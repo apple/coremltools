@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.converters.mil.mil.ops.defs.iOS18.compression &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+              <div class="version">
+                8.0b1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters.mil.mil.ops.defs.iOS18.compression</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.converters.mil.mil.ops.defs.iOS18.compression</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2023, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">types</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="n">InputSpec</span><span class="p">,</span> <span class="n">TensorInputType</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="n">Operation</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">constexpr_cast</span> <span class="k">as</span> <span class="n">_constexpr_cast_iOS16</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs.iOS18</span> <span class="kn">import</span> <span class="n">_IOS18_TARGET</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.var</span> <span class="kn">import</span> <span class="n">Var</span>
+
+
+<div class="viewcode-block" id="constexpr_blockwise_shift_scale">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS18.compression.constexpr_blockwise_shift_scale">[docs]</a>
+<span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS18_TARGET</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">constexpr_blockwise_shift_scale</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A compile-time operation that returns a constant output value upon dequantizing its constant inputs.</span>
+
+<span class="sd">    It&#39;s similar to iOS 16 :py:class:`~.iOS16.constexpr_ops.constexpr_affine_dequantize`, but supports</span>
+<span class="sd">    block-wise quantization for int4 and int8.</span>
+
+<span class="sd">    Although all parameters of this op are constants, this op is not constant-folded to a single</span>
+<span class="sd">    const op at the time of model serialization. The unquantized output will be decompressed later,</span>
+<span class="sd">    based on the implementation detail (either at model load time or runtime).</span>
+
+<span class="sd">    Generic expression: output = scale * (data - offset)</span>
+
+<span class="sd">    Algorithm:</span>
+<span class="sd">        Assuming Rank 3 scenario:</span>
+<span class="sd">            output_data[i, j, k] = scale[i0, j0, k0] * (data[i, j, k] - offset[i0, j0, k0])</span>
+<span class="sd">            where</span>
+<span class="sd">                i0 = floor(i/block_size[0]),</span>
+<span class="sd">                j0 = floor(j/block_size[1]),</span>
+<span class="sd">                k0 = floor(k/block_size[2])</span>
+<span class="sd">        The block size is implied by block_size[m] = data.shape[m] / scale.shape[m]</span>
+
+<span class="sd">    Constraints:</span>
+<span class="sd">    - All tensors: scale, data, offset and output have same rank.</span>
+<span class="sd">    - Inputs: scale and offset (if provided) have same shape.</span>
+<span class="sd">    - Output shape is same as the shape of input argument: `data`.</span>
+<span class="sd">    - Number of scales along each dimension should be a factor of corresponding dimension size of</span>
+<span class="sd">      `data`.  That is, block_size[i] should be an integer where block_size[i] = data.shape[i] / scale.shape[i]</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data: const tensor&lt;SrcT, [1..]&gt; (Required)</span>
+
+<span class="sd">    scale: const tensor&lt;DstT, [1..]&gt; (Required)</span>
+
+<span class="sd">    offset: const tensor&lt;OffsetT, [1..]&gt; (Optional)</span>
+<span class="sd">        * If provided, must have the same shape as the ``scale``.</span>
+<span class="sd">        * If dtype is not fp16 or fp32, it must be the same as SrcT.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    const tensor&lt;DstT, [1..]&gt;</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SrcT: int4, uint4, int8, uint8, fp16, fp32</span>
+<span class="sd">    DstT: fp16, fp32</span>
+<span class="sd">    OffsetT: int4, uint4, int8, uint8, fp16, fp32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;SrcT&quot;</span><span class="p">),</span>
+        <span class="n">scale</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;DstT&quot;</span><span class="p">),</span>
+        <span class="n">offset</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;OffsetT&quot;</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;SrcT&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">int4</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint4</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+        <span class="s2">&quot;DstT&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+        <span class="s2">&quot;OffsetT&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">int4</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint4</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_validate_shift_scale_inputs</span><span class="p">(</span>
+        <span class="n">data_shape</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">data_dtype</span><span class="p">:</span> <span class="n">types</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="n">Var</span><span class="p">,</span> <span class="n">offset</span><span class="p">:</span> <span class="n">Var</span>
+    <span class="p">):</span>
+        <span class="n">data_rank</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_shape</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">data_rank</span> <span class="o">!=</span> <span class="n">scale</span><span class="o">.</span><span class="n">rank</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Parameter &#39;data&#39; and &#39;scale&#39; need to have the same rank, but got </span><span class="si">{</span><span class="n">data_rank</span><span class="si">}</span><span class="s2"> vs </span><span class="si">{</span><span class="n">scale</span><span class="o">.</span><span class="n">rank</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">data_rank</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Parameter &#39;data&#39; needs to have at least rank 1, but got scalar.&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">rank_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">data_rank</span><span class="p">):</span>
+            <span class="n">data_dim</span> <span class="o">=</span> <span class="n">data_shape</span><span class="p">[</span><span class="n">rank_idx</span><span class="p">]</span>
+            <span class="n">scale_dim</span> <span class="o">=</span> <span class="n">scale</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">rank_idx</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">data_dim</span> <span class="o">%</span> <span class="n">scale_dim</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Number of scales along each dimension should be a factor of &quot;</span>
+                    <span class="s2">&quot;corresponding dimension size of &#39;data&#39;. However, at dim &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">rank_idx</span><span class="si">}</span><span class="s2">, the &#39;data&#39; has </span><span class="si">{</span><span class="n">data_dim</span><span class="si">}</span><span class="s2"> while &#39;scale&#39; has </span><span class="si">{</span><span class="n">scale_dim</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">offset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">offset</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">scale</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Invalid parameter &#39;offset&#39;; the shape of &#39;offset&#39; should match the shape of &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;&#39;scale&#39;, but got (</span><span class="si">{</span><span class="n">offset</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">) vs (</span><span class="si">{</span><span class="n">scale</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">).&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">types</span><span class="o">.</span><span class="n">is_float</span><span class="p">(</span><span class="n">offset</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="ow">and</span> <span class="n">offset</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">data_dtype</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Invalid parameter &#39;offset&#39;; the dtype of &#39;offset&#39; should match the dtype of &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;&#39;data&#39;, but got (</span><span class="si">{</span><span class="n">types</span><span class="o">.</span><span class="n">builtin_to_string</span><span class="p">(</span><span class="n">offset</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="si">}</span><span class="s2">) vs &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">types</span><span class="o">.</span><span class="n">builtin_to_string</span><span class="p">(</span><span class="n">data_dtype</span><span class="p">)</span><span class="si">}</span><span class="s2">).&quot;</span>
+                <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_validate_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_shift_scale_inputs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_inputs</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">materialized_val_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">val</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">op_type</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;constexpr_&quot;</span><span class="p">):</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">materialized_val_inference</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">scale</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">op_type</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;constexpr_&quot;</span><span class="p">):</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">materialized_val_inference</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span>
+            <span class="n">data</span><span class="p">,</span>
+            <span class="n">scale</span><span class="p">,</span>
+            <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="o">.</span><span class="n">val</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">decompress</span><span class="p">(</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">scale</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">offset</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+    <span class="p">):</span>
+        <span class="c1"># Adjust dtype to avoid overflow in the quantized dtype.</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">scale</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+        <span class="c1"># Interleaved repeat scale and offset to make it match the shape of data.</span>
+        <span class="n">block_sizes</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">data_shape</span> <span class="o">//</span> <span class="n">scale_shape</span> <span class="k">for</span> <span class="p">(</span><span class="n">data_shape</span><span class="p">,</span> <span class="n">scale_shape</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">scale</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">block_size</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">block_sizes</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">block_size</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="n">block_size</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">offset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">offset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">block_size</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">offset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span> <span class="o">-</span> <span class="n">offset</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">data</span>
+
+        <span class="k">return</span> <span class="n">data</span></div>
+
+
+
+<div class="viewcode-block" id="constexpr_lut_to_dense">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS18.compression.constexpr_lut_to_dense">[docs]</a>
+<span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS18_TARGET</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">constexpr_lut_to_dense</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A compile-time operation that returns a constant output value upon dequantizing its constant inputs.</span>
+
+<span class="sd">    This operator is used to store constant weights in lookup tables format (aka palettized weights).</span>
+<span class="sd">    It&#39;s similar to iOS 16 :py:class:`~.iOS16.constexpr_ops.constexpr_lut_to_dense`, but supports</span>
+<span class="sd">    block-wise / vector palettization.</span>
+
+<span class="sd">    LUT&#39;s rank is K + 2, where K is the rank of indices.</span>
+<span class="sd">    Each dimension of LUT&#39;s first K dimensions should be divisible by each corresponding dimension</span>
+<span class="sd">    of the decompressed tensor.</span>
+<span class="sd">    e.g., when indices_shape = [2, 3, 4], lut_shape[:3] = [1, 1, 2], it means that there are two</span>
+<span class="sd">    lookup tables over the last axis. And each of them have their own LUT values.</span>
+<span class="sd">    See Case 1 below for details.</span>
+
+<span class="sd">    VECTOR_SIZE is added to support vector palettization.</span>
+<span class="sd">    - When VECTOR_SIZE is 1, it is scalar palettization.</span>
+<span class="sd">    - When VECTOR_SIZE is larger than 1, it retrieves a vector instead of a single value from the</span>
+<span class="sd">      lookup table, and fill the result continuously.</span>
+<span class="sd">    The vector_axis is used to define which axis the vectored elements in the lookup table be filled</span>
+<span class="sd">    across the output tensor. vector_axis is only optional if VECTOR_SIZE is 1.</span>
+<span class="sd">    As a result:</span>
+<span class="sd">        output_shape[i] = indices_shape[i] , i != vector_axis</span>
+<span class="sd">        output_shape[i] = indices_shape[i] * VECTOR_SIZE, i == vector_axis</span>
+<span class="sd">    See Case 2 below for details.</span>
+
+<span class="sd">    Examples:</span>
+
+<span class="sd">      Case 1: per-group scalar palettization:</span>
+<span class="sd">        e.g.:</span>
+<span class="sd">        - indices = tensor&lt;uint2, [6, 2]&gt;&gt;([2, 3, 3, 0, 1, 0, 3, 0, 2, 1, 0, 3])</span>
+<span class="sd">        - lut = tensor&lt;fp16, [2, 1, 4, 1]&gt;([1.0, 5.0, 9.0, 13.0, 2.0, 10.0, 18.0, 26.0])</span>
+
+<span class="sd">        It is effectively a 2-group 2-bit scalar palettization.</span>
+<span class="sd">        The output shape would be [6, 2], which is the same as the indices shape.</span>
+<span class="sd">        The output tensor values are:</span>
+<span class="sd">        [[lut0[2]-&gt;9.0,  lut0[3]-&gt;13.0],</span>
+<span class="sd">          [lut0[3]-&gt;13.0, lut0[0]-&gt;1.0],</span>
+<span class="sd">          [lut0[1]-&gt;5.0,  lut0[0]-&gt;1.0],</span>
+<span class="sd">          [lut1[3]-&gt;26.0, lut1[0]-&gt;2.0],</span>
+<span class="sd">          [lut1[2]-&gt;18.0, lut1[1]-&gt;10.0],</span>
+<span class="sd">          [lut1[0]-&gt;2.0,  lut1[3]-&gt;26.0]]</span>
+<span class="sd">        where lut0 is the first lookup table (lut[0, :, :, :]) and lut1 is the second lookup table.</span>
+
+<span class="sd">      Case 2: per-tensor vector palettization:</span>
+<span class="sd">        e.g.:</span>
+<span class="sd">        - indices = tensor&lt;uint1, [2, 2, 2]&gt;&gt;.</span>
+<span class="sd">        The indices values are:</span>
+<span class="sd">               [</span>
+<span class="sd">                 [</span>
+<span class="sd">                  [0, 0],</span>
+<span class="sd">                  [1, 0]</span>
+<span class="sd">                 ],</span>
+<span class="sd">                 [</span>
+<span class="sd">                  [1, 1],</span>
+<span class="sd">                  [0, 0]</span>
+<span class="sd">                 ]</span>
+<span class="sd">               ]</span>
+<span class="sd">        - lut = tensor&lt;int8, [1, 1, 1, 2, 3]&gt;([a0, a1, a2,</span>
+<span class="sd">                    b0, b1, b2])</span>
+<span class="sd">           which means the two centroids are [a1, a2, a3] and [b1, b2, b3].</span>
+
+<span class="sd">      Case 2.1: vector_axis = 1</span>
+<span class="sd">        It is effectively a 1-bit vector palettization.</span>
+<span class="sd">        The output shape would be [2, 2*3, 2], where each index in the indices would be effectively replaced with</span>
+<span class="sd">        the 3 elements in the vector over the 1st dimension to construct the output tensor.</span>
+<span class="sd">        The output values are:</span>
+<span class="sd">        [</span>
+<span class="sd">         [</span>
+<span class="sd">          [a0, a0],</span>
+<span class="sd">          [a1, a1],</span>
+<span class="sd">          [a2, a2],</span>
+<span class="sd">          [b0, a0],</span>
+<span class="sd">          [b1, a1],</span>
+<span class="sd">          [b2, a2],</span>
+<span class="sd">         ],</span>
+<span class="sd">         [</span>
+<span class="sd">          [b0, b0],</span>
+<span class="sd">          [b1, b1],</span>
+<span class="sd">          [b2, b2],</span>
+<span class="sd">          [a0, a0],</span>
+<span class="sd">          [a1, a1],</span>
+<span class="sd">          [a2, a2],</span>
+<span class="sd">         ]</span>
+<span class="sd">        ]</span>
+
+<span class="sd">      Case 2.2: vector_axis = 2</span>
+<span class="sd">        The output shape would be [2, 2, 2*3], where each index in the indices would be effectively replaced with</span>
+<span class="sd">        the 3 elements in the vector over the last dimension to construct the output tensor.</span>
+<span class="sd">        The output values are:</span>
+<span class="sd">        [</span>
+<span class="sd">         [</span>
+<span class="sd">          [a0, a1, a2, a0, a1, a2],</span>
+<span class="sd">          [b0, b1, b2, a0, a1, a2],</span>
+<span class="sd">         ],</span>
+<span class="sd">         [</span>
+<span class="sd">          [b0, b1, b2, b0, b1, b2],</span>
+<span class="sd">          [a0, a1, a2, a0, a1, a2],</span>
+<span class="sd">         ]</span>
+<span class="sd">        ]</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    indices: const tensor&lt;IndicesT, [1..]&gt; (Required)</span>
+
+<span class="sd">    lut: const tensor&lt;T, [1.., NUM_PALETTES, VECTOR_SIZE]&gt; (Required)</span>
+<span class="sd">        * NUM_PALETTES needs to be 2^nbits where nbits is indicated by IndicesT.</span>
+
+<span class="sd">    vector_axis: const tensor&lt;int32, []&gt; (Optional)</span>
+<span class="sd">        * vector_axis can be optional if VECTOR_SIZE is 1.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    const tensor&lt;T, [1..]&gt;</span>
+<span class="sd">        * output_shape = indices_shape * [1..1, VECTOR_SIZE, 1..1] (all 1 but VECTOR_SIZE at vector_axis dimension).</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    IndicesT: uint1, uint2, uint3, uint4, uint6, uint8</span>
+<span class="sd">    T: uint8, int8, fp16, fp32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">indices</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;IndicesT&quot;</span><span class="p">),</span>
+        <span class="n">lut</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">vector_axis</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;IndicesT&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">uint1</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint2</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint3</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint4</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint6</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">),</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_validate_lut_inputs</span><span class="p">(</span>
+        <span class="n">indices_shape</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">indices_dtype</span><span class="p">:</span> <span class="n">types</span><span class="p">,</span> <span class="n">lut_shape</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">vector_axis</span><span class="p">:</span> <span class="n">Var</span>
+    <span class="p">):</span>
+        <span class="n">indices_rank</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices_shape</span><span class="p">)</span>
+        <span class="n">lut_rank</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lut_shape</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">indices_rank</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Parameter &#39;indices&#39; needs to have at least rank 1, but got scalar.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">lut_rank</span> <span class="o">!=</span> <span class="n">indices_rank</span> <span class="o">+</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Parameter &#39;lut&#39; need to have 2 more dim than &#39;indices&#39;, but got &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">lut_rank</span><span class="si">}</span><span class="s2">-rank &#39;lut&#39; and </span><span class="si">{</span><span class="n">indices_rank</span><span class="si">}</span><span class="s2">-rank &#39;indices&#39;.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">rank_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">indices_rank</span><span class="p">):</span>
+            <span class="n">indices_dim</span> <span class="o">=</span> <span class="n">indices_shape</span><span class="p">[</span><span class="n">rank_idx</span><span class="p">]</span>
+            <span class="n">lut_dim</span> <span class="o">=</span> <span class="n">lut_shape</span><span class="p">[</span><span class="n">rank_idx</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">indices_dim</span> <span class="o">%</span> <span class="n">lut_dim</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Each dimension of &#39;indices&#39; should be divisible by each corresponding &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;dimension of the &#39;lut&#39;. However, at dim </span><span class="si">{</span><span class="n">rank_idx</span><span class="si">}</span><span class="s2">, the &#39;indices&#39; has &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">indices_dim</span><span class="si">}</span><span class="s2"> while &#39;lut&#39; has </span><span class="si">{</span><span class="n">lut_dim</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span>
+
+        <span class="n">nbits</span> <span class="o">=</span> <span class="n">indices_dtype</span><span class="o">.</span><span class="n">get_bitwidth</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">lut_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">2</span><span class="o">**</span><span class="n">nbits</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Invalid parameter &#39;lut&#39;; the second last dim should have size &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;2^nbits, where nbits is </span><span class="si">{</span><span class="n">nbits</span><span class="si">}</span><span class="s2">, but got </span><span class="si">{</span><span class="n">lut_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">vector_axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">vector_axis</span><span class="o">.</span><span class="n">rank</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Invalid parameter &#39;vector_axis&#39;; It should be a scalar, but got &quot;</span> <span class="s2">&quot;a tensor.&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="o">-</span><span class="n">indices_rank</span> <span class="o">&lt;=</span> <span class="n">vector_axis</span><span class="o">.</span><span class="n">val</span> <span class="o">&lt;</span> <span class="n">indices_rank</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Invalid parameter &#39;vector_axis&#39;; The valid range is between &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="o">-</span><span class="n">indices_rank</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">indices_rank</span><span class="si">}</span><span class="s2">, but got </span><span class="si">{</span><span class="n">vector_axis</span><span class="o">.</span><span class="n">val</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">lut_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;When lut&#39;s last dim (VECTOR_SIZE) &gt; 1, the parameter &quot;</span>
+                    <span class="s2">&quot;&#39;vector_axis&#39; need to be provided.&quot;</span>
+                <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_validate_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_lut_inputs</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lut</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector_axis</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_inputs</span><span class="p">()</span>
+        <span class="n">output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">vector_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lut</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">vector_size</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">output_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)</span>
+            <span class="n">output_shape</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">vector_axis</span><span class="o">.</span><span class="n">val</span><span class="p">]</span> <span class="o">*=</span> <span class="n">vector_size</span>
+            <span class="n">output_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lut</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">output_shape</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">materialized_val_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="o">.</span><span class="n">val</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lut</span><span class="o">.</span><span class="n">val</span><span class="p">,</span>
+            <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector_axis</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector_axis</span><span class="o">.</span><span class="n">val</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">decompress</span><span class="p">(</span>
+        <span class="n">indices</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">lut</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">vector_axis</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">generic</span><span class="p">],</span>
+    <span class="p">):</span>
+        <span class="n">num_palettes</span> <span class="o">=</span> <span class="n">lut</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">vector_size</span> <span class="o">=</span> <span class="n">lut</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">original_lut_shape</span> <span class="o">=</span> <span class="n">lut</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">block_size</span> <span class="o">=</span> <span class="p">[</span><span class="n">indices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">//</span> <span class="n">lut</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="o">.</span><span class="n">shape</span><span class="p">))]</span>
+
+        <span class="k">if</span> <span class="n">vector_axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">vector_axis</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">vector_axis</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="n">lut</span> <span class="o">=</span> <span class="n">lut</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_palettes</span><span class="p">,</span> <span class="n">vector_size</span><span class="p">)</span>
+        <span class="n">decompressed_res</span> <span class="o">=</span> <span class="n">indices</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">lut</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">vector_size</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># Tile the vector_axis to make room for the vector retrieved from lut.</span>
+            <span class="n">decompressed_res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">decompressed_res</span><span class="p">,</span> <span class="n">vector_size</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">vector_axis</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lut</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">lut</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># TODO (rdar://115061946): Vectorize the computation.</span>
+        <span class="k">for</span> <span class="n">table_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">lut</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="c1"># Get the corresponding idx in indices for the current table.</span>
+            <span class="c1"># For example, if table coord is (1, 3), the corresponding indices should be</span>
+            <span class="c1"># [1*block_size[0] : 2*block_size[0], 3*block_size[1], 4*block_size[1]].</span>
+            <span class="n">original_table_coord</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">table_idx</span><span class="p">,</span> <span class="n">original_lut_shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">slice_idxes</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="nb">slice</span><span class="p">(</span><span class="n">coord</span> <span class="o">*</span> <span class="n">block_size</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="p">(</span><span class="n">coord</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">block_size</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">coord</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">original_table_coord</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">unquantized_values</span> <span class="o">=</span> <span class="n">lut</span><span class="p">[</span><span class="n">table_idx</span><span class="p">][</span><span class="n">indices</span><span class="p">[</span><span class="n">slice_idxes</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="n">vector_size</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">vector_axis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;vector_axis must be provided for vector lut.&quot;</span><span class="p">)</span>
+                <span class="c1"># Merge the vector dim into the decompressed values (flatten the vector).</span>
+                <span class="n">unquantized_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">unquantized_values</span><span class="p">,</span> <span class="n">vector_axis</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+                <span class="n">unquantized_values</span> <span class="o">=</span> <span class="n">unquantized_values</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                    <span class="n">unquantized_values</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,)</span>
+                <span class="p">)</span>
+                <span class="n">unquantized_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">unquantized_values</span><span class="p">,</span> <span class="n">vector_axis</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="c1"># Resize the slice to make room for the merged vector dequantized values.</span>
+                <span class="n">slice_idxes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">slice_idxes</span><span class="p">)</span>
+                <span class="n">resized_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span>
+                    <span class="n">slice_idxes</span><span class="p">[</span><span class="n">vector_axis</span><span class="p">]</span><span class="o">.</span><span class="n">start</span> <span class="o">*</span> <span class="n">vector_size</span><span class="p">,</span>
+                    <span class="n">slice_idxes</span><span class="p">[</span><span class="n">vector_axis</span><span class="p">]</span><span class="o">.</span><span class="n">stop</span> <span class="o">*</span> <span class="n">vector_size</span><span class="p">,</span>
+                    <span class="n">slice_idxes</span><span class="p">[</span><span class="n">vector_axis</span><span class="p">]</span><span class="o">.</span><span class="n">step</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">slice_idxes</span><span class="p">[</span><span class="n">vector_axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">resized_slice</span>
+            <span class="n">decompressed_res</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">slice_idxes</span><span class="p">)]</span> <span class="o">=</span> <span class="n">unquantized_values</span>
+
+        <span class="k">return</span> <span class="n">decompressed_res</span></div>
+
+
+
+<div class="viewcode-block" id="constexpr_sparse_to_dense">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS18.compression.constexpr_sparse_to_dense">[docs]</a>
+<span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS18_TARGET</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">constexpr_sparse_to_dense</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A compile-time operation that returns a constant output value upon de-sparsification of its constant inputs.</span>
+
+<span class="sd">    The differences from iOS16 :py:class:`~.iOS16.constexpr_ops.constexpr_sparse_to_dense` are:</span>
+<span class="sd">    - In iOS16, the mask parameter is &#39;const tensor&lt;uint8, [M]&gt;&#39;, which is a flat tensor with length</span>
+<span class="sd">      M, so it requires a parameter `shape` to determine the output shape.</span>
+<span class="sd">      In iOS18, we use uint1 (0 or 1) to represent bitmask, which packs the bitmask data and costs</span>
+<span class="sd">      the same memory as the uint8 mask in iOS16, but can explicitly tell the tensor shape. We use</span>
+<span class="sd">      uint1 instead of bool because bool in MIL uses uint8 as the storage dtype, which costs 8x</span>
+<span class="sd">      memory compared to uint1.</span>
+<span class="sd">    - Support more dtypes (int4 and uint4) for the input/output data.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nonzero_data: const tensor&lt;T, [D]&gt; (Required)</span>
+
+<span class="sd">    mask: const tensor&lt;uint1, [1..]&gt; (Required)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    const tensor&lt;T, [1..]&gt;</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: int4, uint4, int8, uint8, fp16, fp32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">nonzero_data</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">mask</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">uint1</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">int4</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint4</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">)}</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">decompress</span><span class="p">(</span><span class="n">nonzero_data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">decompressed_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">nonzero_data</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">decompressed_val</span><span class="p">[</span><span class="n">mask</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">nonzero_data</span>
+        <span class="k">return</span> <span class="n">decompressed_val</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_validate_sparse_inputs</span><span class="p">(</span><span class="n">nonzero_data</span><span class="p">:</span> <span class="n">Var</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n">Var</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">nonzero_data</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Parameter nonzero_data needs to have rank 1, but got </span><span class="si">{</span><span class="n">nonzero_data</span><span class="o">.</span><span class="n">rank</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">mask</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">val</span><span class="p">)</span> <span class="o">!=</span> <span class="n">nonzero_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+                <span class="s2">&quot;Number of 1s in mask not match number of elements in parameter nonzero_data&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_sparse_inputs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nonzero_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nonzero_data</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">materialized_val_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">nonzero_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonzero_data</span><span class="o">.</span><span class="n">val</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">val</span>
+        <span class="k">if</span> <span class="n">nonzero_data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonzero_data</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">op_type</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;constexpr_&quot;</span><span class="p">):</span>
+            <span class="n">nonzero_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonzero_data</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">materialized_val_inference</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nonzero_data</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">nonzero_data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># For sparse constexpr ops they have two outputs, one for mask and one for val.</span>
+                <span class="n">nonzero_data</span> <span class="o">=</span> <span class="n">nonzero_data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">op_type</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;constexpr_&quot;</span><span class="p">):</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">materialized_val_inference</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="n">nonzero_data</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="constexpr_lut_to_sparse">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS18.compression.constexpr_lut_to_sparse">[docs]</a>
+<span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS18_TARGET</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">constexpr_lut_to_sparse</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A compile-time operation that returns a constant output value upon de-palettizing its constant inputs.</span>
+
+<span class="sd">    This op is a sparse-to-sparse op to support `constexpr_lut_to_dense` on sparse data, where the</span>
+<span class="sd">    de-palettization is only applied on the nonzero data. Usually it would be followed by a</span>
+<span class="sd">    `constexpr_sparse_to_dense` op to get the dense tensor. So, parameters of this op are similar to</span>
+<span class="sd">    `constexpr_sparse_to_dense` and `constexpr_lut_to_dense`. For detailed descriptions</span>
+<span class="sd">    about its parameters, please refer to iOS 18 :py:class:`~.iOS18.constexpr_ops.constexpr_sparse_to_dense`</span>
+<span class="sd">    and :py:class:`~.iOS18.constexpr_ops.constexpr_lut_to_dense`.</span>
+
+<span class="sd">    This op has two outputs:</span>
+<span class="sd">        1. the mask of the de-palettized nonzero_data.</span>
+<span class="sd">        2. the de-palettized nonzero_data.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    indices_mask: const tensor&lt;uint1, [1..]&gt; (Required)</span>
+
+<span class="sd">    indices_nonzero_data: const tensor&lt;IndicesT, [D]&gt; (Required)</span>
+
+<span class="sd">    lut: const tensor&lt;T, [1.., NUM_PALETTES, VECTOR_SIZE]&gt; (Required)</span>
+<span class="sd">        * NUM_PALETTES needs to be 2^nbits where nbits is indicated by IndicesT.</span>
+
+<span class="sd">    vector_axis: const tensor&lt;int32, []&gt; (Optional)</span>
+<span class="sd">        * vector_axis can be optional if VECTOR_SIZE is 1.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    const tensor&lt;uint1, [1..]&gt;</span>
+<span class="sd">        * the mask of the de-palettized nonzero_data.</span>
+<span class="sd">          For scalar palettization, it&#39;s the same as the input indices_mask.</span>
+<span class="sd">          For vector palettization, it&#39;s expanded of the indices_mask over axis=vector_axis.</span>
+<span class="sd">    const tensor&lt;T, [VD]&gt;</span>
+<span class="sd">        * the de-palettized nonzero_data.</span>
+<span class="sd">          For scalar palettization, VD=D (same size as indices_nonzero_data).</span>
+<span class="sd">          For vector palettization, VD=VECTOR_SIZE * D (each entry is expanded by a vector).</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    IndicesT: uint1, uint2, uint3, uint4, uint6, uint8</span>
+<span class="sd">    T: uint8, int8, fp16, fp32</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Assume we have the following inputs:</span>
+<span class="sd">        indices_mask&lt;uint1, [4, 6]&gt; = [[1, 1, 0, 0, 0, 0],</span>
+<span class="sd">                                       [1, 1, 0, 0, 0, 1],</span>
+<span class="sd">                                       [0, 1, 1, 0, 1, 0],</span>
+<span class="sd">                                       [0, 0, 0, 1, 0, 0]]</span>
+<span class="sd">        indices_nonzero_data&lt;uint1, [9]&gt; = [0, 1, 1, 0, 1, 1, 0, 0, 1]</span>
+
+<span class="sd">        Notice that:</span>
+<span class="sd">        - The uint1 in `indices_mask` and `indices_nonzero_data` has different meanings. For</span>
+<span class="sd">          `indices_mask` the dtype is always uint1 to represent bit mask. For `indices_nonzero_data`</span>
+<span class="sd">          the uint1 means the LUT only has two entries, so only 1 bit is needed to represent indices.</span>
+<span class="sd">        - The 0 in `indices_mask` and `indices_nonzero_data` has different meanings. For</span>
+<span class="sd">          `indices_mask` the 0 means empty entry in sparse representation. For `indices_nonzero_data`</span>
+<span class="sd">          the 0 means index 0 in LUT.</span>
+
+<span class="sd">    With the given indices_mask and indices_nonzero_data, an example for &quot;Scalar Palettization&quot;:</span>
+<span class="sd">         lut&lt;fp16, [1, 1, 2, 1]&gt; = [2.0, 3.0] (indices-to-values mapping is {0: 2.0, 1: 3.0})</span>
+
+<span class="sd">         The sparse indices in the dense layout would look like:</span>
+<span class="sd">         0   1   .   .   .   .</span>
+<span class="sd">         1   0   .   .   .   1</span>
+<span class="sd">         .   1   0   .   0   .</span>
+<span class="sd">         .   .   .   1   .   .</span>
+<span class="sd">         (here &quot;.&quot; means spare elements in sparse representation)</span>
+
+<span class="sd">         When we apply per-tensor de-palettization with this sparse indices, the `indices_nonzero_data`</span>
+<span class="sd">         is used to read the values from the LUT as in the dense layout. The output sparse tensor in</span>
+<span class="sd">         the dense layout would be:</span>
+<span class="sd">         2.0  3.0   .    .   .    .</span>
+<span class="sd">         3.0  2.0   .    .   .   3.0</span>
+<span class="sd">          .   3.0  2.0   .  2.0   .</span>
+<span class="sd">          .    .    .   3.0  .    .</span>
+<span class="sd">         The first output would be the same as the indices_mask.</span>
+<span class="sd">         The second output would be [2.0, 3.0, 3.0, 2.0, 3.0, 3.0, 2.0, 2.0, 3.0]</span>
+
+<span class="sd">    With the given indices_mask and indices_nonzero_data, an example for &quot;Vector Palettization&quot;:</span>
+<span class="sd">         lut&lt;fp16, [1, 1, 2, 2] = [[2.0, 2.0], [3.0, 3.0]]</span>
+<span class="sd">         vector_axis = 0</span>
+
+<span class="sd">         The first output would be the expanded mask of the indices_mask over axis=0, which is:</span>
+<span class="sd">         output&lt;uint1, [8, 6]&gt; = [</span>
+<span class="sd">             [1, 1, 0, 0, 0, 0],</span>
+<span class="sd">             [1, 1, 0, 0, 0, 0],</span>
+<span class="sd">             [1, 1, 0, 0, 0, 1],</span>
+<span class="sd">             [1, 1, 0, 0, 0, 1],</span>
+<span class="sd">             [0, 1, 1, 0, 1, 0],</span>
+<span class="sd">             [0, 1, 1, 0, 1, 0],</span>
+<span class="sd">             [0, 0, 0, 1, 0, 0],</span>
+<span class="sd">             [0, 0, 0, 1, 0, 0],</span>
+<span class="sd">         ]</span>
+<span class="sd">         The second output in the dense layout would be:</span>
+<span class="sd">         2.0  3.0   .    .   .    .</span>
+<span class="sd">         2.0  3.0   .    .   .    .</span>
+<span class="sd">         3.0  2.0   .    .   .   3.0</span>
+<span class="sd">         3.0  2.0   .    .   .   3.0</span>
+<span class="sd">          .   3.0  2.0   .  2.0   .</span>
+<span class="sd">          .   3.0  2.0      2.0   .</span>
+<span class="sd">          .    .    .   3.0  .    .</span>
+<span class="sd">          .    .    .   3.0  .    .</span>
+<span class="sd">         It is created by fetching the vector entry from the lut for every bit 1 in the data_mask,</span>
+<span class="sd">         and filling the vector over axis=0.</span>
+
+<span class="sd">    Those two outputs of this op could be passed as inputs to a following `sparse_to_dense` op</span>
+<span class="sd">    in order to recover the dense weights.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">indices_mask</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">uint1</span><span class="p">),</span>
+        <span class="n">indices_nonzero_data</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;IndicesT&quot;</span><span class="p">),</span>
+        <span class="n">lut</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">vector_axis</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;IndicesT&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">uint1</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint2</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint3</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint4</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint6</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">),</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_validate_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">constexpr_sparse_to_dense</span><span class="o">.</span><span class="n">_validate_sparse_inputs</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">indices_nonzero_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices_mask</span>
+        <span class="p">)</span>
+        <span class="n">constexpr_lut_to_dense</span><span class="o">.</span><span class="n">_validate_lut_inputs</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">indices_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">indices_nonzero_data</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lut</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vector_axis</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_inputs</span><span class="p">()</span>
+        <span class="n">output_mask_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices_mask</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">output_nonzero_data_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices_nonzero_data</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">vector_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lut</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">vector_size</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">output_mask_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">output_mask_shape</span><span class="p">)</span>
+            <span class="n">output_mask_shape</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">vector_axis</span><span class="o">.</span><span class="n">val</span><span class="p">]</span> <span class="o">*=</span> <span class="n">vector_size</span>
+            <span class="n">output_mask_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output_mask_shape</span><span class="p">)</span>
+            <span class="n">output_nonzero_data_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">dim</span> <span class="o">*</span> <span class="n">vector_size</span> <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="n">output_nonzero_data_shape</span><span class="p">]</span>
+            <span class="p">)</span>
+
+        <span class="n">output_mask_type</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">indices_mask</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">output_mask_shape</span><span class="p">)</span>
+        <span class="n">output_nonzero_data_type</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lut</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">output_nonzero_data_shape</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">output_mask_type</span><span class="p">,</span> <span class="n">output_nonzero_data_type</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">decompress</span><span class="p">(</span>
+        <span class="n">indices_mask</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">indices_nonzero_data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">lut</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">vector_axis</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">generic</span><span class="p">],</span>
+    <span class="p">):</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">constexpr_sparse_to_dense</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="n">indices_nonzero_data</span><span class="p">,</span> <span class="n">indices_mask</span><span class="p">)</span>
+        <span class="n">output_nonzero_data</span> <span class="o">=</span> <span class="n">constexpr_lut_to_dense</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">lut</span><span class="p">,</span> <span class="n">vector_axis</span><span class="p">)</span>
+        <span class="n">output_mask</span> <span class="o">=</span> <span class="n">indices_mask</span>
+        <span class="k">if</span> <span class="n">vector_axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">vector_size</span> <span class="o">=</span> <span class="n">lut</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">output_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">output_mask</span><span class="p">,</span> <span class="n">vector_size</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">vector_axis</span><span class="p">)</span>
+        <span class="n">output_nonzero_data</span> <span class="o">=</span> <span class="n">output_nonzero_data</span><span class="p">[</span><span class="n">output_mask</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">output_mask</span><span class="p">,</span> <span class="n">output_nonzero_data</span>
+
+    <span class="k">def</span> <span class="nf">materialized_val_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">vector_axis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector_axis</span><span class="o">.</span><span class="n">val</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector_axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">indices_mask</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices_nonzero_data</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lut</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">vector_axis</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="constexpr_sparse_blockwise_shift_scale">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS18.compression.constexpr_sparse_blockwise_shift_scale">[docs]</a>
+<span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS18_TARGET</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">constexpr_sparse_blockwise_shift_scale</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A compile-time operation that returns a constant output value upon de-quantize (shift-scale) its</span>
+<span class="sd">    constant inputs.</span>
+<span class="sd">    This op is a sparse-to-sparse op to support `constexpr_blockwise_shift_scale` on sparse data,</span>
+<span class="sd">    where the de-quantization is only applied on the nonzero data. Usually it would be followed by a</span>
+<span class="sd">    `constexpr_sparse_to_dense` op to get the dense tensor. So, parameters of this op are similar to</span>
+<span class="sd">    `constexpr_sparse_to_dense` and `constexpr_blockwise_shift_scale`. For detailed descriptions</span>
+<span class="sd">    about its parameters, please refer to iOS 18 :py:class:`~.iOS18.constexpr_ops.constexpr_sparse_to_dense`</span>
+<span class="sd">    and :py:class:`~.iOS18.constexpr_ops.constexpr_blockwise_shift_scale`.</span>
+
+<span class="sd">    This op has two outputs:</span>
+<span class="sd">         1. the mask of the de-quantized nonzero_data.</span>
+<span class="sd">         2. the de-quantized nonzero_data.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -------</span>
+<span class="sd">    data_mask: const tensor&lt;uint1, [1..]&gt; (Required)</span>
+
+<span class="sd">    nonzero_data: const tensor&lt;SrcT, [D]&gt; (Required)</span>
+
+<span class="sd">    scale: const tensor&lt;DstT, [1..]&gt; (Required)</span>
+
+<span class="sd">    offset: const tensor&lt;OffsetT, [1..]&gt; (Optional)</span>
+<span class="sd">        * If provided, must have the same shape as the ``scale``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    const tensor&lt;uint1, [1..]&gt;</span>
+<span class="sd">         * the mask of the shift-scaled nonzero_data.</span>
+<span class="sd">    const tensor&lt;DstT, [D]&gt;</span>
+<span class="sd">         * the shift-scaled nonzero_data.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    -------</span>
+<span class="sd">    SrcT: int4, uint4, int8, uint8, fp16, fp32</span>
+<span class="sd">    DstT: fp16, fp32</span>
+<span class="sd">    OffsetT: int4, uint4, int8, uint8, fp16, fp32</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    -------</span>
+<span class="sd">    For example:</span>
+<span class="sd">        data_mask = [[1, 1, 0, 0], [1, 1, 1, 0], [0, 0, 1, 1], [1, 1, 0, 0]]</span>
+<span class="sd">        nonzero_data = [10, 11, 3, 4, 5, 6, 7, 8, 9]</span>
+<span class="sd">        The sparse tensor in the dense layout would look like:</span>
+<span class="sd">         10   11    .    .</span>
+<span class="sd">          3    4    5    .</span>
+<span class="sd">          .    .    6    7</span>
+<span class="sd">          8    9    .    .</span>
+
+<span class="sd">        When we apply per-channel de-quantization on this sparse tensor, where:</span>
+<span class="sd">        scale = [[0.1, 0.2, 0.3, 0.4]]</span>
+<span class="sd">        offset = [[1, 2, 3, 4]]</span>
+<span class="sd">        The input `nonzero_data` would be dequantized per-column as in the dense layout, and the</span>
+<span class="sd">        output sparse tensor in the dense layout would be:</span>
+<span class="sd">         (10-1)*0.1   (11-2)*0.2        .            .</span>
+<span class="sd">         (10-1)*0.1   (11-2)*0.2        .            .</span>
+<span class="sd">          (3-1)*0.1    (4-2)*0.2    (5-3)*0.3        .</span>
+<span class="sd">              .            .        (6-3)*0.3    (7-4)*0.4</span>
+<span class="sd">          (8-1)*0.1    (9-2)*0.2        .            .</span>
+
+<span class="sd">        The first output would be the same as the `data_mask`,</span>
+<span class="sd">        The second output would be [0.9, 1.8, 0.2, 0.4, 0.6, 0.9, 1.2, 0.7, 1.4].</span>
+<span class="sd">        The two outputs could be passed as inputs to the following `sparse_to_dense` op in order to</span>
+<span class="sd">        get the dense weights.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">data_mask</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">uint1</span><span class="p">),</span>
+        <span class="n">nonzero_data</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;SrcT&quot;</span><span class="p">),</span>
+        <span class="n">scale</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;DstT&quot;</span><span class="p">),</span>
+        <span class="n">offset</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;OffsetT&quot;</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;SrcT&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">int4</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint4</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+        <span class="s2">&quot;DstT&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+        <span class="s2">&quot;OffsetT&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">int4</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint4</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_validate_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">constexpr_sparse_to_dense</span><span class="o">.</span><span class="n">_validate_sparse_inputs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nonzero_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_mask</span><span class="p">)</span>
+        <span class="n">constexpr_blockwise_shift_scale</span><span class="o">.</span><span class="n">_validate_shift_scale_inputs</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonzero_data</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_inputs</span><span class="p">()</span>
+        <span class="n">output_mask_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_mask</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">output_nonzero_data_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonzero_data</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">output_mask_type</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_mask</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">output_mask_shape</span><span class="p">)</span>
+        <span class="n">output_nonzero_data_type</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">output_nonzero_data_shape</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">output_mask_type</span><span class="p">,</span> <span class="n">output_nonzero_data_type</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">decompress</span><span class="p">(</span>
+        <span class="n">data_mask</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">nonzero_data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">scale</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">offset</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+    <span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">constexpr_sparse_to_dense</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="n">nonzero_data</span><span class="p">,</span> <span class="n">data_mask</span><span class="p">)</span>
+        <span class="n">dequantized_data</span> <span class="o">=</span> <span class="n">constexpr_blockwise_shift_scale</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+        <span class="n">output_nonzero_data</span> <span class="o">=</span> <span class="n">dequantized_data</span><span class="p">[</span><span class="n">data_mask</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">data_mask</span><span class="p">,</span> <span class="n">output_nonzero_data</span>
+
+    <span class="k">def</span> <span class="nf">materialized_val_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="o">.</span><span class="n">val</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_mask</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonzero_data</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="constexpr_cast">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS18.compression.constexpr_cast">[docs]</a>
+<span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS18_TARGET</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">constexpr_cast</span><span class="p">(</span><span class="n">_constexpr_cast_iOS16</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A compile-time operation that returns a constant output value upon casting its constant input.</span>
+
+<span class="sd">    The only difference between this version and the iOS 16 :py:class:`~.iOS16.constexpr_ops.constexpr_cast` is</span>
+<span class="sd">    the parameters are treated as inputs, instead of attributes in the MIL backend framework.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">source_val</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">),</span>
+        <span class="n">output_dtype</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

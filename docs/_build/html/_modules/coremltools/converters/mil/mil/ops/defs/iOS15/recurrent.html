@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.converters.mil.mil.ops.defs.iOS15.recurrent &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+              <div class="version">
+                8.0b1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters.mil.mil.ops.defs.iOS15.recurrent</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.converters.mil.mil.ops.defs.iOS15.recurrent</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright (c) 2020, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">Var</span><span class="p">,</span> <span class="n">types</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="n">DefaultInputs</span><span class="p">,</span> <span class="n">InputSpec</span><span class="p">,</span> <span class="n">TensorInputType</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
+
+
+<div class="viewcode-block" id="gru">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.recurrent.gru">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span> <span class="nc">gru</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gated Recurrent Unit (GRU)</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       r_t = \rm{recurrent\_activation}(W_{ir} x_t + b_{ir} + W_{hr} h_{t-1} + b_{hr})</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       z_t = \rm{recurrent\_activation}(W_{iz} x_t + b_{iz} + W_{hz} h_{t-1} + b_{hz})</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       o_t = \rm{activation}(W_{io} x_t + b_{io} + r_t * W_{ho} h_{t-1} + b_{ho})</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       h_t = (1 − z_t) * o_t + z_t * h_{t−1}</span>
+
+<span class="sd">    Where:</span>
+
+<span class="sd">    * :math:`W_{i[r|o|z]}` are state input weights for reset, output and update gate, respectively.</span>
+<span class="sd">    * :math:`b_{i[r|o|z]}` are input biases for reset, output and update gate, respectively.</span>
+<span class="sd">    * :math:`W_{h[r|o|z]}` are recurrent/hidden weights on hidden state to reset, output, and update gates, respectively.</span>
+<span class="sd">    * :math:`b_{h[r|o|z]}` are recurrent/hidden biases on hidden state to reset, output, and update gates, respectively.</span>
+<span class="sd">    * :math:`h_t`  is the hidden state at time ``t``.</span>
+<span class="sd">    * :math:`x_t` is the input at time ``t``.</span>
+<span class="sd">    * :math:`h_{t-1}` is the hidden state of the layer at time ``t-1`` or the initial</span>
+<span class="sd">      hidden state at time ``0``.</span>
+<span class="sd">    * :math:`r_t`, :math:`o_t`, and :math:`z_t` are the reset, new, and update gates, respectively.</span>
+<span class="sd">    * :math:`*` is elementwise product.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: &lt;s, b, I, T&gt; (Required)</span>
+<span class="sd">        * ``s`` is the sequence length, ``b`` is the batch size, and ``I`` is the</span>
+<span class="sd">          input dimension.</span>
+
+<span class="sd">    initial_h: &lt;b, H, T&gt; (Required)</span>
+<span class="sd">        * ``H`` denotes hidden size.</span>
+
+<span class="sd">    weight_ih: const&lt;3*H, I, T&gt; (Required) - Weight matrix</span>
+<span class="sd">        * ``weigh_ih = [W_{ir} | W_{io} | W_{iz}]`` where ``[a|b]`` denotes column</span>
+<span class="sd">          concatenation and ``[a, b]`` denotes row concatenation. ``W_{ir}``,</span>
+<span class="sd">          ``W_{io}``, and ``W_{iz}`` have shape ``(H, I)``.</span>
+
+<span class="sd">    weight_hh: const&lt;3*H, H, T&gt; (Required) - Weight matrix</span>
+<span class="sd">        * ``weight_hh =  [W_{hr} | W_{ho} | W_{hz}]``: ``W_{hr}``, ``W_{ho}``, and</span>
+<span class="sd">          ``W_{hz}`` have shape ``(H, H)``.</span>
+
+<span class="sd">    bias: const&lt;3*H, T&gt; (Optional) [Default all 0s]</span>
+<span class="sd">        * ``bias[0]`` are input-hidden and hidden-hidden bias.</span>
+<span class="sd">        * ``3*H`` are biases for ``[b_{ir} | b_{io} | b_{hz}]``.</span>
+
+<span class="sd">    direction: const&lt;str&gt; (Optional) [Default=forward]</span>
+<span class="sd">        * Either ``forward`` or ``reverse``.</span>
+
+<span class="sd">    output_sequence: const&lt;bool&gt; (Optional) [Default=False]</span>
+<span class="sd">        * Outputs every step if ``True``.</span>
+
+<span class="sd">    recurrent_activation: const&lt;str&gt; (Optional) [Default=sigmoid]</span>
+<span class="sd">        * Activation applied on update and reset gate.</span>
+
+<span class="sd">    activation: const&lt;str&gt; (Optional) [Default=tanh]</span>
+<span class="sd">        * Activation applied on output gate.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    &lt;s, b, H, T&gt; or &lt;1, b, H, T&gt;</span>
+<span class="sd">        * If ``output_sequence == True`` (hidden states from every step):</span>
+<span class="sd">          ``&lt;s, b, H, T&gt;``.</span>
+<span class="sd">        * Else ``&lt;1, b, H, T&gt;`` (hidden states of the final step).</span>
+<span class="sd">    &lt;b, H, T&gt;</span>
+<span class="sd">        * Hidden states of the final step.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">initial_h</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">weight_ih</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">weight_hh</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">bias</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">direction</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">),</span>
+        <span class="n">output_sequence</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
+        <span class="n">recurrent_activation</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">),</span>
+        <span class="n">activation</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DefaultInputs</span><span class="p">(</span>
+            <span class="n">bias</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">direction</span><span class="o">=</span><span class="s2">&quot;forward&quot;</span><span class="p">,</span>
+            <span class="n">output_sequence</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">recurrent_activation</span><span class="o">=</span><span class="s2">&quot;sigmoid&quot;</span><span class="p">,</span>
+            <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;tanh&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Invalid input shape. Expecting Rank 3 input, got </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">sequence_length</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">input_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_ih</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Invalid weight shape. Expecting Rank 2 input, got </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_ih</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_hh</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Invalid weight shape. Expecting Rank 2 input, got </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_hh</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">hidden_dim</span><span class="p">,</span> <span class="n">hidden_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_hh</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="n">direction</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">direction</span><span class="o">.</span><span class="n">val</span>
+        <span class="n">valid_directions</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;forward&quot;</span><span class="p">,</span> <span class="s2">&quot;reverse&quot;</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">direction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_directions</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Direction </span><span class="si">{}</span><span class="s2"> not supported. Supported directions: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">direction</span><span class="p">,</span> <span class="n">valid_directions</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">dim_factor</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="k">if</span> <span class="n">hidden_size</span> <span class="o">!=</span> <span class="p">(</span><span class="n">hidden_dim</span> <span class="o">//</span> <span class="n">dim_factor</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Incorrect weight matrix: hidden dim size mismatch. </span><span class="se">\</span>
+<span class="s2">                Provided weight_ih </span><span class="si">{}</span><span class="s2">, weight_hh </span><span class="si">{}</span><span class="s2">. Expecting &lt;b, 3*H&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">weight_ih</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_hh</span><span class="o">.</span><span class="n">shape</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">out_seq_len</span> <span class="o">=</span> <span class="n">sequence_length</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_sequence</span><span class="o">.</span><span class="n">val</span> <span class="k">else</span> <span class="mi">1</span>
+        <span class="n">output_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">out_seq_len</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">]</span>
+        <span class="n">output_h_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)),</span>
+            <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output_h_shape</span><span class="p">)),</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="lstm">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.recurrent.lstm">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span> <span class="nc">lstm</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Long Short-Term Memory (LSTM)</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       i_t = \rm{recurrent\_activation}(W_{ii} x_t + B_{ii} + W_{hi} h_{t-1} + B_{hi})</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       f_t = \rm{recurrent\_activation}(W_{if} x_t + B_{if} + W_{hf} h_{t-1} + B_{hf})</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       z_t = \rm{cell\_activation}(W_{iz} x_t + B_{iz} + W_{hz} h_{t-1} + B_{hz})</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       o_t = \rm{recurrent\_activation}(W_{io} x_t + B_{io} + W_{ho} h_{t-1} + B_{ho})</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       c_t = f_t * c_{t-1} + i_t * z_t</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       h_t = o_t * \rm{activation(c_t)}</span>
+
+<span class="sd">    Where:</span>
+
+<span class="sd">    * :math:`i_t`, :math:`f_t`, :math:`o_t`, and :math:`z_t` are input, forget, output, and cell gates,</span>
+<span class="sd">      respectively, at time ``t``.</span>
+<span class="sd">    * :math:`c_t` is cell state at time ``t``.</span>
+<span class="sd">    * :math:`h_t`  is the hidden state at time ``t``.</span>
+<span class="sd">    * :math:`W_{ii}`, :math:`W_{if}`, :math:`W_{io}`, and :math:`W_{iz}` are input weights for input,</span>
+<span class="sd">      forget, output, and cell gate, respectively.</span>
+<span class="sd">    * :math:`B_{ii}`, :math:`B_{if}`, :math:`B_{io}`, and :math:`B_{iz}` are input biases for input,</span>
+<span class="sd">      forget, output, and cell gate, respectively.</span>
+<span class="sd">    * :math:`W_{hi}`, :math:`W_{hf}`, :math:`W_{ho}`, and :math:`W_{hz}` are recurrent weights for input,</span>
+<span class="sd">      forget, output, and cell gate, respectively.</span>
+<span class="sd">    * :math:`B_{hi}`, :math:`B_{hf}`, :math:`B_{ho}`, and :math:`B_{hz}` are recurrent weights for input,</span>
+<span class="sd">      forget, output, and cell gate, respectively.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: &lt;s, b, I, T&gt; (Required)</span>
+<span class="sd">        * ``s`` is the sequence length, ``b`` is the batch size, and ``I`` is the</span>
+<span class="sd">          input dimension.</span>
+
+<span class="sd">    initial_h: &lt;b, DIRECTIONS*H, T&gt; (Required)</span>
+<span class="sd">        * Initial hidden state. ``DIRECTIONS = 1`` for uni-directional.</span>
+<span class="sd">          ``DIRECTIONS = 2`` for bi-directional LSTM.</span>
+<span class="sd">        * ``H`` denotes hidden size.</span>
+<span class="sd">        * ``[b, :H]`` and ``[b, H:]`` represents forward and reverse direction</span>
+<span class="sd">          values, respectively.</span>
+
+<span class="sd">    initial_c: &lt;b, DIRECTIONS*H, T&gt; (Required)</span>
+<span class="sd">        * Initial cell state.</span>
+<span class="sd">        * Format is same as ``initial_h``.</span>
+
+<span class="sd">    weight_ih: const&lt;4*H, I, T&gt; (Required)</span>
+<span class="sd">        * Input-hidden weight matrix</span>
+<span class="sd">        * Weight tensor should be in order of</span>
+<span class="sd">          ``[input_gate, forget_gate, output_gate, cell_gate]``.</span>
+<span class="sd">        * If direction==&quot;bidirectional&quot;, this is applied in forward direction.</span>
+<span class="sd">        * If direction==&quot;forward&quot; or &quot;backward&quot; these weights are used.</span>
+
+<span class="sd">    weight_hh: const&lt;4*H, H, T&gt; (Required)</span>
+<span class="sd">        * Hidden-hidden weight matrix.</span>
+<span class="sd">        * Weight tensor should be in order of</span>
+<span class="sd">          ``[input_gate, forget_gate, output_gate, cell_gate]``.</span>
+<span class="sd">        * If direction==&quot;bidirectional&quot;, this is applied in forward direction.</span>
+<span class="sd">        * If direction==&quot;forward&quot; or &quot;backward&quot; these weights are used.</span>
+
+<span class="sd">    bias: const&lt;4*H, T&gt; (Optional, default all 0s)</span>
+<span class="sd">        * bias = input-hidden bias + hidden-hidden bias</span>
+<span class="sd">        * If direction==&quot;bidirectional&quot;, this is applied in forward direction.</span>
+<span class="sd">        * If direction==&quot;forward&quot; or &quot;backward&quot; this bias are used.</span>
+
+<span class="sd">    peephole: const&lt;3*H, T&gt; (Optional, default all 0s)</span>
+<span class="sd">        * Weight tensor for peephole.</span>
+<span class="sd">        * Order is ``[input_gate, forget_gate, output_gate]``.</span>
+<span class="sd">        * Shape of each peephole vector is ``(H,)`` (``H`` is hidden size).</span>
+<span class="sd">        * If direction==&quot;bidirectional&quot;, this is applied in forward direction.</span>
+<span class="sd">        * If direction==&quot;forward&quot; or &quot;backward&quot; these weights are used.</span>
+
+<span class="sd">    weight_ih_back: const&lt;4*H, I, T&gt; (Optional) -</span>
+<span class="sd">        * Input-hidden weight matrix for backward direction for `bidirectinal LSTM`.</span>
+<span class="sd">        * Weight tensor should be in order of</span>
+<span class="sd">          ``[input_gate, forget_gate, output_gate, cell_gate]``.</span>
+<span class="sd">        * Must be provided for `bidirectional LSTM`.</span>
+<span class="sd">        * This is only used when `direction` is &quot;bidirectional&quot;.</span>
+<span class="sd">        * For direction=&quot;reverse&quot; use `weight_ih` instead.</span>
+
+<span class="sd">    weight_hh_back: const&lt;4*H, H, T&gt; (Optional) - Hidden-hidden weight matrix</span>
+<span class="sd">        * Hidden-hidden weight matrix for backward direction for `bidirectinal LSTM`.</span>
+<span class="sd">        * Weight tensor should be in order of</span>
+<span class="sd">          ``[input_gate, forget_gate, output_gate, cell_gate]``.</span>
+<span class="sd">        * Must be provided for `bidirectional LSTM`.</span>
+<span class="sd">        * This is only used when `direction` is &quot;bidirectional&quot;.</span>
+<span class="sd">        * For direction=&quot;reverse&quot; use `weight_hh` instead.</span>
+
+<span class="sd">    bias_back: const&lt;4*H, T&gt; (Optional, default all 0s)</span>
+<span class="sd">        * bias = input-hidden bias + hidden-hidden bias.</span>
+<span class="sd">        * Bias of backward direction for `bidirectional lstm`</span>
+<span class="sd">        * This is only used when `direction` is &quot;bidirectional&quot;.</span>
+<span class="sd">        * For direction=&quot;reverse&quot; use `bias` instead.</span>
+
+<span class="sd">    peephole_back: const&lt;3*H, T&gt; (Optional, default all 0s)</span>
+<span class="sd">        * Weight tensor for peephole in backward direction for `bidirectional LSTM`.</span>
+<span class="sd">        * Order is ``[input_gate, forget_gate, output_gate]``.</span>
+<span class="sd">        * Shape of each peephole vector is ``(H,)`` (``H`` is hidden size).</span>
+<span class="sd">        * Peephole of backward direction for `bidirectional lstm`</span>
+<span class="sd">        * Bias of backward direction for `bidirectional lstm`</span>
+<span class="sd">        * This is only used when `direction` is &quot;bidirectional&quot;.</span>
+<span class="sd">        * For direction=&quot;reverse&quot; use `peephole` instead.</span>
+
+<span class="sd">    direction: const&lt;str&gt; (Optional) [Default=forward]</span>
+<span class="sd">        * One of the following: ``forward``, ``reverse``, or ``bidirectional``.</span>
+<span class="sd">        * Must match ``DIRECTIONAL`` in initial states and weight parameters.</span>
+
+<span class="sd">    output_sequence: const&lt;bool&gt; (Optional) [Default=False]</span>
+<span class="sd">        * Outputs every step if ``True``.</span>
+
+<span class="sd">    recurrent_activation: const&lt;str&gt; (Optional) [Default=sigmoid]</span>
+<span class="sd">        * Activation applied on input, forget, and output gates.</span>
+<span class="sd">        * Supported values: ``hard_sigmoid``, ``linear``, ``relu``, ``scaled_tanh``, ``sigmoid``, ``tanh``</span>
+
+<span class="sd">    cell_activation: const&lt;str&gt; (Optional) [Default=tanh]</span>
+<span class="sd">        * Activation applied on cell gate.</span>
+<span class="sd">        * Supported values: ``hard_sigmoid``, ``linear``, ``relu``, ``scaled_tanh``, ``sigmoid``, ``tanh``</span>
+
+<span class="sd">    activation: const&lt;str&gt; (Optional) [Default=tanh]</span>
+<span class="sd">        * Activation applied on output gate.</span>
+<span class="sd">        * Supported values: ``hard_sigmoid``, ``linear``, ``relu``, ``scaled_tanh``, ``sigmoid``, ``tanh``</span>
+
+<span class="sd">    clip: const&lt;T&gt; (optional) [Default=None]</span>
+<span class="sd">        * Cell gate is clipped to ``[-clip, +clip]``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    &lt;s, b, DIRECTIONS*H, T&gt; or &lt;1, b, DIRECTIONS*H, T&gt;</span>
+<span class="sd">        * If ``output_sequence == True`` (hidden states from every step):</span>
+<span class="sd">          ``&lt;s, b, DIRECTIONS*H, T&gt;``.</span>
+<span class="sd">        * Else ``&lt;1, b, DIRECTIONS*H, T&gt;`` (hidden states of the final step).</span>
+<span class="sd">    &lt;b, DIRECTIONS*H, T&gt;</span>
+<span class="sd">        * Hidden states of the final step.</span>
+<span class="sd">    &lt;b, DIRECTIONS*H, T&gt;</span>
+<span class="sd">        * Memory state of the final step.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">initial_h</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">initial_c</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">weight_ih</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>  <span class="c1"># ifoz layout,</span>
+        <span class="n">weight_hh</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>  <span class="c1"># ifoz layout</span>
+        <span class="n">bias</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>  <span class="c1"># ifoz layout</span>
+        <span class="n">peephole</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>  <span class="c1"># ifo layout</span>
+        <span class="n">weight_ih_back</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>  <span class="c1"># ifoz layout,</span>
+        <span class="n">weight_hh_back</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>  <span class="c1"># ifoz layout</span>
+        <span class="n">bias_back</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>  <span class="c1"># ifoz layout</span>
+        <span class="n">peephole_back</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>  <span class="c1"># ifo layout</span>
+        <span class="n">direction</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">),</span>
+        <span class="n">output_sequence</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
+        <span class="n">recurrent_activation</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">),</span>
+        <span class="n">cell_activation</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">),</span>
+        <span class="n">activation</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">),</span>
+        <span class="n">clip</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DefaultInputs</span><span class="p">(</span>
+            <span class="n">bias</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">direction</span><span class="o">=</span><span class="s2">&quot;forward&quot;</span><span class="p">,</span>
+            <span class="n">output_sequence</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">recurrent_activation</span><span class="o">=</span><span class="s2">&quot;sigmoid&quot;</span><span class="p">,</span>
+            <span class="n">cell_activation</span><span class="o">=</span><span class="s2">&quot;tanh&quot;</span><span class="p">,</span>
+            <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;tanh&quot;</span><span class="p">,</span>
+            <span class="n">peephole</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">clip</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_inputs</span><span class="p">()</span>
+
+        <span class="n">sequence_length</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">input_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">hidden_dim</span><span class="p">,</span> <span class="n">hidden_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_hh</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">dim_factor</span> <span class="o">=</span> <span class="mi">8</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">direction</span><span class="o">.</span><span class="n">val</span> <span class="o">==</span> <span class="s2">&quot;bidirectional&quot;</span> <span class="k">else</span> <span class="mi">4</span>
+        <span class="n">out_seq_len</span> <span class="o">=</span> <span class="n">sequence_length</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_sequence</span><span class="o">.</span><span class="n">val</span> <span class="k">else</span> <span class="mi">1</span>
+        <span class="n">num_directions</span> <span class="o">=</span> <span class="n">dim_factor</span> <span class="o">//</span> <span class="mi">4</span>
+        <span class="n">output_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">out_seq_len</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">num_directions</span> <span class="o">*</span> <span class="n">hidden_size</span><span class="p">]</span>
+        <span class="n">output_h_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">num_directions</span> <span class="o">*</span> <span class="n">hidden_size</span><span class="p">]</span>
+        <span class="n">output_c_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">num_directions</span> <span class="o">*</span> <span class="n">hidden_size</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)),</span>
+            <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output_h_shape</span><span class="p">)),</span>
+            <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output_c_shape</span><span class="p">)),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_validate_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">_ALLOWED_DIRECTIONS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;forward&quot;</span><span class="p">,</span> <span class="s2">&quot;reverse&quot;</span><span class="p">,</span> <span class="s2">&quot;bidirectional&quot;</span><span class="p">}</span>
+        <span class="n">_ALLOWED_ACTIVATIONS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;tanh&quot;</span><span class="p">,</span> <span class="s2">&quot;scaled_tanh&quot;</span><span class="p">,</span> <span class="s2">&quot;sigmoid&quot;</span><span class="p">,</span> <span class="s2">&quot;hard_sigmoid&quot;</span><span class="p">,</span> <span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="s2">&quot;linear&quot;</span><span class="p">}</span>
+
+        <span class="k">def</span> <span class="nf">check_activation</span><span class="p">(</span><span class="n">activation</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">activation</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_ALLOWED_ACTIVATIONS</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Activation `</span><span class="si">{</span><span class="n">activation</span><span class="si">}</span><span class="s2">` not supported. Supported activations: </span><span class="si">{</span><span class="n">_ALLOWED_ACTIVATIONS</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid input shape. Expecting Rank 3 input, got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">direction</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">direction</span><span class="o">.</span><span class="n">val</span>
+        <span class="k">if</span> <span class="n">direction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_ALLOWED_DIRECTIONS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Direction </span><span class="si">{</span><span class="n">direction</span><span class="si">}</span><span class="s2"> not supported. Supported directions: </span><span class="si">{</span><span class="n">_ALLOWED_DIRECTIONS</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_weight_shape_check</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_ih</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_hh</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;bidirectional&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_ih_back</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_hh_back</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;For bidirectional LSTM, the `weight_ih_back` and `weight_hh_back`&quot;</span>
+                    <span class="s2">&quot; must be provided.&quot;</span>
+                <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_weight_shape_check</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_ih_back</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_hh_back</span><span class="p">)</span>
+
+        <span class="n">check_activation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">recurrent_activation</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+        <span class="n">check_activation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cell_activation</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+        <span class="n">check_activation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_weight_shape_check</span><span class="p">(</span><span class="n">wt_ih</span><span class="p">:</span> <span class="n">Var</span><span class="p">,</span> <span class="n">wt_hh</span><span class="p">:</span> <span class="n">Var</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">wt_ih</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">wt_hh</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Expecting Rank 2 input, got weight_ih rank: </span><span class="si">{</span><span class="n">wt_ih</span><span class="o">.</span><span class="n">rank</span><span class="si">}</span><span class="s2">, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;weight_hh rank: </span><span class="si">{</span><span class="n">wt_hh</span><span class="o">.</span><span class="n">rank</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="n">hidden_size</span> <span class="o">=</span> <span class="n">wt_hh</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">wt_hh</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="n">hidden_size</span> <span class="o">!=</span> <span class="mi">4</span> <span class="ow">or</span> <span class="n">wt_ih</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="n">hidden_size</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Incorrect weight matrix: hidden dim size mismatch. Provided &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;weight_ih </span><span class="si">{</span><span class="n">wt_ih</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, weight_hh </span><span class="si">{</span><span class="n">wt_hh</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">. Expecting &lt;4*H, H&gt;&quot;</span>
+            <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="rnn">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.recurrent.rnn">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span> <span class="nc">rnn</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Recurrent Neural Network (RNN)</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       h_t = \rm{activation}(W_{ih} x_t + b_{ih} + W_{hh} h_{t−1} + b_{hh})</span>
+
+<span class="sd">    Where:</span>
+
+<span class="sd">    * :math:`W_{ih}` is the input weight.</span>
+<span class="sd">    * :math:`W_{hh}` is the hidden/recurrent weight.</span>
+<span class="sd">    * :math:`h_t`  is the hidden state at time ``t``.</span>
+<span class="sd">    * :math:`x_t` is the input at time ``t``.</span>
+<span class="sd">    * :math:`h_{t-1}` is the hidden state of the layer at time ``t-1`` or the initial</span>
+<span class="sd">      hidden state at ``t = 0``.</span>
+<span class="sd">    * :math:`b_{ih}` is the input bias.</span>
+<span class="sd">    * :math:`b_{hh}` if the hidden/recurrent bias.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: &lt;s, b, I, T&gt; (Required)</span>
+<span class="sd">        * ``s`` is the sequence length, ``b`` is the batch size, and ``I`` is the</span>
+<span class="sd">          input dimension.</span>
+
+<span class="sd">    initial_h: &lt;b, H, T&gt; (Required)</span>
+<span class="sd">        * ``H`` denotes hidden size.</span>
+
+<span class="sd">    weight_ih: const&lt;H, I, T&gt; (Required) - Input-hidden weight matrix</span>
+
+<span class="sd">    weight_hh: const&lt;H, H, T&gt; (Required) - Hidden-hidden weight matrix</span>
+
+<span class="sd">    bias: const&lt;H, T&gt; (Optional) [Default all 0s]</span>
+<span class="sd">        * bias for input-hidden and hidden-hidden</span>
+
+<span class="sd">    direction: const&lt;str&gt; (Optional) [Default=forward]</span>
+<span class="sd">        * Either ``forward`` or ``reverse``.</span>
+
+<span class="sd">    output_sequence: const&lt;bool&gt; (Optional) [Default=False]</span>
+<span class="sd">        * Outputs every step if ``True``.</span>
+
+<span class="sd">    activation: const&lt;str&gt; (Optional) [Default=tanh]</span>
+<span class="sd">        * Supported activation functions: ``relu``, ``tanh``, ``sigmoid``,</span>
+<span class="sd">          ``sigmoid_hard``, ``scaled_tanh``, and ``linear``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    &lt;s, b, H, T&gt; or &lt;1, b, H, T&gt;</span>
+<span class="sd">        * If ``output_sequence == True`` (hidden states from every step):</span>
+<span class="sd">          ``&lt;s, b, H, T&gt;``.</span>
+<span class="sd">        * Else ``&lt;1, b, H, T&gt;`` (hidden states of the final step).</span>
+<span class="sd">    &lt;b, H, T&gt;</span>
+<span class="sd">        * Hidden states of the final step.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">initial_h</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">weight_ih</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">weight_hh</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">bias</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">direction</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">),</span>
+        <span class="n">output_sequence</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
+        <span class="n">activation</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DefaultInputs</span><span class="p">(</span>
+            <span class="n">bias</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">direction</span><span class="o">=</span><span class="s2">&quot;forward&quot;</span><span class="p">,</span>
+            <span class="n">output_sequence</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;tanh&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid input shape. Expecting Rank 3 input, got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">sequence_length</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">input_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_ih</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_hh</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid weight shape. Expecting Rank 2 input, got weight_ih &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_ih</span><span class="o">.</span><span class="n">rank</span><span class="si">}</span><span class="s2">, weight_hh </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_hh</span><span class="o">.</span><span class="n">rank</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">hidden_size</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_ih</span><span class="o">.</span><span class="n">shape</span>
+
+        <span class="n">direction</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">direction</span><span class="o">.</span><span class="n">val</span>
+        <span class="n">valid_directions</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;forward&quot;</span><span class="p">,</span> <span class="s2">&quot;reverse&quot;</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">direction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_directions</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Direction </span><span class="si">{</span><span class="n">direction</span><span class="si">}</span><span class="s2"> not supported. Supported directions: </span><span class="si">{</span><span class="n">valid_directions</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">out_seq_len</span> <span class="o">=</span> <span class="n">sequence_length</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_sequence</span><span class="o">.</span><span class="n">val</span> <span class="k">else</span> <span class="mi">1</span>
+        <span class="n">output_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">out_seq_len</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">]</span>
+        <span class="n">output_h_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)),</span>
+            <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output_h_shape</span><span class="p">)),</span>
+        <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

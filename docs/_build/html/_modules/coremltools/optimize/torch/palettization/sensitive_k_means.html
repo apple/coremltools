@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.optimize.torch.palettization.sensitive_k_means &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+              <div class="version">
+                8.0b1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.optimize.torch.palettization.sensitive_k_means</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.optimize.torch.palettization.sensitive_k_means</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright (c) 2024, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="kn">import</span> <span class="nn">copy</span> <span class="k">as</span> <span class="nn">_copy</span>
+<span class="kn">import</span> <span class="nn">logging</span> <span class="k">as</span> <span class="nn">_logging</span>
+<span class="kn">import</span> <span class="nn">tempfile</span> <span class="k">as</span> <span class="nn">_tempfile</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span> <span class="k">as</span> <span class="n">_OrderedDict</span>
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span> <span class="k">as</span> <span class="n">_contextmanager</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span> <span class="k">as</span> <span class="n">_Any</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span> <span class="k">as</span> <span class="n">_Callable</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span> <span class="k">as</span> <span class="n">_Dict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterable</span> <span class="k">as</span> <span class="n">_Iterable</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span> <span class="k">as</span> <span class="n">_List</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">NewType</span> <span class="k">as</span> <span class="n">_NewType</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span> <span class="k">as</span> <span class="n">_Tuple</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span> <span class="k">as</span> <span class="n">_Union</span>
+
+<span class="kn">import</span> <span class="nn">cattrs</span> <span class="k">as</span> <span class="nn">_cattrs</span>
+<span class="kn">import</span> <span class="nn">torch</span> <span class="k">as</span> <span class="nn">_torch</span>
+<span class="kn">import</span> <span class="nn">torch.multiprocessing</span> <span class="k">as</span> <span class="nn">_mp</span>
+<span class="kn">from</span> <span class="nn">attr</span> <span class="kn">import</span> <span class="n">define</span> <span class="k">as</span> <span class="n">_define</span>
+<span class="kn">from</span> <span class="nn">attr</span> <span class="kn">import</span> <span class="n">field</span> <span class="k">as</span> <span class="n">_field</span>
+<span class="kn">from</span> <span class="nn">attrs</span> <span class="kn">import</span> <span class="n">validators</span> <span class="k">as</span> <span class="n">_validators</span>
+<span class="kn">from</span> <span class="nn">torch.distributed.fsdp</span> <span class="kn">import</span> <span class="n">FullStateDictConfig</span> <span class="k">as</span> <span class="n">_FullStateDictConfig</span>
+<span class="kn">from</span> <span class="nn">torch.distributed.fsdp</span> <span class="kn">import</span> <span class="n">FullyShardedDataParallel</span> <span class="k">as</span> <span class="n">_FSDP</span>
+<span class="kn">from</span> <span class="nn">torch.distributed.fsdp</span> <span class="kn">import</span> <span class="n">ShardingStrategy</span> <span class="k">as</span> <span class="n">_ShardingStrategy</span>
+<span class="kn">from</span> <span class="nn">torch.distributed.fsdp</span> <span class="kn">import</span> <span class="n">StateDictType</span> <span class="k">as</span> <span class="n">_StateDictType</span>
+
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.dist_utils</span> <span class="kn">import</span> <span class="n">ddp_setup</span> <span class="k">as</span> <span class="n">_ddp_setup</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.dist_utils</span> <span class="kn">import</span> <span class="n">is_leader</span> <span class="k">as</span> <span class="n">_is_leader</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.fsdp_utils</span> <span class="kn">import</span> <span class="n">FSDPAutoWrapPolicy</span> <span class="k">as</span> <span class="n">_FSDPAutoWrapPolicy</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.k_means</span> <span class="kn">import</span> <span class="n">KMeansConfig</span> <span class="k">as</span> <span class="n">_KMeansConfig</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.k_means</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">KMeansSupportedModulesRegistry</span> <span class="k">as</span> <span class="n">_KMeansSupportedModulesRegistry</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.k_means</span> <span class="kn">import</span> <span class="n">ParallelKMeans</span> <span class="k">as</span> <span class="n">_ParallelKMeans</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.k_means</span> <span class="kn">import</span> <span class="n">SequentialKMeans</span> <span class="k">as</span> <span class="n">_SequentialKMeans</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.report_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">compute_post_training_report</span> <span class="k">as</span> <span class="n">_compute_post_training_report</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">maybe_convert_str_to_dtype</span> <span class="k">as</span> <span class="n">_maybe_convert_str_to_dtype</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">maybe_convert_str_to_mod_type</span> <span class="k">as</span> <span class="n">_maybe_convert_str_to_mod_type</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.validation_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">validate_param_config</span> <span class="k">as</span> <span class="n">_validate_param_config</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.base_model_optimizer</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BaseDataCalibratedModelOptimizer</span> <span class="k">as</span> <span class="n">_BaseDataCalibratedModelOptimizer</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.base_model_optimizer</span> <span class="kn">import</span> <span class="n">_Report</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.optimization_config</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ModuleOptimizationConfig</span> <span class="k">as</span> <span class="n">_ModuleOptimizationConfig</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.optimization_config</span> <span class="kn">import</span> <span class="n">OptimizationConfig</span> <span class="k">as</span> <span class="n">_OptimizationConfig</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.optimization_config</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">PalettizationGranularity</span><span class="p">,</span>
+    <span class="n">_structure_from_dict_hook_factory</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">_logger</span> <span class="o">=</span> <span class="n">_logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ModuleSKMPalettizerConfig">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.ModuleSKMPalettizerConfig">[docs]</a>
+<span class="nd">@_define</span>
+<span class="k">class</span> <span class="nc">ModuleSKMPalettizerConfig</span><span class="p">(</span><span class="n">_ModuleOptimizationConfig</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Configuration class for specifying global and module-level palettization options for</span>
+<span class="sd">    :py:class:`SKMPalettizer` algorithm.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        n_bits (:obj:`int`): Number of bits to use for palettizing the weights. Defaults to ``4``.</span>
+<span class="sd">        lut_dtype (:py:class:`torch.dtype`): The dtype to use for representing each element in lookup tables.</span>
+<span class="sd">            When value is ``None``, no quantization is performed. Supported values are :py:class:`torch.int8` and</span>
+<span class="sd">            :py:class:`torch.uint8`. Defaults to ``None``.</span>
+<span class="sd">        granularity (:py:class:`PalettizationGranularity`) – Granularity for palettization.</span>
+<span class="sd">            One of ``per_tensor`` or ``per_grouped_channel``. Defaults to ``per_tensor``.</span>
+<span class="sd">        group_size (:obj:`int`): Specify the number of channels in a group.</span>
+<span class="sd">            Only effective when granularity is ``per_grouped_channel``.</span>
+<span class="sd">        channel_axis (:obj:`int`): Specify the channel axis to form a group of channels.</span>
+<span class="sd">            Only effective when granularity is ``per_grouped_channel``. Defaults to output channel axis.</span>
+<span class="sd">        cluster_dim (:obj:`int`): The dimension of centroids for each lookup table.</span>
+<span class="sd">            The centroid is a scalar by default. When ``cluster_dim &gt; 1``, it indicates 2-D clustering,</span>
+<span class="sd">            and each ``cluster_dim`` length of weight vectors along the output channel are palettized</span>
+<span class="sd">            using the same 2-D centroid. The length of each entry in the lookup tables is equal to ``cluster_dim``.</span>
+<span class="sd">        enable_per_channel_scale (:obj:`bool`): When set to ``True``, weights are normalized along the output channels</span>
+<span class="sd">            using per-channel scales before being palettized. This is not supported with ``cluster_dim &gt; 1``.</span>
+
+<span class="sd">    This class supports two different configurations to structure the palettization:</span>
+
+<span class="sd">    1. **Per-tensor palettization**:  This is the default configuration where the whole tensor shares a single lookup</span>
+<span class="sd">    table. The ``granularity`` is set to ``per_tensor``, and ``group_size`` is ``None``.</span>
+
+<span class="sd">    2. **Per-grouped-channel palettization**: In this configuration, the number of channels ``group_size`` along</span>
+<span class="sd">    ``channel_axis`` share the same lookup table. For example, for a weight matrix of shape ``(16, 25)``, if we provide </span>
+<span class="sd">    ``group_size = 8``, the shape of the lookup table would be ``(2, 2^n_bits)``.</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        Grouping is currently only supported along either the input or output channel axis.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">n_bits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
+    <span class="n">lut_dtype</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">converter</span><span class="o">=</span><span class="k">lambda</span> <span class="n">val</span><span class="p">:</span> <span class="n">_maybe_convert_str_to_dtype</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">if</span> <span class="n">val</span> <span class="k">else</span> <span class="n">val</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span>
+                <span class="n">_validators</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span><span class="n">_torch</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">uint8</span><span class="p">]),</span>
+            <span class="p">]</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">granularity</span><span class="p">:</span> <span class="n">PalettizationGranularity</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;per_tensor&quot;</span><span class="p">,</span>
+        <span class="n">converter</span><span class="o">=</span><span class="n">PalettizationGranularity</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">PalettizationGranularity</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">group_size</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="n">channel_axis</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">([</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="n">_validators</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])]),</span>
+    <span class="p">)</span>
+    <span class="n">cluster_dim</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="n">enable_per_channel_scale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">bool</span><span class="p">))</span>
+    <span class="p">)</span>
+
+    <span class="nd">@group_size</span><span class="o">.</span><span class="n">validator</span>
+    <span class="k">def</span> <span class="nf">per_grouped_channel_granularity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">granularity</span> <span class="o">==</span> <span class="n">PalettizationGranularity</span><span class="o">.</span><span class="n">per_grouped_channel</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="p">),</span> <span class="s2">&quot;group_size has to be specified along with per_grouped_channel granularity.&quot;</span>
+            <span class="k">assert</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;group_size should be greater than zero&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;group_size can&#39;t be specified along with per_tensor granularity.&quot;</span>
+
+    <span class="nd">@cluster_dim</span><span class="o">.</span><span class="n">validator</span>
+    <span class="k">def</span> <span class="nf">no_per_channel_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">enable_per_channel_scale</span> <span class="o">==</span> <span class="kc">False</span>
+            <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Enabling per_channel_scale is not supported for cluster_dim=</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> larger than 1&quot;</span></div>
+
+
+
+<span class="n">_ModuleTypeConfigType</span> <span class="o">=</span> <span class="n">_NewType</span><span class="p">(</span>
+    <span class="s2">&quot;ModuleTypeConfigType&quot;</span><span class="p">,</span>
+    <span class="n">_Dict</span><span class="p">[</span><span class="n">_Union</span><span class="p">[</span><span class="n">_Callable</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">ModuleSKMPalettizerConfig</span><span class="p">]],</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="SKMPalettizerConfig">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.SKMPalettizerConfig">[docs]</a>
+<span class="nd">@_define</span>
+<span class="k">class</span> <span class="nc">SKMPalettizerConfig</span><span class="p">(</span><span class="n">_OptimizationConfig</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Configuration class for specifying how different submodules of a model are</span>
+<span class="sd">    palettized by :py:class:`SKMPalettizer`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        global_config (:py:class:`ModuleSKMPalettizerConfig`): Config to be applied globally</span>
+<span class="sd">            to all supported modules. Missing values are chosen from the default config.</span>
+<span class="sd">        module_type_configs (:obj:`dict` of :obj:`str` to :py:class:`ModuleSKMPalettizerConfig`):</span>
+<span class="sd">            Module type configs applied to a specific module class, such as :py:class:`torch.nn.Linear`.</span>
+<span class="sd">            The keys can be either strings or module classes.</span>
+<span class="sd">        module_name_configs (:obj:`dict` of :obj:`str` to :py:class:`ModuleSKMPalettizerConfig`):</span>
+<span class="sd">            Module-level configs applied to specific modules. The name of the module must either be</span>
+<span class="sd">            a regex or a fully qualified name that can be used to fetch it from the top level module</span>
+<span class="sd">            using the ``module.get_submodule(target)`` method.</span>
+<span class="sd">        calibration_nsamples (:obj:`int`): Number of samples to be used for calibration.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">global_config</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">ModuleSKMPalettizerConfig</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="n">ModuleSKMPalettizerConfig</span><span class="p">)),</span>
+    <span class="p">)</span>
+    <span class="n">module_type_configs</span><span class="p">:</span> <span class="n">_ModuleTypeConfigType</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">factory</span><span class="o">=</span><span class="n">_OrderedDict</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">deep_mapping</span><span class="p">(</span>
+            <span class="n">key_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">((</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Callable</span><span class="p">)),</span>
+            <span class="n">value_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span>
+                <span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="n">ModuleSKMPalettizerConfig</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">mapping_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">dict</span><span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">module_name_configs</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">ModuleSKMPalettizerConfig</span><span class="p">]]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">factory</span><span class="o">=</span><span class="n">_OrderedDict</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">deep_mapping</span><span class="p">(</span>
+            <span class="n">key_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">str</span><span class="p">),</span>
+            <span class="n">value_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span>
+                <span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="n">ModuleSKMPalettizerConfig</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">mapping_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">dict</span><span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">calibration_nsamples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">global_config</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_type_configs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_name_configs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">global_config</span> <span class="o">=</span> <span class="n">ModuleSKMPalettizerConfig</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module_type_configs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">_maybe_convert_str_to_mod_type</span><span class="p">(</span><span class="n">key</span><span class="p">):</span> <span class="n">val</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">module_type_configs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;SKMPalettizerConfig&quot;</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">config_dict</span><span class="p">)</span>
+        <span class="n">converter</span> <span class="o">=</span> <span class="n">_cattrs</span><span class="o">.</span><span class="n">Converter</span><span class="p">(</span><span class="n">forbid_extra_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">converter</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span>
+            <span class="n">_ModuleTypeConfigType</span><span class="p">,</span>
+            <span class="n">_structure_from_dict_hook_factory</span><span class="p">(</span><span class="n">ModuleSKMPalettizerConfig</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">converter</span><span class="o">.</span><span class="n">structure_attrs_fromdict</span><span class="p">(</span><span class="n">config_dict</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="SKMPalettizer">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.SKMPalettizer">[docs]</a>
+<span class="k">class</span> <span class="nc">SKMPalettizer</span><span class="p">(</span><span class="n">_BaseDataCalibratedModelOptimizer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Perform post-training palettization of weights by running a weighted k-means</span>
+<span class="sd">    on the model weights. The weight values used for weighing different elements of</span>
+<span class="sd">    a model&#39;s weight matrix are computed using the Fisher information matrix, which</span>
+<span class="sd">    is an approximation of the Hessian. These weight values indicate how sensitive </span>
+<span class="sd">    a given weight element is: the more sensitive an element, the larger the impact perturbing </span>
+<span class="sd">    or palettizing it has on the model’s loss function. This means that weighted k-means </span>
+<span class="sd">    moves the clusters closer to the sensitive weight values, allowing them to be </span>
+<span class="sd">    represented more exactly. This leads to a lower degradation in model performance </span>
+<span class="sd">    after palettization. The Fisher information matrix is computed using a few</span>
+<span class="sd">    samples of calibration data.</span>
+
+<span class="sd">    This algorithm implements `SqueezeLLM: Dense-and-Sparse Quantization &lt;https://arxiv.org/pdf/2306.07629.pdf&gt;`_.</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                import torch.nn as nn</span>
+<span class="sd">                from coremltools.optimize.torch.palettization import (</span>
+<span class="sd">                    SKMPalettizer,</span>
+<span class="sd">                    SKMPalettizerConfig,</span>
+<span class="sd">                )</span>
+
+<span class="sd">                model = nn.Sequential(</span>
+<span class="sd">                    OrderedDict(</span>
+<span class="sd">                        {</span>
+<span class="sd">                            &quot;conv&quot;: nn.Conv2d(1, 20, (3, 3)),</span>
+<span class="sd">                            &quot;relu1&quot;: nn.ReLU(),</span>
+<span class="sd">                            &quot;conv2&quot;: nn.Conv2d(20, 20, (3, 3)),</span>
+<span class="sd">                            &quot;relu2&quot;: nn.ReLU(),</span>
+<span class="sd">                        }</span>
+<span class="sd">                    )</span>
+<span class="sd">                )</span>
+
+<span class="sd">                dataloader = load_calibration_data()</span>
+
+<span class="sd">                # define callable for loss function</span>
+<span class="sd">                def loss_fn(model, data):</span>
+<span class="sd">                    inp, target = data</span>
+<span class="sd">                    out = model(inp)</span>
+<span class="sd">                    return nn.functional.mse_loss(out, target)</span>
+
+
+<span class="sd">                # initialize the palettizer</span>
+<span class="sd">                config = SKMPalettizerConfig.from_dict(</span>
+<span class="sd">                    {</span>
+<span class="sd">                        &quot;global_config&quot;: {</span>
+<span class="sd">                            &quot;n_bits&quot;: 4,</span>
+<span class="sd">                        },</span>
+<span class="sd">                        &quot;calibration_nsamples&quot;: 16,</span>
+<span class="sd">                    }</span>
+<span class="sd">                )</span>
+
+<span class="sd">                compressor = SKMPalettizer(model, config)</span>
+<span class="sd">                compressed_model = compressor.compress(dataloader=dataloader, loss_fn=loss_fn)</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (:obj:`torch.nn.Module`): Module to be compressed.</span>
+<span class="sd">        config (:py:class:`LayerwiseCompressorConfig`): Config that specifies how</span>
+<span class="sd">            different submodules in the model will be compressed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_supported_modules</span><span class="p">:</span> <span class="n">_Tuple</span> <span class="o">=</span> <span class="n">_KMeansSupportedModulesRegistry</span><span class="o">.</span><span class="n">get_supported_modules</span><span class="p">()</span>
+    <span class="n">_SENSITIVITY_CLIP_THR</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mf">1e-12</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">SKMPalettizerConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">SKMPalettizerConfig</span><span class="p">()</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">config</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tempdir</span> <span class="o">=</span> <span class="n">_tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sensitivity_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tempdir</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;/sensitivity.pt&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model_checkpoint_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tempdir</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;/model.pt&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_compute_sensitivity_impl_single_worker</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="n">_List</span><span class="p">,</span> <span class="n">loss_fn</span><span class="p">:</span> <span class="n">_Callable</span><span class="p">,</span> <span class="n">sensitivity_path</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes sensitivity for the model weights using a single process.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">_torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_register_grad_square_hooks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">didx</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dataset</span><span class="p">):</span>
+                <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Computing sensitivity using sample </span><span class="si">{</span><span class="n">didx</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+                <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+
+            <span class="n">sensitivity_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">named_parameters</span><span class="p">(</span><span class="n">remove_duplicate</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">:</span>
+                    <span class="n">sensitivity_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">param</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>
+
+            <span class="n">_torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">sensitivity_dict</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_sensitivity_path</span><span class="p">(</span><span class="n">sensitivity_path</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_compute_sensitivity_impl_multiple_workers</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">rank</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">num_workers</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">dataset</span><span class="p">:</span> <span class="n">_List</span><span class="p">,</span>
+        <span class="n">loss_fn</span><span class="p">:</span> <span class="n">_Callable</span><span class="p">,</span>
+        <span class="n">sensitivity_path</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">fsdp_auto_wrap_policy</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_FSDPAutoWrapPolicy</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes sensitivity for the model weights using multiple processes.</span>
+<span class="sd">        This mode is useful for large models for which computing gradients on a single</span>
+<span class="sd">        process is infeasible because the model does not fit on a single GPU. The model is</span>
+<span class="sd">        sharded on multiple GPUs using :py:class:`FullyShardedDataParallel`, which enables</span>
+<span class="sd">        distributed computation of gradients.</span>
+
+<span class="sd">        If ``sensitivity_path`` is passed as ``None``, the sensitivity matrices are</span>
+<span class="sd">        stored temporarily and deleted after model compression. Otherwise, they are</span>
+<span class="sd">        saved at the location specified by ``sensitivity_path``.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            rank (:obj:`int`):  Rank of the worker process on which this function is executed</span>
+<span class="sd">            num_workers (:obj:`int`): Number of workers used for computing sensitivity</span>
+<span class="sd">            dataset (:py:class:`Iterable`): An iterable where each element</span>
+<span class="sd">                is an input to the model to be compressed. Used for computing gradients of model weights.</span>
+<span class="sd">            loss_fn (:obj:`Callable`): A callable which takes the model and data as input and performs</span>
+<span class="sd">                a forward pass on the model and computes the training loss</span>
+<span class="sd">            sensitivity_path (:obj:`str` or ``None``): An optional path for saving the sensitivity</span>
+<span class="sd">                of weights. Defaults to ``None``.</span>
+<span class="sd">            fsdp_auto_wrap_policy (:py:class:`_FSDPAutoWrapPolicy` or ``None``): Policy to apply</span>
+<span class="sd">                :py:class:`FullyShardedDataParallel` to submodules of ``model``. Defaults to ``None``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_ddp_setup</span><span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="n">num_workers</span><span class="p">)</span>
+        <span class="n">auto_wrap_policy</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">fsdp_auto_wrap_policy</span><span class="o">.</span><span class="n">get_policy</span><span class="p">()</span> <span class="k">if</span> <span class="n">fsdp_auto_wrap_policy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">_FSDP</span><span class="p">(</span>
+            <span class="n">module</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span>
+            <span class="n">auto_wrap_policy</span><span class="o">=</span><span class="n">auto_wrap_policy</span><span class="p">,</span>
+            <span class="n">sharding_strategy</span><span class="o">=</span><span class="n">_ShardingStrategy</span><span class="o">.</span><span class="n">FULL_SHARD</span><span class="p">,</span>
+            <span class="n">use_orig_params</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">device_id</span><span class="o">=</span><span class="n">_torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">current_device</span><span class="p">(),</span>
+            <span class="n">sync_module_states</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># We want to compute squares of gradients of the un-sharded parameters</span>
+        <span class="c1"># to use later for k-means. However, parameters are sharded and gradients</span>
+        <span class="c1"># are also computed in the sharded state. And there is no efficient way</span>
+        <span class="c1"># to un-shard them, hence we use an optimizer to add the sharded gradients</span>
+        <span class="c1"># to the parameters, which can later be un-sharded when we save the state dict.</span>
+        <span class="n">optim</span> <span class="o">=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">param</span> <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">()</span> <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">],</span> <span class="n">lr</span><span class="o">=</span><span class="mf">1.0</span>
+        <span class="p">)</span>
+        <span class="n">optim</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_register_grad_square_hooks</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">didx</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dataset</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">_is_leader</span><span class="p">():</span>
+                    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Computing sensitivity using sample </span><span class="si">{</span><span class="n">didx</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+                <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+
+            <span class="c1"># we set the parameters to zero so that when we call optim.step,</span>
+            <span class="c1"># the parameter values are equal to the square of the gradient</span>
+            <span class="k">with</span> <span class="n">_torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
+                    <span class="n">param</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">zero_</span><span class="p">()</span>
+
+            <span class="n">optim</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+            <span class="n">cfg</span> <span class="o">=</span> <span class="n">_FullStateDictConfig</span><span class="p">(</span><span class="n">offload_to_cpu</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rank0_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">_FSDP</span><span class="o">.</span><span class="n">state_dict_type</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">_StateDictType</span><span class="o">.</span><span class="n">FULL_STATE_DICT</span><span class="p">,</span> <span class="n">cfg</span><span class="p">):</span>
+                <span class="n">sensitivity_dict</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">_is_leader</span><span class="p">():</span>
+                <span class="n">_torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">sensitivity_dict</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_sensitivity_path</span><span class="p">(</span><span class="n">sensitivity_path</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_get_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rank</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">num_workers</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">dataloader</span><span class="p">:</span> <span class="n">_Iterable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_List</span><span class="p">[</span><span class="n">_Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a subset of dataloader for worker with given rank.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">num_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">calibration_nsamples</span> <span class="o">//</span> <span class="n">num_workers</span>
+        <span class="n">sampled</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dataloader</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">idx</span> <span class="o">%</span> <span class="n">num_workers</span> <span class="o">==</span> <span class="n">rank</span><span class="p">:</span>
+                <span class="n">dataset</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+                <span class="n">sampled</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">sampled</span> <span class="o">==</span> <span class="n">num_samples</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="k">return</span> <span class="n">dataset</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@_contextmanager</span>
+    <span class="k">def</span> <span class="nf">_register_grad_square_hooks</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Context manager for registering gradient squaring hooks within the context</span>
+<span class="sd">        and unregistering them on exit.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">hook_handles</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">:</span>
+                <span class="n">hook_handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">register_hook</span><span class="p">(</span><span class="k">lambda</span> <span class="n">grad</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">grad</span><span class="p">)))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">model</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">handle</span> <span class="ow">in</span> <span class="n">hook_handles</span><span class="p">:</span>
+                <span class="n">handle</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_get_sensitivity_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sensitivity_path</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return sensitivity_path if it&#39;s not None else a temporary path</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">sensitivity_path</span> <span class="k">if</span> <span class="n">sensitivity_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sensitivity_path</span>
+
+    <span class="k">def</span> <span class="nf">compute_sensitivity</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataloader</span><span class="p">:</span> <span class="n">_Iterable</span><span class="p">,</span>
+        <span class="n">loss_fn</span><span class="p">:</span> <span class="n">_Callable</span><span class="p">,</span>
+        <span class="n">sensitivity_path</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">num_sensitivity_workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">fsdp_auto_wrap_policy</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_FSDPAutoWrapPolicy</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute sensitivities of model&#39;s weights. A weight element&#39;s sensitivity indicates</span>
+<span class="sd">        how much effect perturbing it has on the model&#39;s loss function. The sensitivities</span>
+<span class="sd">        are computed as Fisher information of the model&#39;s weights.</span>
+
+<span class="sd">        If ``sensitivity_path`` is passed as a non ``None`` value, the sensitivity matrices</span>
+<span class="sd">        saved at the location specified by ``sensitivity_path``.</span>
+
+<span class="sd">        When computing sensitivity of large models, it is recommended to use ``num_sensitivity_workers``</span>
+<span class="sd">        equal to the number of GPUs available. This is because computing gradients using a single</span>
+<span class="sd">        process maybe infeasible for a large model as it may not fit on a single GPU.</span>
+<span class="sd">        When ``num_sensitivity_workers &gt; 1``, the model is sharded on multiple GPUs using</span>
+<span class="sd">        :py:class:`FullyShardedDataParallel`, which enables distributed computation of gradients.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dataloader (:py:class:`Iterable`): An iterable where each element</span>
+<span class="sd">                is an input to the model to be compressed. Used for computing gradients of model weights.</span>
+<span class="sd">            loss_fn (:obj:`Callable`): A callable which takes the model and data as input and performs</span>
+<span class="sd">                a forward pass on the model and computes the training loss</span>
+<span class="sd">            sensitivity_path (:obj:`str` or ``None``): An optional path for saving the sensitivity</span>
+<span class="sd">                of weights. Defaults to ``None``.</span>
+<span class="sd">            num_sensitivity_workers (:obj:`int`): Number of worker processes used for computing sensitivity.</span>
+<span class="sd">                Defaults to ``1``.</span>
+<span class="sd">            fsdp_auto_wrap_policy (:py:class:`_FSDPAutoWrapPolicy` or ``None``): Policy which specifies</span>
+<span class="sd">                how different submodules of ``model`` are wrapped with individual</span>
+<span class="sd">                :py:class:`FullyShardedDataParallel` wrappers. This argument is only used when</span>
+<span class="sd">                ``num_sensitivity_workers &gt; 1`` and it is only necessary when the model cannot be fit on a single GPU.</span>
+<span class="sd">                 Please refer to documentation of :py:class:`_FSDPAutoWrapPolicy` for more details.</span>
+<span class="sd">                 Defaults to ``None`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">num_sensitivity_workers</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">_torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;num_sensitivity_workers &gt; 1 is only supported on GPUs with CUDA. Setting &quot;</span>
+                <span class="s2">&quot;num_sensitivity_workers to 1, since a CUDA compatible PyTorch installation&quot;</span>
+                <span class="s2">&quot;couldn&#39;t be found.&quot;</span>
+            <span class="p">)</span>
+            <span class="n">num_sensitivity_workers</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="c1"># We save the model&#39;s state dict so that we can restore it later</span>
+        <span class="c1"># We need to do this because _compute_sensitivity_impl_multiple_workers</span>
+        <span class="c1"># sets the parameters&#39; value to squares of their gradients and</span>
+        <span class="c1"># _compute_sensitivity_impl_single_worker can modify layers such as batch norm</span>
+        <span class="c1"># during forward pass</span>
+        <span class="n">_torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_checkpoint_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">num_sensitivity_workers</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_sensitivity_impl_single_worker</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_get_dataset</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dataloader</span><span class="p">),</span>
+                <span class="n">loss_fn</span><span class="p">,</span>
+                <span class="n">sensitivity_path</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">fsdp_auto_wrap_policy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;num_sensitivity_workers &gt; 1 and fsdp_auto_wrap_policy is None. For a large model, this might &quot;</span>
+                    <span class="s2">&quot;lead to OOM issue on GPUs. Consider setting fsdp_auto_wrap_policy to indicate how different &quot;</span>
+                    <span class="s2">&quot;submodules of the model should be wrapped with FSDP wrappers to prevent all gather for all &quot;</span>
+                    <span class="s2">&quot;parameters on all GPUs.&quot;</span>
+                <span class="p">)</span>
+
+            <span class="n">ctx</span> <span class="o">=</span> <span class="n">_mp</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="s2">&quot;spawn&quot;</span><span class="p">)</span>
+
+            <span class="n">worker_processes</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">ctx</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
+                    <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_compute_sensitivity_impl_multiple_workers</span><span class="p">,</span>
+                    <span class="n">args</span><span class="o">=</span><span class="p">(</span>
+                        <span class="n">rank</span><span class="p">,</span>
+                        <span class="n">num_sensitivity_workers</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_get_dataset</span><span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="n">num_sensitivity_workers</span><span class="p">,</span> <span class="n">dataloader</span><span class="p">),</span>
+                        <span class="n">loss_fn</span><span class="p">,</span>
+                        <span class="n">sensitivity_path</span><span class="p">,</span>
+                        <span class="n">fsdp_auto_wrap_policy</span><span class="p">,</span>
+                    <span class="p">),</span>
+                    <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Process-</span><span class="si">{</span><span class="n">rank</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">rank</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_sensitivity_workers</span><span class="p">)</span>
+            <span class="p">]</span>
+            <span class="k">for</span> <span class="n">worker_process</span> <span class="ow">in</span> <span class="n">worker_processes</span><span class="p">:</span>
+                <span class="n">worker_process</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+                <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Started </span><span class="si">{</span><span class="n">worker_process</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> for computing sensitivity.&quot;</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">worker_process</span> <span class="ow">in</span> <span class="n">worker_processes</span><span class="p">:</span>
+                <span class="n">worker_process</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+                <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Finished </span><span class="si">{</span><span class="n">worker_process</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># restore the original state of the model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>
+        <span class="n">old_state_dict</span> <span class="o">=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_checkpoint_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">old_state_dict</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_sensitivity</span><span class="p">(</span><span class="n">sensitivity_path</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_process_sensitivity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sensitivity_path</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Post process the sensitivity values to normalize them.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">raw_sensitivity_dict</span> <span class="o">=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_sensitivity_path</span><span class="p">(</span><span class="n">sensitivity_path</span><span class="p">))</span>
+        <span class="n">sensitivity_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">raw_sensitivity_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># Since optimizer sets param value as: p &lt;= p - learning_rate * (grad**2),</span>
+            <span class="c1"># we need to negate the values to get grad**2</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">*</span> <span class="o">-</span><span class="n">val</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">nonzero</span><span class="p">())</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">val</span><span class="p">[</span><span class="n">val</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+            <span class="c1"># normalize sensitivity between 0 and 1</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">val</span> <span class="o">/</span> <span class="n">_torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+
+            <span class="c1"># Clipping very small or zero sensitivity values stabilizes k-means,</span>
+            <span class="c1"># they can lead to divergence otherwise</span>
+            <span class="n">val</span><span class="p">[</span><span class="n">val</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">val</span><span class="p">[</span><span class="n">val</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">])</span>
+            <span class="n">val</span><span class="p">[</span><span class="n">val</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_SENSITIVITY_CLIP_THR</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_SENSITIVITY_CLIP_THR</span>
+
+            <span class="n">sensitivity_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+
+        <span class="c1"># If user wants to save sensitivity values at the specified path</span>
+        <span class="c1"># we save them in the processed state</span>
+        <span class="k">if</span> <span class="n">sensitivity_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">sensitivity_dict</span><span class="p">,</span> <span class="n">sensitivity_path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sensitivity_dict</span>
+
+    <span class="k">def</span> <span class="nf">_compute_outlier_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sensitivity</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">outliers</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute outlier masks using the sensitivity values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sensitivity_flat</span> <span class="o">=</span> <span class="n">sensitivity</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="n">numel</span> <span class="o">=</span> <span class="n">sensitivity_flat</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span>
+        <span class="n">num_outliers</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">numel</span> <span class="o">*</span> <span class="p">(</span><span class="n">outliers</span> <span class="o">/</span> <span class="mf">100.0</span><span class="p">))</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">sensitivity_flat</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">_torch</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+        <span class="n">mask</span><span class="p">[</span><span class="n">_torch</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">sensitivity_flat</span><span class="p">,</span> <span class="n">descending</span><span class="o">=</span><span class="kc">True</span><span class="p">)[:</span><span class="n">num_outliers</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="n">mask</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">sensitivity</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_submodules_to_compress</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Iterable</span><span class="p">[</span><span class="n">_Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return an iterator over the names and submodules to be compressed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">submodule</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">named_modules</span><span class="p">():</span>
+            <span class="k">yield</span> <span class="n">name</span><span class="p">,</span> <span class="n">submodule</span>
+
+    <span class="k">def</span> <span class="nf">compress</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataloader</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_Iterable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">loss_fn</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sensitivity_path</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">num_kmeans_workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">num_sensitivity_workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">fsdp_auto_wrap_policy</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_FSDPAutoWrapPolicy</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compresses a model&#39;s weights using Fisher information sensitivity based weighted k-means</span>
+<span class="sd">        palettization.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dataloader (:py:class:`Iterable`): An iterable where each element</span>
+<span class="sd">                is an input to the model to be compressed. Used for computing gradients of model weights.</span>
+<span class="sd">                This argument is not needed if ``sensitivity_path`` is specified and will be ignored.</span>
+<span class="sd">                It is required then ``sensitivity_path`` is ``None``.  Defaults to ``None``.</span>
+<span class="sd">            loss_fn (:obj:`Callable`): A callable which takes the model and data as input and performs</span>
+<span class="sd">                a forward pass on the model and computes the training loss. This argument is not needed if</span>
+<span class="sd">                ``sensitivity_path`` is specified and will be ignored. It is required when ``sensitivity_path``</span>
+<span class="sd">                is ``None``. Defaults to ``None``.</span>
+<span class="sd">            sensitivity_path (:obj:`str` or ``None``): An optional path from which the sensitivity values</span>
+<span class="sd">                are loaded. If ``sensitivity_path`` is not ``None``, sensitivity values are loaded from the</span>
+<span class="sd">                path specified, otherwise, sensitivity values are computed using the ``dataloader`` and</span>
+<span class="sd">                ``loss_fn``. The sensitivity values stored at ``sensitivity_path`` should be a dictionary</span>
+<span class="sd">                from strings indicating fully qualified parameter names to tensors with the same shape as the</span>
+<span class="sd">                parameters, with each element of the tensor indicating how important that element is. This is</span>
+<span class="sd">                usally the output of the :py:meth:`compute_sensitivity` method. Defaults to ``None``.</span>
+<span class="sd">            num_kmeans_workers (:obj:`int`): Number of worker processes to use for performing k-means.</span>
+<span class="sd">                It is recommended to use more than one worker process to parallelize the clustering,</span>
+<span class="sd">                especially when multiple CPUs are available. Defaults to ``1``.</span>
+<span class="sd">            num_sensitivity_workers (:obj:`int`): Number of worker processes to use for computing</span>
+<span class="sd">                sensitivity. For large models, it is recommended to set this value to the number</span>
+<span class="sd">                of GPUs available. Defaults to ``1``.</span>
+<span class="sd">            inplace (:obj:`bool`): If ``True``, model transformations are carried out in-place and</span>
+<span class="sd">                the original module is mutated, otherwise a copy of the model is mutated and returned.</span>
+<span class="sd">                Defaults to ``False``.</span>
+<span class="sd">            fsdp_auto_wrap_policy (:py:class:`_FSDPAutoWrapPolicy` or ``None``): Policy which specifies</span>
+<span class="sd">                how different submodules of ``model`` are wrapped with individual</span>
+<span class="sd">                :py:class:`FullyShardedDataParallel` wrappers. This argument is only used when</span>
+<span class="sd">                ``num_sensitivity_workers &gt; 1`` and it is only necessary when the model cannot be fit on a single GPU.</span>
+<span class="sd">                 Please refer to documentation of :py:class:`_FSDPAutoWrapPolicy` for more details.</span>
+<span class="sd">                 Defaults to ``None`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">dataloader</span><span class="o">=</span><span class="n">dataloader</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="n">inplace</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sensitivity_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sensitivity_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_sensitivity</span><span class="p">(</span>
+                <span class="n">dataloader</span><span class="p">,</span>
+                <span class="n">loss_fn</span><span class="p">,</span>
+                <span class="n">sensitivity_path</span><span class="p">,</span>
+                <span class="n">num_sensitivity_workers</span><span class="p">,</span>
+                <span class="n">fsdp_auto_wrap_policy</span><span class="o">=</span><span class="n">fsdp_auto_wrap_policy</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading sensitivity values from </span><span class="si">{</span><span class="n">sensitivity_path</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="n">sensitivity_dict</span> <span class="o">=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">sensitivity_path</span><span class="p">)</span>
+
+        <span class="n">kmeans_config_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">submodule</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_submodules_to_compress</span><span class="p">():</span>
+            <span class="n">submod_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">get_module_config</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">submodule</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">submod_config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">k_means_module_cls</span> <span class="o">=</span> <span class="n">_KMeansSupportedModulesRegistry</span><span class="o">.</span><span class="n">get_kmeans_module</span><span class="p">(</span><span class="n">submodule</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">k_means_module_cls</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="k">for</span> <span class="n">param_name</span> <span class="ow">in</span> <span class="n">k_means_module_cls</span><span class="o">.</span><span class="n">parameter_names</span><span class="p">:</span>
+                <span class="c1"># Validate configuration for parameter</span>
+                <span class="n">param</span> <span class="o">=</span> <span class="n">submodule</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span>
+                <span class="n">updated_config</span> <span class="o">=</span> <span class="n">_validate_param_config</span><span class="p">(</span>
+                    <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">param_name</span><span class="p">,</span>
+                    <span class="n">param</span><span class="p">,</span>
+                    <span class="n">submodule</span><span class="p">,</span>
+                    <span class="n">submod_config</span><span class="p">,</span>
+                    <span class="p">[</span><span class="s2">&quot;palettization_group_size&quot;</span><span class="p">,</span> <span class="s2">&quot;palettization_cluster_dim&quot;</span><span class="p">],</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">updated_config</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="n">sensitivity_key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">param_name</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">param_name</span>
+                <span class="n">sensitivity</span> <span class="o">=</span> <span class="n">sensitivity_dict</span><span class="p">[</span><span class="n">sensitivity_key</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kmeans_config_dict</span><span class="p">:</span>
+                    <span class="n">kmeans_config_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+                <span class="n">kmeans_config_dict</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">_KMeansConfig</span><span class="p">(</span>
+                    <span class="n">n_bits</span><span class="o">=</span><span class="n">updated_config</span><span class="o">.</span><span class="n">n_bits</span><span class="p">,</span>
+                    <span class="n">axis</span><span class="o">=</span><span class="n">updated_config</span><span class="o">.</span><span class="n">channel_axis</span><span class="p">,</span>
+                    <span class="n">lut_dtype</span><span class="o">=</span><span class="n">updated_config</span><span class="o">.</span><span class="n">lut_dtype</span><span class="p">,</span>
+                    <span class="n">block_size</span><span class="o">=</span><span class="n">updated_config</span><span class="o">.</span><span class="n">group_size</span><span class="p">,</span>
+                    <span class="n">importance</span><span class="o">=</span><span class="n">sensitivity</span><span class="p">,</span>
+                    <span class="n">cluster_dim</span><span class="o">=</span><span class="n">updated_config</span><span class="o">.</span><span class="n">cluster_dim</span><span class="p">,</span>
+                    <span class="n">enable_per_channel_scale</span><span class="o">=</span><span class="n">updated_config</span><span class="o">.</span><span class="n">enable_per_channel_scale</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">num_kmeans_workers</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_ParallelKMeans</span><span class="o">.</span><span class="n">cluster_weights</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span> <span class="n">kmeans_config_dict</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="n">num_kmeans_workers</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_SequentialKMeans</span><span class="o">.</span><span class="n">cluster_weights</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span> <span class="n">kmeans_config_dict</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">report</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Report</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_compute_post_training_report</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_uncompressed_model</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span>
+            <span class="n">supported_modules</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_supported_modules</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

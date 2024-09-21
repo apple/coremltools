@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pruning &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Quantization" href="coremltools.optimize.coreml.quantization.html" />
+    <link rel="prev" title="Palettization" href="coremltools.optimize.coreml.palettization.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+              <div class="version">
+                8.0b1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="coremltools.optimize.html">Optimizers</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="coremltools.optimize.html#pytorch">PyTorch</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="coremltools.optimize.html#core-ml">Core ML</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.coreml.palettization.html">Palettization</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Pruning</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.optimize.coreml.prune_weights"><code class="docutils literal notranslate"><span class="pre">prune_weights()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.optimize.coreml.OpThresholdPrunerConfig"><code class="docutils literal notranslate"><span class="pre">OpThresholdPrunerConfig</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.optimize.coreml.OpMagnitudePrunerConfig"><code class="docutils literal notranslate"><span class="pre">OpMagnitudePrunerConfig</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.coreml.quantization.html">Quantization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.coreml.utilities.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="coremltools.optimize.html">Optimizers</a></li>
+      <li class="breadcrumb-item active">Pruning</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/source/coremltools.optimize.coreml.pruning.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-coremltools.optimize.coreml">
+<span id="pruning"></span><h1>Pruning<a class="headerlink" href="#module-coremltools.optimize.coreml" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="coremltools.optimize.coreml.prune_weights">
+<span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">prune_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_post_training_quantization.html#prune_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.prune_weights" title="Link to this definition"></a></dt>
+<dd><p>Utility function to convert a float precision MLModel of type <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code> to a
+compressed MLModel using sparse representation. The <code class="docutils literal notranslate"><span class="pre">const</span></code> ops storing weight
+values are replaced by <code class="docutils literal notranslate"><span class="pre">constexpr_sparse_to_dense</span></code> ops.</p>
+<p>This function is useful if the model is trained with pruning techniques so that
+a lot of weights have zero values. If a large percentage of weight values are zero,
+a sparse representation is more efficient than a dense one (the default).</p>
+<p>The sparsified weights are stored in a bit mask. If the weight values are
+<code class="docutils literal notranslate"><span class="pre">{0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">56.3}</span></code>, its sparse representation contains a bit mask with
+ones on locations where the value is non-zero: <code class="docutils literal notranslate"><span class="pre">00000001b</span></code>. This is accompanied by
+non-zero data, which is a size-1 vector of value <code class="docutils literal notranslate"><span class="pre">{56.3}</span></code>.</p>
+<p>For example, given the following:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">weight</span> <span class="pre">=</span> <span class="pre">[0.3,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0.5,</span> <span class="pre">0,</span> <span class="pre">0]</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">non_zero_data,</span> <span class="pre">bit_mask</span> <span class="pre">=</span> <span class="pre">sparsify(weight)</span></code></p></li>
+</ul>
+</div></blockquote>
+<p>The indices of the non-zero elements are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">non_zero_data</span> <span class="pre">=</span> <span class="pre">[0.3,</span> <span class="pre">0.5]</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bit_mask</span> <span class="pre">=</span> <span class="pre">&quot;100100&quot;</span></code></p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>mlmodel: MLModel</strong></dt><dd><p>Model to be sparsified. This MLModel should be of type <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>.</p>
+</dd>
+<dt><strong>config: OptimizationConfig</strong></dt><dd><p>An <a class="reference internal" href="coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.OptimizationConfig" title="coremltools.optimize.coreml.OptimizationConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationConfig</span></code></a> object that specifies the parameters for weight pruning.</p>
+</dd>
+<dt><strong>joint_compression: bool</strong></dt><dd><p>Specification of whether or not to further prune the already-compressed input MLModel to a
+jointly compressed MLModel. See the <cite>prune_weights</cite> graph pass for information
+about which compression schemas could be further pruned.</p>
+<p>Take “quantize + prune” as an example of joint compression, where the input MLModel is already
+quantized, and it will be further pruned. In such an example, the weight values are
+represented by <code class="docutils literal notranslate"><span class="pre">constexpr_sparse_blockwise_shift_scale</span></code> + <code class="docutils literal notranslate"><span class="pre">constexpr_sparse_to_dense</span></code> ops:
+quantized(sparse) -&gt; constexpr_sparse_blockwise_shift_scale -&gt; weight(sparse) -&gt; constexpr_sparse_to_dense -&gt; weight(dense)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>model: MLModel</dt><dd><p>The sparse MLModel instance.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="kn">import</span> <span class="nn">coremltools.optimize</span> <span class="k">as</span> <span class="nn">cto</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">)</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OptimizationConfig</span><span class="p">(</span>
+    <span class="n">global_config</span><span class="o">=</span><span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OpThresholdPrunerConfig</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">compressed_model</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">prune_weights</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.optimize.coreml.OpThresholdPrunerConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">OpThresholdPrunerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minimum_sparsity_percentile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2048</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_config.html#OpThresholdPrunerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.OpThresholdPrunerConfig" title="Link to this definition"></a></dt>
+<dd><p>All weights with absolute value smaller than <code class="docutils literal notranslate"><span class="pre">threshold</span></code> are changed to <code class="docutils literal notranslate"><span class="pre">0</span></code>,
+and the tensor is stored in a sparse format.</p>
+<p>For example, given the following:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">weight</span> <span class="pre">=</span> <span class="pre">[0.3,</span> <span class="pre">-0.2,</span> <span class="pre">-0.01,</span> <span class="pre">0.05]</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">threshold</span> <span class="pre">=</span> <span class="pre">0.03</span></code></p></li>
+</ul>
+</div></blockquote>
+<p>The sparsified weight would be <code class="docutils literal notranslate"><span class="pre">[0.3,</span> <span class="pre">-0.2,</span> <span class="pre">0,</span> <span class="pre">0.05]</span></code>.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>threshold: float</strong></dt><dd><p>All weight values above this threshold are set to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
+<ul class="simple">
+<li><p>Default value is <code class="docutils literal notranslate"><span class="pre">1e-12</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>minimum_sparsity_percentile: float</strong></dt><dd><p>The sparsity level must be above this value for the weight representation to be stored in the sparse format rather than the dense format.</p>
+<p>For example, if <code class="docutils literal notranslate"><span class="pre">minimum_sparsity_percentile</span> <span class="pre">=</span> <span class="pre">0.6</span></code> and the sparisty level is <code class="docutils literal notranslate"><span class="pre">0.54</span></code>; that is, <code class="docutils literal notranslate"><span class="pre">54%</span></code> of the
+weight values are exactly <code class="docutils literal notranslate"><span class="pre">0</span></code>, then the resulting weight tensor will be stored as a dense const op,
+and not converted to the <code class="docutils literal notranslate"><span class="pre">constsexpr_sparse_to_dense</span></code> op (which stores the weight values in a sparse format).</p>
+<ul class="simple">
+<li><p>Must be a value between <code class="docutils literal notranslate"><span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
+<li><p>Default value is <code class="docutils literal notranslate"><span class="pre">0.5</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>weight_threshold: int</strong></dt><dd><p>The size threshold, above which weights are pruned.
+That is, a weight tensor is pruned only if its total number of elements are greater than <code class="docutils literal notranslate"><span class="pre">weight_threshold</span></code>.</p>
+<p>For example, if <code class="docutils literal notranslate"><span class="pre">weight_threshold</span> <span class="pre">=</span> <span class="pre">1024</span></code> and a weight tensor is of shape <code class="docutils literal notranslate"><span class="pre">[10,</span> <span class="pre">20,</span> <span class="pre">1,</span> <span class="pre">1]</span></code>, hence <code class="docutils literal notranslate"><span class="pre">200</span></code>
+elements, it will not be pruned.</p>
+<ul class="simple">
+<li><p>If not provided, it will be set to <code class="docutils literal notranslate"><span class="pre">2048</span></code>, in which weights bigger than <code class="docutils literal notranslate"><span class="pre">2048</span></code> elements are compressed.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.optimize.coreml.OpMagnitudePrunerConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">OpMagnitudePrunerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_sparsity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_m_ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2048</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_config.html#OpMagnitudePrunerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.OpMagnitudePrunerConfig" title="Link to this definition"></a></dt>
+<dd><p>Prune the weight with a constant sparsity percentile, which can be specified by either <code class="docutils literal notranslate"><span class="pre">target_sparsity</span></code> or <code class="docutils literal notranslate"><span class="pre">n_m_ratio</span></code>.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">target_sparsity</span></code> is set, where <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">floor(size_of_weight_tensor</span> <span class="pre">*</span> <span class="pre">target_sparsity)</span></code>, the <code class="docutils literal notranslate"><span class="pre">n</span></code> lowest
+absolute weight values are changed to <code class="docutils literal notranslate"><span class="pre">0</span></code>. For example, given the following:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">weight</span> <span class="pre">=</span> <span class="pre">[0.3,</span> <span class="pre">-0.2,</span> <span class="pre">-0.01,</span> <span class="pre">0.05]</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">target_sparsity</span> <span class="pre">=</span> <span class="pre">0.75</span></code></p></li>
+</ul>
+</div></blockquote>
+<p>The sparsified weight would be <code class="docutils literal notranslate"><span class="pre">[0.3,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0]</span></code>.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">block_size</span></code> is set, then weights are pruned in a block structured manner; that is, chunks of weight values, as big as the <code class="docutils literal notranslate"><span class="pre">block_size</span></code>, will be set to <code class="docutils literal notranslate"><span class="pre">0</span></code>.
+Block sparsity can only be applied to <code class="docutils literal notranslate"><span class="pre">linear</span></code> and <code class="docutils literal notranslate"><span class="pre">conv</span></code> layers.
+For example:</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Given a 4 x 2 weight with the following value, and block_size = 2, dim = 0.</span>
+<span class="p">[</span>
+    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+    <span class="p">[</span><span class="o">-</span><span class="mi">6</span><span class="p">,</span> <span class="o">-</span><span class="mi">7</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+    <span class="p">[</span><span class="o">-</span><span class="mi">9</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+<span class="p">]</span>
+
+<span class="c1"># We first flatten the matrix along axis = 0.</span>
+<span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">6</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">9</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">7</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+
+<span class="c1"># For block size 2, the L2 norm will be compute of first 2 elements, then the second and 3rd element and so on.</span>
+<span class="p">[</span><span class="mf">6.08</span><span class="p">,</span> <span class="mf">9.00</span><span class="p">,</span> <span class="mf">7.62</span><span class="p">,</span> <span class="mf">3.61</span><span class="p">]</span>
+
+<span class="c1"># Then the smallest values will be picked to prune. So if target_sparsity = 0.5, then the blocks that will be</span>
+<span class="c1"># pruned will be with ones with L2 norm value of 6.08 and 3.61. And hence, the elements in the first and third</span>
+<span class="c1"># block are pruned. Resulting in the following flatten pruned tensor:</span>
+<span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">9</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">7</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+
+<span class="c1"># The final pruned tensor is:</span>
+<span class="p">[</span>
+    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">7</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="p">[</span><span class="o">-</span><span class="mi">9</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>The <code class="docutils literal notranslate"><span class="pre">n_m_ratio</span></code> triggers <code class="docutils literal notranslate"><span class="pre">n:m</span></code> pruning along the <code class="docutils literal notranslate"><span class="pre">dim</span></code> axis. In <code class="docutils literal notranslate"><span class="pre">n:m</span></code> pruning,
+out of every <code class="docutils literal notranslate"><span class="pre">m</span></code> elements, <code class="docutils literal notranslate"><span class="pre">n</span></code> with lowest magnitude are set to <code class="docutils literal notranslate"><span class="pre">0</span></code>.
+For more information, see
+<a class="reference external" href="https://arxiv.org/abs/2102.04010">Learning N:M Fine-Grained Structured Sparse Neural Networks From Scratch</a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">n:m</span></code> pruning can be applied only to <code class="docutils literal notranslate"><span class="pre">linear</span></code> and <code class="docutils literal notranslate"><span class="pre">conv</span></code> layers.</p>
+<p class="rubric">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Given a 4 x 4 weight of</span>
+<span class="p">[</span>
+    <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">8</span><span class="p">],</span>
+    <span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">],</span>
+<span class="p">]</span>
+
+<span class="c1"># For n_m_ratio = (1, 2) with axis = 1 (default), the resulting pruned weight is</span>
+<span class="p">[</span>
+    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">8</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+<span class="p">]</span>
+
+<span class="c1"># For axis = 0, we get</span>
+<span class="p">[</span>
+    <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">8</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">],</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>target_sparsity: float</strong></dt><dd><p>The percentage of sparsity for compression, which needs to be in the range <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>. When <code class="docutils literal notranslate"><span class="pre">0</span></code>, no sparsification
+occurs. For <code class="docutils literal notranslate"><span class="pre">1</span></code>, all weights become <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
+</dd>
+<dt><strong>block_size: int</strong></dt><dd><p>Block size for inducing block sparsity.
+This is applied on the <code class="docutils literal notranslate"><span class="pre">dim</span></code> dimension of the parameter.
+Having the zeros aligned in the parameter helps gain latency/memory performance on-device.</p>
+<ul class="simple">
+<li><p>If set, must be greater than <code class="docutils literal notranslate"><span class="pre">1</span></code> to enable block sparsity.</p></li>
+<li><p>Block sparsity can be applied only to <code class="docutils literal notranslate"><span class="pre">linear</span></code> and <code class="docutils literal notranslate"><span class="pre">conv</span></code> layers.</p></li>
+<li><p>The channel will be padded with <code class="docutils literal notranslate"><span class="pre">0</span></code> if it is not divisible by <code class="docutils literal notranslate"><span class="pre">block_size</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>n_m_ratio: tuple[int]</strong></dt><dd><p>A tuple of two integers which specify the ratio for <code class="docutils literal notranslate"><span class="pre">n:m</span></code> pruning.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">n</span></code> must be smaller or equal to <code class="docutils literal notranslate"><span class="pre">m</span></code>.</p></li>
+<li><p>The channel would be padded with <code class="docutils literal notranslate"><span class="pre">0</span></code> if it is not divisible by <code class="docutils literal notranslate"><span class="pre">m</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>dim: int</strong></dt><dd><p>Dimension where the block sparsity or <code class="docutils literal notranslate"><span class="pre">n:m</span></code> sparsity is applied.</p>
+<ul class="simple">
+<li><p>Must be either <code class="docutils literal notranslate"><span class="pre">0</span></code> or <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
+<li><p>The default value for block sparsity is <code class="docutils literal notranslate"><span class="pre">0</span></code> (output channel).</p></li>
+<li><p>The default value for <code class="docutils literal notranslate"><span class="pre">n:m</span></code> sparsity is <code class="docutils literal notranslate"><span class="pre">1</span></code> (input channel).</p></li>
+</ul>
+</dd>
+<dt><strong>weight_threshold: int</strong></dt><dd><p>The size threshold, above which weights are pruned.
+That is, a weight tensor is pruned only if its total number of elements is greater than <code class="docutils literal notranslate"><span class="pre">weight_threshold</span></code>.</p>
+<p>For example, if <code class="docutils literal notranslate"><span class="pre">weight_threshold</span> <span class="pre">=</span> <span class="pre">1024</span></code> and a weight tensor is of shape <code class="docutils literal notranslate"><span class="pre">[10,</span> <span class="pre">20,</span> <span class="pre">1,</span> <span class="pre">1]</span></code>, hence <code class="docutils literal notranslate"><span class="pre">200</span></code>
+elements, it will not be pruned.</p>
+<ul class="simple">
+<li><p>If not provided, it will be set to <code class="docutils literal notranslate"><span class="pre">2048</span></code>, in which weights bigger than <code class="docutils literal notranslate"><span class="pre">2048</span></code> elements are compressed.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="coremltools.optimize.coreml.palettization.html" class="btn btn-neutral float-left" title="Palettization" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="coremltools.optimize.coreml.quantization.html" class="btn btn-neutral float-right" title="Quantization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
