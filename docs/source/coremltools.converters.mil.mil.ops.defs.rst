@@ -48,7 +48,7 @@ classify
 
    .. autoclass:: classify
 
-constexpr_ops
+constexpr_ops (iOS 16+)
 ---------------------------------------------------
 
 .. automodule:: coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops
@@ -57,6 +57,18 @@ constexpr_ops
    .. autoclass:: constexpr_cast
    .. autoclass:: constexpr_lut_to_dense
    .. autoclass:: constexpr_sparse_to_dense
+
+constexpr_ops (iOS 18+)
+---------------------------------------------------------------------
+
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS18.compression
+
+   .. autoclass:: constexpr_blockwise_shift_scale
+   .. autoclass:: constexpr_lut_to_dense
+   .. autoclass:: constexpr_sparse_to_dense
+   .. autoclass:: constexpr_lut_to_sparse
+   .. autoclass:: constexpr_sparse_blockwise_shift_scale
+   .. autoclass:: constexpr_cast
 
 control\_flow
 ------------------------------------------------------------
@@ -280,6 +292,14 @@ recurrent (iOS 17+)
    .. autoclass:: gru
    .. autoclass:: lstm
    .. autoclass:: rnn
+
+recurrent (iOS 18+)
+--------------------------------------------------------
+
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS18.recurrent
+
+   .. autoclass:: gru
+
 
 reduction (iOS 15+)
 --------------------------------------------------------
