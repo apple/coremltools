@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.optimize.torch.quantization.quantization_config &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+              <div class="version">
+                8.0b1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.optimize.torch.quantization.quantization_config</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.optimize.torch.quantization.quantization_config</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright (c) 2024, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="kn">import</span> <span class="nn">logging</span> <span class="k">as</span> <span class="nn">_logging</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span> <span class="k">as</span> <span class="n">_OrderedDict</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span> <span class="k">as</span> <span class="n">_Enum</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">unique</span> <span class="k">as</span> <span class="n">_unique</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span> <span class="k">as</span> <span class="n">_Any</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span> <span class="k">as</span> <span class="n">_Callable</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span> <span class="k">as</span> <span class="n">_Dict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span> <span class="k">as</span> <span class="n">_List</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">NewType</span> <span class="k">as</span> <span class="n">_NewType</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span> <span class="k">as</span> <span class="n">_Union</span>
+
+<span class="kn">import</span> <span class="nn">cattrs</span> <span class="k">as</span> <span class="nn">_cattrs</span>
+<span class="kn">import</span> <span class="nn">torch</span> <span class="k">as</span> <span class="nn">_torch</span>
+<span class="kn">import</span> <span class="nn">torch.ao.quantization</span> <span class="k">as</span> <span class="nn">_aoquant</span>
+<span class="kn">from</span> <span class="nn">attr</span> <span class="kn">import</span> <span class="n">define</span> <span class="k">as</span> <span class="n">_define</span>
+<span class="kn">from</span> <span class="nn">attr</span> <span class="kn">import</span> <span class="n">field</span> <span class="k">as</span> <span class="n">_field</span>
+<span class="kn">from</span> <span class="nn">attrs</span> <span class="kn">import</span> <span class="n">validators</span> <span class="k">as</span> <span class="n">_validators</span>
+
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">get_n_bits_from_dtype</span> <span class="k">as</span> <span class="n">_get_n_bits_from_dtype</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">maybe_convert_str_to_dtype</span> <span class="k">as</span> <span class="n">_maybe_convert_str_to_dtype</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">maybe_convert_str_to_mod_type</span> <span class="k">as</span> <span class="n">_maybe_convert_str_to_mod_type</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.optimization_config</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ModuleOptimizationConfig</span> <span class="k">as</span> <span class="n">_ModuleOptimizationConfig</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.optimization_config</span> <span class="kn">import</span> <span class="n">OptimizationConfig</span> <span class="k">as</span> <span class="n">_OptimizationConfig</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.optimization_config</span> <span class="kn">import</span> <span class="n">_structure_from_dict_hook_factory</span>
+
+<span class="n">_logger</span> <span class="o">=</span> <span class="n">_logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ObserverType">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.ObserverType">[docs]</a>
+<span class="nd">@_unique</span>
+<span class="k">class</span> <span class="nc">ObserverType</span><span class="p">(</span><span class="n">_Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An enum indicating the type of observer.</span>
+<span class="sd">    Allowed options are moving_average_min_max, min_max, ema_min_max, ema_percentile, mse, ema_mse, lsq and lsq_plus.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">moving_average_min_max</span> <span class="o">=</span> <span class="s2">&quot;moving_average_min_max&quot;</span>
+    <span class="n">min_max</span> <span class="o">=</span> <span class="s2">&quot;min_max&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_observer</span><span class="p">(</span><span class="n">observer_type</span><span class="p">:</span> <span class="s2">&quot;ObserverType&quot;</span><span class="p">,</span> <span class="n">is_per_channel</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Any</span><span class="p">:</span>
+        <span class="n">_str_to_observer_map</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;moving_average_min_max&quot;</span><span class="p">:</span> <span class="n">_aoquant</span><span class="o">.</span><span class="n">MovingAverageMinMaxObserver</span><span class="p">,</span>
+            <span class="s2">&quot;min_max&quot;</span><span class="p">:</span> <span class="n">_aoquant</span><span class="o">.</span><span class="n">MinMaxObserver</span><span class="p">,</span>
+            <span class="s2">&quot;moving_average_min_max_per_channel&quot;</span><span class="p">:</span> <span class="n">_aoquant</span><span class="o">.</span><span class="n">MovingAveragePerChannelMinMaxObserver</span><span class="p">,</span>
+            <span class="s2">&quot;min_max_per_channel&quot;</span><span class="p">:</span> <span class="n">_aoquant</span><span class="o">.</span><span class="n">PerChannelMinMaxObserver</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">observer_name</span> <span class="o">=</span> <span class="n">observer_type</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">if</span> <span class="n">is_per_channel</span><span class="p">:</span>
+            <span class="n">observer_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">observer_name</span><span class="si">}</span><span class="s2">_per_channel&quot;</span>
+        <span class="k">return</span> <span class="n">_str_to_observer_map</span><span class="p">[</span><span class="n">observer_name</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="QuantizationScheme">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.QuantizationScheme">[docs]</a>
+<span class="nd">@_unique</span>
+<span class="k">class</span> <span class="nc">QuantizationScheme</span><span class="p">(</span><span class="n">_Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An enum indicating the type of quantization to be performed. Allowed options are symmetric</span>
+<span class="sd">    and affine.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">symmetric</span> <span class="o">=</span> <span class="s2">&quot;symmetric&quot;</span>
+    <span class="n">affine</span> <span class="o">=</span> <span class="s2">&quot;affine&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_qscheme</span><span class="p">(</span>
+        <span class="n">quantizaton_scheme</span><span class="p">:</span> <span class="s2">&quot;QuantizationScheme&quot;</span><span class="p">,</span> <span class="n">is_per_channel</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_torch</span><span class="o">.</span><span class="n">qscheme</span><span class="p">:</span>
+        <span class="n">_str_to_qscheme_map</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;symmetric&quot;</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">per_tensor_symmetric</span><span class="p">,</span>
+            <span class="s2">&quot;affine&quot;</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">per_tensor_affine</span><span class="p">,</span>
+            <span class="s2">&quot;symmetric_per_channel&quot;</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">per_channel_symmetric</span><span class="p">,</span>
+            <span class="s2">&quot;affine_per_channel&quot;</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">per_channel_affine</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">quantization_scheme_name</span> <span class="o">=</span> <span class="n">quantizaton_scheme</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">if</span> <span class="n">is_per_channel</span><span class="p">:</span>
+            <span class="n">quantization_scheme_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">quantization_scheme_name</span><span class="si">}</span><span class="s2">_per_channel&quot;</span>
+        <span class="k">return</span> <span class="n">_str_to_qscheme_map</span><span class="p">[</span><span class="n">quantization_scheme_name</span><span class="p">]</span></div>
+
+
+
+<span class="n">_default_quantization_options</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;weight_dtype&quot;</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">qint8</span><span class="p">,</span>
+    <span class="s2">&quot;weight_per_channel&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="s2">&quot;weight_ch_axis&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s2">&quot;activation_dtype&quot;</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">quint8</span><span class="p">,</span>
+    <span class="s2">&quot;observer&quot;</span><span class="p">:</span> <span class="n">ObserverType</span><span class="o">.</span><span class="n">moving_average_min_max</span><span class="p">,</span>
+    <span class="s2">&quot;quantization_scheme&quot;</span><span class="p">:</span> <span class="n">QuantizationScheme</span><span class="o">.</span><span class="n">symmetric</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="c1"># Backends only support 4 and 8 bit quantization</span>
+<span class="n">_SUPPORTED_N_BITS</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">32</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="ModuleLinearQuantizerConfig">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig">[docs]</a>
+<span class="nd">@_define</span>
+<span class="k">class</span> <span class="nc">ModuleLinearQuantizerConfig</span><span class="p">(</span><span class="n">_ModuleOptimizationConfig</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Configuration class for specifying global and module-level quantization options for linear quantization</span>
+<span class="sd">    algorithm implemented in :py:class:`LinearQuantizer`.</span>
+
+<span class="sd">    Linear quantization algorithm simulates the effects of quantization during training, by quantizing</span>
+<span class="sd">    and dequantizing the weights and/or activations during the model&#39;s forward pass. The forward and</span>
+<span class="sd">    backward pass computations are conducted in ``float`` dtype, however, these ``float`` values follow</span>
+<span class="sd">    the constraints imposed by ``int8`` and ``quint8`` dtypes. For more details, please refer to</span>
+<span class="sd">    `Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference</span>
+<span class="sd">    &lt;https://arxiv.org/pdf/1712.05877.pdf&gt;`_.</span>
+
+<span class="sd">    For most applications, the only parameters that need to be set are ``quantization_scheme`` and</span>
+<span class="sd">    ``milestones``.</span>
+
+<span class="sd">    By default, ``quantization_scheme`` is set to :py:class:`QuantizationScheme.symmetric`, which means</span>
+<span class="sd">    all weights are quantized with zero point as zero, and activations are quantized with zero point as zero for</span>
+<span class="sd">    non-negative activations and 128 for all other activations. The weights are quantized using :py:class:`torch.qint8`</span>
+<span class="sd">    and activations are quantized using :py:class:`torch.quint8`.</span>
+
+<span class="sd">    Linear quantization algorithm inserts ``observers`` for each weight/activation tensor.</span>
+<span class="sd">    These observers collect statistics of these tensors&#39; values, for example, the minimum and maximum values they can</span>
+<span class="sd">    take. These statistics are then used to compute the scale and zero point, which are in turn used for quantizing</span>
+<span class="sd">    the weights/activations. By default, ``moving_average_min_max`` observer is used. For more details, please</span>
+<span class="sd">    check `MinMaxObserver &lt;https://pytorch.org/docs/stable/generated/torch.ao.quantization.observer.MinMaxObserver.html#torch.ao.quantization.observer.MinMaxObserver&gt;`_.</span>
+
+<span class="sd">    The ``milestones`` parameter controls the flow of the quantization algorithm.  The example below illustrates its</span>
+<span class="sd">    usage in more detail:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">            model = define_model()</span>
+
+<span class="sd">            config = LinearQuantizerConfig(</span>
+<span class="sd">                global_config=ModuleLinearQuantizerConfig(</span>
+<span class="sd">                    quantization_scheme=&quot;symmetric&quot;,</span>
+<span class="sd">                    milestones=[0, 100, 300, 200],</span>
+<span class="sd">                )</span>
+<span class="sd">            )</span>
+
+<span class="sd">            quantizer = LinearQuantizer(model, config)</span>
+
+<span class="sd">            # prepare the model to insert FakeQuantize layers for QAT</span>
+<span class="sd">            model = quantizer.prepare()</span>
+
+<span class="sd">            # use quantizer in your PyTorch training loop</span>
+<span class="sd">            for inputs, labels in data:</span>
+<span class="sd">                output = model(inputs)</span>
+<span class="sd">                loss = loss_fn(output, labels)</span>
+<span class="sd">                loss.backward()</span>
+<span class="sd">                optimizer.step()</span>
+<span class="sd">                quantizer.step()</span>
+
+<span class="sd">            # In this example, from step 0 onwards, observers will collect statistics</span>
+<span class="sd">            # of the values of weights/activations. However, between steps 0 and 100,</span>
+<span class="sd">            # effects of quantization will not be simulated. At step 100, quantization</span>
+<span class="sd">            # simulation will begin and at step 300, observer statistics collection will</span>
+<span class="sd">            # stop. A batch norm layer computes mean and variance of input batch for normalizing</span>
+<span class="sd">            # it during training, and collects running estimates of its computed mean and variance,</span>
+<span class="sd">            # which are then used for normalization during evaluation. At step 200, batch norm</span>
+<span class="sd">            # statistics collection is frozen, and the batch norm layers switch to evaluation</span>
+<span class="sd">            # mode, thus more closely simulating the inference numerics during training time.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        weight_dtype (:py:class:`torch.dtype`): The dtype to use for quantizing the weights. The number of bits used</span>
+<span class="sd">            for quantization is inferred from the dtype. When dtype is set to :py:class:`torch.float32`, the weights</span>
+<span class="sd">            corresponding to that layer are not quantized.  Defaults to :py:class:`torch.int8` which corresponds to</span>
+<span class="sd">            8-bit quantization.</span>
+<span class="sd">        weight_observer (:py:class:`ObserverType`): Type of observer to use for quantizing weights.</span>
+<span class="sd">            Defaults to ``moving_average_min_max``.</span>
+<span class="sd">        weight_per_channel (:obj:`bool`): When ``True``, weights are quantized per channel; otherwise, per tensor.</span>
+<span class="sd">        activation_dtype (:py:class:`torch.dtype`): The dtype to use for quantizing the activations. When dtype</span>
+<span class="sd">            is set to :py:class:`torch.float32`, the activations corresponding to that layer are not quantized.</span>
+<span class="sd">            Defaults to :py:class:`torch.quint8`.</span>
+<span class="sd">        activation_observer (:py:class:`ObserverType`): Type of observer to use for quantizing activations.</span>
+<span class="sd">            Defaults to ``moving_average_min_max``.</span>
+<span class="sd">        quantization_scheme: (:py:class:`QuantizationScheme`): Type of quantization configuration to use. When</span>
+<span class="sd">            this parameter is set to :py:class:`QuantizationScheme.symmetric`, all weights are</span>
+<span class="sd">            quantized with zero point as zero, and activations are quantized with zero point as zero for</span>
+<span class="sd">            non-negative activations and 128 for all other activations. When it is set to</span>
+<span class="sd">            :py:class:`QuantizationScheme.affine`, zero point can be set anywhere in the range of values allowed</span>
+<span class="sd">            for the quantized weight/activation. Defaults to :py:class:`QuantizationScheme.symmetric`.</span>
+<span class="sd">        milestones (:obj:`list` of :obj:`int`): A list of four integers indicating milestones to use during</span>
+<span class="sd">            quantization. The first milestone corresponds to enabling observers, the second to enabling fake</span>
+<span class="sd">            quantization simulation, the third to disabling observers, and the last to freezing batch norm statistics.</span>
+<span class="sd">            Defaults to ``None``, which means the ``step`` method of :py:class:`LinearQuantizer` will be a no-op and</span>
+<span class="sd">            all observers and quantization simulation will be turned on from the first step, batch norm layers always</span>
+<span class="sd">            operate in training mode, and mean and variance statistics collection is not frozen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">weight_dtype</span><span class="p">:</span> <span class="n">_Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">_default_quantization_options</span><span class="p">[</span><span class="s2">&quot;weight_dtype&quot;</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="n">weight_observer</span><span class="p">:</span> <span class="n">ObserverType</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">_default_quantization_options</span><span class="p">[</span><span class="s2">&quot;observer&quot;</span><span class="p">],</span>
+        <span class="n">converter</span><span class="o">=</span><span class="n">ObserverType</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">ObserverType</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">weight_per_channel</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">_default_quantization_options</span><span class="p">[</span><span class="s2">&quot;weight_per_channel&quot;</span><span class="p">],</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">bool</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">activation_dtype</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">_default_quantization_options</span><span class="p">[</span><span class="s2">&quot;activation_dtype&quot;</span><span class="p">],</span>
+        <span class="n">converter</span><span class="o">=</span><span class="n">_maybe_convert_str_to_dtype</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span>
+            <span class="n">_validators</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span><span class="n">_torch</span><span class="o">.</span><span class="n">quint8</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">float32</span><span class="p">]),</span>
+        <span class="p">],</span>
+    <span class="p">)</span>
+    <span class="n">activation_observer</span><span class="p">:</span> <span class="n">ObserverType</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">_default_quantization_options</span><span class="p">[</span><span class="s2">&quot;observer&quot;</span><span class="p">],</span>
+        <span class="n">converter</span><span class="o">=</span><span class="n">ObserverType</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">ObserverType</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">quantization_scheme</span><span class="p">:</span> <span class="n">QuantizationScheme</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">_default_quantization_options</span><span class="p">[</span><span class="s2">&quot;quantization_scheme&quot;</span><span class="p">],</span>
+        <span class="n">converter</span><span class="o">=</span><span class="n">QuantizationScheme</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">QuantizationScheme</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">milestones</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span>
+            <span class="n">_validators</span><span class="o">.</span><span class="n">deep_iterable</span><span class="p">(</span>
+                <span class="n">member_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span>
+                <span class="n">iterable_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">list</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weight_n_bits</span> <span class="o">=</span> <span class="n">_get_n_bits_from_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span> <span class="o">=</span> <span class="n">_maybe_convert_str_to_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">_torch</span><span class="o">.</span><span class="n">qint8</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">quint8</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">float32</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;weight_dtype must be one of (_torch.qint8, _torch.quint8, _torch.float32) not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+    <span class="nd">@milestones</span><span class="o">.</span><span class="n">validator</span>
+    <span class="k">def</span> <span class="nf">_check_milestones</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">,</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Received milestones = </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Milestones should be of length 4. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Refer to docs for more information.&quot;</span>
+            <span class="p">)</span>
+
+<div class="viewcode-block" id="ModuleLinearQuantizerConfig.from_dict">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig.from_dict">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">):</span>
+        <span class="n">converter</span> <span class="o">=</span> <span class="n">_cattrs</span><span class="o">.</span><span class="n">Converter</span><span class="p">(</span><span class="n">forbid_extra_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">converter</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span>
+            <span class="n">_Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">],</span>
+            <span class="k">lambda</span> <span class="n">obj</span><span class="p">,</span> <span class="nb">type</span><span class="p">:</span> <span class="n">obj</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">converter</span><span class="o">.</span><span class="n">structure_attrs_fromdict</span><span class="p">(</span><span class="n">config_dict</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="n">_ModuleTypeConfigType</span> <span class="o">=</span> <span class="n">_NewType</span><span class="p">(</span>
+    <span class="s2">&quot;ModuleTypeConfigType&quot;</span><span class="p">,</span>
+    <span class="n">_Dict</span><span class="p">[</span><span class="n">_Union</span><span class="p">[</span><span class="n">_Callable</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">ModuleLinearQuantizerConfig</span><span class="p">]],</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="LinearQuantizerConfig">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizerConfig">[docs]</a>
+<span class="nd">@_define</span>
+<span class="k">class</span> <span class="nc">LinearQuantizerConfig</span><span class="p">(</span><span class="n">_OptimizationConfig</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Configuration class for specifying how different submodules of a model are</span>
+<span class="sd">    quantized by :py:class:`LinearQuantizer`.</span>
+
+<span class="sd">    In order to disable quantizing a layer or an operation, ``module_type_config`` or</span>
+<span class="sd">    ``module_name_config`` corresponding to that operation can be set to ``None``.</span>
+
+<span class="sd">    For example:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">            # The following config will enable weight only quantization for all layers:</span>
+<span class="sd">            config = LinearQuantizerConfig.from_dict(</span>
+<span class="sd">                {</span>
+<span class="sd">                    &quot;global_config&quot;: {</span>
+<span class="sd">                        &quot;activation_dtype&quot;: &quot;float32&quot;,</span>
+<span class="sd">                    }</span>
+<span class="sd">                }</span>
+<span class="sd">            )</span>
+
+<span class="sd">            # The following config will disable quantization for all linear layers and</span>
+<span class="sd">            # set quantization mode to weight only quantization for convolution layers:</span>
+<span class="sd">            config = LinearQuantizerConfig.from_dict(</span>
+<span class="sd">                {</span>
+<span class="sd">                    &quot;module_type_configs&quot;: {</span>
+<span class="sd">                        &quot;Linear&quot;: None,</span>
+<span class="sd">                        &quot;Conv2d&quot;: {</span>
+<span class="sd">                            &quot;activation_dtype&quot;: &quot;float32&quot;,</span>
+<span class="sd">                        },</span>
+<span class="sd">                    }</span>
+<span class="sd">                }</span>
+<span class="sd">            )</span>
+
+<span class="sd">            # The following config will disable quantization for layers named conv1 and conv2:</span>
+<span class="sd">            config = LinearQuantizerConfig.from_dict(</span>
+<span class="sd">                {</span>
+<span class="sd">                    &quot;module_name_configs&quot;: {</span>
+<span class="sd">                        &quot;conv1&quot;: None,</span>
+<span class="sd">                        &quot;conv2&quot;: None,</span>
+<span class="sd">                    }</span>
+<span class="sd">                }</span>
+<span class="sd">            )</span>
+
+<span class="sd">            # If model has some methods and attributes which are not used in the forward</span>
+<span class="sd">            # pass, but are needed to be preserved after quantization is added, they can</span>
+<span class="sd">            # be preserved on the quantized model by passing them in preserved_attributes</span>
+<span class="sd">            # parameter</span>
+
+<span class="sd">            model = MyModel()</span>
+<span class="sd">            model.key_1 = value_1</span>
+<span class="sd">            model.key_2 = value_2</span>
+
+<span class="sd">            config = LinearQuantizerConfig.from_dict({&quot;preserved_attributes&quot;: [&quot;key_1&quot;, &quot;key_2&quot;]})</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        global_config (:py:class:`ModuleLinearQuantizerConfig`): Config to be applied globally</span>
+<span class="sd">            to all supported modules. Missing values are chosen from the default config.</span>
+<span class="sd">        module_type_configs (:obj:`dict` of :obj:`str` to :py:class:`ModuleLinearQuantizerConfig`):</span>
+<span class="sd">            Module type level configs applied to a specific</span>
+<span class="sd">            module class, such as :py:class:`torch.nn.Linear`. The keys can be either strings</span>
+<span class="sd">            or module classes.</span>
+<span class="sd">        module_name_configs (:obj:`dict` of :obj:`str` to :py:class:`ModuleLinearQuantizerConfig`):</span>
+<span class="sd">            Module-level configs applied to specific modules.</span>
+<span class="sd">            The name of the module must be a fully qualified name that can be used to fetch it</span>
+<span class="sd">            from the top level module using the ``module.get_submodule(target)`` method.</span>
+<span class="sd">        non_traceable_module_names (:obj:`list` of :obj:`str`):</span>
+<span class="sd">            Names of modules which cannot be traced using ``torch.fx``.</span>
+<span class="sd">        preserved_attributes (:obj:`list` of :obj:`str`): Names of attributes of the model</span>
+<span class="sd">            which should be preserved on the prepared and finalized models, even if they are not</span>
+<span class="sd">            used in the model&#39;s forward pass.</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        The ``quantization_scheme`` parameter must be the same across all configs.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">global_config</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">ModuleLinearQuantizerConfig</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="n">ModuleLinearQuantizerConfig</span><span class="p">)),</span>
+    <span class="p">)</span>
+    <span class="n">module_type_configs</span><span class="p">:</span> <span class="n">_ModuleTypeConfigType</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">factory</span><span class="o">=</span><span class="n">_OrderedDict</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">deep_mapping</span><span class="p">(</span>
+            <span class="n">key_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">((</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Callable</span><span class="p">)),</span>
+            <span class="n">value_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span>
+                <span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="n">ModuleLinearQuantizerConfig</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">mapping_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">dict</span><span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">module_name_configs</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">ModuleLinearQuantizerConfig</span><span class="p">]]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">factory</span><span class="o">=</span><span class="n">_OrderedDict</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">deep_mapping</span><span class="p">(</span>
+            <span class="n">key_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">str</span><span class="p">),</span>
+            <span class="n">value_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span>
+                <span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="n">ModuleLinearQuantizerConfig</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">mapping_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">dict</span><span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">non_traceable_module_names</span><span class="p">:</span> <span class="n">_List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">(),</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">deep_iterable</span><span class="p">(</span>
+            <span class="n">member_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">str</span><span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">preserved_attributes</span><span class="p">:</span> <span class="n">_List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">factory</span><span class="o">=</span><span class="nb">list</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">deep_iterable</span><span class="p">(</span>
+            <span class="n">member_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">str</span><span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">global_config</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_type_configs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_name_configs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">global_config</span> <span class="o">=</span> <span class="n">ModuleLinearQuantizerConfig</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module_type_configs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">_maybe_convert_str_to_mod_type</span><span class="p">(</span><span class="n">key</span><span class="p">):</span> <span class="n">val</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">module_type_configs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_same_params</span><span class="p">([</span><span class="s2">&quot;quantization_scheme&quot;</span><span class="p">])</span>
+
+<div class="viewcode-block" id="LinearQuantizerConfig.from_dict">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizerConfig.from_dict">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;LinearQuantizerConfig&quot;</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">config_dict</span><span class="p">)</span>
+        <span class="n">converter</span> <span class="o">=</span> <span class="n">_cattrs</span><span class="o">.</span><span class="n">Converter</span><span class="p">(</span><span class="n">forbid_extra_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">converter</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span>
+            <span class="n">_Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">],</span>
+            <span class="k">lambda</span> <span class="n">obj</span><span class="p">,</span> <span class="nb">type</span><span class="p">:</span> <span class="n">obj</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">converter</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span>
+            <span class="n">_ModuleTypeConfigType</span><span class="p">,</span>
+            <span class="n">_structure_from_dict_hook_factory</span><span class="p">(</span><span class="n">ModuleLinearQuantizerConfig</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">converter</span><span class="o">.</span><span class="n">structure_attrs_fromdict</span><span class="p">(</span><span class="n">config_dict</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

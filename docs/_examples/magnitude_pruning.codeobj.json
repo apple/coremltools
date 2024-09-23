@@ -1,0 +1,360 @@
+{
+ ".pruning.MagnitudePruner": [
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": ".pruning",
+   "module_short": ".pruning",
+   "name": "MagnitudePruner"
+  },
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": ".pruning",
+   "module_short": ".pruning",
+   "name": "MagnitudePruner"
+  }
+ ],
+ ".pruning.MagnitudePruner.finalize": [
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": ".pruning.MagnitudePruner",
+   "module_short": ".pruning.MagnitudePruner",
+   "name": "finalize"
+  }
+ ],
+ ".pruning.MagnitudePruner.prepare": [
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": ".pruning.MagnitudePruner",
+   "module_short": ".pruning.MagnitudePruner",
+   "name": "prepare"
+  }
+ ],
+ ".pruning.MagnitudePruner.step": [
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": ".pruning.MagnitudePruner",
+   "module_short": ".pruning.MagnitudePruner",
+   "name": "step"
+  }
+ ],
+ ".pruning.MagnitudePrunerConfig": [
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": ".pruning",
+   "module_short": ".pruning",
+   "name": "MagnitudePrunerConfig"
+  }
+ ],
+ ".pruning.PolynomialDecayScheduler": [
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": ".pruning",
+   "module_short": ".pruning",
+   "name": "PolynomialDecayScheduler"
+  }
+ ],
+ ".pruning.pruning_scheduler.PruningScheduler": [
+  {
+   "is_class": false,
+   "is_explicit": true,
+   "module": ".pruning.pruning_scheduler",
+   "module_short": ".pruning.pruning_scheduler",
+   "name": "PruningScheduler"
+  }
+ ],
+ "F.nll_loss": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torch.nn.functional",
+   "module_short": "torch.nn.functional",
+   "name": "nll_loss"
+  }
+ ],
+ "MagnitudePruner": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "coremltools.optimize.torch.pruning",
+   "module_short": "coremltools.optimize.torch.pruning",
+   "name": "MagnitudePruner"
+  }
+ ],
+ "MagnitudePrunerConfig": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "coremltools.optimize.torch.pruning",
+   "module_short": "coremltools.optimize.torch.pruning",
+   "name": "MagnitudePrunerConfig"
+  }
+ ],
+ "ModuleMagnitudePrunerConfig": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "coremltools.optimize.torch.pruning",
+   "module_short": "coremltools.optimize.torch.pruning",
+   "name": "ModuleMagnitudePrunerConfig"
+  }
+ ],
+ "OrderedDict": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "collections",
+   "module_short": "collections",
+   "name": "OrderedDict"
+  }
+ ],
+ "PolynomialDecayScheduler": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "coremltools.optimize.torch.pruning",
+   "module_short": "coremltools.optimize.torch.pruning",
+   "name": "PolynomialDecayScheduler"
+  }
+ ],
+ "ct.PassPipeline.DEFAULT_PRUNING": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "coremltools.PassPipeline",
+   "module_short": "coremltools.PassPipeline",
+   "name": "DEFAULT_PRUNING"
+  }
+ ],
+ "ct.TensorType": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "coremltools",
+   "module_short": "coremltools",
+   "name": "TensorType"
+  }
+ ],
+ "ct.convert": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "coremltools",
+   "module_short": "coremltools",
+   "name": "convert"
+  }
+ ],
+ "ct.target.iOS16": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "coremltools.target",
+   "module_short": "coremltools.target",
+   "name": "iOS16"
+  }
+ ],
+ "datasets.MNIST": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torchvision.datasets",
+   "module_short": "torchvision.datasets",
+   "name": "MNIST"
+  }
+ ],
+ "nn.Conv2d": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torch.nn",
+   "module_short": "torch.nn",
+   "name": "Conv2d"
+  }
+ ],
+ "nn.Flatten": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torch.nn",
+   "module_short": "torch.nn",
+   "name": "Flatten"
+  }
+ ],
+ "nn.Linear": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torch.nn",
+   "module_short": "torch.nn",
+   "name": "Linear"
+  }
+ ],
+ "nn.LogSoftmax": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torch.nn",
+   "module_short": "torch.nn",
+   "name": "LogSoftmax"
+  }
+ ],
+ "nn.MaxPool2d": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torch.nn",
+   "module_short": "torch.nn",
+   "name": "MaxPool2d"
+  }
+ ],
+ "nn.ReLU": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torch.nn",
+   "module_short": "torch.nn",
+   "name": "ReLU"
+  }
+ ],
+ "nn.Sequential": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torch.nn",
+   "module_short": "torch.nn",
+   "name": "Sequential"
+  }
+ ],
+ "np.testing.assert_allclose": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "numpy.testing",
+   "module_short": "numpy.testing",
+   "name": "assert_allclose"
+  }
+ ],
+ "os.makedirs": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "os",
+   "module_short": "os",
+   "name": "makedirs"
+  }
+ ],
+ "os.path.exists": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "os.path",
+   "module_short": "os.path",
+   "name": "exists"
+  }
+ ],
+ "os.path.expanduser": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "os.path",
+   "module_short": "os.path",
+   "name": "expanduser"
+  }
+ ],
+ "torch.jit.trace": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torch.jit",
+   "module_short": "torch.jit",
+   "name": "trace"
+  }
+ ],
+ "torch.nn.Conv2d": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torch.nn",
+   "module_short": "torch.nn",
+   "name": "Conv2d"
+  }
+ ],
+ "torch.nn.Linear": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torch.nn",
+   "module_short": "torch.nn",
+   "name": "Linear"
+  }
+ ],
+ "torch.no_grad": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torch",
+   "module_short": "torch",
+   "name": "no_grad"
+  }
+ ],
+ "torch.optim.Adam": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torch.optim",
+   "module_short": "torch.optim",
+   "name": "Adam"
+  }
+ ],
+ "torch.rand": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torch",
+   "module_short": "torch",
+   "name": "rand"
+  }
+ ],
+ "torch.utils.data.DataLoader": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torch.utils.data",
+   "module_short": "torch.utils.data",
+   "name": "DataLoader"
+  }
+ ],
+ "transforms.Compose": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torchvision.transforms",
+   "module_short": "torchvision.transforms",
+   "name": "Compose"
+  }
+ ],
+ "transforms.Normalize": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torchvision.transforms",
+   "module_short": "torchvision.transforms",
+   "name": "Normalize"
+  }
+ ],
+ "transforms.ToTensor": [
+  {
+   "is_class": false,
+   "is_explicit": false,
+   "module": "torchvision.transforms",
+   "module_short": "torchvision.transforms",
+   "name": "ToTensor"
+  }
+ ]
+}

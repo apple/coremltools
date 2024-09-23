@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.converters.mil.mil.passes.defs.cleanup.loop_invariant_elimination &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+              <div class="version">
+                8.0b1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters.mil.mil.passes.defs.cleanup.loop_invariant_elimination</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.converters.mil.mil.passes.defs.cleanup.loop_invariant_elimination</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright (c) 2023, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">mb</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span> <span class="kn">import</span> <span class="n">AbstractGraphPass</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.helper</span> <span class="kn">import</span> <span class="n">block_context_manager</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.pass_registry</span> <span class="kn">import</span> <span class="n">register_pass</span>
+
+
+<div class="viewcode-block" id="loop_invariant_elimination">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.cleanup.loop_invariant_elimination">[docs]</a>
+<span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">loop_invariant_elimination</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    When a block does not modify a block input var, eliminate that block</span>
+<span class="sd">    input var and use the corresponding var in the outer scope. Example:</span>
+
+<span class="sd">    .. code-block::</span>
+
+<span class="sd">       # Before loop_invariant_elimination pass.</span>
+<span class="sd">       # Notice that ``%b.x`` is constant through while loop iterates.</span>
+<span class="sd">       main(%a: (1, 2, fp32),</span>
+<span class="sd">            %b: (1, 2, fp32)) {</span>
+<span class="sd">         block0() {</span>
+<span class="sd">           %loop:0: (1, 2, fp32), %loop:1: (1, 2, fp32) = \</span>
+<span class="sd">           while_loop(loop_vars=(%a, %b))</span>
+<span class="sd">             loop_cond(%a.x, %b.x) {</span>
+<span class="sd">               %cond_var: (bool) = some_op(x=%a.x, y=%b.x)</span>
+<span class="sd">             } -&gt; (%cond_var)</span>
+<span class="sd">             loop_body(%a.x, %b.x) {</span>
+<span class="sd">               %add_0: (1, 2, fp32) = add(x=%a.x, y=%b.x)</span>
+<span class="sd">             } -&gt; (%add_0, %b.x)</span>
+<span class="sd">         } -&gt; (%loop:0, %loop:1)</span>
+<span class="sd">       }</span>
+
+<span class="sd">       # After loop_invariant_elimination pass.</span>
+<span class="sd">       main(%a: (1, 2, fp32),</span>
+<span class="sd">            %b: (1, 2, fp32)) {</span>
+<span class="sd">         block0() {</span>
+<span class="sd">           %loop:1: (1, 2, fp32) = identity(x=%b)</span>
+<span class="sd">           %loop:0: (1, 2, fp32) = \</span>
+<span class="sd">           while_loop(loop_vars=(%a))</span>
+<span class="sd">             loop_cond(%a.x) {</span>
+<span class="sd">               %cond_var: (bool) = some_op(x=%a.x, y=%b)</span>
+<span class="sd">             } -&gt; (%cond_var)</span>
+<span class="sd">             loop_body(%a.x) {</span>
+<span class="sd">               %add_0: (1, 2, fp32) = add(x=%a.x, y=%b)</span>
+<span class="sd">             } -&gt; (%add_0)</span>
+<span class="sd">         } -&gt; (%loop:0, %loop:1)</span>
+<span class="sd">       }</span>
+
+<span class="sd">    where we eliminate loop invariant ``%b.x`` from ``while_loop``, which returns 1</span>
+<span class="sd">    instead of 2 outputs. We also preserve the return var names with identity.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_loop_invariant_elimination_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_detect_loop_invariants</span><span class="p">(</span><span class="n">while_op</span><span class="p">):</span>
+        <span class="n">block</span> <span class="o">=</span> <span class="n">while_op</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># body block</span>
+        <span class="n">loop_invariant_ids</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># list of index in op.loop_vars, block.inputs</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">vx_in</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">inputs</span><span class="p">):</span>
+            <span class="n">vx_out</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>  <span class="c1"># first output is cond var.</span>
+            <span class="n">return_input_as_output</span> <span class="o">=</span> <span class="n">vx_in</span> <span class="o">==</span> <span class="n">vx_out</span>
+            <span class="c1"># this block output is a var from outside of the block</span>
+
+            <span class="n">enclosing_block</span> <span class="o">=</span> <span class="n">while_op</span><span class="o">.</span><span class="n">enclosing_block</span>
+            <span class="n">output_from_outside_of_block</span> <span class="o">=</span> <span class="n">enclosing_block</span><span class="o">.</span><span class="n">is_var_visible_in_block</span><span class="p">(</span>
+                <span class="n">vx_out</span><span class="p">,</span> <span class="n">upto_op</span><span class="o">=</span><span class="n">while_op</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">return_input_as_output</span> <span class="ow">or</span> <span class="n">output_from_outside_of_block</span><span class="p">:</span>
+                <span class="n">loop_invariant_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+        <span class="c1"># TODO: All outputs that depend on only invariants are invariant. We</span>
+        <span class="c1"># need to move computation out of while loop.</span>
+        <span class="k">return</span> <span class="n">loop_invariant_ids</span>
+
+    <span class="nd">@block_context_manager</span>
+    <span class="k">def</span> <span class="nf">_loop_invariant_elimination_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
+        <span class="c1"># Phase 1: Find vars needed to be renamed.</span>
+        <span class="c1">#</span>
+        <span class="c1"># while_loop outputs need to be renamed if the output will be eliminated</span>
+        <span class="c1"># (due to loop invariant) and is returned as block output (which would</span>
+        <span class="c1"># change the return var name and the program interface).</span>
+        <span class="c1">#</span>
+        <span class="c1"># list[(v_src, v_tgt, before_op)]: will rename v_src to v_tgt before</span>
+        <span class="c1"># before_op (a while_loop)</span>
+        <span class="n">output_rename</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_loop_invariant_elimination_block</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">!=</span> <span class="s2">&quot;while_loop&quot;</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">loop_invariant_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_detect_loop_invariants</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">loop_invariant_ids</span><span class="p">:</span>
+                <span class="n">output_rename</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">op</span><span class="o">.</span><span class="n">loop_vars</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">op</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">loop_invariant_ids</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># Avoid the following case:</span>
+                <span class="c1"># %a, %b = while_loop(..., name=&quot;b&quot;)</span>
+                <span class="c1"># becomes</span>
+                <span class="c1"># %b = identity(..., name=&quot;b&quot;)</span>
+                <span class="c1"># %a = while_loop(..., name=&quot;b&quot;)</span>
+                <span class="c1"># (two ops with the same name -&gt; name collision)</span>
+                <span class="n">op</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_renamed&quot;</span>
+
+        <span class="c1"># Phase 2: insert rename ops. This changes block.operations</span>
+        <span class="k">for</span> <span class="n">v_src</span><span class="p">,</span> <span class="n">v_tgt</span><span class="p">,</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">output_rename</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">v_tgt</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+                <span class="c1"># rename the loop output to existing block output names</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">v_src</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">v_tgt</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span><span class="o">.</span><span class="n">replace_uses_of_var_after_op</span><span class="p">(</span>
+                    <span class="n">anchor_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span> <span class="n">old_var</span><span class="o">=</span><span class="n">v_tgt</span><span class="p">,</span> <span class="n">new_var</span><span class="o">=</span><span class="n">res</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Phase 3: Perform loop invariant elimination without fear!</span>
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">!=</span> <span class="s2">&quot;while_loop&quot;</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">loop_invariant_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_detect_loop_invariants</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+
+            <span class="c1"># replace uses of loop_invariants with its source from outside of the</span>
+            <span class="c1"># while_loop op.</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">loop_invariant_ids</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+                    <span class="n">block</span><span class="o">.</span><span class="n">replace_uses_of_var_after_op</span><span class="p">(</span>
+                        <span class="n">anchor_op</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">old_var</span><span class="o">=</span><span class="n">block</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">new_var</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">loop_vars</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="p">)</span>
+
+            <span class="c1"># replace block inputs</span>
+            <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+                <span class="n">block</span><span class="o">.</span><span class="n">remove_inputs</span><span class="p">([</span><span class="n">block</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">loop_invariant_ids</span><span class="p">])</span>
+
+            <span class="c1"># remove invariants from while_loop loop_vars</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">loop_invariant_ids</span><span class="p">:</span>
+                <span class="c1"># replace usage of while_loop outputs that we&#39;ll eliminate.</span>
+                <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span><span class="o">.</span><span class="n">replace_uses_of_var_after_op</span><span class="p">(</span>
+                    <span class="n">anchor_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span> <span class="n">old_var</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">new_var</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">loop_vars</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Remove after replacing to ensure program is valid</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">loop_invariant_ids</span><span class="p">:</span>
+                <span class="n">op</span><span class="o">.</span><span class="n">loop_vars</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">remove_child_op</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+
+            <span class="n">op</span><span class="o">.</span><span class="n">loop_vars</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">v</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">loop_vars</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">loop_invariant_ids</span>
+            <span class="p">)</span>
+            <span class="n">op</span><span class="o">.</span><span class="n">_input_vars</span><span class="p">[</span><span class="s2">&quot;loop_vars&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">loop_vars</span>
+
+            <span class="c1"># remove invariants from while_loop body_block outputs</span>
+            <span class="n">body_block</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">body_block</span><span class="o">.</span><span class="n">set_outputs</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">body_block</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">loop_invariant_ids</span><span class="p">]</span>
+            <span class="p">)</span>
+
+            <span class="c1"># op._output_vars doesn&#39;t include cond var</span>
+            <span class="n">op</span><span class="o">.</span><span class="n">_output_vars</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">v</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">_output_vars</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">loop_invariant_ids</span>
+            <span class="p">]</span>
+
+            <span class="c1"># check healthy state</span>
+            <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

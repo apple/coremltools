@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+              <div class="version">
+                8.0b1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright (c) 2023, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">get_new_symbol</span><span class="p">,</span> <span class="n">types</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="n">DefaultInputs</span><span class="p">,</span> <span class="n">InputSpec</span><span class="p">,</span> <span class="n">TensorInputType</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">crop_resize</span> <span class="k">as</span> <span class="n">_crop_resize_iOS16</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing</span> <span class="kn">import</span> <span class="n">resample</span> <span class="k">as</span> <span class="n">_resample_iOS16</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs.iOS17</span> <span class="kn">import</span> <span class="n">_IOS17_TARGET</span>
+
+
+<div class="viewcode-block" id="crop_resize">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing.crop_resize">[docs]</a>
+<span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS17_TARGET</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">crop_resize</span><span class="p">(</span><span class="n">_crop_resize_iOS16</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The major differences between this version and the iOS 16 :py:class:`~.iOS16.image_resizing.crop_resize`</span>
+<span class="sd">    are as follows:</span>
+
+<span class="sd">    - The input ``ROI`` is replaced by ``boxes`` and ``box_indices``.</span>
+<span class="sd">    - The dtype domain of input ``x``, ``boxes``, and ``box_indices`` are independent.</span>
+<span class="sd">    - The output no longer has the ``B`` dim. The output is ``[N, C, target_height, target_width]``</span>
+<span class="sd">      rather than the ``[N, B, C, target_height, target_width]`` in iOS 16.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;[B, C, H, W], T&gt; (Required)</span>
+<span class="sd">        * The input, from which patches (regions of interest) are extracted</span>
+<span class="sd">          and resized using bilinear interpolation.</span>
+<span class="sd">        * Rank ``4``.</span>
+
+<span class="sd">    boxes: tensor&lt;[N, 4], BOX_T&gt; (Required)</span>
+<span class="sd">        * Coordinates of ``N`` boxes.</span>
+<span class="sd">        * The convention to express coordinates depends on the value of ``box_coordinate_mode``.</span>
+<span class="sd">        * If ``normalized_coordinates`` is True, only fp16 and fp32 dtypes are allowed.</span>
+
+<span class="sd">    box_indices: tensor&lt;[N], BOX_INDEX_T&gt; (Optional)</span>
+<span class="sd">        * Default is ``arange(N)``, or ``[0, 1, ..., N-1]``.</span>
+<span class="sd">        * If ``box_indices[i]=j``, this means that ``boxes[i]`` will be applied to the ``j``-th image.</span>
+<span class="sd">          Therefore, it is invalid for ``box_indices[i]`` to be greater than ``B``.</span>
+
+<span class="sd">    target_height: const&lt;i32&gt; (Optional, Default=1)</span>
+<span class="sd">        * Target height for resizing each patch.</span>
+
+<span class="sd">    target_width: const&lt;i32&gt; (Optional, Default=1)</span>
+<span class="sd">        * Target width for resizing each patch.</span>
+
+<span class="sd">    normalized_coordinates : const&lt;bool&gt; (Optional, default=False)</span>
+<span class="sd">        * If ``True``, the bounding box coordinates must be in the</span>
+<span class="sd">          interval ``[0, 1]``. Scaling is based on the input spatial</span>
+<span class="sd">          dimensions: ``(H_in - 1)`` for height and ``(W_in - 1)`` for width.</span>
+<span class="sd">        * If ``False``, the bounding box coordinates must be in the interval</span>
+<span class="sd">          ``[0, H_in - 1]`` for height dimensions and ``[0, W_in - 1]`` for</span>
+<span class="sd">          width dimensions.</span>
+
+<span class="sd">    spatial_scale : const&lt;fp32&gt; (Optional, default=1.0)</span>
+<span class="sd">        * Additional spatial scale that multiplies the bounding box coordinates.</span>
+<span class="sd">        * You would use this to implement the RoI Align layer, which typically</span>
+<span class="sd">          uses unnormalized RoI coordinates along with a spatial scale that is</span>
+<span class="sd">          less than or equal to ``1``.</span>
+
+<span class="sd">    box_coordinate_mode: const&lt;str&gt; (Optional, default=&quot;CORNERS_HEIGHT_FIRST&quot;)</span>
+<span class="sd">        * Specifies the convention for specifying the four bounding box</span>
+<span class="sd">          coordinates for an image of size ``(Height, Width)``. The ``(0,0)``</span>
+<span class="sd">          coordinate corresponds to the top-left corner of the image.</span>
+<span class="sd">        * This parameter can take one of four values:</span>
+
+<span class="sd">          ``&quot;CORNERS_HEIGHT_FIRST&quot;``: ``[h_start, w_start, h_end, w_end]``</span>
+
+<span class="sd">          ``&quot;CORNERS_WIDTH_FIRST&quot;``: ``[w_start, h_start, w_end, h_end]``</span>
+
+<span class="sd">          ``&quot;CENTER_SIZE_HEIGHT_FIRST&quot;``: ``[h_center, w_center, box_height, box_width]``</span>
+
+<span class="sd">          ``&quot;CENTER_SIZE_WIDTH_FIRST&quot;``: ``[w_center, h_center, box_width, box_height]``</span>
+
+<span class="sd">    sampling_mode : const&lt;str&gt; (Optional, default=&quot;DEFAULT&quot;)</span>
+<span class="sd">        * This parameter can take ``&quot;STRICT_ALIGN_CORNERS&quot;``,</span>
+<span class="sd">          ``&quot;ALIGN_CORNERS&quot;``, ``&quot;DEFAULT&quot;``, ``&quot;OFFSET_CORNERS&quot;`` or</span>
+<span class="sd">          ``UNALIGN_CORNERS`` as values.</span>
+<span class="sd">        * This is the same convention used by the :py:class:`~.iOS15.image_resizing.resize_bilinear` op.</span>
+
+<span class="sd">    pad_value : const&lt;T&gt; (Optional, default=0.0)</span>
+<span class="sd">        * If the box indexes go beyond the input boundary, the input image is padded with ``pad_value``.</span>
+<span class="sd">        * Defaults to ``0``.</span>
+<span class="sd">        * It is the same as ``extrapolation_value`` in `tf.image.crop_and_resize &lt;https://www.tensorflow.org/api_docs/python/tf/image/crop_and_resize&gt;`_.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;[N, C, target_height, target_width], T&gt;</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32</span>
+<span class="sd">    BOX_T: fp16, fp32, uint16</span>
+<span class="sd">    BOX_INDEX_T: uint16, int32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">boxes</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;BOX_T&quot;</span><span class="p">),</span>
+        <span class="n">box_indices</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;BOX_INDEX_T&quot;</span><span class="p">),</span>
+        <span class="n">target_height</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+        <span class="n">target_width</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+        <span class="n">normalized_coordinates</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
+        <span class="n">spatial_scale</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+        <span class="n">box_coordinate_mode</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">),</span>
+        <span class="n">sampling_mode</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">),</span>
+        <span class="n">pad_value</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+        <span class="s2">&quot;BOX_T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint16</span><span class="p">),</span>
+        <span class="s2">&quot;BOX_INDEX_T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">uint16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_indices</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">boxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="c1"># The default box indices is [0, 1, ..., N-1], which is out-of-range for N&gt;B.</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;&quot;crop_resize&quot; op: N dimension of &quot;boxes&quot; (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">boxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1">) &#39;</span>
+                <span class="sa">f</span><span class="s1">&#39;should not be greater than the B dimension of &quot;x&quot; (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1">) &#39;</span>
+                <span class="sa">f</span><span class="s1">&#39;when &quot;box_indices&quot; is not specified, otherwise &quot;box_indices&quot; would &#39;</span>
+                <span class="sa">f</span><span class="s1">&#39;point outside of &quot;x&quot; bounds.&#39;</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">DefaultInputs</span><span class="p">(</span>
+            <span class="n">box_indices</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">boxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span>
+            <span class="n">target_height</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">target_width</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">normalized_coordinates</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">spatial_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="n">box_coordinate_mode</span><span class="o">=</span><span class="s2">&quot;CORNERS_HEIGHT_FIRST&quot;</span><span class="p">,</span>
+            <span class="n">sampling_mode</span><span class="o">=</span><span class="s2">&quot;DEFAULT&quot;</span><span class="p">,</span>
+            <span class="n">pad_value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_validate_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;input to the &quot;crop_resize&quot; op must be of rank 4, but got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">boxes</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">boxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;&quot;crop_resize&quot; op: input &quot;boxes&quot; must has shape [N, 4], but got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">boxes</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_indices</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_indices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;&quot;crop_resize&quot; op: input &quot;box_indices&quot; must has shape [</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">boxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1">], &#39;</span>
+                <span class="sa">f</span><span class="s2">&quot;but got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">box_indices</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_indices</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">box_indices</span><span class="o">.</span><span class="n">val</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;&quot;crop_resize&quot; op: input &quot;box_indices&quot; should not have values &gt;= B dimension of x &#39;</span>
+                <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">), but got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">box_indices</span><span class="o">.</span><span class="n">val</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_coordinate_mode</span><span class="o">.</span><span class="n">val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_VALID_BOX_COORDINATE_MODES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;&quot;crop_resize&quot; op: unrecognized box_coordinate_mode &quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">box_coordinate_mode</span><span class="o">.</span><span class="n">val</span><span class="si">}</span><span class="s1">&quot;&#39;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampling_mode</span><span class="o">.</span><span class="n">val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_VALID_SAMPLING_MODES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;&quot;crop_resize&quot; op: unrecognized sampling mode &quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sampling_mode</span><span class="o">.</span><span class="n">val</span><span class="si">}</span><span class="s1">&quot;&#39;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalized_coordinates</span><span class="o">.</span><span class="n">val</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">boxes</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">}:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s1">&#39;&quot;crop_resize&quot; op: When normalized_coordinates is set, the &#39;</span>
+                    <span class="sa">f</span><span class="s1">&#39;&quot;boxes&quot; must have fp16 or fp32 dtype, but got &#39;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">types</span><span class="o">.</span><span class="n">builtin_to_string</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sampling_mode</span><span class="o">.</span><span class="n">val</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_input</span><span class="p">()</span>
+        <span class="c1"># Output shape is [N, C, h_out, w_out].</span>
+        <span class="n">ret_shape</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">boxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">target_height</span><span class="o">.</span><span class="n">val</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">target_width</span><span class="o">.</span><span class="n">val</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">ret_shape</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="resample">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing.resample">[docs]</a>
+<span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS17_TARGET</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">resample</span><span class="p">(</span><span class="n">_resample_iOS16</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Resample the input image tensor ``x`` at the ``coordinates``.</span>
+
+<span class="sd">    The major difference between this version and the iOS 16 :py:class:`~.iOS16.image_resizing.resample`</span>
+<span class="sd">    is that `coordinates` supports int8, uint8, int16, uint16.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">coordinates</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;U&quot;</span><span class="p">),</span>
+        <span class="n">sampling_mode</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">),</span>
+        <span class="n">padding_mode</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">),</span>
+        <span class="n">padding_value</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">coordinates_mode</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">),</span>
+        <span class="n">align_corners</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+        <span class="s2">&quot;U&quot;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span>
+            <span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span>
+            <span class="n">types</span><span class="o">.</span><span class="n">int16</span><span class="p">,</span>
+            <span class="n">types</span><span class="o">.</span><span class="n">uint16</span><span class="p">,</span>
+            <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
+            <span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span>
+            <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="resize">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing.resize">[docs]</a>
+<span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS17_TARGET</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">resize</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Resizes the input tensor ``x`` by choosing the right-most ``resized_dims`` dimensions from</span>
+<span class="sd">    the input shape ``shape``, and by choosing the rest from ``x`` &#39;s shape.</span>
+
+<span class="sd">    This iOS17 ``resize`` is a superset of iOS 15 :py:class:`~.iOS15.image_resizing.resize_bilinear`</span>
+<span class="sd">    and :py:class:`~.iOS15.image_resizing.resize_nearest_neighbor`.</span>
+<span class="sd">    The main benefit is that this resize op allows a use-case in dynamic tensor shapes where</span>
+<span class="sd">    a tensor needs to be resized to a dynamic shape as specified by another tensor.</span>
+
+<span class="sd">    To illustrate how output shape is inferred, the following are two examples:</span>
+
+<span class="sd">    - Example #1::</span>
+
+<span class="sd">        x.shape: [1, 2, 3, 4]</span>
+<span class="sd">        shape: [1, 6, 8]</span>
+<span class="sd">        resized_dims: 2</span>
+<span class="sd">        The output&#39;s shape will be [1, 2, 6, 8]</span>
+
+<span class="sd">    - Example #2::</span>
+
+<span class="sd">        x.shape: [1, 2, 3, is0]</span>
+<span class="sd">        shape: [1, 0, 0]</span>
+<span class="sd">        resized_dims: 2</span>
+<span class="sd">        The output&#39;s shape will be [1, 2, 3, is0]</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;[...], T&gt; (Required)</span>
+
+<span class="sd">    shape: tensor&lt;[K], U&gt; (Required)</span>
+<span class="sd">        * Restriction: ``size(shape)`` &lt;= ``rank(x)``.</span>
+<span class="sd">        * If ``shape[i]==0``, the dimension in the output tensor will instead be inferred from the</span>
+<span class="sd">          corresponding element of ``x.shape()``.  Note this might not be ``x.shape()[i]``, as ``size(shape)``,</span>
+<span class="sd">          ``resized_dims``, and ``size(x)`` may all be different sizes.</span>
+
+<span class="sd">    resized_dims: const tensor&lt;[], uint32&gt; (Required)</span>
+<span class="sd">        * Restriction: ``resized_dims`` &lt;= ``size(shape)``.</span>
+
+<span class="sd">    interpolation_mode: const&lt;str&gt; (Optional, default=&quot;LINEAR&quot;)</span>
+<span class="sd">        * Available mode: ``LINEAR``, ``NEAREST_NEIGHBOR``.</span>
+
+<span class="sd">    sampling_mode: const&lt;str&gt; (Optional, default=&quot;DEFAULT&quot;)</span>
+<span class="sd">        * Available mode: ``DEFAULT``, ``STRICT_ALIGN_CORNERS``, ``ALIGN_CORNERS``, ``OFFSET_CORNERS``, ``UNALIGN_CORNERS``.</span>
+<span class="sd">        * For details about different sampling modes, see iOS 15 :py:class:`~.iOS15.image_resizing.resize_bilinear`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;[...], T&gt;</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, int32</span>
+<span class="sd">    U: int32, int16, uint16, uint32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">shape</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;U&quot;</span><span class="p">),</span>
+        <span class="n">resized_dims</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">uint32</span><span class="p">),</span>
+        <span class="n">interpolation_mode</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">),</span>
+        <span class="n">sampling_mode</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+        <span class="s2">&quot;U&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint32</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="n">_VALID_INTERPOLATION_MODES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;LINEAR&quot;</span><span class="p">,</span> <span class="s2">&quot;NEAREST_NEIGHBOR&quot;</span><span class="p">}</span>
+    <span class="n">_VALID_SAMPLING_MODE</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;DEFAULT&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;STRICT_ALIGN_CORNERS&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ALIGN_CORNERS&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;OFFSET_CORNERS&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;UNALIGN_CORNERS&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DefaultInputs</span><span class="p">(</span>
+            <span class="n">interpolation_mode</span><span class="o">=</span><span class="s2">&quot;LINEAR&quot;</span><span class="p">,</span>
+            <span class="n">sampling_mode</span><span class="o">=</span><span class="s2">&quot;DEFAULT&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_validate_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">shape_element_num</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">size</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">resized_dims</span><span class="o">.</span><span class="n">val</span> <span class="o">&gt;</span> <span class="n">shape_element_num</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;The resized_dims (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">resized_dims</span><span class="o">.</span><span class="n">val</span><span class="si">}</span><span class="s2">) must &lt;= shape&#39;s size (</span><span class="si">{</span><span class="n">shape_element_num</span><span class="si">}</span><span class="s2">)&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="n">shape_element_num</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;The shape&#39;s size (</span><span class="si">{</span><span class="n">shape_element_num</span><span class="si">}</span><span class="s2">) must &lt;= x&#39;s rank (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span><span class="si">}</span><span class="s2">)&quot;</span>
+                <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The shape&#39;s rank must be 1, but got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">rank</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolation_mode</span><span class="o">.</span><span class="n">val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_VALID_INTERPOLATION_MODES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid interpolation_mode </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">interpolation_mode</span><span class="o">.</span><span class="n">val</span><span class="si">}</span><span class="s2">. Supported modes are: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_VALID_INTERPOLATION_MODES</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampling_mode</span><span class="o">.</span><span class="n">val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_VALID_SAMPLING_MODE</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid sampling_mode </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sampling_mode</span><span class="o">.</span><span class="n">val</span><span class="si">}</span><span class="s2">. Supported modes are: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_VALID_SAMPLING_MODE</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_input</span><span class="p">()</span>
+
+        <span class="c1"># The output tensor will have the same rank as the input tensor. The rightmost resized_dims</span>
+        <span class="c1"># dimensions of the output_shape will be taken from the input &quot;shape&quot;.</span>
+        <span class="n">ret_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="n">start_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">resized_dims</span><span class="o">.</span><span class="n">val</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resized_dims</span><span class="o">.</span><span class="n">val</span><span class="p">):</span>
+            <span class="n">target_shape</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">get_new_symbol</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">val</span><span class="p">[</span><span class="n">start_idx</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">target_shape</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># The 0 in `shape` means inheriting from x&#39;s shape.</span>
+                <span class="n">target_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">resized_dims</span><span class="o">.</span><span class="n">val</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span>
+            <span class="n">ret_shape</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">resized_dims</span><span class="o">.</span><span class="n">val</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">target_shape</span>
+
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">ret_shape</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
