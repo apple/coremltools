@@ -7562,3 +7562,13 @@ def multinomial(context, node):
     # Based on PyTorch documentations, the input to `torch.multinomial` is probability, not logit.
     x = mb.random_categorical(x=x, size=num_samples, mode="probs", name=node.name)
     context.add(x)
+
+
+@register_torch_op
+def one_hot(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    labels = inputs[0]
+    num_classes = inputs[1].val
+    
+    res = mb.one_hot(indices=labels, one_hot_vector_size=num_classes, name=node.name)
+    context.add(res)
