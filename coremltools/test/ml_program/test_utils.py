@@ -793,33 +793,29 @@ class TestMultiFunctionModelEnd2End:
             np.testing.assert_allclose(gt_output_2, output)
 
         # make sure the weights are deduplicated
-        with tempfile.TemporaryDirectory() as serialize_dir:
-            os.system(f"coremlcompiler compile {saved_package_path} {serialize_dir}")
-            model_name_with_extension = os.path.basename(saved_package_path)
-            model_name_wo_extension, _ = os.path.splitext(model_name_with_extension)
-            mil_file = open(
-                os.path.join(serialize_dir, f"{model_name_wo_extension}.mlmodelc", "model.mil")
+        default_model = ct.models.MLModel(saved_package_path)
+        mil_file = open(os.path.join(default_model.get_compiled_model_path(), "model.mil"))
+        mil_txt = mil_file.read()
+        assert (
+            mil_txt.count(
+                'const()[name = string("const_0_to_fp16"), val = tensor<fp16, [8, 1, 5, 5]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(64)))];'
             )
-            mil_txt = mil_file.read()
-            assert (
-                mil_txt.count(
-                    'const()[name = string("const_0_to_fp16"), val = tensor<fp16, [8, 1, 5, 5]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(64)))];'
-                )
-                == 2
+            == 2
+        )
+        assert (
+            mil_txt.count(
+                'tensor<fp16, [5, 6272]> linear1_linear1_weight_to_fp16 = const()[name = string("linear1_linear1_weight_to_fp16"), val = tensor<fp16, [5, 6272]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(576)))];'
             )
-            assert (
-                mil_txt.count(
-                    'tensor<fp16, [5, 6272]> linear1_linear1_weight_to_fp16 = const()[name = string("linear1_linear1_weight_to_fp16"), val = tensor<fp16, [5, 6272]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(576)))];'
-                )
-                == 1
+            == 1
+        )
+        assert (
+            mil_txt.count(
+                'tensor<fp16, [5, 6272]> linear1_linear1_weight_to_fp16 = const()[name = string("linear1_linear1_weight_to_fp16"), val = tensor<fp16, [5, 6272]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(63360)))];'
             )
-            assert (
-                mil_txt.count(
-                    'tensor<fp16, [5, 6272]> linear1_linear1_weight_to_fp16 = const()[name = string("linear1_linear1_weight_to_fp16"), val = tensor<fp16, [5, 6272]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(63360)))];'
-                )
-                == 1
-            )
+            == 1
+        )
         shutil.rmtree(saved_package_path)
+
 
     def test_single_model(self):
         """
@@ -912,26 +908,21 @@ class TestMultiFunctionModelEnd2End:
                 np.testing.assert_allclose(gt_output, output)
 
         # make sure the weights are deduplicated
-        with tempfile.TemporaryDirectory() as serialize_dir:
-            os.system(f"coremlcompiler compile {saved_package_path} {serialize_dir}")
-            model_name_with_extension = os.path.basename(saved_package_path)
-            model_name_wo_extension, _ = os.path.splitext(model_name_with_extension)
-            mil_file = open(
-                os.path.join(serialize_dir, f"{model_name_wo_extension}.mlmodelc", "model.mil")
+        default_model = ct.models.MLModel(saved_package_path)
+        mil_file = open(os.path.join(default_model.get_compiled_model_path(), "model.mil"))
+        mil_txt = mil_file.read()
+        assert (
+            mil_txt.count(
+                'const()[name = string("const_0_to_fp16"), val = tensor<fp16, [8, 1, 5, 5]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(64)))];'
             )
-            mil_txt = mil_file.read()
-            assert (
-                mil_txt.count(
-                    'const()[name = string("const_0_to_fp16"), val = tensor<fp16, [8, 1, 5, 5]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(64)))];'
-                )
-                == 10
+            == 10
+        )
+        assert (
+            mil_txt.count(
+                'tensor<fp16, [5, 6272]> linear1_weight_to_fp16 = const()[name = string("linear1_weight_to_fp16"), val = tensor<fp16, [5, 6272]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(576)))];'
             )
-            assert (
-                mil_txt.count(
-                    'tensor<fp16, [5, 6272]> linear1_weight_to_fp16 = const()[name = string("linear1_weight_to_fp16"), val = tensor<fp16, [5, 6272]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(576)))];'
-                )
-                == 10
-            )
+            == 10
+        )
         shutil.rmtree(saved_package_path)
 
 
@@ -1086,17 +1077,14 @@ class TestMaterializeSymbolicShapeMLModel:
         torch_model.eval()
         return torch_model
 
+
     @staticmethod
     def read_mil_text(mlpackage_path: str) -> str:
-        with tempfile.TemporaryDirectory() as serialize_dir:
-            os.system(f"coremlcompiler compile {mlpackage_path} {serialize_dir}")
-            model_name_with_extension = os.path.basename(mlpackage_path)
-            model_name_wo_extension, _ = os.path.splitext(model_name_with_extension)
-            mil_file = open(
-                os.path.join(serialize_dir, f"{model_name_wo_extension}.mlmodelc", "model.mil")
-            )
-            mil_text = mil_file.read()
+        mlmodel = ct.models.MLModel(mlpackage_path)
+        mil_file = open(os.path.join(mlmodel.get_compiled_model_path(), "model.mil"))
+        mil_text = mil_file.read()
         return mil_text
+
 
     @pytest.mark.parametrize(
         "symbolic_shape, override_main_function, reload_mlmodel",
