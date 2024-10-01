@@ -860,7 +860,7 @@ class TestWeightNorm(TorchBaseTest):
         ),
     )
     def test_conv3d(self, compute_unit, backend):
-        x = torch.randn(20, 16, 5, 50, 100)
+        x = torch.randn(15, 16, 5, 20, 10)
 
         for dim in (None,) + tuple(range(-5, 5)):
             model = nn.utils.weight_norm(nn.Conv3d(16, 33, 3), dim=dim)
