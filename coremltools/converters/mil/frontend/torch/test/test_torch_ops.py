@@ -467,6 +467,10 @@ class TestFrac(TorchBaseTest):
             backend=backend,
             compute_unit=compute_unit,
             rand_range=(-10.0, 10.0),
+
+            # Casting from fp32 to fp16 can produce very different result when value close to whole number.
+            input_dtype=np.float16,
+            minimum_deployment_target=ct.target.iOS16,
         )
 
 
