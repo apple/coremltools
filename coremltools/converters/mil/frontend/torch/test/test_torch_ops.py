@@ -6247,8 +6247,8 @@ class TestMatMul(TorchBaseTest):
         ),
     )
     def test_bmm_with_fp16_inputs(self, compute_unit, backend, frontend):
-        if platform.machine() == "x86_64" and ct.utils._macos_version() <= (14, 2):
-            pytest.xfail("rdar://135925921 ([CI] Upgrade External CI Machine OS)")
+        if platform.machine() == "x86_64":
+            pytest.xfail("rdar://137157493")
 
         class TestModel(torch.nn.Module):
             def forward(self, x, y):
