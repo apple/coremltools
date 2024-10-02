@@ -3657,6 +3657,24 @@ class TestConcat(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend", itertools.product(compute_units, backends, frontends)
     )
+    def test_cat_with_empty_tensors(self, compute_unit, backend, frontend):
+        class TestNet(nn.Module):
+            def forward(self, x):
+                y = torch.cat((torch.empty(1, 0, 3), torch.empty(1, 0, 3)), axis=1)
+                return torch.cat([x, y], axis=1)
+
+        model = TestNet()
+        self.run_compare_torch(
+            (1, 2, 3),
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend", itertools.product(compute_units, backends, frontends)
+    )
     def test_cat_input_types_promotion(self, compute_unit, backend, frontend):
         if frontend == TorchFrontend.EXECUTORCH:
             pytest.skip("executorch does not allow mixed dtypes")
@@ -12400,7 +12418,7 @@ class TestSoftplus(TorchBaseTest):
             backend=backend,
             compute_unit=compute_unit,
         )
-    
+
     @pytest.mark.parametrize(
         "compute_unit, backend",
         itertools.product(compute_units, backends),
@@ -12408,13 +12426,13 @@ class TestSoftplus(TorchBaseTest):
     def test_softplus_no_default(self, compute_unit, backend):
         model = ModuleWrapper(function=torch.nn.functional.softplus, kwargs={"beta": 2, "threshold": 2}).eval()
         self.run_compare_torch(
-            torch.arange(0, 3).float() + 0.5, 
-            model, 
-            backend=backend, 
+            torch.arange(0, 3).float() + 0.5,
+            model,
+            backend=backend,
             compute_unit=compute_unit,
             input_as_shape=False,
         )
-    
+
     @pytest.mark.parametrize(
         "compute_unit, backend, value",
         itertools.product(compute_units, backends, [1.0, 3.0, 1e5, 1e7, 1e9]),
