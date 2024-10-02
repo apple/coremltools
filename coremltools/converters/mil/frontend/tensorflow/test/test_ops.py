@@ -1935,6 +1935,11 @@ class TestConvTranspose(TensorFlowBaseTest):
         if _macos_version() < (12, 0) and strides == (1, 2, 3) and padding == "VALID":
             # Behavior changed in macOS 12
             return
+        if (platform.machine() == "x86_64" and compute_unit == ct.ComputeUnit.CPU_ONLY
+          and backend == ('mlprogram', 'fp16') and padding == "SAME"
+          and DHWkDkHkW in ((4, 6, 8, 2, 3, 1), (5, 7, 9, 2, 4, 2))
+          and strides == (1, 2, 3) and dilations == (1, 1, 1) and dynamic):
+            pytest.xfail("rdar://137132151")
 
         D, H, W, kD, kH, kW = DHWkDkHkW
         N, C_in, C_out = 2, 1, 2
