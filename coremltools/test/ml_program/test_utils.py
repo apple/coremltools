@@ -686,6 +686,7 @@ class TestMultiFunctionModelEnd2End:
                 x = self.linear1(torch.flatten(x))
                 return x
 
+
         model = TestModel().eval()
         example_input = torch.rand(1, 1, 28, 28)
         return torch.jit.trace(model, example_input)
@@ -704,6 +705,7 @@ class TestMultiFunctionModelEnd2End:
             def forward(self, x):
                 return self.linear1(x)
 
+
         class TestModel(torch.nn.Module):
             def __init__(self):
                 super().__init__()
@@ -716,6 +718,7 @@ class TestMultiFunctionModelEnd2End:
                 x = self.bn1(x)
                 x = self.linear1(torch.flatten(x))
                 return x
+
 
         example_input = torch.rand(1, 1, 28, 28)
         model = TestModel().eval()
@@ -737,6 +740,9 @@ class TestMultiFunctionModelEnd2End:
 
         After merging model_1 with model_2, the base weights should be shared.
         """
+        if platform.machine() == "x86_64":
+            pytest.xfail("rdar://137217263")
+
         traced_model_1, traced_model_2 = self._get_test_model_2()
         input = np.random.rand(1, 1, 28, 28)
 
@@ -861,6 +867,9 @@ class TestMultiFunctionModelEnd2End:
         """
         Copy a single model 10 times and create a multi-functions model with 10 functions.
         """
+        if platform.machine() == "x86_64":
+            pytest.xfail("rdar://137217263")
+
         traced_model = self._get_test_model()
         input = np.random.rand(1, 1, 28, 28)
         NUM_MODEL = 10
