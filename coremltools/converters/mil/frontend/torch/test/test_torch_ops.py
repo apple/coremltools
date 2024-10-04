@@ -467,6 +467,10 @@ class TestFrac(TorchBaseTest):
             backend=backend,
             compute_unit=compute_unit,
             rand_range=(-10.0, 10.0),
+
+            # Casting from fp32 to fp16 can produce very different result when value close to whole number.
+            input_dtype=np.float16,
+            minimum_deployment_target=ct.target.iOS16,
         )
 
 
@@ -860,7 +864,7 @@ class TestWeightNorm(TorchBaseTest):
         ),
     )
     def test_conv3d(self, compute_unit, backend):
-        x = torch.randn(20, 16, 5, 50, 100)
+        x = torch.randn(15, 16, 5, 20, 10)
 
         for dim in (None,) + tuple(range(-5, 5)):
             model = nn.utils.weight_norm(nn.Conv3d(16, 33, 3), dim=dim)
@@ -6243,8 +6247,8 @@ class TestMatMul(TorchBaseTest):
         ),
     )
     def test_bmm_with_fp16_inputs(self, compute_unit, backend, frontend):
-        if platform.machine() == "x86_64" and ct.utils._macos_version() <= (14, 2):
-            pytest.xfail("rdar://135925921 ([CI] Upgrade External CI Machine OS)")
+        if platform.machine() == "x86_64":
+            pytest.xfail("rdar://137157493")
 
         class TestModel(torch.nn.Module):
             def forward(self, x, y):

@@ -626,6 +626,9 @@ class MLModel:
         the compiled model to persist, you need to make a copy.
 
         """
+        if self.__proxy__ is None:
+            raise Exception("This model was not loaded or compiled with the Core ML Framework.")
+
         return self.__proxy__.get_compiled_model_path()
 
 
@@ -804,6 +807,8 @@ class MLModel:
         """
         if not _is_macos() or _macos_version() < (15, 0):
             raise Exception("State functionality is only supported on macOS 15+")
+        if self.__proxy__ is None:
+            raise Exception("This model was not loaded with the Core ML Framework. Cannot get state.")
 
         return MLState(self.__proxy__.newState())
 

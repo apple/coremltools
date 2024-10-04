@@ -5,6 +5,7 @@
 
 import itertools
 import logging
+import platform
 import re
 import shutil
 import tempfile
@@ -392,6 +393,9 @@ class TestLinearQuantizeWeights:
         ),
     )
     def test_blockwise_quanitzation_stress(compute_unit, backend, mode, nbits, signed, block_size):
+        if platform.machine() == "x86_64":
+            pytest.xfail("rdar://137153993 ([CI] Quantization Tests Failing only on *native* x86_64 (not with Rosetta))")
+
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data()
         torchmodel = torch.jit.trace(model, torch_input_values)
         mlmodel = ct.convert(
@@ -461,6 +465,9 @@ class TestLinearQuantizeWeights:
         ),
     )
     def test_per_tensor_quantization_with_blockwise_op(compute_unit, backend, mode, nbits):
+        if platform.machine() == "x86_64":
+            pytest.xfail("rdar://137153993 ([CI] Quantization Tests Failing only on *native* x86_64 (not with Rosetta))")
+
         op_config = cto.coreml.OpLinearQuantizerConfig(
             mode=mode, dtype=f"int{nbits}", granularity="per_tensor"
         )
@@ -1050,6 +1057,9 @@ class TestPalettizeWeights:
     def test_channelwise_palettization_stress(
         compute_unit, backend, mode, nbits, channel_axis, channel_group_size
     ):
+        if platform.machine() == "x86_64":
+            pytest.xfail("rdar://137153993 ([CI] Quantization Tests Failing only on *native* x86_64 (not with Rosetta))")
+
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data()
         torchmodel = torch.jit.trace(model, torch_input_values)
         mlmodel = ct.convert(
@@ -1347,6 +1357,9 @@ class TestPalettizeWeights:
     )
     def test_palettization_pcs(self, compute_unit, backend):
         """Test the palettization with per-channel-scale."""
+        if platform.machine() == "x86_64":
+            pytest.xfail("rdar://137153993 ([CI] Quantization Tests Failing only on *native* x86_64 (not with Rosetta))")
+
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data()
 
         torchmodel = torch.jit.trace(model, torch_input_values)

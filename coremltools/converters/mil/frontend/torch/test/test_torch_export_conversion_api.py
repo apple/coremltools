@@ -80,9 +80,6 @@ class TestTorchExportConversionAPI(TorchBaseTest):
         itertools.product(compute_units, backends, frontends),
     )
     def test_dynamic_input(self, compute_unit, backend, frontend):
-        if ct.utils._macos_version() <= (14, 2):
-            pytest.xfail("rdar://135925921 ([CI] Upgrade External CI Machine OS)")
-
         class Model(torch.nn.Module):
             def __init__(self):
                 super().__init__()
@@ -158,9 +155,6 @@ class TestExecuTorchExamples(TorchBaseTest):
         itertools.product(compute_units, backends, frontends, (True, False)),
     )
     def test_mul(self, compute_unit, backend, frontend, dynamic):
-        if ct.utils._macos_version() <= (14, 2) and dynamic:
-            pytest.xfail("rdar://135925921 ([CI] Upgrade External CI Machine OS)")
-
         class MulModule(torch.nn.Module):
             def forward(self, input, other):
                 return input * other
@@ -242,9 +236,6 @@ class TestExecuTorchExamples(TorchBaseTest):
         itertools.product(compute_units, backends, frontends, (True, False)),
     )
     def test_linear(self, compute_unit, backend, frontend, dynamic):
-        if ct.utils._macos_version() <= (14, 2) and dynamic:
-            pytest.xfail("rdar://135925921 ([CI] Upgrade External CI Machine OS)")
-
         class LinearModule(torch.nn.Module):
             def __init__(self):
                 super().__init__()
@@ -424,9 +415,6 @@ class TestExecuTorchExamples(TorchBaseTest):
         itertools.product(compute_units, backends, frontends, (True, False)),
     )
     def test_add_mul(self, compute_unit, backend, frontend, dynamic):
-        if ct.utils._macos_version() <= (14, 2) and dynamic:
-            pytest.xfail("rdar://135925921 ([CI] Upgrade External CI Machine OS)")
-
         class AddMulModule(torch.nn.Module):
             def forward(self, a, x, b):
                 y = torch.mm(a, x)
@@ -542,9 +530,6 @@ class TestExecuTorchExamples(TorchBaseTest):
         itertools.product(compute_units, backends, frontends, (True, False)),
     )
     def test_softmax(self, compute_unit, backend, frontend, dynamic):
-        if ct.utils._macos_version() <= (14, 2) and dynamic:
-            pytest.xfail("rdar://135925921 ([CI] Upgrade External CI Machine OS)")
-
         class SoftmaxModule(torch.nn.Module):
             def __init__(self):
                 super().__init__()
