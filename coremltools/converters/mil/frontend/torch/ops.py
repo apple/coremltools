@@ -2384,7 +2384,7 @@ def cat(context, node):
         # However, CoreML does not allow such empty tensor, so remove them now
         if np.any([is_tensor_empty(x) for x in xs]):
             filtered_xs = [x for x in xs if not is_tensor_empty(x)]
-            xs = filtered_xs if filtered_xs else [xs[0]]
+            xs = filtered_xs if len(filtered_xs) > 0 else [xs[0]]
 
         dim = inputs[1] if nargs > 1 else 0
 
