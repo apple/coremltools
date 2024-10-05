@@ -5541,10 +5541,7 @@ def zeros_like(context, node):
         zeros_like = mb.const(val=zeros, name=node.name)
     else:
         value = np_type(0)
-        if is_current_opset_version_compatible_with(target.iOS16):
-            zeros_like = mb.fill_like(ref_tensor=x, value=value, name=node.name)
-        else:
-            zeros_like = mb.fill(shape=shape, value=value, name=node.name)
+        zeros_like = mb.mul(x=x, y=value, name=node.name)
 
     context.add(zeros_like)
 
