@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Multifunction Models &#8212; Guide to Core ML Tools</title>
+    <title>Converting a Large Language Model &#8212; Guide to Core ML Tools</title>
   
   
   
@@ -44,11 +44,11 @@
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'source/multifunction-models';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'source/convert-llm';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Xcode Model Preview Types" href="xcode-model-preview-types.html" />
-    <link rel="prev" title="MLModel Overview" href="mlmodel.html" />
+    <link rel="next" title="Conversion Options" href="conversion-options.html" />
+    <link rel="prev" title="Converting a PyTorch Segmentation Model" href="pytorch-conversion-examples.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -168,7 +168,7 @@
 <li class="toctree-l1"><a class="reference internal" href="how-to-contribute.html">Contributing</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
-<ul class="nav bd-sidenav">
+<ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="target-conversion-formats.html">Source and Conversion Formats</a></li>
@@ -188,7 +188,7 @@
 <li class="toctree-l2"><a class="reference internal" href="convert-tensorflow-2-bert-transformer-models.html">Converting TensorFlow 2 BERT Transformer Models</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="convert-pytorch-workflow.html">PyTorch Conversion Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-tracing.html">Model Tracing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-scripting.html">Model Scripting</a></li>
@@ -196,7 +196,7 @@
 <li class="toctree-l2"><a class="reference internal" href="convert-nlp-model.html">Converting a Natural Language Processing Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html">Converting a torchvision Model from PyTorch</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pytorch-conversion-examples.html">Converting a PyTorch Segmentation Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="convert-llm.html">Converting a Large Language Model</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Converting a Large Language Model</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -255,9 +255,9 @@
 <li class="toctree-l1"><a class="reference internal" href="xgboost-conversion.html">XGBoost</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">MLModel</span></p>
-<ul class="current nav bd-sidenav">
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="mlmodel.html">MLModel Overview</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Multifunction Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multifunction-models.html">Multifunction Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="xcode-model-preview-types.html">Xcode Model Preview Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mlmodel-utilities.html">MLModel Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model-prediction.html">Model Prediction</a></li>
@@ -336,7 +336,7 @@
       
       
       
-      <li><a href="../_sources/source/multifunction-models.md" target="_blank"
+      <li><a href="../_sources/source/convert-llm.md" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -420,7 +420,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Multifunction Models</h1>
+    <h1>Converting a Large Language Model</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -430,8 +430,13 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-combine-models">Why Combine Models?</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#combining-models-toy-example-with-lora-adapters">Combining models: toy example with LoRA adapters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#import-libraries-and-set-up-the-model">Import Libraries and Set Up the Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#export-the-model">Export the Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert-the-model-to-core-ml">Convert the Model to Core ML</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tokenize-the-prompt">Tokenize the Prompt</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-pytorch-model">Run the PyTorch Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-converted-core-ml-model">Run the Converted Core ML Model</a></li>
 </ul>
             </nav>
         </div>
@@ -443,180 +448,142 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="multifunction-models">
-<span id="index-0"></span><h1>Multifunction Models<a class="headerlink" href="#multifunction-models" title="Link to this heading">#</a></h1>
-<p>An <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code> Core ML model typically contains a single function, called <code class="docutils literal notranslate"><span class="pre">main</span></code>.
-This is the default form in which a model is constructed, such as when it’s produced via
-the conversion process. Starting with <code class="docutils literal notranslate"><span class="pre">iOS18</span></code>/<code class="docutils literal notranslate"><span class="pre">macOS15</span></code>, you can produce an <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>
-with multiple functions in it.
-Each function, indexed by its unique name, can then be independently loaded and invoked for inference.</p>
-<p>Consider a scenario, where you have separate models that share weights and run in the same app.
-For example, as illustrated in the following figure, one model may have a feature extractor,
-followed by a classifier to produce a classification output. Another model may use the same feature extractor,
-followed by a regressor to produce the regression output.</p>
-<p><img alt="Model 1" src="../_images/multifunction-flow1.png" /></p>
-<p><img alt="Model 2" src="../_images/multifunction-flow2.png" /></p>
-<p>Using Core ML Tools, you can merge these models to produce a
-single <code class="docutils literal notranslate"><span class="pre">.mlpackage</span></code> asset, with multiple functions,
-such that the common weights (feature extractor in this case) are shared between those.
-During the process of merging, Core ML Tools deduplicates shared weights by
-calculating the hash of the weight values.
-The merged multifunction model can do both tasks based on the function chosen to run.</p>
-<p><img alt="Multifunction model" src="../_images/multifunction-combination.png" /></p>
-<section id="why-combine-models">
-<h2>Why Combine Models?<a class="headerlink" href="#why-combine-models" title="Link to this heading">#</a></h2>
-<p>In the example above, the two models used a common backbone.
-While utilizing multifunctions and producing a single model asset is definitely
-beneficial, there does exist a reasonable workaround in this case:
-simply breaking up the models into three submodels: backbone, classifier head, and
-regressor head, and then using two of them in sequence based on the use case.</p>
-<p>However, there are scenarios when such a workaround would not be available.
-An example of this is the case of parameter-efficient fine-tuning (PEFT),
-which is a common approach for specializing large models to particular tasks.
-In the case of PEFT, “adapters” are attached to the base model, typically
-at multiple points within the network, as shown in the
-figures below. Only the parameters in these adapters
-are fine-tuned for a specific task. This is much more efficient than fine-tuning
-the whole base model, which has many more parameters.</p>
-<figure class="align-left">
-<a class="reference internal image-reference" href="../_images/multifunction-adapter-1.png"><img alt="Multifunction adapter 1" src="../_images/multifunction-adapter-1.png" style="width: 350px;" /></a>
-</figure>
-<figure class="align-default">
-<a class="reference internal image-reference" href="../_images/multifunction-adapter-2.png"><img alt="Multifunction adapter 2" src="../_images/multifunction-adapter-2.png" style="width: 350px;" /></a>
-</figure>
-<p>In this case, you can use a multifunction model to
-capture the multiple variations in a single model.
-A separate function could be defined for each adapter.
-The weights for the base model will be shared.</p>
-<p><img alt="Multifunction adapter 3" src="../_images/multifunction-adapter-3.png" /></p>
-<p>For an example, see the “Deploy machine learning and AI models on-device with Core ML”
-<a class="reference external" href="https://developer.apple.com/videos/play/wwdc2024/10161/">session video</a> in WWDC 2024
-to learn more about integrating multifunction models into your app.
-It includes a text-to-image example, in which a single
-model with multiple adapters is used to generate images with different styles.</p>
+  <section id="converting-a-large-language-model">
+<h1>Converting a Large Language Model<a class="headerlink" href="#converting-a-large-language-model" title="Link to this heading">#</a></h1>
+<p>The following example shows how to convert into Core ML an <a class="reference external" href="https://huggingface.co/apple/OpenELM">OpenELM</a> model trained using PyTorch. OpenELM is a family of Open Efficient Language Models. The small size variants are suitable for mobile and embedded language applications.</p>
+<p>In this example you do the following:</p>
+<ol class="arabic simple">
+<li><p><a class="reference internal" href="#import-libraries-and-set-up-the-model">Import libraries and set up the model</a></p></li>
+<li><p><a class="reference internal" href="#export-the-model">Export the model</a></p></li>
+<li><p><a class="reference internal" href="#convert-the-model-to-core-ml">Convert the model to Core ML</a></p></li>
+<li><p><a class="reference internal" href="#tokenize-the-prompt">Tokenize the prompt</a></p></li>
+<li><p><a class="reference internal" href="#run-the-pytorch-model">Run the PyTorch model</a></p></li>
+<li><p><a class="reference internal" href="#run-the-converted-core-ml-model">Run the converted Core ML model</a></p></li>
+</ol>
+<section id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading">#</a></h2>
+<p>This example requires macOS Monterey or newer versions, <a class="reference external" href="https://pytorch.org/">PyTorch</a>, <a class="reference external" href="https://huggingface.co/transformers/index.html">Transformers</a>, and Core ML Tools 8.0 or newer versions. Use the following commands:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>torch
+pip<span class="w"> </span>install<span class="w"> </span>transformers
+pip<span class="w"> </span>install<span class="w"> </span>coremltools
+</pre></div>
+</div>
+<p>At the time of creating this example, the author environment is</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>torch              2.4.1
+transformers       4.45.1
+coremltools        8.0
+</pre></div>
+</div>
 </section>
-<section id="combining-models-toy-example-with-lora-adapters">
-<h2>Combining models: toy example with LoRA adapters<a class="headerlink" href="#combining-models-toy-example-with-lora-adapters" title="Link to this heading">#</a></h2>
-<p>In this example, learn how to combine a base model and adapter model to create a merged multifunction Core ML model, load it, and get predictions.</p>
-<p>First, define a base model with two linear layers.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span> <span class="c1"># torch==2.3.0</span>
-<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
-
-<span class="k">class</span> <span class="nc">Base</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">linear1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">6000</span><span class="p">,</span> <span class="mi">6000</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">relu</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">linear2</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">6000</span><span class="p">,</span> <span class="mi">6000</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear2</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">x</span>
-
-<span class="n">base_model</span> <span class="o">=</span> <span class="n">Base</span><span class="p">()</span>
+<section id="import-libraries-and-set-up-the-model">
+<h2>Import Libraries and Set Up the Model<a class="headerlink" href="#import-libraries-and-set-up-the-model" title="Link to this heading">#</a></h2>
+<p>Import the <code class="docutils literal notranslate"><span class="pre">torch</span></code>, <code class="docutils literal notranslate"><span class="pre">numpy</span></code>, and <code class="docutils literal notranslate"><span class="pre">coremltools</span></code> libraries, and <code class="docutils literal notranslate"><span class="pre">AutoModelForCausalLM</span></code> and <code class="docutils literal notranslate"><span class="pre">AutoTokenizer</span></code> from <code class="docutils literal notranslate"><span class="pre">transformers</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="kn">from</span> <span class="nn">transformers</span> <span class="kn">import</span> <span class="n">AutoModelForCausalLM</span><span class="p">,</span> <span class="n">AutoTokenizer</span>
 </pre></div>
 </div>
-<p>Update the model by first attaching one of the most common type of adapters to it,
-<a class="reference external" href="https://huggingface.co/docs/peft/en/package_reference/lora">LoRA</a> (low rank approximation), and then<br />
-converting it using the HuggingFace <a class="reference external" href="https://github.com/huggingface/peft"><code class="docutils literal notranslate"><span class="pre">peft</span></code></a>
-package.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">peft</span> <span class="kn">import</span> <span class="n">get_peft_model</span><span class="p">,</span> <span class="n">LoraConfig</span> <span class="c1"># peft==0.11.1</span>
-</pre></div>
-</div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">adapt_model_with_lora</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
-    <span class="n">lora_config</span> <span class="o">=</span> <span class="n">LoraConfig</span><span class="p">(</span><span class="n">target_modules</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;linear1&quot;</span><span class="p">,</span> <span class="s2">&quot;linear2&quot;</span><span class="p">],</span> <span class="n">r</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">lora_alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># rank 32 </span>
-    <span class="n">adapted_model</span> <span class="o">=</span> <span class="n">get_peft_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">lora_config</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">adapted_model</span>
-</pre></div>
-</div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">adapted_model_1</span> <span class="o">=</span> <span class="n">adapt_model_with_lora</span><span class="p">(</span><span class="n">base_model</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>At this stage, you would typically fine-tune the model. Since this is an illustrative example,
-you can skip that step and go directly to the next stage of converting the model.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span> 
-
-<span class="n">mlmodel_1</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">adapted_model_1</span><span class="o">.</span><span class="n">eval</span><span class="p">(),</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6000</span><span class="p">)),</span> 
-                       <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;input_adpated_model_1&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6000</span><span class="p">))],</span>
-                       <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;out_adpated_model_1&quot;</span><span class="p">)],</span>
-                       <span class="n">minimum_deployment_target</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS18</span><span class="p">,</span>
-                      <span class="p">)</span>
-<span class="n">mlmodel_1</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;adapted_model_1.mlpackage&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Create a different adapter model, which you would fine-tune to a different task in practice.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">adapted_model_2</span> <span class="o">=</span> <span class="n">adapt_model_with_lora</span><span class="p">(</span><span class="n">base_model</span><span class="p">)</span>
-<span class="n">mlmodel_2</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">adapted_model_2</span><span class="o">.</span><span class="n">eval</span><span class="p">(),</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6000</span><span class="p">)),</span> 
-                       <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;input_adpated_model_2&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6000</span><span class="p">))],</span>
-                       <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;out_adpated_model_2&quot;</span><span class="p">)],</span>
-                       <span class="n">minimum_deployment_target</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS18</span><span class="p">,</span>
-                      <span class="p">)</span>
-<span class="n">mlmodel_2</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;adapted_model_2.mlpackage&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>To deploy both these variants of models in a single app, combine them into a single model.
-Create a <code class="docutils literal notranslate"><span class="pre">MultiFunctionDescriptor</span></code> to specify which models to merge and what the new function name
-will be in the merged model. You can then use the <code class="docutils literal notranslate"><span class="pre">save_multifunction</span></code>
-utility to produce a merged multifunction Core ML model.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">desc</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">MultiFunctionDescriptor</span><span class="p">()</span>
-
-<span class="n">desc</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span>
-    <span class="s2">&quot;adapted_model_1.mlpackage&quot;</span><span class="p">,</span>
-    <span class="n">src_function_name</span><span class="o">=</span><span class="s2">&quot;main&quot;</span><span class="p">,</span>
-    <span class="n">target_function_name</span><span class="o">=</span><span class="s2">&quot;adapter_1&quot;</span>
+<p>Initialize the language model along with its tokenizer. Here we choose the smallest variant <a class="reference external" href="https://huggingface.co/apple/OpenELM-270M-Instruct">OpenELM-270M-Instruct</a>, which uses the <a class="reference external" href="https://huggingface.co/meta-llama/Llama-2-7b-hf">Llama-2-7b</a> tokenizer</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">torch_model</span> <span class="o">=</span> <span class="n">AutoModelForCausalLM</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+    <span class="s2">&quot;apple/OpenELM-270M-Instruct&quot;</span><span class="p">,</span>
+    <span class="n">torch_dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+    <span class="n">trust_remote_code</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">return_dict</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">use_cache</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">desc</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span>
-    <span class="s2">&quot;adapted_model_2.mlpackage&quot;</span><span class="p">,</span>
-    <span class="n">src_function_name</span><span class="o">=</span><span class="s2">&quot;main&quot;</span><span class="p">,</span>
-    <span class="n">target_function_name</span><span class="o">=</span><span class="s2">&quot;adapter_2&quot;</span>
+<span class="n">torch_model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;meta-llama/Llama-2-7b-hf&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="export-the-model">
+<h2>Export the Model<a class="headerlink" href="#export-the-model" title="Link to this heading">#</a></h2>
+<p>You can now use PyTorch’s exporter (<a class="reference external" href="https://pytorch.org/docs/stable/export.html#torch.export.export"><code class="docutils literal notranslate"><span class="pre">torch.export.export</span></code></a>) to export the language model:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">example_input_ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">32</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+<span class="n">sequence_length</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">export</span><span class="o">.</span><span class="n">Dim</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;sequence_length&quot;</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+<span class="n">dynamic_shapes</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="n">sequence_length</span><span class="p">}}</span>
+<span class="n">exported_program</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">export</span><span class="o">.</span><span class="n">export</span><span class="p">(</span>
+    <span class="n">torch_model</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">example_input_ids</span><span class="p">,),</span>
+    <span class="n">dynamic_shapes</span><span class="o">=</span><span class="n">dynamic_shapes</span><span class="p">,</span>
+    <span class="c1"># Because of https://github.com/pytorch/pytorch/issues/133252</span>
+    <span class="c1"># we need to use strict=False until torch 2.5</span>
+    <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span>
-
-<span class="n">desc</span><span class="o">.</span><span class="n">default_function_name</span> <span class="o">=</span> <span class="s2">&quot;adapter_1&quot;</span>
-<span class="n">ct</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">save_multifunction</span><span class="p">(</span><span class="n">desc</span><span class="p">,</span> <span class="s2">&quot;combined_adpater_models.mlpackage&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>When loading the multifunction model, you can specify the
-<code class="docutils literal notranslate"><span class="pre">function_name</span></code> to load the specific function and then do the prediction.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span> 
-
-<span class="n">mlmodel_1</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;combined_adpater_models.mlpackage&quot;</span><span class="p">)</span>  <span class="c1"># Uses default function</span>
-<span class="n">y_1</span> <span class="o">=</span> <span class="n">mlmodel_1</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s1">&#39;input_adpated_model_1&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6000</span><span class="p">)})</span>
-
-<span class="n">mlmodel_2</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;combined_adpater_models.mlpackage&quot;</span><span class="p">,</span> <span class="n">function_name</span><span class="o">=</span><span class="s2">&quot;adapter_2&quot;</span><span class="p">)</span>
-<span class="n">y_2</span> <span class="o">=</span> <span class="n">mlmodel_2</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s1">&#39;input_adpated_model_2&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6000</span><span class="p">)})</span>
+<p>For more about exporting, see <a class="reference internal" href="model-exporting.html"><span class="doc std std-doc">Model Exporting</span></a>.</p>
+</section>
+<section id="convert-the-model-to-core-ml">
+<h2>Convert the Model to Core ML<a class="headerlink" href="#convert-the-model-to-core-ml" title="Link to this heading">#</a></h2>
+<p>Convert the model <code class="docutils literal notranslate"><span class="pre">exported_program</span></code> to Core ML using the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> method:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">exported_program</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The number of parameters in the base model are roughly 72M (6000x6000 = 36M for each
-of the two linear layers), ignoring the bias vectors.
-The LoRA adapters used here, of rank 32, will attach two linear layers of shapes, (6000, 32) and (32, 6000), to each of
-the linear modules in the base model.
-This will result in 4x6000x32 = 0.768M parameters to be added,
-which is a fraction of the base model.
-The combined model will share the 72M parameters of
-the base model and only have the additional adapter parameters.
-You can see this in the model sizes:</p>
-<figure class="align-center">
-<a class="reference internal image-reference" href="../_images/multifunction_model_sizes_lora_example.png"><img alt="Model sizes LoRA toy example" src="../_images/multifunction_model_sizes_lora_example.png" style="width: 440px;" /></a>
-</figure>
-<p>This is how the model interface for a multifunction model
-would show up in the Xcode predictions tab:</p>
-<figure class="align-left">
-<a class="reference internal image-reference" href="../_images/multifunction_input_output_xcode_adapted_model_1.png"><img alt="Multifunction adapter 1" src="../_images/multifunction_input_output_xcode_adapted_model_1.png" style="width: 360px; height: 360px;" /></a>
-</figure>
-<figure class="align-default">
-<a class="reference internal image-reference" href="../_images/multifunction_input_output_xcode_adapted_model_2.png"><img alt="Multifunction adapter 2" src="../_images/multifunction_input_output_xcode_adapted_model_2.png" style="width: 360px; height: 360px;" /></a>
-</figure>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The multifunction model feature is available starting with
-<code class="docutils literal notranslate"><span class="pre">iOS18</span></code>/<code class="docutils literal notranslate"><span class="pre">macOS15</span></code> for the <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code> model type.</p>
+</section>
+<section id="tokenize-the-prompt">
+<h2>Tokenize the Prompt<a class="headerlink" href="#tokenize-the-prompt" title="Link to this heading">#</a></h2>
+<p>To test the performance of the converted model, tokenize the prompt (<code class="docutils literal notranslate"><span class="pre">&quot;Once</span> <span class="pre">upon</span> <span class="pre">a</span> <span class="pre">time</span> <span class="pre">there</span> <span class="pre">was&quot;</span></code>) using the <a class="reference external" href="https://huggingface.co/meta-llama/Llama-2-7b-hf">Llama-2-7b</a> tokenizer, and convert that list of tokens into a Torch tensor.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">prompt</span> <span class="o">=</span> <span class="s2">&quot;Once upon a time there was&quot;</span>
+<span class="n">tokenized_prompt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">tokenizer</span><span class="p">(</span><span class="n">prompt</span><span class="p">)[</span><span class="s2">&quot;input_ids&quot;</span><span class="p">])</span>
+</pre></div>
 </div>
-<p><strong>Tip</strong>:
-You can specify the <code class="docutils literal notranslate"><span class="pre">function_name</span></code> argument when loading a
-<a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.html#compiled-mlmodel"><code class="docutils literal notranslate"><span class="pre">CompiledMLModel</span></code></a>
-as well.</p>
+</section>
+<section id="run-the-pytorch-model">
+<h2>Run the PyTorch Model<a class="headerlink" href="#run-the-pytorch-model" title="Link to this heading">#</a></h2>
+<p>Run the original PyTorch model with the tokenized prompt as input, to establish the benchmark for the model’s performance. The output appears below the code:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># prompt</span>
+<span class="n">input_ids</span> <span class="o">=</span> <span class="n">tokenized_prompt</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">logits</span> <span class="o">=</span> <span class="n">torch_model</span><span class="p">(</span><span class="n">input_ids</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">output_id</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)[:,</span> <span class="o">-</span><span class="mi">1</span> <span class="p">:]</span>
+<span class="c1"># extend</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">64</span><span class="p">):</span>
+    <span class="n">input_ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">output_id</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">logits</span> <span class="o">=</span> <span class="n">torch_model</span><span class="p">(</span><span class="n">input_ids</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">output_id</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)[:,</span> <span class="o">-</span><span class="mi">1</span> <span class="p">:]</span>
+<span class="c1"># decode</span>
+<span class="n">input_ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">output_id</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">output_text</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">input_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">skip_special_tokens</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Output text from the original torch model:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">output_text</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Output text from the original torch model:
+Once upon a time there was a man named John Smith. John Smith was a hard-working farmer, a good husband, and a good father. He loved his family dearly, and he cherished every moment with them.
+But one day, John&#39;s life changed forever.
+John&#39;s wife, Mary, died suddenly of a
+</pre></div>
+</div>
+</section>
+<section id="run-the-converted-core-ml-model">
+<h2>Run the Converted Core ML Model<a class="headerlink" href="#run-the-converted-core-ml-model" title="Link to this heading">#</a></h2>
+<p>Now run the converted Core ML version of the model with the same input:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># prompt</span>
+<span class="n">tokenized_prompt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">tokenized_prompt</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+<span class="n">input_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">tokenized_prompt</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">logits</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">mlmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="n">input_ids</span><span class="p">})</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">output_id</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)[:,</span> <span class="o">-</span><span class="mi">1</span> <span class="p">:]</span>
+<span class="c1"># extend</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">64</span><span class="p">):</span>
+    <span class="n">input_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concat</span><span class="p">((</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">output_id</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">logits</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">mlmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="n">input_ids</span><span class="p">})</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">output_id</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)[:,</span> <span class="o">-</span><span class="mi">1</span> <span class="p">:]</span>
+<span class="c1"># decode</span>
+<span class="n">input_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concat</span><span class="p">((</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">output_id</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">output_text</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">input_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">skip_special_tokens</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Output text from the converted Core ML model:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">output_text</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Output text from the converted Core ML model:
+Once upon a time there was a man named John Smith. John Smith was a hard-working farmer, a good husband, and a good father. He loved his family dearly, and he cherished every moment with them.
+But one day, John&#39;s life changed forever.
+John&#39;s wife, Mary, died suddenly of a
+</pre></div>
+</div>
+<p>As you can see, the converted Core ML model performs in the same manner as the original model. To make the Core ML model more performant, please stay tuned on <a class="reference external" href="https://machinelearning.apple.com">machinelearning.apple.com</a></p>
 </section>
 </section>
 
@@ -632,20 +599,20 @@ as well.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="mlmodel.html"
+       href="pytorch-conversion-examples.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">MLModel Overview</p>
+        <p class="prev-next-title">Converting a PyTorch Segmentation Model</p>
       </div>
     </a>
     <a class="right-next"
-       href="xcode-model-preview-types.html"
+       href="conversion-options.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Xcode Model Preview Types</p>
+        <p class="prev-next-title">Conversion Options</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -665,8 +632,13 @@ as well.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-combine-models">Why Combine Models?</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#combining-models-toy-example-with-lora-adapters">Combining models: toy example with LoRA adapters</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#import-libraries-and-set-up-the-model">Import Libraries and Set Up the Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#export-the-model">Export the Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert-the-model-to-core-ml">Convert the Model to Core ML</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tokenize-the-prompt">Tokenize the Prompt</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-pytorch-model">Run the PyTorch Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-converted-core-ml-model">Run the Converted Core ML Model</a></li>
 </ul>
   </nav></div>
 

@@ -48,7 +48,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Converting a torchvision Model from PyTorch" href="convert-a-torchvision-model-from-pytorch.html" />
-    <link rel="prev" title="Model Scripting" href="model-scripting.html" />
+    <link rel="prev" title="Model Exporting" href="model-exporting.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -192,9 +192,11 @@
 <li class="toctree-l2"><a class="reference internal" href="convert-pytorch-workflow.html">PyTorch Conversion Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-tracing.html">Model Tracing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-scripting.html">Model Scripting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-exporting.html">Model Exporting</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Converting a Natural Language Processing Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html">Converting a torchvision Model from PyTorch</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pytorch-conversion-examples.html">Converting a PyTorch Segmentation Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-llm.html">Converting a Large Language Model</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -480,7 +482,7 @@ pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </s
 </section>
 <section id="import-libraries-and-set-up-the-model">
 <h2>Import Libraries and Set Up the Model<a class="headerlink" href="#import-libraries-and-set-up-the-model" title="Link to this heading">#</a></h2>
-<p>Import the <code class="docutils literal notranslate"><span class="pre">torch</span></code>, <code class="docutils literal notranslate"><span class="pre">numpy</span></code>, and <code class="docutils literal notranslate"><span class="pre">coremltools</span></code> libraries, and <code class="docutils literal notranslate"><span class="pre">GPT2LMHeadModel</span></code>) and <code class="docutils literal notranslate"><span class="pre">GPT2Tokenizer</span></code> from <code class="docutils literal notranslate"><span class="pre">transformers</span></code>.</p>
+<p>Import the <code class="docutils literal notranslate"><span class="pre">torch</span></code>, <code class="docutils literal notranslate"><span class="pre">numpy</span></code>, and <code class="docutils literal notranslate"><span class="pre">coremltools</span></code> libraries, and <code class="docutils literal notranslate"><span class="pre">GPT2LMHeadModel</span></code> and <code class="docutils literal notranslate"><span class="pre">GPT2Tokenizer</span></code> from <code class="docutils literal notranslate"><span class="pre">transformers</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">transformers</span> <span class="kn">import</span> <span class="n">GPT2LMHeadModel</span><span class="p">,</span> <span class="n">GPT2Tokenizer</span>
@@ -593,12 +595,12 @@ Completed: The Manhattan bridge is a major artery for the city&#39;s subway syst
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="model-scripting.html"
+       href="model-exporting.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Model Scripting</p>
+        <p class="prev-next-title">Model Exporting</p>
       </div>
     </a>
     <a class="right-next"
