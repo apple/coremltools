@@ -64,26 +64,15 @@ class TestWeightFileSerialization:
             minimum_deployment_target=opset_version,
             pass_pipeline=pipeline,
         )
-        saved_package_path = tempfile.mkdtemp(suffix=".mlpackage")
-        mlmodel.save(saved_package_path)
 
         # check the weights are serialized as file value
         if ct.utils._macos_version() >= (15, 0):
-            with tempfile.TemporaryDirectory() as serialize_dir:
-                os.system(f"coremlcompiler compile {saved_package_path} {serialize_dir}")
-                model_name_with_extension = os.path.basename(saved_package_path)
-                model_name_wo_extension, _ = os.path.splitext(model_name_with_extension)
-                mil_file = open(
-                    os.path.join(serialize_dir, f"{model_name_wo_extension}.mlmodelc", "model.mil")
-                )
-                mil_txt = mil_file.read()
-                if should_serialize_weight:
-                    assert f"tensor<{dtype}, [1000]>(BLOBFILE" in mil_txt
-                else:
-                    assert f"tensor<{dtype}, [1000]>(BLOBFILE" not in mil_txt
-
-        # cleanup
-        shutil.rmtree(saved_package_path)
+            mil_file = open(os.path.join(mlmodel.get_compiled_model_path(), "model.mil"))
+            mil_txt = mil_file.read()
+            if should_serialize_weight:
+                assert f"tensor<{dtype}, [1000]>(BLOBFILE" in mil_txt
+            else:
+                assert f"tensor<{dtype}, [1000]>(BLOBFILE" not in mil_txt
 
 
 class TestMILFlexibleShapes:

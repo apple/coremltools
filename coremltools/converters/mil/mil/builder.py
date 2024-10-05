@@ -90,8 +90,8 @@ class Builder:
             err_msg = f"Cannot add const {val}"
             if any_symbolic(val):
                 err_msg += (
-                    "\nPython native vals (list, tuple), np.array that are"
-                    + "operation inputs cannot have symbolic values. Consider feeding"
+                    "\nPython native vals (list, tuple), np.array that are "
+                    + "operation inputs cannot have symbolic values. Consider feeding "
                     + "symbolic shape in through placeholder and use mb.shape() "
                     + f"operator. Input {name}: {val}"
                 )
