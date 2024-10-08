@@ -1473,7 +1473,7 @@ class MultiFunctionDescriptor:
         self, model_path: str, src_function_name: str, target_function_name: str
     ) -> None:
         """
-        Insert a ``src_function_name`` function from ``model_path`` as the 
+        Insert a ``src_function_name`` function from ``model_path`` as the
         ``target_function_name`` function in the multifunction descriptor.
         """
         self._add_modelpath_to_cache(model_path)
@@ -1930,7 +1930,7 @@ def bisect_model(
         )
         if len(prog.functions) > 1 or "main" not in prog.functions:
             raise ValueError("'bisect_model' only support model with a single 'main' function.")
-        
+
         func = prog.functions["main"]
         func.operations = list(func.operations)
 
@@ -2077,7 +2077,7 @@ def _verify_output_correctness_of_chunks(
             )
         return final_psnr
 
-    
+
     # Generate inputs for first chunk and full model
     input_dict = {}
     for input_desc in full_model._spec.description.input:
@@ -2252,3 +2252,138 @@ def _make_second_chunk_prog(prog: _mil.Program, op_idx: int) -> _mil.Program:
     return prog
 
 
+def change_output_tensor_type(
+    ml_model: "_ct.models.model.MLModel",
+    from_type: int,
+    to_type: int,
+    function_names: _Optional[_List[str]] = None,
+) -> "_ct.models.model.MLModel":
+    """
+    Change output type of the CoreML model tensor outputs. Supported types are FLOAT16, FLOAT32.
+
+    Parameters
+    ----------
+    ml_model: MLModel
+        A Core ML model that needs to change its output type.
+        Note:
+        - the original model is not modified, the model with updated output types is returned as a new instance.
+        - only an mlProgram is supported (not pipelines, not neural networks).
+
+    from_type:
+        The output type that should be changed from.
+
+    to_type:
+        The output type that will be used instead of all the outputs of `from_type` type.
+
+    function_names:
+        Optional list of function names where the output needs to be changed. If not specified, only the "main"
+        function will be updated.
+
+    Examples
+    --------
+    .. sourcecode:: python
+
+        from coremltools.models.model import MLModel
+        from coremltools.utils import change_array_output_type
+        from coremltools.proto.FeatureTypes_pb2 import ArrayFeatureType
+
+        model = MLModel("my_model.mlpackage")
+        updated_model = change_output_tensor_type(
+            ml_model=model,
+            from_type=ArrayFeatureType.FLOAT32,
+            to_type=ArrayFeatureType.FLOAT16,
+        )
+        updated_model.save("my_updated_model.mlpackage")
+    """
+    # We do the lazy import to prevent circular import
+    from coremltools.converters.mil.converter import mil_convert as _mil_convert
+    from coremltools.converters.mil import Var
+    from coremltools.converters.mil.mil.block import Function
+    from coremltools.proto.Model_pb2 import FeatureDescription
+
+    def _get_dtype(feature_type: int) -> str:
+        if feature_type == _ct.proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT16:
+            return "fp16"
+        if feature_type == _ct.proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT32:
+            return "fp32"
+        raise ValueError(f"invalid feature type: {feature_type}, supported only FLOAT16, FLOAT32")
+
+    def _get_output_var(var_name: str) -> _Optional[_Tuple[Function, Var]]:
+        for name in function_names:
+            func = prog.functions[name]
+            if var := next(iter([v for v in func.outputs if v.name == var_name]), None):
+                return func, var
+        return None
+
+    def _cast_output(feature_desc: FeatureDescription, feature_var: Var) -> None:
+        with feature_var.op.enclosing_block:
+            x = _mb.cast(x=feature_var, dtype=to_dtype_str, name=feature_desc.name + f"_to_{to_dtype_str}")
+            x.op.enclosing_block.replace_uses_of_var_after_op(
+                anchor_op=x.op,
+                old_var=feature_var,
+                new_var=x,
+                force_replace=True,
+            )
+            feature_desc.name = x.name
+            feature_desc.type.multiArrayType.dataType = to_type
+
+    if not isinstance(ml_model, _ct.models.MLModel):
+        raise ValueError(f"input model must be of type ct.models.MLModel, actual type is {type(ml_model)})")
+
+    model_spec = ml_model.get_spec()
+
+    model_type = model_spec.WhichOneof("Type")
+    if model_type != "mlProgram":
+        raise ValueError(f"input model must be an mlProgram, actual model type is {model_type}")
+
+    if not isinstance(from_type, int):
+        raise ValueError(f"from_type must be an ArrayFeatureType, not {type(from_type)}")
+    if not isinstance(to_type, int):
+        raise ValueError(f"to_type must be an ArrayFeatureType, not {type(to_type)}")
+
+    if from_type == to_type:
+        return ml_model
+    to_dtype_str = _get_dtype(feature_type=to_type)
+
+    prog = _milproto_to_pymil.load(
+        model_spec=model_spec,
+        specification_version=model_spec.specificationVersion,
+        file_weights_dir=ml_model.weights_dir,
+    )
+
+    if not function_names:
+        function_names = ["main"]
+    _logger.debug(f"functions: {function_names}")
+    for func_name in function_names:
+        if func_name not in prog.functions:
+            raise ValueError(f"function '{func_name}' not defined in the model")
+
+    for output in model_spec.description.output:
+        output_type = output.type.WhichOneof("Type")
+        if output_type != "multiArrayType":
+            _logger.debug(f"ignoring output {output.name} (type: {output_type})")
+            continue
+
+        output_data_type = output.type.multiArrayType.dataType
+        if output_data_type != from_type:
+            _logger.debug(f"ignoring output tensor {output.name} (data type: {output_data_type})")
+            continue
+
+        if func_var := _get_output_var(var_name=output.name):
+            function, output_var = func_var
+            if function.opset_version < _ct.target.iOS16:
+                _logger.warning(f"upgrading opset_version for function {function.name} to iOS16")
+                function.opset_version = _ct.target.iOS16
+            _cast_output(feature_desc=output, feature_var=output_var)
+        else:
+            _logger.debug(f"ignoring output {output.name}, not an output of any of the required functions")
+
+    model_opset_version = max(function.opset_version.value for function in prog.functions.values())
+    return _mil_convert(
+        prog,
+        convert_to="mlprogram",
+        convert_from="milinternal",
+        specification_version=model_opset_version,
+        compute_units=ml_model.compute_unit,
+        model_description=model_spec.description,
+    )

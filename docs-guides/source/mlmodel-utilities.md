@@ -209,3 +209,24 @@ ct.models.utils.bisect_model(
     merge_chunks_to_pipeline=True,
 )
 ```
+
+## Change Model Tensor Output Types
+
+Consider a scenario when we have a CoreML model with an fp32 multiarray output, but we need to use a CoreML API that
+requires fp16 multiarrays instead. We can now easily change the model output types from fp32 to fp16 (and vice versa).
+
+An example how to update the output data types:
+
+```python
+from coremltools.models.model import MLModel
+from coremltools.utils import change_array_output_type
+from coremltools.proto.FeatureTypes_pb2 import ArrayFeatureType
+
+model = MLModel("my_model.mlpackage")
+updated_model = change_output_tensor_type(
+    ml_model=model,
+    from_type=ArrayFeatureType.FLOAT32,
+    to_type=ArrayFeatureType.FLOAT16,
+)
+updated_model.save("my_updated_model.mlpackage")
+```

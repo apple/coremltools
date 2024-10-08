@@ -19,7 +19,7 @@ import coremltools as ct
 from coremltools import _SPECIFICATION_VERSION_IOS_18, proto
 from coremltools.converters.mil import mil
 from coremltools.converters.mil.converter import mil_convert as _mil_convert
-from coremltools.converters.mil.mil import Program
+from coremltools.converters.mil.mil import Program, types
 from coremltools.converters.mil.mil.builder import Builder as mb
 from coremltools.converters.mil.mil.passes.pass_pipeline import (
     PASS_REGISTRY,
@@ -27,7 +27,9 @@ from coremltools.converters.mil.mil.passes.pass_pipeline import (
     PassPipelineManager,
 )
 from coremltools.converters.mil.testing_utils import assert_spec_input_type, assert_spec_output_type, DTYPE_TO_FEATURE_TYPE_MAP, get_op_types_in_program
-from coremltools.models.utils import bisect_model, MultiFunctionDescriptor, load_spec, save_multifunction, load_spec
+from coremltools.models.datatypes import Array
+from coremltools.models.utils import bisect_model, MultiFunctionDescriptor, load_spec, save_multifunction, load_spec, change_output_tensor_type
+from coremltools.proto.FeatureTypes_pb2 import ArrayFeatureType
 import coremltools.optimize as cto
 
 class TestMILConvertCall:
@@ -1786,3 +1788,62 @@ class TestBisectModel:
         # clean up
         shutil.rmtree(output_dir)
         shutil.rmtree(model_path)
+
+
+class TestChangeOutputTensorType:
+    @staticmethod
+    def _build_simple_model(dtype, function_names):
+        weight_dtype = np.float16 if dtype == types.fp16 else np.float32
+
+        @mb.function(input_specs=[mb.TensorSpec(shape=(1, 3), dtype=dtype)], opset_version=ct.target.iOS16)
+        def func(x):
+            return mb.linear(x=x, weight=np.random.rand(2, 3).astype(weight_dtype))
+
+        prog = mil.Program()
+        for function_name in function_names:
+            prog.add_function(function_name, func)
+
+        return _mil_convert(
+            prog,
+            convert_to="mlprogram",
+            convert_from="milinternal",
+            specification_version=ct.target.iOS16,
+            compute_units=ct.ComputeUnit.CPU_ONLY,
+            skip_model_load=True,
+        )
+
+    @pytest.mark.parametrize(
+        "dtype, from_feature_type, to_feature_type", (
+                (types.fp16, ArrayFeatureType.FLOAT16, ArrayFeatureType.FLOAT32),
+                (types.fp32, ArrayFeatureType.FLOAT32, ArrayFeatureType.FLOAT16),
+        )
+    )
+    def test_change_output_type(self, dtype, from_feature_type, to_feature_type) -> None:
+        model = self._build_simple_model(dtype=dtype, function_names=["main"])
+        output = model.get_spec().description.output[0]
+        assert output.type.multiArrayType.dataType == from_feature_type
+
+        updated_model = change_output_tensor_type(ml_model=model, from_type=from_feature_type, to_type=to_feature_type)
+        updated_output = updated_model.get_spec().description.output[0]
+        assert updated_output.type.multiArrayType.dataType == to_feature_type
+
+    @pytest.mark.parametrize(
+        "dtype, from_feature_type, to_feature_type", (
+                (types.fp16, ArrayFeatureType.FLOAT16, ArrayFeatureType.FLOAT32),
+                (types.fp32, ArrayFeatureType.FLOAT32, ArrayFeatureType.FLOAT16),
+        )
+    )
+    def test_change_output_type_multifunc(self, dtype, from_feature_type, to_feature_type) -> None:
+        function_names = ["main", "main_2"]
+        model = self._build_simple_model(dtype=dtype, function_names=function_names)
+        for output in model.get_spec().description.output:
+            assert output.type.multiArrayType.dataType == from_feature_type
+
+        updated_model = change_output_tensor_type(
+            ml_model=model,
+            from_type=from_feature_type,
+            to_type=to_feature_type,
+            function_names=function_names,
+        )
+        for updated_output in updated_model.get_spec().description.output:
+            assert updated_output.type.multiArrayType.dataType == to_feature_type
