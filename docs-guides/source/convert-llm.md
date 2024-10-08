@@ -1,6 +1,6 @@
 # Converting a Large Language Model
 
-The following example shows how to convert into Core ML an [OpenELM](https://huggingface.co/apple/OpenELM) model trained using PyTorch. OpenELM is a family of Open Efficient Language Models. The small size variants are suitable for mobile and embedded language applications.
+The following example shows how to convert a PyTorch [OpenELM](https://huggingface.co/apple/OpenELM) model to Core ML. OpenELM is a family of Open Efficient Language Models. The small size variants are suitable for mobile and embedded language applications.
 
 In this example you do the following:
 
@@ -84,11 +84,14 @@ mlmodel = ct.convert(exported_program)
 
 ## Tokenize the Prompt
 
-To test the performance of the converted model, tokenize the prompt (`"Once upon a time there was"`) using the [Llama-2-7b](https://huggingface.co/meta-llama/Llama-2-7b-hf) tokenizer, and convert that list of tokens into a Torch tensor.
+To test the performance of the converted model, tokenize the prompt (`"Once upon a time there was"`), and convert that list of tokens into a Torch tensor.
 
 ```python
 prompt = "Once upon a time there was"
 tokenized_prompt = torch.tensor(tokenizer(prompt)["input_ids"])
+# Since model takes input ids in batch,
+# create a dummy batch dimension (i.e. size 1) for tokenized prompt
+tokenized_prompt = tokenized_prompt.unsqueeze(0)
 ```
 
 ## Run the PyTorch Model
@@ -96,17 +99,18 @@ tokenized_prompt = torch.tensor(tokenizer(prompt)["input_ids"])
 Run the original PyTorch model with the tokenized prompt as input, to establish the benchmark for the model's performance. The output appears below the code:
 
 ```python
-# prompt
-input_ids = tokenized_prompt.unsqueeze(0)
-logits = torch_model(input_ids)[0]
-output_id = torch.argmax(logits, -1)[:, -1 :]
-# extend
-for i in range(64):
-    input_ids = torch.cat((input_ids, output_id), axis=-1)
+max_sequence_length = 64
+
+input_ids = tokenized_prompt
+# extend sentence (sequence) word-by-word (token-by-token)
+# until reach max sequence length
+for i in range(max_sequence_length):
     logits = torch_model(input_ids)[0]
+    # determine the next token by greedily choosing the one with highest logit (probability)
     output_id = torch.argmax(logits, -1)[:, -1 :]
-# decode
-input_ids = torch.cat((input_ids, output_id), axis=-1)
+    # append the next token to sequence
+    input_ids = torch.cat((input_ids, output_id), axis=-1)
+# decode tokens back to text
 output_text = tokenizer.decode(input_ids[0].tolist(), skip_special_tokens=True)
 print("Output text from the original torch model:")
 print(output_text)
@@ -116,7 +120,7 @@ print(output_text)
 Output text from the original torch model:
 Once upon a time there was a man named John Smith. John Smith was a hard-working farmer, a good husband, and a good father. He loved his family dearly, and he cherished every moment with them.
 But one day, John's life changed forever.
-John's wife, Mary, died suddenly of a
+John's wife, Mary, died suddenly of
 ```
 
 ## Run the Converted Core ML Model
@@ -124,18 +128,16 @@ John's wife, Mary, died suddenly of a
 Now run the converted Core ML version of the model with the same input:
 
 ```python
-# prompt
-tokenized_prompt = np.int32(tokenized_prompt.detach().numpy())
-input_ids = np.expand_dims(tokenized_prompt, axis=0)
-logits = list(mlmodel.predict({"input_ids": input_ids}).values())[0]
-output_id = np.argmax(logits, -1)[:, -1 :]
-# extend
-for i in range(64):
-    input_ids = np.concat((input_ids, output_id), dtype=np.int32, axis=-1)
+input_ids = np.int32(tokenized_prompt.detach().numpy())
+# extend sentence (sequence) word-by-word (token-by-token)
+# until reach max sequence length
+for i in range(max_sequence_length):
     logits = list(mlmodel.predict({"input_ids": input_ids}).values())[0]
+    # determine the next token by greedily choosing the one with highest logit (probability)
     output_id = np.argmax(logits, -1)[:, -1 :]
-# decode
-input_ids = np.concat((input_ids, output_id), dtype=np.int32, axis=-1)
+    # append the next token to sequence
+    input_ids = np.concat((input_ids, output_id), dtype=np.int32, axis=-1)
+# decode tokens back to text
 output_text = tokenizer.decode(input_ids[0].tolist(), skip_special_tokens=True)
 print("Output text from the converted Core ML model:")
 print(output_text)
@@ -145,7 +147,7 @@ print(output_text)
 Output text from the converted Core ML model:
 Once upon a time there was a man named John Smith. John Smith was a hard-working farmer, a good husband, and a good father. He loved his family dearly, and he cherished every moment with them.
 But one day, John's life changed forever.
-John's wife, Mary, died suddenly of a
+John's wife, Mary, died suddenly of
 ```
 
 As you can see, the converted Core ML model performs in the same manner as the original model. To make the Core ML model more performant, please stay tuned on [machinelearning.apple.com](https://machinelearning.apple.com)
