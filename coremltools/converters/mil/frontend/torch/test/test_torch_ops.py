@@ -12428,3 +12428,21 @@ class TestSoftplus(TorchBaseTest):
             compute_unit=compute_unit,
             input_as_shape=False,
         )
+
+
+class TestOneHot(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, num_classes, rank",
+        itertools.product(compute_units, backends, range(1, 5), range(1, 5)),
+    )
+    def test_one_hot(self, compute_unit, backend, num_classes, rank):
+        model = ModuleWrapper(function=torch.nn.functional.one_hot, kwargs={"num_classes": num_classes}).eval()
+        shape = torch.randint(1, 10, (rank,)).tolist()
+        labels = torch.randint(0, num_classes, shape)
+        self.run_compare_torch(
+            torch.LongTensor(labels),
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
