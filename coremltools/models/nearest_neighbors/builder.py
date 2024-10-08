@@ -226,7 +226,7 @@ class KNearestNeighborsClassifierBuilder:
         """
         return self.spec.description.metadata.license
 
-    @author.setter
+    @license.setter
     def license(self, license):
         """
         Add a license for the KNearestNeighborsClassifier model.
