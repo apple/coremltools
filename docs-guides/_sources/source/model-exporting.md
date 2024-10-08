@@ -11,7 +11,7 @@ The easiest way to generate ExportedProgram for your model is to use PyTorch's [
 
 ```{admonition} Exporting Limitations
 
-Torch.export has limitations: graph breaks, data/shape-dependent control flow, and missing fake/meta/abtract kernels for operators. See [limitations of torch.export](https://pytorch.org/docs/stable/export.html#limitations-of-torch-export)
+See [limitations of torch.export](https://pytorch.org/docs/stable/export.html#limitations-of-torch-export)
 ```
 
 ## Requirements

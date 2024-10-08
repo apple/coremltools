@@ -450,7 +450,7 @@ document.write(`
                   
   <section id="converting-a-large-language-model">
 <h1>Converting a Large Language Model<a class="headerlink" href="#converting-a-large-language-model" title="Link to this heading">#</a></h1>
-<p>The following example shows how to convert into Core ML an <a class="reference external" href="https://huggingface.co/apple/OpenELM">OpenELM</a> model trained using PyTorch. OpenELM is a family of Open Efficient Language Models. The small size variants are suitable for mobile and embedded language applications.</p>
+<p>The following example shows how to convert a PyTorch <a class="reference external" href="https://huggingface.co/apple/OpenELM">OpenELM</a> model to Core ML. OpenELM is a family of Open Efficient Language Models. The small size variants are suitable for mobile and embedded language applications.</p>
 <p>In this example you do the following:</p>
 <ol class="arabic simple">
 <li><p><a class="reference internal" href="#import-libraries-and-set-up-the-model">Import libraries and set up the model</a></p></li>
@@ -525,26 +525,30 @@ coremltools        8.0
 </section>
 <section id="tokenize-the-prompt">
 <h2>Tokenize the Prompt<a class="headerlink" href="#tokenize-the-prompt" title="Link to this heading">#</a></h2>
-<p>To test the performance of the converted model, tokenize the prompt (<code class="docutils literal notranslate"><span class="pre">&quot;Once</span> <span class="pre">upon</span> <span class="pre">a</span> <span class="pre">time</span> <span class="pre">there</span> <span class="pre">was&quot;</span></code>) using the <a class="reference external" href="https://huggingface.co/meta-llama/Llama-2-7b-hf">Llama-2-7b</a> tokenizer, and convert that list of tokens into a Torch tensor.</p>
+<p>To test the performance of the converted model, tokenize the prompt (<code class="docutils literal notranslate"><span class="pre">&quot;Once</span> <span class="pre">upon</span> <span class="pre">a</span> <span class="pre">time</span> <span class="pre">there</span> <span class="pre">was&quot;</span></code>), and convert that list of tokens into a Torch tensor.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">prompt</span> <span class="o">=</span> <span class="s2">&quot;Once upon a time there was&quot;</span>
 <span class="n">tokenized_prompt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">tokenizer</span><span class="p">(</span><span class="n">prompt</span><span class="p">)[</span><span class="s2">&quot;input_ids&quot;</span><span class="p">])</span>
+<span class="c1"># Since model takes input ids in batch,</span>
+<span class="c1"># create a dummy batch dimension (i.e. size 1) for tokenized prompt</span>
+<span class="n">tokenized_prompt</span> <span class="o">=</span> <span class="n">tokenized_prompt</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="run-the-pytorch-model">
 <h2>Run the PyTorch Model<a class="headerlink" href="#run-the-pytorch-model" title="Link to this heading">#</a></h2>
 <p>Run the original PyTorch model with the tokenized prompt as input, to establish the benchmark for the model’s performance. The output appears below the code:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># prompt</span>
-<span class="n">input_ids</span> <span class="o">=</span> <span class="n">tokenized_prompt</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-<span class="n">logits</span> <span class="o">=</span> <span class="n">torch_model</span><span class="p">(</span><span class="n">input_ids</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">output_id</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)[:,</span> <span class="o">-</span><span class="mi">1</span> <span class="p">:]</span>
-<span class="c1"># extend</span>
-<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">64</span><span class="p">):</span>
-    <span class="n">input_ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">output_id</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">max_sequence_length</span> <span class="o">=</span> <span class="mi">64</span>
+
+<span class="n">input_ids</span> <span class="o">=</span> <span class="n">tokenized_prompt</span>
+<span class="c1"># extend sentence (sequence) word-by-word (token-by-token)</span>
+<span class="c1"># until reach max sequence length</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_sequence_length</span><span class="p">):</span>
     <span class="n">logits</span> <span class="o">=</span> <span class="n">torch_model</span><span class="p">(</span><span class="n">input_ids</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c1"># determine the next token by greedily choosing the one with highest logit (probability)</span>
     <span class="n">output_id</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)[:,</span> <span class="o">-</span><span class="mi">1</span> <span class="p">:]</span>
-<span class="c1"># decode</span>
-<span class="n">input_ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">output_id</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># append the next token to sequence</span>
+    <span class="n">input_ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">output_id</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="c1"># decode tokens back to text</span>
 <span class="n">output_text</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">input_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">skip_special_tokens</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Output text from the original torch model:&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">output_text</span><span class="p">)</span>
@@ -553,25 +557,23 @@ coremltools        8.0
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Output text from the original torch model:
 Once upon a time there was a man named John Smith. John Smith was a hard-working farmer, a good husband, and a good father. He loved his family dearly, and he cherished every moment with them.
 But one day, John&#39;s life changed forever.
-John&#39;s wife, Mary, died suddenly of a
+John&#39;s wife, Mary, died suddenly of
 </pre></div>
 </div>
 </section>
 <section id="run-the-converted-core-ml-model">
 <h2>Run the Converted Core ML Model<a class="headerlink" href="#run-the-converted-core-ml-model" title="Link to this heading">#</a></h2>
 <p>Now run the converted Core ML version of the model with the same input:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># prompt</span>
-<span class="n">tokenized_prompt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">tokenized_prompt</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
-<span class="n">input_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">tokenized_prompt</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="n">logits</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">mlmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="n">input_ids</span><span class="p">})</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">output_id</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)[:,</span> <span class="o">-</span><span class="mi">1</span> <span class="p">:]</span>
-<span class="c1"># extend</span>
-<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">64</span><span class="p">):</span>
-    <span class="n">input_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concat</span><span class="p">((</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">output_id</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">input_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">tokenized_prompt</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+<span class="c1"># extend sentence (sequence) word-by-word (token-by-token)</span>
+<span class="c1"># until reach max sequence length</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_sequence_length</span><span class="p">):</span>
     <span class="n">logits</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">mlmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="n">input_ids</span><span class="p">})</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c1"># determine the next token by greedily choosing the one with highest logit (probability)</span>
     <span class="n">output_id</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)[:,</span> <span class="o">-</span><span class="mi">1</span> <span class="p">:]</span>
-<span class="c1"># decode</span>
-<span class="n">input_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concat</span><span class="p">((</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">output_id</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># append the next token to sequence</span>
+    <span class="n">input_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concat</span><span class="p">((</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">output_id</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="c1"># decode tokens back to text</span>
 <span class="n">output_text</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">input_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">skip_special_tokens</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Output text from the converted Core ML model:&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">output_text</span><span class="p">)</span>
@@ -580,7 +582,7 @@ John&#39;s wife, Mary, died suddenly of a
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Output text from the converted Core ML model:
 Once upon a time there was a man named John Smith. John Smith was a hard-working farmer, a good husband, and a good father. He loved his family dearly, and he cherished every moment with them.
 But one day, John&#39;s life changed forever.
-John&#39;s wife, Mary, died suddenly of a
+John&#39;s wife, Mary, died suddenly of
 </pre></div>
 </div>
 <p>As you can see, the converted Core ML model performs in the same manner as the original model. To make the Core ML model more performant, please stay tuned on <a class="reference external" href="https://machinelearning.apple.com">machinelearning.apple.com</a></p>
