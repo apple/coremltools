@@ -1501,7 +1501,7 @@ def rrelu(context, node):
 def softplus(context, node):
     inputs = _get_inputs(context, node, expected=3)
     x, beta, threshold = inputs[0], inputs[1].val, inputs[2].val
-    
+
     np_type = nptype_from_builtin(x.dtype)
     b = mb.const(val=np_type(beta))
     t = mb.const(val=np_type(threshold))
@@ -1523,7 +1523,7 @@ def softplus(context, node):
         # And this implementation is slightly faster than mb.softplus * mask for inference on the GPU.
         xb = mb.mul(x=x, y=b)
         m = mb.less_equal(x=xb, y=t)
-        
+
         x_dtype = TYPE_TO_DTYPE_STRING[x.dtype]
         m0 = mb.cast(x=m, dtype=x_dtype)
         xb0 = mb.mul(x=xb, y=m0)
@@ -1531,10 +1531,10 @@ def softplus(context, node):
         exp0 = mb.add(x=exp, y=m0)
         log = mb.log(x=exp0)
         log0 = mb.real_div(x=log, y=b)
-        
+
         m1 = mb.logical_not(x=m)
         x0 = mb.mul(x=x, y=mb.cast(x=m1, dtype=x_dtype))
-        
+
         res = mb.add(x=log0, y=x0)
     context.add(res, torch_name=node.name)
 
@@ -2383,7 +2383,8 @@ def cat(context, node):
         # PyTorch can have empty tensor, which is then ignored
         # However, CoreML does not allow such empty tensor, so remove them now
         if np.any([is_tensor_empty(x) for x in xs]):
-            xs = [x for x in xs if not is_tensor_empty(x)]
+            filtered_xs = [x for x in xs if not is_tensor_empty(x)]
+            xs = filtered_xs if len(filtered_xs) > 0 else [xs[0]]
 
         dim = inputs[1] if nargs > 1 else 0
 
