@@ -196,7 +196,7 @@
 <li class="toctree-l2"><a class="reference internal" href="convert-nlp-model.html">Converting a Natural Language Processing Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html">Converting a torchvision Model from PyTorch</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pytorch-conversion-examples.html">Converting a PyTorch Segmentation Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="convert-llm.html">Converting a Large Language Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-llm.html">Converting an Open Efficient Language Model</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -446,10 +446,11 @@ document.write(`
                   
   <section id="model-exporting">
 <span id="index-0"></span><h1>Model Exporting<a class="headerlink" href="#model-exporting" title="Link to this heading">#</a></h1>
-<p>The easiest way to generate ExportedProgram for your model is to use PyTorch’s <a class="reference external" href="https://pytorch.org/docs/stable/export.html#torch.export.export">torch.export.export</a>. Exporting runs an example input tensor through your model, and captures the operations that are invoked as that input makes its way through the model’s layers.</p>
+<p>The recommended way to generate ExportedProgram for your model is to use PyTorch’s <a class="reference external" href="https://pytorch.org/docs/stable/export.html#torch.export.export">torch.export.export</a>. Exporting runs an example input tensor through your model, and captures the operations that are invoked as that input makes its way through the model’s layers.</p>
 <div class="admonition-exporting-limitations admonition">
 <p class="admonition-title">Exporting Limitations</p>
-<p>See <a class="reference external" href="https://pytorch.org/docs/stable/export.html#limitations-of-torch-export">limitations of torch.export</a></p>
+<p>Core ML Tools torch.export conversion support is newly added in 8.0, currently in beta state, in line with the export API status in PyTorch. As of Core ML Tools 8.0, representative models such as resnet, mobile net, vit, mobile bert, <a class="reference internal" href="convert-llm.html"><span class="doc std std-doc">openelm</span></a> can be converted, and total torch op translation test coverage is roughly ~60%. We would recommend to use this actively developing path</p>
+<p>Also, torch.export has limitations, see <a class="reference external" href="https://pytorch.org/docs/stable/export.html#limitations-of-torch-export">PyTorch elaboration</a></p>
 </div>
 <section id="requirements">
 <h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading">#</a></h2>
@@ -542,7 +543,7 @@ coremltools        8.0
 <section id="difference-from-tracing">
 <h2>Difference from Tracing<a class="headerlink" href="#difference-from-tracing" title="Link to this heading">#</a></h2>
 <p>For tracing, <code class="docutils literal notranslate"><span class="pre">ct.convert</span></code> requires the <code class="docutils literal notranslate"><span class="pre">inputs</span></code> arg from user. This is no longer the case for exporting, since the ExportedProgram object carries all name and shape and dtype info.</p>
-<p>Subsequently, for exporting, dynamic shape is no longer specified through the <code class="docutils literal notranslate"><span class="pre">inputs</span></code> arg of <code class="docutils literal notranslate"><span class="pre">ct.convert</span></code>. Instead, user will need to <a class="reference external" href="https://pytorch.org/docs/stable/export.html#expressing-dynamism">express dynamism in torch.export</a>.</p>
+<p>Subsequently, for exporting, dynamic shape is no longer specified through the <code class="docutils literal notranslate"><span class="pre">inputs</span></code> arg of <code class="docutils literal notranslate"><span class="pre">ct.convert</span></code>. Instead, user will need to <a class="reference external" href="https://pytorch.org/docs/stable/export.html#expressing-dynamism">express dynamism in torch.export</a>, which will then be automatically converted to Core ML <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#rangedim"><code class="docutils literal notranslate"><span class="pre">RangeDim</span></code></a>. As of Core ML Tools 8.0, <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#enumeratedshapes"><code class="docutils literal notranslate"><span class="pre">EnumeratedShapes</span></code></a> is not supported through model exporting, yet.</p>
 </section>
 </section>
 
