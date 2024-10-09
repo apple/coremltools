@@ -1,4 +1,4 @@
-# Converting a Large Language Model
+# Converting an Open Efficient Language Model
 
 The following example shows how to convert a PyTorch [OpenELM](https://huggingface.co/apple/OpenELM) model to Core ML. OpenELM is a family of Open Efficient Language Models. The small size variants are suitable for mobile and embedded language applications.
 
@@ -150,4 +150,4 @@ But one day, John's life changed forever.
 John's wife, Mary, died suddenly of
 ```
 
-As you can see, the converted Core ML model performs in the same manner as the original model. To make the Core ML model more performant, please stay tuned on [machinelearning.apple.com](https://machinelearning.apple.com)
+As you can see, the converted Core ML model performs in the same manner as the original model.

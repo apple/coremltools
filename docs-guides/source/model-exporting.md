@@ -7,11 +7,13 @@
 
 # Model Exporting
 
-The easiest way to generate ExportedProgram for your model is to use PyTorch's [torch.export.export](https://pytorch.org/docs/stable/export.html#torch.export.export). Exporting runs an example input tensor through your model, and captures the operations that are invoked as that input makes its way through the model's layers.
+The recommended way to generate ExportedProgram for your model is to use PyTorch's [torch.export.export](https://pytorch.org/docs/stable/export.html#torch.export.export). Exporting runs an example input tensor through your model, and captures the operations that are invoked as that input makes its way through the model's layers.
 
 ```{admonition} Exporting Limitations
 
-See [limitations of torch.export](https://pytorch.org/docs/stable/export.html#limitations-of-torch-export)
+Core ML Tools torch.export conversion support is newly added in 8.0, currently in beta state, in line with the export API status in PyTorch. As of Core ML Tools 8.0, representative models such as resnet, mobile net, vit, mobile bert, [openelm](convert-llm) can be converted, and total torch op translation test coverage is roughly ~60%. We would recommend to use this actively developing path
+
+Also, torch.export has limitations, see [PyTorch elaboration](https://pytorch.org/docs/stable/export.html#limitations-of-torch-export)
 ```
 
 ## Requirements
@@ -108,4 +110,4 @@ The following example builds a simple model from scratch and exports it to gener
 ## Difference from Tracing
 For tracing, `ct.convert` requires the `inputs` arg from user. This is no longer the case for exporting, since the ExportedProgram object carries all name and shape and dtype info.
 
-Subsequently, for exporting, dynamic shape is no longer specified through the `inputs` arg of `ct.convert`. Instead, user will need to [express dynamism in torch.export](https://pytorch.org/docs/stable/export.html#expressing-dynamism).
+Subsequently, for exporting, dynamic shape is no longer specified through the `inputs` arg of `ct.convert`. Instead, user will need to [express dynamism in torch.export](https://pytorch.org/docs/stable/export.html#expressing-dynamism), which will then be automatically converted to Core ML [`RangeDim`](https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#rangedim). As of Core ML Tools 8.0, [`EnumeratedShapes`](https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#enumeratedshapes) is not supported through model exporting, yet.
