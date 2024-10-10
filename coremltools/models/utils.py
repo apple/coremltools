@@ -48,7 +48,6 @@ from coremltools.converters.mil.mil.passes.pass_pipeline import (
 )
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY as _PASS_REGISTRY
 from coremltools.converters.mil.mil.program import Placeholder as _Placeholder
-from coremltools.proto.FeatureTypes_pb2 import ArrayFeatureType
 
 from .._deps import _HAS_SCIPY
 
@@ -2253,11 +2252,10 @@ def _make_second_chunk_prog(prog: _mil.Program, op_idx: int) -> _mil.Program:
 
     return prog
 
-
 def change_input_output_tensor_type(
     ml_model: "_ct.models.model.MLModel",
-    from_type: ArrayFeatureType,
-    to_type: ArrayFeatureType,
+    from_type: "_ct.proto.FeatureTypes_pb2.ArrayFeatureType",
+    to_type: "_ct.proto.FeatureTypes_pb2.ArrayFeatureType",
     function_names: _Optional[_List[str]] = None,
     input_names: _Optional[_List[str]] = None,
     output_names: _Optional[_List[str]] = None,
@@ -2304,6 +2302,7 @@ def change_input_output_tensor_type(
     from coremltools.converters.mil import Var, Operation
     from coremltools.converters.mil.mil.block import Function
     from coremltools.converters.mil.mil.types import fp16, fp32, tensor, double
+    from coremltools.proto.FeatureTypes_pb2 import ArrayFeatureType
     from coremltools.proto.Model_pb2 import FeatureDescription, Model
     from typing import Iterable as _Iterable
     from typing import Type as _Type
