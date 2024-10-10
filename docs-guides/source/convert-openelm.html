@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Model Exporting &#8212; Guide to Core ML Tools</title>
+    <title>Converting an Open Efficient Language Model &#8212; Guide to Core ML Tools</title>
   
   
   
@@ -44,11 +44,11 @@
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'source/model-exporting';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'source/convert-openelm';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Converting a Natural Language Processing Model" href="convert-nlp-model.html" />
-    <link rel="prev" title="Model Scripting" href="model-scripting.html" />
+    <link rel="next" title="Conversion Options" href="conversion-options.html" />
+    <link rel="prev" title="Converting a PyTorch Segmentation Model" href="pytorch-conversion-examples.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -192,11 +192,11 @@
 <li class="toctree-l2"><a class="reference internal" href="convert-pytorch-workflow.html">PyTorch Conversion Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-tracing.html">Model Tracing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-scripting.html">Model Scripting</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">Model Exporting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-exporting.html">Model Exporting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-nlp-model.html">Converting a Natural Language Processing Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html">Converting a torchvision Model from PyTorch</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pytorch-conversion-examples.html">Converting a PyTorch Segmentation Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="convert-openelm.html">Converting an Open Efficient Language Model</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Converting an Open Efficient Language Model</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -336,7 +336,7 @@
       
       
       
-      <li><a href="../_sources/source/model-exporting.md" target="_blank"
+      <li><a href="../_sources/source/convert-openelm.md" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -420,7 +420,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Model Exporting</h1>
+    <h1>Converting an Open Efficient Language Model</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -431,8 +431,12 @@ document.write(`
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#export-and-convert-your-model">Export and Convert your Model</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#difference-from-tracing">Difference from Tracing</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#import-libraries-and-set-up-the-model">Import Libraries and Set Up the Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#export-the-model">Export the Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert-the-model-to-core-ml">Convert the Model to Core ML</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tokenize-the-prompt">Tokenize the Prompt</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-pytorch-model">Run the PyTorch Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-converted-core-ml-model">Run the Converted Core ML Model</a></li>
 </ul>
             </nav>
         </div>
@@ -444,106 +448,144 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="model-exporting">
-<span id="index-0"></span><h1>Model Exporting<a class="headerlink" href="#model-exporting" title="Link to this heading">#</a></h1>
-<p>The recommended way to generate ExportedProgram for your model is to use PyTorch’s <a class="reference external" href="https://pytorch.org/docs/stable/export.html#torch.export.export">torch.export.export</a>. Exporting runs an example input tensor through your model, and captures the operations that are invoked as that input makes its way through the model’s layers.</p>
-<div class="admonition-exporting-limitations admonition">
-<p class="admonition-title">Exporting Limitations</p>
-<p>Core ML Tools torch.export conversion support is newly added in 8.0, currently in beta state, in line with the export API status in PyTorch. As of Core ML Tools 8.0, representative models such as resnet, mobile net, vit, mobile bert, <a class="reference internal" href="convert-openelm.html"><span class="doc std std-doc">openelm</span></a> can be converted, and total torch op translation test coverage is roughly ~60%. We would recommend to use this actively developing path</p>
-<p>Also, torch.export has limitations, see <a class="reference external" href="https://pytorch.org/docs/stable/export.html#limitations-of-torch-export">PyTorch elaboration</a></p>
-</div>
+  <section id="converting-an-open-efficient-language-model">
+<h1>Converting an Open Efficient Language Model<a class="headerlink" href="#converting-an-open-efficient-language-model" title="Link to this heading">#</a></h1>
+<p>The following example shows how to convert a PyTorch <a class="reference external" href="https://huggingface.co/apple/OpenELM">OpenELM</a> model to Core ML. OpenELM is a family of Open Efficient Language Models. The small size variants are suitable for mobile and embedded language applications.</p>
+<p>In this example you do the following:</p>
+<ol class="arabic simple">
+<li><p><a class="reference internal" href="#import-libraries-and-set-up-the-model">Import libraries and set up the model</a></p></li>
+<li><p><a class="reference internal" href="#export-the-model">Export the model</a></p></li>
+<li><p><a class="reference internal" href="#convert-the-model-to-core-ml">Convert the model to Core ML</a></p></li>
+<li><p><a class="reference internal" href="#tokenize-the-prompt">Tokenize the prompt</a></p></li>
+<li><p><a class="reference internal" href="#run-the-pytorch-model">Run the PyTorch model</a></p></li>
+<li><p><a class="reference internal" href="#run-the-converted-core-ml-model">Run the converted Core ML model</a></p></li>
+</ol>
 <section id="requirements">
 <h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading">#</a></h2>
-<p>This example requires <a class="reference external" href="https://pytorch.org/">PyTorch</a> and Core ML Tools 8.0 or newer versions. Use the following commands:</p>
+<p>This example requires macOS Monterey or newer versions, <a class="reference external" href="https://pytorch.org/">PyTorch</a>, <a class="reference external" href="https://huggingface.co/transformers/index.html">Transformers</a>, and Core ML Tools 8.0 or newer versions. Use the following commands:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>torch
+pip<span class="w"> </span>install<span class="w"> </span>transformers
 pip<span class="w"> </span>install<span class="w"> </span>coremltools
 </pre></div>
 </div>
 <p>At the time of creating this example, the author environment is</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>torch              2.4.1
+transformers       4.45.1
 coremltools        8.0
 </pre></div>
 </div>
 </section>
-<section id="export-and-convert-your-model">
-<h2>Export and Convert your Model<a class="headerlink" href="#export-and-convert-your-model" title="Link to this heading">#</a></h2>
-<p>The following example builds a simple model from scratch and exports it to generate the ExportedProgram object needed by the converter. Follow these steps:</p>
-<ol class="arabic">
-<li><p>Define a simple layer module to reuse:</p>
+<section id="import-libraries-and-set-up-the-model">
+<h2>Import Libraries and Set Up the Model<a class="headerlink" href="#import-libraries-and-set-up-the-model" title="Link to this heading">#</a></h2>
+<p>Import the <code class="docutils literal notranslate"><span class="pre">torch</span></code>, <code class="docutils literal notranslate"><span class="pre">numpy</span></code>, and <code class="docutils literal notranslate"><span class="pre">coremltools</span></code> libraries, and <code class="docutils literal notranslate"><span class="pre">AutoModelForCausalLM</span></code> and <code class="docutils literal notranslate"><span class="pre">AutoTokenizer</span></code> from <code class="docutils literal notranslate"><span class="pre">transformers</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
-<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="kn">from</span> <span class="nn">transformers</span> <span class="kn">import</span> <span class="n">AutoModelForCausalLM</span><span class="p">,</span> <span class="n">AutoTokenizer</span>
+</pre></div>
+</div>
+<p>Initialize the language model along with its tokenizer. Here we choose the smallest variant <a class="reference external" href="https://huggingface.co/apple/OpenELM-270M-Instruct">OpenELM-270M-Instruct</a>, which uses the <a class="reference external" href="https://huggingface.co/meta-llama/Llama-2-7b-hf">Llama-2-7b</a> tokenizer</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">torch_model</span> <span class="o">=</span> <span class="n">AutoModelForCausalLM</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+    <span class="s2">&quot;apple/OpenELM-270M-Instruct&quot;</span><span class="p">,</span>
+    <span class="n">torch_dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+    <span class="n">trust_remote_code</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">return_dict</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">use_cache</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">torch_model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 
-<span class="c1"># Define a simple layer module we will reuse in our network</span>
-<span class="k">class</span> <span class="nc">Attention</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">wq</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">wk</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">wv</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">wo</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embedding</span><span class="p">):</span>
-        <span class="n">q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wq</span><span class="p">(</span><span class="n">embedding</span><span class="p">)</span>
-        <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wk</span><span class="p">(</span><span class="n">embedding</span><span class="p">)</span>
-        <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wv</span><span class="p">(</span><span class="n">embedding</span><span class="p">)</span>
-        <span class="n">attention</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">scaled_dot_product_attention</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
-        <span class="n">o</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wo</span><span class="p">(</span><span class="n">attention</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">o</span>
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;meta-llama/Llama-2-7b-hf&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</li>
-<li><p>Define a simple network consisting of several base layers:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># A simple network consisting of several base layers</span>
-<span class="k">class</span> <span class="nc">Transformer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">attention</span> <span class="o">=</span> <span class="n">Attention</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">w1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">w2</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">w3</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embedding</span><span class="p">):</span>
-        <span class="n">attention</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attention</span><span class="p">(</span><span class="n">embedding</span><span class="p">)</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">embedding</span> <span class="o">+</span> <span class="n">attention</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w2</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">silu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w1</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">w3</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
-        <span class="n">z</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
-        <span class="k">return</span> <span class="n">z</span>
-</pre></div>
-</div>
-</li>
-<li><p>Instantiate the network:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instantiate the network</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">Transformer</span><span class="p">()</span>
-<span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-</pre></div>
-</div>
-</li>
-<li><p>Define the example input, which is needed by exporter, and export the model.</p>
-<p>Run <code class="docutils literal notranslate"><span class="pre">torch.export.export</span></code> on your model with an example input, and save the resulting exported object. For an example input, you can use one sample of training or validation data, or even use randomly-generated data as shown in the following code snippet:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example input, needed by exporter</span>
-<span class="n">example_input</span> <span class="o">=</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">32</span><span class="p">),)</span>
-<span class="c1"># Define dynamic shapes to be considered by exporter, if any</span>
-<span class="n">batch_dim</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">export</span><span class="o">.</span><span class="n">Dim</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;batch_dim&quot;</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
-<span class="n">dynamic_shapes</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;embedding&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="n">batch_dim</span><span class="p">}}</span>
-<span class="c1"># Generate ExportedProgram by exporting</span>
-<span class="n">exported_model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">export</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">example_input</span><span class="p">,</span> <span class="n">dynamic_shapes</span><span class="o">=</span><span class="n">dynamic_shapes</span><span class="p">)</span>
-</pre></div>
-</div>
-</li>
-<li><p>Convert the exported model to Core ML:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
-
-<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">exported_model</span><span class="p">)</span>
-</pre></div>
-</div>
-</li>
-</ol>
 </section>
-<section id="difference-from-tracing">
-<h2>Difference from Tracing<a class="headerlink" href="#difference-from-tracing" title="Link to this heading">#</a></h2>
-<p>For tracing, <code class="docutils literal notranslate"><span class="pre">ct.convert</span></code> requires the <code class="docutils literal notranslate"><span class="pre">inputs</span></code> arg from user. This is no longer the case for exporting, since the ExportedProgram object carries all name and shape and dtype info.</p>
-<p>Subsequently, for exporting, dynamic shape is no longer specified through the <code class="docutils literal notranslate"><span class="pre">inputs</span></code> arg of <code class="docutils literal notranslate"><span class="pre">ct.convert</span></code>. Instead, user will need to <a class="reference external" href="https://pytorch.org/docs/stable/export.html#expressing-dynamism">express dynamism in torch.export</a>, which will then be automatically converted to Core ML <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#rangedim"><code class="docutils literal notranslate"><span class="pre">RangeDim</span></code></a>. As of Core ML Tools 8.0, <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#enumeratedshapes"><code class="docutils literal notranslate"><span class="pre">EnumeratedShapes</span></code></a> is not supported through model exporting, yet.</p>
+<section id="export-the-model">
+<h2>Export the Model<a class="headerlink" href="#export-the-model" title="Link to this heading">#</a></h2>
+<p>You can now use PyTorch’s exporter (<a class="reference external" href="https://pytorch.org/docs/stable/export.html#torch.export.export"><code class="docutils literal notranslate"><span class="pre">torch.export.export</span></code></a>) to export the language model:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">example_input_ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">32</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+<span class="n">sequence_length</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">export</span><span class="o">.</span><span class="n">Dim</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;sequence_length&quot;</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+<span class="n">dynamic_shapes</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="n">sequence_length</span><span class="p">}}</span>
+<span class="n">exported_program</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">export</span><span class="o">.</span><span class="n">export</span><span class="p">(</span>
+    <span class="n">torch_model</span><span class="p">,</span>
+    <span class="p">(</span><span class="n">example_input_ids</span><span class="p">,),</span>
+    <span class="n">dynamic_shapes</span><span class="o">=</span><span class="n">dynamic_shapes</span><span class="p">,</span>
+    <span class="c1"># Because of https://github.com/pytorch/pytorch/issues/133252</span>
+    <span class="c1"># we need to use strict=False until torch 2.5</span>
+    <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>For more about exporting, see <a class="reference internal" href="model-exporting.html"><span class="doc std std-doc">Model Exporting</span></a>.</p>
+</section>
+<section id="convert-the-model-to-core-ml">
+<h2>Convert the Model to Core ML<a class="headerlink" href="#convert-the-model-to-core-ml" title="Link to this heading">#</a></h2>
+<p>Convert the model <code class="docutils literal notranslate"><span class="pre">exported_program</span></code> to Core ML using the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> method:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">exported_program</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="tokenize-the-prompt">
+<h2>Tokenize the Prompt<a class="headerlink" href="#tokenize-the-prompt" title="Link to this heading">#</a></h2>
+<p>To test the performance of the converted model, tokenize the prompt (<code class="docutils literal notranslate"><span class="pre">&quot;Once</span> <span class="pre">upon</span> <span class="pre">a</span> <span class="pre">time</span> <span class="pre">there</span> <span class="pre">was&quot;</span></code>), and convert that list of tokens into a Torch tensor.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">prompt</span> <span class="o">=</span> <span class="s2">&quot;Once upon a time there was&quot;</span>
+<span class="n">tokenized_prompt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">tokenizer</span><span class="p">(</span><span class="n">prompt</span><span class="p">)[</span><span class="s2">&quot;input_ids&quot;</span><span class="p">])</span>
+<span class="c1"># Since model takes input ids in batch,</span>
+<span class="c1"># create a dummy batch dimension (i.e. size 1) for tokenized prompt</span>
+<span class="n">tokenized_prompt</span> <span class="o">=</span> <span class="n">tokenized_prompt</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="run-the-pytorch-model">
+<h2>Run the PyTorch Model<a class="headerlink" href="#run-the-pytorch-model" title="Link to this heading">#</a></h2>
+<p>Run the original PyTorch model with the tokenized prompt as input, to establish the benchmark for the model’s performance. The output appears below the code:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">max_sequence_length</span> <span class="o">=</span> <span class="mi">64</span>
+
+<span class="n">input_ids</span> <span class="o">=</span> <span class="n">tokenized_prompt</span>
+<span class="c1"># extend sentence (sequence) word-by-word (token-by-token)</span>
+<span class="c1"># until reach max sequence length</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_sequence_length</span><span class="p">):</span>
+    <span class="n">logits</span> <span class="o">=</span> <span class="n">torch_model</span><span class="p">(</span><span class="n">input_ids</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c1"># determine the next token by greedily choosing the one with highest logit (probability)</span>
+    <span class="n">output_id</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)[:,</span> <span class="o">-</span><span class="mi">1</span> <span class="p">:]</span>
+    <span class="c1"># append the next token to sequence</span>
+    <span class="n">input_ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">output_id</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="c1"># decode tokens back to text</span>
+<span class="n">output_text</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">input_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">skip_special_tokens</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Output text from the original torch model:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">output_text</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Output text from the original torch model:
+Once upon a time there was a man named John Smith. John Smith was a hard-working farmer, a good husband, and a good father. He loved his family dearly, and he cherished every moment with them.
+But one day, John&#39;s life changed forever.
+John&#39;s wife, Mary, died suddenly of
+</pre></div>
+</div>
+</section>
+<section id="run-the-converted-core-ml-model">
+<h2>Run the Converted Core ML Model<a class="headerlink" href="#run-the-converted-core-ml-model" title="Link to this heading">#</a></h2>
+<p>Now run the converted Core ML version of the model with the same input:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">input_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">tokenized_prompt</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+<span class="c1"># extend sentence (sequence) word-by-word (token-by-token)</span>
+<span class="c1"># until reach max sequence length</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_sequence_length</span><span class="p">):</span>
+    <span class="n">logits</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">mlmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="n">input_ids</span><span class="p">})</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c1"># determine the next token by greedily choosing the one with highest logit (probability)</span>
+    <span class="n">output_id</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)[:,</span> <span class="o">-</span><span class="mi">1</span> <span class="p">:]</span>
+    <span class="c1"># append the next token to sequence</span>
+    <span class="n">input_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concat</span><span class="p">((</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">output_id</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="c1"># decode tokens back to text</span>
+<span class="n">output_text</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">input_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">skip_special_tokens</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Output text from the converted Core ML model:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">output_text</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Output text from the converted Core ML model:
+Once upon a time there was a man named John Smith. John Smith was a hard-working farmer, a good husband, and a good father. He loved his family dearly, and he cherished every moment with them.
+But one day, John&#39;s life changed forever.
+John&#39;s wife, Mary, died suddenly of
+</pre></div>
+</div>
+<p>As you can see, the converted Core ML model performs in the same manner as the original model.</p>
 </section>
 </section>
 
@@ -559,20 +601,20 @@ coremltools        8.0
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="model-scripting.html"
+       href="pytorch-conversion-examples.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Model Scripting</p>
+        <p class="prev-next-title">Converting a PyTorch Segmentation Model</p>
       </div>
     </a>
     <a class="right-next"
-       href="convert-nlp-model.html"
+       href="conversion-options.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Converting a Natural Language Processing Model</p>
+        <p class="prev-next-title">Conversion Options</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -593,8 +635,12 @@ coremltools        8.0
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#export-and-convert-your-model">Export and Convert your Model</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#difference-from-tracing">Difference from Tracing</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#import-libraries-and-set-up-the-model">Import Libraries and Set Up the Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#export-the-model">Export the Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert-the-model-to-core-ml">Convert the Model to Core ML</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tokenize-the-prompt">Tokenize the Prompt</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-pytorch-model">Run the PyTorch Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-the-converted-core-ml-model">Run the Converted Core ML Model</a></li>
 </ul>
   </nav></div>
 
