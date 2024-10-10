@@ -42,7 +42,8 @@ Full examples:
 - [Convert from PyTorch](load-and-convert-model.md#convert-from-pytorch).
 - [PyTorch Conversion Workflow](convert-pytorch-workflow).
 - [Model Tracing](model-tracing).
-- [Model Scripting](model-scripting)
+- [Model Scripting](model-scripting).
+- [Model Exporting](model-exporting).
 
 Full examples:
 - [Converting a Natural Language Processing Model](convert-nlp-model): Combines tracing and scripting to convert a PyTorch natural language processing model.
