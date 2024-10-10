@@ -28,9 +28,10 @@ from coremltools.converters.mil.mil.passes.pass_pipeline import (
 )
 from coremltools.converters.mil.testing_utils import assert_spec_input_type, assert_spec_output_type, DTYPE_TO_FEATURE_TYPE_MAP, get_op_types_in_program
 from coremltools.models.datatypes import Array
-from coremltools.models.utils import bisect_model, MultiFunctionDescriptor, load_spec, save_multifunction, load_spec, change_output_tensor_type
+from coremltools.models.utils import bisect_model, MultiFunctionDescriptor, load_spec, save_multifunction, load_spec, change_input_output_tensor_type
 from coremltools.proto.FeatureTypes_pb2 import ArrayFeatureType
 import coremltools.optimize as cto
+
 
 class TestMILConvertCall:
     @staticmethod
@@ -1790,7 +1791,7 @@ class TestBisectModel:
         shutil.rmtree(model_path)
 
 
-class TestChangeOutputTensorType:
+class TestChangeInputOutputTensorType:
     @staticmethod
     def _build_simple_model(dtype, function_names):
         weight_dtype = np.float16 if dtype == types.fp16 else np.float32
@@ -1818,12 +1819,60 @@ class TestChangeOutputTensorType:
                 (types.fp32, ArrayFeatureType.FLOAT32, ArrayFeatureType.FLOAT16),
         )
     )
+    def test_change_input_type(self, dtype, from_feature_type, to_feature_type) -> None:
+        model = self._build_simple_model(dtype=dtype, function_names=["main"])
+        orig_input = model.get_spec().description.input[0]
+        assert orig_input.type.multiArrayType.dataType == from_feature_type
+
+        updated_model = change_input_output_tensor_type(
+            ml_model=model,
+            from_type=from_feature_type,
+            to_type=to_feature_type,
+            input_names=["x"],
+            output_names=[],
+        )
+        updated_input = updated_model.get_spec().description.input[0]
+        assert updated_input.type.multiArrayType.dataType == to_feature_type
+
+    @pytest.mark.parametrize(
+        "dtype, from_feature_type, to_feature_type", (
+                (types.fp16, ArrayFeatureType.FLOAT16, ArrayFeatureType.FLOAT32),
+                (types.fp32, ArrayFeatureType.FLOAT32, ArrayFeatureType.FLOAT16),
+        )
+    )
+    def test_change_input_type_multifunc(self, dtype, from_feature_type, to_feature_type) -> None:
+        function_names = ["main", "main_2"]
+        model = self._build_simple_model(dtype=dtype, function_names=function_names)
+        for orig_output in model.get_spec().description.output:
+            assert orig_output.type.multiArrayType.dataType == from_feature_type
+
+        updated_model = change_input_output_tensor_type(
+            ml_model=model,
+            from_type=from_feature_type,
+            to_type=to_feature_type,
+            function_names=function_names,
+            input_names=["*"],
+            output_names=[],
+        )
+        for updated_input in updated_model.get_spec().description.input:
+            assert updated_input.type.multiArrayType.dataType == to_feature_type
+
+    @pytest.mark.parametrize(
+        "dtype, from_feature_type, to_feature_type", (
+                (types.fp16, ArrayFeatureType.FLOAT16, ArrayFeatureType.FLOAT32),
+                (types.fp32, ArrayFeatureType.FLOAT32, ArrayFeatureType.FLOAT16),
+        )
+    )
     def test_change_output_type(self, dtype, from_feature_type, to_feature_type) -> None:
         model = self._build_simple_model(dtype=dtype, function_names=["main"])
-        output = model.get_spec().description.output[0]
-        assert output.type.multiArrayType.dataType == from_feature_type
+        orig_output = model.get_spec().description.output[0]
+        assert orig_output.type.multiArrayType.dataType == from_feature_type
 
-        updated_model = change_output_tensor_type(ml_model=model, from_type=from_feature_type, to_type=to_feature_type)
+        updated_model = change_input_output_tensor_type(
+            ml_model=model,
+            from_type=from_feature_type,
+            to_type=to_feature_type,
+        )
         updated_output = updated_model.get_spec().description.output[0]
         assert updated_output.type.multiArrayType.dataType == to_feature_type
 
@@ -1836,10 +1885,10 @@ class TestChangeOutputTensorType:
     def test_change_output_type_multifunc(self, dtype, from_feature_type, to_feature_type) -> None:
         function_names = ["main", "main_2"]
         model = self._build_simple_model(dtype=dtype, function_names=function_names)
-        for output in model.get_spec().description.output:
-            assert output.type.multiArrayType.dataType == from_feature_type
+        for orig_output in model.get_spec().description.output:
+            assert orig_output.type.multiArrayType.dataType == from_feature_type
 
-        updated_model = change_output_tensor_type(
+        updated_model = change_input_output_tensor_type(
             ml_model=model,
             from_type=from_feature_type,
             to_type=to_feature_type,

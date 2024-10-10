@@ -605,7 +605,7 @@ class Operation:
             attr = "["
             for k, v in self.scopes.items():
                 attr += f"{k}: {v}, "
-            attr = attr[:-2] + "]"
+            attr += attr[:-2] + "]"
         else:
             attr = ""
 

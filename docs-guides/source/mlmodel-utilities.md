@@ -210,9 +210,9 @@ ct.models.utils.bisect_model(
 )
 ```
 
-## Change Model Tensor Output Types
+## Change Model Tensor Input/Output Types
 
-Consider a scenario when we have a CoreML model with an fp32 multiarray output, but we need to use a CoreML API that
+Consider a scenario when we have a Core ML model with an fp32 multiarray output, but we need to use a Core ML API that
 requires fp16 multiarrays instead. We can now easily change the model output types from fp32 to fp16 (and vice versa).
 
 An example how to update the output data types:
@@ -223,10 +223,37 @@ from coremltools.utils import change_array_output_type
 from coremltools.proto.FeatureTypes_pb2 import ArrayFeatureType
 
 model = MLModel("my_model.mlpackage")
-updated_model = change_output_tensor_type(
+updated_model = change_input_output_tensor_type(
     ml_model=model,
     from_type=ArrayFeatureType.FLOAT32,
     to_type=ArrayFeatureType.FLOAT16,
 )
 updated_model.save("my_updated_model.mlpackage")
 ```
+
+Another example is showing how to update data types of all the function inputs:
+```python
+from coremltools.models.model import MLModel
+from coremltools.utils import change_array_output_type
+from coremltools.proto.FeatureTypes_pb2 import ArrayFeatureType
+
+model = MLModel("my_model.mlpackage")
+updated_model = change_input_output_tensor_type(
+    ml_model=model,
+    from_type=ArrayFeatureType.FLOAT32,
+    to_type=ArrayFeatureType.FLOAT16,
+    function_names=["main_1", "main_2"],
+    input_names=["*"],
+    output_names=[],  # no output to be modified
+)
+updated_model.save("my_updated_model.mlpackage")
+```
+
+Optional arguments:
+* `function_names`: list of functions to be modified (by default only input / output of the `main` function is modified)
+* `input_names`: list of inputs that should be updated (by default none is modified)
+* `output_names`: list of outputs that should be updated (by default all the outputs matching the `from_type` type are updated)
+
+Special values for `input_names` and `output_names` arguments:
+* an empty list means nothing will be modified (default for `input_names`)
+* a list containing `"*"` string means all relevant inputs/outputs will be modified (those that will match the `from_type` type)
