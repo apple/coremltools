@@ -75,6 +75,7 @@ class TestApiVisibilities:
             "MultiFunctionDescriptor",
             "randomize_weights",
             "bisect_model",
+            "change_input_output_tensor_type",
         ]
         _check_visible_modules(_get_visible_items(ct.utils), expected)
 
