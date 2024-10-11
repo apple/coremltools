@@ -119,7 +119,6 @@ model_from_export.save("newmodel_from_export.mlpackage")
 - To learn how to get better performance and more convenience when using images, see [Image Input and Output](image-inputs).
 - For the details of how to preprocess image input for models in PyTorch's  [torchvision](https://pytorch.org/vision/stable/index.html) library, see [Preprocessing for Torch](image-inputs.md#preprocessing-for-torch).
 - For examples of converting PyTorch models, see the following:
-    - [Converting a Natural Language Processing Model](convert-nlp-model)
     - [Converting a torchvision Model from PyTorch](convert-a-torchvision-model-from-pytorch)
     - [Converting a PyTorch Segmentation Model](convert-a-pytorch-segmentation-model)
     - [Converting an Open Efficient Language Model](convert-openelm)
