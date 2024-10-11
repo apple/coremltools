@@ -11,7 +11,7 @@ The recommended way to generate ExportedProgram for your model is to use PyTorch
 
 ```{admonition} Exporting Limitations
 
-Core ML Tools torch.export conversion support is newly added in 8.0, currently in beta state, in line with the export API status in PyTorch. As of Core ML Tools 8.0, representative models such as resnet, mobile net, vit, mobile bert, [openelm](convert-openelm) can be converted, and total torch op translation test coverage is roughly ~60%. We would recommend to use this actively developing path
+Core ML Tools torch.export conversion support is newly added in 8.0, currently in beta state, in line with the export API status in PyTorch. As of Core ML Tools 8.0, representative models such as mobile bert, resnet, vit, [mobile net](convert-a-torchvision-model-from-pytorch), [deep lab](convert-a-pytorch-segmentation-model), [openelm](convert-openelm) can be converted, and total torch op translation test coverage is roughly ~60%. We would recommend to use this actively developing path
 
 Also, torch.export has limitations, see [PyTorch elaboration](https://pytorch.org/docs/stable/export.html#limitations-of-torch-export)
 ```
