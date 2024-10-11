@@ -51,7 +51,7 @@ mlmodel.save("SegmentationModel_with_metadata.mlpackage")
 
 ```{note}
 
-For the full code to convert the model, see [Converting a PyTorch Segmentation Model](pytorch-conversion-examples).
+For the full code to convert the model, see [Converting a PyTorch Segmentation Model](convert-a-pytorch-segmentation-model).
 ```
 
 ### Open the Model in Xcode
@@ -83,7 +83,7 @@ The preview for a segmentation model is available in Xcode 12.3 or newer.
 
 ```{note}
 
-For the full code to convert the model, see [Converting a PyTorch Segmentation Model](pytorch-conversion-examples).
+For the full code to convert the model, see [Converting a PyTorch Segmentation Model](convert-a-pytorch-segmentation-model).
 ```
 
 ## Body Pose Example

@@ -115,6 +115,6 @@ model_from_export.save("newmodel_from_export.mlpackage")
 - For examples of converting PyTorch models, see the following:
     - [Converting a Natural Language Processing Model](convert-nlp-model)
     - [Converting a torchvision Model from PyTorch](convert-a-torchvision-model-from-pytorch)
-    - [Converting a PyTorch Segmentation Model](pytorch-conversion-examples)
+    - [Converting a PyTorch Segmentation Model](convert-a-pytorch-segmentation-model)
     - [Converting an Open Efficient Language Model](convert-openelm)
 ```

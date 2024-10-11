@@ -191,12 +191,10 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="convert-pytorch-workflow.html">PyTorch Conversion Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-tracing.html">Model Tracing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="model-scripting.html">Model Scripting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-exporting.html">Model Exporting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="convert-nlp-model.html">Converting a Natural Language Processing Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html">Converting a torchvision Model from PyTorch</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pytorch-conversion-examples.html">Converting a PyTorch Segmentation Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="convert-llm.html">Converting a Large Language Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-pytorch-segmentation-model.html">Converting a PyTorch Segmentation Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-openelm.html">Converting an Open Efficient Language Model</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -548,7 +546,7 @@ optimization of the model via the <code class="docutils literal notranslate"><sp
 </section>
 <section id="example">
 <h3>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h3>
-<p>The following code loads the <code class="docutils literal notranslate"><span class="pre">SegmentationModel_with_metadata.mlpackage</span></code> saved in <a class="reference internal" href="pytorch-conversion-examples.html#open-the-model-in-xcode"><span class="std std-ref">Converting a PyTorch Segmentation Model</span></a>. It uses <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.get_weights_metadata"><code class="docutils literal notranslate"><span class="pre">get_weights_metadata()</span></code></a>, which specifies the size threshold (<code class="docutils literal notranslate"><span class="pre">2048</span></code>) in the <code class="docutils literal notranslate"><span class="pre">weight_threshold</span></code> parameter. A weight tensor is included in the resulting dictionary only if its total number of elements are greater than <code class="docutils literal notranslate"><span class="pre">weight_threshold</span></code>.</p>
+<p>The following code loads the <code class="docutils literal notranslate"><span class="pre">SegmentationModel_with_metadata.mlpackage</span></code> saved in <a class="reference internal" href="convert-a-pytorch-segmentation-model.html#open-the-model-in-xcode"><span class="std std-ref">Converting a PyTorch Segmentation Model</span></a>. It uses <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.get_weights_metadata"><code class="docutils literal notranslate"><span class="pre">get_weights_metadata()</span></code></a>, which specifies the size threshold (<code class="docutils literal notranslate"><span class="pre">2048</span></code>) in the <code class="docutils literal notranslate"><span class="pre">weight_threshold</span></code> parameter. A weight tensor is included in the resulting dictionary only if its total number of elements are greater than <code class="docutils literal notranslate"><span class="pre">weight_threshold</span></code>.</p>
 <p>The example also shows how to get the name of the last weight in the model. The code palettizes all ops except the last weight, which is a common practical scenario when the last layer is more sensitive and should be skipped from quantization:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools.optimize</span> <span class="k">as</span> <span class="nn">cto</span>
 
