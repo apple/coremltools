@@ -42,7 +42,6 @@ Full examples:
 - [Convert from PyTorch](load-and-convert-model.md#convert-from-pytorch).
 - [PyTorch Conversion Workflow](convert-pytorch-workflow).
 - [Model Tracing](model-tracing).
-- [Model Scripting](model-scripting).
 - [Model Exporting](model-exporting).
 
 Full examples:
