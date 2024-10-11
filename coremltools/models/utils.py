@@ -2263,7 +2263,7 @@ def change_input_output_tensor_type(
     output_names: _Optional[_List[str]] = None,
 ) -> "_ct.models.model.MLModel":
     """
-    Change input and/or output type of the Core ML model tensor outputs. Supported types are FLOAT16, FLOAT32.
+    Change the tensor data types of Core ML model inputs / outputs. Supported types are FLOAT16, FLOAT32.
 
     Parameters
     ----------
