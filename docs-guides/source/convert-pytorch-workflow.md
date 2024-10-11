@@ -31,7 +31,9 @@ torch_model.eval()
 To ensure that operations such as dropout are disabled, it's important to set the model to evaluation mode (_not_ training mode) before tracing. This setting also results in a more optimized version of the model for conversion.
 ```
 
-## Generate a TorchScript / ExportedProgram Version
+## Generate a PyTorch Graph Version
+
+### TorchScript
 
 [TorchScript](https://pytorch.org/docs/stable/jit.html) is an intermediate representation of a PyTorch model. To generate a TorchScript representation from PyTorch code, use PyTorch's JIT tracer ([`torch.jit.trace`](https://pytorch.org/docs/stable/generated/torch.jit.trace.html)) to _trace_ the model, as shown in the following example:
 
@@ -46,13 +48,17 @@ The process of tracing takes an example input and traces its flow through the mo
 
 If your model uses a data-dependent control flow, such as a loop or conditional, the traced model won't generalize to other inputs. In such cases you can experiment with applying PyTorch's JIT script ([`torch.jit.script`](https://pytorch.org/docs/stable/generated/torch.jit.script.html)) to your model as described in [Model Scripting](model-scripting). You can also use a combination of tracing and scripting.
 
+### ExportedProgram
+
 [ExportedProgram](https://pytorch.org/docs/stable/export.html) is a new ntermediate representation of a PyTorch model introduced in PyTorch 2. To generate an ExportedProgram representation from PyTorch code, use PyTorch's exporter ([`torch.export.export`](https://pytorch.org/docs/stable/export.html#torch.export.export)) to _export_ the model, as shown in the following example:
 
 ```python
 # Export the model with random data.
-example_input = torch.rand(1, 3, 224, 224) 
-exported_program = torch.export.export(torch_model, (example_input,))
+example_inputs = (torch.rand(1, 3, 224, 224),)
+exported_program = torch.export.export(torch_model, example_inputs)
 ```
+
+Core ML Tools torch.export conversion support is newly added in 8.0, currently in beta state, in line with the export API status in PyTorch. As of Core ML Tools 8.0, representative models such as mobile bert, resnet, vit, [mobile net](convert-a-torchvision-model-from-pytorch), [deep lab](convert-a-pytorch-segmentation-model), [openelm](convert-openelm) can be converted, and total torch op translation test coverage is roughly ~60%. We would recommend to use this actively developing path
 
 ## Convert to Core ML
 
