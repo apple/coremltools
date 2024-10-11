@@ -21,9 +21,11 @@ from copy import deepcopy as _deepcopy
 from functools import lru_cache as _lru_cache
 from typing import Callable as _Callable
 from typing import Dict as _Dict
+from typing import Iterable as _Iterable
 from typing import List as _List
 from typing import Optional as _Optional
 from typing import Tuple as _Tuple
+from typing import Type as _Type
 from typing import Union as _Union
 
 import numpy as _np
@@ -2253,33 +2255,40 @@ def _make_second_chunk_prog(prog: _mil.Program, op_idx: int) -> _mil.Program:
     return prog
 
 def change_input_output_tensor_type(
-    ml_model: "_ct.models.model.MLModel",
-    from_type: "_ct.proto.FeatureTypes_pb2.ArrayFeatureType",
-    to_type: "_ct.proto.FeatureTypes_pb2.ArrayFeatureType",
+    ml_model: "_ct.models.MLModel",
+    from_type: _proto.FeatureTypes_pb2.ArrayFeatureType,
+    to_type: _proto.FeatureTypes_pb2.ArrayFeatureType,
     function_names: _Optional[_List[str]] = None,
     input_names: _Optional[_List[str]] = None,
     output_names: _Optional[_List[str]] = None,
 ) -> "_ct.models.model.MLModel":
     """
-    Change output type of the Core ML model tensor outputs. Supported types are FLOAT16, FLOAT32.
+    Change input and/or output type of the Core ML model tensor outputs. Supported types are FLOAT16, FLOAT32.
 
     Parameters
     ----------
     ml_model: MLModel
-        A Core ML model that needs to change its output type.
+        A Core ML model that needs to change its input/output type.
         Note:
-        - the original model is not modified, the model with updated output types is returned as a new instance.
+        - the original model is not modified, the model with updated types is returned as a new instance.
         - only an mlProgram is supported (not pipelines, not neural networks).
 
     from_type:
-        The output type that should be changed from.
+        The type that should be changed from.
 
     to_type:
-        The output type that will be used instead of all the outputs of `from_type` type.
+        The type that will be used instead of all the `from_type` type.
 
     function_names:
-        Optional list of function names where the output needs to be changed. If not specified, only the "main"
+        Optional list of function names where the input/output needs to be changed. If not specified, only the "main"
         function will be updated.
+
+    input_names:
+        Optional list of input names that should be updated (by default none of the inputs will be updated).
+
+    output_names:
+        Optional list of output names that should be updated (by default all the outputs that match the `from_type`
+        type will be updated).
 
     Examples
     --------
@@ -2299,17 +2308,13 @@ def change_input_output_tensor_type(
     """
     # We do the lazy import to prevent circular import
     from coremltools.converters.mil.converter import mil_convert as _mil_convert
-    from coremltools.converters.mil import Var, Operation
-    from coremltools.converters.mil.mil.block import Function
-    from coremltools.converters.mil.mil.types import fp16, fp32, tensor, double
-    from coremltools.proto.FeatureTypes_pb2 import ArrayFeatureType
-    from coremltools.proto.Model_pb2 import FeatureDescription, Model
-    from typing import Iterable as _Iterable
-    from typing import Type as _Type
 
-    SUPPORTED_TYPES = (ArrayFeatureType.FLOAT16, ArrayFeatureType.FLOAT32)
+    SUPPORTED_TYPES = (
+        _proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT16,
+        _proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT32,
+    )
 
-    def _get_model_spec(model: "_ct.models.model.MLModel") -> Model:
+    def _get_model_spec(model: _ct.models.MLModel) -> _proto.Model_pb2.Model:
         if not isinstance(model, _ct.models.MLModel):
             raise ValueError(f"input model must be of type ct.models.MLModel, actual type is {type(model)})")
         model_spec = model.get_spec()
@@ -2320,11 +2325,11 @@ def change_input_output_tensor_type(
 
         return model_spec
 
-    def _get_dtype(feature_type: int) -> _Type[double]:
-        if feature_type == ArrayFeatureType.FLOAT16:
-            return fp16
-        if feature_type == ArrayFeatureType.FLOAT32:
-            return fp32
+    def _get_dtype(feature_type: _proto.FeatureTypes_pb2.ArrayFeatureType) -> _Type[_mil.types.double]:
+        if feature_type == _proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT16:
+            return _mil.types.fp16
+        if feature_type == _proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT32:
+            return _mil.types.fp32
         raise ValueError(f"invalid feature type: {feature_type}, supported only FLOAT16, FLOAT32")
 
     def _sanitize_names(names: _Optional[_List[str]], desc_list: _Iterable, default: _List[str]) -> _List[str]:
@@ -2332,7 +2337,11 @@ def change_input_output_tensor_type(
             names = default
         return [x.name for x in desc_list if "*" in names or x.name in names]
 
-    def _eligible_feature_desc(feature_desc: FeatureDescription, names: _List[str], data_type: ArrayFeatureType) -> bool:
+    def _eligible_feature_desc(
+            feature_desc: _proto.Model_pb2.FeatureDescription,
+            names: _List[str],
+            data_type: _proto.FeatureTypes_pb2.ArrayFeatureType,
+    ) -> bool:
         if feature_desc.name not in names:
             _logger.debug(f"ignoring feature {feature_desc.name} as it's not in the list of required names {names}")
             return False
@@ -2349,7 +2358,7 @@ def change_input_output_tensor_type(
 
         return True
 
-    def _get_input_vars(var_name: str) -> _Iterable[_Tuple[_Optional[Function], _Optional[Var]]]:
+    def _get_input_vars(var_name: str) -> _Iterable[_Tuple[_Optional[_mil.block.Function], _Optional[_mil.Var]]]:
         for name in function_names:
             func = prog.functions[name]
             var = next(iter([v for k, v in func.inputs.items() if k == var_name]), None)
@@ -2359,7 +2368,7 @@ def change_input_output_tensor_type(
                     func.opset_version = _ct.target.iOS16
                 yield func, var
 
-    def _get_output_vars(var_name: str) -> _Iterable[_Tuple[_Optional[Function], _Optional[Var]]]:
+    def _get_output_vars(var_name: str) -> _Iterable[_Tuple[_Optional[_mil.block.Function], _Optional[_mil.Var]]]:
         for name in function_names:
             func = prog.functions[name]
             var = next(iter([v for v in func.outputs if v.name == var_name]), None)
@@ -2369,7 +2378,11 @@ def change_input_output_tensor_type(
                     func.opset_version = _ct.target.iOS16
                 yield func, var
 
-    def _cast_input_type(feature_desc: FeatureDescription, feature_var: Var, first_operation: Operation) -> None:
+    def _cast_input_type(
+            feature_desc: _proto.Model_pb2.FeatureDescription,
+            feature_var: _mil.Var,
+            first_operation: _mil.Operation,
+    ) -> None:
         with first_operation.enclosing_block:
             from_dtype_str = f"fp{from_dtype.get_bitwidth()}"
             var_name = feature_desc.name + f"_to_{from_dtype_str}"
@@ -2378,12 +2391,11 @@ def change_input_output_tensor_type(
                 anchor_op=x.op,
                 old_var=feature_var,
                 new_var=x,
-                force_replace=True,
             )
             feature_desc.type.multiArrayType.dataType = to_type
-            feature_var._sym_type = tensor(to_dtype, feature_var.sym_type.get_shape())
+            feature_var._sym_type = _mil.types.tensor(to_dtype, feature_var.sym_type.get_shape())
 
-    def _cast_output_type(feature_desc: FeatureDescription, feature_var: Var) -> None:
+    def _cast_output_type(feature_desc: _proto.Model_pb2.FeatureDescription, feature_var: _mil.Var) -> None:
         with feature_var.op.enclosing_block:
             to_dtype_str = f"fp{to_dtype.get_bitwidth()}"
             var_name = feature_desc.name + f"_to_{to_dtype_str}"
@@ -2392,7 +2404,6 @@ def change_input_output_tensor_type(
                 anchor_op=x.op,
                 old_var=feature_var,
                 new_var=x,
-                force_replace=True,
             )
             x.name = var_name
             feature_desc.name = var_name
