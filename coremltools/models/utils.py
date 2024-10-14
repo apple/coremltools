@@ -17,12 +17,15 @@ import sys as _sys
 import tempfile as _tempfile
 import warnings as _warnings
 from collections.abc import Iterable as _Iterable
+from copy import deepcopy as _deepcopy
 from functools import lru_cache as _lru_cache
 from typing import Callable as _Callable
 from typing import Dict as _Dict
+from typing import Iterable as _Iterable
 from typing import List as _List
 from typing import Optional as _Optional
 from typing import Tuple as _Tuple
+from typing import Type as _Type
 from typing import Union as _Union
 
 import numpy as _np
@@ -1473,7 +1476,7 @@ class MultiFunctionDescriptor:
         self, model_path: str, src_function_name: str, target_function_name: str
     ) -> None:
         """
-        Insert a ``src_function_name`` function from ``model_path`` as the 
+        Insert a ``src_function_name`` function from ``model_path`` as the
         ``target_function_name`` function in the multifunction descriptor.
         """
         self._add_modelpath_to_cache(model_path)
@@ -1930,7 +1933,7 @@ def bisect_model(
         )
         if len(prog.functions) > 1 or "main" not in prog.functions:
             raise ValueError("'bisect_model' only support model with a single 'main' function.")
-        
+
         func = prog.functions["main"]
         func.operations = list(func.operations)
 
@@ -2077,7 +2080,7 @@ def _verify_output_correctness_of_chunks(
             )
         return final_psnr
 
-    
+
     # Generate inputs for first chunk and full model
     input_dict = {}
     for input_desc in full_model._spec.description.input:
@@ -2251,4 +2254,208 @@ def _make_second_chunk_prog(prog: _mil.Program, op_idx: int) -> _mil.Program:
 
     return prog
 
+def change_input_output_tensor_type(
+    ml_model: "_ct.models.MLModel",
+    from_type: _proto.FeatureTypes_pb2.ArrayFeatureType,
+    to_type: _proto.FeatureTypes_pb2.ArrayFeatureType,
+    function_names: _Optional[_List[str]] = None,
+    input_names: _Optional[_List[str]] = None,
+    output_names: _Optional[_List[str]] = None,
+) -> "_ct.models.model.MLModel":
+    """
+    Change the tensor data types of Core ML model inputs / outputs. Supported types are FLOAT16, FLOAT32.
 
+    Parameters
+    ----------
+    ml_model: MLModel
+        A Core ML model that needs to change its input/output type.
+        Note:
+        - the original model is not modified, the model with updated types is returned as a new instance.
+        - only an mlProgram is supported (not pipelines, not neural networks).
+
+    from_type:
+        The type that should be changed from.
+
+    to_type:
+        The type that will be used instead of all the `from_type` type.
+
+    function_names:
+        Optional list of function names where the input/output needs to be changed. If not specified, only the "main"
+        function will be updated.
+
+    input_names:
+        Optional list of input names that should be updated (by default none of the inputs will be updated).
+
+    output_names:
+        Optional list of output names that should be updated (by default all the outputs that match the `from_type`
+        type will be updated).
+
+    Examples
+    --------
+    .. sourcecode:: python
+
+        from coremltools.models.model import MLModel
+        from coremltools.utils import change_array_output_type
+        from coremltools.proto.FeatureTypes_pb2 import ArrayFeatureType
+
+        model = MLModel("my_model.mlpackage")
+        updated_model = change_output_tensor_type(
+            ml_model=model,
+            from_type=ArrayFeatureType.FLOAT32,
+            to_type=ArrayFeatureType.FLOAT16,
+        )
+        updated_model.save("my_updated_model.mlpackage")
+    """
+    # We do the lazy import to prevent circular import
+    from coremltools.converters.mil.converter import mil_convert as _mil_convert
+
+    SUPPORTED_TYPES = (
+        _proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT16,
+        _proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT32,
+    )
+
+    def _get_model_spec(model: _ct.models.MLModel) -> _proto.Model_pb2.Model:
+        if not isinstance(model, _ct.models.MLModel):
+            raise ValueError(f"input model must be of type ct.models.MLModel, actual type is {type(model)})")
+        model_spec = model.get_spec()
+
+        model_type = model_spec.WhichOneof("Type")
+        if model_type != "mlProgram":
+            raise ValueError(f"input model must be an mlProgram, actual model type is {model_type}")
+
+        return model_spec
+
+    def _get_dtype(feature_type: _proto.FeatureTypes_pb2.ArrayFeatureType) -> _Type[_mil.types.double]:
+        if feature_type == _proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT16:
+            return _mil.types.fp16
+        if feature_type == _proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT32:
+            return _mil.types.fp32
+        raise ValueError(f"invalid feature type: {feature_type}, supported only FLOAT16, FLOAT32")
+
+    def _sanitize_names(names: _Optional[_List[str]], desc_list: _Iterable, default: _List[str]) -> _List[str]:
+        if names is None:
+            names = default
+        return [x.name for x in desc_list if "*" in names or x.name in names]
+
+    def _eligible_feature_desc(
+            feature_desc: _proto.Model_pb2.FeatureDescription,
+            names: _List[str],
+            data_type: _proto.FeatureTypes_pb2.ArrayFeatureType,
+    ) -> bool:
+        if feature_desc.name not in names:
+            _logger.debug(f"ignoring feature {feature_desc.name} as it's not in the list of required names {names}")
+            return False
+
+        feature_type = feature_desc.type.WhichOneof("Type")
+        if feature_type != "multiArrayType":
+            _logger.debug(f"ignoring output {feature_desc.name} (type: {feature_type})")
+            return False
+
+        feature_data_type = feature_desc.type.multiArrayType.dataType
+        if feature_data_type != data_type:
+            _logger.debug(f"ignoring output tensor {feature_desc.name} (data type: {feature_data_type})")
+            return False
+
+        return True
+
+    def _get_input_vars(var_name: str) -> _Iterable[_Tuple[_Optional[_mil.block.Function], _Optional[_mil.Var]]]:
+        for name in function_names:
+            func = prog.functions[name]
+            var = next(iter([v for k, v in func.inputs.items() if k == var_name]), None)
+            if var:
+                if func.opset_version < _ct.target.iOS16:
+                    _logger.warning(f"upgrading opset_version for function {func.name} to iOS16")
+                    func.opset_version = _ct.target.iOS16
+                yield func, var
+
+    def _get_output_vars(var_name: str) -> _Iterable[_Tuple[_Optional[_mil.block.Function], _Optional[_mil.Var]]]:
+        for name in function_names:
+            func = prog.functions[name]
+            var = next(iter([v for v in func.outputs if v.name == var_name]), None)
+            if var:
+                if func.opset_version < _ct.target.iOS16:
+                    _logger.warning(f"upgrading opset_version for function {func.name} to iOS16")
+                    func.opset_version = _ct.target.iOS16
+                yield func, var
+
+    def _cast_input_type(
+            feature_desc: _proto.Model_pb2.FeatureDescription,
+            feature_var: _mil.Var,
+            first_operation: _mil.Operation,
+    ) -> None:
+        with first_operation.enclosing_block:
+            from_dtype_str = f"fp{from_dtype.get_bitwidth()}"
+            var_name = feature_desc.name + f"_to_{from_dtype_str}"
+            x = _mb.cast(x=feature_var, dtype=from_dtype_str, name=var_name, before_op=first_operation)
+            x.op.enclosing_block.replace_uses_of_var_after_op(
+                anchor_op=x.op,
+                old_var=feature_var,
+                new_var=x,
+            )
+            feature_desc.type.multiArrayType.dataType = to_type
+            feature_var._sym_type = _mil.types.tensor(to_dtype, feature_var.sym_type.get_shape())
+
+    def _cast_output_type(feature_desc: _proto.Model_pb2.FeatureDescription, feature_var: _mil.Var) -> None:
+        with feature_var.op.enclosing_block:
+            to_dtype_str = f"fp{to_dtype.get_bitwidth()}"
+            var_name = feature_desc.name + f"_to_{to_dtype_str}"
+            x = _mb.cast(x=feature_var, dtype=to_dtype_str, name=var_name)
+            x.op.enclosing_block.replace_uses_of_var_after_op(
+                anchor_op=x.op,
+                old_var=feature_var,
+                new_var=x,
+            )
+            x.name = var_name
+            feature_desc.name = var_name
+            feature_desc.type.multiArrayType.dataType = to_type
+
+    ml_model_spec = _get_model_spec(model=ml_model)
+
+    if from_type not in SUPPORTED_TYPES:
+        raise ValueError(f"not supported from_type: must be an ArrayFeatureType of {SUPPORTED_TYPES}")
+    if to_type not in SUPPORTED_TYPES:
+        raise ValueError(f"not supported to_type: must be an ArrayFeatureType of {SUPPORTED_TYPES}")
+
+    if from_type == to_type:
+        return _deepcopy(ml_model)
+
+    from_dtype = _get_dtype(feature_type=from_type)
+    to_dtype = _get_dtype(feature_type=to_type)
+
+    input_names = _sanitize_names(names=input_names, desc_list=ml_model_spec.description.input, default=[])
+    output_names = _sanitize_names(names=output_names, desc_list=ml_model_spec.description.output, default=["*"])
+
+    prog = _milproto_to_pymil.load(
+        model_spec=ml_model_spec,
+        specification_version=ml_model_spec.specificationVersion,
+        file_weights_dir=ml_model.weights_dir,
+    )
+
+    if not function_names:
+        function_names = ["main"]
+    _logger.debug(f"functions: {function_names}")
+    for func_name in function_names:
+        if func_name not in prog.functions:
+            raise ValueError(f"function '{func_name}' not defined in the model")
+
+    for desc_input in ml_model_spec.description.input:
+        if not _eligible_feature_desc(feature_desc=desc_input, names=input_names, data_type=from_type):
+            continue
+        for function, input_var in _get_input_vars(var_name=desc_input.name):
+            _cast_input_type(feature_desc=desc_input, feature_var=input_var, first_operation=function.operations[0])
+
+    for desc_output in ml_model_spec.description.output:
+        if not _eligible_feature_desc(feature_desc=desc_output, names=output_names, data_type=from_type):
+            continue
+        for function, output_var in _get_output_vars(var_name=desc_output.name):
+            _cast_output_type(feature_desc=desc_output, feature_var=output_var)
+
+    model_opset_version = max(function.opset_version.value for function in prog.functions.values())
+    return _mil_convert(
+        prog,
+        convert_to="mlprogram",
+        convert_from="milinternal",
+        specification_version=model_opset_version,
+        compute_units=ml_model.compute_unit,
+        model_description=ml_model_spec.description,
+    )
