@@ -577,6 +577,10 @@ document.write(`
 </div>
 <p>You can open the saved ML package in Xcode and click the <strong>Predictions</strong> tab to display the input and output, as shown in the following figure.</p>
 <p><img alt="Range shape" src="../_images/range_shape.png" /></p>
+<div class="admonition-torch-export-dynamism admonition">
+<p class="admonition-title">Torch.Export Dynamism</p>
+<p>If the source PyTorch model is exported by <a class="reference external" href="https://pytorch.org/docs/stable/export.html#torch.export.export"><code class="docutils literal notranslate"><span class="pre">torch.export.export</span></code></a>, then user will need to <a class="reference external" href="https://pytorch.org/docs/stable/export.html#expressing-dynamism">express dynamism in torch.export</a>, which will then be automatically converted to Core ML <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#rangedim"><code class="docutils literal notranslate"><span class="pre">RangeDim</span></code></a>. In this case, user no longer has to specify <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#rangedim"><code class="docutils literal notranslate"><span class="pre">RangeDim</span></code></a> in <code class="docutils literal notranslate"><span class="pre">ct.convert</span></code>, see <a class="reference internal" href="model-exporting.html"><span class="doc std std-doc">Model Exporting</span></a>.</p>
+</div>
 </section>
 <section id="reshape-frequency-optimization-hint">
 <h2>Reshape Frequency Optimization Hint<a class="headerlink" href="#reshape-frequency-optimization-hint" title="Link to this heading">#</a></h2>

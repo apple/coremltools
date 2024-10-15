@@ -429,7 +429,7 @@ document.write(`
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#obtain-the-original-pytorch-model">Obtain the Original PyTorch Model</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generate-a-pytorch-graph-version">Generate a PyTorch Graph Version</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#capture-the-pytorch-graph">Capture the PyTorch Graph</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#torchscript">TorchScript</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#exportedprogram">ExportedProgram</a></li>
 </ul>
@@ -452,6 +452,12 @@ document.write(`
 <p class="admonition-title">Minimum Deployment Target</p>
 <p>The Core ML Tools <a class="reference internal" href="unified-conversion-api.html"><span class="doc std std-doc">Unified Conversion API</span></a> produces Core ML models for iOS 13, macOS 10.15, watchOS 6, tvOS 13 or newer deployment targets. If your primary deployment target is iOS 12 or earlier, you can find limited conversion support for PyTorch models via the <a class="reference external" href="https://github.com/onnx/onnx">onnx-coreml</a> package.</p>
 </div>
+<p>To export a model from PyTorch to Core ML, there are 2 steps:</p>
+<ol class="arabic simple">
+<li><p>Capture the PyTorch model graph from the original torch.nn.Module, via <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.jit.trace.html"><code class="docutils literal notranslate"><span class="pre">torch.jit.trace</span></code></a> or <a class="reference external" href="https://pytorch.org/docs/stable/export.html#torch.export.export"><code class="docutils literal notranslate"><span class="pre">torch.export.export</span></code></a>.</p></li>
+<li><p>Convert the PyTorch model graph to Core ML, via the Core ML Tools <a class="reference internal" href="unified-conversion-api.html"><span class="doc std std-doc">Unified Conversion API</span></a>.</p></li>
+</ol>
+<p>Core ML Tools has been supporting the conversion from torch.jit.trace graph since Core ML Tools 4, so this the more mature and stable path. The conversion from torch.export graph is newly added in Core ML Tools 8.0, currently in beta state, in line with the export API status in PyTorch. As of Core ML Tools 8.0, representative models such as mobile bert, resnet, vit, <a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html"><span class="doc std std-doc">mobile net</span></a>, <a class="reference internal" href="convert-a-pytorch-segmentation-model.html"><span class="doc std std-doc">deep lab</span></a>, <a class="reference internal" href="convert-openelm.html"><span class="doc std std-doc">openelm</span></a> can be converted, and total torch op translation test coverage is roughly ~60%. We would recommend to start trying the torch.export path, as <a class="reference external" href="https://github.com/pytorch/pytorch/issues/103841#issuecomment-1605017153">PyTorch no longer offers new feature development for torch.jit.trace</a>.</p>
 <section id="obtain-the-original-pytorch-model">
 <h2>Obtain the Original PyTorch Model<a class="headerlink" href="#obtain-the-original-pytorch-model" title="Link to this heading">#</a></h2>
 <p>As an illustration, here we define a toy PyTorch model</p>
@@ -469,15 +475,14 @@ document.write(`
 <p>To ensure that operations such as dropout are disabled, it’s important to set the model to evaluation mode (<em>not</em> training mode) before tracing. This setting also results in a more optimized version of the model for conversion.</p>
 </div>
 </section>
-<section id="generate-a-pytorch-graph-version">
-<h2>Generate a PyTorch Graph Version<a class="headerlink" href="#generate-a-pytorch-graph-version" title="Link to this heading">#</a></h2>
+<section id="capture-the-pytorch-graph">
+<h2>Capture the PyTorch Graph<a class="headerlink" href="#capture-the-pytorch-graph" title="Link to this heading">#</a></h2>
 <section id="torchscript">
 <h3>TorchScript<a class="headerlink" href="#torchscript" title="Link to this heading">#</a></h3>
 <p><a class="reference external" href="https://pytorch.org/docs/stable/jit.html">TorchScript</a> is an intermediate representation of a PyTorch model. To generate a TorchScript representation from PyTorch code, use PyTorch’s JIT tracer (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.jit.trace.html"><code class="docutils literal notranslate"><span class="pre">torch.jit.trace</span></code></a>) to <em>trace</em> the model, as shown in the following example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Trace the model with random data.</span>
 <span class="n">example_input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">)</span> 
 <span class="n">traced_model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">torch_model</span><span class="p">,</span> <span class="n">example_input</span><span class="p">)</span>
-<span class="n">out</span> <span class="o">=</span> <span class="n">traced_model</span><span class="p">(</span><span class="n">example_input</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The process of tracing takes an example input and traces its flow through the model. You can trace the model by creating an example image input, as shown in the above code using random data. To understand the reasons for tracing and how to trace a PyTorch model, see <a class="reference internal" href="model-tracing.html"><span class="doc std std-doc">Model Tracing</span></a>.</p>
@@ -485,13 +490,13 @@ document.write(`
 </section>
 <section id="exportedprogram">
 <h3>ExportedProgram<a class="headerlink" href="#exportedprogram" title="Link to this heading">#</a></h3>
-<p><a class="reference external" href="https://pytorch.org/docs/stable/export.html">ExportedProgram</a> is a new ntermediate representation of a PyTorch model introduced in PyTorch 2. To generate an ExportedProgram representation from PyTorch code, use PyTorch’s exporter (<a class="reference external" href="https://pytorch.org/docs/stable/export.html#torch.export.export"><code class="docutils literal notranslate"><span class="pre">torch.export.export</span></code></a>) to <em>export</em> the model, as shown in the following example:</p>
+<p><a class="reference external" href="https://pytorch.org/docs/stable/export.html">ExportedProgram</a> is a new intermediate representation of a PyTorch model introduced in PyTorch 2. To generate an ExportedProgram representation from PyTorch code, use PyTorch’s exporter (<a class="reference external" href="https://pytorch.org/docs/stable/export.html#torch.export.export"><code class="docutils literal notranslate"><span class="pre">torch.export.export</span></code></a>) to <em>export</em> the model, as shown in the following example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Export the model with random data.</span>
 <span class="n">example_inputs</span> <span class="o">=</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">),)</span>
 <span class="n">exported_program</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">export</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">torch_model</span><span class="p">,</span> <span class="n">example_inputs</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Core ML Tools torch.export conversion support is newly added in 8.0, currently in beta state, in line with the export API status in PyTorch. As of Core ML Tools 8.0, representative models such as mobile bert, resnet, vit, <a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html"><span class="doc std std-doc">mobile net</span></a>, <a class="reference internal" href="convert-a-pytorch-segmentation-model.html"><span class="doc std std-doc">deep lab</span></a>, <a class="reference internal" href="convert-openelm.html"><span class="doc std std-doc">openelm</span></a> can be converted, and total torch op translation test coverage is roughly ~60%. We would recommend to use this actively developing path</p>
+<p>The process of exporting takes an example input and traces its flow through the model. You can trace the model by creating an example image input, as shown in the above code using random data. To understand the reasons for exporting and how to export a PyTorch model, see <a class="reference internal" href="model-exporting.html"><span class="doc std std-doc">Model Exporting</span></a>.</p>
 </section>
 </section>
 <section id="convert-to-core-ml">
@@ -504,34 +509,11 @@ document.write(`
 <span class="n">model_from_trace</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
     <span class="n">traced_model</span><span class="p">,</span>
     <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">example_input</span><span class="o">.</span><span class="n">shape</span><span class="p">)],</span>
-    <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;mlprogram&quot;</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">model_from_export</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
-    <span class="n">exported_program</span><span class="p">,</span>
-    <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;mlprogram&quot;</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="n">model_from_export</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">exported_program</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>With the converted ML model in memory, you can save it as a <a class="reference internal" href="convert-to-ml-program.html#save-ml-programs-as-model-packages"><span class="std std-ref">Core ML model package</span></a>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Save the converted model.</span>
-<span class="n">model_from_trace</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;newmodel_from_trace.mlpackage&quot;</span><span class="p">)</span>
-<span class="n">model_from_export</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;newmodel_from_export.mlpackage&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>As an alternative, you can convert the model to a neural network by eliminating the <code class="docutils literal notranslate"><span class="pre">convert_to</span></code> parameter:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Convert to Core ML neural network using the Unified Conversion API.</span>
-<span class="n">model_from_trace</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
-    <span class="n">traced_model</span><span class="p">,</span>
-    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">example_input</span><span class="o">.</span><span class="n">shape</span><span class="p">)],</span>
-    <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;neuralnetwork&quot;</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">model_from_export</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
-    <span class="n">exported_program</span><span class="p">,</span>
-    <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;neuralnetwork&quot;</span><span class="p">,</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-<p>With the converted neural network in memory, you can save it as an <code class="docutils literal notranslate"><span class="pre">mlmodel</span></code> file:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Save the converted model.</span>
 <span class="n">model_from_trace</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;newmodel_from_trace.mlpackage&quot;</span><span class="p">)</span>
 <span class="n">model_from_export</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;newmodel_from_export.mlpackage&quot;</span><span class="p">)</span>
@@ -602,7 +584,7 @@ document.write(`
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#obtain-the-original-pytorch-model">Obtain the Original PyTorch Model</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generate-a-pytorch-graph-version">Generate a PyTorch Graph Version</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#capture-the-pytorch-graph">Capture the PyTorch Graph</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#torchscript">TorchScript</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#exportedprogram">ExportedProgram</a></li>
 </ul>

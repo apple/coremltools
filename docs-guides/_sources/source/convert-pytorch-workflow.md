@@ -12,6 +12,12 @@
 The Core ML Tools [Unified Conversion API](unified-conversion-api) produces Core ML models for iOS 13, macOS 10.15, watchOS 6, tvOS 13 or newer deployment targets. If your primary deployment target is iOS 12 or earlier, you can find limited conversion support for PyTorch models via the [onnx-coreml](https://github.com/onnx/onnx) package.
 ```
 
+To export a model from PyTorch to Core ML, there are 2 steps:
+1. Capture the PyTorch model graph from the original torch.nn.Module, via [`torch.jit.trace`](https://pytorch.org/docs/stable/generated/torch.jit.trace.html) or [`torch.export.export`](https://pytorch.org/docs/stable/export.html#torch.export.export).
+2. Convert the PyTorch model graph to Core ML, via the Core ML Tools [Unified Conversion API](unified-conversion-api).
+
+Core ML Tools has been supporting the conversion from torch.jit.trace graph since Core ML Tools 4, so this the more mature and stable path. The conversion from torch.export graph is newly added in Core ML Tools 8.0, currently in beta state, in line with the export API status in PyTorch. As of Core ML Tools 8.0, representative models such as mobile bert, resnet, vit, [mobile net](convert-a-torchvision-model-from-pytorch), [deep lab](convert-a-pytorch-segmentation-model), [openelm](convert-openelm) can be converted, and total torch op translation test coverage is roughly ~60%. We would recommend to start trying the torch.export path, as [PyTorch no longer offers new feature development for torch.jit.trace](https://github.com/pytorch/pytorch/issues/103841#issuecomment-1605017153).
+
 ## Obtain the Original PyTorch Model
 
 As an illustration, here we define a toy PyTorch model
@@ -31,7 +37,7 @@ torch_model.eval()
 To ensure that operations such as dropout are disabled, it's important to set the model to evaluation mode (_not_ training mode) before tracing. This setting also results in a more optimized version of the model for conversion.
 ```
 
-## Generate a PyTorch Graph Version
+## Capture the PyTorch Graph
 
 ### TorchScript
 
@@ -41,7 +47,6 @@ To ensure that operations such as dropout are disabled, it's important to set th
 # Trace the model with random data.
 example_input = torch.rand(1, 3, 224, 224) 
 traced_model = torch.jit.trace(torch_model, example_input)
-out = traced_model(example_input)
 ```
 
 The process of tracing takes an example input and traces its flow through the model. You can trace the model by creating an example image input, as shown in the above code using random data. To understand the reasons for tracing and how to trace a PyTorch model, see [Model Tracing](model-tracing).
@@ -50,7 +55,7 @@ If your model uses a data-dependent control flow, such as a loop or conditional,
 
 ### ExportedProgram
 
-[ExportedProgram](https://pytorch.org/docs/stable/export.html) is a new ntermediate representation of a PyTorch model introduced in PyTorch 2. To generate an ExportedProgram representation from PyTorch code, use PyTorch's exporter ([`torch.export.export`](https://pytorch.org/docs/stable/export.html#torch.export.export)) to _export_ the model, as shown in the following example:
+[ExportedProgram](https://pytorch.org/docs/stable/export.html) is a new intermediate representation of a PyTorch model introduced in PyTorch 2. To generate an ExportedProgram representation from PyTorch code, use PyTorch's exporter ([`torch.export.export`](https://pytorch.org/docs/stable/export.html#torch.export.export)) to _export_ the model, as shown in the following example:
 
 ```python
 # Export the model with random data.
@@ -58,7 +63,7 @@ example_inputs = (torch.rand(1, 3, 224, 224),)
 exported_program = torch.export.export(torch_model, example_inputs)
 ```
 
-Core ML Tools torch.export conversion support is newly added in 8.0, currently in beta state, in line with the export API status in PyTorch. As of Core ML Tools 8.0, representative models such as mobile bert, resnet, vit, [mobile net](convert-a-torchvision-model-from-pytorch), [deep lab](convert-a-pytorch-segmentation-model), [openelm](convert-openelm) can be converted, and total torch op translation test coverage is roughly ~60%. We would recommend to use this actively developing path
+The process of exporting takes an example input and traces its flow through the model. You can trace the model by creating an example image input, as shown in the above code using random data. To understand the reasons for exporting and how to export a PyTorch model, see [Model Exporting](model-exporting).
 
 ## Convert to Core ML
 
@@ -73,38 +78,11 @@ import coremltools as ct
 model_from_trace = ct.convert(
     traced_model,
     inputs=[ct.TensorType(shape=example_input.shape)],
-    convert_to="mlprogram",
 )
-model_from_export = ct.convert(
-    exported_program,
-    convert_to="mlprogram",
-)
+model_from_export = ct.convert(exported_program)
 ```
 
 With the converted ML model in memory, you can save it as a [Core ML model package](convert-to-ml-program.md#save-ml-programs-as-model-packages):
-
-```python
-# Save the converted model.
-model_from_trace.save("newmodel_from_trace.mlpackage")
-model_from_export.save("newmodel_from_export.mlpackage")
-```
-
-As an alternative, you can convert the model to a neural network by eliminating the `convert_to` parameter:
-
-```python
-# Convert to Core ML neural network using the Unified Conversion API.
-model_from_trace = ct.convert(
-    traced_model,
-    inputs=[ct.TensorType(shape=example_input.shape)],
-    convert_to="neuralnetwork",
-)
-model_from_export = ct.convert(
-    exported_program,
-    convert_to="neuralnetwork",
-)
-```
-
-With the converted neural network in memory, you can save it as an `mlmodel` file:
 
 ```python
 # Save the converted model.
