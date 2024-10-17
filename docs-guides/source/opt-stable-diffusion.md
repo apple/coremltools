@@ -95,7 +95,7 @@ The process involves two main steps: pruning the model using calibration data wi
 
 The `LayerwiseCompressor` (`SparseGPT`) algorithm compresses a sequential model layer by layer. Since it only supports sequential models, where the output of one layer directly feeds into the input of the next, some minor modifications are required for the `UNet2DConditionModelXL` to apply this algorithm.
 
-We adjust the forward interface for the down, mid, and up blocks to ensure that the `hidden_states`, `down_block_res_samples`, `temb`, and `encoder_hidden_states` flow through all the blocks. The updated `hidden_states` and `down_block_res_samples` are then returned as outputs. This adjustment is necessary to avoid any skip connections across these blocks.
+We adjust the forward interface for the down, mid, and up blocks to ensure that the `hidden_states`, `down_block_res_samples`, `temb`, and `encoder_hidden_states` flow through all the blocks. The updated `hidden_states` and `down_block_res_samples` are then returned as outputs. This adjustment is necessary to avoid any skip connections across these blocks, so that the model is sequential.
 Here are some code snippets highlighting the changes for reference:
 
 **CrossAttnDownBlock2D**
