@@ -15,7 +15,7 @@ python -m python_coreml_stable_diffusion.torch2coreml --convert-unet --convert-v
 --latent-h 64 --latent-w 64 -o output-xl-512
 ```
 
-The largest model within SDXL is the UNet model, measuring `4.8 GB` in size in `float16` precision. This is too big for running on iPhones or iPads. In order to deploy this model, we need to compress it.
+The largest model within SDXL is the UNet model, measuring `4.8 GB` in size with `float16` precision. This is too big for running on iPhones or iPads. In order to deploy this model, we need to compress it.
 For the purpose of this tutorial we will use a fixed prompt - _“cat in a tuxedo, oil on canvas”_, to compare output images produced by different model variants [^1]. 
 
 Execute the following command to generate image from the baseline SDXL pipeline using CoreML models generated above:
@@ -55,19 +55,13 @@ Trying with nbits equal to 8, 6 & 4 bits we see the following results:
 | 6-bit (per-tensor)    | 1.80 GB    | <img height="250px" src="images/sdxl-6bit.png" width="250px"/>  |
 | 4-bit (per-tensor)    | 1.21 GB    | <img height="250px" src="images/sdxl-4bit.png" width="250px"/>  | 
 
-Applying 8bit palettization can reduce the model size to be about half of the `float16` model, but it is still quite large to consider iOS integration. 
+Applying 8bit palettization can reduce the model size to be about half of the `float16` model, but it is still much too large to consider iOS integration. 
 With 6bit we can finally run this model on an iPad. With 4bit compression we are unable to get a good image anymore, meaning the model isn’t accurate. 
              
 ### Grouped channel palettization
 Let's try to regain the accuracy loss from 4 bit palettization by applying the [per_grouped_channel](opt-palettization-overview.md#granularity) palettization, which increases the number of LUTs (look up tables) per weight tensor.
 
 ```python
-import coremltools as ct
-import coremltools.optimize as cto
-
-mlmodel = ct.models.MLModel(
-    "output-xl-512/Stable_Diffusion_version_stabilityai_stable-diffusion-xl-base-1.0_unet.mlpackage"
-)
 op_config = cto.coreml.OpPalettizerConfig(
             nbits=4,
             mode="kmeans",
