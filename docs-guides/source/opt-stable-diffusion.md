@@ -106,12 +106,19 @@ Here are some code snippets highlighting the changes for reference:
 
 **CrossAttnDownBlock2D**
 ![sdxl-down-block](images/sdxl-down-block.png)
+                
+**UNetMidBlock2DCrossAttn**
+![sdxl-down-block](images/sdxl-mid-block.png)
 
 **UpBlock2D**
 ![sdxl-down-block](images/sdxl-up-block.png)
 
-**UNetMidBlock2DCrossAttn**
-![sdxl-down-block](images/sdxl-mid-block.png)
+We accordingly adjust the top-level module that invokes the various down, mid, and up blocks.  
+
+**UNet2DConditionModel**
+![sdxl-top-level](images/sdxl-top-level-down.png)
+![sdxl-top-level](images/sdxl-top-level-mid.png)
+![sdxl-top-level](images/sdxl-top-level-up.png)
 
 The model is then compressed at the granularity of the down, mid, and up blocks using the `layers` setting in [LayerwiseCompressorConfig](https://apple.github.io/coremltools/source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.layerwise_compression.LayerwiseCompressorConfig). In practice, this means that once a down block is fully compressed, its quantized outputs are used as inputs for the next block, and so on.
 We used the following text prompts to calibrate the model. Samples from all timesteps were used for calibration.
