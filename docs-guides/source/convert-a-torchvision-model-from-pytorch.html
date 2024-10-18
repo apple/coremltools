@@ -568,7 +568,7 @@ pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </s
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>Torch.export path does not support image input yet, so it still uses tensor input</p>
+<p>Torch.export path does not support image input yet (as of Core ML Tools 8.0), so it still uses tensor input</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Using image_input in the inputs parameter:</span>
 <span class="c1"># Convert to Core ML using the Unified Conversion API.</span>
 <span class="n">mlmodel_from_export</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>

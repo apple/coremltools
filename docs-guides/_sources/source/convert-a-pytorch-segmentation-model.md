@@ -161,7 +161,7 @@ Follow these steps:
 1. Pass in the traced / exported model to [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) to produce a Core ML model (ML program), and include the inputs to provide to the model:
     
     ```python
-    mlmode_from_trace = ct.convert(
+    mlmodel_from_trace = ct.convert(
         traced_model,
         inputs=[ct.TensorType(name="input", shape=input_batch.shape)],
     )
@@ -174,17 +174,18 @@ Follow these steps:
     or
 
     ```python
-    mlmode_from_export = ct.convert(exported_program)
+    mlmodel_from_export = ct.convert(exported_program)
     ```
 
     ``` {note}
-    For torch.export, the input name is inherited from the torch model
+    For torch.export, the input name is inherited from the torch model. As of Core ML Tools 8.0, the input name cannot be customized yet.
     ```
 
 2. Save the ML program using the `.mlpackage` extension:
     
     ```python
-    mlmode_from_export.save("SegmentationModel_no_metadata.mlpackage")
+    mlmodel_from_trace.save("SegmentationModel_no_metadata_from_trace.mlpackage")
+    mlmodel_from_export.save("SegmentationModel_no_metadata_from_export.mlpackage")
     ```
 
 ```{eval-rst}
@@ -206,7 +207,7 @@ Set the model's metadata for previewing in Xcode, as described in [Xcode Model P
 
 ```python
 # load the model
-mlmodel = ct.models.MLModel("SegmentationModel_no_metadata.mlpackage")
+mlmodel = ct.models.MLModel("SegmentationModel_no_metadata_from_export.mlpackage")
 
 labels_json = {"labels": ["background", "aeroplane", "bicycle", "bird", "board", "bottle", "bus", "car", "cat", "chair", "cow", "diningTable", "dog", "horse", "motorbike", "person", "pottedPlant", "sheep", "sofa", "train", "tvOrMonitor"]}
 

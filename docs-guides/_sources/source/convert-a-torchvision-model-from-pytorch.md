@@ -137,7 +137,7 @@ mlmodel_from_trace = ct.convert(
 )
 ```
 
-Torch.export path does not support image input yet, so it still uses tensor input
+Torch.export path does not support image input yet (as of Core ML Tools 8.0), so it still uses tensor input
 ```python
 # Using image_input in the inputs parameter:
 # Convert to Core ML using the Unified Conversion API.

@@ -589,7 +589,7 @@ pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </s
 <p>Follow these steps:</p>
 <ol class="arabic">
 <li><p>Pass in the traced / exported model to <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> to produce a Core ML model (ML program), and include the inputs to provide to the model:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlmode_from_trace</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlmodel_from_trace</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
     <span class="n">traced_model</span><span class="p">,</span>
     <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">input_batch</span><span class="o">.</span><span class="n">shape</span><span class="p">)],</span>
 <span class="p">)</span>
@@ -600,16 +600,17 @@ pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </s
 <p>This example includes a name for the input to make it easier to construct the Core ML model’s input dictionary. To learn more about input options, see <a class="reference internal" href="flexible-inputs.html"><span class="doc std std-doc">Flexible Input Shapes</span></a>.</p>
 </div>
 <p>or</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlmode_from_export</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">exported_program</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlmodel_from_export</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">exported_program</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>For torch.export, the input name is inherited from the torch model</p>
+<p>For torch.export, the input name is inherited from the torch model. As of Core ML Tools 8.0, the input name cannot be customized yet.</p>
 </div>
 </li>
 <li><p>Save the ML program using the <code class="docutils literal notranslate"><span class="pre">.mlpackage</span></code> extension:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlmode_from_export</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_no_metadata.mlpackage&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlmodel_from_trace</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_no_metadata_from_trace.mlpackage&quot;</span><span class="p">)</span>
+<span class="n">mlmodel_from_export</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_no_metadata_from_export.mlpackage&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </li>
@@ -626,7 +627,7 @@ pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </s
 <li><p>Save the model.</p></li>
 </ol>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># load the model</span>
-<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_no_metadata.mlpackage&quot;</span><span class="p">)</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_no_metadata_from_export.mlpackage&quot;</span><span class="p">)</span>
 
 <span class="n">labels_json</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;background&quot;</span><span class="p">,</span> <span class="s2">&quot;aeroplane&quot;</span><span class="p">,</span> <span class="s2">&quot;bicycle&quot;</span><span class="p">,</span> <span class="s2">&quot;bird&quot;</span><span class="p">,</span> <span class="s2">&quot;board&quot;</span><span class="p">,</span> <span class="s2">&quot;bottle&quot;</span><span class="p">,</span> <span class="s2">&quot;bus&quot;</span><span class="p">,</span> <span class="s2">&quot;car&quot;</span><span class="p">,</span> <span class="s2">&quot;cat&quot;</span><span class="p">,</span> <span class="s2">&quot;chair&quot;</span><span class="p">,</span> <span class="s2">&quot;cow&quot;</span><span class="p">,</span> <span class="s2">&quot;diningTable&quot;</span><span class="p">,</span> <span class="s2">&quot;dog&quot;</span><span class="p">,</span> <span class="s2">&quot;horse&quot;</span><span class="p">,</span> <span class="s2">&quot;motorbike&quot;</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;pottedPlant&quot;</span><span class="p">,</span> <span class="s2">&quot;sheep&quot;</span><span class="p">,</span> <span class="s2">&quot;sofa&quot;</span><span class="p">,</span> <span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;tvOrMonitor&quot;</span><span class="p">]}</span>
 
