@@ -191,10 +191,10 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="convert-pytorch-workflow.html">PyTorch Conversion Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-tracing.html">Model Tracing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="model-scripting.html">Model Scripting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="convert-nlp-model.html">Converting a Natural Language Processing Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-exporting.html">Model Exporting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html">Converting a torchvision Model from PyTorch</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pytorch-conversion-examples.html">Converting a PyTorch Segmentation Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-pytorch-segmentation-model.html">Converting a PyTorch Segmentation Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-openelm.html">Converting an Open Efficient Language Model</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -477,12 +477,10 @@ figures below. Only the parameters in these adapters
 are fine-tuned for a specific task. This is much more efficient than fine-tuning
 the whole base model, which has many more parameters.</p>
 <figure class="align-left">
-<a class="reference internal image-reference" href="../_images/multifunction-adapter-1.png"><img alt="Multifunction adapter 1" src="../_images/multifunction-adapter-1.png" style="width: 350px;" />
-</a>
+<a class="reference internal image-reference" href="../_images/multifunction-adapter-1.png"><img alt="Multifunction adapter 1" src="../_images/multifunction-adapter-1.png" style="width: 350px;" /></a>
 </figure>
 <figure class="align-default">
-<a class="reference internal image-reference" href="../_images/multifunction-adapter-2.png"><img alt="Multifunction adapter 2" src="../_images/multifunction-adapter-2.png" style="width: 350px;" />
-</a>
+<a class="reference internal image-reference" href="../_images/multifunction-adapter-2.png"><img alt="Multifunction adapter 2" src="../_images/multifunction-adapter-2.png" style="width: 350px;" /></a>
 </figure>
 <p>In this case, you can use a multifunction model to
 capture the multiple variations in a single model.
@@ -598,18 +596,15 @@ The combined model will share the 72M parameters of
 the base model and only have the additional adapter parameters.
 You can see this in the model sizes:</p>
 <figure class="align-center">
-<a class="reference internal image-reference" href="../_images/multifunction_model_sizes_lora_example.png"><img alt="Model sizes LoRA toy example" src="../_images/multifunction_model_sizes_lora_example.png" style="width: 440px;" />
-</a>
+<a class="reference internal image-reference" href="../_images/multifunction_model_sizes_lora_example.png"><img alt="Model sizes LoRA toy example" src="../_images/multifunction_model_sizes_lora_example.png" style="width: 440px;" /></a>
 </figure>
 <p>This is how the model interface for a multifunction model
 would show up in the Xcode predictions tab:</p>
 <figure class="align-left">
-<a class="reference internal image-reference" href="../_images/multifunction_input_output_xcode_adapted_model_1.png"><img alt="Multifunction adapter 1" src="../_images/multifunction_input_output_xcode_adapted_model_1.png" style="width: 360px; height: 360px;" />
-</a>
+<a class="reference internal image-reference" href="../_images/multifunction_input_output_xcode_adapted_model_1.png"><img alt="Multifunction adapter 1" src="../_images/multifunction_input_output_xcode_adapted_model_1.png" style="width: 360px; height: 360px;" /></a>
 </figure>
 <figure class="align-default">
-<a class="reference internal image-reference" href="../_images/multifunction_input_output_xcode_adapted_model_2.png"><img alt="Multifunction adapter 2" src="../_images/multifunction_input_output_xcode_adapted_model_2.png" style="width: 360px; height: 360px;" />
-</a>
+<a class="reference internal image-reference" href="../_images/multifunction_input_output_xcode_adapted_model_2.png"><img alt="Multifunction adapter 2" src="../_images/multifunction_input_output_xcode_adapted_model_2.png" style="width: 360px; height: 360px;" /></a>
 </figure>
 <div class="admonition note">
 <p class="admonition-title">Note</p>

@@ -191,10 +191,10 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="convert-pytorch-workflow.html">PyTorch Conversion Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-tracing.html">Model Tracing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="model-scripting.html">Model Scripting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="convert-nlp-model.html">Converting a Natural Language Processing Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-exporting.html">Model Exporting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html">Converting a torchvision Model from PyTorch</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pytorch-conversion-examples.html">Converting a PyTorch Segmentation Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-pytorch-segmentation-model.html">Converting a PyTorch Segmentation Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-openelm.html">Converting an Open Efficient Language Model</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -512,13 +512,13 @@ document.write(`
 <li><p><a class="reference internal" href="load-and-convert-model.html#convert-from-pytorch"><span class="std std-ref">Convert from PyTorch</span></a>.</p></li>
 <li><p><a class="reference internal" href="convert-pytorch-workflow.html"><span class="doc std std-doc">PyTorch Conversion Workflow</span></a>.</p></li>
 <li><p><a class="reference internal" href="model-tracing.html"><span class="doc std std-doc">Model Tracing</span></a>.</p></li>
-<li><p><a class="reference internal" href="model-scripting.html"><span class="doc std std-doc">Model Scripting</span></a></p></li>
+<li><p><a class="reference internal" href="model-exporting.html"><span class="doc std std-doc">Model Exporting</span></a>.</p></li>
 </ul>
 <p>Full examples:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="convert-nlp-model.html"><span class="doc std std-doc">Converting a Natural Language Processing Model</span></a>: Combines tracing and scripting to convert a PyTorch natural language processing model.</p></li>
-<li><p><a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html"><span class="doc std std-doc">Converting a torchvision Model from PyTorch</span></a>: Traces a torchvision MobileNetV2 model, adds preprocessing for image input, and then converts it to Core ML.</p></li>
-<li><p><a class="reference internal" href="pytorch-conversion-examples.html"><span class="doc std std-doc">Converting a PyTorch Segmentation Model</span></a>: Converts a PyTorch segmentation model that takes an image and outputs a class prediction for each pixel of the image.</p></li>
+<li><p><a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html"><span class="doc std std-doc">Converting a torchvision Model from PyTorch</span></a>: Traces / Exports a torchvision MobileNetV2 model, adds preprocessing for image input, and then converts it to Core ML.</p></li>
+<li><p><a class="reference internal" href="convert-a-pytorch-segmentation-model.html"><span class="doc std std-doc">Converting a PyTorch Segmentation Model</span></a>: Converts a PyTorch segmentation model that takes an image and outputs a class prediction for each pixel of the image.</p></li>
+<li><p><a class="reference internal" href="convert-openelm.html"><span class="doc std std-doc">Converting an Open Efficient Language Model</span></a>: Converts a PyTorch <a class="reference external" href="https://huggingface.co/apple/OpenELM">Open Efficient Language Model</a> to Core ML</p></li>
 </ul>
 </section>
 <section id="model-intermediate-language-mil">
