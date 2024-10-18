@@ -33,6 +33,7 @@ Source model formats supported by the [Unified Conversion API](unified-conversio
 
 - [TorchScript](https://pytorch.org/docs/stable/jit.html) object
 - TorchScript object saved as a `.pt` file
+- [ExportedProgram](https://pytorch.org/docs/stable/export.html) object
 
 ```{eval-rst}
 .. index:: 

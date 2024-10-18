@@ -8,7 +8,7 @@ You can convert a model trained in `PyTorch <https://pytorch.org>`_ to the Core 
 
    convert-pytorch-workflow.md
    model-tracing.md
-   model-scripting.md
-   convert-nlp-model.md
+   model-exporting.md
    convert-a-torchvision-model-from-pytorch.md
-   pytorch-conversion-examples.md
+   convert-a-pytorch-segmentation-model.md
+   convert-openelm.md

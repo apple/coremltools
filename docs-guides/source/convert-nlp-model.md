@@ -43,7 +43,7 @@ GPT-2 was trained on a dataset of over eight million web pages, with a simple ob
 
 ## Import Libraries and Set Up the Model
 
-Import the `torch`, `numpy`, and `coremltools` libraries, and `GPT2LMHeadModel`) and `GPT2Tokenizer` from `transformers`. 
+Import the `torch`, `numpy`, and `coremltools` libraries, and `GPT2LMHeadModel` and `GPT2Tokenizer` from `transformers`. 
 
 ```python
 import torch
