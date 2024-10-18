@@ -11,7 +11,9 @@ The recommended way to generate ExportedProgram for your model is to use PyTorch
 
 ```{admonition} Exporting Limitations
 
-Core ML Tools torch.export conversion support is newly added in 8.0, currently in beta state, in line with the export API status in PyTorch. As of Core ML Tools 8.0, representative models such as mobile bert, resnet, vit, [mobile net](convert-a-torchvision-model-from-pytorch), [deep lab](convert-a-pytorch-segmentation-model), [openelm](convert-openelm) can be converted, and total torch op translation test coverage is roughly ~60%. We would recommend to start trying this path, as [PyTorch no longer offers new feature development for torch.jit.trace](https://github.com/pytorch/pytorch/issues/103841#issuecomment-1605017153).
+The conversion from `torch.export` graph has been newly added to Core ML Tools 8.0.
+It is currently in beta state, in line with the export API status in PyTorch.
+As of Core ML Tools 8.0, representative models such as MobileBert, ResNet, ViT, [MobileNet](convert-a-torchvision-model-from-pytorch), [DeepLab](convert-a-pytorch-segmentation-model), [OpenELM](convert-openelm) can be converted, and the total PyTorch op translation test coverage is roughly ~60%. You can start trying the torch.export path on your models that are working with torch.jit.trace already, so as to gradually move them to the export path as PyTorch also [moves](https://github.com/pytorch/pytorch/issues/103841#issuecomment-1605017153) its support and development to that path over a period of time. In case you hit issues (e.g. models converted via export path are slower than the ones converted from jit.trace path), please report them on Github.
 
 Also, torch.export has limitations, see [PyTorch elaboration](https://pytorch.org/docs/stable/export.html#limitations-of-torch-export)
 ```
@@ -110,4 +112,9 @@ The following example builds a simple model from scratch and exports it to gener
 ## Difference from Tracing
 For tracing, `ct.convert` requires the `inputs` arg from user. This is no longer the case for exporting, since the ExportedProgram object carries all name and shape and dtype info.
 
-Subsequently, for exporting, dynamic shape is no longer specified through the `inputs` arg of `ct.convert`. Instead, user will need to [express dynamism in torch.export](https://pytorch.org/docs/stable/export.html#expressing-dynamism), which will then be automatically converted to Core ML [`RangeDim`](https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#rangedim). As of Core ML Tools 8.0, [`EnumeratedShapes`](https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#enumeratedshapes) is not supported through model exporting, yet.
+Subsequently, for exporting, dynamic shape is no longer specified through the `inputs` arg of `ct.convert`. Instead, user will need to [express dynamism in torch.export](https://pytorch.org/docs/stable/export.html#expressing-dynamism), which will then be automatically converted to Core ML [`RangeDim`](https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#rangedim).
+
+As of Core ML Tools 8.0, there are several features that the torch.export conversion path is yet to support, compared to the mature torch.jit.trace path
+* [EnumeratedShapes](https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#enumeratedshapes)
+* [ImageType](https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ImageType)
+* Setting custom names and dtypes for model inputs and outputs

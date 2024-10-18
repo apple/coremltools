@@ -16,7 +16,13 @@ To export a model from PyTorch to Core ML, there are 2 steps:
 1. Capture the PyTorch model graph from the original torch.nn.Module, via [`torch.jit.trace`](https://pytorch.org/docs/stable/generated/torch.jit.trace.html) or [`torch.export.export`](https://pytorch.org/docs/stable/export.html#torch.export.export).
 2. Convert the PyTorch model graph to Core ML, via the Core ML Tools [Unified Conversion API](unified-conversion-api).
 
-Core ML Tools has been supporting the conversion from torch.jit.trace graph since Core ML Tools 4, so this the more mature and stable path. The conversion from torch.export graph is newly added in Core ML Tools 8.0, currently in beta state, in line with the export API status in PyTorch. As of Core ML Tools 8.0, representative models such as mobile bert, resnet, vit, [mobile net](convert-a-torchvision-model-from-pytorch), [deep lab](convert-a-pytorch-segmentation-model), [openelm](convert-openelm) can be converted, and total torch op translation test coverage is roughly ~60%. We would recommend to start trying the torch.export path, as [PyTorch no longer offers new feature development for torch.jit.trace](https://github.com/pytorch/pytorch/issues/103841#issuecomment-1605017153).
+The conversion from a graph captured via `torch.jit.trace` has been supported for many versions of Core ML Tools, hence it is the stable and the more performant path. For now, this is the recommended way for converting PyTorch models to Core ML.
+
+The conversion from `torch.export` graph has been newly added to Core ML Tools 8.0.
+It is currently in beta state, in line with the export API status in PyTorch.
+As of Core ML Tools 8.0, representative models such as MobileBert, ResNet, ViT, [MobileNet](convert-a-torchvision-model-from-pytorch), [DeepLab](convert-a-pytorch-segmentation-model), [OpenELM](convert-openelm) can be converted, and the total PyTorch op translation test coverage is roughly ~60%. You can start trying the torch.export path on your models that are working with torch.jit.trace already, so as to gradually move them to the export path as PyTorch also [moves](https://github.com/pytorch/pytorch/issues/103841#issuecomment-1605017153) its support and development to that path over a period of time. In case you hit issues (e.g. models converted via export path are slower than the ones converted from jit.trace path), please report them on Github.
+
+Now let us take a closer look at how to convert from PyTorch to Core ML through an example.
 
 ## Obtain the Original PyTorch Model
 
@@ -34,7 +40,7 @@ torch_model.eval()
 
 ```{admonition} Set the Model to Evaluation Mode
 
-To ensure that operations such as dropout are disabled, it's important to set the model to evaluation mode (_not_ training mode) before tracing. This setting also results in a more optimized version of the model for conversion.
+To ensure that training time operations such as dropout, batch norm with moving average etc. are disabled, it is important to set the model to evaluation mode before tracing / exporting. This setting also results in a more optimized version of the model for deployment.
 ```
 
 ## Capture the PyTorch Graph
@@ -51,7 +57,7 @@ traced_model = torch.jit.trace(torch_model, example_input)
 
 The process of tracing takes an example input and traces its flow through the model. You can trace the model by creating an example image input, as shown in the above code using random data. To understand the reasons for tracing and how to trace a PyTorch model, see [Model Tracing](model-tracing).
 
-If your model uses a data-dependent control flow, such as a loop or conditional, the traced model won't generalize to other inputs. In such cases you can experiment with applying PyTorch's JIT script ([`torch.jit.script`](https://pytorch.org/docs/stable/generated/torch.jit.script.html)) to your model as described in [Model Scripting](model-scripting). You can also use a combination of tracing and scripting.
+If your model uses a data-dependent control flow, such as a loop or conditional, the traced model won't generalize to other inputs. In such cases you can use JIT script ([`torch.jit.script`](https://pytorch.org/docs/stable/generated/torch.jit.script.html)) to capture the graph accurately. Core ML Tools offers limited support for models that are obtained from `torch.jit.script` API, so it may or may not work for your model. See [Model Scripting](model-scripting) to learn more.
 
 ### ExportedProgram
 
@@ -63,7 +69,7 @@ example_inputs = (torch.rand(1, 3, 224, 224),)
 exported_program = torch.export.export(torch_model, example_inputs)
 ```
 
-The process of exporting takes an example input and traces its flow through the model. You can trace the model by creating an example image input, as shown in the above code using random data. To understand the reasons for exporting and how to export a PyTorch model, see [Model Exporting](model-exporting).
+The process of exporting takes an example input and traces its flow through the model. You can trace the model by creating an example image input, as shown in the above code using random data.
 
 ## Convert to Core ML
 
