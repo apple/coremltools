@@ -14,4 +14,5 @@ and will vary based on the model type and other factors (OS versions, hardware e
 
    opt-resnet.md
    opt-opt1_3.md
+   opt-stable-diffusion.md
 
