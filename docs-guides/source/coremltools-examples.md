@@ -42,12 +42,12 @@ Full examples:
 - [Convert from PyTorch](load-and-convert-model.md#convert-from-pytorch).
 - [PyTorch Conversion Workflow](convert-pytorch-workflow).
 - [Model Tracing](model-tracing).
-- [Model Scripting](model-scripting)
+- [Model Exporting](model-exporting).
 
 Full examples:
-- [Converting a Natural Language Processing Model](convert-nlp-model): Combines tracing and scripting to convert a PyTorch natural language processing model.
-- [Converting a torchvision Model from PyTorch](convert-a-torchvision-model-from-pytorch): Traces a torchvision MobileNetV2 model, adds preprocessing for image input, and then converts it to Core ML.
-- [Converting a PyTorch Segmentation Model](pytorch-conversion-examples): Converts a PyTorch segmentation model that takes an image and outputs a class prediction for each pixel of the image.
+- [Converting a torchvision Model from PyTorch](convert-a-torchvision-model-from-pytorch): Traces / Exports a torchvision MobileNetV2 model, adds preprocessing for image input, and then converts it to Core ML.
+- [Converting a PyTorch Segmentation Model](convert-a-pytorch-segmentation-model): Converts a PyTorch segmentation model that takes an image and outputs a class prediction for each pixel of the image.
+- [Converting an Open Efficient Language Model](convert-openelm): Converts a PyTorch [Open Efficient Language Model](https://huggingface.co/apple/OpenELM) to Core ML 
 
 ## Model Intermediate Language (MIL)
 
