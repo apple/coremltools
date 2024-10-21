@@ -161,6 +161,10 @@ You can open the saved ML package in Xcode and click the **Predictions** tab to 
 
 ![Range shape](images/range_shape.png)
 
+```{admonition} Torch.Export Dynamism
+
+If the source PyTorch model is exported by [`torch.export.export`](https://pytorch.org/docs/stable/export.html#torch.export.export), then user will need to [express dynamism in torch.export](https://pytorch.org/docs/stable/export.html#expressing-dynamism), which will then be automatically converted to Core ML [`RangeDim`](https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#rangedim). In this case, user no longer has to specify [`RangeDim`](https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#rangedim) in `ct.convert`, see [Model Exporting](model-exporting).
+```
 
 ## Reshape Frequency Optimization Hint
 

@@ -44,10 +44,10 @@
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'source/pytorch-conversion-examples';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'source/convert-a-pytorch-segmentation-model';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Conversion Options" href="conversion-options.html" />
+    <link rel="next" title="Converting an Open Efficient Language Model" href="convert-openelm.html" />
     <link rel="prev" title="Converting a torchvision Model from PyTorch" href="convert-a-torchvision-model-from-pytorch.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -191,10 +191,10 @@
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="convert-pytorch-workflow.html">PyTorch Conversion Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-tracing.html">Model Tracing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="model-scripting.html">Model Scripting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="convert-nlp-model.html">Converting a Natural Language Processing Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-exporting.html">Model Exporting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html">Converting a torchvision Model from PyTorch</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Converting a PyTorch Segmentation Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-openelm.html">Converting an Open Efficient Language Model</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -334,7 +334,7 @@
       
       
       
-      <li><a href="../_sources/source/pytorch-conversion-examples.md" target="_blank"
+      <li><a href="../_sources/source/convert-a-pytorch-segmentation-model.md" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -428,14 +428,13 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-the-required-software">Install the Required Software</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-the-model-and-image">Load the Model and Image</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#normalize-and-segment-the-image">Normalize and Segment the Image</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#trace-the-model-with-sample-input">Trace the Model with Sample Input</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert-the-model">Convert the Model</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#set-the-models-metadata">Set the Model’s Metadata</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#open-the-model-in-xcode">Open the Model in Xcode</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-code">Example Code</a></li>
 </ul>
             </nav>
         </div>
@@ -450,16 +449,12 @@ document.write(`
   <section id="converting-a-pytorch-segmentation-model">
 <span id="index-0"></span><h1>Converting a PyTorch Segmentation Model<a class="headerlink" href="#converting-a-pytorch-segmentation-model" title="Link to this heading">#</a></h1>
 <p>This example demonstrates how to convert a PyTorch <a class="reference external" href="https://pytorch.org/hub/pytorch_vision_deeplabv3_resnet101/" title="DeepLabV3 model with a ResNet-101 backbone">segmentation model</a> to a Core ML model (<a class="reference internal" href="convert-to-ml-program.html"><span class="doc std std-doc">ML program</span></a>). The model takes an image and outputs a class prediction for each pixel of the image.</p>
-<section id="install-the-required-software">
-<h2>Install the Required Software<a class="headerlink" href="#install-the-required-software" title="Link to this heading">#</a></h2>
-<p>To run this example, first install the newest version of Core ML Tools (see <a class="reference internal" href="installing-coremltools.html"><span class="doc std std-doc">Installing Core ML Tools</span></a>):</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>coremltools
-</pre></div>
-</div>
-<p>You also need PyTorch, Torchvision, and PIL (<code class="docutils literal notranslate"><span class="pre">pillow</span></code>). Use the following commands:</p>
+<section id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading">#</a></h2>
+<p>This example requires <a class="reference external" href="https://pytorch.org/">PyTorch</a> and <a class="reference external" href="https://pytorch.org/vision/stable/index.html#torchvision">Torchvision</a>. Use the following commands:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>torch
 pip<span class="w"> </span>install<span class="w"> </span>torchvision
-pip<span class="w"> </span>install<span class="w"> </span>pillow
+pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>coremltools
 </pre></div>
 </div>
 </section>
@@ -470,7 +465,7 @@ pip<span class="w"> </span>install<span class="w"> </span>pillow
 <li><p>Add the following <code class="docutils literal notranslate"><span class="pre">import</span></code> statements:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">urllib</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
-<span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">FutureWarning</span><span class="p">)</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">FutureWarning</span><span class="p">)</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
@@ -485,7 +480,7 @@ pip<span class="w"> </span>install<span class="w"> </span>pillow
 </div>
 </li>
 <li><p>Load the <a class="reference external" href="https://pytorch.org/hub/pytorch_vision_deeplabv3_resnet101/" title="DeepLabV3 model with a ResNet-101 backbone">DeepLabV3 model</a> (<code class="docutils literal notranslate"><span class="pre">deeplabv3</span></code>) segmentation model:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;pytorch/vision:v0.6.0&#39;</span><span class="p">,</span> <span class="s1">&#39;deeplabv3_resnet101&#39;</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;pytorch/vision:v0.6.0&quot;</span><span class="p">,</span> <span class="s2">&quot;deeplabv3_resnet101&quot;</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 </pre></div>
 </div>
 </li>
@@ -522,7 +517,7 @@ pip<span class="w"> </span>install<span class="w"> </span>pillow
 </li>
 <li><p>Get predictions from the model. Running the normalized image through the model will compute a score for each object class per pixel, and the class will be assigned with a maximum score for each pixel.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
-    <span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">input_batch</span><span class="p">)[</span><span class="s1">&#39;out&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">input_batch</span><span class="p">)[</span><span class="s2">&quot;out&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
 <span class="n">torch_predictions</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -570,21 +565,22 @@ pip<span class="w"> </span>install<span class="w"> </span>pillow
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">WrappedDeeplabv3Resnet101</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">load</span><span class="p">(</span>
-            <span class="s1">&#39;pytorch/vision:v0.6.0&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;deeplabv3_resnet101&#39;</span><span class="p">,</span>
+            <span class="s2">&quot;pytorch/vision:v0.6.0&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;deeplabv3_resnet101&quot;</span><span class="p">,</span>
             <span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span>
         <span class="p">)</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
         <span class="c1"># Extract the tensor we want from the output dictionary</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s2">&quot;out&quot;</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">x</span>
 </pre></div>
 </div>
-<p>Now the trace runs without errors:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">traceable_model</span> <span class="o">=</span> <span class="n">WrappedDeeplabv3Resnet101</span><span class="p">()</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-<span class="n">trace</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">traceable_model</span><span class="p">,</span> <span class="n">input_batch</span><span class="p">)</span>
+<p>Now the trace / export runs without errors:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">torch_model</span> <span class="o">=</span> <span class="n">WrappedDeeplabv3Resnet101</span><span class="p">()</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="n">traced_model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">torch_model</span><span class="p">,</span> <span class="n">input_batch</span><span class="p">)</span>
+<span class="n">exported_program</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">export</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">torch_model</span><span class="p">,</span> <span class="p">(</span><span class="n">input_batch</span><span class="p">,))</span>
 </pre></div>
 </div>
 </section>
@@ -592,20 +588,29 @@ pip<span class="w"> </span>install<span class="w"> </span>pillow
 <h2>Convert the Model<a class="headerlink" href="#convert-the-model" title="Link to this heading">#</a></h2>
 <p>Follow these steps:</p>
 <ol class="arabic">
-<li><p>Pass in the traced model to <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> to produce a Core ML model (ML program), and include the inputs to provide to the model:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
-    <span class="n">trace</span><span class="p">,</span>
+<li><p>Pass in the traced / exported model to <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> to produce a Core ML model (ML program), and include the inputs to provide to the model:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlmodel_from_trace</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
+    <span class="n">traced_model</span><span class="p">,</span>
     <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">input_batch</span><span class="o">.</span><span class="n">shape</span><span class="p">)],</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This example includes a name for the output to make it easier to extract from the Core ML model’s prediction dictionary. To learn more about input options, see <a class="reference internal" href="flexible-inputs.html"><span class="doc std std-doc">Flexible Input Shapes</span></a>.</p>
+<p>This example includes a name for the input to make it easier to construct the Core ML model’s input dictionary. To learn more about input options, see <a class="reference internal" href="flexible-inputs.html"><span class="doc std std-doc">Flexible Input Shapes</span></a>.</p>
+</div>
+<p>or</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlmodel_from_export</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">exported_program</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For torch.export, the input name is inherited from the torch model. As of Core ML Tools 8.0, the input name cannot be customized yet.</p>
 </div>
 </li>
 <li><p>Save the ML program using the <code class="docutils literal notranslate"><span class="pre">.mlpackage</span></code> extension:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlmodel</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_no_metadata.mlpackage&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlmodel_from_trace</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_no_metadata_from_trace.mlpackage&quot;</span><span class="p">)</span>
+<span class="n">mlmodel_from_export</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_no_metadata_from_export.mlpackage&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </li>
@@ -622,12 +627,12 @@ pip<span class="w"> </span>install<span class="w"> </span>pillow
 <li><p>Save the model.</p></li>
 </ol>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># load the model</span>
-<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_no_metadata.mlpackage&quot;</span><span class="p">)</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_no_metadata_from_export.mlpackage&quot;</span><span class="p">)</span>
 
 <span class="n">labels_json</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;background&quot;</span><span class="p">,</span> <span class="s2">&quot;aeroplane&quot;</span><span class="p">,</span> <span class="s2">&quot;bicycle&quot;</span><span class="p">,</span> <span class="s2">&quot;bird&quot;</span><span class="p">,</span> <span class="s2">&quot;board&quot;</span><span class="p">,</span> <span class="s2">&quot;bottle&quot;</span><span class="p">,</span> <span class="s2">&quot;bus&quot;</span><span class="p">,</span> <span class="s2">&quot;car&quot;</span><span class="p">,</span> <span class="s2">&quot;cat&quot;</span><span class="p">,</span> <span class="s2">&quot;chair&quot;</span><span class="p">,</span> <span class="s2">&quot;cow&quot;</span><span class="p">,</span> <span class="s2">&quot;diningTable&quot;</span><span class="p">,</span> <span class="s2">&quot;dog&quot;</span><span class="p">,</span> <span class="s2">&quot;horse&quot;</span><span class="p">,</span> <span class="s2">&quot;motorbike&quot;</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;pottedPlant&quot;</span><span class="p">,</span> <span class="s2">&quot;sheep&quot;</span><span class="p">,</span> <span class="s2">&quot;sofa&quot;</span><span class="p">,</span> <span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;tvOrMonitor&quot;</span><span class="p">]}</span>
 
 <span class="n">mlmodel</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="s2">&quot;com.apple.coreml.model.preview.type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;imageSegmenter&quot;</span>
-<span class="n">mlmodel</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="s1">&#39;com.apple.coreml.model.preview.params&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">labels_json</span><span class="p">)</span>
+<span class="n">mlmodel</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="s2">&quot;com.apple.coreml.model.preview.params&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">labels_json</span><span class="p">)</span>
 
 <span class="n">mlmodel</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_with_metadata.mlpackage&quot;</span><span class="p">)</span>
 </pre></div>
@@ -661,113 +666,6 @@ pip<span class="w"> </span>install<span class="w"> </span>pillow
 <p>To use the model with an Xcode project, drag the model file to the Xcode Project Navigator. Choose options if you like, and click <strong>Finish</strong>. You can then select the model in the Project Navigator to show the model information. For more information about using Xcode, see the <a class="reference external" href="https://developer.apple.com/documentation/xcode" title="Xcode documentation">Xcode documentation</a>.</p>
 </div>
 </section>
-<section id="example-code">
-<h2>Example Code<a class="headerlink" href="#example-code" title="Link to this heading">#</a></h2>
-<p>The following is the full code for the segmentation model conversion.</p>
-<p>Requirements:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>torch
-pip<span class="w"> </span>install<span class="w"> </span>torchvision
-</pre></div>
-</div>
-<p>Python code:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">urllib</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
-<span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">FutureWarning</span><span class="p">)</span>
-
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
-<span class="kn">import</span> <span class="nn">torchvision</span>
-<span class="kn">import</span> <span class="nn">json</span>
-
-<span class="kn">from</span> <span class="nn">torchvision</span> <span class="kn">import</span> <span class="n">transforms</span>
-<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
-
-<span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
-
-<span class="c1"># Load the model (deeplabv3)</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;pytorch/vision:v0.6.0&#39;</span><span class="p">,</span> <span class="s1">&#39;deeplabv3_resnet101&#39;</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-
-<span class="c1"># Load a sample image (cat_dog.jpg)</span>
-<span class="n">input_image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;cat_dog.jpg&quot;</span><span class="p">)</span>
-<span class="n">input_image</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-
-<span class="n">preprocess</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span>
-    <span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span>
-    <span class="n">transforms</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span>
-        <span class="n">mean</span><span class="o">=</span><span class="p">[</span><span class="mf">0.485</span><span class="p">,</span> <span class="mf">0.456</span><span class="p">,</span> <span class="mf">0.406</span><span class="p">],</span>
-        <span class="n">std</span><span class="o">=</span><span class="p">[</span><span class="mf">0.229</span><span class="p">,</span> <span class="mf">0.224</span><span class="p">,</span> <span class="mf">0.225</span><span class="p">],</span>
-    <span class="p">),</span>
-<span class="p">])</span>
-
-<span class="n">input_tensor</span> <span class="o">=</span> <span class="n">preprocess</span><span class="p">(</span><span class="n">input_image</span><span class="p">)</span>
-<span class="n">input_batch</span> <span class="o">=</span> <span class="n">input_tensor</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-
-<span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
-    <span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">input_batch</span><span class="p">)[</span><span class="s1">&#39;out&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">torch_predictions</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-
-<span class="k">def</span> <span class="nf">display_segmentation</span><span class="p">(</span><span class="n">input_image</span><span class="p">,</span> <span class="n">output_predictions</span><span class="p">):</span>
-    <span class="c1"># Create a color palette, selecting a color for each class</span>
-    <span class="n">palette</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mi">2</span> <span class="o">**</span> <span class="mi">25</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">15</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">21</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
-    <span class="n">colors</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">21</span><span class="p">)])[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">palette</span>
-    <span class="n">colors</span> <span class="o">=</span> <span class="p">(</span><span class="n">colors</span> <span class="o">%</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span>
-
-    <span class="c1"># Plot the semantic segmentation predictions of 21 classes in each color</span>
-    <span class="n">r</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span>
-        <span class="n">output_predictions</span><span class="o">.</span><span class="n">byte</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
-    <span class="p">)</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">input_image</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
-    <span class="n">r</span><span class="o">.</span><span class="n">putpalette</span><span class="p">(</span><span class="n">colors</span><span class="p">)</span>
-
-    <span class="c1"># Overlay the segmentation mask on the original image</span>
-    <span class="n">alpha_image</span> <span class="o">=</span> <span class="n">input_image</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-    <span class="n">alpha_image</span><span class="o">.</span><span class="n">putalpha</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span>
-    <span class="n">r</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;RGBA&quot;</span><span class="p">)</span>
-    <span class="n">r</span><span class="o">.</span><span class="n">putalpha</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span>
-    <span class="n">seg_image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">alpha_composite</span><span class="p">(</span><span class="n">alpha_image</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
-    <span class="c1"># display(seg_image) -- doesn&#39;t work</span>
-    <span class="n">seg_image</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-
-<span class="n">display_segmentation</span><span class="p">(</span><span class="n">input_image</span><span class="p">,</span> <span class="n">torch_predictions</span><span class="p">)</span>
-
-<span class="c1"># Wrap the Model to Allow Tracing*</span>
-<span class="k">class</span> <span class="nc">WrappedDeeplabv3Resnet101</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">WrappedDeeplabv3Resnet101</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;pytorch/vision:v0.6.0&#39;</span><span class="p">,</span> <span class="s1">&#39;deeplabv3_resnet101&#39;</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-    
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s2">&quot;out&quot;</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">x</span>
-        
-<span class="c1"># Trace the Wrapped Model</span>
-<span class="n">traceable_model</span> <span class="o">=</span> <span class="n">WrappedDeeplabv3Resnet101</span><span class="p">()</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-<span class="n">trace</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">traceable_model</span><span class="p">,</span> <span class="n">input_batch</span><span class="p">)</span>
-
-<span class="c1"># Convert the model</span>
-<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
-    <span class="n">trace</span><span class="p">,</span>
-    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">input_batch</span><span class="o">.</span><span class="n">shape</span><span class="p">)],</span>
-<span class="p">)</span>
-
-<span class="c1"># Save the ML Program model without new metadata</span>
-<span class="n">mlmodel</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_no_metadata.mlpackage&quot;</span><span class="p">)</span>
-
-<span class="c1"># Load the saved model</span>
-<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_no_metadata.mlpackage&quot;</span><span class="p">)</span>
-
-<span class="c1"># Add new metadata for preview in Xcode</span>
-<span class="n">labels_json</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;background&quot;</span><span class="p">,</span> <span class="s2">&quot;aeroplane&quot;</span><span class="p">,</span> <span class="s2">&quot;bicycle&quot;</span><span class="p">,</span> <span class="s2">&quot;bird&quot;</span><span class="p">,</span> <span class="s2">&quot;board&quot;</span><span class="p">,</span> <span class="s2">&quot;bottle&quot;</span><span class="p">,</span> <span class="s2">&quot;bus&quot;</span><span class="p">,</span> <span class="s2">&quot;car&quot;</span><span class="p">,</span> <span class="s2">&quot;cat&quot;</span><span class="p">,</span> <span class="s2">&quot;chair&quot;</span><span class="p">,</span> <span class="s2">&quot;cow&quot;</span><span class="p">,</span> <span class="s2">&quot;diningTable&quot;</span><span class="p">,</span> <span class="s2">&quot;dog&quot;</span><span class="p">,</span> <span class="s2">&quot;horse&quot;</span><span class="p">,</span> <span class="s2">&quot;motorbike&quot;</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;pottedPlant&quot;</span><span class="p">,</span> <span class="s2">&quot;sheep&quot;</span><span class="p">,</span> <span class="s2">&quot;sofa&quot;</span><span class="p">,</span> <span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;tvOrMonitor&quot;</span><span class="p">]}</span>
-
-<span class="n">mlmodel</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="s2">&quot;com.apple.coreml.model.preview.type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;imageSegmenter&quot;</span>
-<span class="n">mlmodel</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="s1">&#39;com.apple.coreml.model.preview.params&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">labels_json</span><span class="p">)</span>
-
-<span class="n">mlmodel</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_with_metadata.mlpackage&quot;</span><span class="p">)</span>
-
-</pre></div>
-</div>
-</section>
 </section>
 
 
@@ -791,11 +689,11 @@ pip<span class="w"> </span>install<span class="w"> </span>torchvision
       </div>
     </a>
     <a class="right-next"
-       href="conversion-options.html"
+       href="convert-openelm.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Conversion Options</p>
+        <p class="prev-next-title">Converting an Open Efficient Language Model</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -815,14 +713,13 @@ pip<span class="w"> </span>install<span class="w"> </span>torchvision
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-the-required-software">Install the Required Software</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-the-model-and-image">Load the Model and Image</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#normalize-and-segment-the-image">Normalize and Segment the Image</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#trace-the-model-with-sample-input">Trace the Model with Sample Input</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert-the-model">Convert the Model</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#set-the-models-metadata">Set the Model’s Metadata</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#open-the-model-in-xcode">Open the Model in Xcode</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-code">Example Code</a></li>
 </ul>
   </nav></div>
 

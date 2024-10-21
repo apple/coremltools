@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Nearest Neighbor Classifier &#8212; Guide to Core ML Tools</title>
+    <title>Model Exporting &#8212; Guide to Core ML Tools</title>
   
   
   
@@ -44,10 +44,11 @@
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'source/updatable-nearest-neighbor-classifier';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'source/model-exporting';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="prev" title="Pipeline Classifier" href="updatable-tiny-drawing-classifier-pipeline-model.html" />
+    <link rel="next" title="Converting a torchvision Model from PyTorch" href="convert-a-torchvision-model-from-pytorch.html" />
+    <link rel="prev" title="Model Tracing" href="model-tracing.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -167,7 +168,7 @@
 <li class="toctree-l1"><a class="reference internal" href="how-to-contribute.html">Contributing</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
-<ul class="nav bd-sidenav">
+<ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="target-conversion-formats.html">Source and Conversion Formats</a></li>
@@ -187,10 +188,10 @@
 <li class="toctree-l2"><a class="reference internal" href="convert-tensorflow-2-bert-transformer-models.html">Converting TensorFlow 2 BERT Transformer Models</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="convert-pytorch-workflow.html">PyTorch Conversion Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-tracing.html">Model Tracing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="model-exporting.html">Model Exporting</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Model Exporting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html">Converting a torchvision Model from PyTorch</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-a-pytorch-segmentation-model.html">Converting a PyTorch Segmentation Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-openelm.html">Converting an Open Efficient Language Model</a></li>
@@ -252,16 +253,16 @@
 <li class="toctree-l1"><a class="reference internal" href="xgboost-conversion.html">XGBoost</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">MLModel</span></p>
-<ul class="current nav bd-sidenav">
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="mlmodel.html">MLModel Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="multifunction-models.html">Multifunction Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="xcode-model-preview-types.html">Xcode Model Preview Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mlmodel-utilities.html">MLModel Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model-prediction.html">Model Prediction</a></li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="updatable-model-examples.html">Updatable Models</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="updatable-model-examples.html">Updatable Models</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="updatable-neural-network-classifier-on-mnist-dataset.html">Neural Network Classifier</a></li>
 <li class="toctree-l2"><a class="reference internal" href="updatable-tiny-drawing-classifier-pipeline-model.html">Pipeline Classifier</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">Nearest Neighbor Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="updatable-nearest-neighbor-classifier.html">Nearest Neighbor Classifier</a></li>
 </ul>
 </details></li>
 </ul>
@@ -333,7 +334,7 @@
       
       
       
-      <li><a href="../_sources/source/updatable-nearest-neighbor-classifier.md" target="_blank"
+      <li><a href="../_sources/source/model-exporting.md" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -417,7 +418,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Nearest Neighbor Classifier</h1>
+    <h1>Model Exporting</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -427,9 +428,9 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-the-classifier">Create the Classifier</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#set-the-number-of-neighbors-value">Set the Number of Neighbors Value</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#set-the-index-type">Set the Index Type</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#export-and-convert-your-model">Export and Convert your Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#difference-from-tracing">Difference from Tracing</a></li>
 </ul>
             </nav>
         </div>
@@ -441,180 +442,114 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="nearest-neighbor-classifier">
-<span id="index-0"></span><h1>Nearest Neighbor Classifier<a class="headerlink" href="#nearest-neighbor-classifier" title="Link to this heading">#</a></h1>
-<p>This topic demonstrates the process of creating an updatable empty k-nearest neighbor model using Core ML Tools.</p>
-<section id="create-the-classifier">
-<h2>Create the Classifier<a class="headerlink" href="#create-the-classifier" title="Link to this heading">#</a></h2>
+  <section id="model-exporting">
+<span id="index-0"></span><h1>Model Exporting<a class="headerlink" href="#model-exporting" title="Link to this heading">#</a></h1>
+<p>The recommended way to generate ExportedProgram for your model is to use PyTorch’s <a class="reference external" href="https://pytorch.org/docs/stable/export.html#torch.export.export">torch.export.export</a>. Exporting runs an example input tensor through your model, and captures the operations that are invoked as that input makes its way through the model’s layers.</p>
+<div class="admonition-exporting-limitations admonition">
+<p class="admonition-title">Exporting Limitations</p>
+<p>The conversion from <code class="docutils literal notranslate"><span class="pre">torch.export</span></code> graph has been newly added to Core ML Tools 8.0.
+It is currently in beta state, in line with the export API status in PyTorch.
+As of Core ML Tools 8.0, representative models such as MobileBert, ResNet, ViT, <a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html"><span class="doc std std-doc">MobileNet</span></a>, <a class="reference internal" href="convert-a-pytorch-segmentation-model.html"><span class="doc std std-doc">DeepLab</span></a>, <a class="reference internal" href="convert-openelm.html"><span class="doc std std-doc">OpenELM</span></a> can be converted, and the total PyTorch op translation test coverage is roughly ~60%. You can start trying the torch.export path on your models that are working with torch.jit.trace already, so as to gradually move them to the export path as PyTorch also <a class="reference external" href="https://github.com/pytorch/pytorch/issues/103841#issuecomment-1605017153">moves</a> its support and development to that path over a period of time. In case you hit issues (e.g. models converted via export path are slower than the ones converted from jit.trace path), please report them on Github.</p>
+<p>Also, torch.export has limitations, see <a class="reference external" href="https://pytorch.org/docs/stable/export.html#limitations-of-torch-export">here</a></p>
+</div>
+<section id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading">#</a></h2>
+<p>This example requires <a class="reference external" href="https://pytorch.org/">PyTorch</a> and Core ML Tools 8.0 or newer versions. Use the following commands:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>torch
+pip<span class="w"> </span>install<span class="w"> </span>coremltools
+</pre></div>
+</div>
+<p>At the time of creating this example, the author environment is</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>torch              2.4.1
+coremltools        8.0
+</pre></div>
+</div>
+</section>
+<section id="export-and-convert-your-model">
+<h2>Export and Convert your Model<a class="headerlink" href="#export-and-convert-your-model" title="Link to this heading">#</a></h2>
+<p>The following example builds a simple model from scratch and exports it to generate the ExportedProgram object needed by the converter. Follow these steps:</p>
 <ol class="arabic">
-<li><p>Create the classifier and apply its properties:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">number_of_dimensions</span> <span class="o">=</span> <span class="mi">128</span>
+<li><p>Define a simple layer module to reuse:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
 
-<span class="kn">from</span> <span class="nn">coremltools.models.nearest_neighbors</span> <span class="kn">import</span> <span class="n">KNearestNeighborsClassifierBuilder</span>
-<span class="n">builder</span> <span class="o">=</span> <span class="n">KNearestNeighborsClassifierBuilder</span><span class="p">(</span><span class="n">input_name</span><span class="o">=</span><span class="s1">&#39;input&#39;</span><span class="p">,</span>
-				 <span class="n">output_name</span><span class="o">=</span><span class="s1">&#39;output&#39;</span><span class="p">,</span>
-				 <span class="n">number_of_dimensions</span><span class="o">=</span><span class="n">number_of_dimensions</span><span class="p">,</span>
-				 <span class="n">default_class_label</span><span class="o">=</span><span class="s1">&#39;defaultLabel&#39;</span><span class="p">,</span>
-				 <span class="n">number_of_neighbors</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-				 <span class="n">weighting_scheme</span><span class="o">=</span><span class="s1">&#39;inverse_distance&#39;</span><span class="p">,</span>
-				 <span class="n">index_type</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">)</span>
+<span class="c1"># Define a simple layer module we will reuse in our network</span>
+<span class="k">class</span> <span class="nc">Attention</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wq</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wk</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wv</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wo</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
 
-<span class="n">builder</span><span class="o">.</span><span class="n">author</span> <span class="o">=</span> <span class="s1">&#39;Core ML Tools Example&#39;</span>
-<span class="n">builder</span><span class="o">.</span><span class="n">license</span> <span class="o">=</span> <span class="s1">&#39;MIT&#39;</span>
-<span class="n">builder</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="s1">&#39;Classifies </span><span class="si">{}</span><span class="s1"> dimension vector based on 3 nearest neighbors&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">number_of_dimensions</span><span class="p">)</span>
-
-<span class="n">builder</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shortDescription</span> <span class="o">=</span> <span class="s1">&#39;Input vector to classify&#39;</span>
-<span class="n">builder</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shortDescription</span> <span class="o">=</span> <span class="s1">&#39;Predicted label. Defaults to </span><span class="se">\&#39;</span><span class="s1">defaultLabel</span><span class="se">\&#39;</span><span class="s1">&#39;</span>
-<span class="n">builder</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">output</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shortDescription</span> <span class="o">=</span> <span class="s1">&#39;Probabilities / score for each possible label.&#39;</span>
-
-<span class="n">builder</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">trainingInput</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shortDescription</span> <span class="o">=</span> <span class="s1">&#39;Example input vector&#39;</span>
-<span class="n">builder</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">trainingInput</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shortDescription</span> <span class="o">=</span> <span class="s1">&#39;Associated true label of each example vector&#39;</span>
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>An empty <code class="docutils literal notranslate"><span class="pre">knn</span></code> model is updatable by default:</p>
-</div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># By default an empty knn model is updatable</span>
-<span class="n">builder</span><span class="o">.</span><span class="n">is_updatable</span>
-</pre></div>
-</div>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>True
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embedding</span><span class="p">):</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wq</span><span class="p">(</span><span class="n">embedding</span><span class="p">)</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wk</span><span class="p">(</span><span class="n">embedding</span><span class="p">)</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wv</span><span class="p">(</span><span class="n">embedding</span><span class="p">)</span>
+        <span class="n">attention</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">scaled_dot_product_attention</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wo</span><span class="p">(</span><span class="n">attention</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">o</span>
 </pre></div>
 </div>
 </li>
-<li><p>Confirm that the number of dimensions are set correctly:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Let&#39;s confirm the number of dimension is set correctly</span>
-<span class="n">builder</span><span class="o">.</span><span class="n">number_of_dimensions</span>
+<li><p>Define a simple network consisting of several base layers:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># A simple network consisting of several base layers</span>
+<span class="k">class</span> <span class="nc">Transformer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attention</span> <span class="o">=</span> <span class="n">Attention</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w2</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w3</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embedding</span><span class="p">):</span>
+        <span class="n">attention</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attention</span><span class="p">(</span><span class="n">embedding</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">embedding</span> <span class="o">+</span> <span class="n">attention</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">w2</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">silu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">w1</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">w3</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
+        <span class="k">return</span> <span class="n">z</span>
 </pre></div>
 </div>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>128
+</li>
+<li><p>Instantiate the network:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instantiate the network</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">Transformer</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+</pre></div>
+</div>
+</li>
+<li><p>Define the example input, which is needed by exporter, and export the model.</p>
+<p>Run <code class="docutils literal notranslate"><span class="pre">torch.export.export</span></code> on your model with an example input, and save the resulting exported object. For an example input, you can use one sample of training or validation data, or even use randomly-generated data as shown in the following code snippet:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example input, needed by exporter</span>
+<span class="n">example_input</span> <span class="o">=</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">32</span><span class="p">),)</span>
+<span class="c1"># Define dynamic shapes to be considered by exporter, if any</span>
+<span class="n">batch_dim</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">export</span><span class="o">.</span><span class="n">Dim</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;batch_dim&quot;</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+<span class="n">dynamic_shapes</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;embedding&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="n">batch_dim</span><span class="p">}}</span>
+<span class="c1"># Generate ExportedProgram by exporting</span>
+<span class="n">exported_model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">export</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">example_input</span><span class="p">,</span> <span class="n">dynamic_shapes</span><span class="o">=</span><span class="n">dynamic_shapes</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>Convert the exported model to Core ML:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">exported_model</span><span class="p">)</span>
 </pre></div>
 </div>
 </li>
 </ol>
 </section>
-<section id="set-the-number-of-neighbors-value">
-<h2>Set the Number of Neighbors Value<a class="headerlink" href="#set-the-number-of-neighbors-value" title="Link to this heading">#</a></h2>
-<ol class="arabic">
-<li><p>Verify the current number of neighbors value:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Let&#39;s check what the value of &#39;numberOfNeighbors&#39; is</span>
-<span class="n">builder</span><span class="o">.</span><span class="n">number_of_neighbors</span>
-</pre></div>
-</div>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>3
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The number of neighbors is bounded by the default range:</p>
-</div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># The number of neighbors is bounded by the default range...</span>
-<span class="n">builder</span><span class="o">.</span><span class="n">number_of_neighbors_allowed_range</span><span class="p">()</span>
-</pre></div>
-</div>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>(1, 1000)
-</pre></div>
-</div>
-<p>If you set the number of neighbors to a value outside of this default range, an <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> will occur as shown in the <strong>Out</strong> tab:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># If we try to set the number of neighbors to a value outside of this range</span>
-<span class="n">builder</span><span class="o">.</span><span class="n">number_of_neighbors</span> <span class="o">=</span> <span class="mi">1001</span>
-</pre></div>
-</div>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>---------------------------------------------------------------------------
-ValueError                                Traceback (most recent call last)
-&lt;ipython-input-17-e8bea591e72c&gt; in &lt;module&gt;
-	  1 # If we try to set the number of neighbors to a value outside of this range
-----&gt; 2 builder.number_of_neighbors = 1001
-
-~/eng/sources/coreml/coremltools/coremltools/models/nearest_neighbors/builder.py in number_of_neighbors(self, number_of_neighbors)
-	312                 self.spec.kNearestNeighborsClassifier.numberOfNeighbors.defaultValue = number_of_neighbors
-	313             else:
---&gt; 314                 raise ValueError(&#39;number_of_neighbors is not within range bounds&#39;)
-	315         else:
-	316             spec_values = self.spec.kNearestNeighborsClassifier.numberOfNeighbors.set.values
-
-ValueError: number_of_neighbors is not within range bounds
-</pre></div>
-</div>
-</li>
-<li><p>Change the bounds for the number of neighbors. Individual values can be set for the <code class="docutils literal notranslate"><span class="pre">numberOfNeighbors</span></code> parameter:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instead of a range, you can a set individual values that are valid for the numberOfNeighbors parameter.</span>
-<span class="n">builder</span><span class="o">.</span><span class="n">set_number_of_neighbors_with_bounds</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">allowed_set</span><span class="o">=</span><span class="p">{</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span> <span class="p">})</span>
-</pre></div>
-</div>
-</li>
-<li><p>Verify change using the <code class="docutils literal notranslate"><span class="pre">number_of_neighbors_allowed_set()</span></code> method.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check out the results of the previous operation</span>
-<span class="n">builder</span><span class="o">.</span><span class="n">number_of_neighbors_allowed_set</span><span class="p">()</span>
-</pre></div>
-</div>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>{1, 3, 5}
-</pre></div>
-</div>
-</li>
-<li><p>The number of neighbors value can now be set without an error:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># And now if you attempt to set it to an invalid value...</span>
-<span class="n">builder</span><span class="o">.</span><span class="n">number_of_neighbors</span> <span class="o">=</span> <span class="mi">4</span>
-</pre></div>
-</div>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>---------------------------------------------------------------------------
-ValueError                                Traceback (most recent call last)
-&lt;ipython-input-20-98c77c72c722&gt; in &lt;module&gt;
-	  1 # And now if you attempt to set it to an invalid value...
-----&gt; 2 builder.number_of_neighbors = 4
-
-~/eng/sources/coreml/coremltools/coremltools/models/nearest_neighbors/builder.py in number_of_neighbors(self, number_of_neighbors)
-	320                     self.spec.kNearestNeighborsClassifier.numberOfNeighbors.defaultValue = number_of_neighbors
-	321                     return
---&gt; 322             raise ValueError(&#39;number_of_neighbors is not an allowed value&#39;)
-	323 
-	324     def set_number_of_neighbors_with_bounds(self, number_of_neighbors, allowed_range=None, allowed_set=None):
-
-ValueError: number_of_neighbors is not valid
-</pre></div>
-</div>
-</li>
-</ol>
-<p>If desired, you can revert back to a valid range:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># And of course you can go back to a valid range</span>
-<span class="n">builder</span><span class="o">.</span><span class="n">set_number_of_neighbors_with_bounds</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">allowed_range</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">30</span><span class="p">))</span>
-</pre></div>
-</div>
-</section>
-<section id="set-the-index-type">
-<h2>Set the Index Type<a class="headerlink" href="#set-the-index-type" title="Link to this heading">#</a></h2>
-<ol class="arabic">
-<li><p>Verify the current index type:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Let&#39;s see what the index type is</span>
-<span class="n">builder</span><span class="o">.</span><span class="n">index_type</span>
-</pre></div>
-</div>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>&#39;linear&#39;
-</pre></div>
-</div>
-</li>
-<li><p>Set the index and leaf size:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Let&#39;s set the index to kd_tree with leaf size of 30</span>
-<span class="n">builder</span><span class="o">.</span><span class="n">set_index_type</span><span class="p">(</span><span class="s1">&#39;kd_tree&#39;</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
-<span class="n">builder</span><span class="o">.</span><span class="n">index_type</span>
-</pre></div>
-</div>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>&#39;kd_tree&#39;
-</pre></div>
-</div>
-</li>
-<li><p>Save the model:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlmodel_updatable_path</span> <span class="o">=</span> <span class="s1">&#39;./UpdatableKNN.mlmodel&#39;</span>
-
-<span class="c1"># Save the updated spec</span>
-<span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">MLModel</span>
-<span class="n">mlmodel_updatable</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="n">builder</span><span class="o">.</span><span class="n">spec</span><span class="p">)</span>
-<span class="n">mlmodel_updatable</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">mlmodel_updatable_path</span><span class="p">)</span>
-</pre></div>
-</div>
-</li>
-</ol>
+<section id="difference-from-tracing">
+<h2>Difference from Tracing<a class="headerlink" href="#difference-from-tracing" title="Link to this heading">#</a></h2>
+<p>For tracing, <code class="docutils literal notranslate"><span class="pre">ct.convert</span></code> requires the <code class="docutils literal notranslate"><span class="pre">inputs</span></code> arg from user. This is no longer the case for exporting, since the ExportedProgram object carries all name and shape and dtype info.</p>
+<p>Subsequently, for exporting, dynamic shape is no longer specified through the <code class="docutils literal notranslate"><span class="pre">inputs</span></code> arg of <code class="docutils literal notranslate"><span class="pre">ct.convert</span></code>. Instead, user will need to <a class="reference external" href="https://pytorch.org/docs/stable/export.html#expressing-dynamism">express dynamism in torch.export</a>, which will then be automatically converted to Core ML <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#rangedim"><code class="docutils literal notranslate"><span class="pre">RangeDim</span></code></a>.</p>
+<p>As of Core ML Tools 8.0, there are several features that the torch.export conversion path is yet to support, compared to the mature torch.jit.trace path. Such as:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#enumeratedshapes">EnumeratedShapes</a></p></li>
+<li><p><a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ImageType">ImageType</a></p></li>
+<li><p>Setting custom names and dtypes for model inputs and outputs</p></li>
+</ul>
 </section>
 </section>
 
@@ -630,13 +565,22 @@ ValueError: number_of_neighbors is not valid
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="updatable-tiny-drawing-classifier-pipeline-model.html"
+       href="model-tracing.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Pipeline Classifier</p>
+        <p class="prev-next-title">Model Tracing</p>
       </div>
+    </a>
+    <a class="right-next"
+       href="convert-a-torchvision-model-from-pytorch.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Converting a torchvision Model from PyTorch</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
     </a>
 </div>
                 </footer>
@@ -654,9 +598,9 @@ ValueError: number_of_neighbors is not valid
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-the-classifier">Create the Classifier</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#set-the-number-of-neighbors-value">Set the Number of Neighbors Value</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#set-the-index-type">Set the Index Type</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#export-and-convert-your-model">Export and Convert your Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#difference-from-tracing">Difference from Tracing</a></li>
 </ul>
   </nav></div>
 

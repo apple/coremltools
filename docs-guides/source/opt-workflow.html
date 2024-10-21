@@ -191,10 +191,10 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="convert-pytorch-workflow.html">PyTorch Conversion Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-tracing.html">Model Tracing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="model-scripting.html">Model Scripting</a></li>
-<li class="toctree-l2"><a class="reference internal" href="convert-nlp-model.html">Converting a Natural Language Processing Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-exporting.html">Model Exporting</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html">Converting a torchvision Model from PyTorch</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pytorch-conversion-examples.html">Converting a PyTorch Segmentation Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-pytorch-segmentation-model.html">Converting a PyTorch Segmentation Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-openelm.html">Converting an Open Efficient Language Model</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -538,16 +538,14 @@ levels of sparsity (75% or more) without significant loss of accuracy.</p></li>
 then it is recommended to first compress the weights of the torch model, using something like the data-free
 approach, and then try to regain accuracy by performing parameter-efficient fine-tuning (attaching adapters to the models and fine-tuning those).</p>
 <figure class="align-center" id="id1">
-<a class="imgnoborder reference internal image-reference" href="../_images/workflows_accuracy_vs_compression.png"><img alt="Accuracy trade-off with compression" class="imgnoborder" src="../_images/workflows_accuracy_vs_compression.png" style="width: 840px; height: 280px;" />
-</a>
+<a class="imgnoborder reference internal image-reference" href="../_images/workflows_accuracy_vs_compression.png"><img alt="Accuracy trade-off with compression" class="imgnoborder" src="../_images/workflows_accuracy_vs_compression.png" style="width: 840px; height: 280px;" /></a>
 <figcaption>
 <p><span class="caption-text">A hypothetical “accuracy-compression amount” trade-off curve to illustrate what you may see
 on average for different compression workflows.</span><a class="headerlink" href="#id1" title="Link to this image">#</a></p>
 </figcaption>
 </figure>
 <figure class="align-center" id="id2">
-<a class="imgnoborder reference internal image-reference" href="../_images/three_compression_workflows.png"><img alt="Compression workflows" class="imgnoborder" src="../_images/three_compression_workflows.png" style="width: 800px;" />
-</a>
+<a class="imgnoborder reference internal image-reference" href="../_images/three_compression_workflows.png"><img alt="Compression workflows" class="imgnoborder" src="../_images/three_compression_workflows.png" style="width: 800px;" /></a>
 <figcaption>
 <p><span class="caption-text">Compression workflows for different input model formats</span><a class="headerlink" href="#id2" title="Link to this image">#</a></p>
 </figcaption>
