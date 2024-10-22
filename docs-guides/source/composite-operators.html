@@ -218,6 +218,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="opt-overview-examples.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="opt-resnet.html">Optimizing ResNet50 Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-opt1_3.html">Optimizing OPT Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-stable-diffusion.html">Optimizing StableDiffusion Model</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1"><a class="reference internal" href="opt-workflow.html">Optimization Workflow</a></li>
@@ -484,10 +485,12 @@ document.write(`
 <span id="index-1"></span><h2>Decompose into Existing MIL Operators<a class="headerlink" href="#decompose-into-existing-mil-operators" title="Link to this heading">#</a></h2>
 <p>The TensorFlow <a class="reference external" href="https://www.tensorflow.org/api_docs/java/org/tensorflow/op/core/Einsum">documentation on Einsum</a> refers to Einstein summation notation. You can use this notation to represent a variety of tensor operations such as <code class="docutils literal notranslate"><span class="pre">reduce_sum</span></code>, <code class="docutils literal notranslate"><span class="pre">transpose</span></code>, and <code class="docutils literal notranslate"><span class="pre">trace</span></code>, using a string. Einsum is usually a complicated operation, but with this example you don’t need to know all the possible cases, just the particular notation that this model uses.</p>
 <p>The error trace shows that the model uses the following notation for Einsum:</p>
-<a class="imgnoborder reference internal image-reference" href="../_images/first_eq_300.png"><img alt="Notation for Einsum" class="imgnoborder align-center" src="../_images/first_eq_300.png" style="width: 400px;" /></a>
+<a class="imgnoborder reference internal image-reference" href="../_images/first_eq_300.png"><img alt="Notation for Einsum" class="imgnoborder align-center" src="../_images/first_eq_300.png" style="width: 400px;" />
+</a>
 <hr class="docutils" />
 <p>The above notation translates into the following mathematical expression:</p>
-<a class="imgnoborder reference internal image-reference" href="../_images/second_eq_300.png"><img alt="Math expression" class="imgnoborder align-center" src="../_images/second_eq_300.png" style="width: 600px;" /></a>
+<a class="imgnoborder reference internal image-reference" href="../_images/second_eq_300.png"><img alt="Math expression" class="imgnoborder align-center" src="../_images/second_eq_300.png" style="width: 600px;" />
+</a>
 <hr class="docutils" />
 <p>While the above may look complicated, it is essentially a batched matrix multiplication with a transpose on the second input:</p>
 <img alt="Batched matrix multiplication" class="imgnoborder align-center" src="../_images/third_eq_300.png" />

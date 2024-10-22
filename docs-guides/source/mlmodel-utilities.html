@@ -218,6 +218,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="opt-overview-examples.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="opt-resnet.html">Optimizing ResNet50 Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-opt1_3.html">Optimizing OPT Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-stable-diffusion.html">Optimizing StableDiffusion Model</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1"><a class="reference internal" href="opt-workflow.html">Optimization Workflow</a></li>
@@ -437,6 +438,7 @@ document.write(`
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bisect-model">Bisect Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#change-model-tensor-input-output-types">Change Model Tensor Input/Output Types</a></li>
 </ul>
             </nav>
         </div>
@@ -626,6 +628,53 @@ optimization of the model via the <code class="docutils literal notranslate"><sp
 </pre></div>
 </div>
 </section>
+<section id="change-model-tensor-input-output-types">
+<h2>Change Model Tensor Input/Output Types<a class="headerlink" href="#change-model-tensor-input-output-types" title="Link to this heading">#</a></h2>
+<p>Consider a scenario when we have a Core ML model with an fp32 multiarray output, but we need to use a Core ML API that
+requires fp16 multiarrays instead. We can now easily change the model output types from fp32 to fp16 (and vice versa).</p>
+<p>An example how to update the output data types:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.models.model</span> <span class="kn">import</span> <span class="n">MLModel</span>
+<span class="kn">from</span> <span class="nn">coremltools.utils</span> <span class="kn">import</span> <span class="n">change_array_output_type</span>
+<span class="kn">from</span> <span class="nn">coremltools.proto.FeatureTypes_pb2</span> <span class="kn">import</span> <span class="n">ArrayFeatureType</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">)</span>
+<span class="n">updated_model</span> <span class="o">=</span> <span class="n">change_input_output_tensor_type</span><span class="p">(</span>
+    <span class="n">ml_model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+    <span class="n">from_type</span><span class="o">=</span><span class="n">ArrayFeatureType</span><span class="o">.</span><span class="n">FLOAT32</span><span class="p">,</span>
+    <span class="n">to_type</span><span class="o">=</span><span class="n">ArrayFeatureType</span><span class="o">.</span><span class="n">FLOAT16</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">updated_model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;my_updated_model.mlpackage&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Another example is showing how to update data types of all the function inputs:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.models.model</span> <span class="kn">import</span> <span class="n">MLModel</span>
+<span class="kn">from</span> <span class="nn">coremltools.utils</span> <span class="kn">import</span> <span class="n">change_array_output_type</span>
+<span class="kn">from</span> <span class="nn">coremltools.proto.FeatureTypes_pb2</span> <span class="kn">import</span> <span class="n">ArrayFeatureType</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">)</span>
+<span class="n">updated_model</span> <span class="o">=</span> <span class="n">change_input_output_tensor_type</span><span class="p">(</span>
+    <span class="n">ml_model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+    <span class="n">from_type</span><span class="o">=</span><span class="n">ArrayFeatureType</span><span class="o">.</span><span class="n">FLOAT32</span><span class="p">,</span>
+    <span class="n">to_type</span><span class="o">=</span><span class="n">ArrayFeatureType</span><span class="o">.</span><span class="n">FLOAT16</span><span class="p">,</span>
+    <span class="n">function_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;main_1&quot;</span><span class="p">,</span> <span class="s2">&quot;main_2&quot;</span><span class="p">],</span>
+    <span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;*&quot;</span><span class="p">],</span>
+    <span class="n">output_names</span><span class="o">=</span><span class="p">[],</span>  <span class="c1"># no output to be modified</span>
+<span class="p">)</span>
+<span class="n">updated_model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;my_updated_model.mlpackage&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Optional arguments:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">function_names</span></code>: list of functions to be modified (by default only input / output of the <code class="docutils literal notranslate"><span class="pre">main</span></code> function is modified)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">input_names</span></code>: list of inputs that should be updated (by default none is modified)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">output_names</span></code>: list of outputs that should be updated (by default all the outputs matching the <code class="docutils literal notranslate"><span class="pre">from_type</span></code> type are updated)</p></li>
+</ul>
+<p>Special values for <code class="docutils literal notranslate"><span class="pre">input_names</span></code> and <code class="docutils literal notranslate"><span class="pre">output_names</span></code> arguments:</p>
+<ul class="simple">
+<li><p>an empty list means nothing will be modified (default for <code class="docutils literal notranslate"><span class="pre">input_names</span></code>)</p></li>
+<li><p>a list containing <code class="docutils literal notranslate"><span class="pre">&quot;*&quot;</span></code> string means all relevant inputs/outputs will be modified (those that will match the <code class="docutils literal notranslate"><span class="pre">from_type</span></code> type)</p></li>
+</ul>
+</section>
 </section>
 
 
@@ -682,6 +731,7 @@ optimization of the model via the <code class="docutils literal notranslate"><sp
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bisect-model">Bisect Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#change-model-tensor-input-output-types">Change Model Tensor Input/Output Types</a></li>
 </ul>
   </nav></div>
 

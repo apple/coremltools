@@ -1,0 +1,792 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Optimizing StableDiffusion Model &#8212; Guide to Core ML Tools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css?v=27a1495e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=c1ce5b23"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'source/opt-stable-diffusion';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Optimization Workflow" href="opt-workflow.html" />
+    <link rel="prev" title="Optimizing OPT Model" href="opt-opt1_3.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Guide to Core ML Tools</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/index.html">coremltools API Reference</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="overview-coremltools.html">What Is Core ML Tools?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installing-coremltools.html">Installing Core ML Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introductory-quickstart.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="new-features.html">New Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faqs.html">Core ML Tools FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools-examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-to-contribute.html">Contributing</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="target-conversion-formats.html">Source and Conversion Formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="load-and-convert-model.html">Load and Convert Model Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-to-ml-program.html">Convert Models to ML Programs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-to-neural-network.html">Convert Models to Neural Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="comparing-ml-programs-and-neural-networks.html">Comparing ML Programs and Neural Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="typed-execution.html">Typed Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="typed-execution-example.html">Typed Execution Workflow Example</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-tensorflow.html">Converting from TensorFlow</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="tensorflow-1-workflow.html">TensorFlow 1 Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-image-classifier.html">Converting a TensorFlow 1 Image Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-deepspeech-model.html">Converting a TensorFlow 1 DeepSpeech Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tensorflow-2.html">TensorFlow 2 Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-tensorflow-2-bert-transformer-models.html">Converting TensorFlow 2 BERT Transformer Models</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="convert-pytorch-workflow.html">PyTorch Conversion Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-tracing.html">Model Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-exporting.html">Model Exporting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html">Converting a torchvision Model from PyTorch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-pytorch-segmentation-model.html">Converting a PyTorch Segmentation Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-openelm.html">Converting an Open Efficient Language Model</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="new-conversion-options.html">New Conversion Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-input-and-output-types.html">Model Input and Output Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="image-inputs.html">Image Input and Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stateful-models.html">Stateful Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="classifiers.html">Classifiers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flexible-inputs.html">Flexible Input Shapes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="composite-operators.html">Composite Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom-operators.html">Custom Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph-passes-intro.html">Graph Passes</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="model-intermediate-language.html">Model Intermediate Language</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Optimization</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="opt-overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="opt-whats-new.html">What’s New</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="opt-overview-examples.html">Examples</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="opt-resnet.html">Optimizing ResNet50 Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-opt1_3.html">Optimizing OPT Model</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Optimizing StableDiffusion Model</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="opt-workflow.html">Optimization Workflow</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-palettization.html">Palettization</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="opt-palettization-overview.html">Palettization Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-palettization-perf.html">Performance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-palettization-algos.html">Palettization Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-palettization-api.html">API Overview</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-quantization.html">Linear Quantization</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="opt-quantization-overview.html">Quantization Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-quantization-perf.html">Performance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-quantization-algos.html">Quantization Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-quantization-api.html">API Overview</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-pruning.html">Pruning</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="opt-pruning-overview.html">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-pruning-perf.html">Performance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-pruning-algos.html">Pruning Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-pruning-api.html">API Overview</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="opt-joint-compression.html">Combining Compression Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="opt-conversion.html">Conversion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quantization-neural-network.html">Compressing Neural Network Weights</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Other Converters</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="libsvm-conversion.html">LibSVM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sci-kit-learn-conversion.html">Scikit-learn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="xgboost-conversion.html">XGBoost</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">MLModel</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="mlmodel.html">MLModel Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multifunction-models.html">Multifunction Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="xcode-model-preview-types.html">Xcode Model Preview Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mlmodel-utilities.html">MLModel Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model-prediction.html">Model Prediction</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="updatable-model-examples.html">Updatable Models</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="updatable-neural-network-classifier-on-mnist-dataset.html">Neural Network Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="updatable-tiny-drawing-classifier-pipeline-model.html">Pipeline Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="updatable-nearest-neighbor-classifier.html">Nearest Neighbor Classifier</a></li>
+</ul>
+</details></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/apple/coremltools" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/source/opt-stable-diffusion.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Optimizing StableDiffusion Model</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#palettizing-coreml-model">Palettizing CoreML Model</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#scalar-palettization">Scalar palettization</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#grouped-channel-palettization">Grouped channel palettization</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#joint-compression">Joint compression</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pruning-with-sparsegpt">Pruning with SparseGPT</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#palettization-with-posttrainingpalettizer">Palettization with PostTrainingPalettizer</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#results">Results</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="optimizing-stablediffusion-model">
+<h1>Optimizing StableDiffusion Model<a class="headerlink" href="#optimizing-stablediffusion-model" title="Link to this heading">#</a></h1>
+<p>In this tutorial, we will explore how we can use Core ML Tools APIs for compressing a Stable Diffusion model for deployment on an iPhone.
+The model takes a natural language description, known as a prompt, and produces an image matching that description.</p>
+<p>Specifically, we will use the <a class="reference external" href="https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0">SDXL</a> model from <a class="reference external" href="https://huggingface.co">HuggingFace</a>.
+For the purpose of this tutorial we use <a class="reference external" href="https://github.com/apple/ml-stable-diffusion">apple/ml-stable-diffusion</a> repo to convert, compress and run the model.</p>
+<p>Execute the following command to generate Core ML model files (.mlpackage) for UNet, TextEncoder and VAEDecoder models needed for the SDXL pipeline:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>python_coreml_stable_diffusion.torch2coreml<span class="w"> </span>--convert-unet<span class="w"> </span>--convert-vae-decoder<span class="w"> </span><span class="se">\</span>
+--convert-text-encoder<span class="w"> </span>--refiner-version<span class="w"> </span>stabilityai/stable-diffusion-xl-refiner-1.0<span class="w"> </span><span class="se">\</span>
+--xl-version<span class="w"> </span>--model-version<span class="w"> </span>stabilityai/stable-diffusion-xl-base-1.0<span class="w"> </span><span class="se">\</span>
+--latent-h<span class="w"> </span><span class="m">64</span><span class="w"> </span>--latent-w<span class="w"> </span><span class="m">64</span><span class="w"> </span>-o<span class="w"> </span>output-xl-512
+</pre></div>
+</div>
+<p>The largest model within SDXL is the UNet model, measuring <code class="docutils literal notranslate"><span class="pre">4.8</span> <span class="pre">GB</span></code> in size with <code class="docutils literal notranslate"><span class="pre">float16</span></code> precision. This is too big for running on iPhones or iPads. In order to deploy this model, we need to compress it.
+For the purpose of this tutorial we will use a fixed prompt - <em>“cat in a tuxedo, oil on canvas”</em>, to compare output images produced by different model variants <a class="footnote-reference brackets" href="#id2" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p>
+<p>Execute the following command to generate image from the baseline SDXL pipeline using CoreML models generated above:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>python_coreml_stable_diffusion.pipeline<span class="w"> </span>--prompt<span class="w"> </span><span class="s2">&quot;cat in a tuxedo, oil on canvas&quot;</span><span class="w"> </span><span class="se">\</span>
+-i<span class="w"> </span>output-xl-512<span class="w"> </span>-o<span class="w"> </span>base_xl<span class="w"> </span>--compute-unit<span class="w"> </span>CPU_ONLY<span class="w"> </span>--seed<span class="w"> </span><span class="m">231</span><span class="w"> </span><span class="se">\</span>
+--model-version<span class="w"> </span>stabilityai/stable-diffusion-xl-base-1.0
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="../_images/sdxl-base.png"><img alt="../_images/sdxl-base.png" src="../_images/sdxl-base.png" style="width: 250px; height: 250px;" />
+</a>
+<section id="palettizing-coreml-model">
+<h2>Palettizing CoreML Model<a class="headerlink" href="#palettizing-coreml-model" title="Link to this heading">#</a></h2>
+<section id="scalar-palettization">
+<h3>Scalar palettization<a class="headerlink" href="#scalar-palettization" title="Link to this heading">#</a></h3>
+<p>Let’s start with data free scalar palettization using <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.palettize_weights">ct.optimize.coreml.palettize_weights</a> API.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="kn">import</span> <span class="nn">coremltools.optimize</span> <span class="k">as</span> <span class="nn">cto</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span>
+    <span class="s2">&quot;output-xl-512/Stable_Diffusion_version_stabilityai_stable-diffusion-xl-base-1.0_unet.mlpackage&quot;</span>
+<span class="p">)</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OptimizationConfig</span><span class="p">(</span>
+    <span class="n">global_config</span><span class="o">=</span><span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OpPalettizerConfig</span><span class="p">(</span><span class="n">nbits</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">compressed_model</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">palettize_weights</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Trying with nbits equal to 8, 6 &amp; 4 bits we see the following results:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Config</p></th>
+<th class="head"><p>Model Size</p></th>
+<th class="head"><p>Image</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>8-bit (per tensor)</p></td>
+<td><p>2.40 GB</p></td>
+<td><p><a class="reference internal" href="../_images/sdxl-8bit.png"><img alt="../_images/sdxl-8bit.png" src="../_images/sdxl-8bit.png" style="width: 250px; height: 250px;" /></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>6-bit (per-tensor)</p></td>
+<td><p>1.80 GB</p></td>
+<td><p><a class="reference internal" href="../_images/sdxl-6bit.png"><img alt="../_images/sdxl-6bit.png" src="../_images/sdxl-6bit.png" style="width: 250px; height: 250px;" /></a></p></td>
+</tr>
+<tr class="row-even"><td><p>4-bit (per-tensor)</p></td>
+<td><p>1.21 GB</p></td>
+<td><p><a class="reference internal" href="../_images/sdxl-4bit.png"><img alt="../_images/sdxl-4bit.png" src="../_images/sdxl-4bit.png" style="width: 250px; height: 250px;" /></a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Applying 8bit palettization can reduce the model size to be about half of the <code class="docutils literal notranslate"><span class="pre">float16</span></code> model, but it is still much too large to consider iOS integration.
+With 6bit we can finally run this model on an iPad. With 4bit compression we are unable to get a good image anymore, meaning the model isn’t accurate.</p>
+</section>
+<section id="grouped-channel-palettization">
+<h3>Grouped channel palettization<a class="headerlink" href="#grouped-channel-palettization" title="Link to this heading">#</a></h3>
+<p>Let’s try to regain the accuracy loss from 4 bit palettization by applying the <a class="reference internal" href="opt-palettization-overview.html#granularity"><span class="std std-ref">per_grouped_channel</span></a> palettization, which increases the number of LUTs (look up tables) per weight tensor.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">op_config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OpPalettizerConfig</span><span class="p">(</span>
+            <span class="n">nbits</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+            <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;kmeans&quot;</span><span class="p">,</span>
+            <span class="n">granularity</span><span class="o">=</span><span class="s2">&quot;per_grouped_channel&quot;</span><span class="p">,</span>
+            <span class="n">group_size</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> 
+<span class="p">)</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OptimizationConfig</span><span class="p">(</span>    
+    <span class="n">global_config</span><span class="o">=</span><span class="n">op_config</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">compressed_mlmodel</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">palettize_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Experimenting with group_size equal to 4, 16 &amp; 32 we see the following results:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Config</p></th>
+<th class="head"><p>Model Size</p></th>
+<th class="head"><p>Image</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>4-bit (per-tensor)</p></td>
+<td><p>1.21 GB</p></td>
+<td><p><a class="reference internal" href="../_images/sdxl-4bit.png"><img alt="../_images/sdxl-4bit.png" src="../_images/sdxl-4bit.png" style="width: 250px; height: 250px;" /></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>4-bit (group_size=4)</p></td>
+<td><p>1.22 GB</p></td>
+<td><p><a class="reference internal" href="../_images/sdxl-4bit-gs4.png"><img alt="../_images/sdxl-4bit-gs4.png" src="../_images/sdxl-4bit-gs4.png" style="width: 250px; height: 250px;" /></a></p></td>
+</tr>
+<tr class="row-even"><td><p>4-bit (group_size=16)</p></td>
+<td><p>1.21 GB</p></td>
+<td><p><a class="reference internal" href="../_images/sdxl-4bit-gs16.png"><img alt="../_images/sdxl-4bit-gs16.png" src="../_images/sdxl-4bit-gs16.png" style="width: 250px; height: 250px;" /></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>4-bit (group_size=32)</p></td>
+<td><p>1.21 GB</p></td>
+<td><p><a class="reference internal" href="../_images/sdxl-4bit-gs32.png"><img alt="../_images/sdxl-4bit-gs32.png" src="../_images/sdxl-4bit-gs32.png" style="width: 250px; height: 250px;" /></a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>We see that images generated with grouped channel palettization are much better than one generated with scalar palettization. We are able to reclaim most of the accuracy back, with a very slight increase in size. This increase is due to the little bit of extra space taken by the additional lookup tables.</p>
+</section>
+</section>
+<section id="joint-compression">
+<h2>Joint compression<a class="headerlink" href="#joint-compression" title="Link to this heading">#</a></h2>
+<p>In this section, we aim to further compress the model using joint compression techniques. We’ll utilize the <code class="docutils literal notranslate"><span class="pre">ct.optimize.torch.*</span></code> APIs to compress the PyTorch model.
+The process involves two main steps: pruning the model using calibration data with <a class="reference internal" href="opt-pruning-algos.html#sparsegpt"><span class="std std-ref">SparseGPT</span></a>, followed by data-free palettization of the pruned model using <a class="reference internal" href="opt-palettization-algos.html#k-means"><span class="std std-ref">PostTrainingPalettizer</span></a>.</p>
+<section id="pruning-with-sparsegpt">
+<h3>Pruning with SparseGPT<a class="headerlink" href="#pruning-with-sparsegpt" title="Link to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">LayerwiseCompressor</span></code> (<code class="docutils literal notranslate"><span class="pre">SparseGPT</span></code>) algorithm compresses a sequential model layer by layer. Since it only supports sequential models, where the output of one layer directly feeds into the input of the next, some minor modifications are required for the <code class="docutils literal notranslate"><span class="pre">UNet2DConditionModelXL</span></code> to apply this algorithm.</p>
+<p>We adjust the forward interface for the down, mid, and up blocks to ensure that the <code class="docutils literal notranslate"><span class="pre">hidden_states</span></code>, <code class="docutils literal notranslate"><span class="pre">down_block_res_samples</span></code>, <code class="docutils literal notranslate"><span class="pre">temb</span></code>, and <code class="docutils literal notranslate"><span class="pre">encoder_hidden_states</span></code> flow through all the blocks. The updated <code class="docutils literal notranslate"><span class="pre">hidden_states</span></code> and <code class="docutils literal notranslate"><span class="pre">down_block_res_samples</span></code> are then returned as outputs. This adjustment is necessary to avoid any skip connections across these blocks, so that the model is sequential.
+Here are some code snippets highlighting the changes for reference:</p>
+<p><strong>CrossAttnDownBlock2D</strong>
+<img alt="sdxl-down-block" src="../_images/sdxl-down-block.png" /></p>
+<p><strong>UNetMidBlock2DCrossAttn</strong>
+<img alt="sdxl-down-block" src="../_images/sdxl-mid-block.png" /></p>
+<p><strong>UpBlock2D</strong>
+<img alt="sdxl-down-block" src="../_images/sdxl-up-block.png" /></p>
+<p>We accordingly adjust the top-level module that invokes the various down, mid, and up blocks.</p>
+<p><strong>UNet2DConditionModel</strong>
+<img alt="sdxl-top-level" src="../_images/sdxl-top-level-down.png" />
+<img alt="sdxl-top-level" src="../_images/sdxl-top-level-mid.png" />
+<img alt="sdxl-top-level" src="../_images/sdxl-top-level-up.png" /></p>
+<p>The model is then compressed at the granularity of the down, mid, and up blocks using the <code class="docutils literal notranslate"><span class="pre">layers</span></code> setting in <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.layerwise_compression.LayerwiseCompressorConfig">LayerwiseCompressorConfig</a>. In practice, this means that once a down block is fully compressed, its quantized outputs are used as inputs for the next block, and so on.
+We used the following text prompts to calibrate the model. Samples from all timesteps were used for calibration.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>modern office building, 8 stories tall, glass and steel, 3D render style, wide angle view, very detailed, sharp photographic image, in an office park, bright sunny day, clear blue skies, trees and landscaping
+image of a transparent tall glass with ice, fruits and mint, photograph, commercial, food, warm background, beautiful image, detailed
+german castle on a mountain, blue sky, realistic, photograph, dramatic, wide angle view
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.optimize.torch.layerwise_compression</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">LayerwiseCompressor</span><span class="p">,</span> 
+        <span class="n">LayerwiseCompressorConfig</span><span class="p">,</span> 
+        <span class="n">ModuleSparseGPTConfig</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">calibration_data_loader</span><span class="p">():</span>
+    <span class="n">input_sample</span> <span class="o">=</span> <span class="n">load_data_iter</span><span class="p">()</span>
+    <span class="k">yield</span> <span class="n">input_sample</span>
+
+<span class="n">prune_config</span> <span class="o">=</span> <span class="n">ModuleSparseGPTConfig</span><span class="p">(</span><span class="n">target_sparsity</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+<span class="n">compressor_config</span> <span class="o">=</span> <span class="n">LayerwiseCompressorConfig</span><span class="p">(</span>
+    <span class="n">global_config</span><span class="o">=</span><span class="n">prune_config</span><span class="p">,</span>
+    <span class="n">calibration_nsamples</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
+    <span class="n">input_cacher</span><span class="o">=</span><span class="s2">&quot;gpt&quot;</span><span class="p">,</span>
+    <span class="n">layers</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;down_blocks.\d+&#39;</span><span class="p">,</span> <span class="s1">&#39;mid_block&#39;</span><span class="p">,</span> <span class="s1">&#39;up_blocks.\d+&#39;</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">pruner</span> <span class="o">=</span> <span class="n">LayerwiseCompressor</span><span class="p">(</span><span class="n">torch_model</span><span class="p">,</span> <span class="n">compressor_config</span><span class="p">)</span> 
+<span class="n">sparse_model</span> <span class="o">=</span> <span class="n">pruner</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">calibration_data_loader</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="palettization-with-posttrainingpalettizer">
+<h3>Palettization with PostTrainingPalettizer<a class="headerlink" href="#palettization-with-posttrainingpalettizer" title="Link to this heading">#</a></h3>
+<p>Next, we take the sparse model and apply grouped channel palettization, similar as shown <a class="reference internal" href="#grouped-channel-palettization">here</a>, but in this case on a sparse PyTorch model.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.optimize.torch.palettization</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">PostTrainingPalettizer</span><span class="p">,</span>
+    <span class="n">PostTrainingPalettizerConfig</span><span class="p">,</span>
+    <span class="n">ModulePostTrainingPalettizerConfig</span>
+<span class="p">)</span>
+
+
+<span class="n">palettize_config</span> <span class="o">=</span> <span class="n">ModulePostTrainingPalettizerConfig</span><span class="p">(</span>
+    <span class="n">n_bits</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> 
+    <span class="n">granularity</span><span class="o">=</span><span class="s2">&quot;per_grouped_channel&quot;</span><span class="p">,</span> 
+    <span class="n">group_size</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">ptp_config</span> <span class="o">=</span> <span class="n">PostTrainingPalettizerConfig</span><span class="p">(</span><span class="n">global_config</span><span class="o">=</span><span class="n">palettize_config</span><span class="p">)</span>
+<span class="n">palettizer</span> <span class="o">=</span> <span class="n">PostTrainingPalettizer</span><span class="p">(</span><span class="n">sparse_model</span><span class="p">,</span> <span class="n">ptp_config</span><span class="p">)</span>
+
+<span class="n">sparse_palettized_model</span> <span class="o">=</span> <span class="n">palettizer</span><span class="o">.</span><span class="n">compress</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">sparse_palettized_model</span></code> generated above can be converted to produce a joint compressed mlpackage.</p>
+</section>
+<section id="results">
+<h3>Results<a class="headerlink" href="#results" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Config</p></th>
+<th class="head"><p>Model Size</p></th>
+<th class="head"><p>Image</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>40% Sparsity, 4-bit (group_size=4)</p></td>
+<td><p>1.04 GB</p></td>
+<td><p><a class="reference internal" href="../_images/sdxl-0.4sparse-4bit-gs4.png"><img alt="../_images/sdxl-0.4sparse-4bit-gs4.png" src="../_images/sdxl-0.4sparse-4bit-gs4.png" style="width: 250px; height: 250px;" /></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>40% Sparsity, 4-bit (group_size=16)</p></td>
+<td><p>1.03 GB</p></td>
+<td><p><a class="reference internal" href="../_images/sdxl-0.4sparse-4bit-gs16.png"><img alt="../_images/sdxl-0.4sparse-4bit-gs16.png" src="../_images/sdxl-0.4sparse-4bit-gs16.png" style="width: 250px; height: 250px;" /></a></p></td>
+</tr>
+<tr class="row-even"><td><p>50% Sparsity, 4-bit (group_size=4)</p></td>
+<td><p>942 MB</p></td>
+<td><p><a class="reference internal" href="../_images/sdxl-0.5sparse-4bit-gs4.png"><img alt="../_images/sdxl-0.5sparse-4bit-gs4.png" src="../_images/sdxl-0.5sparse-4bit-gs4.png" style="width: 250px; height: 250px;" /></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>50% Sparsity, 4-bit (group_size=16)</p></td>
+<td><p>933 MB</p></td>
+<td><p><a class="reference internal" href="../_images/sdxl-0.5sparse-4bit-gs16.png"><img alt="../_images/sdxl-0.5sparse-4bit-gs16.png" src="../_images/sdxl-0.5sparse-4bit-gs16.png" style="width: 250px; height: 250px;" /></a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>To summarize, we were able to use post training palettization to compress SDXL UNet model from <code class="docutils literal notranslate"><span class="pre">4.8GB</span></code> to <code class="docutils literal notranslate"><span class="pre">1.2GB</span></code> in size. We were able to regain accuracy lost from 4-bit palettization by using per grouped channel LUT.
+With joint compression, we are able to further bring down the model size to <code class="docutils literal notranslate"><span class="pre">1GB</span></code>, while still generating decent accuracy images with 40% sparsity.</p>
+<hr class="footnotes docutils" />
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id2" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>All images shown in this article have been generated on macOS 15.0. The image outputs can vary based on platform, backend, number of inference steps, etc.</p>
+</aside>
+</aside>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="opt-opt1_3.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Optimizing OPT Model</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="opt-workflow.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Optimization Workflow</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#palettizing-coreml-model">Palettizing CoreML Model</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#scalar-palettization">Scalar palettization</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#grouped-channel-palettization">Grouped channel palettization</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#joint-compression">Joint compression</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pruning-with-sparsegpt">Pruning with SparseGPT</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#palettization-with-posttrainingpalettizer">Palettization with PostTrainingPalettizer</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#results">Results</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Apple
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2023, Apple Inc.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

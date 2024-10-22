@@ -218,6 +218,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="opt-overview-examples.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="opt-resnet.html">Optimizing ResNet50 Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-opt1_3.html">Optimizing OPT Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-stable-diffusion.html">Optimizing StableDiffusion Model</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1"><a class="reference internal" href="opt-workflow.html">Optimization Workflow</a></li>
@@ -462,7 +463,8 @@ document.write(`
 </div>
 <p>In the above equations, <code class="docutils literal notranslate"><span class="pre">w_unquantized</span></code> and <code class="docutils literal notranslate"><span class="pre">scale</span></code> are of type float, and <code class="docutils literal notranslate"><span class="pre">w_quantized</span></code> and <code class="docutils literal notranslate"><span class="pre">zero_point</span></code> (also called quantization bias, or offset) are of the quantized data type.</p>
 <figure class="align-center" id="id1">
-<a class="imgnoborder reference internal image-reference" href="../_images/quantization-technique.png"><img alt="Uniform lowering of precision" class="imgnoborder" src="../_images/quantization-technique.png" style="width: 500px;" /></a>
+<a class="imgnoborder reference internal image-reference" href="../_images/quantization-technique.png"><img alt="Uniform lowering of precision" class="imgnoborder" src="../_images/quantization-technique.png" style="width: 500px;" />
+</a>
 <figcaption>
 <p><span class="caption-text">Process of quantizing to int8.</span><a class="headerlink" href="#id1" title="Link to this image">#</a></p>
 </figcaption>
@@ -478,7 +480,8 @@ document.write(`
 <section id="quantization-granularity">
 <h3>Quantization Granularity<a class="headerlink" href="#quantization-granularity" title="Link to this heading">#</a></h3>
 <figure class="align-center" id="id2">
-<a class="imgnoborder reference internal image-reference" href="../_images/quantization-granularities.png"><img alt="Different granularities for quantization" class="imgnoborder" src="../_images/quantization-granularities.png" style="width: 500px;" /></a>
+<a class="imgnoborder reference internal image-reference" href="../_images/quantization-granularities.png"><img alt="Different granularities for quantization" class="imgnoborder" src="../_images/quantization-granularities.png" style="width: 500px;" />
+</a>
 <figcaption>
 <p><span class="caption-text">Different granularities supported for quantization.</span><a class="headerlink" href="#id2" title="Link to this image">#</a></p>
 </figcaption>
