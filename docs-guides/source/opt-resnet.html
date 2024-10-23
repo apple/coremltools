@@ -218,6 +218,7 @@
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="opt-overview-examples.html">Examples</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Optimizing ResNet50 Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-opt1_3.html">Optimizing OPT Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-stable-diffusion.html">Optimizing StableDiffusion Model</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1"><a class="reference internal" href="opt-workflow.html">Optimization Workflow</a></li>
@@ -437,7 +438,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scenario-2-minimizing-latency">Scenario 2: Minimizing latency</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#latency-reduction-with-pruning">Latency reduction with pruning</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#latency-reduction-with-activation-quantization">Latency reduction with activation quantization</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Summary</a></li>
 </ul>
 </li>
 </ul>
@@ -457,7 +458,7 @@ document.write(`
 while staying within a specified accuracy loss budget.  In particular, we will consider two scenarios -
 one with the goal to reduce the model size, the other with the goal to reduce runtime latency.</p>
 <p>For this exercise, we will use the pretrained <a class="reference external" href="https://pytorch.org/vision/stable/models/generated/torchvision.models.resnet50.html#torchvision.models.resnet50">ResNet50</a> model from torchvision.
-Baseline ResNet50 model has a top 1% accuracy of <code class="docutils literal notranslate"><span class="pre">76.13%</span></code>, mlpackage size of <code class="docutils literal notranslate"><span class="pre">49MB</span></code> (<code class="docutils literal notranslate"><span class="pre">float16</span></code> precision) and latency of <code class="docutils literal notranslate"><span class="pre">~1.63ms</span></code><a class="footnote-reference brackets" href="#id2" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p>
+Baseline ResNet50 model has a top 1% accuracy of <code class="docutils literal notranslate"><span class="pre">76.13%</span></code>, mlpackage size of <code class="docutils literal notranslate"><span class="pre">49MB</span></code> (<code class="docutils literal notranslate"><span class="pre">float16</span></code> precision) and latency of <code class="docutils literal notranslate"><span class="pre">~1.63ms</span></code><a class="footnote-reference brackets" href="#id3" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p>
 <section id="scenario-1-minimizing-model-size">
 <h2>Scenario 1 : Minimizing model size<a class="headerlink" href="#scenario-1-minimizing-model-size" title="Link to this heading">#</a></h2>
 <p>In this scenario, our goal would be to minimize the disk size of the model, while trying to retain as much accuracy as possible of the <code class="docutils literal notranslate"><span class="pre">float16</span></code> model (within 5%).</p>
@@ -721,8 +722,8 @@ section.</p>
 <p>Note that if you have a Core ML model, you can use the <a class="reference internal" href="opt-quantization-api.html#quantizing-weights-and-activations"><span class="std std-ref"><code class="docutils literal notranslate"><span class="pre">linear_quantize_activations</span></code></span></a>
 method to quantize the activations.</p>
 </section>
-<section id="id3">
-<h3>Summary<a class="headerlink" href="#id3" title="Link to this heading">#</a></h3>
+<section id="id2">
+<h3>Summary<a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
 <p>Below we summarize results from above experiments as well as note the order of time taken to apply each of these compression workflows.
 With calibration data based activation quantization workflow we are able to achieve good speedup for minimal loss in accuracy, and it is much quicker to set up and apply.
 On the other hand, by pruning the model with fine-tuning we are able to get even better speedup and a much smaller model for a slightly higher loss in accuracy, but with a more extensive set up.</p>
@@ -761,16 +762,16 @@ On the other hand, by pruning the model with fine-tuning we are able to get even
 </tbody>
 </table>
 </div>
-</section>
-</section>
-</section>
 <hr class="footnotes docutils" />
 <aside class="footnote-list brackets">
-<aside class="footnote brackets" id="id2" role="doc-footnote">
+<aside class="footnote brackets" id="id3" role="doc-footnote">
 <span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
 <p>All latency numbers reported in this article have been measured on iPhone 15 Pro with iOS18 seed build. The latency numbers are sensitive to the device state, and may vary depending on the device state and build versions.</p>
 </aside>
 </aside>
+</section>
+</section>
+</section>
 
 
                 </article>
@@ -826,7 +827,7 @@ On the other hand, by pruning the model with fine-tuning we are able to get even
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scenario-2-minimizing-latency">Scenario 2: Minimizing latency</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#latency-reduction-with-pruning">Latency reduction with pruning</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#latency-reduction-with-activation-quantization">Latency reduction with activation quantization</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Summary</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Summary</a></li>
 </ul>
 </li>
 </ul>

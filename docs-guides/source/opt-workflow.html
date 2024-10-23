@@ -48,7 +48,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Palettization" href="opt-palettization.html" />
-    <link rel="prev" title="Optimizing OPT Model" href="opt-opt1_3.html" />
+    <link rel="prev" title="Optimizing StableDiffusion Model" href="opt-stable-diffusion.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -218,6 +218,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="opt-overview-examples.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="opt-resnet.html">Optimizing ResNet50 Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-opt1_3.html">Optimizing OPT Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-stable-diffusion.html">Optimizing StableDiffusion Model</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Optimization Workflow</a></li>
@@ -538,14 +539,16 @@ levels of sparsity (75% or more) without significant loss of accuracy.</p></li>
 then it is recommended to first compress the weights of the torch model, using something like the data-free
 approach, and then try to regain accuracy by performing parameter-efficient fine-tuning (attaching adapters to the models and fine-tuning those).</p>
 <figure class="align-center" id="id1">
-<a class="imgnoborder reference internal image-reference" href="../_images/workflows_accuracy_vs_compression.png"><img alt="Accuracy trade-off with compression" class="imgnoborder" src="../_images/workflows_accuracy_vs_compression.png" style="width: 840px; height: 280px;" /></a>
+<a class="imgnoborder reference internal image-reference" href="../_images/workflows_accuracy_vs_compression.png"><img alt="Accuracy trade-off with compression" class="imgnoborder" src="../_images/workflows_accuracy_vs_compression.png" style="width: 840px; height: 280px;" />
+</a>
 <figcaption>
 <p><span class="caption-text">A hypothetical “accuracy-compression amount” trade-off curve to illustrate what you may see
 on average for different compression workflows.</span><a class="headerlink" href="#id1" title="Link to this image">#</a></p>
 </figcaption>
 </figure>
 <figure class="align-center" id="id2">
-<a class="imgnoborder reference internal image-reference" href="../_images/three_compression_workflows.png"><img alt="Compression workflows" class="imgnoborder" src="../_images/three_compression_workflows.png" style="width: 800px;" /></a>
+<a class="imgnoborder reference internal image-reference" href="../_images/three_compression_workflows.png"><img alt="Compression workflows" class="imgnoborder" src="../_images/three_compression_workflows.png" style="width: 800px;" />
+</a>
 <figcaption>
 <p><span class="caption-text">Compression workflows for different input model formats</span><a class="headerlink" href="#id2" title="Link to this image">#</a></p>
 </figcaption>
@@ -671,12 +674,12 @@ on an MNIST model to get an overview of the APIs.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="opt-opt1_3.html"
+       href="opt-stable-diffusion.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Optimizing OPT Model</p>
+        <p class="prev-next-title">Optimizing StableDiffusion Model</p>
       </div>
     </a>
     <a class="right-next"
