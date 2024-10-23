@@ -5306,6 +5306,53 @@ class TestCumSum(TorchBaseTest):
         model = ModuleWrapper(function=torch.cumsum, kwargs={"dim": axis})
         self.run_compare_torch(input_shape, model, backend=backend, compute_unit=compute_unit)
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, src_dtype, dst_dtype",
+        itertools.product(
+            compute_units,
+            backends,
+            [torch.float16, torch.float32, torch.int32, torch.bool],
+            [torch.float16, torch.float32, torch.int32],
+        ),
+    )
+    def test_cumsum_dtype(self, compute_unit, backend, src_dtype, dst_dtype):
+        target = None
+        if src_dtype == torch.float16 or dst_dtype == torch.float16:
+            target = ct.target.iOS16
+        input_data = torch.randint(0, 10, [1, 3, 5]).to(dtype=src_dtype)
+        model = ModuleWrapper(function=torch.cumsum, kwargs={"dim": -1, "dtype": dst_dtype}).eval()
+        
+        self.run_compare_torch(
+            input_data,
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+            minimum_deployment_target=target,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, dtype",
+        itertools.product(
+            compute_units,
+            backends,
+            [torch.float16, torch.float32],
+        ),
+    )
+    def test_cumsum_float_to_int(self, compute_unit, backend, dtype):
+        target = None if dtype != torch.float16 else ct.target.iOS16
+        input_data = torch.randint(0, 10, [5]).to(dtype) + 0.5
+        model = ModuleWrapper(function=torch.cumsum, kwargs={"dim": -1, "dtype": torch.int32}).eval()
+        
+        self.run_compare_torch(
+            input_data,
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+            minimum_deployment_target=target,
+        )
+
 
 class TestReshape(TorchBaseTest):
     @pytest.mark.parametrize(
