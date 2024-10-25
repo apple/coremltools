@@ -965,10 +965,17 @@ def add(context, node):
 
 @register_torch_op
 def cumsum(context, node):
-    inputs = _get_inputs(context, node, expected=3)
+    inputs = _get_inputs(context, node, min_expected=2)
     x = inputs[0]
     if is_bool(x.dtype):
         x = mb.cast(x=x, dtype='int32')
+    src_dtype = builtin_to_string(x.dtype)
+    dst_dtype = src_dtype
+    if len(inputs) > 2 and inputs[2] and inputs[2].val:
+        dst_dtype = NUM_TO_DTYPE_STRING[inputs[2].val]    
+    
+    if src_dtype != dst_dtype:
+        x = mb.cast(x=x, dtype=dst_dtype)
     res = mb.cumsum(x=x, axis=inputs[1], name=node.name)
     context.add(res)
 
