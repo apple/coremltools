@@ -16,9 +16,12 @@ class gru(_gru_iOS17):
     """
     Gated Recurrent Unit (GRU)
 
-    The only difference between this version and the iOS 17 :py:class:`~.iOS17.recurrent.gru` is
-    the reset_after parameter. This parameter is optional and defaults to False. When True, the
-    reset gate is applied before the elementwise matrix multiplication.
+    Two new parameters have been added to the iOS 17 :py:class:`~.iOS17.recurrent.gru`.
+
+    `reset_after` - this parameter is optional and defaults to False. When True, the reset
+    gate is applied before the elementwise matrix multiplication.
+
+    `input_bias` - const<3*H, T> (Optional) [Default all 0s].
     """
     input_spec = InputSpec(
         x=TensorInputType(type_domain="T"),
