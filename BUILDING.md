@@ -24,7 +24,7 @@ Follow these steps:
 
 3. Run the [test.sh](scripts/test.sh) script to test the build.
 
-**Under the hood**: If an Anaconda or Miniconda environment doesn't already exist or is not up-to-date, the `build.sh` script automatically runs the [`env_create.sh`](scripts/env_create.sh) script to create the environment. It then uses [`env_activate.sh`](scripts/env_activate.sh) to activate the environment and set up the appropriate version of Python. The new environment is located at `<repo root>/coremltoos/envs` and is named after the `py` parameter. For example, a development environment with py 3.7 is named `coremltools-dev-py37`.
+**Under the hood**: If an Anaconda or Miniconda environment doesn't already exist or is not up-to-date, the `build.sh` script automatically runs the [`env_create.sh`](scripts/env_create.sh) script to create the environment. It then uses [`env_activate.sh`](scripts/env_activate.sh) to activate the environment and set up the appropriate version of Python. The new environment is located at `<repo root>/coremltools/envs` and is named after the `py` parameter. For example, a development environment with py 3.7 is named `coremltools-dev-py37`.
 
 
 ## Build targets
