@@ -5536,23 +5536,29 @@ def zeros_like(context, node):
         min_expected={TorchFrontend.TORCHEXPORT: 1, TorchFrontend.EXECUTORCH: 1},
     )
     x = inputs[0]
-    shape = mb.shape(x=x)
+    src_np_type = nptype_from_builtin(x.dtype)
     if len(inputs) > 1 and inputs[1] and inputs[1].val:
         dtype = inputs[1].val
-        np_type = NUM_TO_NUMPY_DTYPE[dtype]
+        dst_np_type = NUM_TO_NUMPY_DTYPE[dtype]
     else:
-        np_type = nptype_from_builtin(x.dtype)
+        dst_np_type = src_np_type
 
+    shape = mb.shape(x=x)
     if shape.can_be_folded_to_const():
         shape = shape.val
-        zeros = _np.zeros(shape).astype(np_type)
+        zeros = _np.zeros(shape).astype(dst_np_type)
         zeros_like = mb.const(val=zeros, name=node.name)
     else:
-        value = np_type(0)
-        if is_current_opset_version_compatible_with(target.iOS16):
-            zeros_like = mb.fill_like(ref_tensor=x, value=value, name=node.name)
+        if src_np_type == np.bool_:
+            zeros = mb.logical_xor(x=x, y=x)
         else:
-            zeros_like = mb.fill(shape=shape, value=value, name=node.name)
+            zeros = mb.sub(x=x, y=x)
+        if src_np_type != dst_np_type:
+            num = NUMPY_DTYPE_TO_TORCH_NUM[dst_np_type]
+            zeros_like = mb.cast(x=zeros, dtype=NUM_TO_DTYPE_STRING[num], name=node.name)
+        else:
+            zeros.name = node.name
+            zeros_like = zeros
 
     context.add(zeros_like)
 

@@ -7449,6 +7449,34 @@ class TestZeros(TorchBaseTest):
             # The zeros op is not folded to const.
             assert len(prog.find_ops(op_type="fill")) == 1
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, is_dynamic, src_dtype, dst_dtype",
+        itertools.product(
+            compute_units,
+            backends,
+            [True, False],
+            [torch.float16, torch.float32, torch.int32, torch.bool],
+            [torch.float16, torch.float32, torch.int32, torch.bool],
+        ),
+    )
+    def test_zeros_like_types(self, compute_unit, backend, is_dynamic, src_dtype, dst_dtype):
+        target, type = None, None
+        if src_dtype == torch.float16 or dst_dtype == torch.float16:
+            target = ct.target.iOS16
+        if is_dynamic:
+            type = [ct.TensorType(shape=ct.Shape([ct.RangeDim(1, 1_000)]))]
+        model = ModuleWrapper(function=torch.zeros_like, kwargs={"dtype": dst_dtype}).eval()
+        
+        self.run_compare_torch(
+            torch.tensor([3], dtype=src_dtype),
+            model,
+            input_as_shape=False,
+            backend=backend,
+            compute_unit=compute_unit,
+            converter_input_type=type,
+            minimum_deployment_target=target,
+        )
+
 
 class TestTopk(TorchBaseTest):
     @pytest.mark.parametrize(
