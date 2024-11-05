@@ -312,6 +312,9 @@ class ModelDebugger:
 
     # The function will get called for each intermediate output, return `False` if you want to stop the enumeration otherwise `True`.
     def check_intermediate_output(output_value, output_name, operation, activation_stats_dict):
+        if not isinstance(output_value, np.ndarray):
+            # output_value may be a PIL image, convert it to numpy array
+            output_value = np.array(output_value)
         tensor_min = np.min(output_value.flatten())
         tensor_max = np.max(output_value.flatten())
         activation_stats_dict[output_name]["rmin"] = tensor_min
