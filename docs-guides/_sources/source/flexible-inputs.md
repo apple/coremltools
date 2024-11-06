@@ -168,15 +168,15 @@ If the source PyTorch model is exported by [`torch.export.export`](https://pytor
 
 ## Reshape Frequency Optimization Hint
 
-Setting the Reshape Frequency Optimization Hint to `Frequent` can allow flexible shaped models to run on the Neural Engine. This option can be set when loading your model:
+Setting the Reshape Frequency Optimization Hint to `Infrequent` can allow flexible shaped models to run on the Neural Engine, with iOS 17.4 or later.
+This option can be set when loading your model:
 
 ```python
 model = ct.model.MLModel(
-    'path/to/the/saved/model.mlmodel',
-    optimization_hints={ 'reshapeFrequency': ct.ReshapeFrequency.Frequent }
+    'path/to/the/saved/model.mlpackage',
+    optimization_hints={ 'reshapeFrequency': ct.ReshapeFrequency.Infrequent }
 )
-p```
-
+```
 
 ## Enable Unbounded Ranges
 

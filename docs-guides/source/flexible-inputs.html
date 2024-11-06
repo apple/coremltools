@@ -16,27 +16,30 @@
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
+  <!-- 
+    this give us a css class that will be invisible only if js is disabled 
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-
-  
-  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+  <link href="../_static/styles/theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css?v=27a1495e" />
   
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=26a4bc78f4c0ddb94549"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
-  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
     <script src="../_static/documentation_options.js?v=c1ce5b23"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
@@ -51,6 +54,7 @@
     <link rel="prev" title="Classifiers" href="classifiers.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
   </head>
   
   
@@ -66,19 +70,8 @@
     <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
-  <input type="checkbox"
-          class="sidebar-toggle"
-          id="pst-primary-sidebar-checkbox"/>
-  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
-  
-  <input type="checkbox"
-          class="sidebar-toggle"
-          id="pst-secondary-sidebar-checkbox"/>
-  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
-  
-  <div class="search-button__wrapper">
-    <div class="search-button__overlay"></div>
-    <div class="search-button__search-container">
+  <dialog id="pst-search-dialog">
+    
 <form class="bd-search d-flex align-items-center"
       action="../search.html"
       method="get">
@@ -86,7 +79,6 @@
   <input type="search"
          class="form-control"
          name="q"
-         id="search-input"
          placeholder="Search..."
          aria-label="Search..."
          autocomplete="off"
@@ -94,8 +86,8 @@
          autocapitalize="off"
          spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form></div>
-  </div>
+</form>
+  </dialog>
 
   <div class="pst-async-banner-revealer d-none">
   <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
@@ -111,7 +103,8 @@
       
       
       
-      <div class="bd-sidebar-primary bd-sidebar">
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
   
@@ -141,15 +134,11 @@
 </a></div>
         <div class="sidebar-primary-item">
 
- <script>
- document.write(`
-   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span class="search-button__default-text">Search</span>
-    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-   </button>
- `);
- </script></div>
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">API Reference</span></p>
@@ -388,24 +377,16 @@
 
 
 
-<script>
-document.write(`
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
-  </button>
-`);
-</script>
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
 
 
-<script>
-document.write(`
-  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
-  </button>
-`);
-</script>
+</button>
 <button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <span class="fa-solid fa-list"></span>
 </button>
@@ -432,6 +413,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#select-from-predetermined-shapes">Select From Predetermined Shapes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#set-the-range-for-each-dimension">Set the Range for Each Dimension</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reshape-frequency-optimization-hint">Reshape Frequency Optimization Hint</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#enable-unbounded-ranges">Enable Unbounded Ranges</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#update-a-core-ml-model-to-use-flexible-input-shapes">Update a Core ML Model to Use Flexible Input Shapes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#api-reference">API Reference</a></li>
 </ul>
@@ -452,7 +434,7 @@ document.write(`
 <ul class="simple">
 <li><p><a class="reference internal" href="#select-from-predetermined-shapes">Select from predetermined shapes</a> to limit the input to selected shapes, optimizing performance.</p></li>
 <li><p><a class="reference internal" href="#set-the-range-for-each-dimension">Set a bounded range for each dimension</a> to define the minimum and maximum for more dynamic shapes. Using a bounded range provides more opportunity for the runtime compiler to make optimizations, which is harder with an unbounded range.</p></li>
-<li><p><a class="reference internal" href="#enable-unbounded-ranges"><span class="xref myst">Enable unbounded ranges</span></a>, if necessary, for maximum flexibility.</p></li>
+<li><p><a class="reference internal" href="#enable-unbounded-ranges">Enable unbounded ranges</a>, if necessary, for maximum flexibility.</p></li>
 </ul>
 <section id="select-from-predetermined-shapes">
 <span id="index-1"></span><h2>Select From Predetermined Shapes<a class="headerlink" href="#select-from-predetermined-shapes" title="Link to this heading">#</a></h2>
@@ -585,20 +567,20 @@ document.write(`
 </section>
 <section id="reshape-frequency-optimization-hint">
 <h2>Reshape Frequency Optimization Hint<a class="headerlink" href="#reshape-frequency-optimization-hint" title="Link to this heading">#</a></h2>
-<p>Setting the Reshape Frequency Optimization Hint to <code class="docutils literal notranslate"><span class="pre">Frequent</span></code> can allow flexible shaped models to run on the Neural Engine. This option can be set when loading your model:</p>
+<p>Setting the Reshape Frequency Optimization Hint to <code class="docutils literal notranslate"><span class="pre">Infrequent</span></code> can allow flexible shaped models to run on the Neural Engine, with iOS 17.4 or later.
+This option can be set when loading your model:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span>
-    <span class="s1">&#39;path/to/the/saved/model.mlmodel&#39;</span><span class="p">,</span>
-    <span class="n">optimization_hints</span><span class="o">=</span><span class="p">{</span> <span class="s1">&#39;reshapeFrequency&#39;</span><span class="p">:</span> <span class="n">ct</span><span class="o">.</span><span class="n">ReshapeFrequency</span><span class="o">.</span><span class="n">Frequent</span> <span class="p">}</span>
+    <span class="s1">&#39;path/to/the/saved/model.mlpackage&#39;</span><span class="p">,</span>
+    <span class="n">optimization_hints</span><span class="o">=</span><span class="p">{</span> <span class="s1">&#39;reshapeFrequency&#39;</span><span class="p">:</span> <span class="n">ct</span><span class="o">.</span><span class="n">ReshapeFrequency</span><span class="o">.</span><span class="n">Infrequent</span> <span class="p">}</span>
 <span class="p">)</span>
-<span class="n">p</span><span class="err">```</span>
-
-
-<span class="c1">## Enable Unbounded Ranges</span>
-
-<span class="err">```</span><span class="p">{</span><span class="n">warning</span><span class="p">}</span>
-<span class="n">Unbounded</span> <span class="n">ranges</span> <span class="n">are</span> <span class="ow">not</span> <span class="n">permitted</span> <span class="k">with</span> <span class="err">`</span><span class="n">RangeDim</span><span class="err">`</span> <span class="n">when</span> <span class="n">converting</span> <span class="n">to</span> <span class="n">an</span> <span class="n">ML</span> <span class="n">program</span><span class="p">;</span> <span class="k">if</span> <span class="n">no</span> <span class="n">upper</span><span class="o">-</span><span class="n">bound</span> <span class="ow">is</span> <span class="nb">set</span> <span class="p">(</span><span class="k">with</span> <span class="n">a</span> <span class="n">positive</span> <span class="n">number</span><span class="p">),</span> <span class="n">Core</span> <span class="n">ML</span> <span class="n">Tools</span> <span class="n">will</span> <span class="k">raise</span> <span class="n">an</span> <span class="n">exception</span><span class="o">.</span> <span class="n">Also</span><span class="p">,</span> <span class="k">if</span> <span class="n">you</span> <span class="n">are</span> <span class="ow">not</span> <span class="n">using</span> <span class="n">the</span> <span class="err">`</span><span class="n">inputs</span><span class="err">`</span> <span class="n">parameter</span> <span class="k">with</span> <span class="n">an</span> <span class="n">ML</span> <span class="n">program</span><span class="p">,</span> <span class="ow">and</span> <span class="n">there</span> <span class="n">are</span> <span class="n">undetermined</span> <span class="n">dimensions</span> <span class="ow">in</span> <span class="nb">input</span> <span class="n">shape</span> <span class="p">(</span><span class="k">for</span> <span class="n">example</span><span class="p">,</span> <span class="n">a</span> <span class="n">TensorFlow</span> <span class="k">with</span> <span class="err">`</span><span class="s2">&quot;None&quot;</span><span class="err">`</span> <span class="ow">in</span> <span class="n">the</span> <span class="nb">input</span> <span class="n">placeholder</span><span class="p">),</span> <span class="n">the</span> <span class="nb">input</span> <span class="n">will</span> <span class="n">be</span> <span class="n">sanitized</span> <span class="n">to</span> <span class="n">a</span> <span class="n">finite</span> <span class="n">number</span> <span class="p">(</span><span class="err">`</span><span class="n">default_size</span> <span class="o">+</span> <span class="mi">1</span><span class="err">`</span><span class="p">)</span> <span class="ow">and</span> <span class="n">Core</span> <span class="n">ML</span> <span class="n">Tools</span> <span class="n">will</span> <span class="k">raise</span> <span class="n">a</span> <span class="n">warning</span><span class="o">.</span>
-
 </pre></div>
+</div>
+</section>
+<section id="enable-unbounded-ranges">
+<h2>Enable Unbounded Ranges<a class="headerlink" href="#enable-unbounded-ranges" title="Link to this heading">#</a></h2>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Unbounded ranges are not permitted with <code class="docutils literal notranslate"><span class="pre">RangeDim</span></code> when converting to an ML program; if no upper-bound is set (with a positive number), Core ML Tools will raise an exception. Also, if you are not using the <code class="docutils literal notranslate"><span class="pre">inputs</span></code> parameter with an ML program, and there are undetermined dimensions in input shape (for example, a TensorFlow with <code class="docutils literal notranslate"><span class="pre">&quot;None&quot;</span></code> in the input placeholder), the input will be sanitized to a finite number (<code class="docutils literal notranslate"><span class="pre">default_size</span> <span class="pre">+</span> <span class="pre">1</span></code>) and Core ML Tools will raise a warning.</p>
 </div>
 <p>To enable an unbounded range for a neural network (<em>not</em> for an ML program), which would allow the input to be as large as needed, set the <code class="docutils literal notranslate"><span class="pre">upper_bound</span></code> with <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#rangedim"><code class="docutils literal notranslate"><span class="pre">RangeDim</span></code></a> to <code class="docutils literal notranslate"><span class="pre">-1</span></code> for no upper limit. However, the device’s memory constraints actually determine how large the input can be. Set a maximum range for <code class="docutils literal notranslate"><span class="pre">upper_bound</span></code> to ensure that the model doesn’t crash at runtime for your users.</p>
 </section>
@@ -683,7 +665,8 @@ document.write(`
             
             
               
-                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
   <div class="sidebar-secondary-item">
@@ -695,6 +678,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#select-from-predetermined-shapes">Select From Predetermined Shapes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#set-the-range-for-each-dimension">Set the Range for Each Dimension</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reshape-frequency-optimization-hint">Reshape Frequency Optimization Hint</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#enable-unbounded-ranges">Enable Unbounded Ranges</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#update-a-core-ml-model-to-use-flexible-input-shapes">Update a Core ML Model to Use Flexible Input Shapes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#api-reference">API Reference</a></li>
 </ul>
@@ -745,8 +729,8 @@ By Apple
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549"></script>
 
   <footer class="bd-footer">
   </footer>
