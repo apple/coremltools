@@ -1037,21 +1037,43 @@ def addmm(context, node):
     # addmm(Tensor x, Tensor mat1, Tensor mat2, Scalar beta=1, Scalar alpha=1)
     # output = beta * x + alpha * (mat1 @ mat2)
 
-    assert len(node.outputs) == 1
-    inputs = _get_inputs(context, node, expected=[3, 4, 5])
-    x = inputs[0]
-    mat1 = inputs[1]
-    mat2 = inputs[2]
-    beta = inputs[3] if len(inputs) > 3 else mb.const(val=1.0)
-    alpha = inputs[4] if len(inputs) > 4 else mb.const(val=1.0)
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, expected=(3, 4, 5))
+        nargs = len(inputs)
 
-    if beta.val != 1.0:
+        x = inputs[0]
+        mat1 = inputs[1]
+        mat2 = inputs[2]
+
+        beta = inputs[3] if nargs > 3 else 1.0
+        alpha = inputs[4] if nargs > 4 else 1.0
+
+        return x, mat1, mat2, beta, alpha
+
+    def _parse_keyword_args(context, node, beta, alpha) -> Tuple[Var]:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return beta, alpha
+
+        beta = _get_kwinputs(context, node, "beta", default=[beta])[0]
+        alpha = _get_kwinputs(context, node, "alpha", default=[alpha])[0]
+
+        return beta, alpha
+
+    x, mat1, mat2, beta, alpha = _parse_positional_args(context, node)
+    beta, alpha = _parse_keyword_args(context, node, beta, alpha)
+    if isinstance(beta, Var):
+        beta = beta.val
+    if isinstance(alpha, Var):
+        alpha = alpha.val
+
+    if beta != 1.0:
         # Apply beta scaling factor to the input.
         x = mb.mul(x=x, y=beta)
 
     matmul = mb.matmul(x=mat1, y=mat2)
 
-    if alpha.val != 1.0:
+    if alpha != 1.0:
         # Apply alpha scaling factor to the matrix multiplicaiton
         matmul = mb.mul(x=alpha, y=matmul)
 
@@ -1069,25 +1091,49 @@ def baddbmm(context, node):
     If batch1 is a (b×n×m) tensor, batch2 is a (b×m×p) tensor, then input must be broadcastable with a (b×n×p) tensor
     and out will be a (b×n×p) tensor.
     """
-    assert len(node.outputs) == 1
-    inputs = _get_inputs(context, node, expected=5)
-    bias, batch1, batch2, beta, alpha = inputs
 
-    if alpha.val != 1.0:
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, expected=(3, 4, 5))
+        nargs = len(inputs)
+
+        bias = inputs[0]
+        batch1 = inputs[1]
+        batch2 = inputs[2]
+
+        beta = inputs[3] if nargs > 3 else 1.0
+        alpha = inputs[4] if nargs > 4 else 1.0
+
+        return bias, batch1, batch2, beta, alpha
+
+    def _parse_keyword_args(context, node, beta, alpha) -> Tuple[Var]:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return beta, alpha
+
+        beta = _get_kwinputs(context, node, "beta", default=[beta])[0]
+        alpha = _get_kwinputs(context, node, "alpha", default=[alpha])[0]
+
+        return beta, alpha
+
+    bias, batch1, batch2, beta, alpha = _parse_positional_args(context, node)
+    beta, alpha = _parse_keyword_args(context, node, beta, alpha)
+    if isinstance(beta, Var):
+        beta = beta.val
+    if isinstance(alpha, Var):
+        alpha = alpha.val
+
+    if alpha != 1.0:
         # Apply scaling factor alpha to the input.
         batch1 = mb.mul(x=alpha, y=batch1, name=batch1.name + "_scaled")
         context.add(batch1)
 
     bmm_node = mb.matmul(x=batch1, y=batch2, name=node.name + "_bmm")
 
-    if beta.val != 0.0 or bias.shape != bmm_node.shape:
+    if beta != 0.0 or bias.shape != bmm_node.shape:
         context.add(bmm_node)
-        if beta.val != 1.0:
+        if beta != 1.0:
             # Torch supports integers, so convert to float before
             if beta.dtype != bias.dtype:
-                logger.warning(
-                    f"Casting the `beta`(value={beta.val}) argument of `baddbmm` op {node.name} "
-                    f"from {beta.dtype} to {bias.dtype} dtype")
                 beta = mb.cast(x=beta, dtype=types.builtin_to_string(bias.dtype))
             # Apply scaling factor beta to the bias.
             bias = mb.mul(x=beta, y=bias, name=bias.name + "_scaled")
@@ -1555,14 +1601,38 @@ def einsum(context, node):
     context.add(x)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["eye.m"])
 def eye(context, node):
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected={TorchFrontend.TORCHSCRIPT: [5, 6]},
+            min_expected={TorchFrontend.TORCHEXPORT: 1, TorchFrontend.EXECUTORCH: 1},
+        )
+        nargs = len(inputs)
+
+        n = inputs[0].val
+        if context.frontend == TorchFrontend.TORCHSCRIPT:
+            if nargs == 6:
+                m = inputs[1].val
+            else:
+                m = None
+        else:
+            if node.kind == "eye.m":
+                m = inputs[1].val
+            else:
+                m = None
+
+        return n, m
+
+    n, m = _parse_positional_args(context, node)
+
     # TODO: rdar://104400568 ([PyTorch] Use MIL ops to construct the eye matrix in order to avoid directly folding the input into a const)
-    inputs = _get_inputs(context, node, expected=[5, 6])
-    if len(inputs) == 5:
-        eye = _np.eye(inputs[0].val)
-    if len(inputs) == 6:
-        eye = _np.eye(inputs[0].val, inputs[1].val)
+    if m is None:
+        eye = _np.eye(n)
+    else:
+        eye = _np.eye(n, m)
     eye = mb.const(val=eye, name=node.name)
     context.add(eye)
 
@@ -6315,9 +6385,7 @@ def gather(context, node):
 
 @register_torch_op
 def index_select(context, node):
-    x = context[node.inputs[0]]
-    axis = context[node.inputs[1]]
-    indices = context[node.inputs[2]]
+    x, axis, indices = _get_inputs(context, node, expected=3)
     context.add(mb.gather(x=x, indices=indices, axis=axis, name=node.name))
 
 
@@ -7464,6 +7532,7 @@ def hann_window(context, node):
     sin_sq = mb.mul(x=sin, y=sin, name=node.name)
     context.add(sin_sq)
 
+
 @register_torch_op
 def mse_loss(context, node):
     inputs = _get_inputs(context, node, expected=3)
@@ -7492,19 +7561,50 @@ def mse_loss(context, node):
 
     context.add(res)
 
+
+@register_torch_op(torch_alias=["diagonal_copy"])
+def diagonal(context, node):
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, min_expected=1)
+        nargs = len(inputs)
+
+        x = inputs[0]
+        offset = inputs[1] if nargs > 1 else 0
+        dim1 = inputs[2] if nargs > 2 else 0
+        dim2 = inputs[3] if nargs > 3 else 1
+
+        return x, offset, dim1, dim2
+
+    def _parse_keyword_args(context, node, offset, dim1, dim2) -> Tuple[Var]:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return offset, dim1, dim2
+
+        offset = _get_kwinputs(context, node, "offset", default=[offset])[0]
+        dim1 = _get_kwinputs(context, node, "dim1", default=[dim1])[0]
+        dim2 = _get_kwinputs(context, node, "dim2", default=[dim2])[0]
+
+        return offset, dim1, dim2
+
+    x, offset, dim1, dim2 = _parse_positional_args(context, node)
+    offset, dim1, dim2 = _parse_keyword_args(context, node, offset, dim1, dim2)
+
+    if offset == 0 and dim1 == 0 and dim2 == 1:
+        diagonal = mb.band_part(x=x, lower=0, upper=0, name=node.name)
+    else:
+        raise NotImplementedError("Only offset == 0 and dim1 == 0 and dim2 == 1 handled")
+
+    context.add(diagonal)
+
+
 @register_torch_op
 def trace(context, node):
     inputs = _get_inputs(context, node, expected=1)
     x = inputs[0]
-    dims = mb.shape(x=x)
-    dim0 = value_at(dims, 0)
-    dim1 = value_at(dims, 1)
-    min_dim = mb.minimum(x=dim0, y=dim1)
-    indices = mb.range_1d(end=min_dim, start=0, step=1)
-    indices = mb.stack(values=[indices, indices], axis=1)
-    diagonal = mb.gather_nd(x=x, indices=indices)
+    diagonal = mb.band_part(x=x, lower=0, upper=0)
     trace = mb.reduce_sum(x=diagonal, name=node.name)
     context.add(trace)
+
 
 @register_torch_op
 def roll(context, node):
