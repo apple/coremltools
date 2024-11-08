@@ -10758,6 +10758,38 @@ class TestAddmm(TorchBaseTest):
         )
 
 
+class TestBaddbmm(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, shapes, beta",
+        itertools.product(
+            compute_units,
+            backends,
+            [(2, 4, 6, 8), (4, 12, 6, 16)],
+            [0.0, 0.5, 1.0, 2],
+        ),
+    )
+    def test_baddbmm(self, compute_unit, backend, shapes, beta):
+        B, N, M, P = shapes
+
+        # input shape: any shape broadcastable to (B, N, P)
+        # batch1 shape: (B, N, M)
+        # batch2 shape: (B, M, P)
+        # output shape : (B, N, P)
+        class BaddbmmModel(nn.Module):
+            def __init__(self):
+                super(BaddbmmModel, self).__init__()
+                self.batch1 = torch.randn(B, N, M)
+                self.batch2 = torch.randn(B, M, P)
+
+            def forward(self, x):
+                return torch.baddbmm(x, self.batch1, self.batch2, beta=beta)
+
+        model = BaddbmmModel()
+        # Makes it broadcastable to (B, N, P).
+        for input_shape in [(1, N, P), (B, 1, P), (1, P)]:
+            self.run_compare_torch(input_shape, model, backend=backend, compute_unit=compute_unit)
+
+
 class TestScatter(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, shapes_dims, minimum_deployment_target",
@@ -11094,38 +11126,6 @@ class TestDuplicateOutputTensors(TorchBaseTest):
             compute_unit=compute_unit,
             converter_input_type=converter_input_type,
         )
-
-
-class TestBaddbmm(TorchBaseTest):
-    @pytest.mark.parametrize(
-        "compute_unit, backend, shapes, beta",
-        itertools.product(
-            compute_units,
-            backends,
-            [(2, 4, 6, 8), (4, 12, 6, 16)],
-            [0.0, 0.5, 1.0, 2],
-        ),
-    )
-    def test_baddbmm(self, compute_unit, backend, shapes, beta):
-        B, N, M, P = shapes
-
-        # input shape: any shape broadcastable to (B, N, P)
-        # batch1 shape: (B, N, M)
-        # batch2 shape: (B, M, P)
-        # output shape : (B, N, P)
-        class BaddbmmModel(nn.Module):
-            def __init__(self):
-                super(BaddbmmModel, self).__init__()
-                self.batch1 = torch.randn(B, N, M)
-                self.batch2 = torch.randn(B, M, P)
-
-            def forward(self, x):
-                return torch.baddbmm(x, self.batch1, self.batch2, beta=beta)
-
-        model = BaddbmmModel()
-        # Makes it broadcastable to (B, N, P).
-        for input_shape in [(1, N, P), (B, 1, P), (1, P)]:
-            self.run_compare_torch(input_shape, model, backend=backend, compute_unit=compute_unit)
 
 
 class TestGlu(TorchBaseTest):
