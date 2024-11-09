@@ -78,6 +78,10 @@ TORCH_STRING_ARGS = {
 
     # norm
     "fro",
+
+    # searchsorted side
+    "left",
+    "right",
 }
 
 
@@ -239,6 +243,7 @@ def _get_bindings(context, alist) -> List[Var]:
             elif i in TORCH_STRING_ARGS:
                 results.append(i)
             else:
+                results.append(i)
                 logger.warning(
                     f"Binding {i} is neither a name of exisitng var in context, "
                     "nor a torch string argument."
@@ -8237,7 +8242,63 @@ def linalg_inv(context, node):
 
 
 @register_torch_op
+def isnan(context, node):
+    x = _get_inputs(context, node, expected=1)[0]
+    # Find indices of NaN based on "NaN is never equal to itself".
+    nan_indices = mb.not_equal(x=x, y=x, name=node.name)
+    context.add(nan_indices)
+
+
+@register_torch_op
 def nan_to_num(context, node):
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected={TorchFrontend.TORCHSCRIPT: 4},
+            min_expected={TorchFrontend.TORCHEXPORT: 1, TorchFrontend.EXECUTORCH: 1},
+        )
+        nargs = len(inputs)
+
+        x = inputs[0]
+        nan = inputs[1] if nargs > 1 else None
+        posinf = inputs[2] if nargs > 2 else None
+        neginf = inputs[3] if nargs > 3 else None
+
+        return x, nan, posinf, neginf
+
+    def _parse_keyword_args(context, node, nan, posinf, neginf) -> Tuple[Var]:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return nan, posinf, neginf
+
+        nan = _get_kwinputs(context, node, "nan", default=[nan])[0]
+        posinf = _get_kwinputs(context, node, "posinf", default=[posinf])[0]
+        neginf = _get_kwinputs(context, node, "neginf", default=[neginf])[0]
+
+        return nan, posinf, neginf
+
+    def _translate_torch_args(x, nan, posinf, neginf) -> Tuple[Var]:
+        if nan is None:
+            nan = 0.0
+        else:
+            if isinstance(nan, Var):
+                nan = nan.val
+
+        if posinf is None:
+            posinf = types.type_mapping.builtin_to_range(x.dtype).high
+        else:
+            if isinstance(posinf, Var):
+                posinf = posinf.val
+
+        if neginf is None:
+            neginf = types.type_mapping.builtin_to_range(x.dtype).low
+        else:
+            if isinstance(neginf, Var):
+                neginf = neginf.val
+
+        return nan, posinf, neginf
+
     def _replace_values_by_bool_mask(data: Var, mask: Var, new_value: Union[int, float]):
         """Replace the position in data where mask has True element to new_value."""
         indices = mb.non_zero(x=mb.cast(x=mask, dtype="int32"))
@@ -8250,15 +8311,9 @@ def nan_to_num(context, node):
         # Replace all nan to the corresponding values.
         return mb.scatter_nd(data=data, indices=indices, updates=replacement_values, mode="update")
 
-    inputs = _get_inputs(context, node, expected=4)
-    x = inputs[0]
-    nan = inputs[1].val if inputs[1] is not None else 0.0
-    posinf = inputs[2].val if inputs[2] is not None else None
-    neginf = inputs[3].val if inputs[3] is not None else None
-    if posinf is None:
-        posinf = types.type_mapping.builtin_to_range(x.dtype).high
-    if neginf is None:
-        neginf = types.type_mapping.builtin_to_range(x.dtype).low
+    x, nan, posinf, neginf = _parse_positional_args(context, node)
+    nan, posinf, neginf = _parse_keyword_args(context, node, nan, posinf, neginf)
+    nan, posinf, neginf = _translate_torch_args(x, nan, posinf, neginf)
 
     if x.val is not None:
         res = mb.const(val=np.nan_to_num(x.val, nan=nan, posinf=posinf, neginf=neginf))
@@ -8280,9 +8335,10 @@ def nan_to_num(context, node):
 
 @register_torch_op
 def cumprod(context, node):
-    inputs = _get_inputs(context, node, expected=3)
+    inputs = _get_inputs(context, node, min_expected=2)
     x = inputs[0]
     dim = inputs[1].val
+    # dtype may be the 3rd input, but we will not use it
 
     size = x.shape[dim]
     if is_symbolic(size):
@@ -8299,16 +8355,52 @@ def cumprod(context, node):
 
 @register_torch_op
 def searchsorted(context, node):
-    inputs = _get_inputs(context, node, expected=6)
-    sorted_sequence = inputs[0]
-    values = inputs[1]
-    side = inputs[4].val if inputs[4] is not None else False
-    if side is not None:
-        # The `side` parameter is preferred than `right` in torch.
-        right = side == "right"
-    else:
-        # If side is not specified, use the `right` parameter to determine.
-        right = inputs[3].val if inputs[3] is not None else False
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected={TorchFrontend.TORCHSCRIPT: 6},
+            min_expected={TorchFrontend.TORCHEXPORT: 2, TorchFrontend.EXECUTORCH: 2},
+        )
+        nargs = len(inputs)
+
+        sorted_sequence = inputs[0]
+        values = inputs[1]
+        # we will not use `out_int32`
+        right = inputs[3] if nargs > 3 else False
+        side = inputs[4] if nargs > 4 else None
+        # we will not use `sorter`
+
+        return sorted_sequence, values, right, side
+
+    def _parse_keyword_args(context, node, right, side) -> Tuple[Var]:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return right, side
+
+        right = _get_kwinputs(context, node, "right", default=[right])[0]
+        side = _get_kwinputs(context, node, "side", default=[side])[0]
+
+        return right, side
+
+    def _translate_torch_args(right, side) -> Tuple[Var]:
+        if side is not None:
+            if isinstance(side, Var):
+                side = side.val
+            # The `side` parameter is preferred than `right` in torch.
+            right = side == "right"
+        else:
+            # If side is not specified, use the `right` parameter to determine.
+            if right is None:
+                right = False
+            else:
+                if isinstance(right, Var):
+                    right = right.val
+        return right
+
+    sorted_sequence, values, right, side = _parse_positional_args(context, node)
+    right, side = _parse_keyword_args(context, node, right, side)
+    right = _translate_torch_args(right, side)
 
     if sorted_sequence.rank != values.rank:
         raise NotImplementedError(
@@ -8338,9 +8430,28 @@ def searchsorted(context, node):
 
 @register_torch_op
 def one_hot(context, node):
-    inputs = _get_inputs(context, node, expected=2)
-    labels = inputs[0]
-    num_classes = inputs[1].val
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, expected=(1, 2))
+        nargs = len(inputs)
+
+        labels = inputs[0]
+        num_classes = inputs[1] if nargs > 1 else -1
+
+        return labels, num_classes
+
+    def _parse_keyword_args(context, node, num_classes) -> Var:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return num_classes
+
+        num_classes = _get_kwinputs(context, node, "num_classes", default=[num_classes])[0]
+
+        return num_classes
+
+    labels, num_classes = _parse_positional_args(context, node)
+    num_classes = _parse_keyword_args(context, node, num_classes)
+    if isinstance(num_classes, Var):
+        num_classes = num_classes.val
 
     res = mb.one_hot(indices=labels, one_hot_vector_size=num_classes, name=node.name)
     context.add(res)

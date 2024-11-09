@@ -13602,10 +13602,12 @@ class TestMultinomial(TorchBaseTest):
 
 class TestNanToNum(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, nan, posinf, neginf",
-        itertools.product(compute_units, backends, [None, 1.0], [None, 1000.0], [None, -1000.0]),
+        "compute_unit, backend, frontend, nan, posinf, neginf",
+        itertools.product(
+            compute_units, backends, frontends, [None, 1.0], [None, 1000.0], [None, -1000.0]
+        ),
     )
-    def test_nan_to_num_const(self, compute_unit, backend, nan, posinf, neginf):
+    def test_nan_to_num_const(self, compute_unit, backend, frontend, nan, posinf, neginf):
         class TestModel(nn.Module):
             def forward(self, x):
                 input_data = torch.tensor([float("nan"), float("inf"), -float("inf"), 3.14])
@@ -13614,15 +13616,16 @@ class TestNanToNum(TorchBaseTest):
         self.run_compare_torch(
             (2, 3),
             TestModel(),
+            frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, nan, posinf, neginf",
-        itertools.product(compute_units, backends, [None, 1.0], [1000.0], [-1000.0]),
+        "compute_unit, backend, frontend, nan, posinf, neginf",
+        itertools.product(compute_units, backends, frontends, [None, 1.0], [1000.0], [-1000.0]),
     )
-    def test_nan_to_num_non_const(self, compute_unit, backend, nan, posinf, neginf):
+    def test_nan_to_num_non_const(self, compute_unit, backend, frontend, nan, posinf, neginf):
         class TestModel(nn.Module):
             def forward(self, x):
                 return torch.nan_to_num(x, nan=nan, posinf=posinf, neginf=neginf)
@@ -13631,6 +13634,7 @@ class TestNanToNum(TorchBaseTest):
         self.run_compare_torch(
             input_data,
             TestModel(),
+            frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
             input_as_shape=False,
@@ -13639,10 +13643,13 @@ class TestNanToNum(TorchBaseTest):
 
 class TestCumprod(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, axis",
-        itertools.product(compute_units, backends, [0, 1, 2, -1]),
+        "compute_unit, backend, frontend, axis",
+        itertools.product(compute_units, backends, frontends, [0, 1, 2, -1]),
     )
-    def test_cumprod(self, compute_unit, backend, axis):
+    def test_cumprod(self, compute_unit, backend, frontend, axis):
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("torch._ops.aten.cumprod.default is not Aten Canonical")
+
         class TestModel(nn.Module):
             def forward(self, x):
                 return torch.cumprod(x, axis)
@@ -13650,6 +13657,7 @@ class TestCumprod(TorchBaseTest):
         self.run_compare_torch(
             (2, 3, 4),
             TestModel(),
+            frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
         )
@@ -13657,11 +13665,14 @@ class TestCumprod(TorchBaseTest):
 
 class TestSearchsorted(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, side",
-        itertools.product(compute_units, backends, [None, "left", "right"]),
+        "compute_unit, backend, frontend, side",
+        itertools.product(compute_units, backends, frontends, [None, "left", "right"]),
     )
-    def test_searchsorted_basic(self, compute_unit, backend, side):
+    def test_searchsorted_basic(self, compute_unit, backend, frontend, side):
         """This is the test case same as PyTorch doc for `torch.searchsorted`."""
+
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("torch._ops.aten.searchsorted.Tensor is not Aten Canonical")
 
         class TestModel(nn.Module):
             def forward(self, input_data, values):
@@ -13672,16 +13683,22 @@ class TestSearchsorted(TorchBaseTest):
         self.run_compare_torch(
             (input_data, values),
             TestModel(),
+            frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
             input_as_shape=False,
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, values_shape, side",
-        itertools.product(compute_units, backends, [(2, 1), (2, 10)], [None, "left", "right"]),
+        "compute_unit, backend, frontend, values_shape, side",
+        itertools.product(
+            compute_units, backends, frontends, [(2, 1), (2, 10)], [None, "left", "right"]
+        ),
     )
-    def test_searchsorted_stress(self, compute_unit, backend, values_shape, side):
+    def test_searchsorted_stress(self, compute_unit, backend, frontend, values_shape, side):
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("torch._ops.aten.searchsorted.Tensor is not Aten Canonical")
+
         class TestModel(nn.Module):
             def forward(self, input_data, values):
                 return torch.searchsorted(input_data, values, side=side)
@@ -13691,6 +13708,7 @@ class TestSearchsorted(TorchBaseTest):
         self.run_compare_torch(
             (input_data, values),
             TestModel(),
+            frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
             input_as_shape=False,
@@ -13699,16 +13717,17 @@ class TestSearchsorted(TorchBaseTest):
 
 class TestOneHot(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, num_classes, rank",
-        itertools.product(compute_units, backends, range(1, 5), range(1, 5)),
+        "compute_unit, backend, frontend, num_classes, rank",
+        itertools.product(compute_units, backends, frontends, range(1, 5), range(1, 5)),
     )
-    def test_one_hot(self, compute_unit, backend, num_classes, rank):
+    def test_one_hot(self, compute_unit, backend, frontend, num_classes, rank):
         model = ModuleWrapper(function=torch.nn.functional.one_hot, kwargs={"num_classes": num_classes}).eval()
         shape = torch.randint(1, 10, (rank,)).tolist()
         labels = torch.randint(0, num_classes, shape)
         self.run_compare_torch(
             torch.LongTensor(labels),
             model,
+            frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
             input_as_shape=False,
