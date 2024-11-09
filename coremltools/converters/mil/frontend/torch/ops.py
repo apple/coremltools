@@ -8236,24 +8236,20 @@ def linalg_inv(context, node):
     context.add(mb.const(val=np.linalg.inv(x.val), name=node.name))
 
 
-def _replace_values_by_bool_mask(data: Var, mask: Var, new_value: Union[int, float]):
-    """Replace the position in data where mask has True element to new_value."""
-    indices = mb.non_zero(x=mb.cast(x=mask, dtype="int32"))
-    # If there is no replacement needed, just use identity op.
-    if 0 in indices.shape:
-        return mb.identity(x=data)
-
-    # Expand the replacement value to the compatible shape for scatter_nd.
-    replacement_values = mb.expand_dims(x=new_value, axes=[0])
-    reps = mb.expand_dims(x=value_at(mb.shape(x=indices), 0), axes=[0])
-    replacement_values = mb.tile(x=replacement_values, reps=reps)
-
-    # Replace all nan to the corresponding values.
-    return mb.scatter_nd(data=data, indices=indices, updates=replacement_values, mode="update")
-
-
 @register_torch_op
 def nan_to_num(context, node):
+    def _replace_values_by_bool_mask(data: Var, mask: Var, new_value: Union[int, float]):
+        """Replace the position in data where mask has True element to new_value."""
+        indices = mb.non_zero(x=mb.cast(x=mask, dtype="int32"))
+
+        # Expand the replacement value to the compatible shape for scatter_nd.
+        replacement_values = mb.expand_dims(x=new_value, axes=[0])
+        reps = mb.expand_dims(x=value_at(mb.shape(x=indices), 0), axes=[0])
+        replacement_values = mb.tile(x=replacement_values, reps=reps)
+
+        # Replace all nan to the corresponding values.
+        return mb.scatter_nd(data=data, indices=indices, updates=replacement_values, mode="update")
+
     inputs = _get_inputs(context, node, expected=4)
     x = inputs[0]
     nan = inputs[1].val if inputs[1] is not None else 0.0
