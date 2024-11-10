@@ -23,3 +23,7 @@ cmake_install.cmake
 .cache/
 .idea/
 *.log
+
+# pixi environments
+.pixi
+*.egg-info
