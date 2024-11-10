@@ -47,4 +47,17 @@ coremltools = { path = ".", editable = true }
 
 [tool.pixi.tasks]
 
-[tool.pixi.feature.py37]
+[tool.pixi.feature.py37.dependencies]
+python = "3.7.*"
+
+[tool.pixi.feature.py38.dependencies]
+python = "3.8.*"
+
+[tool.pixi.feature.py39.dependencies]
+python = "3.9.*"
+
+[tool.pixi.feature.py310.dependencies]
+python = "3.10.*"
+
+[tool.pixi.feature.py311.dependencies]
+python = "3.11.*"
