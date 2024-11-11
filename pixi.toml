@@ -8,7 +8,6 @@ platforms = ["osx-arm64", "osx-64", "linux-64"]
 #################################
 
 ### Python features ###
-
 [feature.py39.dependencies]
 python = "3.9.*"
 
@@ -21,7 +20,9 @@ python = "3.11.*"
 [feature.py312.dependencies]
 python = "3.12.*"
 
-### Build features ###
+# ------------------ #
+#    Build features  #
+# ------------------ #
 
 [feature.build.dependencies]
 cmake = ">=3.30.5,<4"
@@ -37,7 +38,9 @@ cattrs = ">=24.1.2, <25"
 pyaml = ">=24.9.0, <25"
 numpy = "==2.0.0"
 
-### Test features ###
+# ------------------ #
+#    Test features   #
+# ------------------ #
 
 # Dependencies for all platforms and python versions
 [feature.test.pypi-dependencies]
@@ -64,6 +67,7 @@ filelock = "==3.6.0"
 pytest-flake8 = "==1.0.7"
 pytest-xdist = "==2.5.0"
 pytest-mock = "==3.8.2"
+scikit-learn = "==1.5.1"
 
 # Dependencies for osx-arm64 and all python versions
 [feature.test.target.osx-arm64.pypi-dependencies]
@@ -73,7 +77,8 @@ torchsr = "==1.0.4"
 torchvision = "==0.19.0"
 torchaudio = "==2.4.0"
 torch = "==2.4.0"
-scipy = ">=1.10.1, <2"
+scipy = ">=1.13.1, <2"
+numpy = "==2.0.0"
 
 # Dependencies for osx-64 and all python versions
 [feature.test.target.osx-64.pypi-dependencies]
@@ -82,6 +87,7 @@ xgboost = "==1.4.2"
 torchvision = "==0.17.0"
 torchaudio = "==2.2.0"
 torch = "==2.2.0"
+numpy = ">1.18.4"
 
 # Dependencies for linux-64 and all python versions
 [feature.test.target.linux-64.pypi-dependencies]
@@ -90,17 +96,41 @@ xgboost = "==1.4.2"
 torchvision = "==0.17.0"
 torchaudio = "==2.2.0"
 torch = "==2.2.0"
+numpy = ">1.18.4"
 
-# Dependencies for all platforms and python 3.9
-[feature.test-py39-specific.pypi-dependencies]
+# Dependencies for osx-64 and python 3.9
+[feature.test-py39-specific.target.osx-64.pypi-dependencies]
+libsvm = "*"
+scipy = "==1.8.1"
 
-# Dependencies for all platforms and python 3.10
-[feature.test-py310-specific.pypi-dependencies]
+# Dependencies for linux-64 and python 3.9
+[feature.test-py39-specific.target.linux-64.pypi-dependencies]
+libsvm = "*"
+scipy = "==1.8.1"
 
-# Dependencies for all platforms and python 3.11
-[feature.test-py311-specific.pypi-dependencies]
+# Dependencies for osx-64 and python 3.10
+[feature.test-py310-specific.target.osx-64.pypi-dependencies]
+libsvm = "*"
+scipy = "==1.8.1"
 
-### TF2 Test features ###
+# Dependencies for linux-64 and python 3.10
+[feature.test-py310-specific.target.linux-64.pypi-dependencies]
+libsvm = "*"
+scipy = "==1.8.1"
+
+# Dependencies for osx-64 and python 3.11
+[feature.test-py311-specific.target.osx-64.pypi-dependencies]
+libsvm = "*"
+scipy = "==1.9.2"
+
+# Dependencies for linux-64 and python 3.11
+[feature.test-py311-specific.target.linux-64.pypi-dependencies]
+libsvm = "*"
+scipy = "==1.9.2"
+
+# ------------------ #
+#  TF2 Test features #
+# ------------------ #
 
 # TF2 Dependencies for all platforms and all python versions
 [feature.test-tf2.pypi-dependencies]
@@ -126,7 +156,9 @@ keras = "==2.12.0"
 tensorflow = "==2.12.0"
 tensorflow-estimator = "==2.12.0"
 
-### Lint features ###
+# ------------------ #
+#    Lint features   #
+# ------------------ #
 
 [feature.lint.dependencies]
 python = "3.10.*"
@@ -136,7 +168,9 @@ flake8 = ">=7.1.1, <8"
 pylint = ">=3.3.1, <4"
 yapf = ">=0.40.2, <0.41"
 
-### Docs features ###
+# ------------------ #
+#    Docs features   #
+# ------------------ #
 
 [feature.docs.dependencies]
 python = "3.10.*"
@@ -190,21 +224,21 @@ clean = { depends-on = ["clean-guide", "clean-api-docs"] }
 build = { depends-on = [
     "build-guide",
     "build-api-docs",
-] } # Make this depend on coremltools build
+] } # TODO: Make this depend on coremltools build
 
 ### Environments ###
 
 [environments]
 py39-build = ["py39", "build"]
-py39-test = ["py39", "test"]
+py39-test = ["py39", "test", "test-py39-specific"]
 py39-test-tf2 = ["py39", "test-tf2"]
 
 py310-build = ["py310", "build"]
-py310-test = ["py310", "test"]
+py310-test = ["py310", "test", "test-py310-specific"]
 py310-test-tf2 = ["py310", "test-tf2"]
 
 py311-build = ["py311", "build"]
-py311-test = ["py311", "test"]
+py311-test = ["py311", "test", "test-py311-specific"]
 py311-test-tf2 = ["py311", "test-tf2"]
 
 py312-build = ["py312", "build"]
