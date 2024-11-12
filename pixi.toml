@@ -7,7 +7,10 @@ platforms = ["osx-arm64", "osx-64", "linux-64"]
 ###        Dependencies       ###
 #################################
 
-### Python features ###
+# ------------------ #
+#   Python features  #
+# ------------------ #
+
 [feature.py39.dependencies]
 python = "3.9.*"
 
@@ -211,6 +214,33 @@ pillow = ">=11.0.0, <12"
 ###           Tasks           ###
 #################################
 
+# ------------------ #
+#     Build Tasks    #
+# ------------------ #
+[feature.build.tasks]
+build = "echo 'Building coremltools'"
+# build = "something"
+# clean
+
+# ------------------ #
+#      Test Tasks    #
+# ------------------ #
+[feature.test.tasks]
+# test = "something"
+
+# ------------------ #
+#      Lint Tasks    #
+# ------------------ #
+[feature.lint.tasks]
+# style = "something", runs yapf
+# check-style = "something", runs yapf
+# lint = "something", depends pylint and flake8
+# _flake
+# _pylint
+
+# ------------------ #
+#      Docs Tasks    #
+# ------------------ #
 [feature.docs.tasks]
 clean-guide = { cmd = "sphinx-build -M clean . _build", cwd = "docs-guides" }
 build-guide = { cmd = "sphinx-build -M html . _build", depends-on = [
@@ -224,9 +254,11 @@ clean = { depends-on = ["clean-guide", "clean-api-docs"] }
 build = { depends-on = [
     "build-guide",
     "build-api-docs",
-] } # TODO: Make this depend on coremltools build
+] } # TODO: Make this depend on coremltools build?
 
-### Environments ###
+#################################
+###        Environments       ###
+#################################
 
 [environments]
 py39-build = ["py39", "build"]
