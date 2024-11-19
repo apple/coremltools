@@ -38,18 +38,15 @@ TYPE_TO_BYTE_SIZE_FN: A dictionary with field types and a size computing
 TYPE_TO_SERIALIZE_METHOD: A dictionary with field types and serialization
   function.
 FIELD_TYPE_TO_WIRE_TYPE: A dictionary with field typed and their
-  coresponding wire types.
+  corresponding wire types.
 TYPE_TO_DESERIALIZE_METHOD: A dictionary with field types and deserialization
   function.
 """
 
 __author__ = 'robinson@google.com (Will Robinson)'
 
+import ctypes
 import numbers
-import six
-
-if six.PY3:
-  long = int
 
 from google.protobuf.internal import api_implementation
 from google.protobuf.internal import decoder
@@ -58,6 +55,26 @@ from google.protobuf.internal import wire_format
 from google.protobuf import descriptor
 
 _FieldDescriptor = descriptor.FieldDescriptor
+
+
+def TruncateToFourByteFloat(original):
+  return ctypes.c_float(original).value
+
+
+def ToShortestFloat(original):
+  """Returns the shortest float that has same value in wire."""
+  # All 4 byte floats have between 6 and 9 significant digits, so we
+  # start with 6 as the lower bound.
+  # It has to be iterative because use '.9g' directly can not get rid
+  # of the noises for most values. For example if set a float_field=0.9
+  # use '.9g' will print 0.899999976.
+  precision = 6
+  rounded = float('{0:.{1}g}'.format(original, precision))
+  while TruncateToFourByteFloat(rounded) != original:
+    precision += 1
+    rounded = float('{0:.{1}g}'.format(original, precision))
+  return rounded
+
 
 def SupportsOpenEnums(field_descriptor):
   return field_descriptor.containing_type.syntax == "proto3"
@@ -107,13 +124,18 @@ class TypeChecker(object):
       message = ('%.1024r has type %s, but expected one of: %s' %
                  (proposed_value, type(proposed_value), self._acceptable_types))
       raise TypeError(message)
+    # Some field types(float, double and bool) accept other types, must
+    # convert to the correct type in such cases.
+    if self._acceptable_types:
+      if self._acceptable_types[0] in (bool, float):
+        return self._acceptable_types[0](proposed_value)
     return proposed_value
 
 
 class TypeCheckerWithDefault(TypeChecker):
 
   def __init__(self, default_value, *acceptable_types):
-    TypeChecker.__init__(self, acceptable_types)
+    TypeChecker.__init__(self, *acceptable_types)
     self._default_value = default_value
 
   def DefaultValue(self):
@@ -129,14 +151,13 @@ class IntValueChecker(object):
   def CheckValue(self, proposed_value):
     if not isinstance(proposed_value, numbers.Integral):
       message = ('%.1024r has type %s, but expected one of: %s' %
-                 (proposed_value, type(proposed_value), six.integer_types))
+                 (proposed_value, type(proposed_value), (int,)))
       raise TypeError(message)
     if not self._MIN <= int(proposed_value) <= self._MAX:
       raise ValueError('Value out of range: %d' % proposed_value)
-    # We force 32-bit values to int and 64-bit values to long to make
-    # alternate implementations where the distinction is more significant
-    # (e.g. the C++ implementation) simpler.
-    proposed_value = self._TYPE(proposed_value)
+    # We force all values to int to make alternate implementations where the
+    # distinction is more significant (e.g. the C++ implementation) simpler.
+    proposed_value = int(proposed_value)
     return proposed_value
 
   def DefaultValue(self):
@@ -153,7 +174,7 @@ class EnumValueChecker(object):
   def CheckValue(self, proposed_value):
     if not isinstance(proposed_value, numbers.Integral):
       message = ('%.1024r has type %s, but expected one of: %s' %
-                 (proposed_value, type(proposed_value), six.integer_types))
+                 (proposed_value, type(proposed_value), (int,)))
       raise TypeError(message)
     if int(proposed_value) not in self._enum_type.values_by_number:
       raise ValueError('Unknown enum value: %d' % proposed_value)
@@ -171,9 +192,9 @@ class UnicodeValueChecker(object):
   """
 
   def CheckValue(self, proposed_value):
-    if not isinstance(proposed_value, (bytes, six.text_type)):
+    if not isinstance(proposed_value, (bytes, str)):
       message = ('%.1024r has type %s, but expected one of: %s' %
-                 (proposed_value, type(proposed_value), (bytes, six.text_type)))
+                 (proposed_value, type(proposed_value), (bytes, str)))
       raise TypeError(message)
 
     # If the value is of type 'bytes' make sure that it is valid UTF-8 data.
@@ -185,6 +206,14 @@ class UnicodeValueChecker(object):
                          'encoding. Non-UTF-8 strings must be converted to '
                          'unicode objects before being added.' %
                          (proposed_value))
+    else:
+      try:
+        proposed_value.encode('utf8')
+      except UnicodeEncodeError:
+        raise ValueError('%.1024r isn\'t a valid unicode string and '
+                         'can\'t be encoded in UTF-8.'%
+                         (proposed_value))
+
     return proposed_value
 
   def DefaultValue(self):
@@ -196,25 +225,54 @@ class Int32ValueChecker(IntValueChecker):
   # efficient.
   _MIN = -2147483648
   _MAX = 2147483647
-  _TYPE = int
 
 
 class Uint32ValueChecker(IntValueChecker):
   _MIN = 0
   _MAX = (1 << 32) - 1
-  _TYPE = int
 
 
 class Int64ValueChecker(IntValueChecker):
   _MIN = -(1 << 63)
   _MAX = (1 << 63) - 1
-  _TYPE = long
 
 
 class Uint64ValueChecker(IntValueChecker):
   _MIN = 0
   _MAX = (1 << 64) - 1
-  _TYPE = long
+
+
+# The max 4 bytes float is about 3.4028234663852886e+38
+_FLOAT_MAX = float.fromhex('0x1.fffffep+127')
+_FLOAT_MIN = -_FLOAT_MAX
+_INF = float('inf')
+_NEG_INF = float('-inf')
+
+
+class FloatValueChecker(object):
+
+  """Checker used for float fields.  Performs type-check and range check.
+
+  Values exceeding a 32-bit float will be converted to inf/-inf.
+  """
+
+  def CheckValue(self, proposed_value):
+    """Check and convert proposed_value to float."""
+    if not isinstance(proposed_value, numbers.Real):
+      message = ('%.1024r has type %s, but expected one of: numbers.Real' %
+                 (proposed_value, type(proposed_value)))
+      raise TypeError(message)
+    converted_value = float(proposed_value)
+    # This inf rounding matches the C++ proto SafeDoubleToFloat logic.
+    if converted_value > _FLOAT_MAX:
+      return _INF
+    if converted_value < _FLOAT_MIN:
+      return _NEG_INF
+
+    return TruncateToFourByteFloat(converted_value)
+
+  def DefaultValue(self):
+    return 0.0
 
 
 # Type-checkers for all scalar CPPTYPEs.
@@ -224,9 +282,8 @@ _VALUE_CHECKERS = {
     _FieldDescriptor.CPPTYPE_UINT32: Uint32ValueChecker(),
     _FieldDescriptor.CPPTYPE_UINT64: Uint64ValueChecker(),
     _FieldDescriptor.CPPTYPE_DOUBLE: TypeCheckerWithDefault(
-        0.0, numbers.Real),
-    _FieldDescriptor.CPPTYPE_FLOAT: TypeCheckerWithDefault(
-        0.0, numbers.Real),
+        0.0, float, numbers.Real),
+    _FieldDescriptor.CPPTYPE_FLOAT: FloatValueChecker(),
     _FieldDescriptor.CPPTYPE_BOOL: TypeCheckerWithDefault(
         False, bool, numbers.Integral),
     _FieldDescriptor.CPPTYPE_STRING: TypeCheckerWithDefault(b'', bytes),

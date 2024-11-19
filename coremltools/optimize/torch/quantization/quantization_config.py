@@ -102,6 +102,16 @@ _default_quantization_options = {
 
 # Backends only support 4 and 8 bit quantization
 _SUPPORTED_N_BITS = [4, 8, 32]
+_SUPPORTED_WEIGHT_DTYPE = [
+    "qint4",
+    "quint4",
+    "qint8",
+    "quint8",
+    "float32",
+    _torch.qint8,
+    _torch.quint8,
+    _torch.float32,
+]
 
 
 @_define
@@ -236,12 +246,12 @@ class ModuleLinearQuantizerConfig(_ModuleOptimizationConfig):
     )
 
     def __attrs_post_init__(self):
+        if self.weight_dtype not in _SUPPORTED_WEIGHT_DTYPE:
+            raise ValueError(
+                f"weight_dtype must be one of {_SUPPORTED_WEIGHT_DTYPE} not {self.weight_dtype}"
+            )
         self.weight_n_bits = _get_n_bits_from_dtype(self.weight_dtype)
         self.weight_dtype = _maybe_convert_str_to_dtype(self.weight_dtype)
-        if self.weight_dtype not in [_torch.qint8, _torch.quint8, _torch.float32]:
-            raise ValueError(
-                f"weight_dtype must be one of (_torch.qint8, _torch.quint8, _torch.float32) not {self.weight_dtype}"
-            )
 
     @milestones.validator
     def _check_milestones(self, attribute, value):

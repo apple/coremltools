@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-#
 # Protocol Buffers - Google's data interchange format
 # Copyright 2008 Google Inc.  All rights reserved.
 # https://developers.google.com/protocol-buffers/
@@ -35,10 +33,7 @@
 __author__ = 'petar@google.com (Petar Petrov)'
 
 
-try:
-  import unittest2 as unittest  #PY26
-except ImportError:
-  import unittest
+import unittest
 
 from google.protobuf import unittest_pb2
 from google.protobuf import service_reflection
@@ -82,6 +77,10 @@ class FooUnitTest(unittest.TestCase):
     service_descriptor = unittest_pb2.TestService.GetDescriptor()
     srvc.CallMethod(service_descriptor.methods[1], rpc_controller,
                     unittest_pb2.BarRequest(), MyCallback)
+    self.assertTrue(srvc.GetRequestClass(service_descriptor.methods[1]) is
+                    unittest_pb2.BarRequest)
+    self.assertTrue(srvc.GetResponseClass(service_descriptor.methods[1]) is
+                    unittest_pb2.BarResponse)
     self.assertEqual('Method Bar not implemented.',
                      rpc_controller.failure_message)
     self.assertEqual(None, self.callback_response)

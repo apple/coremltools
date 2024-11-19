@@ -1,4 +1,6 @@
-boto3==1.14.8
+boto3==1.14.8; python_version < '3.12'
+boto3==1.24.22; python_version >= '3.12'
+
 configparser
 future
 
@@ -32,6 +34,8 @@ gast==0.4.0
 # torch 2.3 dropped support for x86 macOS
 torch==2.2.0; platform_machine != "arm64"
 torch==2.4.0; platform_machine == "arm64"
+# TODO (https://github.com/pytorch/executorch/issues/6639)
+# upgrade to executorch 0.4 and torch 2.5, after executorch adds numpy 2.0 support
 executorch==0.3.0; platform_machine == "arm64" and python_version >= '3.10' and python_version <= '3.11'
 torchaudio==2.2.0; platform_machine != "arm64"
 torchaudio==2.4.0; platform_machine == "arm64"

@@ -3,7 +3,6 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-
 import sys
 
 import numpy as np
@@ -76,7 +75,9 @@ def get_converted_model(
     return coreml_model
 
 
-def verify_model_outputs(pytorch_model, coreml_model, input_value):
+def verify_model_outputs(
+    pytorch_model, coreml_model, input_value, snr_thresh=20.0, psnr_thresh=23.0
+):
     """
     This utility functions does the following checks:
     (1) Verify the output of the coreml model has the same shape of the PyTorch model
@@ -94,11 +95,36 @@ def verify_model_outputs(pytorch_model, coreml_model, input_value):
 
     # Validate that the coreml model produces correct outputs
     pytorch_model.eval()
-    ref_output_dict = pytorch_model(input_value)
+    pytorch_output = pytorch_model(input_value)
+    ref_output = [pytorch_output.detach().cpu().numpy()]
+    mlmodel_output_names = [str(x) for x in coreml_model.output_description]
+    ref_output_dict = dict(zip(mlmodel_output_names, ref_output))
+
     coreml_input_value = {"input_1": input_value.detach().numpy()}
     output_dict = coreml_model.predict(coreml_input_value)
-    for k, v in output_dict.items():
-        np.testing.assert_allclose(v, output_dict[k])
+
+    assert len(output_dict) == len(ref_output_dict)
+
+    for key in output_dict:
+        coreml_out = output_dict[key].flatten()
+        ref_out = ref_output_dict[key].flatten()
+        snr, psnr = compute_SNR_and_PSNR(coreml_out, ref_out)
+        print(f"SNR: {snr}, PSNR: {psnr}")
+        assert snr > snr_thresh
+        assert psnr > psnr_thresh
+
+
+def compute_SNR_and_PSNR(x, y):
+    assert len(x) == len(y)
+    eps = 1e-5
+    eps2 = 1e-10
+    noise = x - y
+    noise_var = np.sum(noise**2) / len(noise)
+    signal_energy = np.sum(y**2) / len(y)
+    max_signal_energy = np.amax(y**2)
+    snr = 10 * np.log10((signal_energy + eps) / (noise_var + eps2))
+    psnr = 10 * np.log10((max_signal_energy + eps) / (noise_var + eps2))
+    return snr, psnr
 
 
 def verify_ops(coreml_model, expected_ops):

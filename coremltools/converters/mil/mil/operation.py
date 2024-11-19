@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional, Tuple
 import numpy as np
 
 from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil.types import builtin_to_string
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbolic
 
 from . import SPACES
@@ -156,6 +157,10 @@ class Operation:
 
     # Map from type domain id to a tuple of accepted types.
     type_domains: Dict[str, Tuple[Any]] = dict()
+
+    @classmethod
+    def supported_dtypes(cls):
+        return [builtin_to_string(v) for v in cls.type_domains["T"]]
 
     def __init__(self, **kwargs):
         self._input_types = self.input_spec.input_types

@@ -206,6 +206,7 @@ def get_quant_range(n_bits: int, dtype: _torch.dtype) -> _Tuple[int, int]:
         quant_max = max_q / 2 - 1
     return int(quant_min), int(quant_max)
 
+
 def get_n_bits_from_range(quant_min: int, quant_max: int) -> int:
     """
     Returns quantization n_bits for given quantization range

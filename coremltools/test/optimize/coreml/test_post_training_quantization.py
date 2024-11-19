@@ -101,7 +101,7 @@ def get_test_model_and_data_complex():
             linear_1 = self.linear_1(reshape)
             linear_2 = self.linear_2(linear_1)
             lstm = self.lstm(linear_2)
-            return lstm
+            return lstm[0]
 
     return Model().eval(), inputs, torch_input_values, coreml_input_values
 
@@ -182,6 +182,17 @@ def create_quantize_friendly_weight(
         quantized_weight.astype(np.float32) - zero_point.astype(np.float32)
     )
     return dequantized_weight, scale, zero_point
+
+
+def create_weight_with_inf(weight, inf_ratio, inf_val=np.inf):
+    """Create weight that has the same shape as input weight, but with inf_ratio elements set as inf_val."""
+    shape = list(weight.shape)
+    size = np.prod(shape)
+    weight = 100 * np.random.rand(size)
+    num_of_inf = int(size * inf_ratio)
+    weight[:num_of_inf] = inf_val
+    np.random.shuffle(weight)
+    return np.reshape(weight, shape).astype(np.float32)
 
 
 def verify_model_outputs(model, compressed_model, input_values, rtol=1e-7, atol=0.0):
@@ -273,8 +284,6 @@ class TestLinearQuantizeWeights:
             "constexpr_affine_dequantize",
             "constexpr_affine_dequantize",
             "lstm",
-            "expand_dims",
-            "expand_dims"
         ]
         prog = mlmodel._mil_program
         assert get_op_types_in_program(prog) == expected_ops
@@ -363,8 +372,6 @@ class TestLinearQuantizeWeights:
             "constexpr_blockwise_shift_scale",
             "constexpr_blockwise_shift_scale",
             "lstm",
-            "expand_dims",
-            "expand_dims",
         ]
         prog = mlmodel_quantized._mil_program
         assert get_op_types_in_program(prog) == expected_ops
@@ -622,6 +629,207 @@ class TestLinearQuantizeWeights:
         else:
             mlmodel_quantized.predict(coreml_input_values)
 
+    @staticmethod
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(compute_units, backends),
+    )
+    def test_skip_inf(compute_unit, backend):
+        model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data_complex()
+
+        # Make conv_1's weight with inf and linear_2's weight with -inf.
+        weight_1_inf = create_weight_with_inf(model.conv_1.weight, 0.1, np.inf)
+        weight_2_neg_inf = create_weight_with_inf(model.linear_2.weight, 0.1, -np.inf)
+        with torch.no_grad():
+            model.conv_1.weight = torch.nn.Parameter(torch.Tensor(weight_1_inf))
+            model.linear_2.weight = torch.nn.Parameter(torch.Tensor(weight_2_neg_inf))
+
+        torchmodel = torch.jit.trace(model, torch_input_values)
+        mlmodel = ct.convert(
+            torchmodel,
+            inputs=inputs,
+            convert_to="mlprogram",
+            minimum_deployment_target=backend.opset_version,
+            compute_precision=ct.precision.FLOAT16
+            if backend.precision == "fp16"
+            else ct.precision.FLOAT32,
+            compute_units=compute_unit,
+        )
+
+        config = cto.coreml.OptimizationConfig(
+            global_config=cto.coreml.OpLinearQuantizerConfig(
+                weight_threshold=500,
+            )
+        )
+        mlmodel_quantized = cto.coreml.linear_quantize_weights(mlmodel, config)
+
+        prog = mlmodel_quantized._mil_program
+        quant_op_name = (
+            "constexpr_blockwise_shift_scale"
+            if backend.opset_version >= ct.target.iOS18
+            else "constexpr_affine_dequantize"
+        )
+        # The conv_1 and linear_2 quantization is skipped due to inf in weights.
+        conv_ops = prog.find_ops(op_type="conv")
+        assert conv_ops[0].weight.op.op_type == "const"
+        assert conv_ops[1].weight.op.op_type == quant_op_name
+        linear_ops = prog.find_ops(op_type="linear")
+        assert linear_ops[0].weight.op.op_type == quant_op_name
+        assert linear_ops[1].weight.op.op_type == "const"
+
+        if _macos_version() >= (13, 0):
+            verify_model_outputs(mlmodel, mlmodel_quantized, coreml_input_values)
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "compute_unit, backend, use_int01_as_bool",
+        itertools.product(compute_units, backends, (True, False)),
+    )
+    def test_skip_bool(compute_unit, backend, use_int01_as_bool):
+        batch_dim, seq_len = 128, 512
+        embedding_dim, projected_embedding_dim = 32, 64
+
+        if use_int01_as_bool:
+
+            class Model(torch.nn.Module):
+                def __init__(self):
+                    super().__init__()
+
+                    self.wq = torch.nn.Linear(embedding_dim, projected_embedding_dim)
+                    self.wk = torch.nn.Linear(embedding_dim, projected_embedding_dim)
+                    self.wv = torch.nn.Linear(embedding_dim, projected_embedding_dim)
+                    self.wo = torch.nn.Linear(projected_embedding_dim, embedding_dim)
+
+                    all_trues = torch.full((seq_len, seq_len), True)
+                    self.causal_mask = torch.tril(all_trues)
+
+                    self.k_cache = torch.rand((1, seq_len, projected_embedding_dim))
+                    self.v_cache = torch.rand((1, seq_len, projected_embedding_dim))
+
+                @torch.no_grad()
+                def forward(self, embedding, input_pos):
+                    input_pos = input_pos[0]
+
+                    q = self.wq(embedding)
+                    current_k = self.wk(embedding)
+                    current_v = self.wv(embedding)
+
+                    k = torch.ops.aten.index_put_(
+                        self.k_cache, [None, input_pos], current_k[:, 0, :]
+                    )
+                    v = torch.ops.aten.index_put_(
+                        self.v_cache, [None, input_pos], current_v[:, 0, :]
+                    )
+                    # This torch index op will be translated to Core ML gather op
+                    # Since Core ML gather op does not support bool,
+                    # Core ML will cast bool mask to int8, gather, then cast back to bool.
+                    # The int8 cast is then const eliminated, resulting in int8 0/1 const mask
+                    mask = torch.ops.aten.index(self.causal_mask, [input_pos])
+
+                    attention = torch.nn.functional.scaled_dot_product_attention(q, k, v, mask)
+                    o = self.wo(attention)
+                    return o
+
+            coreml_input_types = [
+                ct.TensorType(name="embedding", shape=(1, 1, embedding_dim)),
+                ct.TensorType(name="input_pos", shape=(1,), dtype=np.int32),
+            ]
+            torch_input_values = [
+                torch.rand((1, 1, embedding_dim)),
+                torch.tensor([4], dtype=torch.int32),
+            ]
+
+        else:
+
+            class Model(torch.nn.Module):
+                def __init__(self):
+                    super().__init__()
+
+                    self.wq = torch.nn.Linear(embedding_dim, projected_embedding_dim)
+                    self.wk = torch.nn.Linear(embedding_dim, projected_embedding_dim)
+                    self.wv = torch.nn.Linear(embedding_dim, projected_embedding_dim)
+                    self.wo = torch.nn.Linear(projected_embedding_dim, embedding_dim)
+
+                    all_trues = torch.full((seq_len, seq_len), True)
+                    self.causal_mask = torch.tril(all_trues)
+
+                def forward(self, embedding):
+                    q = self.wq(embedding)
+                    k = self.wk(embedding)
+                    v = self.wv(embedding)
+                    attention = torch.nn.functional.scaled_dot_product_attention(
+                        q, k, v, self.causal_mask
+                    )
+                    o = self.wo(attention)
+                    return o
+
+            coreml_input_types = [
+                ct.TensorType(name="embedding", shape=(batch_dim, seq_len, embedding_dim))
+            ]
+            torch_input_values = [torch.rand((batch_dim, seq_len, embedding_dim))]
+
+        model = Model()
+        model.eval()
+
+        coreml_input_values = {
+            i.name: val.detach().numpy() for i, val in zip(coreml_input_types, torch_input_values)
+        }
+
+        torchmodel = torch.jit.trace(model, torch_input_values)
+        mlmodel = ct.convert(
+            torchmodel,
+            inputs=coreml_input_types,
+            convert_to="mlprogram",
+            # must deploy to iOS 18+ for scaled_dot_product_attention op
+            minimum_deployment_target=max(backend.opset_version, ct.target.iOS18),
+            compute_precision=ct.precision.FLOAT16
+            if backend.precision == "fp16"
+            else ct.precision.FLOAT32,
+            compute_units=compute_unit,
+        )
+
+        config = cto.coreml.OptimizationConfig(
+            global_config=cto.coreml.OpLinearQuantizerConfig(
+                weight_threshold=500,
+            )
+        )
+        mlmodel_quantized = cto.coreml.linear_quantize_weights(mlmodel, config)
+
+        prog = mlmodel_quantized._mil_program
+        quant_op_name = (
+            "constexpr_blockwise_shift_scale"
+            if backend.opset_version >= ct.target.iOS18
+            else "constexpr_affine_dequantize"
+        )
+        # The sdpa mask quantization is skipped due to bool
+        sdpa_op = prog.find_ops(op_type="scaled_dot_product_attention")[0]
+        if use_int01_as_bool:
+            cast_int8_to_bool_op = sdpa_op.attn_mask.op
+            assert cast_int8_to_bool_op.op_type == "cast"
+            gather_op = cast_int8_to_bool_op.x.op
+            assert gather_op.op_type == "gather"
+            assert gather_op.x.op.op_type == "const"
+        else:
+            assert sdpa_op.attn_mask.op.op_type == "const"
+        # The linear ops, however, should all have weight quantized
+        linear_ops = prog.find_ops(op_type="linear")
+        for linear_op in linear_ops:
+            assert linear_op.weight.op.op_type == quant_op_name
+
+        if _macos_version() >= (13, 0):
+            if use_int01_as_bool:
+                pytest.xfail(
+                    "Cannot run model, because: "
+                    "1. BNNS does not support sdpa; "
+                    "2. Classic CPU does not support int8 weight; "
+                    "3. GPU supports everything but segmentor just won't choose it, "
+                    "even if set compute_units=ct.ComputeUnit.CPU_AND_GPU. "
+                    "So in the end the model gets dispatched to classic CPU "
+                    "and we observe the int8 weight error"
+                )
+            else:
+                verify_model_outputs(mlmodel, mlmodel_quantized, coreml_input_values)
+
 
 class TestPalettizeWeights:
     @staticmethod
@@ -685,8 +893,6 @@ class TestPalettizeWeights:
             "constexpr_lut_to_dense",
             "constexpr_lut_to_dense",
             "lstm",
-            "expand_dims",
-            "expand_dims"
         ]
         prog = mlmodel._mil_program
         assert get_op_types_in_program(prog) == expected_ops
@@ -845,8 +1051,6 @@ class TestPalettizeWeights:
             "constexpr_lut_to_dense",
             "squeeze",
             "lstm",
-            "expand_dims",
-            "expand_dims",
         ]
         prog = mlmodel._mil_program
         assert get_op_types_in_program(prog) == expected_ops
@@ -901,8 +1105,6 @@ class TestPalettizeWeights:
             "constexpr_lut_to_dense",
             "squeeze",
             "lstm",
-            "expand_dims",
-            "expand_dims",
         ]
         prog = mlmodel._mil_program
         assert get_op_types_in_program(prog) == expected_ops
@@ -975,8 +1177,6 @@ class TestPalettizeWeights:
             "constexpr_lut_to_dense",
             "constexpr_lut_to_dense",
             "lstm",
-            "expand_dims",
-            "expand_dims",
         ]
         prog = mlmodel_palettized._mil_program
         assert get_op_types_in_program(prog) == expected_ops
@@ -1246,7 +1446,6 @@ class TestPalettizeWeights:
         if _macos_version() >= (15, 0):
             verify_model_outputs(mlmodel, mlmodel_palettized, coreml_input_values)
 
-    @pytest.mark.xfail(reason="rdar://131511244 Investigate Why Palettization is Failing on BNNS")
     @pytest.mark.parametrize(
         "compute_unit, backend, mode, cluster_dim",
         itertools.product(compute_units, backends, ("kmeans", "unique"), (2, 4)),
@@ -1296,7 +1495,7 @@ class TestPalettizeWeights:
         # The last dim of lut should match cluster_dim.
         assert palettize_op.lut.shape[-2:] == (2**produced_nbits, cluster_dim)
 
-        if _macos_version() >= (15, 0):
+        if _macos_version() >= (15, 4):
             verify_model_outputs(mlmodel, mlmodel_palettized, coreml_input_values)
 
     @pytest.mark.parametrize(
@@ -1457,8 +1656,6 @@ class TestPruneWeights:
             "linear",
             "linear",
             "lstm",
-            "expand_dims",
-            "expand_dims"
         ]
         prog = mlmodel._mil_program
         assert get_op_types_in_program(prog) == expected_ops
@@ -1595,8 +1792,6 @@ class TestPruneWeights:
             "constexpr_sparse_to_dense",
             "squeeze",
             "lstm",
-            "expand_dims",
-            "expand_dims"
         ]
         assert get_op_types_in_program(prog) == expected_ops
 
@@ -1650,8 +1845,6 @@ class TestPruneWeights:
             "constexpr_sparse_to_dense",
             "squeeze",
             "lstm",
-            "expand_dims",
-            "expand_dims"
         ]
         assert get_op_types_in_program(prog) == expected_ops
 
@@ -1722,9 +1915,6 @@ class TestPruneWeights:
 class TestJointCompressWeights:
     """Test using coremltools PTQ to do joint compression."""
 
-    @pytest.mark.xfail(
-        reason="rdar://131511244 Investigate Why Joint Prune x Anything are Failing on BNNS"
-    )
     @pytest.mark.parametrize(
         "compute_unit, backend, dtype, block_size, output_channel_block_size, prune_first",
         itertools.product(
@@ -1804,7 +1994,7 @@ class TestJointCompressWeights:
             + ["constexpr_sparse_blockwise_shift_scale", "constexpr_sparse_to_dense", "linear"] * 2
             + lstm_weight_compression_ops
             + ["constexpr_sparse_blockwise_shift_scale", "constexpr_sparse_to_dense"] * 2
-            + ["lstm", "expand_dims", "expand_dims"]
+            + ["lstm"]
         )
         prog = mlmodel_joint_pruned_quantized._mil_program
         assert get_op_types_in_program(prog) == expected_ops
@@ -1839,14 +2029,10 @@ class TestJointCompressWeights:
             assert sparse_op.nonzero_data.dtype == types.fp16
 
         if _macos_version() >= (15, 0):
-            atol = 5e-4 if compute_unit == ct.ComputeUnit.CPU_AND_GPU else 1e-6
             verify_model_outputs(
-                mlmodel, mlmodel_joint_pruned_quantized, coreml_input_values, atol=atol
+                mlmodel, mlmodel_joint_pruned_quantized, coreml_input_values, atol=5e-4
             )
 
-    @pytest.mark.xfail(
-        reason="rdar://131511244 Investigate Why Joint Prune x Anything are Failing on BNNS"
-    )
     @pytest.mark.parametrize(
         "compute_unit, backend, nbits, channel_group_size, prune_first",
         itertools.product(
@@ -1914,7 +2100,7 @@ class TestJointCompressWeights:
             + ["constexpr_lut_to_sparse", "constexpr_sparse_to_dense", "linear"] * 2
             + lstm_weight_compression_ops
             + ["constexpr_lut_to_sparse", "constexpr_sparse_to_dense"] * 2
-            + ["lstm", "expand_dims", "expand_dims"]
+            + ["lstm"]
         )
         prog = mlmodel_joint_pruned_palettized._mil_program
         assert get_op_types_in_program(prog) == expected_ops
@@ -1932,6 +2118,10 @@ class TestJointCompressWeights:
             )
             assert sparse_palettize_op.indices_mask.dtype == types.uint1
             assert sparse_palettize_op.lut.dtype == types.fp16
+            # Both outputs of the sparse_palettize_op should be used by the child constexpr_sparse_to_dense op.
+            assert (
+                sparse_palettize_op.outputs[0].child_ops[0].op_type == "constexpr_sparse_to_dense"
+            )
             assert (
                 sparse_palettize_op.outputs[1].child_ops[0].op_type == "constexpr_sparse_to_dense"
             )
@@ -1950,9 +2140,8 @@ class TestJointCompressWeights:
             assert sparse_op.nonzero_data.dtype == types.fp16
 
         if _macos_version() >= (15, 0):
-            atol = 5e-4 if compute_unit == ct.ComputeUnit.CPU_AND_GPU else 1e-6
             verify_model_outputs(
-                mlmodel, mlmodel_joint_pruned_palettized, coreml_input_values, atol=atol
+                mlmodel, mlmodel_joint_pruned_palettized, coreml_input_values, atol=5e-4
             )
 
     @pytest.mark.parametrize(
@@ -2025,7 +2214,7 @@ class TestJointCompressWeights:
             + ["reshape"]
             + ["constexpr_blockwise_shift_scale", "constexpr_lut_to_dense", "linear"] * 2
             + ["constexpr_blockwise_shift_scale", "constexpr_lut_to_dense"] * 3
-            + ["lstm", "expand_dims", "expand_dims"]
+            + ["lstm"]
         )
         prog = mlmodel_joint_palettized_quantized._mil_program
         if channel_group_size == 0:
@@ -2103,9 +2292,6 @@ class TestJointCompressWeights:
                 mlmodel_palettized, quant_config, joint_compression=True
             )
 
-    @pytest.mark.xfail(
-        reason="rdar://131511244 Investigate Why Joint Prune x Anything are Failing on BNNS"
-    )
     @pytest.mark.parametrize(
         "compute_unit, backend, nbits, channel_group_size, target_sparsity",
         itertools.product(
@@ -2189,7 +2375,7 @@ class TestJointCompressWeights:
                 "constexpr_sparse_to_dense",
             ]
             * 2
-            + ["lstm", "expand_dims", "expand_dims"]
+            + ["lstm"]
         )
         if nbits < 4 and channel_group_size == 0:
             # The lut tensor is too small, which is stored as immediate values.
@@ -2227,12 +2413,70 @@ class TestJointCompressWeights:
             assert types.builtin_to_string(sparse_op.nonzero_data.dtype) == backend.precision
 
         if _macos_version() >= (15, 0):
-            atol = 5e-4 if compute_unit == ct.ComputeUnit.CPU_AND_GPU else 1e-6
             verify_model_outputs(
                 mlmodel,
                 mlmodel_joint_pruned_palettized_quantized,
                 coreml_input_values,
-                atol=atol,
+                atol=5e-4,
+            )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, hidden_size",
+        itertools.product(
+            compute_units,
+            backends,
+            (128, 80),
+        ),
+    )
+    def test_lstm_state(self, compute_unit, backend, hidden_size):
+        inputs = [ct.TensorType(name="data", shape=(1, 16, 64))]
+        torch_input_values = [torch.ones(*i.shape.to_list()) for i in inputs]
+        coreml_input_values = {
+            i.name: val.detach().numpy() for i, val in zip(inputs, torch_input_values)
+        }
+
+        class Model(torch.nn.Module):
+            def __init__(self):
+                super(Model, self).__init__()
+                self.lstm = torch.nn.LSTM(64, hidden_size)
+
+            def forward(self, x):
+                return self.lstm(x)
+
+        torchmodel = torch.jit.trace(Model().eval(), torch_input_values)
+        mlmodel = ct.convert(
+            torchmodel,
+            inputs=inputs,
+            convert_to="mlprogram",
+            minimum_deployment_target=backend.opset_version,
+            compute_precision=ct.precision.FLOAT16
+            if backend.precision == "fp16"
+            else ct.precision.FLOAT32,
+            compute_units=compute_unit,
+        )
+
+        prune_config = cto.coreml.OptimizationConfig(
+            global_config=cto.coreml.OpMagnitudePrunerConfig(
+                target_sparsity=0.5, weight_threshold=500
+            )
+        )
+        quant_config = cto.coreml.OptimizationConfig(
+            global_config=cto.coreml.OpLinearQuantizerConfig(
+                mode="linear",
+                granularity="per_block",
+                weight_threshold=500,
+            )
+        )
+        mlmodel_pruned = cto.coreml.prune_weights(mlmodel, prune_config)
+        mlmodel_joint_pruned_quantized = cto.coreml.linear_quantize_weights(
+            mlmodel_pruned, quant_config, joint_compression=True
+        )
+
+        if _macos_version() >= (15, 0):
+            if hidden_size == 80:
+                pytest.xfail("rdar://137003019 (Joint Pruning + Quantization for LSTM Has Incorrect Results on BNNS)")
+            verify_model_outputs(
+                mlmodel, mlmodel_joint_pruned_quantized, coreml_input_values, atol=1e-3
             )
 
 
@@ -2279,6 +2523,11 @@ class TestDecompressWeights:
 
         if ct.utils._macos_version() < (13, 0):
             return
+
+        if platform.machine() == "x86_64":
+            pytest.xfail(
+                "rdar://140156685 ([CI] test_weight_decopmression_coreml_optimize fails on x86_64)"
+            )
 
         # compared the numerical outputs
         output_dict = mlmodel.predict(coreml_input_values)
@@ -2338,8 +2587,6 @@ class TestConvertMixedCompression:
             "constexpr_sparse_to_dense",
             "squeeze",
             "lstm",
-            "expand_dims",
-            "expand_dims"
         ]
         assert get_op_types_in_program(prog) == expected_ops
 

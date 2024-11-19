@@ -41,7 +41,7 @@ namespace protobuf {
 namespace compiler {
 namespace objectivec {
 
-ExtensionGenerator::ExtensionGenerator(const string& root_class_name,
+ExtensionGenerator::ExtensionGenerator(const std::string& root_class_name,
                                        const FieldDescriptor* descriptor)
     : method_name_(ExtensionMethodName(descriptor)),
       root_class_and_method_name_(root_class_name + "_" + method_name_),
@@ -49,9 +49,9 @@ ExtensionGenerator::ExtensionGenerator(const string& root_class_name,
   if (descriptor->is_map()) {
     // NOTE: src/google/protobuf/compiler/plugin.cc makes use of cerr for some
     // error cases, so it seems to be ok to use as a back door for errors.
-    cerr << "error: Extension is a map<>!"
-         << " That used to be blocked by the compiler." << endl;
-    cerr.flush();
+    std::cerr << "error: Extension is a map<>!"
+         << " That used to be blocked by the compiler." << std::endl;
+    std::cerr.flush();
     abort();
   }
 }
@@ -59,8 +59,13 @@ ExtensionGenerator::ExtensionGenerator(const string& root_class_name,
 ExtensionGenerator::~ExtensionGenerator() {}
 
 void ExtensionGenerator::GenerateMembersHeader(io::Printer* printer) {
-  map<string, string> vars;
+  std::map<std::string, std::string> vars;
   vars["method_name"] = method_name_;
+  if (IsRetainedName(method_name_)) {
+    vars["storage_attribute"] = " NS_RETURNS_NOT_RETAINED";
+  } else {
+    vars["storage_attribute"] = "";
+  }
   SourceLocation location;
   if (descriptor_->GetSourceLocation(&location)) {
     vars["comments"] = BuildCommentsString(location, true);
@@ -72,31 +77,31 @@ void ExtensionGenerator::GenerateMembersHeader(io::Printer* printer) {
   vars["deprecated_attribute"] = GetOptionalDeprecatedAttribute(descriptor_, descriptor_->file());
   printer->Print(vars,
                  "$comments$"
-                 "+ (GPBExtensionDescriptor *)$method_name$$deprecated_attribute$;\n");
+                 "+ (GPBExtensionDescriptor *)$method_name$$storage_attribute$$deprecated_attribute$;\n");
 }
 
 void ExtensionGenerator::GenerateStaticVariablesInitialization(
     io::Printer* printer) {
-  map<string, string> vars;
+  std::map<std::string, std::string> vars;
   vars["root_class_and_method_name"] = root_class_and_method_name_;
-  vars["extended_type"] = ClassName(descriptor_->containing_type());
-  vars["number"] = SimpleItoa(descriptor_->number());
+  const std::string containing_type = ClassName(descriptor_->containing_type());
+  vars["extended_type"] = ObjCClass(containing_type);
+  vars["number"] = StrCat(descriptor_->number());
 
-  std::vector<string> options;
+  std::vector<std::string> options;
   if (descriptor_->is_repeated()) options.push_back("GPBExtensionRepeated");
   if (descriptor_->is_packed()) options.push_back("GPBExtensionPacked");
-  if (descriptor_->containing_type()->options().message_set_wire_format())
+  if (descriptor_->containing_type()->options().message_set_wire_format()) {
     options.push_back("GPBExtensionSetWireFormat");
-
+  }
   vars["options"] = BuildFlagsString(FLAGTYPE_EXTENSION, options);
 
   ObjectiveCType objc_type = GetObjectiveCType(descriptor_);
-  string singular_type;
   if (objc_type == OBJECTIVECTYPE_MESSAGE) {
-    vars["type"] = string("GPBStringifySymbol(") +
-                   ClassName(descriptor_->message_type()) + ")";
+    std::string message_type = ClassName(descriptor_->message_type());
+    vars["type"] = ObjCClass(message_type);
   } else {
-    vars["type"] = "NULL";
+    vars["type"] = "Nil";
   }
 
   vars["default_name"] = GPBGenericValueFieldName(descriptor_);
@@ -105,8 +110,8 @@ void ExtensionGenerator::GenerateStaticVariablesInitialization(
   } else {
     vars["default"] = DefaultValue(descriptor_);
   }
-  string type = GetCapitalizedType(descriptor_);
-  vars["extension_type"] = string("GPBDataType") + type;
+  std::string type = GetCapitalizedType(descriptor_);
+  vars["extension_type"] = std::string("GPBDataType") + type;
 
   if (objc_type == OBJECTIVECTYPE_ENUM) {
     vars["enum_desc_func_name"] =
@@ -119,8 +124,8 @@ void ExtensionGenerator::GenerateStaticVariablesInitialization(
                  "{\n"
                  "  .defaultValue.$default_name$ = $default$,\n"
                  "  .singletonName = GPBStringifySymbol($root_class_and_method_name$),\n"
-                 "  .extendedClass = GPBStringifySymbol($extended_type$),\n"
-                 "  .messageOrGroupClassName = $type$,\n"
+                 "  .extendedClass.clazz = $extended_type$,\n"
+                 "  .messageOrGroupClass.clazz = $type$,\n"
                  "  .enumDescriptorFunc = $enum_desc_func_name$,\n"
                  "  .fieldNumber = $number$,\n"
                  "  .dataType = $extension_type$,\n"
@@ -128,11 +133,23 @@ void ExtensionGenerator::GenerateStaticVariablesInitialization(
                  "},\n");
 }
 
+void ExtensionGenerator::DetermineObjectiveCClassDefinitions(
+    std::set<std::string>* fwd_decls) {
+  std::string extended_type = ClassName(descriptor_->containing_type());
+  fwd_decls->insert(ObjCClassDeclaration(extended_type));
+  ObjectiveCType objc_type = GetObjectiveCType(descriptor_);
+  if (objc_type == OBJECTIVECTYPE_MESSAGE) {
+    std::string message_type = ClassName(descriptor_->message_type());
+    fwd_decls->insert(ObjCClassDeclaration(message_type));
+  }
+}
+
 void ExtensionGenerator::GenerateRegistrationSource(io::Printer* printer) {
   printer->Print(
       "[registry addExtension:$root_class_and_method_name$];\n",
       "root_class_and_method_name", root_class_and_method_name_);
 }
+
 }  // namespace objectivec
 }  // namespace compiler
 }  // namespace protobuf

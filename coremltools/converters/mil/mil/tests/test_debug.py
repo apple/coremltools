@@ -7,8 +7,8 @@ import itertools
 import os
 import tempfile
 
-import pytest
 import numpy as np
+import pytest
 
 import coremltools as ct
 from coremltools.converters.mil import Builder as mb
@@ -16,6 +16,7 @@ from coremltools.converters.mil.debugging_utils import extract_submodel
 from coremltools.converters.mil.mil import get_new_symbol
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.testing_utils import get_op_types_in_program
+
 
 def get_simple_program():
     @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 3, 4)),])

@@ -25,6 +25,7 @@ from coremltools.converters.mil.mil.passes.tests.test_passes import CONSTEXPR_FU
 from coremltools.converters.mil.testing_utils import (
     apply_pass_and_basic_check,
     compute_snr_and_psnr,
+    gen_activation_stats_for_program,
     get_op_types_in_program,
 )
 from coremltools.optimize.coreml.experimental._post_training_quantization import (
@@ -2610,8 +2611,8 @@ class TestPalettizer(TestCompressionPasses):
         with pytest.raises(
             AssertionError,
             match=re.escape(
-                "The iOS16 only supports per-tensor lut, but got more than one lut "
-                "on 0th axis. LUT shape: (30, 1, 1, 1, 16, 1)"
+                "The pre-iOS18 palettization only supports per-tensor lut, but got more than one lut "
+                "on 0th axis. LUT shape: (30, 1, 1, 1, 16, 1)\nPlease set the minimum_deployment_target to iOS18"
             ),
         ):
             compressor.apply(prog)
@@ -3583,14 +3584,23 @@ class TestLinearActivationQuantizer(TestCompressionPasses):
             mode=mode, dtype=dtype, weight_threshold=weight_threshold
         )
         config = cto.coreml.OptimizationConfig(global_config=op_config)
-        graph_pass_1 = _insert_prefix_quantize_dequantize_pair(config)
-
-        # Insert suffix quantize/dequantize pairs
-        graph_pass_2 = PASS_REGISTRY["compression::insert_suffix_quantize_dequantize_pair"]
-        graph_pass_2.set_options([PassOption("config", config)])
 
         # Test case: conv
         prog = self._get_test_program_conv()
+
+        # Create activation_stats to all intermediate tensors
+        activation_stats = gen_activation_stats_for_program(prog)
+
+        # Insert prefix quantize/dequantize pairs
+        graph_pass_1 = _insert_prefix_quantize_dequantize_pair(config)
+        graph_pass_1.set_options([PassOption("activation_stats", activation_stats)])
+
+        # Insert suffix quantize/dequantize pairs
+        graph_pass_2 = PASS_REGISTRY["compression::insert_suffix_quantize_dequantize_pair"]
+        graph_pass_2.set_options(
+            [PassOption("config", config), PassOption("activation_stats", activation_stats)]
+        )
+
         apply_pass_and_basic_check(prog, graph_pass_1)
         apply_pass_and_basic_check(prog, graph_pass_2)
 
@@ -3606,6 +3616,20 @@ class TestLinearActivationQuantizer(TestCompressionPasses):
 
         # Test case: conv + relu
         prog = self._get_test_program_conv_relu()
+
+        # Create activation_stats to all intermediate tensors
+        activation_stats = gen_activation_stats_for_program(prog)
+
+        # Insert prefix quantize/dequantize pairs
+        graph_pass_1 = _insert_prefix_quantize_dequantize_pair(config)
+        graph_pass_1.set_options([PassOption("activation_stats", activation_stats)])
+
+        # Insert suffix quantize/dequantize pairs
+        graph_pass_2 = PASS_REGISTRY["compression::insert_suffix_quantize_dequantize_pair"]
+        graph_pass_2.set_options(
+            [PassOption("config", config), PassOption("activation_stats", activation_stats)]
+        )
+
         apply_pass_and_basic_check(prog, graph_pass_1)
         apply_pass_and_basic_check(prog, graph_pass_2)
 
@@ -3634,19 +3658,26 @@ class TestLinearActivationQuantizer(TestCompressionPasses):
         Valid patterns: add
         """
 
-        # Insert prefix quantize/dequantize pairs
         op_config = cto.coreml.experimental.OpActivationLinearQuantizerConfig(
             mode=mode, dtype=dtype, weight_threshold=weight_threshold
         )
         config = cto.coreml.OptimizationConfig(global_config=op_config)
+
+        # Create activation_stats to all intermediate tensors
+        prog = self._get_test_program_add()
+        activation_stats = gen_activation_stats_for_program(prog)
+
+        # Insert prefix quantize/dequantize pairs
         graph_pass_1 = _insert_prefix_quantize_dequantize_pair(config)
+        graph_pass_1.set_options([PassOption("activation_stats", activation_stats)])
 
         # Insert suffix quantize/dequantize pairs
         graph_pass_2 = PASS_REGISTRY["compression::insert_suffix_quantize_dequantize_pair"]
-        graph_pass_2.set_options([PassOption("config", config)])
+        graph_pass_2.set_options(
+            [PassOption("config", config), PassOption("activation_stats", activation_stats)]
+        )
 
         # Test case: add
-        prog = self._get_test_program_add()
         apply_pass_and_basic_check(prog, graph_pass_1)
         apply_pass_and_basic_check(prog, graph_pass_2)
 
@@ -3677,19 +3708,26 @@ class TestLinearActivationQuantizer(TestCompressionPasses):
         Valid pattern: pooling (avg_pool, max_pool)
         """
 
-        # Insert prefix quantize/dequantize pairs
         op_config = cto.coreml.experimental.OpActivationLinearQuantizerConfig(
             mode=mode, dtype=dtype, weight_threshold=weight_threshold
         )
         config = cto.coreml.OptimizationConfig(global_config=op_config)
+
+        # Test case: avg_pool
+        # Create activation_stats to all intermediate tensors
+        prog = self._get_test_program_avgpool()
+        activation_stats = gen_activation_stats_for_program(prog)
+
+        # Insert prefix quantize/dequantize pairs
         graph_pass_1 = _insert_prefix_quantize_dequantize_pair(config)
+        graph_pass_1.set_options([PassOption("activation_stats", activation_stats)])
 
         # Insert suffix quantize/dequantize pairs
         graph_pass_2 = PASS_REGISTRY["compression::insert_suffix_quantize_dequantize_pair"]
-        graph_pass_2.set_options([PassOption("config", config)])
+        graph_pass_2.set_options(
+            [PassOption("config", config), PassOption("activation_stats", activation_stats)]
+        )
 
-        # Test case: avg_pool
-        prog = self._get_test_program_avgpool()
         apply_pass_and_basic_check(prog, graph_pass_1)
         apply_pass_and_basic_check(prog, graph_pass_2)
 
@@ -3705,6 +3743,20 @@ class TestLinearActivationQuantizer(TestCompressionPasses):
 
         # Test case: max_pool
         prog = self._get_test_program_maxpool()
+
+        # Create activation_stats to all intermediate tensors.
+        activation_stats = gen_activation_stats_for_program(prog)
+
+        # Insert prefix quantize/dequantize pairs
+        graph_pass_1 = _insert_prefix_quantize_dequantize_pair(config)
+        graph_pass_1.set_options([PassOption("activation_stats", activation_stats)])
+
+        # Insert suffix quantize/dequantize pairs
+        graph_pass_2 = PASS_REGISTRY["compression::insert_suffix_quantize_dequantize_pair"]
+        graph_pass_2.set_options(
+            [PassOption("config", config), PassOption("activation_stats", activation_stats)]
+        )
+
         apply_pass_and_basic_check(prog, graph_pass_1)
         apply_pass_and_basic_check(prog, graph_pass_2)
 
@@ -3745,7 +3797,7 @@ class TestGetActivationStats(TestCompressionPasses):
         # Prepare sample data
         sample_data = []
         for _ in range(3):
-            input_data = np.random.rand(1, 28 * 28, 1)
+            input_data = np.random.rand(1, 28 * 28)
             sample_data.append({"data": input_data})
 
         # Loading a floating point mlmodel

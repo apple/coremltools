@@ -7,7 +7,9 @@ import numpy as np
 
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget
 from coremltools.converters.mil.frontend._utils import value_at
+from coremltools.converters.mil.mil import Block
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import Operation, Program
 from coremltools.converters.mil.mil.block import is_current_opset_version_compatible_with
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import (
@@ -931,3 +933,117 @@ class use_reflection_padding(AbstractGraphPass):
     def _reflection_padding_block(self, block):
         for op in list(block.operations):
             self._match_pattern(op, block)
+
+
+@register_pass(namespace="common")
+class fuse_stack_split(AbstractGraphPass):
+    """
+    Detect the pattern ``inputs -> stack -> split -> squeeze`` and fuse them into an ``identity`` if the pattern
+    cancel out each out.
+    Note that, the ``identity`` can be further removed by ``noop_elimination``.
+
+    .. code-block::
+
+        Input:
+            %4 = stack([%1, %2, %3], axis=0)
+            %5, %6, %7 = split(%4, axis=0)
+            %8 = squeeze(%5, axes=[0])
+            %9 = squeeze(%6, axes=[0])
+            %10 = squeeze(%7, axes=[0])
+
+        Output:
+            %8 = identity(%1)
+            %9 = identity(%2)
+            %10 = identity(%3)
+    """
+
+    def apply(self, prog: Program) -> None:
+        for f in prog.functions.values():
+            self.fuse_stack_split_block(f)
+
+    @staticmethod
+    def _try_to_transform(block: Block, stack_op: Operation) -> None:
+        def _convert_axis_to_positive(axis, rank):
+            if axis < 0:
+                return axis + rank + 1
+            return axis
+
+        def _try_fuse_a_branch(values, rank, axis, split_op):
+            ops_to_remove = [split_op]
+
+            # check if the split op have the correct config
+            if _convert_axis_to_positive(split_op.axis.val, rank) != axis:
+                return
+
+            split_sizes = split_op.split_sizes
+            if split_sizes is not None:
+                if split_sizes.val.tolist() != [1] * len(values):
+                    return
+
+            num_splits = split_op.num_splits
+            if num_splits is not None:
+                if num_splits.val != len(values):
+                    return
+
+            ops_to_remove.append(split_op)
+
+            # check if any of the output var of the stack / split op is the block output
+            for val in ops_to_remove:
+                for v in val.outputs:
+                    if v in block.outputs:
+                        return
+
+            # check if the outputs of the split op feed only into squeeze
+            split_out_vars = split_op.outputs
+            vars_to_replace = []
+
+            for val in split_out_vars:
+                if len(val.child_ops) != 1 or val.child_ops[0].op_type != "squeeze":
+                    should_fuse = False
+
+                squeeze_op = val.child_ops[0]
+                if [
+                    _convert_axis_to_positive(val, rank) for val in squeeze_op.axes.val.tolist()
+                ] != [axis]:
+                    return
+
+                vars_to_replace.append(squeeze_op.outputs[0])
+                ops_to_remove.append(squeeze_op)
+
+            for _input, _var in zip(values, vars_to_replace):
+                new_var = mb.identity(x=_input, before_op=squeeze_op)
+                block.replace_uses_of_var_after_op(
+                    anchor_op=squeeze_op,
+                    old_var=_var,
+                    new_var=new_var,
+                )
+            block.remove_ops(ops_to_remove)
+
+        if stack_op.outputs[0] in block.outputs:
+            return
+
+        # get the params of the stack op
+        values = stack_op.values
+        rank = values[0].rank
+        axis = _convert_axis_to_positive(stack_op.axis.val, rank)
+
+        # go through the split child ops
+        for val in list(stack_op.outputs[0].child_ops):
+            if val.op_type == "split":
+                _try_fuse_a_branch(values, rank, axis, val)
+
+        # remove the stack op if its output no longer consumed by any ops
+        if len(stack_op.outputs[0].child_ops) == 0:
+            block.remove_ops([stack_op])
+
+
+    @block_context_manager
+    def fuse_stack_split_block(self, block: Block) -> None:
+        for op in list(block.operations):
+            for b in op.blocks:
+                self.fuse_stack_split_block(b)
+
+            if op.op_type != "stack":
+                continue
+
+            self._try_to_transform(block, op)

@@ -62,7 +62,7 @@ namespace CoreML {
         google::protobuf::io::CodedInputStream codedInput(&rawInput);
 
         // Support models up to 2GB
-        codedInput.SetTotalBytesLimit(std::numeric_limits<int>::max(), -1);
+        codedInput.SetTotalBytesLimit(std::numeric_limits<int>::max());
 
         if (!formatObj.ParseFromCodedStream(&codedInput)) {
             return Result(ResultType::FAILED_TO_DESERIALIZE,

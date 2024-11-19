@@ -40,6 +40,7 @@ using Google.Protobuf.Reflection;
 using static Google.Protobuf.JsonParserTest; // For WrapInQuotes
 using System.IO;
 using Google.Protobuf.Collections;
+using ProtobufUnittest;
 
 namespace Google.Protobuf
 {
@@ -154,6 +155,48 @@ namespace Google.Protobuf
         }
 
         [Test]
+        public void WithFormatDefaultValues_DoesNotAffectMessageFields()
+        {
+            var message = new TestAllTypes();
+            var formatter = new JsonFormatter(JsonFormatter.Settings.Default.WithFormatDefaultValues(true));
+            var json = formatter.Format(message);
+            Assert.IsFalse(json.Contains("\"singleNestedMessage\""));
+            Assert.IsFalse(json.Contains("\"singleForeignMessage\""));
+            Assert.IsFalse(json.Contains("\"singleImportMessage\""));
+        }
+
+        [Test]
+        public void WithFormatDefaultValues_DoesNotAffectProto3OptionalFields()
+        {
+            var message = new TestProto3Optional();
+            message.OptionalInt32 = 0;
+            var formatter = new JsonFormatter(JsonFormatter.Settings.Default.WithFormatDefaultValues(true));
+            var json = formatter.Format(message);
+            // The non-optional proto3 fields are formatted, as is the optional-but-specified field.
+            AssertJson("{ 'optionalInt32': 0, 'singularInt32': 0, 'singularInt64': '0' }", json);
+        }
+
+        [Test]
+        public void WithFormatDefaultValues_DoesNotAffectProto2Fields()
+        {
+            var message = new TestProtos.Proto2.ForeignMessage();
+            message.C = 0;
+            var formatter = new JsonFormatter(JsonFormatter.Settings.Default.WithFormatDefaultValues(true));
+            var json = formatter.Format(message);
+            // The specified field is formatted, but the non-specified field (d) is not.
+            AssertJson("{ 'c': 0 }", json);
+        }
+
+        [Test]
+        public void WithFormatDefaultValues_DoesNotAffectOneofFields()
+        {
+            var message = new TestOneof();
+            var formatter = new JsonFormatter(JsonFormatter.Settings.Default.WithFormatDefaultValues(true));
+            var json = formatter.Format(message);
+            AssertJson("{ }", json);
+        }
+
+        [Test]
         public void RepeatedField()
         {
             AssertJson("{ 'repeatedInt32': [ 1, 2, 3, 4, 5 ] }",
@@ -181,6 +224,28 @@ namespace Google.Protobuf
             // The keys are quoted, but the values aren't.
             AssertJson("{ 'mapBoolBool': { 'false': true, 'true': false } }",
                 JsonFormatter.Default.Format(new TestMap { MapBoolBool = { { false, true }, { true, false } } }));
+        }
+
+        [Test]
+        public void NullValueOutsideStruct()
+        {
+            var message = new NullValueOutsideStruct { NullValue = NullValue.NullValue };
+            AssertJson("{ 'nullValue': null }", JsonFormatter.Default.Format(message));
+        }
+
+        [Test]
+        public void NullValueNotInOneof()
+        {
+            var message = new NullValueNotInOneof();
+            AssertJson("{ }", JsonFormatter.Default.Format(message));
+        }
+
+        [Test]
+        public void NullValueNotInOneof_FormatDefaults()
+        {
+            var formatter = new JsonFormatter(JsonFormatter.Settings.Default.WithFormatDefaultValues(true));
+            var message = new NullValueNotInOneof();
+            AssertJson("{ 'nullValue': null }", formatter.Format(message));
         }
 
         [TestCase(1.0, "1")]
@@ -243,7 +308,7 @@ namespace Google.Protobuf
         [Test]
         public void InvalidSurrogatePairsFail()
         {
-            // Note: don't use TestCase for these, as the strings can't be reliably represented 
+            // Note: don't use TestCase for these, as the strings can't be reliably represented
             // See http://codeblog.jonskeet.uk/2014/11/07/when-is-a-string-not-a-string/
 
             // Lone low surrogate
@@ -313,14 +378,16 @@ namespace Google.Protobuf
         }
 
         [Test]
-        public void WrapperFormatting_IncludeNull()
+        public void WrapperFormatting_FormatDefaultValuesDoesNotFormatNull()
         {
             // The actual JSON here is very large because there are lots of fields. Just test a couple of them.
             var message = new TestWellKnownTypes { Int32Field = 10 };
             var formatter = new JsonFormatter(JsonFormatter.Settings.Default.WithFormatDefaultValues(true));
             var actualJson = formatter.Format(message);
-            Assert.IsTrue(actualJson.Contains("\"int64Field\": null"));
-            Assert.IsFalse(actualJson.Contains("\"int32Field\": null"));
+            // This *used* to include "int64Field": null, but that was a bug.
+            // WithDefaultValues should not affect message fields, including wrapper types.
+            Assert.IsFalse(actualJson.Contains("\"int64Field\": null"));
+            Assert.IsTrue(actualJson.Contains("\"int32Field\": 10"));
         }
 
         [Test]
@@ -514,7 +581,7 @@ namespace Google.Protobuf
             var formatter = new JsonFormatter(JsonFormatter.Settings.Default.WithTypeRegistry(TypeRegistry.FromMessages(TestAllTypes.Descriptor)));
             var message = new TestAllTypes { SingleInt32 = 10, SingleNestedMessage = new TestAllTypes.Types.NestedMessage { Bb = 20 } };
             var any = Any.Pack(message);
-            AssertJson("{ '@type': 'type.googleapis.com/protobuf_unittest.TestAllTypes', 'singleInt32': 10, 'singleNestedMessage': { 'bb': 20 } }", formatter.Format(any));
+            AssertJson("{ '@type': 'type.googleapis.com/protobuf_unittest3.TestAllTypes', 'singleInt32': 10, 'singleNestedMessage': { 'bb': 20 } }", formatter.Format(any));
         }
 
         [Test]
@@ -523,7 +590,7 @@ namespace Google.Protobuf
             var formatter = new JsonFormatter(JsonFormatter.Settings.Default.WithTypeRegistry(TypeRegistry.FromMessages(TestAllTypes.Descriptor)));
             var message = new TestAllTypes { SingleInt32 = 10 };
             var any = Any.Pack(message, "foo.bar/baz");
-            AssertJson("{ '@type': 'foo.bar/baz/protobuf_unittest.TestAllTypes', 'singleInt32': 10 }", formatter.Format(any));
+            AssertJson("{ '@type': 'foo.bar/baz/protobuf_unittest3.TestAllTypes', 'singleInt32': 10 }", formatter.Format(any));
         }
 
         [Test]
@@ -536,7 +603,7 @@ namespace Google.Protobuf
             var doubleNestedMessage = new TestAllTypes { SingleInt32 = 20 };
             var nestedMessage = Any.Pack(doubleNestedMessage);
             var message = new TestWellKnownTypes { AnyField = Any.Pack(nestedMessage) };
-            AssertJson("{ 'anyField': { '@type': 'type.googleapis.com/google.protobuf.Any', 'value': { '@type': 'type.googleapis.com/protobuf_unittest.TestAllTypes', 'singleInt32': 20 } } }",
+            AssertJson("{ 'anyField': { '@type': 'type.googleapis.com/google.protobuf.Any', 'value': { '@type': 'type.googleapis.com/protobuf_unittest3.TestAllTypes', 'singleInt32': 20 } } }",
                 formatter.Format(message));
         }
 
@@ -600,6 +667,13 @@ namespace Google.Protobuf
         {
             var value = new RepeatedField<int> { 1, 2, 3 };
             AssertWriteValue(value, "[ 1, 2, 3 ]");
+        }
+
+        [Test]
+        public void Proto2_DefaultValuesWritten()
+        {
+            var value = new ProtobufTestMessages.Proto2.TestAllTypesProto2() { FieldName13 = 0 };
+            AssertWriteValue(value, "{ 'FieldName13': 0 }");
         }
 
         private static void AssertWriteValue(object value, string expectedJson)

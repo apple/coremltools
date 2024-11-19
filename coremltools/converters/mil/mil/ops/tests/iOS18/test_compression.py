@@ -11,6 +11,7 @@ from typing import List, Tuple
 import numpy as np
 import pytest
 
+from coremltools import utils
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.ops.defs._utils import promote_input_dtypes
@@ -508,8 +509,8 @@ class TestConstexprLut:
             decompressed_res, constexpr_lut_to_dense_op.outputs[0].op.materialized_val_inference()
         )
 
-    @pytest.mark.parametrize("vector_axis", (0, 1, 2, -1))
-    def test_builder_eval_vector_lut(self, vector_axis):
+    @pytest.mark.parametrize("compute_unit, backend, vector_axis", itertools.product(compute_units, backends, (0, 1, 2, -1)))
+    def test_builder_eval_vector_lut(self, compute_unit, backend, vector_axis):
         """
         Test vector lut on different axis.
 
@@ -528,9 +529,7 @@ class TestConstexprLut:
                     ]
                   ]
         """
-
-        @mb.program(input_specs=[], opset_version=_IOS18_TARGET)
-        def prog():
+        def build():
             return mb.constexpr_lut_to_dense(
                 indices=np.array([4, 8, 10, 13, 24, 5, 6, 9, 13, 31, 17, 7, 2, 8, 3, 1])
                 .reshape((2, 4, 2))
@@ -539,6 +538,7 @@ class TestConstexprLut:
                 vector_axis=vector_axis,
             )
 
+        prog = mb.program(input_specs=[], opset_version=_IOS18_TARGET)(build)
         constexpr_lut_to_dense_op = prog.functions["main"].find_ops(
             op_type="constexpr_lut_to_dense"
         )[0]
@@ -717,6 +717,16 @@ class TestConstexprLut:
             decompressed_res, constexpr_lut_to_dense_op.outputs[0].op.materialized_val_inference()
         )
 
+        run_compare_builder(
+            build,
+            {},
+            input_values={},
+            expected_output_types=decompressed_res.shape + (types.fp32,),
+            expected_outputs=decompressed_res,
+            compute_unit=compute_unit,
+            backend=backend,
+        )
+
     @pytest.mark.parametrize(
         "compute_unit, backend, nbits", itertools.product(compute_units, backends, [2, 3, 4, 6, 8])
     )
@@ -750,7 +760,6 @@ class TestConstexprLut:
             backend=backend,
         )
 
-    @pytest.mark.xfail(reason="rdar://131511244 Investigate Why Palettization is Failing on BNNS")
     @pytest.mark.parametrize(
         "compute_unit, backend, nbits, block_sizes, vector_size, vector_axis, lut_dtype",
         itertools.product(
@@ -777,22 +786,18 @@ class TestConstexprLut:
         lut = np.random.rand(*lut_shape).astype(lut_np_dtype)
 
         def build(x):
-            output = mb.constexpr_lut_to_dense(
+            return mb.constexpr_lut_to_dense(
                 indices=indices,
                 lut=lut,
                 vector_axis=vector_axis,
             )
-            x, output = promote_input_dtypes([x, output])
-            return mb.add(x=x, y=output)
 
         output_shape = list(indices.shape)
         if vector_size > 1:
             output_shape[vector_axis] *= vector_size
         x_val = np.ones(output_shape).astype(np.float32)
         input_placeholders = {"x": mb.placeholder(shape=x_val.shape)}
-        expected_output = (
-            constexpr_lut_to_dense.decompress(indices, lut, vector_axis=vector_axis) + 1
-        )
+        expected_output = constexpr_lut_to_dense.decompress(indices, lut, vector_axis=vector_axis)
 
         run_compare_builder(
             build,
@@ -1659,7 +1664,6 @@ class TestConstexprSparseBlockwiseShiftScale:
 
 
 class TestJointCompressionOps:
-    @pytest.mark.xfail(reason="rdar://131511244 Investigate Why Palettization is Failing on BNNS")
     @pytest.mark.parametrize(
         "compute_unit, backend, nbits, block_sizes, vector_size, lut_dtype, quant_dtype",
         itertools.product(
@@ -1672,6 +1676,7 @@ class TestJointCompressionOps:
             ["int4", "uint4", "int8", "uint8"],
         ),
     )
+    @pytest.mark.skipif(utils._macos_version() <= (15, 1), reason="Bug fixed in macOS 15.2")
     def test_quant_lut(
         self, compute_unit, backend, nbits, block_sizes, vector_size, lut_dtype, quant_dtype
     ):
@@ -1681,6 +1686,7 @@ class TestJointCompressionOps:
                                                                 constexpr_lut_to_dense -> dense(fp)
                                                          indices /
         """
+
         indices_shape = (4, 8, 16, 8)
         builtin_dtype = types.string_to_builtin(f"uint{nbits}")
         np_dtype = types.nptype_from_builtin(builtin_dtype)

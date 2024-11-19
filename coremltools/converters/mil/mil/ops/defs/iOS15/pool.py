@@ -85,7 +85,7 @@ class avg_pool(Pooling):
 
     Parameters
     ----------
-    x: tensor<[n,C_in,\*D_in], T> (Required)
+    x: tensor<[n,C_in, \\*D_in], T> (Required)
         *  ``3 <= rank <= 5``.
         *  ``D_in`` are spatial dimensions, ``1 <= len(D_in) <= 3``.
         *  ``C_in`` is the number of input channels or depth dimensions.
@@ -133,7 +133,7 @@ class avg_pool(Pooling):
 
     Returns
     -------
-    tensor<[n, C_out,\*D_out], T>
+    tensor<[n, C_out, \\*D_out], T>
         * Same rank as ``x``.
         * ``C_out`` is the number of output channels or depth dimensions.
         * When ``ceil_mode = False``:

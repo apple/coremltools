@@ -124,6 +124,7 @@ def _MacroRefRe(macro_names):
   return re.compile(r'\b(?P<macro_ref>(?P<name>(%s))\((?P<args>.*?)\))' %
                     '|'.join(macro_names))
 
+
 def _MacroArgRefRe(macro_arg_names):
   # Takes in a list of macro arg names and makes a regex that will match
   # uses of those args.
@@ -287,7 +288,7 @@ class MacroCollection(object):
     name = macro_ref_match.group('name')
     for prev_name, prev_macro_ref in macro_stack:
       if name == prev_name:
-        raise PDDMError('Found macro recusion, invoking "%s":%s' %
+        raise PDDMError('Found macro recursion, invoking "%s":%s' %
                         (macro_ref_str, self._FormatStack(macro_stack)))
     macro = self._macros[name]
     args_str = macro_ref_match.group('args').strip()
@@ -318,25 +319,26 @@ class MacroCollection(object):
       return macro.body
     assert len(arg_values) == len(macro.args)
     args = dict(zip(macro.args, arg_values))
+
     def _lookupArg(match):
       val = args[match.group('name')]
       opt = match.group('option')
       if opt:
-        if opt == 'S': # Spaces for the length
+        if opt == 'S':  # Spaces for the length
           return ' ' * len(val)
-        elif opt == 'l': # Lowercase first character
+        elif opt == 'l':  # Lowercase first character
           if val:
             return val[0].lower() + val[1:]
           else:
             return val
-        elif opt == 'L': # All Lowercase
+        elif opt == 'L':  # All Lowercase
           return val.lower()
-        elif opt == 'u': # Uppercase first character
+        elif opt == 'u':  # Uppercase first character
           if val:
             return val[0].upper() + val[1:]
           else:
             return val
-        elif opt == 'U': # All Uppercase
+        elif opt == 'U':  # All Uppercase
           return val.upper()
         else:
           raise PDDMError('Unknown arg option "%s$%s" while expanding "%s".%s'
@@ -350,6 +352,7 @@ class MacroCollection(object):
 
   def _EvalMacrosRefs(self, text, macro_stack):
     macro_ref_re = _MacroRefRe(self._macros.keys())
+
     def _resolveMacro(match):
       return self._Expand(match, macro_stack)
     return macro_ref_re.sub(_resolveMacro, text)
@@ -392,7 +395,7 @@ class SourceFile(object):
         wasn't append.  If SUCCESS is True, then CAN_ADD_MORE is True/False to
         indicate if more lines can be added after this one.
       """
-      assert False, "sublcass should have overridden"
+      assert False, "subclass should have overridden"
       return (False, False)
 
     def HitEOF(self):
@@ -479,13 +482,14 @@ class SourceFile(object):
         if self._macro_collection:
           # Always add a blank line, seems to read better. (If need be, add an
           # option to the EXPAND to indicate if this should be done.)
-          result.extend([_GENERATED_CODE_LINE, ''])
+          result.extend([_GENERATED_CODE_LINE, '// clang-format off', ''])
           macro = line[directive_len:].strip()
           try:
             expand_result = self._macro_collection.Expand(macro)
             # Since expansions are line oriented, strip trailing whitespace
             # from the lines.
             lines = [x.rstrip() for x in expand_result.split('\n')]
+            lines.append('// clang-format on')
             result.append('\n'.join(lines))
           except PDDMError as e:
             raise PDDMError('%s\n...while expanding "%s" from the section'
@@ -496,10 +500,10 @@ class SourceFile(object):
       # Add the ending marker.
       if len(captured_lines) == 1:
         result.append('//%%PDDM-EXPAND-END %s' %
-                       captured_lines[0][directive_len:].strip())
+                      captured_lines[0][directive_len:].strip())
       else:
-        result.append('//%%PDDM-EXPAND-END (%s expansions)' % len(captured_lines))
-
+        result.append('//%%PDDM-EXPAND-END (%s expansions)' %
+                      len(captured_lines))
       return result
 
   class DefinitionSection(SectionBase):
@@ -641,7 +645,7 @@ def main(args):
   opts, extra_args = parser.parse_args(args)
 
   if not extra_args:
-    parser.error('Need atleast one file to process')
+    parser.error('Need at least one file to process')
 
   result = 0
   for a_path in extra_args:
@@ -669,15 +673,15 @@ def main(args):
 
     if src_file.processed_content != src_file.original_content:
       if not opts.dry_run:
-        print 'Updating for "%s".' % a_path
+        print('Updating for "%s".' % a_path)
         with open(a_path, 'w') as f:
           f.write(src_file.processed_content)
       else:
         # Special result to indicate things need updating.
-        print 'Update needed for "%s".' % a_path
+        print('Update needed for "%s".' % a_path)
         result = 1
     elif opts.verbose:
-      print 'No update for "%s".' % a_path
+      print('No update for "%s".' % a_path)
 
   return result
 

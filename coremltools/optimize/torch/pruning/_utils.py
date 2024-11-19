@@ -11,9 +11,16 @@ from typing import cast as _cast
 
 import torch as _torch
 
+from coremltools.optimize.torch._utils.joint_compression_utils import (
+    is_palettized_module as _is_palettized_module,
+)
+from coremltools.optimize.torch._utils.joint_compression_utils import (
+    is_quantized_module as _is_quantized_module,
+)
 from coremltools.optimize.torch._utils.metadata_utils import (
     CompressionMetadata as _CompressionMetadata,
 )
+from coremltools.optimize.torch._utils.torch_utils import get_atomic_layers as _get_atomic_layers
 
 logger = _logging.getLogger(__name__)
 
@@ -216,47 +223,16 @@ def validate_allowed_granularity_values(instance, attribute, value):
         )
 
 
-def is_quantized_module(module):
-    """
-    Check if a module has been quantized by inserting torch.ao.quantization.FakeQuantize layers
-    """
-    return hasattr(module, "weight_fake_quant") and not hasattr(
-        module.weight_fake_quant, "fake_palett_enabled"
-    )
-
-
-def is_palettized_module(module):
-    """
-    Check if a module has been palettized by inserting coremltools.optimize.torch.palettization.FakePalettize layers
-    """
-    return hasattr(module, "weight_fake_quant") and hasattr(
-        module.weight_fake_quant, "fake_palett_enabled"
-    )
-
-
-def get_joint_pruned_quantized_submodule(module, supported_modules):
-    """
-    Given a quantized module, find the submodule that supports pruning
-    """
-    if isinstance(module, supported_modules):
-        return module
-
-    for submodule in module.children():
-        if isinstance(submodule, supported_modules):
-            return submodule
-
-    return None
-
-
 def register_compression_metadata(submodule, pruner_info, supported_modules):
     config = pruner_info.config
     compression_type = ["pruning"]
 
     # Identify joint compression cases
-    if is_quantized_module(pruner_info.module):
+    if _is_quantized_module(pruner_info.module):
         compression_type += ["quantization"]
-        submodule = get_joint_pruned_quantized_submodule(submodule, supported_modules)
-    elif is_palettized_module(pruner_info.module):
+        pruning_support_layers = _get_atomic_layers(submodule, supported_modules)
+        submodule = list(pruning_support_layers.values())[0]
+    elif _is_palettized_module(pruner_info.module):
         compression_type += ["palettization"]
 
     param_name = config.param_name

@@ -48,15 +48,15 @@ class gather(Operation):
 
     Parameters
     ----------
-    x: tensor<\*D, T> (Required)
-    indices: tensor<\*N, i32> (Required)
+    x: tensor<\\*D, T> (Required)
+    indices: tensor<\\*N, i32> (Required)
         * Indices values may be negative. More precisely, ``-D[axis]<= v < D[axis]`` for ``v`` in ``indices``.
     axis: const i32 (Optional. Default=``0``)
         * Negative axis is supported.
 
     Returns
     -------
-    tensor<\*K, T>
+    tensor<\\*K, T>
         * Where ``K = D[:axis] + N + D[axis+1:]``.
 
     Attributes
@@ -158,10 +158,10 @@ class scatter(Operation):
 
     Parameters
     ----------
-    data: tensor<\*D, T> (Required)
+    data: tensor<\\*D, T> (Required)
     indices: tensor<[C], i32> (Required)
         * 1-D tensor.
-    updates: tensor<\*K, T> (Required)
+    updates: tensor<\\*K, T> (Required)
         * ``K = data.shape[:axis] + [len(indices)] + data.shape[axis+1:]``.
     axis: const i32 (Optional)
         * Default to ``0``.
@@ -172,7 +172,7 @@ class scatter(Operation):
 
     Returns
     -------
-    tensor<\*D, T>
+    tensor<\\*D, T>
         * With the same type and shape as input ``x``.
 
     Attributes
@@ -184,7 +184,7 @@ class scatter(Operation):
         indices = [1, 0]
         updates = [[5, 6, 7], [8, 9, 10]]
         axis = 0
-        mode = "update"
+        mode = "add"
 
     produces:
        [[9, 11, 13], [9, 11, 13]]
@@ -242,15 +242,15 @@ class gather_along_axis(Operation):
 
     Parameters
     ----------
-    x: tensor<\*D, T> (Required)
-    indices: tensor<\*K, i32> (Required)
+    x: tensor<\\*D, T> (Required)
+    indices: tensor<\\*K, i32> (Required)
         * ``rank(indices) == rank(x)``.
     axis: const i32 (Optional):
         * Default to ``0``.
 
     Returns
     -------
-    tensor<\*D, T>:
+    tensor<\\*D, T>:
         * Output tensor has the same shape as ``indices``.
 
     Attributes
@@ -359,10 +359,10 @@ class scatter_along_axis(Operation):
 
     Parameters
     ----------
-    data: tensor<\*D, T> (Required)
-    indices: tensor<\*K, i32> (Required)
+    data: tensor<\\*D, T> (Required)
+    indices: tensor<\\*K, i32> (Required)
         * ``rank(indices) == rank(data)``.
-    updates: tensor<\*K, T> (Required)
+    updates: tensor<\\*K, T> (Required)
         * Must be the same shape as ``indices``.
     axis: const i32 (Optional)
         * Default to ``0``.
@@ -373,7 +373,7 @@ class scatter_along_axis(Operation):
 
     Returns
     -------
-    tensor<\*D, T>
+    tensor<\\*D, T>
         * With the same type and shape as input ``x``.
 
     Attributes
@@ -447,12 +447,12 @@ class gather_nd(Operation):
 
     Parameters
     ----------
-    x: tensor<\*D, T> (Required)
-    indices: tensor<\*K, i32> (Required)
+    x: tensor<\\*D, T> (Required)
+    indices: tensor<\\*K, i32> (Required)
 
     Returns
     -------
-    tensor<\*V, T>
+    tensor<\\*V, T>
         * ``V = K[:-1] + D[K[-1]:]``, where ``D = x.shape`` and ``K = indices.shape``.
 
     Attributes
@@ -510,10 +510,10 @@ class scatter_nd(Operation):
 
     Parameters
     ----------
-    data: tensor<\*D, T> (Required)
-    indices: tensor<\*E, i32> (Required)
+    data: tensor<\\*D, T> (Required)
+    indices: tensor<\\*E, i32> (Required)
         * indices.shape[-1] <= data.rank
-    updates: tensor<\*F, T> (Required)
+    updates: tensor<\\*F, T> (Required)
         * Must be the shape as ``indices.shape[:-1] + data.shape[indices.shape[-1]:]``.
     mode: const string (Optional)
         * Default to ``add``.
@@ -522,7 +522,7 @@ class scatter_nd(Operation):
 
     Returns
     -------
-    tensor<\*D, T>
+    tensor<\\*D, T>
         * A tensor with the same shape and type as ``data``.
 
     Attributes

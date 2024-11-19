@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
+import time
 
 import numpy as np
 import pytest
@@ -1118,6 +1119,44 @@ class TestSliceByIndex:
         y_mlprogram = list(model.predict({"x": x}).values())[0]
         # TODO: rdar://103365766 MLProgram does not apply squeeze_mask.
         # np.testing.assert_allclose(y_numpy, y_mlprogram)
+
+    @staticmethod
+    def test_efficient_type_inference():
+        """
+        A bug was found in type inference, a large tensor gets produced from np.arange when the end index is large. This made the conversion extremely slow.
+        """
+        start_time = time.time()
+
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(
+                    shape=[
+                        20,
+                    ]
+                )
+            ]
+        )
+        def prog(x):
+            # end is max int32
+            res = mb.slice_by_index(
+                x=x,
+                begin=[0],
+                end=[2147483647],
+                stride=[1],
+            )
+            assert res.shape == (20,)
+
+            # end > max int32
+            res = mb.slice_by_index(
+                x=x,
+                begin=[0],
+                end=[214748364700],
+                stride=[1],
+            )
+            assert res.shape == (20,)
+            return x
+
+        assert time.time() - start_time < 0.01
 
 
 class TestSliceBySize:

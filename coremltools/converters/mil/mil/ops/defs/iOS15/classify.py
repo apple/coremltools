@@ -25,12 +25,12 @@ class classify(Operation):
 
     Parameters
     ----------
-    probabilities: tensor<[\* , ProbT]> (Required)
+    probabilities: tensor<[\\* , ProbT]> (Required)
         A tensor in the graph, which is used to compute the classifier output(s). This
         is the tensor whose values are mapped to the class labels and used for constructing
         the predicted class label and the output dictionary of class names and values.
 
-    classes: list<\*, ClassT> (Required)
+    classes: list<\\*, ClassT> (Required)
         List of classes.
 
     Returns

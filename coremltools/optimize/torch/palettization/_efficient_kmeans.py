@@ -86,34 +86,53 @@ class _EfficientKMeans:
     ) -> "_EfficientKMeans":
         assert len(parameters) >= self.n_clusters
 
+        num_update_list = []
+        INIT_EXIT = 10
         self.inertia_ = int(1e9)
 
+        # n_init trials for estimating cluster centers
         for n in range(self.n_init):
-            centroids = _torch.zeros(
-                (self.n_clusters, parameters.size(-1)),
-                device=parameters.device,
-                dtype=parameters.dtype,
-            )
-            for i in range(self.n_clusters):
-                if i == 0:
-                    centroids[i] = parameters[_torch.randint(0, len(parameters), [1])]
-                    d_ij_curr = _torch.cdist(centroids[:i], parameters)
-                else:
-                    d_ij_prev = _torch.cdist(centroids[i - 1 : i], parameters)
-                    d_ij_prev[d_ij_prev == 0] = -int(1e9)
 
-                    d_ij_curr = _torch.cat((d_ij_curr, d_ij_prev), dim=0)
+            if n % 2 and sample_weight is not None:
+                centroids = parameters[
+                    _np.random.choice(
+                        len(parameters),
+                        self.n_clusters,
+                        False,
+                        (sample_weight.squeeze() / sample_weight.sum()).cpu().numpy(),
+                    )
+                ]
+            else:
+                centroids = _torch.zeros(
+                    (self.n_clusters, parameters.size(-1)),
+                    device=parameters.device,
+                    dtype=parameters.dtype,
+                )
+                for i in range(self.n_clusters):
+                    if i == 0:
+                        centroids[i] = parameters[_torch.randint(0, len(parameters), [1])]
+                        d_ij_curr = _torch.cdist(centroids[:i], parameters)
+                    else:
+                        d_ij_prev = _torch.cdist(centroids[i - 1 : i], parameters)
+                        d_ij_prev[d_ij_prev == 0] = -int(1e9)
 
-                    c_to_x = _torch.min(d_ij_curr, dim=0)
-                    centroids[i] = parameters[c_to_x[0].argmax()]
+                        d_ij_curr = _torch.cat((d_ij_curr, d_ij_prev), dim=0)
 
+                        c_to_x = _torch.min(d_ij_curr, dim=0)
+                        centroids[i] = parameters[c_to_x[0].argmax()]
+
+            last_inertia = int(1e9)
+            num_update = 0
             for i in range(self.max_iter):
                 min_error, labels = _torch.cdist(parameters, centroids).min(dim=-1)
 
-                # if W is None:
+                min_error = (
+                    min_error * (sample_weight.T).sqrt() if sample_weight is not None else min_error
+                )
+
                 centroids.zero_()
                 agg_params = parameters * sample_weight if sample_weight is not None else parameters
-                weights = sample_weight.squeeze(1) if sample_weight is not None else None
+                weights = sample_weight.view(labels.size()) if sample_weight is not None else None
                 centroids.scatter_add_(
                     0,
                     labels.view(-1, 1).expand([-1, parameters.size(-1)]),
@@ -126,13 +145,27 @@ class _EfficientKMeans:
                 centroids /= n_centroids
                 cur_inertia = min_error.square().sum()
 
+                # update labels and cluster_centers if inertia improves
                 if cur_inertia < self.inertia_:
-                    exit = self.inertia_ <= cur_inertia * (1 + self.tol)
+                    num_update += 1
                     self.inertia_ = cur_inertia
                     self.labels_ = labels
                     self.cluster_centers_ = centroids
-                    if exit:
-                        break
+
+                # exit if there is no improvement in inertia within a tolerance
+                elif last_inertia <= cur_inertia * (1 + self.tol):
+                    break
+
+                last_inertia = cur_inertia
+
+            num_update_list.append(num_update)
+
+            # In every trial, we track number of cluster centre updates.
+            # If number of trials are greater than a specified value INIT_EXIT and
+            # there is no update for the past INIT_EXIT number of trials,
+            # it indicates that the centroids have converged
+            if len(num_update_list) >= INIT_EXIT and sum(num_update_list[-INIT_EXIT:]) == 0:
+                break
 
         return self
 

@@ -33,7 +33,7 @@ from coremltools.optimize.torch._utils.python_utils import ClassRegistryMixin as
 from coremltools.optimize.torch._utils.torch_utils import (
     get_atomic_layers,
     get_n_bits_from_dtype,
-    get_sign_from_dtype,
+    is_signed_dtype,
 )
 from coremltools.optimize.torch.palettization._efficient_kmeans import _EfficientKMeans
 
@@ -762,7 +762,7 @@ class KMeans:
             quantization_mode="LINEAR_SYMMETRIC",
             dtype=centroids.dtype,
             block_sizes=[0] * centroids.ndim,
-            signed=get_sign_from_dtype(dtype),
+            signed=is_signed_dtype(dtype),
         )
 
         if ret is None:

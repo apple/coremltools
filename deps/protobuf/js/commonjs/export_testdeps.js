@@ -7,11 +7,10 @@
  * export_asserts.js.
  */
 
-// Include a dummy provide statement so that closurebuilder.py does not skip over this
-// file.
 goog.provide('jspb.ExportTestDeps');
 
 goog.require('goog.crypt.base64');
+goog.require('goog.testing.PropertyReplacer');
 goog.require('jspb.arith.Int64');
 goog.require('jspb.arith.UInt64');
 goog.require('jspb.BinaryEncoder');

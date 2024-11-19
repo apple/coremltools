@@ -8,15 +8,24 @@ from typing import Tuple as _Tuple
 import torch as _torch
 import torch.distributed as _dist
 
-def vectorize(current_tensor, cluster_dim) -> _Tuple[_torch.Tensor, _torch.Tensor]:
+
+def vectorize(
+    current_tensor, cluster_dim, vector_ch_axis=0
+) -> _Tuple[_torch.Tensor, _torch.Tensor]:
     """
     Function to vectorize a tensor till the point where its numel is divisible by cluster_dim. The remaining parameters
     are returned as a pad.
+
+    vector_ch_axis 0
+    tensor with shape [x_1, x_2, x_3, ..., x_N] --> [x_N, x_2, x_3, ..., x_(N-1), x_1] --> [x_N*x_2*x_3* ... *x_(N-1)*x_1/cluster_dim, cluster_dim]
+
+    vector_ch_axis 1
+    tensor with shape [x_1, x_2, x_3, ..., x_N] --> [x_1, x_N, x_3, ..., x_(N-1), x_2] --> [x_1*x_N*x_3* ... *x_(N-1)*x_2/cluster_dim, cluster_dim]
     """
     num_misalignment = _torch.numel(current_tensor) % cluster_dim
 
     if cluster_dim > 1:
-        current_tensor = current_tensor.transpose(0, -1)
+        current_tensor = current_tensor.transpose(vector_ch_axis, -1)
 
     pad = None
     if num_misalignment:
@@ -27,16 +36,31 @@ def vectorize(current_tensor, cluster_dim) -> _Tuple[_torch.Tensor, _torch.Tenso
     return current_tensor.reshape(-1, cluster_dim), pad
 
 
-def devectorize(current_tensor, pad, target_size, cluster_dim) -> _torch.Tensor:
+def devectorize(current_tensor, pad, target_size, cluster_dim, vector_ch_axis=0) -> _torch.Tensor:
     """
     Function to devectorize by tracing back the vectorize operation in the method above.
+
+    vector_ch_axis 0
+    target_size [x_1, x_2, ..., x_N]
+    tensor with shape [x_1*x_2* ... *x_N/cluster_dim, cluster_dim] --> [x_N, x_2, x_3, ..., x_(N-1), x_1] --> [x_1, x_2, x_3, ..., x_N]
+
+    vector_ch_axis 1
+    target_size [x_1, x_2, ..., x_N]
+    tensor with shape [x_1*x_2* ... *x_N/cluster_dim, cluster_dim] --> [x_1, x_N, x_3, ..., x_(N-1), x_2] --> [x_1, x_2, x_3, ..., x_N]
     """
     if pad is not None:
         current_tensor = _torch.cat([current_tensor.flatten(), pad])
 
     if cluster_dim > 1:
-        current_tensor = current_tensor.reshape(_torch.Size(tuple(target_size)[::-1]))
-        current_tensor = current_tensor.transpose(0, -1)
+        if vector_ch_axis == 0:
+            current_tensor = current_tensor.reshape(
+                target_size[-1:] + target_size[1:-1] + target_size[0:1]
+            ).transpose(0, -1)
+        else:
+            current_tensor = current_tensor.reshape(
+                target_size[0:1] + target_size[-1:] + target_size[2:-1] + target_size[1:2]
+            ).transpose(1, -1)
+
         return current_tensor
 
     return current_tensor.reshape(target_size)

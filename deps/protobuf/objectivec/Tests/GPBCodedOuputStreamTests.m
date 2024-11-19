@@ -237,7 +237,15 @@
 }
 
 - (void)testWriteVarint5 {
-  // 2961488830
+  // The sign/nosign distinction is done here because normally varints are
+  // around 64bit values, but for some cases a 32bit value is forced with
+  // with the sign bit (tags, uint32, etc.)
+
+  // 1887747006 (no sign bit)
+  [self assertWriteVarint:bytes(0xbe, 0xf7, 0x92, 0x84, 0x07)
+                    value:(0x3e << 0) | (0x77 << 7) | (0x12 << 14) |
+                          (0x04 << 21) | (0x07LL << 28)];
+  // 2961488830 (sign bit)
   [self assertWriteVarint:bytes(0xbe, 0xf7, 0x92, 0x84, 0x0b)
                     value:(0x3e << 0) | (0x77 << 7) | (0x12 << 14) |
                           (0x04 << 21) | (0x0bLL << 28)];
@@ -266,7 +274,7 @@
                     value:(0x1b << 0) | (0x28 << 7) | (0x79 << 14) |
                           (0x42 << 21) | (0x3bLL << 28) | (0x56LL << 35) |
                           (0x00LL << 42) | (0x05LL << 49) | (0x26LL << 56) |
-                          (0x01LL << 63)];
+                          (0x01ULL << 63)];
 }
 
 - (void)testWriteLittleEndian {
@@ -392,7 +400,7 @@
 
 - (void)testWriteStringsWithZeroChar {
   // Unicode allows `\0` as a character, and NSString is a class cluster, so
-  // there are a few different classes that could end up beind a given string.
+  // there are a few different classes that could end up behind a given string.
   // Historically, we've seen differences based on constant strings in code and
   // strings built via the NSString apis. So this round trips them to ensure
   // they are acting as expected.
@@ -421,6 +429,16 @@
 
     ++i;
   }
+}
+
+- (void)testThatItThrowsWhenWriteRawPtrFails {
+  NSOutputStream *output = [NSOutputStream outputStreamToMemory];
+  GPBCodedOutputStream *codedOutput =
+      [GPBCodedOutputStream streamWithOutputStream:output bufferSize:0];  // Skip buffering.
+  [output close];  // Close the output stream to force failure on write.
+  const char *cString = "raw";
+  XCTAssertThrowsSpecificNamed([codedOutput writeRawPtr:cString offset:0 length:strlen(cString)],
+                               NSException, GPBCodedOutputStreamException_WriteFailed);
 }
 
 @end

@@ -576,6 +576,90 @@ class TestMILBasic:
             compute_precision=compute_precision,
         )
 
+
+class TestBeforeOp:
+    @staticmethod
+    def verify_op_name(block, expected_names):
+        assert expected_names == [val.name for val in block.operations]
+
+    @staticmethod
+    def get_block():
+        @mb.function(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def block(x):
+            x1 = mb.relu(x=x, name="x1")
+            x2 = mb.relu(x=x, name="x2")
+            return x2
+
+        return block
+
+    def test_before_op_context_manager(self):
+        """
+        Basic usage of mb.set_before_op
+        """
+        # insert op before x2
+        block = self.get_block()
+        target_op = list(block.operations)[1]
+        with block:
+            x = target_op.x
+            with mb.set_before_op(target_op):
+                x_1_5 = mb.relu(x=x, name="x1_5")
+        self.verify_op_name(block, ["x1", "x1_5", "x2"])
+
+        # insert op before x1
+        target_op = list(block.operations)[0]
+        with block:
+            x = target_op.x
+            with mb.set_before_op(target_op):
+                x0 = mb.relu(x=x, name="x0")
+        self.verify_op_name(block, ["x0", "x1", "x1_5", "x2"])
+
+    def test_none_before_op_context_manager(self):
+        """
+        Test that we can use mb.set_before_op to append op.
+        """
+        block = self.get_block()
+        with block:
+            x = block.operations[-1].x
+            with mb.set_before_op(None):
+                x3 = mb.relu(x=x, name="x3")
+        self.verify_op_name(block, ["x1", "x2", "x3"])
+
+    def test_nested_before_op_context_manager(self):
+        """
+        Test that we can nest mb.set_before_op.
+        """
+        block = self.get_block()
+        ops = list(block.operations)
+        op1, op2 = ops[0], ops[1]
+        with block:
+            x = op1.x
+            with mb.set_before_op(op1):
+                mb.relu(x=x, name="a")
+                mb.relu(x=x, name="b")
+                with mb.set_before_op(op2):
+                    mb.relu(x=x, name="c")
+                mb.relu(x=x, name="d")
+        self.verify_op_name(block, ["a", "b", "d", "x1", "c", "x2"])
+
+    def test_providing_before_op_explicitly(self):
+        """
+        When using mb.set_before_op, the builder will still respect the one provided by the user.
+        """
+        block = self.get_block()
+        ops = list(block.operations)
+        op1, op2 = ops[0], ops[1]
+        with block:
+            x = op1.x
+            with mb.set_before_op(op1):
+                x_1_5 = mb.relu(x=x, name="x1_5", before_op=op2)
+        self.verify_op_name(block, ["x1", "x1_5", "x2"])
+
+    @staticmethod
+    def test_error_out_invalid_before_op_type():
+        with pytest.raises(ValueError, match="only accepts input of type Operation"):
+            with mb.set_before_op("invalid"):
+                pass
+
 class TestScope:
     @staticmethod
     def test_basic_single_TorchScript_scope():

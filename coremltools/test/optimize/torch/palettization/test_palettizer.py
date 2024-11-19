@@ -39,6 +39,17 @@ def test_fake_palettize_insertion_weighted_modules(module, palettizer_config):
     palettized_module = palettizer.prepare()
     assert isinstance(palettized_module[0].weight_fake_quant, FakePalettize)
 
+    assert hasattr(palettized_module[0].weight_fake_quant, "reset_parameters")
+    assert hasattr(palettized_module[0].weight_fake_quant, "activation_post_process")
+    assert isinstance(
+        palettized_module[0].weight_fake_quant.activation_post_process,
+        torch.quantization.MovingAveragePerChannelMinMaxObserver,
+    )
+    assert hasattr(
+        palettized_module[0].weight_fake_quant.activation_post_process,
+        "reset_parameters",
+    )
+
 
 @pytest.mark.parametrize("kdim,vdim", [(None, None), (1, 1)])
 @pytest.mark.parametrize("batch_first", [True, False])

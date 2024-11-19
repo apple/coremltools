@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-#
 # Protocol Buffers - Google's data interchange format
 # Copyright 2008 Google Inc.  All rights reserved.
 # https://developers.google.com/protocol-buffers/
@@ -41,6 +40,8 @@ import os
 from google.protobuf import json_format
 from google.protobuf import message
 from google.protobuf import test_messages_proto3_pb2
+from google.protobuf import test_messages_proto2_pb2
+from google.protobuf import text_format
 import conformance_pb2
 
 sys.stdout = os.fdopen(sys.stdout.fileno(), 'wb', 0)
@@ -53,9 +54,71 @@ class ProtocolError(Exception):
   pass
 
 def do_test(request):
-  test_message = test_messages_proto3_pb2.TestAllTypes()
   response = conformance_pb2.ConformanceResponse()
-  test_message = test_messages_proto3_pb2.TestAllTypes()
+
+  if request.message_type == "conformance.FailureSet":
+    failure_set = conformance_pb2.FailureSet()
+    failures = []
+    # TODO(gerbens): Remove, this is a hack to detect if the old vs new
+    # parser is used by the cpp code. Relying on a bug in the old parser.
+    hack_proto = test_messages_proto2_pb2.TestAllTypesProto2()
+    old_parser = True
+    try:
+      hack_proto.ParseFromString(b"\322\002\001")
+    except message.DecodeError as e:
+      old_parser = False
+    if old_parser:
+      # the string above is one of the failing conformance test strings of the
+      # old parser. If we succeed the c++ implementation is using the old
+      # parser so we add the list of failing conformance tests.
+      failures = [
+          "Required.Proto3.ProtobufInput.PrematureEofInDelimitedDataForKnownNonRepeatedValue.MESSAGE",
+          "Required.Proto3.ProtobufInput.PrematureEofInDelimitedDataForKnownRepeatedValue.MESSAGE",
+          "Required.Proto3.ProtobufInput.PrematureEofInPackedField.BOOL",
+          "Required.Proto3.ProtobufInput.PrematureEofInPackedField.DOUBLE",
+          "Required.Proto3.ProtobufInput.PrematureEofInPackedField.ENUM",
+          "Required.Proto3.ProtobufInput.PrematureEofInPackedField.FIXED32",
+          "Required.Proto3.ProtobufInput.PrematureEofInPackedField.FIXED64",
+          "Required.Proto3.ProtobufInput.PrematureEofInPackedField.FLOAT",
+          "Required.Proto3.ProtobufInput.PrematureEofInPackedField.INT32",
+          "Required.Proto3.ProtobufInput.PrematureEofInPackedField.INT64",
+          "Required.Proto3.ProtobufInput.PrematureEofInPackedField.SFIXED32",
+          "Required.Proto3.ProtobufInput.PrematureEofInPackedField.SFIXED64",
+          "Required.Proto3.ProtobufInput.PrematureEofInPackedField.SINT32",
+          "Required.Proto3.ProtobufInput.PrematureEofInPackedField.SINT64",
+          "Required.Proto3.ProtobufInput.PrematureEofInPackedField.UINT32",
+          "Required.Proto3.ProtobufInput.PrematureEofInPackedField.UINT64",
+          "Required.Proto2.ProtobufInput.PrematureEofInDelimitedDataForKnownNonRepeatedValue.MESSAGE",
+          "Required.Proto2.ProtobufInput.PrematureEofInDelimitedDataForKnownRepeatedValue.MESSAGE",
+          "Required.Proto2.ProtobufInput.PrematureEofInPackedField.BOOL",
+          "Required.Proto2.ProtobufInput.PrematureEofInPackedField.DOUBLE",
+          "Required.Proto2.ProtobufInput.PrematureEofInPackedField.ENUM",
+          "Required.Proto2.ProtobufInput.PrematureEofInPackedField.FIXED32",
+          "Required.Proto2.ProtobufInput.PrematureEofInPackedField.FIXED64",
+          "Required.Proto2.ProtobufInput.PrematureEofInPackedField.FLOAT",
+          "Required.Proto2.ProtobufInput.PrematureEofInPackedField.INT32",
+          "Required.Proto2.ProtobufInput.PrematureEofInPackedField.INT64",
+          "Required.Proto2.ProtobufInput.PrematureEofInPackedField.SFIXED32",
+          "Required.Proto2.ProtobufInput.PrematureEofInPackedField.SFIXED64",
+          "Required.Proto2.ProtobufInput.PrematureEofInPackedField.SINT32",
+          "Required.Proto2.ProtobufInput.PrematureEofInPackedField.SINT64",
+          "Required.Proto2.ProtobufInput.PrematureEofInPackedField.UINT32",
+          "Required.Proto2.ProtobufInput.PrematureEofInPackedField.UINT64",
+      ]
+    for x in failures:
+      failure_set.failure.append(x)
+    response.protobuf_payload = failure_set.SerializeToString()
+    return response
+
+  isProto3 = (request.message_type == "protobuf_test_messages.proto3.TestAllTypesProto3")
+  isJson = (request.WhichOneof('payload') == 'json_payload')
+  isProto2 = (request.message_type == "protobuf_test_messages.proto2.TestAllTypesProto2")
+
+  if (not isProto3) and (not isJson) and (not isProto2):
+    raise ProtocolError("Protobuf request doesn't have specific payload type")
+
+  test_message = test_messages_proto2_pb2.TestAllTypesProto2() if isProto2 else \
+    test_messages_proto3_pb2.TestAllTypesProto3()
 
   try:
     if request.WhichOneof('payload') == 'protobuf_payload':
@@ -67,7 +130,18 @@ def do_test(request):
 
     elif request.WhichOneof('payload') == 'json_payload':
       try:
-        json_format.Parse(request.json_payload, test_message)
+        ignore_unknown_fields = \
+            request.test_category == \
+                conformance_pb2.JSON_IGNORE_UNKNOWN_PARSING_TEST
+        json_format.Parse(request.json_payload, test_message,
+                          ignore_unknown_fields)
+      except Exception as e:
+        response.parse_error = str(e)
+        return response
+
+    elif request.WhichOneof('payload') == 'text_payload':
+      try:
+        text_format.Parse(request.text_payload, test_message)
       except Exception as e:
         response.parse_error = str(e)
         return response
@@ -87,6 +161,10 @@ def do_test(request):
       except Exception as e:
         response.serialize_error = str(e)
         return response
+
+    elif request.requested_output_format == conformance_pb2.TEXT_FORMAT:
+      response.text_payload = text_format.MessageToString(
+          test_message, print_unknown_fields=request.print_unknown_fields)
 
   except Exception as e:
     response.runtime_error = str(e)

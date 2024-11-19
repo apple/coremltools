@@ -262,6 +262,17 @@ def assert_same_output_shapes(prog1, prog2, func_name="main"):
     prog2_output_shapes = [o.shape for o in prog2[func_name].outputs]
     assert prog1_output_shapes == prog2_output_shapes
 
+
+def gen_activation_stats_for_program(prog):
+    """
+    Return a dictionary of activation_stats for all intermediate tensors.
+    """
+    tensor_list = get_op_names_in_program(prog)
+    activation_stats = {}
+    for tensor_name in tensor_list:
+        activation_stats[tensor_name] = {"rmin": 0, "rmax": 1}
+    return activation_stats
+
 def get_op_names_in_program(prog, func_name="main", skip_const_ops=True):
     """
     Return the operations names in prog[func_name],
@@ -393,6 +404,7 @@ def compare_backend(
     rtol=1e-05,
     also_compare_shapes=True,
     state=None,
+    allow_mismatch_ratio=0.0,
 ):
     """
     Inputs:
@@ -403,6 +415,9 @@ def compare_backend(
 
         - expected_outputs: dict[str, np.array]. Required iff
           frontend_only is False
+
+        - allow_mismatch_ratio: Allow a ratio of elements to be out of tolenrance of atol and rtol. Mainly used
+          for comparing compressed models outputs.
     """
     if _IS_MACOS and (not mlmodel.is_package or coremltoolsutils._macos_version() >= (12, 0)):
 
@@ -424,7 +439,13 @@ def compare_backend(
             coreml_out = _get_coreml_out_from_dict(pred, o)
 
             if isinstance(coreml_out, np.ndarray):
-                np.testing.assert_allclose(coreml_out, expected, atol=atol, rtol=rtol)
+                try:
+                    np.testing.assert_allclose(coreml_out, expected, atol=atol, rtol=rtol)
+                except AssertionError as e:
+                    mismatch_num = np.sum(~np.isclose(coreml_out, expected, atol=atol, rtol=rtol))
+                    total_num = np.prod(expected.shape)
+                    if mismatch_num / total_num > allow_mismatch_ratio:
+                        raise e
             elif isinstance(coreml_out, dict):
                 for k, v in coreml_out.items():
                     assert k in expected

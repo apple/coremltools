@@ -1,24 +1,24 @@
 #! /usr/bin/env python
 #
 # See README for usage instructions.
+from distutils import util
+import fnmatch
 import glob
 import os
+import pkg_resources
+import re
 import subprocess
 import sys
+import sysconfig
 import platform
 
 # We must use setuptools, not distutils, because we need to use the
 # namespace_packages option for the "google" package.
 from setuptools import setup, Extension, find_packages
 
+from distutils.command.build_ext import build_ext as _build_ext
+from distutils.command.build_py import build_py as _build_py
 from distutils.command.clean import clean as _clean
-
-if sys.version_info[0] == 3:
-  # Python 3
-  from distutils.command.build_py import build_py_2to3 as _build_py
-else:
-  # Python 2
-  from distutils.command.build_py import build_py as _build_py
 from distutils.spawn import find_executable
 
 # Find the Protocol Compiler.
@@ -44,6 +44,7 @@ def GetVersion():
 
   with open(os.path.join('google', 'protobuf', '__init__.py')) as version_file:
     exec(version_file.read(), globals())
+    global __version__
     return __version__
 
 
@@ -78,11 +79,11 @@ def generate_proto(source, require = True):
 
 def GenerateUnittestProtos():
   generate_proto("../src/google/protobuf/any_test.proto", False)
+  generate_proto("../src/google/protobuf/map_proto2_unittest.proto", False)
   generate_proto("../src/google/protobuf/map_unittest.proto", False)
   generate_proto("../src/google/protobuf/test_messages_proto3.proto", False)
+  generate_proto("../src/google/protobuf/test_messages_proto2.proto", False)
   generate_proto("../src/google/protobuf/unittest_arena.proto", False)
-  generate_proto("../src/google/protobuf/unittest_no_arena.proto", False)
-  generate_proto("../src/google/protobuf/unittest_no_arena_import.proto", False)
   generate_proto("../src/google/protobuf/unittest.proto", False)
   generate_proto("../src/google/protobuf/unittest_custom_options.proto", False)
   generate_proto("../src/google/protobuf/unittest_import.proto", False)
@@ -91,6 +92,7 @@ def GenerateUnittestProtos():
   generate_proto("../src/google/protobuf/unittest_mset_wire_format.proto", False)
   generate_proto("../src/google/protobuf/unittest_no_generic_services.proto", False)
   generate_proto("../src/google/protobuf/unittest_proto3_arena.proto", False)
+  generate_proto("../src/google/protobuf/util/json_format.proto", False)
   generate_proto("../src/google/protobuf/util/json_format_proto3.proto", False)
   generate_proto("google/protobuf/internal/any_test.proto", False)
   generate_proto("google/protobuf/internal/descriptor_pool_test1.proto", False)
@@ -105,8 +107,10 @@ def GenerateUnittestProtos():
   generate_proto("google/protobuf/internal/more_extensions.proto", False)
   generate_proto("google/protobuf/internal/more_extensions_dynamic.proto", False)
   generate_proto("google/protobuf/internal/more_messages.proto", False)
+  generate_proto("google/protobuf/internal/no_package.proto", False)
   generate_proto("google/protobuf/internal/packed_field_test.proto", False)
   generate_proto("google/protobuf/internal/test_bad_identifiers.proto", False)
+  generate_proto("google/protobuf/internal/test_proto3_optional.proto", False)
   generate_proto("google/protobuf/pyext/python.proto", False)
 
 
@@ -117,9 +121,7 @@ class clean(_clean):
       for filename in filenames:
         filepath = os.path.join(dirpath, filename)
         if filepath.endswith("_pb2.py") or filepath.endswith(".pyc") or \
-          filepath.endswith(".so") or filepath.endswith(".o") or \
-          filepath.endswith('google/protobuf/compiler/__init__.py') or \
-          filepath.endswith('google/protobuf/util/__init__.py'):
+          filepath.endswith(".so") or filepath.endswith(".o"):
           os.remove(filepath)
     # _clean is an old-style class, so super() doesn't work.
     _clean.run(self)
@@ -141,22 +143,44 @@ class build_py(_build_py):
     generate_proto("../src/google/protobuf/wrappers.proto")
     GenerateUnittestProtos()
 
-    # Make sure google.protobuf/** are valid packages.
-    for path in ['', 'internal/', 'compiler/', 'pyext/', 'util/']:
-      try:
-        open('google/protobuf/%s__init__.py' % path, 'a').close()
-      except EnvironmentError:
-        pass
     # _build_py is an old-style class, so super() doesn't work.
     _build_py.run(self)
+
+  def find_package_modules(self, package, package_dir):
+    exclude = (
+        "*test*",
+        "google/protobuf/internal/*_pb2.py",
+        "google/protobuf/internal/_parameterized.py",
+        "google/protobuf/pyext/python_pb2.py",
+    )
+    modules = _build_py.find_package_modules(self, package, package_dir)
+    return [(pkg, mod, fil) for (pkg, mod, fil) in modules
+            if not any(fnmatch.fnmatchcase(fil, pat=pat) for pat in exclude)]
+
+
+class build_ext(_build_ext):
+
+  def get_ext_filename(self, ext_name):
+    # since python3.5, python extensions' shared libraries use a suffix that
+    # corresponds to the value of sysconfig.get_config_var('EXT_SUFFIX') and
+    # contains info about the architecture the library targets.  E.g. on x64
+    # linux the suffix is ".cpython-XYZ-x86_64-linux-gnu.so" When
+    # crosscompiling python wheels, we need to be able to override this
+    # suffix so that the resulting file name matches the target architecture
+    # and we end up with a well-formed wheel.
+    filename = _build_ext.get_ext_filename(self, ext_name)
+    orig_ext_suffix = sysconfig.get_config_var("EXT_SUFFIX")
+    new_ext_suffix = os.getenv("PROTOCOL_BUFFERS_OVERRIDE_EXT_SUFFIX")
+    if new_ext_suffix and filename.endswith(orig_ext_suffix):
+      filename = filename[:-len(orig_ext_suffix)] + new_ext_suffix
+    return filename
 
 class test_conformance(_build_py):
   target = 'test_python'
   def run(self):
-    if sys.version_info >= (2, 7):
-      # Python 2.6 dodges these extra failures.
-      os.environ["CONFORMANCE_PYTHON_EXTRA_FAILURES"] = (
-          "--failure_list failure_list_python-post26.txt")
+    # Python 2.6 dodges these extra failures.
+    os.environ["CONFORMANCE_PYTHON_EXTRA_FAILURES"] = (
+        "--failure_list failure_list_python-post26.txt")
     cmd = 'cd ../conformance && make %s' % (test_conformance.target)
     status = subprocess.check_call(cmd, shell=True)
 
@@ -176,9 +200,6 @@ if __name__ == '__main__':
     # extension. Note that those libraries have to be compiled with
     # -fPIC for this to work.
     compile_static_ext = get_option_from_sys_argv('--compile_static_extension')
-    extra_compile_args = ['-Wno-write-strings',
-                          '-Wno-invalid-offsetof',
-                          '-Wno-sign-compare']
     libraries = ['protobuf']
     extra_objects = None
     if compile_static_ext:
@@ -187,14 +208,45 @@ if __name__ == '__main__':
                        '../src/.libs/libprotobuf-lite.a']
     test_conformance.target = 'test_python_cpp'
 
+    extra_compile_args = []
+
+    if sys.platform != 'win32':
+      extra_compile_args.append('-Wno-write-strings')
+      extra_compile_args.append('-Wno-invalid-offsetof')
+      extra_compile_args.append('-Wno-sign-compare')
+      extra_compile_args.append('-Wno-unused-variable')
+      extra_compile_args.append('-std=c++11')
+
+    if sys.platform == 'darwin':
+      extra_compile_args.append("-Wno-shorten-64-to-32");
+      extra_compile_args.append("-Wno-deprecated-register");
+
+    # https://developer.apple.com/documentation/xcode_release_notes/xcode_10_release_notes
+    # C++ projects must now migrate to libc++ and are recommended to set a
+    # deployment target of macOS 10.9 or later, or iOS 7 or later.
+    if sys.platform == 'darwin':
+      mac_target = str(sysconfig.get_config_var('MACOSX_DEPLOYMENT_TARGET'))
+      if mac_target and (pkg_resources.parse_version(mac_target) <
+                       pkg_resources.parse_version('10.9.0')):
+        os.environ['MACOSX_DEPLOYMENT_TARGET'] = '10.9'
+        os.environ['_PYTHON_HOST_PLATFORM'] = re.sub(
+            r'macosx-[0-9]+\.[0-9]+-(.+)', r'macosx-10.9-\1',
+            util.get_platform())
+
+    # https://github.com/Theano/Theano/issues/4926
+    if sys.platform == 'win32':
+      extra_compile_args.append('-D_hypot=hypot')
+
+    # https://github.com/tpaviot/pythonocc-core/issues/48
+    if sys.platform == 'win32' and  '64 bit' in sys.version:
+      extra_compile_args.append('-DMS_WIN64')
+
+    # MSVS default is dymanic
+    if (sys.platform == 'win32'):
+      extra_compile_args.append('/MT')
+
     if "clang" in os.popen('$CC --version 2> /dev/null').read():
       extra_compile_args.append('-Wno-shorten-64-to-32')
-
-    v, _, _ = platform.mac_ver()
-    if v:
-      v = float('.'.join(v.split('.')[:2]))
-      if v >= 10.12:
-        extra_compile_args.append('-std=c++11')
 
     if warnings_as_errors in sys.argv:
       extra_compile_args.append('-Werror')
@@ -214,48 +266,48 @@ if __name__ == '__main__':
         Extension(
             "google.protobuf.internal._api_implementation",
             glob.glob('google/protobuf/internal/api_implementation.cc'),
-            extra_compile_args=['-DPYTHON_PROTO2_CPP_IMPL_V2'],
+            extra_compile_args=extra_compile_args + ['-DPYTHON_PROTO2_CPP_IMPL_V2'],
         ),
     ])
     os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'cpp'
 
   # Keep this list of dependencies in sync with tox.ini.
-  install_requires = ['six>=1.9', 'setuptools']
-  if sys.version_info <= (2,7):
-    install_requires.append('ordereddict')
-    install_requires.append('unittest2')
+  install_requires = []
 
   setup(
       name='protobuf',
       version=GetVersion(),
       description='Protocol Buffers',
-      download_url='https://github.com/google/protobuf/releases',
+      download_url='https://github.com/protocolbuffers/protobuf/releases',
       long_description="Protocol Buffers are Google's data interchange format",
       url='https://developers.google.com/protocol-buffers/',
       maintainer='protobuf@googlegroups.com',
       maintainer_email='protobuf@googlegroups.com',
       license='3-Clause BSD License',
       classifiers=[
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.6",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.3",
-        "Programming Language :: Python :: 3.4",
-        ],
+          "Programming Language :: Python",
+          "Programming Language :: Python :: 3",
+          "Programming Language :: Python :: 3.5",
+          "Programming Language :: Python :: 3.6",
+          "Programming Language :: Python :: 3.7",
+          "Programming Language :: Python :: 3.8",
+          "Programming Language :: Python :: 3.9",
+          "Programming Language :: Python :: 3.10",
+      ],
       namespace_packages=['google'],
       packages=find_packages(
           exclude=[
               'import_test_package',
-          ],
-      ),
+              'protobuf_distutils',
+          ],),
       test_suite='google.protobuf.internal',
       cmdclass={
           'clean': clean,
           'build_py': build_py,
+          'build_ext': build_ext,
           'test_conformance': test_conformance,
       },
       install_requires=install_requires,
       ext_modules=ext_module_list,
+      python_requires=">=3.5",
   )

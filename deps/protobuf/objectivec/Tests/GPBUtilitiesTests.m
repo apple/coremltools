@@ -52,12 +52,12 @@
 
 - (void)testRightShiftFunctions {
   XCTAssertEqual((1UL << 31) >> 31, 1UL);
-  XCTAssertEqual((1 << 31) >> 31, -1);
+  XCTAssertEqual((int32_t)(1U << 31) >> 31, -1);
   XCTAssertEqual((1ULL << 63) >> 63, 1ULL);
-  XCTAssertEqual((1LL << 63) >> 63, -1LL);
+  XCTAssertEqual((int64_t)(1ULL << 63) >> 63, -1LL);
 
-  XCTAssertEqual(GPBLogicalRightShift32((1 << 31), 31), 1);
-  XCTAssertEqual(GPBLogicalRightShift64((1LL << 63), 63), 1LL);
+  XCTAssertEqual(GPBLogicalRightShift32((1U << 31), 31), 1);
+  XCTAssertEqual(GPBLogicalRightShift64((1ULL << 63), 63), 1LL);
 }
 
 - (void)testGPBDecodeTextFormatName {
@@ -169,7 +169,27 @@
   [expected release];
 }
 
-// TODO(thomasvl): add test with extensions once those format with correct names.
+- (void)testTextFormatExtensions {
+  TestAllExtensions *message = [TestAllExtensions message];
+
+  // Not kGPBDefaultRepeatCount because we are comparing to golden master file
+  // which was generated with 2.
+  [self setAllExtensions:message repeatedCount:2];
+
+  NSString *result = GPBTextFormatForMessage(message, nil);
+
+  // NOTE: ObjC TextFormat doesn't have the proper extension names so it
+  // uses comments for the ObjC name and raw numbers for the fields instead
+  // of the bracketed extension name.
+  NSString *fileName = @"text_format_extensions_unittest_data.txt";
+  NSData *resultData = [result dataUsingEncoding:NSUTF8StringEncoding];
+  NSData *expectedData =
+      [self getDataFileNamed:fileName dataToWrite:resultData];
+  NSString *expected = [[NSString alloc] initWithData:expectedData
+                                             encoding:NSUTF8StringEncoding];
+  XCTAssertEqualObjects(expected, result);
+  [expected release];
+}
 
 - (void)testSetRepeatedFields {
   TestAllTypes *message = [TestAllTypes message];

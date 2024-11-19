@@ -17,7 +17,7 @@ AC_PREREQ(2.59)
 # In the SVN trunk, the version should always be the next anticipated release
 # version with the "-pre" suffix.  (We used to use "-SNAPSHOT" but this pushed
 # the size of one file name in the dist tarfile over the 99-char limit.)
-AC_INIT([Protocol Buffers],[3.3.0],[protobuf@googlegroups.com],[protobuf])
+AC_INIT([Protocol Buffers],[3.19.0],[protobuf@googlegroups.com],[protobuf])
 
 AM_MAINTAINER_MODE([enable])
 
@@ -47,10 +47,25 @@ AC_CANONICAL_TARGET
 
 AM_INIT_AUTOMAKE([1.9 tar-ustar subdir-objects])
 
+# Silent rules enabled: the output is minimal but informative.
+# In particular, the warnings from the compiler stick out very clearly.
+# To see all logs, use the --disable-silent-rules on configure or via make V=1
+AM_SILENT_RULES([yes])
+
 AC_ARG_WITH([zlib],
   [AS_HELP_STRING([--with-zlib],
     [include classes for streaming compressed data in and out @<:@default=check@:>@])],
   [],[with_zlib=check])
+
+AC_ARG_WITH([zlib-include],
+  [AS_HELP_STRING([--with-zlib-include=PATH],
+    [zlib include directory])],
+  [CPPFLAGS="-I$withval $CPPFLAGS"])
+
+AC_ARG_WITH([zlib-lib],
+  [AS_HELP_STRING([--with-zlib-lib=PATH],
+    [zlib lib directory])],
+  [LDFLAGS="-L$withval $LDFLAGS"])
 
 AC_ARG_WITH([protoc],
   [AS_HELP_STRING([--with-protoc=COMMAND],
@@ -78,7 +93,7 @@ AS_IF([test "x${ac_cv_env_CXXFLAGS_set}" = "x"],[
   # Protocol Buffers contains several checks that are intended to be used only
   # for debugging and which might hurt performance.  Most users are probably
   # end users who don't want these checks, so add -DNDEBUG by default.
-  CXXFLAGS="$CXXFLAGS -DNDEBUG"
+  CXXFLAGS="$CXXFLAGS -std=c++11 -DNDEBUG"
 
   AC_MSG_RESULT([use default: $PROTOBUF_OPT_FLAG $CXXFLAGS])
 ],[
@@ -110,7 +125,7 @@ AC_LINK_IFELSE(
   [have_ld_version_script=yes; AC_MSG_RESULT(yes)],
   [have_ld_version_script=no; AC_MSG_RESULT(no)])
 LDFLAGS=$save_LDFLAGS
-AM_CONDITIONAL([HAVE_LD_VERSION_SCRIPT], [test "$have_ld_version_script" == "yes"])
+AM_CONDITIONAL([HAVE_LD_VERSION_SCRIPT], [test "$have_ld_version_script" = "yes"])
 
 # Checks for header files.
 AC_HEADER_STDC
@@ -155,6 +170,26 @@ AS_IF([test "$with_zlib" != no], [
 ])
 AM_CONDITIONAL([HAVE_ZLIB], [test $HAVE_ZLIB = 1])
 
+# Add -std=c++11 if necesssary. It is important for us to do this before the
+# libatomic check below, since that also depends on C++11.
+AX_CXX_COMPILE_STDCXX([11], [noext], [mandatory])
+
+dnl On some platforms, std::atomic needs a helper library
+AC_MSG_CHECKING(whether -latomic is needed)
+AC_LINK_IFELSE([AC_LANG_SOURCE([[
+  #include <atomic>
+  #include <cstdint>
+  std::atomic<std::int64_t> v;
+  int main() {
+    return v;
+  }
+]])], STD_ATOMIC_NEED_LIBATOMIC=no, STD_ATOMIC_NEED_LIBATOMIC=yes)
+AC_MSG_RESULT($STD_ATOMIC_NEED_LIBATOMIC)
+if test "x$STD_ATOMIC_NEED_LIBATOMIC" = xyes; then
+  LIBATOMIC_LIBS="-latomic"
+fi
+AC_SUBST([LIBATOMIC_LIBS])
+
 AS_IF([test "$with_protoc" != "no"], [
   PROTOC=$with_protoc
   AS_IF([test "$with_protoc" = "yes"], [
@@ -174,20 +209,10 @@ AS_IF([test "$with_protoc" != "no"], [
 ])
 AM_CONDITIONAL([USE_EXTERNAL_PROTOC], [test "$with_protoc" != "no"])
 
-ACX_PTHREAD
-AM_CONDITIONAL([HAVE_PTHREAD], [test "x$acx_pthread_ok" = "xyes"])
-
+AX_PTHREAD
+AM_CONDITIONAL([HAVE_PTHREAD], [test "x$ax_pthread_ok" = "xyes"])
 # We still keep this for improving pbconfig.h for unsupported platforms.
 AC_CXX_STL_HASH
-
-case "$target_os" in
-  mingw* | cygwin* | win*)
-    ;;
-  *)
-    # Need to link against rt on Solaris
-    AC_SEARCH_LIBS([sched_yield], [rt], [], [AC_MSG_FAILURE([sched_yield was not found on your system])])
-    ;;
-esac
 
 # Enable ObjC support for conformance directory on OS X.
 OBJC_CONFORMANCE_TEST=0
@@ -198,14 +223,25 @@ case "$target_os" in
 esac
 AM_CONDITIONAL([OBJC_CONFORMANCE_TEST], [test $OBJC_CONFORMANCE_TEST = 1])
 
-AX_CXX_COMPILE_STDCXX([11], [noext], [optional])
+AC_MSG_CHECKING(whether -llog is needed)
+ANDROID_TEST=no
+case "$target_os" in
+  *android*)
+    ANDROID_TEST=yes
+    ;;
+esac
+AC_MSG_RESULT($ANDROID_TEST)
+if test "x$ANDROID_TEST" = xyes; then
+  LIBLOG_LIBS="-llog"
+fi
+AC_SUBST([LIBLOG_LIBS])
 
 # HACK:  Make gmock's configure script pick up our copy of CFLAGS and CXXFLAGS,
 #   since the flags added by ACX_CHECK_SUNCC must be used when compiling gmock
 #   too.
 export CFLAGS
 export CXXFLAGS
-AC_CONFIG_SUBDIRS([gmock])
+AC_CONFIG_SUBDIRS([third_party/googletest])
 
 AC_CONFIG_FILES([Makefile src/Makefile benchmarks/Makefile conformance/Makefile protobuf.pc protobuf-lite.pc])
 AC_OUTPUT

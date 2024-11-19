@@ -70,18 +70,18 @@ class LayerwiseCompressorConfig(_OptimizationConfig):
 
     Args:
         layers (:obj:`list` of :py:class:`torch.nn.Module` or :obj:`str`): List of layers
-            to be compressed. When items in the list are :obj:`str`, the string can be a regex 
-            or the exact name of the module. The layers listed should be immediate child modules 
-            of the parent container :py:class:`torch.nn.Sequential` model, and they should be contiguous. 
+            to be compressed. When items in the list are :obj:`str`, the string can be a regex
+            or the exact name of the module. The layers listed should be immediate child modules
+            of the parent container :py:class:`torch.nn.Sequential` model, and they should be contiguous.
             That is, the output of layer ``n`` should be the input to layer ``n+1``.
         global_config (:py:class:`ModuleGPTQConfig` or :py:class:`ModuleSparseGPTConfig`): Config to be applied globally
             to all supported modules. Missing values are chosen from the default config.
         module_type_configs (:obj:`dict` of :obj:`str` to :py:class:`ModuleGPTQConfig` or :py:class:`ModuleSparseGPTConfig`):
-            Module type configs applied to a specific module class, such as :py:class:`torch.nn.Linear`. 
+            Module type configs applied to a specific module class, such as :py:class:`torch.nn.Linear`.
             The keys can be either strings or module classes.
         module_name_configs (:obj:`dict` of :obj:`str` to :py:class:`ModuleGPTQConfig` or :py:class:`ModuleSparseGPTConfig`):
-            Module-level configs applied to specific modules. The name of the module must either be a regex or 
-            a fully qualified name that can be used to fetch it from the top level module using the 
+            Module-level configs applied to specific modules. The name of the module must either be a regex or
+            a fully qualified name that can be used to fetch it from the top level module using the
             ``module.get_submodule(target)`` method.
         input_cacher (:obj:`str` or :py:class:`FirstLayerInputCacher`): Cacher object that caches inputs which are then
             fed to the first layer set up for compression.
@@ -186,7 +186,7 @@ def _set_torch_flags():
 class LayerwiseCompressor(_BaseDataCalibratedModelOptimizer):
     """
     A post-training compression algorithm which compresses a sequential model layer by layer
-    by minimizing the quantization error while quantizing the weights. The implementation 
+    by minimizing the quantization error while quantizing the weights. The implementation
     supports two variations of this algorithm:
 
     1) `Generative Pre-Trained Transformer Quantization (GPTQ) <https://arxiv.org/pdf/2210.17323.pdf>`_
@@ -200,7 +200,7 @@ class LayerwiseCompressor(_BaseDataCalibratedModelOptimizer):
     Only sequential models are supported, where the output of one layer feeds into the
     input of the next layer.
 
-    For HuggingFace models, disable the ``use_cache`` config. This is used to speed up decoding, 
+    For HuggingFace models, disable the ``use_cache`` config. This is used to speed up decoding,
     but to generalize forward pass for :py:class:`LayerwiseCompressor` algorithms across all
     model types, the behavior must be disabled.
 

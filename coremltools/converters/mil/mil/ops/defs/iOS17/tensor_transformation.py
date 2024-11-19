@@ -66,7 +66,7 @@ class reshape(_reshape_iOS15):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
 
         * An ``n-D`` tensor or a scalar.
         * If ``x`` has a fixed rank (and possibly contains symbolic dimension),
@@ -90,7 +90,7 @@ class reshape(_reshape_iOS15):
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * Tensor with shape determined by the input shape.
 
     Attributes
@@ -149,10 +149,10 @@ class reshape_like(_reshape_like_iOS16):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
         * The input tensor to be reshaped.
 
-    ref_tensors: Tuple[tensor<\*?, R>] (Required)
+    ref_tensors: Tuple[tensor<\\*?, R>] (Required)
         * A tuple of tensors that define the output shape.
 
     begins: Tuple[const<int32>] (Required)
@@ -167,7 +167,7 @@ class reshape_like(_reshape_like_iOS16):
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * Same type as input tensor ``x``.
         * Output shape is computed by ``ref_tensors``, ``begins``, ``ends``, and ``end_masks``.
 
@@ -209,7 +209,7 @@ class expand_dims(_expand_dims_iOS15):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
         * Scalar or tensor.
     axes: const tensor<[K], int32> Required
         * ``K`` is the number of dimensions expanded.
@@ -219,7 +219,7 @@ class expand_dims(_expand_dims_iOS15):
 
     Returns
     -------
-    tensor<\*(rank(x)+K), T>
+    tensor<\\*(rank(x)+K), T>
         * Same type as the input ``x`` with rank ``rank(x)+K``.
 
     Attributes
@@ -256,7 +256,7 @@ class squeeze(_squeeze_iOS15):
 
     Parameters
     ----------
-    x: tensor<\*?,T> (Required)
+    x: tensor<\\*?, T> (Required)
         * Must be at least 1-D.
     axes: const<K,int32> (Optional)
         * Axes to squeeze out.
@@ -264,7 +264,7 @@ class squeeze(_squeeze_iOS15):
 
     Returns
     -------
-    tensor<\*(rank(x)-K),T>
+    tensor<\\*(rank(x)-K), T>
         * Tensor with same type as input ``x`` and rank ``rank(x)-K``.
 
     Attributes
@@ -301,7 +301,7 @@ class reverse(_reverse_iOS15):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
         * Input tensor.
 
     axes: const<D, int32> (Optional)
@@ -310,7 +310,7 @@ class reverse(_reverse_iOS15):
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * Same type and shape as the input tensor.
 
     Attributes
@@ -352,7 +352,7 @@ class reverse_sequence(_reverse_sequence_iOS15):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
         * Input tensor.
     lengths: tensor<L, U> (Required)
         * 1-dimensional tensor of length ``x.shape[batch_axis]`` specifying the length
@@ -367,7 +367,7 @@ class reverse_sequence(_reverse_sequence_iOS15):
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * Same type and shape as the input tensor.
 
     Attributes
@@ -409,7 +409,7 @@ class sliding_windows(_sliding_windows_iOS15):
 
     Parameters
     ----------
-    x: tensor<[\*d0, d_axis, *dn], T>
+    x: tensor<[\\*d0, d_axis, *dn], T>
         * Input tensor.
 
     axis: const<int32>
@@ -424,7 +424,7 @@ class sliding_windows(_sliding_windows_iOS15):
 
     Returns
     -------
-    tensor<[\*d0, d_axis - size // stride + 1, size, \*dn], T>
+    tensor<[\\*d0, d_axis - size // stride + 1, size, \\*dn], T>
         * The output will be a tensor of rank ``N+1`` where ``N`` is the input tensor
           rank.
 
@@ -464,14 +464,14 @@ class transpose(_transpose_iOS15):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
         * Must be at least 1-D. ``x`` may have a symbolic shape.
     perm: const<[rank(x)], i32> (Required)
         * Permutation order. -rank(x) <= perm[I] < rank(x) for all perm entries.
 
     Returns
     -------
-    tensor<\*?,T>
+    tensor<\\*?,T>
         * Tensor with same rank and type as ``x``.
 
     Attributes
@@ -533,7 +533,7 @@ class slice_by_index(_slice_by_index_iOS15):
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         - Scalar or tensor.
 
     Attributes
@@ -589,7 +589,7 @@ class slice_by_size(_slice_by_size_iOS15):
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * Scalar or tensor.
 
     Attributes

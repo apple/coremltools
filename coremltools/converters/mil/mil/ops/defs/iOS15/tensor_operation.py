@@ -41,7 +41,7 @@ class band_part(Operation):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
         * Input tensor.
     lower: const<i32> (Optional)
         * Number of lower / below sub-diagonals to keep. If negative, keep entire
@@ -54,7 +54,7 @@ class band_part(Operation):
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * Same type and shape as the input tensor.
 
     Attributes
@@ -101,7 +101,7 @@ class cumsum(Operation):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
         * Input tensor.
     axis: const<i32> (Optional)
         * Defaults to ``0``.
@@ -118,7 +118,7 @@ class cumsum(Operation):
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * Same type and shape as the input tensor.
 
     Attributes
@@ -186,7 +186,7 @@ class fill(Operation):
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * Tensor with shape determined by the input shape.
 
     Attributes
@@ -310,7 +310,7 @@ class non_zero(Operation):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
         * Tensor, values selected at indices where its values is not equal to ``0``.
 
     Returns
@@ -369,7 +369,7 @@ class one_hot(Operation):
 
     Returns
     -------
-    tensor<\*?,T>
+    tensor<\\*?, T>
         * A tensor that contains one-hot vectors.
 
     Attributes
@@ -439,9 +439,9 @@ class pad(Operation):
     Parameters
     ----------
 
-    x: tensor<[\*D_in], T>  (Required)
+    x: tensor<[\\*D_in], T>  (Required)
 
-    pad: tensor<[2\*N], i32> (Required)
+    pad: tensor<[2\\*N], i32> (Required)
         ``N <= D_in``. Last ``N`` dimensions of ``x`` are padded as follows:
 
         * For each dimension ``i`` of ``x`` if ``i >= D_in - N``:
@@ -466,7 +466,7 @@ class pad(Operation):
 
     Returns
     -------
-    tensor<[\*D_out],T>
+    tensor<[\\*D_out], T>
         * Tensor with same type as the input.
 
     Attributes
@@ -635,14 +635,14 @@ class tile(Operation):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
         * Input tensor.
     reps: tensor<[rank(x)], i32> (Required)
         * A 1-D tensor with length ``rank(x)``, which indicates the number to replicate the input along each dimension.
 
     Returns
     -------
-    tensor<\*?, T>:
+    tensor<\\*?, T>:
         * An n-D tensor with same type as the input.
 
     Attributes
@@ -712,7 +712,7 @@ class argsort(Operation):
 
     Parameters
     ----------
-    x: <\*?, T> (Required)
+    x: <\\*?, T> (Required)
         * Input tensor.
     * axis: const<i32> (Optional)
         * Defaults to ``-1`` (the last dimension).
@@ -723,7 +723,7 @@ class argsort(Operation):
 
     Returns
     -------
-    tensor<\*?, int32>
+    tensor<\\*?, int32>
         * Tensor containing the indices of the sorted values
 
     Attributes
@@ -766,7 +766,7 @@ class topk(Operation):
 
     Parameters
     ----------
-    x: <\*?, T> (Required)
+    x: <\\*?, T> (Required)
         * Input tensor.
     k: const<i32> (Optional)
         * Defaults to ``1``.
@@ -780,9 +780,9 @@ class topk(Operation):
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * Values of top/bottom ``k`` elements.
-    tensor<\*?, int32>
+    tensor<\\*?, int32>
         * Indices of the top/bottom ``k`` elements along axis.
 
     Attributes
@@ -1107,7 +1107,7 @@ class split(Operation):
 
     Parameters
     ----------
-    x: <\*?,T>  (Required)
+    x: <\\*?, T>  (Required)
         * The tensor to split.
         * The tensors may be variadic, but the number of tensors must be determined
           at compile time (i.e. a tuple).
@@ -1135,7 +1135,7 @@ class split(Operation):
 
     Returns
     -------
-    Tuple[tensor<\*?, T>]
+    Tuple[tensor<\\*?, T>]
         * Where the length of the tuple is the number of splits (determined
           from ``num_splits`` or ``split_sizes``).
 
@@ -1274,8 +1274,9 @@ class stack(Operation):
         # compare all shape
         for t in self.values:
             if not is_compatible_symbolic_vector(t.shape, t_shape):
-                msg = "Component tensor {} has shape {}, others have {}"
-                raise ValueError(msg.format(t.name, t.shape, t_shape))
+                raise ValueError(
+                    f"Component tensor {t.name} has shape {t.shape}, others have {t_shape}"
+                )
 
         # Validate values share the same data type
         dtype = self.values[0].dtype
@@ -1321,12 +1322,12 @@ class identity(Operation):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
         * Input tensor.
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * Same type and shape as the input tensor.
 
     Attributes

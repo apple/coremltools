@@ -37,6 +37,7 @@ module Google
   module Protobuf
     class Error < StandardError; end
     class ParseError < Error; end
+    class TypeError < ::TypeError; end
   end
 end
 
@@ -49,8 +50,10 @@ else
   rescue LoadError
     require 'google/protobuf_c'
   end
+
 end
 
+require 'google/protobuf/descriptor_dsl'
 require 'google/protobuf/repeated_field'
 
 module Google
@@ -60,16 +63,16 @@ module Google
       msg.to_proto
     end
 
-    def self.encode_json(msg)
-      msg.to_json
+    def self.encode_json(msg, options = {})
+      msg.to_json(options)
     end
 
     def self.decode(klass, proto)
       klass.decode(proto)
     end
 
-    def self.decode_json(klass, json)
-      klass.decode_json(json)
+    def self.decode_json(klass, json, options = {})
+      klass.decode_json(json, options)
     end
 
   end

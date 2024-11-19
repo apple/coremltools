@@ -253,6 +253,8 @@ class materialize_symbolic_shape_program(AbstractGraphPass):
             and source_const_var.op.weight_key is not None
         ):
             target_const_var.op.weight_key = source_const_var.op.weight_key
+        if hasattr(source_const_var.op, "weight_id") and source_const_var.op.weight_id is not None:
+            target_const_var.op.weight_id = source_const_var.op.weight_id
         return target_const_var
 
     def apply(self, prog: Program) -> None:
@@ -303,6 +305,12 @@ class materialize_symbolic_shape_program(AbstractGraphPass):
                                     assert (
                                         source_input_var.op.op_type == "const"
                                     ), "Only const may be absent from context"
+                                    # The consts across function should share the same file value while lowering into milproto,
+                                    # so we assign the weight_id, if not presented.
+                                    if source_input_var.op.weight_id is None:
+                                        source_input_var.op.weight_id = (
+                                            f"const_{source_input_var.name}_weight_id"
+                                        )
                                     context[source_input_var.name] = self._copy_construct_const_var(
                                         source_input_var
                                     )
@@ -331,15 +339,3 @@ class materialize_symbolic_shape_program(AbstractGraphPass):
                 )
 
                 prog.add_function(target_function_name, target_function)
-
-        # For some reason, if we run const_deduplication._deduplicate_const_across_functions here,
-        # the populated `const.weight_id` will get lost if we run pass pipeline afterwards,
-        # so we have no choice but to let user manually deduplicate after all passes are done
-        # TODO (rdar://131680531): Investigate why it happens & whether we can change this behavior
-        logger.warning(
-            "(If you are using ct.utils.materialize_dynamic_shape_mlmodel, "
-            "you are safe to ignore this warning message) "
-            "Weights are duplicated in each materialized new function, "
-            "so you may want to run const_deduplication._deduplicate_const_across_functions "
-            "on your pymil program before serialization to milproto"
-        )

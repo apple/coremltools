@@ -589,29 +589,22 @@ def solve_slice_by_index_shape(x_shape, begin, end, stride, begin_mask, end_mask
             and end[idx] is not None
         ):
             out_shape = None
+            begin_int64, end_int64 = np.int64(begin[idx]), np.int64(end[idx])
             if begin[idx] >= 0 and end[idx] >= 0 and stride[idx] > 0:
                 if end[idx] < begin[idx]:
                     raise ValueError(
-                        "slice_by_index op: unsupported values in for dimension {}, "
-                        "(begin, end, stride) : ({}, {}, {})".format(
-                            idx, begin[idx], end[idx], stride[idx]
-                        )
+                        f"slice_by_index op: unsupported values in for dimension {idx}, "
+                        f"(begin, end, stride) : ({begin[idx]}, {end[idx]}, {stride[idx]})"
                     )
-                out_shape = np.arange(end[idx] - begin[idx])[
-                    slice(0, end[idx] - begin[idx], stride[idx])
-                ].size
+                out_shape = max(0, (end_int64 - begin_int64 + stride[idx] - 1) // stride[idx])
 
             if begin[idx] < 0 and end[idx] < 0 and stride[idx] < 0:
                 if begin[idx] < end[idx]:
                     raise ValueError(
-                        "slice_by_index op: unsupported values in for dimension {}, "
-                        "(begin, end, stride) : ({}, {}, {})".format(
-                            idx, begin[idx], end[idx], stride[idx]
-                        )
+                        "slice_by_index op: unsupported values in for dimension {idx}, "
+                        "(begin, end, stride) : ({begin[idx]}, {end[idx]}, {stride[idx]})"
                     )
-                out_shape = np.arange(begin[idx] - end[idx])[
-                    slice(-1, end[idx] - begin[idx] - 1, stride[idx])
-                ].size
+                out_shape = max(0, -(begin_int64 - end_int64 - stride[idx] - 1) // stride[idx])
 
             if out_shape in (0, 1):
                 ret_shape.append(out_shape)

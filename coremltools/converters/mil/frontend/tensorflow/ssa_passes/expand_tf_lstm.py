@@ -61,23 +61,23 @@ def _expand_tf_lstm_helper(block):
                 logger.info("Expanding {} (op_type: {})".format(op.name, op.op_type))
 
 
-def _lstm_cell_builder(op, x, h_prev, cs_prev, before_op=None):
+def _lstm_cell_builder(op, x, h_prev, cs_prev):
     b = op.bias  # [4*hidden_dim]
     forget_bias = op.forget_bias.val  # python:float
 
     # xh = [x, h_prev]
     # xh shape: [b, input_dim+hidden_dim]
-    xh = mb.concat(values=[x, h_prev], axis=-1, before_op=before_op)
+    xh = mb.concat(values=[x, h_prev], axis=-1)
 
     # w: [4*hidden_dim, input_dim + hidden_dim] (icfo layout)
     w = np.transpose(op.weight.val)
     # [i, ci, f, o] = xh * w + b. Shape is [b, 4*hidden_dim]
-    icfo = mb.linear(x=xh, weight=w, bias=b, before_op=before_op)
+    icfo = mb.linear(x=xh, weight=w, bias=b)
 
     # i, ci, f, o shape: [b, hidden_dim]
-    i, ci, f, o = mb.split(x=icfo, num_splits=4, axis=-1, before_op=before_op)
+    i, ci, f, o = mb.split(x=icfo, num_splits=4, axis=-1)
     if op.forget_bias.val != 0:
-        f = mb.add(x=f, y=forget_bias, before_op=before_op)
+        f = mb.add(x=f, y=forget_bias)
 
     # note that .* means Hadamard product
     # i = sigmoid(cs_prev .* wci + i)
@@ -86,41 +86,41 @@ def _lstm_cell_builder(op, x, h_prev, cs_prev, before_op=None):
         wci = op.weight_peep_i.val  # [hidden_dim]
         wcf = op.weight_peep_f.val  # [hidden_dim]
 
-        x = mb.mul(x=cs_prev, y=wci, before_op=before_op)
-        pre_i = mb.add(x=x, y=i, before_op=before_op)
+        x = mb.mul(x=cs_prev, y=wci)
+        pre_i = mb.add(x=x, y=i)
 
-        x = mb.mul(x=cs_prev, y=wcf, before_op=before_op)
-        pre_f = mb.add(x=x, y=f, before_op=before_op)
+        x = mb.mul(x=cs_prev, y=wcf)
+        pre_f = mb.add(x=x, y=f)
     else:
         pre_i = i
         pre_f = f
 
-    i = mb.sigmoid(x=pre_i, before_op=before_op)
-    f = mb.sigmoid(x=pre_f, before_op=before_op)
-    ci = mb.tanh(x=ci, before_op=before_op)
+    i = mb.sigmoid(x=pre_i)
+    f = mb.sigmoid(x=pre_f)
+    ci = mb.tanh(x=ci)
 
     # cs = ci .* i + cs_prev .* f
-    x = mb.mul(x=ci, y=i, before_op=before_op)
-    y = mb.mul(x=cs_prev, y=f, before_op=before_op)
-    cs = mb.add(x=x, y=y, before_op=before_op)
+    x = mb.mul(x=ci, y=i)
+    y = mb.mul(x=cs_prev, y=f)
+    cs = mb.add(x=x, y=y)
 
     # cs = clip(cs, cell_clip)
     if op.cell_clip is not None:
         clip_val = op.cell_clip.val
-        cs = mb.clip(x=cs, alpha=-clip_val, beta=clip_val, before_op=before_op)
+        cs = mb.clip(x=cs, alpha=-clip_val, beta=clip_val)
 
     # o = sigmoid(cs * wco + o)
     if op.use_peephole.val:
         wco = op.weight_peep_o.val
-        x = mb.mul(x=cs, y=wco, before_op=before_op)
-        pre_o = mb.add(x=x, y=o, before_op=before_op)
+        x = mb.mul(x=cs, y=wco)
+        pre_o = mb.add(x=x, y=o)
     else:
         pre_o = o
-    o = mb.sigmoid(x=pre_o, before_op=before_op)
-    co = mb.tanh(x=cs, before_op=before_op)
+    o = mb.sigmoid(x=pre_o)
+    co = mb.tanh(x=cs)
 
     # h = co .* o
-    h = mb.mul(x=co, y=o, before_op=before_op)
+    h = mb.mul(x=co, y=o)
 
     return [i, cs, f, o, ci, co, h]
 
@@ -134,9 +134,8 @@ def _expand_tf_lstm_block_cell(op):
         h_prev = op.h_prev  # [b, hidden_dim]
         cs_prev = op.c_prev  # [b, hidden_dim]
 
-        i, cs, f, o, ci, co, h = _lstm_cell_builder(
-            op, x, h_prev, cs_prev, before_op=op
-        )
+        with mb.set_before_op(op):
+            i, cs, f, o, ci, co, h = _lstm_cell_builder(op, x, h_prev, cs_prev)
 
         # Replace all outputs
         new_outputs = [i, cs, f, o, ci, co, h]

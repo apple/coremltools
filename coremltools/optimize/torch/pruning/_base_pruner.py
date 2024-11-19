@@ -10,6 +10,12 @@ from typing import Tuple as _Tuple
 
 import torch as _torch
 
+from coremltools.optimize.torch._utils.joint_compression_utils import (
+    is_palettized_module as _is_palettized_module,
+)
+from coremltools.optimize.torch._utils.joint_compression_utils import (
+    is_quant_prepared as _is_quant_prepared,
+)
 from coremltools.optimize.torch._utils.metadata_utils import (
     register_metadata_version as _register_metadata_version,
 )
@@ -53,7 +59,14 @@ class BasePrunerWithPruningMethod(BasePruner):
             inplace (:obj:`bool`): If ``True``, model transformations are carried out in-place and
                 the original module is mutated, otherwise a copy of the model is mutated and returned.
         """
-        return self._get_model_for_compression(inplace=inplace)
+        if _is_quant_prepared(self) and not inplace:
+            raise RuntimeError(
+                "If you are trying to run joint compression, pass inplace=True to ensure "
+                "quantizer / palettizer and pruner are operating on the same model."
+            )
+
+        self._model = self._get_model_for_compression(inplace=inplace)
+        return self._model
 
     def step(self):
         """
@@ -79,6 +92,14 @@ class BasePrunerWithPruningMethod(BasePruner):
             model = self._model
         finalized_model = model if inplace else _copy.deepcopy(model)
 
+        # If model has been prepared for quantization but not finalized yet
+        if _is_quant_prepared(self):
+            raise RuntimeError(
+                "When running joint compression, first finalize quantizer / palettizer "
+                "and then finalize pruner with that model. This is to ensure the compression "
+                "metadata (required for export) is correctly registered in the model."
+            )
+
         # Add compression metadata
         _register_metadata_version(finalized_model)
         for name, pruner_info in self._pruner_info.items():
@@ -91,7 +112,7 @@ class BasePrunerWithPruningMethod(BasePruner):
                 submodule.pruning_method.remove(submodule)
             # If the module has been joint pruned + palettized, then palettizer finalize()
             # can remove pruning_method attribute but not the forward pre hook. So we explicitly remove it.
-            elif name in self._pruner_info and _utils.is_palettized_module(
+            elif name in self._pruner_info and _is_palettized_module(
                 self._pruner_info[name].module
             ):
                 for k, hook in submodule._forward_pre_hooks.items():

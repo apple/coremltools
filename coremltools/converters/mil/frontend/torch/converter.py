@@ -18,13 +18,19 @@ from coremltools._deps import _HAS_TORCH_EXPORT_API
 from coremltools.converters.mil import mil
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget as _target
 from coremltools.converters.mil.frontend import _utils as frontend_utils
-from coremltools.converters.mil.input_types import ImageType, InputType, StateType, TensorType
+from coremltools.converters.mil.input_types import (
+    EnumeratedShapes,
+    ImageType,
+    InputType,
+    StateType,
+    TensorType,
+)
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, Placeholder, Program, types
 from coremltools.converters.mil.mil.block import is_current_opset_version_compatible_with
 from coremltools.converters.mil.mil.scope import ScopeInfo, ScopeSource
 from coremltools.converters.mil.mil.types import builtin_to_string, is_float
-from coremltools.converters.mil.mil.types.symbolic import any_symbolic
+from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbolic
 from coremltools.converters.mil.mil.var import Var
 from coremltools.optimize.coreml import _utils as optimize_utils
 from coremltools.optimize.coreml._quantization_passes import prune_weights
@@ -121,13 +127,15 @@ class CompressionInfo:
                 )
 
 
-def _convert_to_torch_inputtype(inputs: List[TensorType]) -> List[TensorType]:
+def _convert_to_torch_inputtype(
+    inputs: List[TensorType], allow_default_shape: bool = True
+) -> List[TensorType]:
     input_type = []
     for _input in inputs:
         if isinstance(_input, (list, tuple)):
             input_type.append(_convert_to_torch_inputtype(_input))
         elif isinstance(_input, InputType):
-            if _input.shape is None:
+            if _input.shape is None and not allow_default_shape:
                 raise ValueError(
                     "'shape' must be provided in the 'inputs' argument for pytorch conversion"
                 )
@@ -311,9 +319,9 @@ class TranscriptionContext:
     def torch_graph(self, graph: InternalTorchIRGraph):
         self._torch_graph = graph
 
-    def prepare_for_conversion(self, node: InternalTorchIRNode) -> None:
+    def convert_input_to_tensor_type(self, node: InternalTorchIRNode) -> None:
         """
-        Perform any preparation necessary before node-specific frontend conversion is invoked.
+        Convert non-tensor type input of a node into tensor type.
 
         This utility check if the input is a function state input, and
         convert it into a tensor type.
@@ -335,10 +343,6 @@ class TranscriptionContext:
         ``%read_x_cast`` is cached in ``name_to_source_state``, to make sure one
         state feeds into only one ``read_state`` op.
         """
-
-        # Only torch script needs to prepare
-        if self.frontend != TorchFrontend.TORCHSCRIPT:
-            return
 
         for val in node.inputs:
             if val is None:
@@ -565,7 +569,8 @@ class TorchConverter:
         # process inputs
         if inputs is None:
             inputs = []
-        self.inputs = _convert_to_torch_inputtype(inputs)
+        allow_default_shape = _HAS_TORCH_EXPORT_API and isinstance(loaded_model, ExportedProgram)
+        self.inputs = _convert_to_torch_inputtype(inputs, allow_default_shape=allow_default_shape)
         for idx, inp in enumerate(self.inputs):
             if isinstance(inp, ImageType) and self.inputs[idx].channel_first is None:
                 self.inputs[idx].channel_first = True
@@ -604,6 +609,9 @@ class TorchConverter:
             for p in passes:
                 p(self.graph)
 
+            # finalize inputs after internal graph gets settled
+            self.inputs = list(self.graph.inputs.values())
+
         elif _HAS_TORCH_EXPORT_API and isinstance(loaded_model, ExportedProgram):
             if loaded_model.dialect == "ATEN":
                 frontend = TorchFrontend.TORCHEXPORT
@@ -615,15 +623,18 @@ class TorchConverter:
                     f"Provided Dialect: {loaded_model.dialect}"
                 )
             self.context = TranscriptionContext(frontend=frontend)
-            self.graph = InternalTorchIRGraph.from_exir(exir=loaded_model)
-            # For iOS 18+, create states for all mutable buffers
-            if self.opset_version is not None and self.opset_version >= _target.iOS18:
+            self.graph = InternalTorchIRGraph.from_exir(
+                exir=loaded_model, cut_at_symbols=cut_at_symbols
+            )
+
+            # finalize inputs after internal graph gets settled
+            self.inputs = self._match_user_exir_inputs(inputs)
+
+            if states is None or len(states) == 0:
+                # For torch.export, we default to create states from torch mutable buffers
                 self.states = []
                 for name, tensor in self.graph.buffers.items():
                     dtype = NUM_TO_NUMPY_DTYPE[TORCH_DTYPE_TO_NUM[tensor.dtype]]
-                    # For now, we check state dtype here since we construct input from EXIR program
-                    # TODO (rdar://115845792): Once we support user inputs,
-                    # we can migrate this check to inputs validation
                     if dtype != np.float16:
                         logger.warning(
                             "Core ML only supports fp16 states, "
@@ -634,12 +645,6 @@ class TorchConverter:
                         wrapped_type=TensorType(shape=tensor.shape, dtype=dtype), name=name
                     )
                     self.states.append(state)
-            # For iOS 17 or earlier, make sure there is no mutable buffer
-            # (We may workaround by out of place, i.e. have initial value as input
-            #  and mutated value as output. Let us see if there is such demand)
-            else:
-                if self.graph.buffers:
-                    raise ValueError("iOS 18+ is required to convert mutable buffer")
 
         else:
             raise ValueError(
@@ -647,7 +652,6 @@ class TorchConverter:
             )
 
         self.context.torch_graph = self.graph
-        self.inputs = list(self.graph.inputs.values())
         self._validate_states()
 
         # Store the mapping from parameter name (such as "dense1.weight") to the compression info.
@@ -673,10 +677,54 @@ class TorchConverter:
                         ]
                         del self.param_to_compression_info[param_name]
 
+    def _match_user_exir_inputs(self, user_inputs: List[TensorType]) -> List[TensorType]:
+        """
+        check consistency between user-specified `InputType`s and EXIR inputs
+        inherit missing user specifications from EXIR
+        """
+        if user_inputs is None or len(user_inputs) == 0:
+            # user did not specify inputs, default to use EXIR inputs
+            return list(self.graph.inputs.values())
+        if len(user_inputs) != len(self.graph.inputs):
+            raise ValueError("Inconsistent number of inputs between user and EXIR specifications")
+
+        for user_input, (_, exir_input) in zip(user_inputs, self.graph.inputs.items()):
+            # user specified shape, then check consistency with EXIR
+            if user_input.shape is not None:
+                if isinstance(user_input.shape, EnumeratedShapes):
+                    user_shapes = [enum_shape.shape for enum_shape in user_input.shape.shapes]
+                else:
+                    user_shapes = [tuple(user_input.shape.to_list(allow_symbolic=True))]
+                exir_shape = tuple(exir_input.shape.to_list(allow_symbolic=True))
+                for user_shape in user_shapes:
+                    for user_size, exir_size in zip(user_shape, exir_shape):
+                        # Dynamic size can be changed (almost) arbitrarily
+                        # Static size, however, is dangerous to change, since the EXIR graph
+                        # is very likely to have been specialized using the static size value
+                        if not is_symbolic(exir_size) and user_size != exir_size:
+                            raise ValueError(
+                                f"inconsistent shape between "
+                                f"EXIR input {exir_input.name} shape {exir_shape} and "
+                                f"user specified input {user_input.name} shape {user_shape}"
+                            )
+            # shape not specified, inherit from EXIR
+            else:
+                user_input.shape = exir_input.shape
+
+            # inherit dtype from EXIR if not specified
+            if user_input.dtype is None:
+                user_input.dtype = exir_input.dtype
+
+            # inherit name from EXIR if not specified
+            if user_input.name is None:
+                user_input.name = exir_input.name
+
+        return user_inputs
+
     def _validate_states(self) -> None:
         """
         Validate that the user provided states is consistent with the
-        registered buffer in the torchscript model, and add states to inputs
+        registered buffer in the torch model, and add states to inputs
         """
         if len(self.states) > 0:
             for state in self.states:
@@ -777,8 +825,10 @@ class TorchConverter:
         # int64 and fp64 are not supported, so they are mapped to int32 / fp32 accordingly
         if dtype == types.int64:
             dtype = types.int32
+            logger.warning(f"int64 dtype input {_input.name} down casted to int32.")
         elif dtype == types.fp64:
             dtype = types.fp32
+            logger.warning(f"fp64 dtype input {_input.name} down casted to fp32.")
 
         if isinstance(_input, StateType):
             return mb.state_tensor_placeholder(shape, dtype=dtype)
@@ -1044,29 +1094,7 @@ class TorchConverter:
             lut = tmp_quant_var.op.data.val
 
         if compressed_var is None:
-            if is_current_opset_version_compatible_with(_target.iOS18):
-                result = mb.constexpr_lut_to_dense(
-                    indices=indices, lut=lut, vector_axis=vector_axis, name=name
-                )
-            else:
-                if np.prod(lut.shape[:-2]) > 1:
-                    raise ValueError(
-                        "More than one look-up-table (lut) per tensor is only supported in iOS18+. "
-                        "Please set the minimum_deployment_target to iOS18 or later."
-                    )
-                if lut.shape[-1] > 1:
-                    raise ValueError(
-                        "Vector palettization (lut last dim > 1) is only supported in iOS18+. "
-                        "Please set the minimum_deployment_target to iOS18 or later."
-                    )
-                # Convert iOS18 lut params to pre-iOS18 compatible format.
-                lut = lut.reshape([num_palettes])
-                result = mb.constexpr_lut_to_dense(
-                    indices=optimize_utils.pack_elements_into_bits(indices, nbits),
-                    lut=lut,
-                    shape=np.uint32(indices.shape),
-                    name=name,
-                )
+            result = frontend_utils._construct_constexpr_lut_op(indices, lut, vector_axis, name)
         else:
             # Specially handles joint compression, such as using sparse op if joint with pruning.
             if compressed_var.op.op_type == "constexpr_sparse_to_dense":
@@ -1264,7 +1292,7 @@ class TorchConverter:
             for torch_name, ssa_name in zip(internal_names, user_names):
                 input_var = ssa_func.inputs[ssa_name]
                 if self.context.frontend == TorchFrontend.TORCHSCRIPT:
-                    # To create fp16 Core ML model from fp32 torch model, we
+                    # To create fp16 Core ML model from fp32 torch script model, we
                     # 1. Cast input to fp32 (if specified fp16 input)
                     # 2. Convert fp32 torch model to fp32 Core ML model
                     # 3. Graph passes `add_fp16_cast` and `cast_optimization`
@@ -1282,22 +1310,36 @@ class TorchConverter:
                         ):
                             input_var = mb.cast(x=input_var, dtype="fp32")
                 elif self.context.frontend in TORCH_EXPORT_BASED_FRONTENDS:
-                    # EXIR has dtypes all determined, so for now we just stick to EXIR dtypes
-                    # TODO (rdar://115845792): Handle fp16 IO dtypes
                     # When handle user provided IO dtypes, we will also need to handle IO metadata
                     # TODO (rdar://125572392): Support torch.export IO metadata
-                    if (
-                        input_var.dtype == types.fp16
-                        and not is_current_opset_version_compatible_with(_target.iOS16)
-                    ):
-                        raise ValueError(
-                            "To use fp16 input, please set minimum deployment target to iOS16+"
-                        )
-                    # Torch.export may produce scalar input,
-                    # which then gets wrapped as rank-1 size-1 tensor for Core ML residency
-                    # during our internal graph construction.
-                    # Here we squeeze it back to scalar
+                    if types.is_tensor(input_var.sym_type) or types.is_scalar(input_var.sym_type):
+                        # cast and minimum deployment target check may be needed
+                        user_input_dtype = input_var.dtype
+                        exir_input_dtype = self.graph.inputs[torch_name].dtype
+                        if user_input_dtype != exir_input_dtype:
+                            scopes = [
+                                ScopeInfo(source=ScopeSource.EXIR_STACK_TRACE, data=torch_name)
+                            ]
+                            if self.context.frontend == TorchFrontend.EXECUTORCH:
+                                scopes.append(
+                                    ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None])
+                                )
+                            with mb.scope(*scopes):
+                                input_var = mb.cast(
+                                    x=input_var, dtype=builtin_to_string(exir_input_dtype)
+                                )
+                        if (
+                            user_input_dtype == types.fp16
+                            and not is_current_opset_version_compatible_with(_target.iOS16)
+                        ):
+                            raise ValueError(
+                                "To use fp16 input, please set minimum deployment target to iOS16+"
+                            )
                     if torch_name.endswith(WRAPPED_SCALAR_INPUT_SUFFIX):
+                        # Torch.export may produce scalar input,
+                        # which then gets wrapped as rank-1 size-1 tensor for Core ML residency
+                        # during our internal graph construction.
+                        # Here we squeeze it back to scalar
                         torch_name = torch_name[: -len(WRAPPED_SCALAR_INPUT_SUFFIX)]
                         scopes = [
                             ScopeInfo(

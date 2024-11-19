@@ -10,6 +10,7 @@
 #include "NeuralNetworkValidatorUtils.hpp"
 
 #include <algorithm>
+#include <numeric>
 #include <sstream>
 
 using namespace CoreML;

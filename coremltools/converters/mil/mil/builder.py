@@ -25,12 +25,13 @@ from .program import Placeholder, StateTensorPlaceholder
 from .scope import (
     SCOPE_STACK,
     VALID_OPS_TO_COPY_SCOPE_INFO,
-    ScopeContextManger,
+    ScopeContextManager,
     ScopeInfo,
     ScopeSource,
 )
 from .var import InternalVar, Var
 
+_BEFORE_OP_STACK: List["mil.Operation"] = []
 
 def is_python_value(val):
     return (
@@ -41,6 +42,29 @@ def is_python_value(val):
         or (isinstance(val, (tuple, list)) and all(is_python_value(v) for v in val))
     )
 
+class BeforeOpContextManager:
+    def __init__(self, before_op: "mil.Operation"):
+        """
+        A context manager which makes the operations created within it contructed before the target ``before_op``.
+
+        Parameters
+        ----------
+        before_op: Operation
+            * The anchor op where the new op is going to be created at (right before `before_op`).
+            * If the users explicity specify ``before_op`` when creating ``Operation`` object under this context manager, the builder
+              will respect the one provided by the users.
+        """
+        if not isinstance(before_op, mil.Operation) and before_op is not None:
+            raise ValueError(
+                f"mb.set_before_op only accepts input of type Operation. Got {type(before_op)}."
+            )
+        self.before_op = before_op
+
+    def __enter__(self):
+        _BEFORE_OP_STACK.append(self.before_op)
+
+    def __exit__(self, type, value, traceback):
+        _BEFORE_OP_STACK.pop()
 
 class Builder:
     """
@@ -172,7 +196,13 @@ class Builder:
         logger.debug(
             "Adding op '{}' of type {}".format(kwargs["name"], op_cls.__name__)
         )
+
+        # If before_op is explicitly passed, the builder will respect it,
+        # otherwise it will refer to _BEFORE_OP_STACK.
         before_op = kwargs.get("before_op", None)
+        if before_op is None and len(_BEFORE_OP_STACK) != 0:
+            before_op = _BEFORE_OP_STACK[-1]
+
         # Shallow copy list inputs to ensure op inputs are immutable
         kwargs = {k: v if not isinstance(v, (list, tuple)) else v[:] for k, v in kwargs.items() if v is not None}
         kwargs.update(cls._create_vars(
@@ -336,9 +366,23 @@ class Builder:
         return wrapper
 
     @staticmethod
+    def set_before_op(before_op: "mil.Operation") -> BeforeOpContextManager:
+        """
+        The ``mb.set_before_op`` creates a context manager, which makes the operations created within it contructed before the target ``before_op``.
+
+        Parameters
+        ----------
+        before_op: Operation
+            * The anchor op where the new op is going to be created at (right before `before_op`).
+            * If the users explicity specify ``before_op`` when creating ``Operation`` object under this context manager, the builder
+              will respect the one provided by the users.
+        """
+        return BeforeOpContextManager(before_op=before_op)
+
+    @staticmethod
     def scope(
         *scopes: List[ScopeInfo],
-    ) -> ScopeContextManger:
+    ) -> ScopeContextManager:
         """
         The ``mb.scope`` creates a context manager, which makes the operations created within it have the corresponding scope information.
 
@@ -391,4 +435,4 @@ class Builder:
             * TORCHSCRIPT_MODULE_TYPE: ["Module1", "Module2"]
             * TORCHSCRIPT_MODULE_NAME: ["module_2"]
         """
-        return ScopeContextManger(*scopes)
+        return ScopeContextManager(*scopes)

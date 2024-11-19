@@ -44,41 +44,44 @@ namespace csharp {
 class MessageFieldGenerator : public FieldGeneratorBase {
  public:
   MessageFieldGenerator(const FieldDescriptor* descriptor,
-                        int fieldOrdinal,
+                        int presenceIndex,
                         const Options *options);
   ~MessageFieldGenerator();
 
-  virtual void GenerateCodecCode(io::Printer* printer);
-  virtual void GenerateCloningCode(io::Printer* printer);
-  virtual void GenerateFreezingCode(io::Printer* printer);
-  virtual void GenerateMembers(io::Printer* printer);
-  virtual void GenerateMergingCode(io::Printer* printer);
-  virtual void GenerateParsingCode(io::Printer* printer);
-  virtual void GenerateSerializationCode(io::Printer* printer);
-  virtual void GenerateSerializedSizeCode(io::Printer* printer);
+  MessageFieldGenerator(const MessageFieldGenerator&) = delete;
+  MessageFieldGenerator& operator=(const MessageFieldGenerator&) = delete;
 
-  virtual void WriteHash(io::Printer* printer);
-  virtual void WriteEquals(io::Printer* printer);
-  virtual void WriteToString(io::Printer* printer);
+  virtual void GenerateCodecCode(io::Printer* printer) override;
+  virtual void GenerateCloningCode(io::Printer* printer) override;
+  virtual void GenerateFreezingCode(io::Printer* printer) override;
+  virtual void GenerateMembers(io::Printer* printer) override;
+  virtual void GenerateMergingCode(io::Printer* printer) override;
+  virtual void GenerateParsingCode(io::Printer* printer) override;
+  virtual void GenerateSerializationCode(io::Printer* printer) override;
+  virtual void GenerateSerializedSizeCode(io::Printer* printer) override;
+  virtual void GenerateExtensionCode(io::Printer* printer) override;
 
- private:
-  GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(MessageFieldGenerator);
+  virtual void WriteHash(io::Printer* printer) override;
+  virtual void WriteEquals(io::Printer* printer) override;
+  virtual void WriteToString(io::Printer* printer) override;
 };
 
 class MessageOneofFieldGenerator : public MessageFieldGenerator {
  public:
   MessageOneofFieldGenerator(const FieldDescriptor* descriptor,
-                             int fieldOrdinal,
+                             int presenceIndex,
                              const Options *options);
   ~MessageOneofFieldGenerator();
 
-  virtual void GenerateCloningCode(io::Printer* printer);
-  virtual void GenerateMembers(io::Printer* printer);
-  virtual void WriteToString(io::Printer* printer);
-  virtual void GenerateParsingCode(io::Printer* printer);
+  MessageOneofFieldGenerator(const MessageOneofFieldGenerator&) = delete;
+  MessageOneofFieldGenerator& operator=(const MessageOneofFieldGenerator&) =
+      delete;
 
- private:
-  GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(MessageOneofFieldGenerator);
+  virtual void GenerateCloningCode(io::Printer* printer) override;
+  virtual void GenerateMembers(io::Printer* printer) override;
+  virtual void GenerateMergingCode(io::Printer* printer) override;
+  virtual void WriteToString(io::Printer* printer) override;
+  virtual void GenerateParsingCode(io::Printer* printer) override;
 };
 
 }  // namespace csharp

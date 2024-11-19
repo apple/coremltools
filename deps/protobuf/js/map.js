@@ -1,3 +1,4 @@
+
 // Protocol Buffers - Google's data interchange format
 // Copyright 2008 Google Inc.  All rights reserved.
 // https://developers.google.com/protocol-buffers/
@@ -28,12 +29,16 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+/**
+ * @fileoverview
+ * @suppress {missingRequire} TODO(b/152540451): this shouldn't be needed
+ */
 goog.provide('jspb.Map');
 
 goog.require('goog.asserts');
 
-goog.forwardDeclare('jspb.BinaryReader');
-goog.forwardDeclare('jspb.BinaryWriter');
+goog.requireType('jspb.BinaryReader');
+goog.requireType('jspb.BinaryWriter');
 
 
 
@@ -48,9 +53,9 @@ goog.forwardDeclare('jspb.BinaryWriter');
  *
  * @template K, V
  *
- * @param {!Array<!Array<!Object>>} arr
+ * @param {!Array<!Array<?>>} arr
  *
- * @param {?function(new:V)|function(new:V,?)=} opt_valueCtor
+ * @param {?function(new:V, ?=)=} opt_valueCtor
  *    The constructor for type V, if type V is a message type.
  *
  * @constructor
@@ -118,7 +123,7 @@ jspb.Map.prototype.toArray = function() {
     strKeys.sort();
     for (var i = 0; i < strKeys.length; i++) {
       var entry = this.map_[strKeys[i]];
-      var valueWrapper = /** @type {!Object} */ (entry.valueWrapper);
+      var valueWrapper = /** @type {?jspb.Message} */ (entry.valueWrapper);
       if (valueWrapper) {
         valueWrapper.toArray();
       }
@@ -136,7 +141,7 @@ jspb.Map.prototype.toArray = function() {
  *
  * @param {boolean=} includeInstance Whether to include the JSPB instance for
  *    transitional soy proto support: http://goto/soy-param-migration
- * @param {!function((boolean|undefined),V):!Object=} valueToObject
+ * @param {function((boolean|undefined),V):!Object=} valueToObject
  *    The static toObject() method, if V is a message type.
  * @return {!Array<!Array<!Object>>}
  */
@@ -165,9 +170,9 @@ jspb.Map.prototype.toObject = function(includeInstance, valueToObject) {
  *
  * @template K, V
  * @param {!Array<!Array<!Object>>} entries
- * @param {!function(new:V)|function(new:V,?)} valueCtor
+ * @param {function(new:V,?=)} valueCtor
  *    The constructor for type V.
- * @param {!function(!Object):V} valueFromObject
+ * @param {function(!Object):V} valueFromObject
  *    The fromObject function for type V.
  * @return {!jspb.Map<K, V>}
  */
@@ -410,9 +415,9 @@ jspb.Map.prototype.has = function(key) {
  * number.
  * @param {number} fieldNumber
  * @param {!jspb.BinaryWriter} writer
- * @param {!function(this:jspb.BinaryWriter,number,K)} keyWriterFn
+ * @param {function(this:jspb.BinaryWriter,number,K)} keyWriterFn
  *     The method on BinaryWriter that writes type K to the stream.
- * @param {!function(this:jspb.BinaryWriter,number,V,?=)|
+ * @param {function(this:jspb.BinaryWriter,number,V,?=)|
  *          function(this:jspb.BinaryWriter,number,V,?)} valueWriterFn
  *     The method on BinaryWriter that writes type V to the stream.  May be
  *     writeMessage, in which case the second callback arg form is used.
@@ -432,7 +437,8 @@ jspb.Map.prototype.serializeBinary = function(
       valueWriterFn.call(writer, 2, this.wrapEntry_(entry),
                          opt_valueWriterCallback);
     } else {
-      valueWriterFn.call(writer, 2, entry.value);
+      /** @type {function(this:jspb.BinaryWriter,number,?)} */ (valueWriterFn)
+          .call(writer, 2, entry.value);
     }
     writer.endSubMessage();
   }
@@ -442,43 +448,63 @@ jspb.Map.prototype.serializeBinary = function(
 /**
  * Read one key/value message from the given BinaryReader. Compatible as the
  * `reader` callback parameter to jspb.BinaryReader.readMessage, to be called
- * when a key/value pair submessage is encountered.
+ * when a key/value pair submessage is encountered. If the Key is undefined,
+ * we should default it to 0.
  * @template K, V
  * @param {!jspb.Map} map
  * @param {!jspb.BinaryReader} reader
- * @param {!function(this:jspb.BinaryReader):K} keyReaderFn
+ * @param {function(this:jspb.BinaryReader):K} keyReaderFn
  *     The method on BinaryReader that reads type K from the stream.
  *
- * @param {!function(this:jspb.BinaryReader):V|
+ * @param {function(this:jspb.BinaryReader):V|
  *          function(this:jspb.BinaryReader,V,
  *                  function(V,!jspb.BinaryReader))} valueReaderFn
  *    The method on BinaryReader that reads type V from the stream. May be
  *    readMessage, in which case the second callback arg form is used.
  *
  * @param {?function(V,!jspb.BinaryReader)=} opt_valueReaderCallback
- *    The BinaryReader parsing callback for type V, if V is a message type.
+ *    The BinaryReader parsing callback for type V, if V is a message type
+ *
+ * @param {K=} opt_defaultKey
+ *    The default value for the type of map keys. Accepting map entries with
+ *    unset keys is required for maps to be backwards compatible with the
+ *    repeated message representation described here: goo.gl/zuoLAC
+ *
+ * @param {V=} opt_defaultValue
+ *    The default value for the type of map values. Accepting map entries with
+ *    unset values is required for maps to be backwards compatible with the
+ *    repeated message representation described here: goo.gl/zuoLAC
  *
  */
 jspb.Map.deserializeBinary = function(map, reader, keyReaderFn, valueReaderFn,
-                                      opt_valueReaderCallback) {
-  var key = undefined;
-  var value = undefined;
+                                      opt_valueReaderCallback, opt_defaultKey,
+                                      opt_defaultValue) {
+  var key = opt_defaultKey;
+  var value = opt_defaultValue;
 
   while (reader.nextField()) {
     if (reader.isEndGroup()) {
       break;
     }
     var field = reader.getFieldNumber();
+
     if (field == 1) {
       // Key.
       key = keyReaderFn.call(reader);
     } else if (field == 2) {
       // Value.
       if (map.valueCtor_) {
-        value = new map.valueCtor_();
+        goog.asserts.assert(opt_valueReaderCallback);
+        if (!value) {
+          // Old generator still doesn't provide default value message.
+          // Need this for backward compatibility.
+          value = new map.valueCtor_();
+        }
         valueReaderFn.call(reader, value, opt_valueReaderCallback);
       } else {
-        value = valueReaderFn.call(reader);
+        value =
+            (/** @type {function(this:jspb.BinaryReader):?} */ (valueReaderFn))
+                .call(reader);
       }
     }
   }

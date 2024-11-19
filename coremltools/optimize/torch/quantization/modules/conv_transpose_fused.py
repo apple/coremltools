@@ -4,7 +4,6 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 # Original implementation from https://github.com/pytorch/pytorch/blob/main/torch/ao/nn/intrinsic/qat/modules/conv_fused.py
-# Copyright (c) 2016 Facebook, Inc (Adam Paszke)
 
 from typing import List as _List
 from typing import Optional as _Optional

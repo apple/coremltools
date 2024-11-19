@@ -49,7 +49,7 @@ def _torch_upsample_to_core_upsample_block(block):
 
 def _try_get_upsample_factor(output_size):
     op = output_size
-    # If the output has value, than the upsample op itself is derived from the upsample_1d op,
+    # If the output has value, then the upsample op itself is derived from the upsample_1d op,
     # so we can just return scale factor 1 for that case
     if op.outputs[0].val is not None:
         assert op.outputs[0].val == 1.
@@ -60,30 +60,31 @@ def _try_get_upsample_factor(output_size):
     #        for i in range(dim)
     #    ]
     # source from : https://pytorch.org/docs/stable/_modules/torch/nn/functional.html#interpolate
-    # We validation if we can trace all the way back to the original scale_factor
-    # The whole sequence is mul(input_size, scale_factor) -> cast(fp32) -> floor() -> cast(int32)
-
-    # 1. check if the output_size is type 'cast' with dtype 'int32'
-    if op.op_type != "cast" or op.dtype.val != "int32":
-        return None
-
-    # 2. check if the op is type 'floor'
-    op = op.x.op
-    if op.op_type != "floor":
-        return None
-
-    # 3. check if the op is type 'cast' with dtype 'fp32'
-    op = op.x.op
-    if op.op_type != 'cast' or op.dtype.val != "fp32":
-        return None
-
-    # 4. check if the op is type mul
-    op = op.x.op
-    if op.op_type != 'mul':
-        return None
-
-    # we successfully trace back the original scale factor
-    return np.float32(op.y.val)
+    # We validate if we can trace all the way back to the original scale_factor
+    if op.op_type == "mul":
+        # we successfully trace back the original scale factor
+        assert op.y.val is not None, "scale factor should be const"
+        return np.float32(op.y.val)
+    else:
+        # The whole sequence is mul(input_size, scale_factor) -> cast(fp32) -> floor() -> cast(int32)
+        # 1. check if the output_size is type 'cast' with dtype 'int32'
+        if op.op_type != "cast" or op.dtype.val != "int32":
+            return None
+        # 2. check if the op is type 'floor'
+        op = op.x.op
+        if op.op_type != "floor":
+            return None
+        # 3. check if the op is type 'cast' with dtype 'fp32'
+        op = op.x.op
+        if op.op_type != "cast" or op.dtype.val != "fp32":
+            return None
+        # 4. check if the op is type mul
+        op = op.x.op
+        if op.op_type != "mul":
+            return None
+        # we successfully trace back the original scale factor
+        assert op.y.val is not None, "scale factor should be const"
+        return np.float32(op.y.val)
 
 
 def _try_replace_with_core_upsample(op):

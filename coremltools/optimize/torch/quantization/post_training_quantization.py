@@ -24,7 +24,7 @@ from attr import field as _field
 from attrs import validators as _validators
 
 from coremltools.converters.mil.mil.ops.defs.iOS18 import constexpr_blockwise_shift_scale
-from coremltools.optimize.coreml._utils import compute_qparams as _ct_compute_qparams
+from coremltools.optimize.coreml._utils import compute_qparams as _cti_compute_qparams
 from coremltools.optimize.torch._utils.metadata_utils import (
     CompressionMetadata as _CompressionMetadata,
 )
@@ -67,6 +67,20 @@ _default_ptq_options = {
 
 _logger = _logging.getLogger(__name__)
 
+_SUPPORTED_WEIGHT_DTYPE = [
+    "int8",
+    "uint8",
+    "int4",
+    "uint4",
+    "fp8_e4m3",
+    "fp8_e5m2",
+    "float32",
+    _torch.int8,
+    _torch.uint8,
+    _torch.float8_e4m3fn,
+    _torch.float8_e5m2,
+    _torch.float32,
+]
 
 @_define
 class ModulePostTrainingQuantizerConfig(_ModuleOptimizationConfig):
@@ -101,7 +115,7 @@ class ModulePostTrainingQuantizerConfig(_ModuleOptimizationConfig):
     all values in the tensor will share a single scale and, if applicable, a single zero point. The ``granularity`` argument is set
     to ``per_tensor``.
 
-    3. **Per-block quantization**: This configuration is used to structure the tensor for blockwise quantization. The ``granularity`` 
+    3. **Per-block quantization**: This configuration is used to structure the tensor for blockwise quantization. The ``granularity``
     is set to ``per_block``, and the ``block_size`` argument has to be specified. The ``block_size`` argument can either be of type
     ``int`` or ``tuple``:
         * int: In this configuration, each row along the output channel axis will have its own quantization parameters, similar to the ``per_channel`` configuration.
@@ -120,11 +134,6 @@ class ModulePostTrainingQuantizerConfig(_ModuleOptimizationConfig):
     """
     weight_dtype: _Union[str, _torch.dtype] = _field(
         default=_default_ptq_options["weight_dtype"],
-        converter=_maybe_convert_str_to_dtype,
-        validator=[
-            _validators.instance_of(_torch.dtype),
-            _validators.in_([_torch.int8, _torch.uint8, _torch.float32]),
-        ],
     )
     granularity: QuantizationGranularity = _field(
         default=_default_ptq_options["granularity"],
@@ -148,7 +157,12 @@ class ModulePostTrainingQuantizerConfig(_ModuleOptimizationConfig):
     )
 
     def __attrs_post_init__(self):
+        if self.weight_dtype not in _SUPPORTED_WEIGHT_DTYPE:
+            raise ValueError(
+                f"weight_dtype must be one of {_SUPPORTED_WEIGHT_DTYPE} not {self.weight_dtype}"
+            )
         self.weight_n_bits = _get_n_bits_from_dtype(self.weight_dtype)
+        self.weight_dtype = _maybe_convert_str_to_dtype(self.weight_dtype)
 
     @block_size.validator
     def per_block_granularity(self, attribute, value):
@@ -256,7 +270,7 @@ class PostTrainingQuantizer(_BasePostTrainingModelOptimizer):
     .. note::
         After quantization, the weight values stored will still remain in full precision, so
         the PyTorch model size will not be reduced. To see the reduction in model size, please convert
-        the model using ``coremltools.convert(...)``, which will produce a model intermediate language 
+        the model using ``coremltools.convert(...)``, which will produce a model intermediate language
         (MIL) model containing the compressed weights.
 
         Example:
@@ -281,7 +295,7 @@ class PostTrainingQuantizer(_BasePostTrainingModelOptimizer):
                 )
 
                 # initialize the quantizer
-                config = PostTrainingQuantizerConfig.from_dict(
+                config = PostTrainingquantizerConfig.from_dict(
                     {
                         "global_config": {
                             "weight_dtype": "int8",
@@ -345,7 +359,7 @@ class PostTrainingQuantizer(_BasePostTrainingModelOptimizer):
         Compute quantization parameters
         """
 
-        ret = _ct_compute_qparams(
+        ret = _cti_compute_qparams(
             weight=weight,
             nbits=nbits,
             quantization_mode=quantization_mode,

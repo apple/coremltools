@@ -30,6 +30,9 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endregion
 
+using Google.Protobuf.Collections;
+using System;
+
 namespace Google.Protobuf.Reflection
 {
     /// <summary>
@@ -70,7 +73,35 @@ namespace Google.Protobuf.Reflection
         /// <summary>
         /// The (possibly empty) set of custom options for this method.
         /// </summary>
-        public CustomOptions CustomOptions => Proto.Options?.CustomOptions ?? CustomOptions.Empty;
+        [Obsolete("CustomOptions are obsolete. Use the GetOptions() method.")]
+        public CustomOptions CustomOptions => new CustomOptions(Proto.Options?._extensions?.ValuesByNumber);
+
+        /// <summary>
+        /// The <c>MethodOptions</c>, defined in <c>descriptor.proto</c>.
+        /// If the options message is not present (i.e. there are no options), <c>null</c> is returned.
+        /// Custom options can be retrieved as extensions of the returned message.
+        /// NOTE: A defensive copy is created each time this property is retrieved.
+        /// </summary>
+        public MethodOptions GetOptions() => Proto.Options?.Clone();
+
+        /// <summary>
+        /// Gets a single value method option for this descriptor
+        /// </summary>
+        [Obsolete("GetOption is obsolete. Use the GetOptions() method.")]
+        public T GetOption<T>(Extension<MethodOptions, T> extension)
+        {
+            var value = Proto.Options.GetExtension(extension);
+            return value is IDeepCloneable<T> ? (value as IDeepCloneable<T>).Clone() : value;
+        }
+
+        /// <summary>
+        /// Gets a repeated value method option for this descriptor
+        /// </summary>
+        [Obsolete("GetOption is obsolete. Use the GetOptions() method.")]
+        public RepeatedField<T> GetOption<T>(RepeatedExtension<MethodOptions, T> extension)
+        {
+            return Proto.Options.GetExtension(extension).Clone();
+        }
 
         internal MethodDescriptor(MethodDescriptorProto proto, FileDescriptor file,
                                   ServiceDescriptor parent, int index)
@@ -106,3 +137,4 @@ namespace Google.Protobuf.Reflection
         }
     }
 }
+ 

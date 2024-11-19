@@ -83,7 +83,7 @@ class ModulePostTrainingPalettizerConfig(_ModuleOptimizationConfig):
     table. The ``granularity`` is set to ``per_tensor``, and ``group_size`` is ``None``.
 
     2. **Per-grouped-channel palettization**: In this configuration, the number of channels ``group_size`` along
-    ``channel_axis`` share the same lookup table. For example, for a weight matrix of shape ``(16, 25)``, if we provide 
+    ``channel_axis`` share the same lookup table. For example, for a weight matrix of shape ``(16, 25)``, if we provide
     ``group_size = 8``, the shape of the lookup table would be ``(2, 2^n_bits)``.
 
     .. note::

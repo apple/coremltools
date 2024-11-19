@@ -17,6 +17,9 @@ from torch.ao.quantization.fx.custom_config import PrepareCustomConfig as _Prepa
 from torch.ao.quantization.quantize_fx import convert_to_reference_fx as _convert_to_reference_fx
 
 import coremltools.optimize.torch.quantization.modules.qat_modules as _qat
+from coremltools.optimize.torch._utils.joint_compression_utils import (
+    is_pruner_prepared as _is_pruner_prepared,
+)
 from coremltools.optimize.torch._utils.math_utils import rmse_error as _rmse_error
 from coremltools.optimize.torch._utils.metadata_utils import (
     register_metadata_version as _register_metadata_version,
@@ -157,6 +160,42 @@ class LinearQuantizer(Quantizer):
                 return config
         return _ModuleLinearQuantizerConfig()
 
+    def _get_torch_ao_prepared_model(
+        self, example_inputs: _Tuple[_Any, ...], inplace: bool = False
+    ):
+        """
+        Helper method to prepare quantized model :
+        Prepares the model for quantization aware training by inserting
+            :py:class:`torch.ao.quantization.FakeQuantize` layers in the model in appropriate places.
+        """
+        if self._is_prepared:
+            _logger.warning(
+                "Model has already been prepared for QAT. This API call " "will be a no-op."
+            )
+            return self._model
+
+        if _is_pruner_prepared(self):
+            raise RuntimeError(
+                "Model has been prepared for pruning. When running joint compression, "
+                "first prepare quantizer/palettizer and then pruner, to ensure insertion of "
+                "fake quantization layers does not remove pruning forward hooks."
+            )
+        model = self._get_model_for_compression(inplace=inplace)
+        model.train()
+        prepare_custom_config = _PrepareCustomConfig().set_non_traceable_module_names(
+            self._config.non_traceable_module_names
+        )
+        prepare_custom_config = prepare_custom_config.set_preserved_attributes(
+            self._config.preserved_attributes
+        )
+        qat_handler = self._qat_configuration_handler_cls(
+            prepare_custom_config=prepare_custom_config,
+            qconfig_mapping=self._qconfig_mapping,
+            backend_config=_get_backend_config(),
+            quantization_scheme=self._quantization_scheme,
+        )
+        return qat_handler.prepare(model, example_inputs)
+
     def prepare(self, example_inputs: _Tuple[_Any, ...], inplace: bool = False) -> _torch.nn.Module:
         """
         Prepares the model for quantization aware training by inserting
@@ -176,27 +215,8 @@ class LinearQuantizer(Quantizer):
             to update your model first before using :py:class:`LinearQuantizer` algorithm.
 
         """
-        if self._is_prepared:
-            _logger.warning(
-                "Model has already been prepared for QAT. This API call "
-                "will be a no-op."
-            )
-            return self._model
-        model = self._get_model_for_compression(inplace=inplace)
-        model.train()
-        prepare_custom_config = _PrepareCustomConfig().set_non_traceable_module_names(
-            self._config.non_traceable_module_names
-        )
-        prepare_custom_config = prepare_custom_config.set_preserved_attributes(
-            self._config.preserved_attributes
-        )
-        qat_handler = self._qat_configuration_handler_cls(
-            prepare_custom_config=prepare_custom_config,
-            qconfig_mapping=self._qconfig_mapping,
-            backend_config=_get_backend_config(),
-            quantization_scheme=self._quantization_scheme,
-        )
-        prepared_model = qat_handler.prepare(model, example_inputs)
+
+        prepared_model = self._get_torch_ao_prepared_model(example_inputs, inplace)
         if self._milestones is not None:
             prepared_model.apply(_aoquant.disable_observer)
             prepared_model.apply(_aoquant.disable_fake_quant)

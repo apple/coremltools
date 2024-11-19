@@ -24,7 +24,7 @@ from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbo
 def value_at(x: Var, idx: int, name=None, before_op=None):
     """
     input x: 1D tensor (vector).
-    return value at index idx. x[idx].
+    return value at index idx: x[idx].
     Could specify the name of the returned MIL scalar tensor as well.
     """
     assert x.rank == 1
@@ -72,6 +72,8 @@ def _construct_gather_op(
         x = mb.cast(x=x, dtype=work_dtype)
 
     if op_type == "gather":
+        if types.is_float(indices.dtype):
+            indices = mb.cast(x=indices, dtype="int32")
         result = mb.gather(x=x, indices=indices, axis=axis, **gather_name_kwarg)
     else:
         result = mb.gather_nd(x=x, indices=indices, **gather_name_kwarg)
@@ -655,3 +657,46 @@ def _construct_constexpr_dequant_op(
     if before_op is not None:
         kwargs["before_op"] = before_op
     return mb.constexpr_blockwise_shift_scale(**kwargs)
+
+
+def _construct_constexpr_lut_op(
+    indices: Union[Var, np.ndarray],
+    lut: Union[Var, np.ndarray],
+    vector_axis: Optional[Union[Var, int]] = None,
+    name: Optional[str] = None,
+    before_op: Optional[Operation] = None,
+) -> Var:
+    """
+    Constructs the constexpr op to represent the palettized weight, using different versions of `constexpr_lut_to_dense`
+    op based on the opset version.
+
+    The input `indices`, `lut` and `vector_axis` (if provided) should follow iOS18 `constexpr_lut_to_dense` op's def.
+    """
+    # Avoid circular import
+    from coremltools.optimize.coreml import _utils as optimize_utils
+
+    kwargs = {"indices": indices, "lut": lut}
+    if name is not None:
+        kwargs["name"] = name
+    if before_op is not None:
+        kwargs["before_op"] = before_op
+
+    if is_current_opset_version_compatible_with(target.iOS18):
+        if vector_axis is not None:
+            kwargs["vector_axis"] = vector_axis
+        if not isinstance(lut, Var):
+            # Adjust dtype if necessary.
+            num_palettes = lut.shape[-2]
+            nbits = int(math.log2(num_palettes))
+            target_np_dtype = types.nptype_from_builtin(types.string_to_builtin(f"uint{nbits}"))
+            kwargs["indices"] = indices.astype(target_np_dtype)
+    else:
+        if isinstance(lut, Var):
+            lut: np.ndarray = lut.val
+        lut_params = optimize_utils.LutParams(indices=indices, lut=lut, vector_axis=vector_axis)
+        lut_params: optimize_utils.LutParamsIos16 = optimize_utils.ios18_lut_params_to_ios16(
+            lut_params
+        )
+        kwargs.update(lut_params._asdict())
+
+    return mb.constexpr_lut_to_dense(**kwargs)

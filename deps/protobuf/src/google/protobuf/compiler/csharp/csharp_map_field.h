@@ -44,24 +44,26 @@ namespace csharp {
 class MapFieldGenerator : public FieldGeneratorBase {
  public:
   MapFieldGenerator(const FieldDescriptor* descriptor,
-                    int fieldOrdinal,
+                    int presenceIndex,
                     const Options* options);
   ~MapFieldGenerator();
 
-  virtual void GenerateCloningCode(io::Printer* printer);
-  virtual void GenerateFreezingCode(io::Printer* printer);
-  virtual void GenerateMembers(io::Printer* printer);
-  virtual void GenerateMergingCode(io::Printer* printer);
-  virtual void GenerateParsingCode(io::Printer* printer);
-  virtual void GenerateSerializationCode(io::Printer* printer);
-  virtual void GenerateSerializedSizeCode(io::Printer* printer);
+  MapFieldGenerator(const MapFieldGenerator&) = delete;
+  MapFieldGenerator& operator=(const MapFieldGenerator&) = delete;
 
-  virtual void WriteHash(io::Printer* printer);
-  virtual void WriteEquals(io::Printer* printer);
-  virtual void WriteToString(io::Printer* printer);
+  virtual void GenerateCloningCode(io::Printer* printer) override;
+  virtual void GenerateFreezingCode(io::Printer* printer) override;
+  virtual void GenerateMembers(io::Printer* printer) override;
+  virtual void GenerateMergingCode(io::Printer* printer) override;
+  virtual void GenerateParsingCode(io::Printer* printer) override;
+  virtual void GenerateParsingCode(io::Printer* printer, bool use_parse_context) override;
+  virtual void GenerateSerializationCode(io::Printer* printer) override;
+  virtual void GenerateSerializationCode(io::Printer* printer, bool use_write_context) override;
+  virtual void GenerateSerializedSizeCode(io::Printer* printer) override;
 
- private:
-  GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(MapFieldGenerator);
+  virtual void WriteHash(io::Printer* printer) override;
+  virtual void WriteEquals(io::Printer* printer) override;
+  virtual void WriteToString(io::Printer* printer) override;
 };
 
 }  // namespace csharp

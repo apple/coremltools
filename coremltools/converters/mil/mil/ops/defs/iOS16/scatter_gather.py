@@ -26,8 +26,8 @@ class gather(Operation):
 
     Parameters
     ----------
-    x: tensor<\*D, T> (Required)
-    indices: tensor<\*N, I> (Required)
+    x: tensor<\\*D, T> (Required)
+    indices: tensor<\\*N, I> (Required)
         * Indices values may be negative. More precisely, ``-D[axis]<= v < D[axis]`` for ``v`` in ``indices``.
     axis: const i32 (Optional. Default=``0``)
         * Negative axis is supported.
@@ -36,7 +36,7 @@ class gather(Operation):
 
     Returns
     -------
-    tensor<\*K, T>
+    tensor<\\*K, T>
         * Where ``K = D[:axis] + N[batch_dims:] + D[axis+1:]``.
 
     Attributes
@@ -126,14 +126,14 @@ class gather_along_axis(_gather_along_axis_iOS15):
 
     Parameters
     ----------
-    x: tensor<\*D, T> (Required)
-    indices: tensor<\*K, I> (Required)
+    x: tensor<\\*D, T> (Required)
+    indices: tensor<\\*K, I> (Required)
     axis: const i32 (Optional):
         * Default to ``0``.
 
     Returns
     -------
-    tensor<\*D, T>:
+    tensor<\\*D, T>:
         * Output tensor has the same shape as ``indices``.
 
     Attributes
@@ -166,14 +166,14 @@ class gather_nd(Operation):
 
     Parameters
     ----------
-    x: tensor<\*D, T> (Required)
-    indices: tensor<\*K, I> (Required)
+    x: tensor<\\*D, T> (Required)
+    indices: tensor<\\*K, I> (Required)
     batch_dims: const i32 (Optional. Default=``0``)
         * The number of batch dimensions.
 
     Returns
     -------
-    tensor<\*V, T>
+    tensor<\\*V, T>
         * ``V = K[:-1] + D[batch_dims + K[-1]:]``, where ``D = x.shape`` and ``K = indices.shape``.
 
     Attributes

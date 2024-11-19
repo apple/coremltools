@@ -4,6 +4,7 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
+from sys import version_info
 
 import numpy as np
 import pytest
@@ -903,6 +904,7 @@ class TestStateConversionAPI:
         if run_prediction:
             verify_prediction(mlmodel)
 
+    @pytest.mark.xfail(reason="rdar://138957606 ([Bug] Stateful model regression in CoreML)")
     @pytest.mark.parametrize(
         "compute_unit",
         compute_units,
@@ -1048,11 +1050,15 @@ class TestStateConversionAPI:
         assert_prog_output_type(mlmodel._mil_program, expected_dtype_str="fp32")
         verify_prediction(mlmodel)
 
+    @pytest.mark.xfail(reason="rdar://138957606 ([Bug] Stateful model regression in CoreML)")
     @pytest.mark.parametrize(
         "compute_unit",
         compute_units,
     )
     def test_color_output_with_buffer(self, rank4_input_model_with_buffer, compute_unit):
+        if (version_info.major, version_info.minor) == (3, 12):
+            pytest.skip("rdar://139103000 (Two Unit Tests Fail only on Lighting (not locally) and with Python 3.12)")
+
         # image input / image output
         mlmodel = ct.convert(
             rank4_input_model_with_buffer,

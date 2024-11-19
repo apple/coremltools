@@ -4,31 +4,37 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
+from sys import version_info
 
+import numpy as np
 import pytest
 
-from coremltools._deps import _HAS_EXECUTORCH, _HAS_TORCH_EXPORT_API
+from ..utils import TorchFrontend
+from .testing_utils import frontends as _frontends
 
-if not _HAS_TORCH_EXPORT_API:
-    pytest.skip(allow_module_level=True, reason="torch.export is required")
+frontends = _frontends.copy()
+
+if TorchFrontend.TORCHSCRIPT in frontends:
+    frontends.remove(TorchFrontend.TORCHSCRIPT)
+
+if len(frontends) == 0:
+    pytest.skip(allow_module_level=True)
 
 from coremltools.converters.mil.frontend.torch.exir_utils import WRAPPED_SCALAR_INPUT_SUFFIX
-from coremltools.converters.mil.frontend.torch.utils import TorchFrontend
-
-frontends = [TorchFrontend.TORCHEXPORT]
-
-if _HAS_EXECUTORCH:
-    import executorch.exir
-
-    frontends.append(TorchFrontend.EXECUTORCH)
 
 import torch
+
+if TorchFrontend.EXECUTORCH in frontends:
+    import executorch.exir
 
 import coremltools as ct
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil.scope import ScopeSource
+from coremltools.converters.mil.testing_utils import assert_spec_input_image_type, verify_prediction
+from coremltools.models import _METADATA_SOURCE_DIALECT
+from coremltools.proto import FeatureTypes_pb2 as ft
 
-from .testing_utils import TorchBaseTest
+from .testing_utils import TorchBaseTest, export_torch_model_to_frontend
 
 backends = testing_reqs.backends
 compute_units = testing_reqs.compute_units
@@ -39,6 +45,56 @@ if torch.__version__ >= "2.4.0":
 
 
 class TestTorchExportConversionAPI(TorchBaseTest):
+    @pytest.mark.parametrize("frontend", frontends)
+    def test_image_input(self, frontend):
+        class Model(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.conv2d = torch.nn.Conv2d(in_channels=3, out_channels=5, kernel_size=3)
+
+            def forward(self, x):
+                return self.conv2d(x)
+
+        model = Model()
+        model.eval()
+
+        shape = (1, 3, 128, 256)
+        x = torch.randint(0, 256, shape, dtype=torch.float32)
+        exported_model = export_torch_model_to_frontend(model, (x,), frontend)
+
+        mlmodel = ct.convert(
+            exported_model,
+            inputs=[ct.ImageType(shape=shape, color_layout=ct.colorlayout.RGB)],
+            outputs=[ct.TensorType(dtype=np.float32)],
+        )
+
+        assert_spec_input_image_type(mlmodel._spec, expected_feature_type=ft.ImageFeatureType.RGB)
+        verify_prediction(mlmodel)
+
+    @pytest.mark.parametrize("frontend", frontends)
+    def test_unsupported_dim_order(self, frontend):
+        class Model(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.conv3d = torch.nn.Conv3d(in_channels=3, out_channels=5, kernel_size=3)
+
+            def forward(self, x):
+                return self.conv3d(x)
+
+        model = Model()
+        model.eval()
+
+        shape = (1, 3, 128, 256, 512)
+        x = torch.randint(0, 256, shape, dtype=torch.float32)
+        x = x.to(memory_format=torch.channels_last_3d)
+        exported_model = export_torch_model_to_frontend(model, (x,), frontend)
+
+        with pytest.raises(
+            NotImplementedError,
+            match=r"Core ML does not have general support for non-contiguous dim order",
+        ):
+            ct.convert(exported_model)
+
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend",
         itertools.product(compute_units, backends, frontends),
@@ -94,6 +150,7 @@ class TestTorchExportConversionAPI(TorchBaseTest):
         batch_dim = torch.export.Dim("batch_dim")
         dynamic_shapes = {"x": {0: batch_dim}}
 
+        # default dynamic shape: inherit from torch.export
         coreml_model = self.run_compare_torch(
             (2, 3),
             model,
@@ -102,13 +159,47 @@ class TestTorchExportConversionAPI(TorchBaseTest):
             frontend=frontend,
             torch_export_dynamic_shapes=dynamic_shapes,
         )[1]
-
         input_proto = coreml_model.input_description._fd_spec[0]
         size_ranges = input_proto.type.multiArrayType.shapeRange.sizeRanges
         assert size_ranges[0].lowerBound == TORCH_EXPORT_DEFAULT_LOWER_BOUND[frontend]
         assert size_ranges[0].upperBound == 2147483647
         assert size_ranges[1].lowerBound == 3
         assert size_ranges[1].upperBound == 3
+
+        # customize: replace torch.export dynamic shape with Core ML enumerated shape
+        shape0 = (2, 3)
+        shape1 = (4, 3)
+        shape2 = (8, 3)
+        enumerated_shapes = ct.EnumeratedShapes(shapes=[shape0, shape1, shape2])
+        coreml_model = self.run_compare_torch(
+            shape1,
+            model,
+            compute_unit=compute_unit,
+            backend=backend,
+            frontend=frontend,
+            torch_export_dynamic_shapes=dynamic_shapes,
+            converter_input_type=[ct.TensorType(shape=enumerated_shapes)],
+        )[1]
+        input_proto = coreml_model.input_description._fd_spec[0]
+        enumerated_shapes = input_proto.type.multiArrayType.enumeratedShapes.shapes
+        assert tuple(enumerated_shapes[0].shape) == shape0
+        assert tuple(enumerated_shapes[1].shape) == shape1
+        assert tuple(enumerated_shapes[2].shape) == shape2
+
+        # customize: materialize torch.export dynamic shape into static shape
+        shape = (8, 3)
+        coreml_model = self.run_compare_torch(
+            shape,
+            model,
+            compute_unit=compute_unit,
+            backend=backend,
+            frontend=frontend,
+            torch_export_dynamic_shapes=dynamic_shapes,
+            converter_input_type=[ct.TensorType(shape=shape)],
+        )[1]
+        input_proto = coreml_model.input_description._fd_spec[0]
+        proto_shape = input_proto.type.multiArrayType.shape
+        assert tuple(proto_shape) == shape
 
     @pytest.mark.parametrize("frontend, dynamic", itertools.product(frontends, (True, False)))
     def test_invalid_inputs(self, frontend, dynamic):
@@ -139,14 +230,114 @@ class TestTorchExportConversionAPI(TorchBaseTest):
             exported_program = executorch.exir.to_edge(exported_program).exported_program()
 
         with pytest.raises(
-            AssertionError, match=r"'inputs' argument should be None for ExportedProgram"
+            ValueError,
+            match=(
+                r"inconsistent shape between EXIR input x shape \((is)?[0-9]+, 3\) "
+                r"and user specified input None shape \(2, 4\)"
+            ),
         ):
-            inputs = [ct.TensorType(shape=(2, 3))]
-            if dynamic:
-                batch_dim = ct.RangeDim(lower_bound=1, upper_bound=128)
-                shape = (batch_dim, 3)
-                inputs = [ct.TensorType(shape=shape)]
-            ct.convert(exported_program, inputs=inputs)
+            ct.convert(exported_program, inputs=[ct.TensorType(shape=(2, 4))])
+
+    @staticmethod
+    @pytest.mark.parametrize("backend, frontend", itertools.product(backends, frontends))
+    def test_fp16_io_on_fp32_model(backend, frontend):
+        class Model(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.linear = torch.nn.Linear(10, 20)
+
+            def forward(self, x):
+                return self.linear(x)
+
+        model = Model()
+        model.eval()
+
+        shape = (1, 10)
+        example_inputs = (torch.rand(*shape),)
+        exported_model = export_torch_model_to_frontend(model, example_inputs, frontend)
+
+        # Default deployment target is iOS14 for neuralnetwork and iOS15 for mlprogram,
+        # both are too old to support fp16 io
+        with pytest.raises(
+            TypeError,
+            match=(
+                r"float16 dtype for inputs is only supported for deployment target "
+                r">= iOS16/macOS13/watchOS9/tvOS16"
+            ),
+        ):
+            ct.convert(
+                exported_model, convert_to=backend[0], inputs=[ct.TensorType(dtype=np.float16)]
+            )
+
+        # fp16 io should work fine for iOS16+
+        if backend[0] == "mlprogram":
+            ct.convert(
+                exported_model,
+                convert_to="mlprogram",
+                minimum_deployment_target=ct.target.iOS16,
+            )
+
+    @staticmethod
+    @pytest.mark.parametrize("backend, frontend", itertools.product(backends, frontends))
+    def test_fp16_model(backend, frontend):
+        class Model(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.linear = torch.nn.Linear(10, 20, dtype=torch.float16)
+
+            def forward(self, x):
+                return self.linear(x)
+
+        model = Model()
+        model.eval()
+
+        shape = (2, 10)
+        example_inputs = (torch.rand(*shape, dtype=torch.float16),)
+        exported_model = export_torch_model_to_frontend(model, example_inputs, frontend)
+
+        # fp32 io should always work fine
+        ct.convert(exported_model, convert_to=backend[0], inputs=[ct.TensorType(dtype=np.float32)])
+
+        # Default deployment target is iOS14 for neuralnetwork and iOS15 for mlprogram,
+        # both are too old to support fp16 io
+        with pytest.raises(
+            ValueError, match=r"To use fp16 input, please set minimum deployment target to iOS16\+"
+        ):
+            ct.convert(exported_model, convert_to=backend[0])
+
+        # fp16 io should work fine for iOS16+
+        if backend[0] == "mlprogram":
+            ct.convert(
+                exported_model,
+                convert_to="mlprogram",
+                minimum_deployment_target=ct.target.iOS16,
+            )
+
+    @pytest.mark.parametrize("backend, frontend", itertools.product(backends, frontends))
+    def test_source_dialect_metadata(self, backend, frontend):
+        class Model(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.linear = torch.nn.Linear(10, 20)
+
+            def forward(self, x):
+                return self.linear(x)
+
+        model = Model()
+        model.eval()
+
+        mlmodel = self.run_compare_torch(
+            (4, 10),
+            model,
+            backend=backend,
+            frontend=frontend,
+        )[1]
+
+        assert _METADATA_SOURCE_DIALECT in mlmodel.user_defined_metadata
+        dialect_name = (
+            "TorchExport::ATEN" if frontend == TorchFrontend.TORCHEXPORT else "TorchExport::EDGE"
+        )
+        assert mlmodel.user_defined_metadata[_METADATA_SOURCE_DIALECT] == dialect_name
 
 
 class TestExecuTorchExamples(TorchBaseTest):
@@ -155,9 +346,13 @@ class TestExecuTorchExamples(TorchBaseTest):
         itertools.product(compute_units, backends, frontends, (True, False)),
     )
     def test_mul(self, compute_unit, backend, frontend, dynamic):
+        if (version_info.major, version_info.minor) == (3, 12):
+            pytest.skip("rdar://139103000 (Two Unit Tests Fail only on Lighting (not locally) and with Python 3.12)")
+
         class MulModule(torch.nn.Module):
             def forward(self, input, other):
                 return input * other
+
 
         dynamic_shapes = None
         if dynamic:

@@ -37,19 +37,21 @@
 
 namespace google {
 namespace protobuf {
-  class FieldDescriptor;         // descriptor.h
-  class Descriptor;              // descriptor.h
-  class ServiceDescriptor;       // descriptor.h
-  namespace compiler {
-    namespace java {
-      class MessageGenerator;    // message.h
-      class ExtensionGenerator;  // extension.h
-      class ServiceGenerator;    // service.h
-      class Context;             // context.h
-    }
-  }
-}
+class FieldDescriptor;    // descriptor.h
+class Descriptor;         // descriptor.h
+class ServiceDescriptor;  // descriptor.h
+namespace compiler {
+namespace java {
+class MessageGenerator;    // message.h
+class ExtensionGenerator;  // extension.h
+class ServiceGenerator;    // service.h
+class Context;             // context.h
+}  // namespace java
+}  // namespace compiler
+}  // namespace protobuf
+}  // namespace google
 
+namespace google {
 namespace protobuf {
 namespace compiler {
 namespace java {
@@ -78,14 +80,14 @@ class ImmutableGeneratorFactory : public GeneratorFactory {
   ImmutableGeneratorFactory(Context* context);
   virtual ~ImmutableGeneratorFactory();
 
-  virtual MessageGenerator* NewMessageGenerator(
-      const Descriptor* descriptor) const;
+  MessageGenerator* NewMessageGenerator(
+      const Descriptor* descriptor) const override;
 
-  virtual ExtensionGenerator* NewExtensionGenerator(
-      const FieldDescriptor* descriptor) const;
+  ExtensionGenerator* NewExtensionGenerator(
+      const FieldDescriptor* descriptor) const override;
 
-  virtual ServiceGenerator* NewServiceGenerator(
-      const ServiceDescriptor* descriptor) const;
+  ServiceGenerator* NewServiceGenerator(
+      const ServiceDescriptor* descriptor) const override;
 
  private:
   Context* context_;
@@ -96,6 +98,6 @@ class ImmutableGeneratorFactory : public GeneratorFactory {
 }  // namespace java
 }  // namespace compiler
 }  // namespace protobuf
-
 }  // namespace google
+
 #endif  // GOOGLE_PROTOBUF_COMPILER_JAVA_GENERATOR_FACTORY_H__

@@ -39,9 +39,7 @@ if "TORCH_FRONTENDS" in os.environ:
     for frontend_str in os.environ["TORCH_FRONTENDS"].split(","):
         frontend = TorchFrontend[frontend_str]
         if platform.machine() == "x86_64" and frontend in TORCH_EXPORT_BASED_FRONTENDS:
-            logger.warning(
-                f"{frontend_str} is not supported well on x86_64, skipped this frontend test"
-            )
+            logger.warning("rdar://135842397 ([Bug] Torch.export failed on x86_64 platform)")
             continue
         if frontend == TorchFrontend.TORCHEXPORT and not _HAS_TORCH_EXPORT_API:
             logger.warning(
@@ -141,14 +139,12 @@ def convert_to_mlmodel(
                 "Unable to parse type {} into InputType.".format(type(inputs))
             )
 
-    if converter_input_type is None:
-        inputs = list(_convert_to_inputtype(tensor_inputs))
-    else:
-        inputs = converter_input_type
-
-    if _HAS_TORCH_EXPORT_API and isinstance(model_spec, ExportedProgram):
-        inputs = None
-        outputs = None
+    inputs = converter_input_type
+    if inputs is None:
+        if not (_HAS_TORCH_EXPORT_API and isinstance(model_spec, ExportedProgram)):
+            # torch.export graph has input type defined,
+            # but other model specifications need us to construct input types
+            inputs = list(_convert_to_inputtype(tensor_inputs))
 
     return ct_convert(
         model_spec,
@@ -267,7 +263,7 @@ def convert_and_compare(
     else:
         torch_model = model_spec
     if _HAS_TORCH_EXPORT_API and isinstance(torch_model, ExportedProgram):
-            torch_model = torch_model.module()
+        torch_model = torch_model.module()
 
     if not isinstance(input_data, (list, tuple)):
         input_data = [input_data]

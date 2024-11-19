@@ -36,25 +36,26 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
- * A partial implementation of the {@link MessageLite} interface which
- * implements as many methods of that interface as possible in terms of other
- * methods.
+ * A partial implementation of the {@link MessageLite} interface which implements as many methods of
+ * that interface as possible in terms of other methods.
  *
  * @author kenton@google.com Kenton Varda
  */
 public abstract class AbstractMessageLite<
-    MessageType extends AbstractMessageLite<MessageType, BuilderType>,
-    BuilderType extends AbstractMessageLite.Builder<MessageType, BuilderType>>
-        implements MessageLite {
+        MessageType extends AbstractMessageLite<MessageType, BuilderType>,
+        BuilderType extends AbstractMessageLite.Builder<MessageType, BuilderType>>
+    implements MessageLite {
   protected int memoizedHashCode = 0;
+
   @Override
   public ByteString toByteString() {
     try {
-      final ByteString.CodedBuilder out =
-        ByteString.newCodedBuilder(getSerializedSize());
+      final ByteString.CodedBuilder out = ByteString.newCodedBuilder(getSerializedSize());
       writeTo(out.getCodedOutput());
       return out.build();
     } catch (IOException e) {
@@ -77,10 +78,8 @@ public abstract class AbstractMessageLite<
 
   @Override
   public void writeTo(final OutputStream output) throws IOException {
-    final int bufferSize =
-        CodedOutputStream.computePreferredBufferSize(getSerializedSize());
-    final CodedOutputStream codedOutput =
-        CodedOutputStream.newInstance(output, bufferSize);
+    final int bufferSize = CodedOutputStream.computePreferredBufferSize(getSerializedSize());
+    final CodedOutputStream codedOutput = CodedOutputStream.newInstance(output, bufferSize);
     writeTo(codedOutput);
     codedOutput.flush();
   }
@@ -88,26 +87,45 @@ public abstract class AbstractMessageLite<
   @Override
   public void writeDelimitedTo(final OutputStream output) throws IOException {
     final int serialized = getSerializedSize();
-    final int bufferSize = CodedOutputStream.computePreferredBufferSize(
-        CodedOutputStream.computeRawVarint32Size(serialized) + serialized);
-    final CodedOutputStream codedOutput =
-        CodedOutputStream.newInstance(output, bufferSize);
+    final int bufferSize =
+        CodedOutputStream.computePreferredBufferSize(
+            CodedOutputStream.computeRawVarint32Size(serialized) + serialized);
+    final CodedOutputStream codedOutput = CodedOutputStream.newInstance(output, bufferSize);
     codedOutput.writeRawVarint32(serialized);
     writeTo(codedOutput);
     codedOutput.flush();
   }
 
+  // We'd like these to be abstract but some folks are extending this class directly. They shouldn't
+  // be doing that and they should feel bad.
+  int getMemoizedSerializedSize() {
+    throw new UnsupportedOperationException();
+  }
 
-  /**
-   * Package private helper method for AbstractParser to create
-   * UninitializedMessageException.
-   */
+  void setMemoizedSerializedSize(int size) {
+    throw new UnsupportedOperationException();
+  }
+
+
+  int getSerializedSize(Schema schema) {
+    int memoizedSerializedSize = getMemoizedSerializedSize();
+    if (memoizedSerializedSize == -1) {
+      memoizedSerializedSize = schema.getSerializedSize(this);
+      setMemoizedSerializedSize(memoizedSerializedSize);
+    }
+    return memoizedSerializedSize;
+  }
+
+  /** Package private helper method for AbstractParser to create UninitializedMessageException. */
   UninitializedMessageException newUninitializedMessageException() {
     return new UninitializedMessageException(this);
   }
 
   private String getSerializingExceptionMessage(String target) {
-    return "Serializing " + getClass().getName() + " to a " + target
+    return "Serializing "
+        + getClass().getName()
+        + " to a "
+        + target
         + " threw an IOException (should never happen).";
   }
 
@@ -118,20 +136,33 @@ public abstract class AbstractMessageLite<
     }
   }
 
-  protected static <T> void addAll(final Iterable<T> values,
-      final Collection<? super T> list) {
+  // For binary compatibility
+  @Deprecated
+  protected static <T> void addAll(final Iterable<T> values, final Collection<? super T> list) {
+    Builder.addAll(values, (List) list);
+  }
+
+  protected static <T> void addAll(final Iterable<T> values, final List<? super T> list) {
     Builder.addAll(values, list);
   }
 
+  /** Interface for an enum which signifies which field in a {@code oneof} was specified. */
+  protected interface InternalOneOfEnum {
+    /**
+     * Retrieves the field number of the field which was set in this {@code oneof}, or {@code 0} if
+     * none were.
+     */
+    int getNumber();
+  }
+
   /**
-   * A partial implementation of the {@link Message.Builder} interface which
-   * implements as many methods of that interface as possible in terms of
-   * other methods.
+   * A partial implementation of the {@link Message.Builder} interface which implements as many
+   * methods of that interface as possible in terms of other methods.
    */
   @SuppressWarnings("unchecked")
   public abstract static class Builder<
-      MessageType extends AbstractMessageLite<MessageType, BuilderType>,
-      BuilderType extends Builder<MessageType, BuilderType>>
+          MessageType extends AbstractMessageLite<MessageType, BuilderType>,
+          BuilderType extends Builder<MessageType, BuilderType>>
       implements MessageLite.Builder {
     // The compiler produces an error if this is not declared explicitly.
     @Override
@@ -187,8 +218,7 @@ public abstract class AbstractMessageLite<
     public BuilderType mergeFrom(final byte[] data, final int off, final int len)
         throws InvalidProtocolBufferException {
       try {
-        final CodedInputStream input =
-            CodedInputStream.newInstance(data, off, len);
+        final CodedInputStream input = CodedInputStream.newInstance(data, off, len);
         mergeFrom(input);
         input.checkLastTagWas(0);
         return (BuilderType) this;
@@ -213,8 +243,7 @@ public abstract class AbstractMessageLite<
         final ExtensionRegistryLite extensionRegistry)
         throws InvalidProtocolBufferException {
       try {
-        final CodedInputStream input =
-            CodedInputStream.newInstance(data, off, len);
+        final CodedInputStream input = CodedInputStream.newInstance(data, off, len);
         mergeFrom(input, extensionRegistry);
         input.checkLastTagWas(0);
         return (BuilderType) this;
@@ -243,10 +272,9 @@ public abstract class AbstractMessageLite<
     }
 
     /**
-     * An InputStream implementations which reads from some other InputStream
-     * but is limited to a particular number of bytes.  Used by
-     * mergeDelimitedFrom().  This is intentionally package-private so that
-     * UnknownFieldSet can share it.
+     * An InputStream implementations which reads from some other InputStream but is limited to a
+     * particular number of bytes. Used by mergeDelimitedFrom(). This is intentionally
+     * package-private so that UnknownFieldSet can share it.
      */
     static final class LimitedInputStream extends FilterInputStream {
       private int limit;
@@ -274,8 +302,7 @@ public abstract class AbstractMessageLite<
       }
 
       @Override
-      public int read(final byte[] b, final int off, int len)
-                      throws IOException {
+      public int read(final byte[] b, final int off, int len) throws IOException {
         if (limit <= 0) {
           return -1;
         }
@@ -312,8 +339,7 @@ public abstract class AbstractMessageLite<
 
     @Override
     public boolean mergeDelimitedFrom(final InputStream input) throws IOException {
-      return mergeDelimitedFrom(input,
-          ExtensionRegistryLite.getEmptyRegistry());
+      return mergeDelimitedFrom(input, ExtensionRegistryLite.getEmptyRegistry());
     }
 
     @Override
@@ -330,29 +356,52 @@ public abstract class AbstractMessageLite<
     protected abstract BuilderType internalMergeFrom(MessageType message);
 
     private String getReadingExceptionMessage(String target) {
-      return "Reading " + getClass().getName() + " from a " + target
+      return "Reading "
+          + getClass().getName()
+          + " from a "
+          + target
           + " threw an IOException (should never happen).";
     }
 
-    /**
-     * Construct an UninitializedMessageException reporting missing fields in
-     * the given message.
-     */
-    protected static UninitializedMessageException
-        newUninitializedMessageException(MessageLite message) {
+    // We check nulls as we iterate to avoid iterating over values twice.
+    private static <T> void addAllCheckingNulls(Iterable<T> values, List<? super T> list) {
+      if (list instanceof ArrayList && values instanceof Collection) {
+        ((ArrayList<T>) list).ensureCapacity(list.size() + ((Collection<T>) values).size());
+      }
+      int begin = list.size();
+      for (T value : values) {
+        if (value == null) {
+          // encountered a null value so we must undo our modifications prior to throwing
+          String message = "Element at index " + (list.size() - begin) + " is null.";
+          for (int i = list.size() - 1; i >= begin; i--) {
+            list.remove(i);
+          }
+          throw new NullPointerException(message);
+        }
+        list.add(value);
+      }
+    }
+
+    /** Construct an UninitializedMessageException reporting missing fields in the given message. */
+    protected static UninitializedMessageException newUninitializedMessageException(
+        MessageLite message) {
       return new UninitializedMessageException(message);
     }
 
+    // For binary compatibility.
+    @Deprecated
+    protected static <T> void addAll(final Iterable<T> values, final Collection<? super T> list) {
+      addAll(values, (List<T>) list);
+    }
+
     /**
-     * Adds the {@code values} to the {@code list}.  This is a helper method
-     * used by generated code.  Users should ignore it.
+     * Adds the {@code values} to the {@code list}. This is a helper method used by generated code.
+     * Users should ignore it.
      *
-     * @throws NullPointerException if {@code values} or any of the elements of
-     * {@code values} is null. When that happens, some elements of
-     * {@code values} may have already been added to the result {@code list}.
+     * @throws NullPointerException if {@code values} or any of the elements of {@code values} is
+     *     null.
      */
-    protected static <T> void addAll(final Iterable<T> values,
-                                     final Collection<? super T> list) {
+    protected static <T> void addAll(final Iterable<T> values, final List<? super T> list) {
       checkNotNull(values);
       if (values instanceof LazyStringList) {
         // For StringOrByteStringLists, check the underlying elements to avoid
@@ -360,24 +409,30 @@ public abstract class AbstractMessageLite<
         // TODO(dweis): Could we just prohibit nulls in all protobuf lists and get rid of this? Is
         // if even possible to hit this condition as all protobuf methods check for null first,
         // right?
-        checkForNullValues(((LazyStringList) values).getUnderlyingElements());
-        list.addAll((Collection<T>) values);
-      } else if (values instanceof Collection) {
-        if (!(values instanceof PrimitiveNonBoxingCollection)) {
-          checkForNullValues(values);
+        List<?> lazyValues = ((LazyStringList) values).getUnderlyingElements();
+        LazyStringList lazyList = (LazyStringList) list;
+        int begin = list.size();
+        for (Object value : lazyValues) {
+          if (value == null) {
+            // encountered a null value so we must undo our modifications prior to throwing
+            String message = "Element at index " + (lazyList.size() - begin) + " is null.";
+            for (int i = lazyList.size() - 1; i >= begin; i--) {
+              lazyList.remove(i);
+            }
+            throw new NullPointerException(message);
+          }
+          if (value instanceof ByteString) {
+            lazyList.add((ByteString) value);
+          } else {
+            lazyList.add((String) value);
+          }
         }
-        list.addAll((Collection<T>) values);
       } else {
-        for (final T value : values) {
-          checkNotNull(value);
-          list.add(value);
+        if (values instanceof PrimitiveNonBoxingCollection) {
+          list.addAll((Collection<T>) values);
+        } else {
+          addAllCheckingNulls(values, list);
         }
-      }
-    }
-
-    private static void checkForNullValues(final Iterable<?> values) {
-      for (final Object value : values) {
-        checkNotNull(value);
       }
     }
   }

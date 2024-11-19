@@ -190,7 +190,7 @@ test_py310_coremltools_test:
     PYTHON: "3.10"
     REQUIREMENTS: reqs/test.pip
 
-test_py310_pytorch:
+test_py310_pytorch_script:
   <<: *test_macos_pkg
   tags:
     - macOS_M1
@@ -201,6 +201,33 @@ test_py310_pytorch:
     TEST_PACKAGE: coremltools.converters.mil.frontend.torch
     WHEEL_PATH: build/dist/*cp310*11*
     REQUIREMENTS: reqs/test.pip
+    TORCH_FRONTENDS: TORCHSCRIPT
+
+test_py310_pytorch_export:
+  <<: *test_macos_pkg
+  tags:
+    - macOS_M1
+  dependencies:
+    - build_wheel_macos_py310
+  variables:
+    PYTHON: "3.10"
+    TEST_PACKAGE: coremltools.converters.mil.frontend.torch
+    WHEEL_PATH: build/dist/*cp310*11*
+    REQUIREMENTS: reqs/test.pip
+    TORCH_FRONTENDS: TORCHEXPORT
+
+test_py310_pytorch_executorch:
+  <<: *test_macos_pkg
+  tags:
+    - macOS_M1
+  dependencies:
+    - build_wheel_macos_py310
+  variables:
+    PYTHON: "3.10"
+    TEST_PACKAGE: coremltools.converters.mil.frontend.torch
+    WHEEL_PATH: build/dist/*cp310*11*
+    REQUIREMENTS: reqs/test.pip
+    TORCH_FRONTENDS: EXECUTORCH
 
 test_py310_tf2-1:
   <<: *test_macos_pkg

@@ -3,6 +3,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import math
 import operator
 from collections import OrderedDict
 from typing import List
@@ -1019,7 +1020,6 @@ def test_elementwise_op_act_fusion(config, activation_fn, elementwise_op, conv_t
                 return self.act(
                     elementwise_op("bkhq,bchk->bchq", x.transpose(1, 3), self.conv1(x))
                 )
-
             return self.act(elementwise_op(x, self.conv1(x)))
 
     model = ElementWiseActModule(conv_transpose)
@@ -1113,3 +1113,60 @@ def test_skipping_quantization_for_layers(
                 if producer.target != "dropout":
                     # for some nodes, if producer is dropout, we won't have activation post process
                     assert "activation_post_process" in producer.target
+
+
+class MySoftmax(nn.Module):
+    def __init__(self, dim):
+        super().__init__()
+        self.dim = dim
+
+    def forward(self, x):
+        # Reduction max
+        max_x = x.max(dim=self.dim, keepdim=True).values
+        # EW sub
+        x -= max_x
+        # Scale for EXP to EXP2, Activation EXP2
+        scaled_x = x * (1 / math.log(2))
+        exp_act = torch.exp2(scaled_x)
+        # Reduction Sum + Inv
+        exp_sum_inv = 1 / exp_act.sum(dim=self.dim, keepdims=True)
+        # EW Mult
+        return exp_act * exp_sum_inv
+
+
+def test_softmax_breakdown():
+    model = MySoftmax(1)
+    input = torch.rand(2, 77, 1, 4096)
+
+    quantizer = LinearQuantizer(model, LinearQuantizerConfig())
+    prepared_model = quantizer.prepare(example_inputs=input)
+    nodes = list(prepared_model.graph.nodes)
+    """
+    Ensure fake quantize layers are inserted at the right places in the graph
+
+    # Reduction max,
+    # q / dq
+    # EW sub,
+    # q / dq
+    # Scale for EXP to EXP2, Activation EXP2,
+    # q / dq
+    # Reduction Sum + Inv,
+    # q / dq
+    # EW Mult
+    """
+    assert nodes[0].name == "x"
+    assert nodes[1].name == "activation_post_process_0"
+    assert nodes[2].name == "max_1"
+    assert nodes[3].name == "getattr_1"
+    assert nodes[4].name == "activation_post_process_1"
+    assert nodes[5].name == "sub"
+    assert nodes[6].name == "activation_post_process_2"
+    assert nodes[7].name == "mul"
+    assert nodes[8].name == "exp2"
+    assert nodes[9].name == "activation_post_process_3"
+    assert nodes[10].name == "sum_1"
+    assert nodes[11].name == "truediv"
+    assert nodes[12].name == "activation_post_process_4"
+    assert nodes[13].name == "mul_1"
+    assert nodes[14].name == "activation_post_process_5"
+    assert nodes[15].name == "output"

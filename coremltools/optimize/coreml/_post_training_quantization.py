@@ -97,9 +97,9 @@ def linear_quantize_weights(
     Quantized weights are computed as follows:
 
     .. math::
-       w_q = cast\_to\_8\_bit\_integer(w_r / s + cast\_to\_float(z))
+       w_q = cast\\_to\\_8\\_bit\\_integer(w_r / s + cast\\_to\\_float(z))
 
-    Note: :math:`cast\_to\_8\_bit\_integer` is the process of clipping the input to range ``[low, high]`` followed by rounding and casting to 8-bit integer.
+    Note: :math:`cast\\_to\\_8\\_bit\\_integer` is the process of clipping the input to range ``[low, high]`` followed by rounding and casting to 8-bit integer.
 
     In ``"linear"`` mode, ``s, z`` are computed by mapping the original float range
     ``[A, B]`` into the 8-bit integer range ``[-128, 127]`` or ``[0, 255]``. That is, you are solving the

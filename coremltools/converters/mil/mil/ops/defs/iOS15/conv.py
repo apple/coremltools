@@ -12,6 +12,7 @@ from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.ops.defs._utils import \
     spatial_dimensions_out_shape
 from coremltools.converters.mil.mil.ops.defs.iOS15 import _IOS15_TARGET
+from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 
 
 @register_op
@@ -21,7 +22,7 @@ class conv(Operation):
 
     Parameters
     ----------
-    x: tensor<[n, C_in, \*d_in], T> (Required)
+    x: tensor<[n, C_in, \\*d_in], T> (Required)
 
         * ``d_in`` are (possibly runtime-determined) spatial dimensions. For example,
           ``d_in = [224, 224]`` for 2D convolution.
@@ -29,7 +30,7 @@ class conv(Operation):
         * ``C_in`` is the number of input channels or depth dimensions.
         * ``n``  is the batch dimension.
 
-    weight: tensor<[C_out, C_in/groups, \*K], T> (Required)
+    weight: tensor<[C_out, C_in/groups, \\*K], T> (Required)
 
         * Filter weights.
         * ``C_in`` is the number of input channels.
@@ -108,7 +109,7 @@ class conv(Operation):
 
     Returns
     -------
-    tensor<[n, C_out, \*d_out], T>
+    tensor<[n, C_out, \\*d_out], T>
         * Output activation has the same rank and spatial dimension as the input.
           That is, ``len(d_out) == len(d_in)``.
         * For ``i=0,..,len(d_in)-1, d_out[i] = floor [(D_in[i] + pad[2*i] +
@@ -158,14 +159,16 @@ class conv(Operation):
         groups = self.groups.val
 
         if self.bias is not None and (len(self.bias.shape) > 1 or self.bias.shape[0] != C_out):
-            msg = "# of bias values {} not equal to # output channels {}"
-            raise ValueError(msg.format(self.bias.shape[0], C_out))
-        if C_in % groups != 0:
-            msg = "# of input channels {} not divisible by groups {}"
-            raise ValueError(msg.format(C_in, groups))
-        if C_in // groups != self.weight.shape[1]:
-            msg = "C_in / groups = {}/{} != weight[1] ({})"
-            raise ValueError(msg.format(C_in, groups, self.weight.shape[1]))
+            raise ValueError(
+                f"# of bias values {self.bias.shape[0]} not equal to # output channels {C_out}"
+            )
+        if not is_symbolic(C_in):
+            if C_in % groups != 0:
+                raise ValueError(f"# of input channels {C_in} not divisible by groups {groups}")
+            if C_in // groups != self.weight.shape[1]:
+                raise ValueError(
+                    f"C_in / groups = {C_in}/{groups} != weight[1] ({self.weight.shape[1]})"
+                )
 
         strides = self.strides.val
         dilations = self.dilations.val

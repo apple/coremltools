@@ -3,7 +3,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from torch.ao.quantization import quantization_mappings
+from coremltools.optimize.torch.palettization._supported_modules import DKMPalettizerModulesRegistry
 
 
 def _assert_changes_post_attach(module, n_bits, cluster_dim):
@@ -15,9 +15,8 @@ def _assert_changes_post_attach(module, n_bits, cluster_dim):
 def _assert_changes_post_prepare(
     original_module, palettized_module, n_bits, cluster_dim, kmeans_max_iter
 ):
-    assert (
-        type(palettized_module)
-        == quantization_mappings.DEFAULT_QAT_MODULE_MAPPINGS[type(original_module)]
+    assert type(palettized_module) == DKMPalettizerModulesRegistry.get_palettizer_module(
+        original_module
     )
     assert palettized_module.weight_fake_quant.n_clusters == 2**n_bits
     assert palettized_module.weight_fake_quant.cluster_dim == cluster_dim
