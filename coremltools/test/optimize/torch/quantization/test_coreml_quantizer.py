@@ -19,7 +19,7 @@ from coremltools.optimize.torch.quantization.quantization_config import (
 )
 from coremltools._deps import _HAS_TORCH_EXPORT_API
 if _HAS_TORCH_EXPORT_API:
-    from torch._export import capture_pre_autograd_graph
+    from torch.export import export_for_training
     from torch.ao.quantization.quantize_pt2e import (
         convert_pt2e,
         prepare_pt2e,
@@ -163,7 +163,7 @@ def quantize_model(
     is_qat: bool = True,
 ):
     quantizer = CoreMLQuantizer(quantization_config)
-    exported_model = capture_pre_autograd_graph(model, (data,))
+    exported_model = export_for_training(model, (data,)).module()
     if is_qat:
         prepared_model = prepare_qat_pt2e(exported_model, quantizer)
     else:
