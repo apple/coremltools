@@ -55,7 +55,7 @@ class reduce_argmax(reduce_arg):
 
     Parameters
     ----------
-    x: <\*,T> (Required)
+    x: <\\*, T> (Required)
         * Must be 1-dimensional or higher.
 
     axis: const<i32> (Optional)
@@ -73,7 +73,7 @@ class reduce_argmax(reduce_arg):
 
     Returns
     -------
-    <\*, U>
+    <\\*, U>
 
     Attributes
     ----------
@@ -97,7 +97,7 @@ class reduce_argmin(reduce_arg):
 
     Parameters
     ----------
-    x: <\*,T> (Required)
+    x: <\\*, T> (Required)
         * Must be 1-dimensional or higher.
 
     axis: const<i32> (Optional)
@@ -114,7 +114,7 @@ class reduce_argmin(reduce_arg):
 
     Returns
     -------
-    <\*, U>
+    <\\*, U>
 
     Attributes
     ----------

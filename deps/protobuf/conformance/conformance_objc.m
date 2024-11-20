@@ -31,6 +31,7 @@
 #import <Foundation/Foundation.h>
 
 #import "Conformance.pbobjc.h"
+#import "google/protobuf/TestMessagesProto2.pbobjc.h"
 #import "google/protobuf/TestMessagesProto3.pbobjc.h"
 
 static void Die(NSString *format, ...) __dead2;
@@ -63,17 +64,28 @@ static NSData *CheckedReadDataOfLength(NSFileHandle *handle, NSUInteger numBytes
 
 static ConformanceResponse *DoTest(ConformanceRequest *request) {
   ConformanceResponse *response = [ConformanceResponse message];
-  TestAllTypes *testMessage = nil;
+  GPBMessage *testMessage = nil;
 
   switch (request.payloadOneOfCase) {
     case ConformanceRequest_Payload_OneOfCase_GPBUnsetOneOfCase:
-      Die(@"Request didn't have a payload: %@", request);
+      response.runtimeError =
+          [NSString stringWithFormat:@"Request didn't have a payload: %@", request];
       break;
 
     case ConformanceRequest_Payload_OneOfCase_ProtobufPayload: {
+      Class msgClass = nil;
+      if ([request.messageType isEqual:@"protobuf_test_messages.proto3.TestAllTypesProto3"]) {
+        msgClass = [Proto3TestAllTypesProto3 class];
+      } else if ([request.messageType isEqual:@"protobuf_test_messages.proto2.TestAllTypesProto2"]) {
+        msgClass = [TestAllTypesProto2 class];
+      } else {
+        response.runtimeError =
+            [NSString stringWithFormat:@"Protobuf request had an unknown message_type: %@",
+                                       request.messageType];
+        break;
+      }
       NSError *error = nil;
-      testMessage = [TestAllTypes parseFromData:request.protobufPayload
-                                          error:&error];
+      testMessage = [msgClass parseFromData:request.protobufPayload error:&error];
       if (!testMessage) {
         response.parseError =
             [NSString stringWithFormat:@"Parse error: %@", error];
@@ -84,13 +96,24 @@ static ConformanceResponse *DoTest(ConformanceRequest *request) {
     case ConformanceRequest_Payload_OneOfCase_JsonPayload:
       response.skipped = @"ObjC doesn't support parsing JSON";
       break;
+
+    case ConformanceRequest_Payload_OneOfCase_JspbPayload:
+      response.skipped =
+          @"ConformanceRequest had a jspb_payload ConformanceRequest.payload;"
+          " those aren't supposed to happen with opensource.";
+      break;
+
+    case ConformanceRequest_Payload_OneOfCase_TextPayload:
+      response.skipped = @"ObjC doesn't support parsing TextFormat";
+      break;
   }
 
   if (testMessage) {
     switch (request.requestedOutputFormat) {
       case WireFormat_GPBUnrecognizedEnumeratorValue:
       case WireFormat_Unspecified:
-        Die(@"Unrecognized/unspecified output format: %@", request);
+        response.runtimeError =
+            [NSString stringWithFormat:@"Unrecognized/unspecified output format: %@", request];
         break;
 
       case WireFormat_Protobuf:
@@ -103,6 +126,18 @@ static ConformanceResponse *DoTest(ConformanceRequest *request) {
 
       case WireFormat_Json:
         response.skipped = @"ObjC doesn't support generating JSON";
+        break;
+
+      case WireFormat_Jspb:
+        response.skipped =
+            @"ConformanceRequest had a requested_output_format of JSPB WireFormat; that"
+            " isn't supposed to happen with opensource.";
+        break;
+
+      case WireFormat_TextFormat:
+        // ObjC only has partial objc generation, so don't attempt any tests that need
+        // support.
+        response.skipped = @"ObjC doesn't support generating TextFormat";
         break;
     }
   }

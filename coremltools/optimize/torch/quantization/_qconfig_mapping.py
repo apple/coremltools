@@ -111,7 +111,12 @@ class _QConfigMappingBuilder:
 
         return _aoquant.QConfig(
             activation=cls._create_fake_quantize_partial_from_kwargs(
-                False, act_observer, act_dtype, act_qscheme
+                False,
+                act_observer,
+                act_dtype,
+                act_qscheme,
+                False,
+                quantization_config=quantization_config,
             ),
             weight=cls._create_fake_quantize_partial_from_kwargs(
                 True,
@@ -119,6 +124,7 @@ class _QConfigMappingBuilder:
                 weight_dtype,
                 weight_qscheme,
                 weight_per_channel=_default_quantization_options["weight_per_channel"],
+                quantization_config=quantization_config,
             ),
         )
 
@@ -180,6 +186,7 @@ class _QConfigMappingBuilder:
                     quant_min=weight.quant_min,
                     quant_max=weight.quant_max,
                     ch_axis=ch_axis,
+                    quantization_config=quantization_config,
                 ),
             )
         return qconfig
@@ -224,7 +231,11 @@ class _QConfigMappingBuilder:
             )
 
             activation_qconfig = cls._create_fake_quantize_partial_from_kwargs(
-                False, act_observer, act_dtype, act_qscheme
+                False,
+                act_observer,
+                act_dtype,
+                act_qscheme,
+                quantization_config=quantization_config,
             )
 
         if quantization_config.weight_dtype == _torch.float32:
@@ -259,6 +270,7 @@ class _QConfigMappingBuilder:
                 weight_per_channel=quantization_config.weight_per_channel,
                 quant_min=quant_min,
                 quant_max=quant_max,
+                quantization_config=quantization_config,
             )
 
         return _aoquant.QConfig(activation=activation_qconfig, weight=weight_qconfig)

@@ -103,7 +103,7 @@ class const_deduplication(AbstractGraphPass):
             all_vars = [k] + list(v)
             all_vars = list(set(all_vars))
             for duplicate in all_vars:
-                duplicate.op.weight_id = i
+                duplicate.op.weight_id = str(i)
 
     def remove_duplicate_ops(
         self, block: Block, unique2duplicates: Dict[Var, List[Var]], force_replace: bool
@@ -150,7 +150,7 @@ class const_deduplication(AbstractGraphPass):
         hashkey_2_duplicates: Dict[Tuple, List[Var]] = {}
         for block in blocks:
             for op in list(block.operations):
-                if "constexpr" not in op.op_type:
+                if not op.op_type.startswith("constexpr_"):
                     continue
                 if hasattr(op, "weight_key"):
                     hash_key = [op.op_type, op.weight_key]

@@ -37,6 +37,7 @@ class _Partitioner:
         kmeans_batch_threshold: int,
         kmeans_n_init: int,
         kmeans_error_bnd: float,
+        vector_ch_axis: int,
     ):
         self.centroids = [kmeans_init]
         self.n_clusters = 2 ** int(n_bits)
@@ -45,6 +46,7 @@ class _Partitioner:
         self.enable_partition = []
         self.proj_factor = None
         self.partitions = []
+        self.partition_numel = None
         self.cum_inertia = []
         self.cluster_dim = cluster_dim
         self.cluster_permute = cluster_permute
@@ -56,6 +58,7 @@ class _Partitioner:
         self.kmeans_batch_threshold = kmeans_batch_threshold
         self.kmeans_n_init = kmeans_n_init
         self.kmeans_error_bnd = kmeans_error_bnd
+        self.vector_ch_axis = vector_ch_axis
 
     def create_partitions(self, weights) -> None:
         """
@@ -102,7 +105,7 @@ class _Partitioner:
         """
         Method to get kmeans for a particular partition.
         """
-        cY, pad = _vectorize(X[partition], self.cluster_dim)
+        cY, pad = _vectorize(X[partition], self.cluster_dim, self.vector_ch_axis)
 
         kmeans = _EfficientKMeans(
             n_clusters=n_clusters,
@@ -127,12 +130,26 @@ class _Partitioner:
 
         return kmeans
 
+    def _move_centroids_and_labels_to_device(
+        self, device: _torch.device, dtype: _torch.dtype
+    ) -> None:
+        """
+        If centroids are loaded from a checkpoint, we may need to move them to the same device as the weights.
+        """
+        for cidx in range(len(self.centroids)):
+            if isinstance(self.centroids[cidx], _torch.Tensor):
+                self.centroids[cidx] = self.centroids[cidx].to(device).to(dtype)
+            if isinstance(self.labels[cidx], _torch.Tensor):
+                self.labels[cidx] = self.labels[cidx].to(device).to(dtype)
+
     def init_partitions(self, parameters) -> None:
         """
         Method to initialize the partitions and set the k-means. Called during first iteration of palettization in the
         forward method of ``FakePalettize``.
         """
         if isinstance(self.centroids[0], _torch.Tensor):
+            if self.centroids[0].device != parameters.device:
+                self._move_centroids_and_labels_to_device(parameters.device, parameters.dtype)
             return
         with _torch.no_grad():
             num_partitions = len(self.partitions)
@@ -286,13 +303,17 @@ class _Partitioner:
         self.partitions = state_dict.pop(prefix + "partitions")
         self.centroids = state_dict.pop(prefix + "centroids")
         self.labels = state_dict.pop(prefix + "labels")
-        self.proj_factor = state_dict.pop(prefix + "proj_factor")
+        if prefix + "partition_numel" in state_dict:
+            self.partition_numel = state_dict.pop(prefix + "partition_numel")
+        if prefix + "proj_factor" in state_dict:
+            self.proj_factor = state_dict.pop(prefix + "proj_factor")
 
     def _save_to_state_dict_(self, destination, prefix, keep_vars):
         destination[prefix + "centroids"] = self.centroids
         destination[prefix + "labels"] = self.labels
         destination[prefix + "permute"] = self.cluster_permute
         destination[prefix + "partitions"] = self.partitions
+        destination[prefix + "partition_numel"] = self.partition_numel
 
 
 def _get_best_rank(metric, func=_torch.argmin) -> int:

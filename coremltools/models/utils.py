@@ -6,7 +6,6 @@
 """
 Utilities for the entire package.
 """
-from collections import OrderedDict as _OrderedDict
 import copy as _copy
 import gc as _gc
 import math as _math
@@ -16,6 +15,7 @@ import subprocess as _subprocess
 import sys as _sys
 import tempfile as _tempfile
 import warnings as _warnings
+from collections import OrderedDict as _OrderedDict
 from collections.abc import Iterable as _Iterable
 from copy import deepcopy as _deepcopy
 from functools import lru_cache as _lru_cache
@@ -31,9 +31,9 @@ from typing import Union as _Union
 import numpy as _np
 
 import coremltools as _ct
-from coremltools import _logger
 from coremltools import _SPECIFICATION_VERSION_IOS_16, _SPECIFICATION_VERSION_IOS_18
 from coremltools import ComputeUnit as _ComputeUnit
+from coremltools import _logger
 from coremltools import proto as _proto
 from coremltools.converters.mil import mil as _mil
 from coremltools.converters.mil.frontend.milproto import load as _milproto_to_pymil
@@ -44,7 +44,9 @@ from coremltools.converters.mil.mil.passes.defs.randomize import (
     WeightRandomizer as _WeightRandomizer,
 )
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass as _AbstractGraphPass
-from coremltools.converters.mil.mil.passes.helper import block_context_manager as _block_context_manager
+from coremltools.converters.mil.mil.passes.helper import (
+    block_context_manager as _block_context_manager,
+)
 from coremltools.converters.mil.mil.passes.pass_pipeline import (
     PassPipelineManager as _PassPipelineManager,
 )
@@ -1654,6 +1656,7 @@ def save_multifunction(
         defaultFunctionName=default_function_name,
     )
     multifunction_prog.skip_all_passes = True
+    multifunction_prog.export_as_multifunction = True
     mlmodel = _mil_convert(
         multifunction_prog,
         convert_to="mlprogram",
@@ -1661,7 +1664,6 @@ def save_multifunction(
         specification_version=spec_version,
         compute_units=_ct.ComputeUnit.CPU_ONLY,
         model_description=model_description,
-        export_multi_functions=True,
         skip_model_load=True,
     )
     mlmodel.save(destination_path)
@@ -1773,30 +1775,27 @@ def materialize_dynamic_shape_mlmodel(
     )
     _PassPipelineManager.apply_pipeline(dynamic_shape_prog, pass_pipeline)
 
-    # Weights are duplicated in each materialized new function
-    # By default, graph pass const_deduplication will not deduplicate across functions,
-    # so we need to call it explicitly here
-    const_deduplication_pass = _PASS_REGISTRY["common::const_deduplication"]
-    const_deduplication_pass._deduplicate_const_across_functions(dynamic_shape_prog)
-
-    export_multi_functions = True
     # If source function is the only function in source model,
     # and source function is replaced with materialization,
     # and materialization does not create other functions,
+    # and source function name is "main",
     # then we will end up with a unifunction model
     # Core ML distinguishs "unifunction model" and "multifunction model with only 1 function"
     if (
         len(dynamic_shape_prog.functions) == 1
         and len(function_name_to_materialization_map) == 1
         and source_function_name in function_name_to_materialization_map
+        and source_function_name == "main"
     ):
-        export_multi_functions = False
+        dynamic_shape_prog.export_as_multifunction = False
+    else:
+        dynamic_shape_prog.export_as_multifunction = True
 
     # Multifunciton is added in iOS 18, so
     # * if export multifunction, then specification version has to be iOS 18+
     # * else, specification version can be the same as original version
     specification_version = dynamic_shape_mlmodel._spec.specificationVersion
-    if export_multi_functions:
+    if dynamic_shape_prog.export_as_multifunction:
         specification_version = max(_ct.target.iOS18, specification_version)
 
     dynamic_shape_prog.skip_all_passes = True
@@ -1806,7 +1805,6 @@ def materialize_dynamic_shape_mlmodel(
         convert_to="mlprogram",
         specification_version=specification_version,
         compute_units=_ct.ComputeUnit.CPU_ONLY,
-        export_multi_functions=export_multi_functions,
         skip_model_load=True,
     )
     materialized_mlmodel.save(destination_path)
@@ -1911,8 +1909,9 @@ def bisect_model(
         )
     """
     # We do the lazy import to prevent circular import
-    from . import MLModel
     from coremltools.converters.mil.converter import mil_convert as _mil_convert
+
+    from . import MLModel
 
     def get_pymil_prog_and_spec_from_model(model):
 
@@ -2054,8 +2053,10 @@ def _verify_output_correctness_of_chunks(
 ) -> None:
     """Verifies the end-to-end output correctness of full (original) model versus chunked models"""
     # lazy import avoids circular error
-    from coremltools.converters.mil.testing_utils import random_gen_input_feature_type as random_gen_input_feature_type
     from coremltools.converters.mil.testing_utils import compute_snr_and_psnr
+    from coremltools.converters.mil.testing_utils import (
+        random_gen_input_feature_type as random_gen_input_feature_type,
+    )
 
     def report_correctness(original_outputs: _np.ndarray, final_outputs: _np.ndarray, log_prefix: str):
         """ Report PSNR values across two compatible tensors.
@@ -2253,6 +2254,7 @@ def _make_second_chunk_prog(prog: _mil.Program, op_idx: int) -> _mil.Program:
     block.function_inputs = tuple(block._input_dict.values())
 
     return prog
+
 
 def change_input_output_tensor_type(
     ml_model: "_ct.models.MLModel",

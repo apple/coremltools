@@ -8,17 +8,16 @@ from typing import Tuple
 
 import pytest
 
-from coremltools._deps import _HAS_EXECUTORCH, _HAS_TORCH_EXPORT_API
+from ..utils import TorchFrontend
+from .testing_utils import frontends as _frontends
 
-if not _HAS_TORCH_EXPORT_API:
-    pytest.skip(allow_module_level=True, reason="torch.export is required")
+frontends = _frontends.copy()
 
-from coremltools.converters.mil.frontend.torch.utils import TorchFrontend
+if TorchFrontend.TORCHSCRIPT in frontends:
+    frontends.remove(TorchFrontend.TORCHSCRIPT)
 
-frontends = [TorchFrontend.TORCHEXPORT]
-
-if _HAS_EXECUTORCH:
-    frontends.append(TorchFrontend.EXECUTORCH)
+if len(frontends) == 0:
+    pytest.skip(allow_module_level=True)
 
 import torch
 

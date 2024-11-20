@@ -53,8 +53,9 @@ class decompose_conv1d(AbstractGraphPass):
                 if op.op_type != "conv" or op.x.rank != 3:
                     continue
 
-                if self._try_apply_transform(op, block):
-                    fusion_occurred = True
+                with mb.set_before_op(op):
+                    if self._try_apply_transform(op, block):
+                        fusion_occurred = True
 
             return fusion_occurred
 
@@ -65,10 +66,10 @@ class decompose_conv1d(AbstractGraphPass):
     @staticmethod
     def _try_apply_transform(conv_op: Operation, block: Block) -> bool:
         # create `expand_dims`
-        expand_out = mb.expand_dims(x=conv_op.x, axes=(-2,), before_op=conv_op)
+        expand_out = mb.expand_dims(x=conv_op.x, axes=(-2,))
 
         # prepare `conv2d`
-        conv_kwargs = {"x": expand_out, "before_op": conv_op}
+        conv_kwargs = {"x": expand_out}
 
         # inherit `pad_type`, `groups`, `bias` from `conv1d`
         conv_kwargs["pad_type"] = conv_op.inputs["pad_type"].val
@@ -78,9 +79,7 @@ class decompose_conv1d(AbstractGraphPass):
             conv_kwargs["bias"] = bias
 
         # expand `weight`, `strides`, `pad`, `dilations` from `conv1d`
-        conv_kwargs["weight"] = mb.expand_dims(
-            x=conv_op.inputs["weight"], axes=(-2,), before_op=conv_op
-        )
+        conv_kwargs["weight"] = mb.expand_dims(x=conv_op.inputs["weight"], axes=(-2,))
         conv_kwargs["strides"] = (1, conv_op.inputs["strides"].val[-1])
         conv_kwargs["pad"] = (0, 0, conv_op.inputs["pad"].val[-2], conv_op.inputs["pad"].val[-1])
         conv_kwargs["dilations"] = (1, conv_op.inputs["dilations"].val[-1])
@@ -89,9 +88,7 @@ class decompose_conv1d(AbstractGraphPass):
         conv_out = mb.conv(**conv_kwargs)
 
         # create `squeeze`
-        squeeze_out = mb.squeeze(
-            x=conv_out, axes=(-2,), name=conv_op.outputs[0].name, before_op=conv_op
-        )
+        squeeze_out = mb.squeeze(x=conv_out, axes=(-2,), name=conv_op.outputs[0].name)
 
         # try replacing `conv1d` output
         # with the new `expand_dims` -> `conv2d` -> `squeeze` output

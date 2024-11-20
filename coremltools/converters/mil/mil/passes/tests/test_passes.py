@@ -7200,3 +7200,174 @@ class TestRandomizeWeights:
 
         # check the weights have changed
         TestRandomizeWeights.assert_weights_changed(prog_before, prog_after)
+
+
+class TestStackSplitFusion:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "axis",
+        [
+            0,
+            1,
+            3,
+            [-1, -1, 3],
+            [-2, 2, -2],
+        ],
+    )
+    def test_spit_with_split_sizes(axis):
+        if isinstance(axis, int):
+            stack_axis = squeeze_axis = split_axis = axis
+        else:
+            stack_axis, squeeze_axis, split_axis = axis
+
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(2, 5, 6)),
+                mb.TensorSpec(shape=(2, 5, 6)),
+                mb.TensorSpec(shape=(2, 5, 6)),
+            ]
+        )
+        def prog(x, y, z):
+            res = mb.stack(values=[x, y, z], axis=stack_axis)
+            return tuple(
+                [
+                    mb.squeeze(x=val, axes=[squeeze_axis])
+                    for val in mb.split(x=res, split_sizes=[1, 1, 1], axis=split_axis)
+                ]
+            )
+
+        apply_pass_and_basic_check(prog, "common::fuse_stack_split")
+        assert get_op_types_in_program(prog) == ["identity"] * 3
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "axis",
+        [
+            0,
+            1,
+            3,
+            [-1, -1, 3],
+            [-2, 2, -2],
+        ],
+    )
+    def test_spit_with_num_splits(axis):
+        if isinstance(axis, int):
+            stack_axis = squeeze_axis = split_axis = axis
+        else:
+            stack_axis, squeeze_axis, split_axis = axis
+
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(2, 5, 6)),
+                mb.TensorSpec(shape=(2, 5, 6)),
+                mb.TensorSpec(shape=(2, 5, 6)),
+            ]
+        )
+        def prog(x, y, z):
+            res = mb.stack(values=[x, y, z], axis=stack_axis)
+            return tuple(
+                [
+                    mb.squeeze(x=val, axes=[squeeze_axis])
+                    for val in mb.split(x=res, num_splits=3, axis=split_axis)
+                ]
+            )
+
+        apply_pass_and_basic_check(prog, "common::fuse_stack_split")
+        assert get_op_types_in_program(prog) == ["identity"] * 3
+
+    def test_negative_stack_as_output(axis):
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(2, 5, 6)),
+                mb.TensorSpec(shape=(2, 5, 6)),
+                mb.TensorSpec(shape=(2, 5, 6)),
+            ]
+        )
+        def prog(x, y, z):
+            res = mb.stack(values=[x, y, z], axis=0)
+            a, b, c = [mb.squeeze(x=val, axes=[0]) for val in mb.split(x=res, num_splits=3, axis=0)]
+            return res, a
+
+        apply_pass_and_basic_check(prog, "common::fuse_stack_split")
+        assert get_op_types_in_program(prog) == ["stack", "split"] + ["squeeze"] * 3
+
+    def test_multiple_branch(axis):
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(2, 1, 3)),
+                mb.TensorSpec(shape=(2, 1, 3)),
+                mb.TensorSpec(shape=(2, 1, 3)),
+            ]
+        )
+        def prog(x, y, z):
+            res = mb.stack(values=[x, y, z], axis=0)
+            [mb.squeeze(x=val, axes=[0]) for val in mb.split(x=res, num_splits=3, axis=0)]
+            relu = mb.relu(x=res)
+            [mb.squeeze(x=val, axes=[0]) for val in mb.split(x=res, num_splits=3, axis=0)]
+            sin = mb.sin(x=res)
+            [mb.squeeze(x=val, axes=[3]) for val in mb.split(x=res, num_splits=3, axis=3)]
+            return mb.const(val=0)
+
+        apply_pass_and_basic_check(prog, "common::fuse_stack_split")
+        assert (
+            get_op_types_in_program(prog)
+            == ["stack"]
+            + ["identity"] * 3
+            + ["relu"]
+            + ["identity"] * 3
+            + ["sin", "split"]
+            + ["squeeze"] * 3
+        )
+
+    def test_negative_split_as_output(axis):
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(2, 5, 6)),
+                mb.TensorSpec(shape=(2, 5, 6)),
+                mb.TensorSpec(shape=(2, 5, 6)),
+            ]
+        )
+        def prog(x, y, z):
+            res = mb.stack(values=[x, y, z], axis=0)
+            a, b, c = mb.split(x=res, num_splits=3, axis=0)
+            return (
+                b,
+                mb.squeeze(x=a, axes=[0]),
+                mb.squeeze(x=b, axes=[0]),
+                mb.squeeze(x=c, axes=[0]),
+            )
+
+        apply_pass_and_basic_check(prog, "common::fuse_stack_split")
+        assert get_op_types_in_program(prog) == ["stack", "split"] + ["squeeze"] * 3
+
+    def test_negative_not_feed_into_squeeze(axis):
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(2, 5, 6)),
+                mb.TensorSpec(shape=(2, 5, 6)),
+                mb.TensorSpec(shape=(2, 5, 6)),
+            ]
+        )
+        def prog(x, y, z):
+            res = mb.stack(values=[x, y, z], axis=0)
+            a, b, c = mb.split(x=res, num_splits=3, axis=0)
+            return b, mb.squeeze(x=a, axes=[0]), mb.squeeze(x=b, axes=[0]), mb.add(x=c, y=8.0)
+
+        apply_pass_and_basic_check(prog, "common::fuse_stack_split")
+        assert get_op_types_in_program(prog) == ["stack", "split"] + ["squeeze"] * 2 + ["add"]
+
+    def test_negative_axis_mismatch(axis):
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(2, 1, 3)),
+                mb.TensorSpec(shape=(2, 1, 3)),
+                mb.TensorSpec(shape=(2, 1, 3)),
+            ]
+        )
+        def prog(x, y, z):
+            res = mb.stack(values=[x, y, z], axis=0)
+            a, b, c = mb.split(x=res, num_splits=3, axis=3)
+            return mb.squeeze(x=a, axes=[3]), mb.squeeze(x=b, axes=[3]), mb.squeeze(x=c, axes=[3])
+
+        apply_pass_and_basic_check(prog, "common::fuse_stack_split")
+        assert get_op_types_in_program(prog) == ["stack", "split"] + ["squeeze"] * 3

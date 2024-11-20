@@ -12,11 +12,17 @@ import torch.nn as _nn
 from torch.ao.quantization import FakeQuantize as _FakeQuantize
 
 from coremltools.optimize.torch._typing import ParamsDict as _ParamsDict
+from coremltools.optimize.torch._utils.joint_compression_utils import (
+    is_pruner_prepared as _is_pruner_prepared,
+)
 from coremltools.optimize.torch._utils.math_utils import rmse_error as _rmse_error
 from coremltools.optimize.torch._utils.metadata_utils import (
     register_metadata_version as _register_metadata_version,
 )
 from coremltools.optimize.torch._utils.torch_utils import get_eval_model as _get_eval_model
+from coremltools.optimize.torch._utils.torch_utils import (
+    normalize_fsdp_module_name as _normalize_fsdp_module_name,
+)
 from coremltools.optimize.torch._utils.validation_utils import (
     validate_param_config as _validate_param_config,
 )
@@ -25,13 +31,10 @@ from coremltools.optimize.torch.base_model_optimizer import (
 )
 from coremltools.optimize.torch.base_model_optimizer import _Report
 from coremltools.optimize.torch.palettization._custom_conversion import (
-    PALETTIZATION_CONVERT_DICT as _PALETTIZATION_CONVERT_DICT,
+    get_conversion_custom_config_dict as _get_conversion_custom_config_dict,
 )
 from coremltools.optimize.torch.palettization._supported_modules import (
-    _get_palettization_qat_mappings,
-)
-from coremltools.optimize.torch.palettization._supported_modules import (
-    get_palettizable_parameters as _get_palettizable_parameters,
+    DKMPalettizerModulesRegistry as _DKMPalettizerModulesRegistry,
 )
 from coremltools.optimize.torch.palettization.fake_palettize import FakePalettize as _FakePalettize
 from coremltools.optimize.torch.palettization.palettization_config import (
@@ -52,6 +55,20 @@ _logger = _logging.getLogger(__name__)
 
 class Palettizer(_BaseTrainingTimeModelOptimizer):
     pass
+
+
+class _PalettizerLUTObserver(_torch.quantization.MovingAveragePerChannelMinMaxObserver):
+    """
+    Subclassing _torch.quantization.MovingAveragePerChannelMinMaxObserver to add reset_parameters method
+    """
+    def reset_parameters(self) -> None:
+        """
+        FSDP expects reset_parameters method to initialize parameters/buffers in submodules
+        Initializing buffers used by the MovingAveragePerChannelMinMaxObserver
+        """
+        self.min_val = _torch.empty(0)
+        self.max_val = _torch.empty(0)
+        self.eps = _torch.tensor([_torch.finfo(_torch.float32).eps])
 
 
 class DKMPalettizer(Palettizer):
@@ -104,7 +121,8 @@ class DKMPalettizer(Palettizer):
         config = _DKMPalettizerConfig() if config is None else config
         super().__init__(model, config)
         self._milestones = {}
-        self._supported_modules = _get_palettization_qat_mappings()
+        self._palettization_module_mapping = _DKMPalettizerModulesRegistry.REGISTRY
+        self._supported_modules = _DKMPalettizerModulesRegistry.get_supported_modules()
 
     def _palettize_supported_modules(self):
         """
@@ -112,36 +130,45 @@ class DKMPalettizer(Palettizer):
         """
         for name, submodule in self._model.named_modules(remove_duplicate=True):
             config = self._config.get_module_config(name, submodule)
-            if type(submodule) in self._supported_modules:
-                if config is not None:
+            if isinstance(submodule, self._supported_modules):
+                palettizer_module = _DKMPalettizerModulesRegistry.get_palettizer_module(submodule)
+                if config is not None and palettizer_module is not None:
                     submod_configs = config if isinstance(config, list) else [config]
                     for submod_config in submod_configs:
                         if all(
                             param.numel() > submod_config.weight_threshold
-                            for param, _ in _get_palettizable_parameters(submodule)
+                            for param, _ in palettizer_module.get_palettizable_parameters(submodule)
                         ):
                             module_level_advanced_options = self._get_module_level_advanced_options(
                                 submodule, submod_config
                             )
+                            default_config = _DEFAULT_PALETTIZATION_SCHEME[_nn.Linear]
                             n_bits = (
                                 submod_config.n_bits
                                 if submod_config.n_bits is not None
-                                else _DEFAULT_PALETTIZATION_SCHEME[type(submodule)]["n_bits"]
+                                else _DEFAULT_PALETTIZATION_SCHEME.get(
+                                    type(submodule), default_config
+                                )["n_bits"]
                             )
                             cluster_dim = (
                                 submod_config.cluster_dim
                                 if submod_config.cluster_dim is not None
-                                else _DEFAULT_PALETTIZATION_SCHEME[type(submodule)]["cluster_dim"]
+                                else _DEFAULT_PALETTIZATION_SCHEME.get(
+                                    type(submodule), default_config
+                                )["cluster_dim"]
                             )
                             enable_per_channel_scale = (
                                 submod_config.enable_per_channel_scale
                                 if submod_config.enable_per_channel_scale is not None
-                                else _DEFAULT_PALETTIZATION_SCHEME[type(submodule)][
-                                    "enable_per_channel_scale"
-                                ]
+                                else _DEFAULT_PALETTIZATION_SCHEME.get(
+                                    type(submodule), default_config
+                                )["enable_per_channel_scale"]
                             )
                             updated_config = None
-                            for param, param_name in _get_palettizable_parameters(submodule):
+                            for (
+                                param,
+                                param_name,
+                            ) in palettizer_module.get_palettizable_parameters(submodule):
                                 updated_config = _validate_param_config(
                                     name + "." + param_name,
                                     param,
@@ -158,7 +185,7 @@ class DKMPalettizer(Palettizer):
                             if not updated_config:
                                 continue
 
-                            self._palettize_module(
+                            self._attach_qconfig(
                                 submodule,
                                 n_bits,
                                 cluster_dim,
@@ -174,7 +201,7 @@ class DKMPalettizer(Palettizer):
                             self._milestones[name] = updated_config.milestone
 
     @staticmethod
-    def _palettize_module(
+    def _attach_qconfig(
         module: _nn.Module,
         n_bits: int,
         cluster_dim: int,
@@ -188,11 +215,11 @@ class DKMPalettizer(Palettizer):
         advanced_options: _Dict,
     ):
         """
-        Method to palettize a module.
+        Attach :py:class:`QConfig` to a module so that it can be palettized.
         """
         fq_activation = _nn.Identity
         fq_weight = _FakePalettize.with_args(
-            observer=_torch.quantization.MovingAveragePerChannelMinMaxObserver.with_args(
+            observer=_PalettizerLUTObserver.with_args(
                 quant_min=quant_min, quant_max=quant_max, dtype=dtype
             ),
             n_bits=n_bits,
@@ -206,7 +233,7 @@ class DKMPalettizer(Palettizer):
         )
         if quantize_activations:
             fq_activation = _FakeQuantize.with_args(
-                observer=_torch.quantization.MovingAveragePerChannelMinMaxObserver.with_args(
+                observer=_PalettizerLUTObserver.with_args(
                     quant_min=quant_min, quant_max=quant_max, dtype=dtype
                 ),
                 quant_min=quant_min,
@@ -220,13 +247,17 @@ class DKMPalettizer(Palettizer):
         module: _nn.Module, module_level_config: _ModuleDKMPalettizerConfig
     ) -> _ParamsDict:
         """
-        Returns advanced_options for a module. First checks whether the user specified something for those options in the
-        palettization_config. If not, uses the options from the DEFAULT_PALETTIZATION_SCHEME of that module type.
-        Returns false otherwise.
+        Returns advanced_options for a module. First checks whether the user specified something for
+        those options in the palettization_config. If not, uses the options from the
+        DEFAULT_PALETTIZATION_SCHEME of that module type.
         """
         module_level_advanced_options = {}
         for key in _DEFAULT_PALETTIZATION_ADVANCED_OPTIONS.keys():
-            if key == "cluster_permute" and module_level_config.lut_dtype == "oc_last":
+            if (
+                key == "cluster_permute"
+                and module_level_config.cluster_dtype == "oc_last"
+                and hasattr(module, "weight")
+            ):
                 cluster_permute = list(range(module.weight.dim()))
                 cluster_permute = cluster_permute[1:] + cluster_permute[:1]
                 module_level_advanced_options[key] = cluster_permute
@@ -243,14 +274,25 @@ class DKMPalettizer(Palettizer):
             inplace (:obj:`bool`): If ``True``, model transformations are carried out in-place and
                 the original module is mutated, otherwise a copy of the model is mutated and returned.
         """
+        if _is_pruner_prepared(self):
+            raise RuntimeError(
+                "Model has been prepared for pruning. When running joint compression, "
+                "first prepare quantizer/palettizer and then pruner, to ensure insertion of "
+                "fake quantization layers does not remove pruning forward hooks."
+            )
         self._model = self._get_model_for_compression(inplace)
         self._model.train()
         self._palettize_supported_modules()
-        qat_mappings = _get_palettization_qat_mappings()
         self._model = _torch.quantization.prepare_qat(
-            self._model, mapping=qat_mappings, inplace=True
+            self._model, mapping=self._palettization_module_mapping, inplace=True
         )
+        self._default_enable_fake_palett()
         return self._model
+
+    def _default_enable_fake_palett(self):
+        for name, module in self._model.named_modules():
+            if name in self._milestones and self._milestones[name] == 0:
+                self._enable_fake_palett_impl(module, True)
 
     def finalize(self, model: _Optional[_nn.Module] = None, inplace: bool = False) -> _nn.Module:
         """
@@ -270,7 +312,9 @@ class DKMPalettizer(Palettizer):
         model.eval()
 
         finalized_model = _torch.quantization.convert(
-            model, convert_custom_config_dict=_PALETTIZATION_CONVERT_DICT, inplace=inplace
+            model,
+            convert_custom_config_dict=_get_conversion_custom_config_dict(),
+            inplace=inplace,
         )
 
         if model is None:
@@ -284,11 +328,14 @@ class DKMPalettizer(Palettizer):
         is called is equal to ``milestone``, palettization is enabled.
         """
         for name, module in self._model.named_modules():
-            if name in self._milestones:
-                if self._step_count == self._milestones[name]:
+            # FSDP flattens model parameters leading to change in module names
+            # _normalize_fsdp_module_name function call to get original module name
+            normalized_name = _normalize_fsdp_module_name(name)
+            if normalized_name in self._milestones:
+                if self._step_count == self._milestones[normalized_name]:
                     self._enable_fake_palett_impl(module, True)
                     self._init_prune_threshold_and_module_wise_target_sparsity(module)
-                if self._step_count > self._milestones[name]:
+                if self._step_count > self._milestones[normalized_name]:
                     self._update_prune_threshold(module)
         self._step_count += 1
 

@@ -8,106 +8,138 @@ use Google\Protobuf\Internal\GPBType;
 use Google\Protobuf\Internal\GPBWire;
 use Google\Protobuf\Internal\RepeatedField;
 use Google\Protobuf\Internal\InputStream;
-
 use Google\Protobuf\Internal\GPBUtil;
 
 /**
- * <pre>
  * Describes a value within an enum.
- * </pre>
  *
- * Protobuf type <code>google.protobuf.EnumValueDescriptorProto</code>
+ * Generated from protobuf message <code>google.protobuf.EnumValueDescriptorProto</code>
  */
 class EnumValueDescriptorProto extends \Google\Protobuf\Internal\Message
 {
     /**
-     * <code>optional string name = 1;</code>
+     * Generated from protobuf field <code>optional string name = 1;</code>
      */
-    private $name = '';
-    private $has_name = false;
+    protected $name = null;
     /**
-     * <code>optional int32 number = 2;</code>
+     * Generated from protobuf field <code>optional int32 number = 2;</code>
      */
-    private $number = 0;
-    private $has_number = false;
+    protected $number = null;
     /**
-     * <code>optional .google.protobuf.EnumValueOptions options = 3;</code>
+     * Generated from protobuf field <code>optional .google.protobuf.EnumValueOptions options = 3;</code>
      */
-    private $options = null;
-    private $has_options = false;
+    protected $options = null;
 
-    public function __construct() {
+    /**
+     * Constructor.
+     *
+     * @param array $data {
+     *     Optional. Data for populating the Message object.
+     *
+     *     @type string $name
+     *     @type int $number
+     *     @type \Google\Protobuf\Internal\EnumValueOptions $options
+     * }
+     */
+    public function __construct($data = NULL) {
         \GPBMetadata\Google\Protobuf\Internal\Descriptor::initOnce();
-        parent::__construct();
+        parent::__construct($data);
     }
 
     /**
-     * <code>optional string name = 1;</code>
+     * Generated from protobuf field <code>optional string name = 1;</code>
+     * @return string
      */
     public function getName()
     {
-        return $this->name;
+        return isset($this->name) ? $this->name : '';
+    }
+
+    public function hasName()
+    {
+        return isset($this->name);
+    }
+
+    public function clearName()
+    {
+        unset($this->name);
     }
 
     /**
-     * <code>optional string name = 1;</code>
+     * Generated from protobuf field <code>optional string name = 1;</code>
+     * @param string $var
+     * @return $this
      */
     public function setName($var)
     {
         GPBUtil::checkString($var, True);
         $this->name = $var;
-        $this->has_name = true;
-    }
 
-    public function hasName()
-    {
-        return $this->has_name;
+        return $this;
     }
 
     /**
-     * <code>optional int32 number = 2;</code>
+     * Generated from protobuf field <code>optional int32 number = 2;</code>
+     * @return int
      */
     public function getNumber()
     {
-        return $this->number;
+        return isset($this->number) ? $this->number : 0;
+    }
+
+    public function hasNumber()
+    {
+        return isset($this->number);
+    }
+
+    public function clearNumber()
+    {
+        unset($this->number);
     }
 
     /**
-     * <code>optional int32 number = 2;</code>
+     * Generated from protobuf field <code>optional int32 number = 2;</code>
+     * @param int $var
+     * @return $this
      */
     public function setNumber($var)
     {
         GPBUtil::checkInt32($var);
         $this->number = $var;
-        $this->has_number = true;
-    }
 
-    public function hasNumber()
-    {
-        return $this->has_number;
+        return $this;
     }
 
     /**
-     * <code>optional .google.protobuf.EnumValueOptions options = 3;</code>
+     * Generated from protobuf field <code>optional .google.protobuf.EnumValueOptions options = 3;</code>
+     * @return \Google\Protobuf\Internal\EnumValueOptions|null
      */
     public function getOptions()
     {
         return $this->options;
     }
 
+    public function hasOptions()
+    {
+        return isset($this->options);
+    }
+
+    public function clearOptions()
+    {
+        unset($this->options);
+    }
+
     /**
-     * <code>optional .google.protobuf.EnumValueOptions options = 3;</code>
+     * Generated from protobuf field <code>optional .google.protobuf.EnumValueOptions options = 3;</code>
+     * @param \Google\Protobuf\Internal\EnumValueOptions $var
+     * @return $this
      */
-    public function setOptions(&$var)
+    public function setOptions($var)
     {
         GPBUtil::checkMessage($var, \Google\Protobuf\Internal\EnumValueOptions::class);
         $this->options = $var;
-        $this->has_options = true;
-    }
 
-    public function hasOptions()
-    {
-        return $this->has_options;
+        return $this;
     }
 
 }

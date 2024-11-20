@@ -14,6 +14,7 @@ from tqdm import tqdm
 from coremltools import _logger as logger
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget
 from coremltools.converters.mil.backend.mil.load import should_use_weight_file
+from coremltools.converters.mil.frontend import _utils as frontend_utils
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Operation, Program, types
 from coremltools.converters.mil.mil.block import is_current_opset_version_compatible_with
@@ -589,7 +590,7 @@ class palettize_weights(AbstractCompressionPass):
 
     The transform performs the following:
 
-    - A linear look-up table (LUT) with 2\ :sup:`nbits` entries is created with values represented by indexing into this LUT.
+    - A linear look-up table (LUT) with 2\\ :sup:`nbits` entries is created with values represented by indexing into this LUT.
     - If ``fake_compression=False``, compressed value is encoded using the ``constexpr_lut_to_dense`` op.
     - If ``fake_compression=True``,  compressed value is decompressed and then encoded using the ``const`` op.
     - Old ``const`` op is replaced by a newly created operation.
@@ -1035,27 +1036,6 @@ class palettize_weights(AbstractCompressionPass):
         else:
             raise ValueError("Invalid type of params")
 
-    @staticmethod
-    def _create_constexpr_var(op: Operation, lut_params: optimize_utils.LutParams) -> Var:
-        """Create constexpr lut op based on opset version."""
-        if not is_current_opset_version_compatible_with(AvailableTarget.iOS18):
-            lut_params_ios16 = optimize_utils.ios18_lut_params_to_ios16(lut_params)
-            return mb.constexpr_lut_to_dense(
-                indices=lut_params_ios16.indices,
-                lut=lut_params_ios16.lut,
-                shape=np.uint32(lut_params_ios16.shape),
-                before_op=op,
-                name=op.name + "_palettized",
-            )
-
-        return mb.constexpr_lut_to_dense(
-            indices=lut_params.indices,
-            lut=lut_params.lut,
-            vector_axis=lut_params.vector_axis,
-            before_op=op,
-            name=op.name + "_palettized",
-        )
-
     def transform_op(self, op: Operation):
         op_config = self.config._get_const_op_config(op)
         if op_config is None:
@@ -1135,9 +1115,32 @@ class palettize_weights(AbstractCompressionPass):
                     # Feed the sparse lut's nonzero_data output to the child sparse op.
                     new_var = nonzero_data
 
+                    # The mask of the child `constexpr_sparse_to_dense` op need to be the output mask from sparse op
+                    # because for vector-palettization the output mask could be different from input mask.
+                    # So we have to re-create the child constexpr_sparse_to_dense op and remove the old one.
+                    new_sparse_to_dense_op = mb.constexpr_sparse_to_dense(
+                        nonzero_data=nonzero_data,
+                        mask=mask,
+                        before_op=child_op,
+                        name=child_op.name,
+                    )
+                    op.enclosing_block.replace_uses_of_var_after_op(
+                        anchor_op=child_op,
+                        old_var=child_op.outputs[0],
+                        new_var=new_sparse_to_dense_op,
+                        force_replace=True,
+                    )
+                    op.enclosing_block.remove_ops([child_op])
+
             # For other cases, the new lut var could be constructed directly from lut_params.
             if new_var is None:
-                new_var = self._create_constexpr_var(op, lut_params)
+                new_var = frontend_utils._construct_constexpr_lut_op(
+                    lut_params.indices,
+                    lut_params.lut,
+                    lut_params.vector_axis,
+                    name=op.name + "_palettized",
+                    before_op=op,
+                )
 
             if op_config.enable_per_channel_scale:
                 if not is_current_opset_version_compatible_with(AvailableTarget.iOS18):
@@ -1379,6 +1382,30 @@ class linear_quantize_weights(AbstractCompressionPass):
             return
 
         weight_to_compress = op.outputs[0].val
+
+        if np.any(np.isinf(weight_to_compress)):
+            logger.warning(
+                f"The const {op} has inf/-inf, which is not supported by quantization. Skipped."
+            )
+            return
+        elif weight_to_compress.dtype == bool:
+            # bool is already the smallest possible dtype (i.e. 1 bit), cannot further compress
+            return
+        elif np.issubdtype(weight_to_compress.dtype, np.integer):
+            # We have a real use case (llama) where a const bool mask is indexed by input position,
+            # which lowers to Core ML `cast bool to int8 -> gather int8 -> cast int8 back to bool`
+            # because Core ML gather does not support bool
+            # The `cast bool to int8` is then const eliminated,
+            # so Core ML serializes const int8 0/1 mask instead
+            # Theoretically, such int8 0/1 const can be compressed to 1-bit,
+            # but for now let us simply skip its quantization since it does not occupy much space
+            # TODO: Explore how the 1-bit compression for such int8 0/1 const can be implemented
+            if (
+                np.amax(weight_to_compress) - np.amin(weight_to_compress) < 2
+                and weight_to_compress.dtype.itemsize <= 1
+            ):
+                return
+
         if self.joint_compression:
             child_op = op.outputs[0].child_ops[0]
             if child_op.op_type == "constexpr_sparse_to_dense":
@@ -1485,12 +1512,11 @@ class WeightDecompressor(AbstractQuantizationPass):
             )
 
         for decomp_val, output_var in zip(decompressed_val, op.outputs):
-            new_const = mb.const(val=decomp_val, before_op=op, name=op.name)
+            new_const = mb.const(val=decomp_val, before_op=output_var.op, name=output_var.name)
             op.enclosing_block.replace_uses_of_var_after_op(
-                anchor_op=op,
+                anchor_op=output_var.op,
                 old_var=output_var,
                 new_var=new_const,
-                no_check_var_types=True,
                 force_replace=True,
             )
 

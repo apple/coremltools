@@ -517,13 +517,13 @@ class TestMILProtoLoad:
 
     @staticmethod
     def convert_and_save(prog: mil.Program) -> str:
+        prog.export_as_multifunction = True
         mlmodel = _mil_convert(
             prog,
             convert_to="mlprogram",
             convert_from="milinternal",
             specification_version=_SPECIFICATION_VERSION_IOS_18,
             compute_units=ct.ComputeUnit.CPU_ONLY,
-            export_multi_functions=True,
             skip_model_load=True,
         )
         package_path = tempfile.mkdtemp(suffix=".mlpackage")
@@ -757,6 +757,51 @@ class TestMILProtoLoad:
         shutil.rmtree(package_path)
 
 
+class TestMILProtoExporter:
+    @pytest.mark.skipif(
+        ct.utils._macos_version() < (15, 0), reason="Tests are for deployment target iOS18/macos15"
+    )
+    def test_const_share_blob_value(self):
+        """For the same const in the function, they should share the same blob value."""
+        mask_val = np.random.randint(low=0, high=2, size=(32, 32)).astype(types.np_uint1_dtype)
+        nonzero_data_val = np.random.randint(low=1, high=100, size=(np.sum(mask_val),)).astype(
+            np.int8
+        )
+
+        @mb.program(input_specs=[], opset_version=ct.target.iOS18)
+        def prog():
+            mask_const = mb.const(val=mask_val)
+            mask, nonzero_data = mb.constexpr_sparse_blockwise_shift_scale(
+                data_mask=mask_const,
+                nonzero_data=nonzero_data_val,
+                scale=np.array([[0.1]]),
+                offset=np.array([[1]]).astype(np.int8),
+            )
+            return mb.constexpr_sparse_to_dense(
+                nonzero_data=nonzero_data,
+                mask=mask_const,
+            )
+
+        mlmodel = ct.convert(prog, minimum_deployment_target=ct.target.iOS18)
+        saved_package_path = tempfile.mkdtemp(suffix=".mlpackage")
+        mlmodel.save(saved_package_path)
+
+        with tempfile.TemporaryDirectory() as serialize_dir:
+            mil_file = open(os.path.join(mlmodel.get_compiled_model_path(), "model.mil"))
+            mil_txt = mil_file.read()
+            # The `data_mask` and `mask` should share the same offset.
+            assert (
+                'constexpr_sparse_blockwise_shift_scale(data_mask = tensor<uint1, [32, 32]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(64)))'
+                in mil_txt
+            )
+            assert (
+                'constexpr_sparse_to_dense(mask = tensor<uint1, [32, 32]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(64)))'
+                in mil_txt
+            )
+
+        shutil.rmtree(saved_package_path)
+
+
 @pytest.mark.skipif(
     ct.utils._macos_version() < (15, 0), reason="Tests are for deployment target iOS18/macos15"
 )
@@ -896,6 +941,7 @@ class TestStateModelLoad:
         prog = mil.Program()
         prog.add_function("main", func)
         prog.add_function("func_1", func_1)
+        prog.export_as_multifunction = True
 
         mlmodel = _mil_convert(
             prog,
@@ -903,7 +949,6 @@ class TestStateModelLoad:
             convert_from="milinternal",
             specification_version=_SPECIFICATION_VERSION_IOS_18,
             compute_units=ct.ComputeUnit.CPU_ONLY,
-            export_multi_functions=True,
         )
 
         spec = mlmodel.get_spec()

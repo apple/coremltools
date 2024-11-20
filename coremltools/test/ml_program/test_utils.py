@@ -22,7 +22,6 @@ from coremltools.converters.mil.converter import mil_convert as _mil_convert
 from coremltools.converters.mil.mil import Program, types
 from coremltools.converters.mil.mil.builder import Builder as mb
 from coremltools.converters.mil.mil.passes.pass_pipeline import (
-    PASS_REGISTRY,
     PassPipeline,
     PassPipelineManager,
 )
@@ -69,13 +68,13 @@ class TestMILConvertCall:
 class TestMultiFunctionDescriptor:
     @staticmethod
     def _convert_multifunction_prog(prog):
+        prog.export_as_multifunction = True
         mlmodel = _mil_convert(
             prog,
             convert_to="mlprogram",
             convert_from="milinternal",
             specification_version=_SPECIFICATION_VERSION_IOS_18,
             compute_units=ct.ComputeUnit.CPU_ONLY,
-            export_multi_functions=True,
             skip_model_load=True,
         )
         package_path = tempfile.mkdtemp(suffix=".mlpackage")
@@ -1211,6 +1210,7 @@ class TestMaterializeSymbolicShapeMLModel:
     @pytest.mark.skipif(
         ct.utils._macos_version() < (15, 0), reason="State only supported on macOS 15+"
     )
+    @pytest.mark.xfail(reason="rdar://138957606 ([Bug] Stateful model regression in CoreML)")
     @pytest.mark.parametrize(
         "symbolic_shape, override_main_function, reload_mlmodel",
         itertools.product(
@@ -1400,12 +1400,6 @@ class TestMaterializeSymbolicShapeMLModel:
             )
             PassPipelineManager.apply_pipeline(dynamic_shape_prog, pass_pipeline)
 
-            # Weights are duplicated in each materialized new function
-            # By default, graph pass const_deduplication will not deduplicate across functions,
-            # so we need to call it explicitly here
-            const_deduplication_pass = PASS_REGISTRY["common::const_deduplication"]
-            const_deduplication_pass._deduplicate_const_across_functions(dynamic_shape_prog)
-
             # Source function may no longer be needed,
             # e.g. if it has intermediate symbolic-shape state
             dynamic_shape_prog.functions.pop("main")
@@ -1414,13 +1408,13 @@ class TestMaterializeSymbolicShapeMLModel:
             )[0]
 
             dynamic_shape_prog.skip_all_passes = True
+            dynamic_shape_prog.export_as_multifunction = True
             materialized_mlmodel = _mil_convert(
                 dynamic_shape_prog,
                 convert_from="milinternal",
                 convert_to="mlprogram",
                 specification_version=ct.target.iOS18,
                 compute_units=ct.ComputeUnit.CPU_ONLY,
-                export_multi_functions=True,
                 skip_model_load=True,
             )
             materialized_mlmodel.save(destination_path)

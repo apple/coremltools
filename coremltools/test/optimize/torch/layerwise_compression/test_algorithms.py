@@ -221,6 +221,10 @@ def test_gptq_metadata(config, model, input_shape):
     [
         pytest.param({"global_config": {"algorithm": "sparse_gpt"}}, id="pruning"),
         pytest.param(
+            {"global_config": {"algorithm": "sparse_gpt", "weight_dtype": "float16"}},
+            id="pruning_half_precision",
+        ),
+        pytest.param(
             {"global_config": {"algorithm": "sparse_gpt", "weight_dtype": "uint8"}},
             id="pruning_quantization",
         ),

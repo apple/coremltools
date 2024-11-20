@@ -229,6 +229,7 @@ class TestReadState:
 
 
 class TestStatefulModel:
+    @pytest.mark.xfail(reason="rdar://138957299 ([Bug] Stateful model slice update regression)")
     @pytest.mark.parametrize(
         "compute_unit, backend",
         itertools.product(

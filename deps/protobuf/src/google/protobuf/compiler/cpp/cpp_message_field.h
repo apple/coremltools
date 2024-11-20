@@ -38,6 +38,7 @@
 #include <map>
 #include <string>
 #include <google/protobuf/compiler/cpp/cpp_field.h>
+#include <google/protobuf/compiler/cpp/cpp_helpers.h>
 
 namespace google {
 namespace protobuf {
@@ -47,38 +48,35 @@ namespace cpp {
 class MessageFieldGenerator : public FieldGenerator {
  public:
   MessageFieldGenerator(const FieldDescriptor* descriptor,
-                        const Options& options);
-  ~MessageFieldGenerator();
+                        const Options& options,
+                        MessageSCCAnalyzer* scc_analyzer);
+  ~MessageFieldGenerator() override;
 
   // implements FieldGenerator ---------------------------------------
-  void GeneratePrivateMembers(io::Printer* printer) const;
-  void GenerateDependentAccessorDeclarations(io::Printer* printer) const;
-  void GenerateAccessorDeclarations(io::Printer* printer) const;
-  void GenerateDependentInlineAccessorDefinitions(io::Printer* printer) const;
-  void GenerateInlineAccessorDefinitions(io::Printer* printer,
-                                         bool is_inline) const;
-  void GenerateNonInlineAccessorDefinitions(io::Printer* printer) const;
-  void GenerateClearingCode(io::Printer* printer) const;
-  void GenerateMessageClearingCode(io::Printer* printer) const;
-  void GenerateMergingCode(io::Printer* printer) const;
-  void GenerateSwappingCode(io::Printer* printer) const;
-  void GenerateDestructorCode(io::Printer* printer) const;
-  void GenerateConstructorCode(io::Printer* printer) const;
-  void GenerateCopyConstructorCode(io::Printer* printer) const;
-  void GenerateMergeFromCodedStream(io::Printer* printer) const;
-  void GenerateSerializeWithCachedSizes(io::Printer* printer) const;
-  void GenerateSerializeWithCachedSizesToArray(io::Printer* printer) const;
-  void GenerateByteSize(io::Printer* printer) const;
+  void GeneratePrivateMembers(io::Printer* printer) const override;
+  void GenerateAccessorDeclarations(io::Printer* printer) const override;
+  void GenerateInlineAccessorDefinitions(io::Printer* printer) const override;
+  void GenerateNonInlineAccessorDefinitions(
+      io::Printer* printer) const override;
+  void GenerateInternalAccessorDeclarations(
+      io::Printer* printer) const override;
+  void GenerateInternalAccessorDefinitions(io::Printer* printer) const override;
+  void GenerateClearingCode(io::Printer* printer) const override;
+  void GenerateMessageClearingCode(io::Printer* printer) const override;
+  void GenerateMergingCode(io::Printer* printer) const override;
+  void GenerateSwappingCode(io::Printer* printer) const override;
+  void GenerateDestructorCode(io::Printer* printer) const override;
+  void GenerateConstructorCode(io::Printer* printer) const override;
+  void GenerateCopyConstructorCode(io::Printer* printer) const override;
+  void GenerateSerializeWithCachedSizesToArray(
+      io::Printer* printer) const override;
+  void GenerateByteSize(io::Printer* printer) const override;
+  void GenerateIsInitialized(io::Printer* printer) const override;
+  void GenerateConstinitInitializer(io::Printer* printer) const override;
 
  protected:
-  void GenerateArenaManipulationCode(const std::map<string, string>& variables,
-                                     io::Printer* printer) const;
-
-  virtual void GenerateGetterDeclaration(io::Printer* printer) const;
-
-  const FieldDescriptor* descriptor_;
-  const bool dependent_field_;
-  std::map<string, string> variables_;
+  const bool implicit_weak_field_;
+  const bool has_required_fields_;
 
  private:
   GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(MessageFieldGenerator);
@@ -87,66 +85,53 @@ class MessageFieldGenerator : public FieldGenerator {
 class MessageOneofFieldGenerator : public MessageFieldGenerator {
  public:
   MessageOneofFieldGenerator(const FieldDescriptor* descriptor,
-                             const Options& options);
-  ~MessageOneofFieldGenerator();
+                             const Options& options,
+                             MessageSCCAnalyzer* scc_analyzer);
+  ~MessageOneofFieldGenerator() override;
 
   // implements FieldGenerator ---------------------------------------
-  void GenerateDependentAccessorDeclarations(io::Printer* printer) const;
-  void GenerateDependentInlineAccessorDefinitions(io::Printer* printer) const;
-  void GenerateInlineAccessorDefinitions(io::Printer* printer,
-                                         bool is_inline) const;
-  void GenerateNonInlineAccessorDefinitions(io::Printer* printer) const { }
-  void GenerateClearingCode(io::Printer* printer) const;
+  void GenerateInlineAccessorDefinitions(io::Printer* printer) const override;
+  void GenerateNonInlineAccessorDefinitions(
+      io::Printer* printer) const override;
+  void GenerateClearingCode(io::Printer* printer) const override;
 
   // MessageFieldGenerator, from which we inherit, overrides this so we need to
   // override it as well.
-  void GenerateMessageClearingCode(io::Printer* printer) const;
-  void GenerateSwappingCode(io::Printer* printer) const;
-  void GenerateDestructorCode(io::Printer* printer) const;
-  void GenerateConstructorCode(io::Printer* printer) const;
-
- protected:
-  void GenerateGetterDeclaration(io::Printer* printer) const;
+  void GenerateMessageClearingCode(io::Printer* printer) const override;
+  void GenerateSwappingCode(io::Printer* printer) const override;
+  void GenerateDestructorCode(io::Printer* printer) const override;
+  void GenerateConstructorCode(io::Printer* printer) const override;
+  void GenerateIsInitialized(io::Printer* printer) const override;
 
  private:
-  void InternalGenerateInlineAccessorDefinitions(
-      const std::map<string, string>& variables, io::Printer* printer) const;
-
-  const bool dependent_base_;
   GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(MessageOneofFieldGenerator);
 };
 
 class RepeatedMessageFieldGenerator : public FieldGenerator {
  public:
   RepeatedMessageFieldGenerator(const FieldDescriptor* descriptor,
-                                const Options& options);
-  ~RepeatedMessageFieldGenerator();
+                                const Options& options,
+                                MessageSCCAnalyzer* scc_analyzer);
+  ~RepeatedMessageFieldGenerator() override;
 
   // implements FieldGenerator ---------------------------------------
-  void GeneratePrivateMembers(io::Printer* printer) const;
-  void GenerateDependentAccessorDeclarations(io::Printer* printer) const;
-  void GenerateAccessorDeclarations(io::Printer* printer) const;
-  void GenerateDependentInlineAccessorDefinitions(io::Printer* printer) const;
-  void GenerateInlineAccessorDefinitions(io::Printer* printer,
-                                         bool is_inline) const;
-  void GenerateClearingCode(io::Printer* printer) const;
-  void GenerateMergingCode(io::Printer* printer) const;
-  void GenerateSwappingCode(io::Printer* printer) const;
-  void GenerateConstructorCode(io::Printer* printer) const;
-  void GenerateCopyConstructorCode(io::Printer* printer) const {}
-  void GenerateMergeFromCodedStream(io::Printer* printer) const;
-  void GenerateSerializeWithCachedSizes(io::Printer* printer) const;
-  void GenerateSerializeWithCachedSizesToArray(io::Printer* printer) const;
-  void GenerateByteSize(io::Printer* printer) const;
+  void GeneratePrivateMembers(io::Printer* printer) const override;
+  void GenerateAccessorDeclarations(io::Printer* printer) const override;
+  void GenerateInlineAccessorDefinitions(io::Printer* printer) const override;
+  void GenerateClearingCode(io::Printer* printer) const override;
+  void GenerateMergingCode(io::Printer* printer) const override;
+  void GenerateSwappingCode(io::Printer* printer) const override;
+  void GenerateConstructorCode(io::Printer* printer) const override;
+  void GenerateCopyConstructorCode(io::Printer* printer) const override {}
+  void GenerateSerializeWithCachedSizesToArray(
+      io::Printer* printer) const override;
+  void GenerateByteSize(io::Printer* printer) const override;
+  void GenerateIsInitialized(io::Printer* printer) const override;
+  void GenerateConstinitInitializer(io::Printer* printer) const override;
 
  private:
-  void InternalGenerateTypeDependentAccessorDeclarations(
-      io::Printer* printer) const;
-
-  const FieldDescriptor* descriptor_;
-  const bool dependent_field_;
-  const bool dependent_getter_;
-  std::map<string, string> variables_;
+  const bool implicit_weak_field_;
+  const bool has_required_fields_;
 
   GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(RepeatedMessageFieldGenerator);
 };
@@ -154,6 +139,6 @@ class RepeatedMessageFieldGenerator : public FieldGenerator {
 }  // namespace cpp
 }  // namespace compiler
 }  // namespace protobuf
-
 }  // namespace google
+
 #endif  // GOOGLE_PROTOBUF_COMPILER_CPP_MESSAGE_FIELD_H__

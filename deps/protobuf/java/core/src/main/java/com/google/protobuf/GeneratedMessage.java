@@ -359,7 +359,7 @@ public abstract class GeneratedMessage extends AbstractMessage
    * TODO(xiaofeng): remove this after b/29368482 is fixed. We need to move this
    * interface to AbstractMessage in order to versioning GeneratedMessage but
    * this move breaks binary compatibility for AppEngine. After AppEngine is
-   * fixed we can exlude this from google3.
+   * fixed we can exclude this from google3.
    */
   protected interface BuilderParent extends AbstractMessage.BuilderParent {}
 
@@ -3014,7 +3014,7 @@ public abstract class GeneratedMessage extends AbstractMessage
 
     return (Extension<MessageType, T>) extension;
   }
-  
+
   protected static int computeStringSize(final int fieldNumber, final Object value) {
     if (value instanceof String) {
       return CodedOutputStream.computeStringSize(fieldNumber, (String) value);
@@ -3022,7 +3022,7 @@ public abstract class GeneratedMessage extends AbstractMessage
       return CodedOutputStream.computeBytesSize(fieldNumber, (ByteString) value);
     }
   }
-  
+
   protected static int computeStringSizeNoTag(final Object value) {
     if (value instanceof String) {
       return CodedOutputStream.computeStringSizeNoTag((String) value);
@@ -3030,7 +3030,7 @@ public abstract class GeneratedMessage extends AbstractMessage
       return CodedOutputStream.computeBytesSizeNoTag((ByteString) value);
     }
   }
-  
+
   protected static void writeString(
       CodedOutputStream output, final int fieldNumber, final Object value) throws IOException {
     if (value instanceof String) {
@@ -3039,7 +3039,7 @@ public abstract class GeneratedMessage extends AbstractMessage
       output.writeBytes(fieldNumber, (ByteString) value);
     }
   }
-  
+
   protected static void writeStringNoTag(
       CodedOutputStream output, final Object value) throws IOException {
     if (value instanceof String) {

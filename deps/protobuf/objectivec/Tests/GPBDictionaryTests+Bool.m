@@ -42,6 +42,7 @@
 
 //%PDDM-EXPAND BOOL_TESTS_FOR_POD_VALUE(UInt32, uint32_t, 100U, 101U)
 // This block of code is generated, do not edit it directly.
+// clang-format off
 
 #pragma mark - Bool -> UInt32
 
@@ -63,7 +64,8 @@
 }
 
 - (void)testOne {
-  GPBBoolUInt32Dictionary *dict = [GPBBoolUInt32Dictionary dictionaryWithUInt32:100U forKey:YES];
+  GPBBoolUInt32Dictionary *dict = [[GPBBoolUInt32Dictionary alloc] init];
+  [dict setUInt32:100U forKey:YES];
   XCTAssertNotNil(dict);
   XCTAssertEqual(dict.count, 1U);
   uint32_t value;
@@ -76,6 +78,7 @@
     XCTAssertEqual(aValue, 100U);
     XCTAssertNotEqual(stop, NULL);
   }];
+  [dict release];
 }
 
 - (void)testBasics {
@@ -214,17 +217,18 @@
   XCTAssertNotNil(dict);
 
   GPBBoolUInt32Dictionary *dict2 =
-      [GPBBoolUInt32Dictionary dictionaryWithDictionary:dict];
+      [[GPBBoolUInt32Dictionary alloc] initWithDictionary:dict];
   XCTAssertNotNil(dict2);
 
   // Should be new pointer, but equal objects.
   XCTAssertNotEqual(dict, dict2);
   XCTAssertEqualObjects(dict, dict2);
+  [dict2 release];
   [dict release];
 }
 
 - (void)testAdds {
-  GPBBoolUInt32Dictionary *dict = [GPBBoolUInt32Dictionary dictionary];
+  GPBBoolUInt32Dictionary *dict = [[GPBBoolUInt32Dictionary alloc] init];
   XCTAssertNotNil(dict);
 
   XCTAssertEqual(dict.count, 0U);
@@ -249,6 +253,7 @@
   XCTAssertTrue([dict getUInt32:&value forKey:NO]);
   XCTAssertEqual(value, 101U);
   [dict2 release];
+  [dict release];
 }
 
 - (void)testRemove {
@@ -341,8 +346,10 @@
 
 @end
 
+// clang-format on
 //%PDDM-EXPAND BOOL_TESTS_FOR_POD_VALUE(Int32, int32_t, 200, 201)
 // This block of code is generated, do not edit it directly.
+// clang-format off
 
 #pragma mark - Bool -> Int32
 
@@ -364,7 +371,8 @@
 }
 
 - (void)testOne {
-  GPBBoolInt32Dictionary *dict = [GPBBoolInt32Dictionary dictionaryWithInt32:200 forKey:YES];
+  GPBBoolInt32Dictionary *dict = [[GPBBoolInt32Dictionary alloc] init];
+  [dict setInt32:200 forKey:YES];
   XCTAssertNotNil(dict);
   XCTAssertEqual(dict.count, 1U);
   int32_t value;
@@ -377,6 +385,7 @@
     XCTAssertEqual(aValue, 200);
     XCTAssertNotEqual(stop, NULL);
   }];
+  [dict release];
 }
 
 - (void)testBasics {
@@ -515,17 +524,18 @@
   XCTAssertNotNil(dict);
 
   GPBBoolInt32Dictionary *dict2 =
-      [GPBBoolInt32Dictionary dictionaryWithDictionary:dict];
+      [[GPBBoolInt32Dictionary alloc] initWithDictionary:dict];
   XCTAssertNotNil(dict2);
 
   // Should be new pointer, but equal objects.
   XCTAssertNotEqual(dict, dict2);
   XCTAssertEqualObjects(dict, dict2);
+  [dict2 release];
   [dict release];
 }
 
 - (void)testAdds {
-  GPBBoolInt32Dictionary *dict = [GPBBoolInt32Dictionary dictionary];
+  GPBBoolInt32Dictionary *dict = [[GPBBoolInt32Dictionary alloc] init];
   XCTAssertNotNil(dict);
 
   XCTAssertEqual(dict.count, 0U);
@@ -550,6 +560,7 @@
   XCTAssertTrue([dict getInt32:&value forKey:NO]);
   XCTAssertEqual(value, 201);
   [dict2 release];
+  [dict release];
 }
 
 - (void)testRemove {
@@ -642,8 +653,10 @@
 
 @end
 
+// clang-format on
 //%PDDM-EXPAND BOOL_TESTS_FOR_POD_VALUE(UInt64, uint64_t, 300U, 301U)
 // This block of code is generated, do not edit it directly.
+// clang-format off
 
 #pragma mark - Bool -> UInt64
 
@@ -665,7 +678,8 @@
 }
 
 - (void)testOne {
-  GPBBoolUInt64Dictionary *dict = [GPBBoolUInt64Dictionary dictionaryWithUInt64:300U forKey:YES];
+  GPBBoolUInt64Dictionary *dict = [[GPBBoolUInt64Dictionary alloc] init];
+  [dict setUInt64:300U forKey:YES];
   XCTAssertNotNil(dict);
   XCTAssertEqual(dict.count, 1U);
   uint64_t value;
@@ -678,6 +692,7 @@
     XCTAssertEqual(aValue, 300U);
     XCTAssertNotEqual(stop, NULL);
   }];
+  [dict release];
 }
 
 - (void)testBasics {
@@ -816,17 +831,18 @@
   XCTAssertNotNil(dict);
 
   GPBBoolUInt64Dictionary *dict2 =
-      [GPBBoolUInt64Dictionary dictionaryWithDictionary:dict];
+      [[GPBBoolUInt64Dictionary alloc] initWithDictionary:dict];
   XCTAssertNotNil(dict2);
 
   // Should be new pointer, but equal objects.
   XCTAssertNotEqual(dict, dict2);
   XCTAssertEqualObjects(dict, dict2);
+  [dict2 release];
   [dict release];
 }
 
 - (void)testAdds {
-  GPBBoolUInt64Dictionary *dict = [GPBBoolUInt64Dictionary dictionary];
+  GPBBoolUInt64Dictionary *dict = [[GPBBoolUInt64Dictionary alloc] init];
   XCTAssertNotNil(dict);
 
   XCTAssertEqual(dict.count, 0U);
@@ -851,6 +867,7 @@
   XCTAssertTrue([dict getUInt64:&value forKey:NO]);
   XCTAssertEqual(value, 301U);
   [dict2 release];
+  [dict release];
 }
 
 - (void)testRemove {
@@ -943,8 +960,10 @@
 
 @end
 
+// clang-format on
 //%PDDM-EXPAND BOOL_TESTS_FOR_POD_VALUE(Int64, int64_t, 400, 401)
 // This block of code is generated, do not edit it directly.
+// clang-format off
 
 #pragma mark - Bool -> Int64
 
@@ -966,7 +985,8 @@
 }
 
 - (void)testOne {
-  GPBBoolInt64Dictionary *dict = [GPBBoolInt64Dictionary dictionaryWithInt64:400 forKey:YES];
+  GPBBoolInt64Dictionary *dict = [[GPBBoolInt64Dictionary alloc] init];
+  [dict setInt64:400 forKey:YES];
   XCTAssertNotNil(dict);
   XCTAssertEqual(dict.count, 1U);
   int64_t value;
@@ -979,6 +999,7 @@
     XCTAssertEqual(aValue, 400);
     XCTAssertNotEqual(stop, NULL);
   }];
+  [dict release];
 }
 
 - (void)testBasics {
@@ -1117,17 +1138,18 @@
   XCTAssertNotNil(dict);
 
   GPBBoolInt64Dictionary *dict2 =
-      [GPBBoolInt64Dictionary dictionaryWithDictionary:dict];
+      [[GPBBoolInt64Dictionary alloc] initWithDictionary:dict];
   XCTAssertNotNil(dict2);
 
   // Should be new pointer, but equal objects.
   XCTAssertNotEqual(dict, dict2);
   XCTAssertEqualObjects(dict, dict2);
+  [dict2 release];
   [dict release];
 }
 
 - (void)testAdds {
-  GPBBoolInt64Dictionary *dict = [GPBBoolInt64Dictionary dictionary];
+  GPBBoolInt64Dictionary *dict = [[GPBBoolInt64Dictionary alloc] init];
   XCTAssertNotNil(dict);
 
   XCTAssertEqual(dict.count, 0U);
@@ -1152,6 +1174,7 @@
   XCTAssertTrue([dict getInt64:&value forKey:NO]);
   XCTAssertEqual(value, 401);
   [dict2 release];
+  [dict release];
 }
 
 - (void)testRemove {
@@ -1244,8 +1267,10 @@
 
 @end
 
+// clang-format on
 //%PDDM-EXPAND BOOL_TESTS_FOR_POD_VALUE(Bool, BOOL, NO, YES)
 // This block of code is generated, do not edit it directly.
+// clang-format off
 
 #pragma mark - Bool -> Bool
 
@@ -1267,7 +1292,8 @@
 }
 
 - (void)testOne {
-  GPBBoolBoolDictionary *dict = [GPBBoolBoolDictionary dictionaryWithBool:NO forKey:YES];
+  GPBBoolBoolDictionary *dict = [[GPBBoolBoolDictionary alloc] init];
+  [dict setBool:NO forKey:YES];
   XCTAssertNotNil(dict);
   XCTAssertEqual(dict.count, 1U);
   BOOL value;
@@ -1280,6 +1306,7 @@
     XCTAssertEqual(aValue, NO);
     XCTAssertNotEqual(stop, NULL);
   }];
+  [dict release];
 }
 
 - (void)testBasics {
@@ -1418,17 +1445,18 @@
   XCTAssertNotNil(dict);
 
   GPBBoolBoolDictionary *dict2 =
-      [GPBBoolBoolDictionary dictionaryWithDictionary:dict];
+      [[GPBBoolBoolDictionary alloc] initWithDictionary:dict];
   XCTAssertNotNil(dict2);
 
   // Should be new pointer, but equal objects.
   XCTAssertNotEqual(dict, dict2);
   XCTAssertEqualObjects(dict, dict2);
+  [dict2 release];
   [dict release];
 }
 
 - (void)testAdds {
-  GPBBoolBoolDictionary *dict = [GPBBoolBoolDictionary dictionary];
+  GPBBoolBoolDictionary *dict = [[GPBBoolBoolDictionary alloc] init];
   XCTAssertNotNil(dict);
 
   XCTAssertEqual(dict.count, 0U);
@@ -1453,6 +1481,7 @@
   XCTAssertTrue([dict getBool:&value forKey:NO]);
   XCTAssertEqual(value, YES);
   [dict2 release];
+  [dict release];
 }
 
 - (void)testRemove {
@@ -1545,8 +1574,10 @@
 
 @end
 
+// clang-format on
 //%PDDM-EXPAND BOOL_TESTS_FOR_POD_VALUE(Float, float, 500.f, 501.f)
 // This block of code is generated, do not edit it directly.
+// clang-format off
 
 #pragma mark - Bool -> Float
 
@@ -1568,7 +1599,8 @@
 }
 
 - (void)testOne {
-  GPBBoolFloatDictionary *dict = [GPBBoolFloatDictionary dictionaryWithFloat:500.f forKey:YES];
+  GPBBoolFloatDictionary *dict = [[GPBBoolFloatDictionary alloc] init];
+  [dict setFloat:500.f forKey:YES];
   XCTAssertNotNil(dict);
   XCTAssertEqual(dict.count, 1U);
   float value;
@@ -1581,6 +1613,7 @@
     XCTAssertEqual(aValue, 500.f);
     XCTAssertNotEqual(stop, NULL);
   }];
+  [dict release];
 }
 
 - (void)testBasics {
@@ -1719,17 +1752,18 @@
   XCTAssertNotNil(dict);
 
   GPBBoolFloatDictionary *dict2 =
-      [GPBBoolFloatDictionary dictionaryWithDictionary:dict];
+      [[GPBBoolFloatDictionary alloc] initWithDictionary:dict];
   XCTAssertNotNil(dict2);
 
   // Should be new pointer, but equal objects.
   XCTAssertNotEqual(dict, dict2);
   XCTAssertEqualObjects(dict, dict2);
+  [dict2 release];
   [dict release];
 }
 
 - (void)testAdds {
-  GPBBoolFloatDictionary *dict = [GPBBoolFloatDictionary dictionary];
+  GPBBoolFloatDictionary *dict = [[GPBBoolFloatDictionary alloc] init];
   XCTAssertNotNil(dict);
 
   XCTAssertEqual(dict.count, 0U);
@@ -1754,6 +1788,7 @@
   XCTAssertTrue([dict getFloat:&value forKey:NO]);
   XCTAssertEqual(value, 501.f);
   [dict2 release];
+  [dict release];
 }
 
 - (void)testRemove {
@@ -1846,8 +1881,10 @@
 
 @end
 
+// clang-format on
 //%PDDM-EXPAND BOOL_TESTS_FOR_POD_VALUE(Double, double, 600., 601.)
 // This block of code is generated, do not edit it directly.
+// clang-format off
 
 #pragma mark - Bool -> Double
 
@@ -1869,7 +1906,8 @@
 }
 
 - (void)testOne {
-  GPBBoolDoubleDictionary *dict = [GPBBoolDoubleDictionary dictionaryWithDouble:600. forKey:YES];
+  GPBBoolDoubleDictionary *dict = [[GPBBoolDoubleDictionary alloc] init];
+  [dict setDouble:600. forKey:YES];
   XCTAssertNotNil(dict);
   XCTAssertEqual(dict.count, 1U);
   double value;
@@ -1882,6 +1920,7 @@
     XCTAssertEqual(aValue, 600.);
     XCTAssertNotEqual(stop, NULL);
   }];
+  [dict release];
 }
 
 - (void)testBasics {
@@ -2020,17 +2059,18 @@
   XCTAssertNotNil(dict);
 
   GPBBoolDoubleDictionary *dict2 =
-      [GPBBoolDoubleDictionary dictionaryWithDictionary:dict];
+      [[GPBBoolDoubleDictionary alloc] initWithDictionary:dict];
   XCTAssertNotNil(dict2);
 
   // Should be new pointer, but equal objects.
   XCTAssertNotEqual(dict, dict2);
   XCTAssertEqualObjects(dict, dict2);
+  [dict2 release];
   [dict release];
 }
 
 - (void)testAdds {
-  GPBBoolDoubleDictionary *dict = [GPBBoolDoubleDictionary dictionary];
+  GPBBoolDoubleDictionary *dict = [[GPBBoolDoubleDictionary alloc] init];
   XCTAssertNotNil(dict);
 
   XCTAssertEqual(dict.count, 0U);
@@ -2055,6 +2095,7 @@
   XCTAssertTrue([dict getDouble:&value forKey:NO]);
   XCTAssertEqual(value, 601.);
   [dict2 release];
+  [dict release];
 }
 
 - (void)testRemove {
@@ -2147,8 +2188,10 @@
 
 @end
 
+// clang-format on
 //%PDDM-EXPAND TESTS_FOR_BOOL_KEY_OBJECT_VALUE(Object, NSString*, @"abc", @"def")
 // This block of code is generated, do not edit it directly.
+// clang-format off
 
 #pragma mark - Bool -> Object
 
@@ -2170,7 +2213,8 @@
 }
 
 - (void)testOne {
-  GPBBoolObjectDictionary<NSString*> *dict = [GPBBoolObjectDictionary dictionaryWithObject:@"abc" forKey:YES];
+  GPBBoolObjectDictionary<NSString*> *dict = [[GPBBoolObjectDictionary alloc] init];
+  [dict setObject:@"abc" forKey:YES];
   XCTAssertNotNil(dict);
   XCTAssertEqual(dict.count, 1U);
   XCTAssertEqualObjects([dict objectForKey:YES], @"abc");
@@ -2180,6 +2224,7 @@
     XCTAssertEqualObjects(aObject, @"abc");
     XCTAssertNotEqual(stop, NULL);
   }];
+  [dict release];
 }
 
 - (void)testBasics {
@@ -2313,17 +2358,18 @@
   XCTAssertNotNil(dict);
 
   GPBBoolObjectDictionary<NSString*> *dict2 =
-      [GPBBoolObjectDictionary dictionaryWithDictionary:dict];
+      [[GPBBoolObjectDictionary alloc] initWithDictionary:dict];
   XCTAssertNotNil(dict2);
 
   // Should be new pointer, but equal objects.
   XCTAssertNotEqual(dict, dict2);
   XCTAssertEqualObjects(dict, dict2);
+  [dict2 release];
   [dict release];
 }
 
 - (void)testAdds {
-  GPBBoolObjectDictionary<NSString*> *dict = [GPBBoolObjectDictionary dictionary];
+  GPBBoolObjectDictionary<NSString*> *dict = [[GPBBoolObjectDictionary alloc] init];
   XCTAssertNotNil(dict);
 
   XCTAssertEqual(dict.count, 0U);
@@ -2343,6 +2389,7 @@
   XCTAssertEqualObjects([dict objectForKey:YES], @"abc");
   XCTAssertEqualObjects([dict objectForKey:NO], @"def");
   [dict2 release];
+  [dict release];
 }
 
 - (void)testRemove {
@@ -2413,6 +2460,7 @@
 
 @end
 
+// clang-format on
 //%PDDM-EXPAND-END (8 expansions)
 
 

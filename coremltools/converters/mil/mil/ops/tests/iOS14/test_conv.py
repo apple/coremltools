@@ -15,7 +15,7 @@ from coremltools.converters.mil.mil import get_new_symbol, types
 from coremltools.converters.mil.mil.ops.tests.iOS14 import backends
 from coremltools.converters.mil.mil.ops.tests.testing_utils import run_compare_builder
 from coremltools.converters.mil.testing_reqs import compute_units
-from coremltools.converters.mil.testing_utils import random_gen
+from coremltools.converters.mil.testing_utils import assert_model_is_valid, random_gen
 
 if _HAS_TORCH:
     import torch
@@ -255,6 +255,15 @@ class TestConv:
             conv_2 = mb.conv(x=x, weight=weight, pad_type=pad_type, pad=[2, 3, 4, 5])
             assert conv_1.shape == conv_2.shape
             return conv_1
+
+    def test_type_inference_dynamic_x_with_groups(self):
+        w = np.random.rand(6, 4, 2, 2)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, get_new_symbol(), 256, 256))])
+        def prog(x):
+            return mb.conv(x=x, weight=w, groups=2)
+
+        assert_model_is_valid(prog, {"x": (1, 8, 256, 256)})
 
     @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     @pytest.mark.parametrize(

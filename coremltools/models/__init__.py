@@ -40,3 +40,5 @@ from . import ml_program
 
 from ._compiled_model import CompiledMLModel
 
+from . import compute_device
+from . import compute_plan

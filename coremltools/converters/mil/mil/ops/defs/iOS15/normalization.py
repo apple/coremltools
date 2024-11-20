@@ -142,14 +142,14 @@ class l2_norm(Operation):
 
     Parameters
     ----------
-    x: tensor<[\*B, \*D], T> (Required)
+    x: tensor<[\\*B, \\*D], T> (Required)
         * Input tensor, ``rank(x) >= 3``.
         * ``*B`` refers to the leading dimensions.
         * ``*D`` refers to the spatial dimensions to be normalized. Must be rank 3: ``rank(*D) == 3``.
         * When ``rank(x) == 3``, in which ``rank(*B) == 0 and rank(*D) == 3``, the input is divided by
           the square root of the sum of squares of all elements.
         * For ranks greater than 3, in which ``rank(*B) >= 1 and rank(*D) == 3``,
-          the leading dimensions \*B, starting from ``0`` to ``-4`` (inclusive),
+          the leading dimensions \\*B, starting from ``0`` to ``-4`` (inclusive),
           are all treated as batch. The L2 normalization are done batch-wise.
     epsilon: const T (Optional)
         * Small constant to avoid division by ``0``.
@@ -157,7 +157,7 @@ class l2_norm(Operation):
 
     Returns
     -------
-    tensor<[\*B, \*D], T>
+    tensor<[\\*B, \\*D], T>
         * Same type and shape as the input tensor ``x``.
 
     Attributes
@@ -215,20 +215,20 @@ class layer_norm(Operation):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
         * Input tensor.
 
     axes: const<[K], i32> (Optional)
         * Dimensions to perform layer normalization.
         * Default is ``None`` (all dimensions).
 
-    gamma: const tensor<\*?, T>, T> (Optional)
+    gamma: const tensor<\\*?, T>, T> (Optional)
         * if provided, the shape must be be ``x.shape[axes]``. For instance, if
           input ``x`` with shape ``(3,4,5,6)`` and ``axes = [2,3]``, gamma must have
           shape ``(5,6)``.
         * Default is all ones.
 
-    beta: const tensor<\*?, T>, T> (Optional)
+    beta: const tensor<\\*?, T>, T> (Optional)
         * Same shape as gamma.
         * Default is all zeros.
 
@@ -239,7 +239,7 @@ class layer_norm(Operation):
 
     Returns
     -------
-    tensor<\*?, T>:
+    tensor<\\*?, T>:
      * Tensor with same shape and type as the input tensor ``x``.
 
     Attributes

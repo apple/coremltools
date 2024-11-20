@@ -37,6 +37,7 @@ import java.io.InputStream;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.OutputStream;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.InvalidMarkException;
@@ -44,9 +45,7 @@ import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * A {@link ByteString} that wraps around a {@link ByteBuffer}.
- */
+/** A {@link ByteString} that wraps around a {@link ByteBuffer}. */
 final class NioByteString extends ByteString.LeafByteString {
   private final ByteBuffer buffer;
 
@@ -60,16 +59,12 @@ final class NioByteString extends ByteString.LeafByteString {
   // =================================================================
   // Serializable
 
-  /**
-   * Magic method that lets us override serialization behavior.
-   */
+  /** Magic method that lets us override serialization behavior. */
   private Object writeReplace() {
     return ByteString.copyFrom(buffer.slice());
   }
 
-  /**
-   * Magic method that lets us override deserialization behavior.
-   */
+  /** Magic method that lets us override deserialization behavior. */
   private void readObject(@SuppressWarnings("unused") ObjectInputStream in) throws IOException {
     throw new InvalidObjectException("NioByteString instances are not to be serialized directly");
   }
@@ -85,6 +80,13 @@ final class NioByteString extends ByteString.LeafByteString {
     } catch (IndexOutOfBoundsException e) {
       throw new ArrayIndexOutOfBoundsException(e.getMessage());
     }
+  }
+
+  @Override
+  public byte internalByteAt(int index) {
+    // it isn't possible to avoid the bounds checking inside of ByteBuffer, so just use the default
+    // implementation.
+    return byteAt(index);
   }
 
   @Override
@@ -108,7 +110,7 @@ final class NioByteString extends ByteString.LeafByteString {
   protected void copyToInternal(
       byte[] target, int sourceOffset, int targetOffset, int numberToCopy) {
     ByteBuffer slice = buffer.slice();
-    slice.position(sourceOffset);
+    ((Buffer) slice).position(sourceOffset);
     slice.get(target, targetOffset, numberToCopy);
   }
 
@@ -284,8 +286,8 @@ final class NioByteString extends ByteString.LeafByteString {
     }
 
     ByteBuffer slice = buffer.slice();
-    slice.position(beginIndex - buffer.position());
-    slice.limit(endIndex - buffer.position());
+    ((Buffer) slice).position(beginIndex - buffer.position());
+    ((Buffer) slice).limit(endIndex - buffer.position());
     return slice;
   }
 }

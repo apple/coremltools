@@ -3,7 +3,6 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-
 import numpy as np
 
 from coremltools.converters.mil.mil import Block
@@ -61,6 +60,21 @@ class insert_suffix_quantize_dequantize_pair(AbstractGraphPass):
         "relu6",
     }
 
+    # Graph pass option for setting activation stats.
+    _activation_stats = None
+
+    @property
+    def activation_stats(self) -> dict:
+        return self._activation_stats
+
+    @activation_stats.setter
+    def activation_stats(self, activation_stats: dict):
+        if not isinstance(activation_stats, dict):
+            raise ValueError(
+                f"activation_stats only supports dict, but got {type(activation_stats)}"
+            )
+        self._activation_stats = activation_stats
+
     # Graph pass option for setting compression config.
     _config = None
 
@@ -110,7 +124,11 @@ class insert_suffix_quantize_dequantize_pair(AbstractGraphPass):
             block_changed = help_insert_quantize_dequantize(block)
 
     def _try_match_and_transform_pattern(
-        self, dequantize_op: Operation, block: Block, config, visited_ops: set
+        self,
+        dequantize_op: Operation,
+        block: Block,
+        config,
+        visited_ops: set,
     ) -> bool:
         """
         This function performs the pattern match for all target patterns.
@@ -181,8 +199,8 @@ class insert_suffix_quantize_dequantize_pair(AbstractGraphPass):
 
         return self._try_apply_transform(last_op, _child_op, block, visited_ops)
 
-    @staticmethod
     def _try_apply_transform(
+        self,
         last_op: Operation,
         _child_op: Operation,
         block: Block,
@@ -218,17 +236,33 @@ class insert_suffix_quantize_dequantize_pair(AbstractGraphPass):
         kargs["before_op"] = last_op
         new_last_op = new_last_op(**kargs)
 
+        from coremltools.optimize.coreml._utils import get_min_and_max_values, quantize_weight
+
+        var_name = last_op.outputs[0].name
+        val = get_min_and_max_values(self._activation_stats, var_name)
+
+        # Numerically the scale and zero point won't change if the input array only have two elements:
+        # the min and max values of the input array. That's the trick to re-use quantize_weight util.
+        _, _scale, _zero_point = quantize_weight(
+            val,
+            axes=0,
+            nbits=8,
+            signed=True,
+            quantization_mode="LINEAR_SYMMETRIC",
+            dtype=types.int8,
+        )
+
         new_quantize_op = mb.quantize(
             input=new_last_op,
-            scale=np.array(1).astype(scale_dtype),
-            zero_point=np.int8(0),
+            scale=_scale,
+            zero_point=_zero_point,
             output_dtype="int8",
             before_op=last_op,
         )
         new_dequantize_op = mb.dequantize(
             input=new_quantize_op,
-            scale=np.array(1).astype(scale_dtype),
-            zero_point=np.int8(0),
+            scale=_scale,
+            zero_point=_zero_point,
             before_op=last_op,
         )
         ops_to_remove = [last_op]
@@ -250,172 +284,5 @@ class insert_suffix_quantize_dequantize_pair(AbstractGraphPass):
             new_dequantize_op.set_name(f"{new_dequantize_var_name}__post__dequant")
             new_last_op.set_name(f"{last_op_var_name}")
             return True
-
-        return False
-
-
-@register_pass(namespace="compression")
-class update_quantize_dequantize(AbstractGraphPass):
-    """
-    Update scale and zero point values in `quantize` and `dequantize` operations with calibration statistics.
-
-    .. code-block::
-    Pattern:
-        Given:
-            %2 = quantize(%1) with random scale and zp
-            %3 = dequantize(%2) with random scale and zp
-            ...
-        Result:
-            %2 = quantize(%1) with calculated scale and zp
-            %3 = dequantize(%2) with calculated scale and zp
-            ...
-    """
-
-    _activation_stats = None
-
-    @property
-    def activation_stats(self):
-        return self._activation_stats
-
-    @activation_stats.setter
-    def activation_stats(self, value):
-        self._activation_stats = value
-
-    def apply(self, prog):
-        visited_ops = set()
-        for f in prog.functions.values():
-            self._update_quantize_dequantize(f, self._activation_stats, visited_ops)
-
-    @block_context_manager
-    def _update_quantize_dequantize(self, block: Block, activation_stats: dict, visited_ops: set):
-        def help_update_quantize_dequantize(block: Block, activation_stats: dict) -> bool:
-            fusion_occurred = False
-
-            for op in list(block.operations):
-                if op.enclosing_block is None:
-                    continue
-
-                if op in visited_ops:
-                    continue
-                visited_ops.add(op)
-
-                for b in op.blocks:
-                    self._update_quantize_dequantize(b, activation_stats)
-
-                # Must start with "quantize" op
-                if op.op_type != "quantize":
-                    continue
-
-                # Try pattern match: `quantize` -> `dequantize`.
-                if self._try_match_and_transform_pattern(op, block, activation_stats, visited_ops):
-                    fusion_occurred = True
-
-            return fusion_occurred
-
-        block_changed = True
-        while block_changed:
-            block_changed = help_update_quantize_dequantize(block, activation_stats)
-
-    def _try_match_and_transform_pattern(
-        self, quantize_op: Operation, block: Block, activation_stats: dict, visited_ops: set
-    ) -> bool:
-        """
-        This function performs validation checks for the target pattern:
-        `quantize` -> `dequantize`
-        """
-        if not _check_child_op_type(quantize_op, "dequantize"):
-            return False
-        dequantize_op = quantize_op.outputs[0].child_ops[0]
-        last_op = dequantize_op
-
-        _child_op = None
-        if len(dequantize_op.outputs[0].child_ops) > 0:
-            _child_op = dequantize_op.outputs[0].child_ops[0]
-
-        return self._try_apply_transform(
-            quantize_op, last_op, _child_op, block, activation_stats, visited_ops
-        )
-
-    @staticmethod
-    def _try_apply_transform(
-        quantize_op: Operation,
-        last_op: Operation,
-        _child_op: Operation,
-        block: Block,
-        activation_stats: dict,
-        visited_ops: set,
-    ) -> bool:
-        """
-        last_op: last op of a valid pattern. it's 'dequantize' in this case.
-        _child_op: the child op of the last_op.
-        block: current block.
-        """
-        ops_to_remove = [quantize_op, last_op]
-
-        if _child_op is None:
-            return False
-
-        # Name of input var to `quantize`.
-        in_var_name = quantize_op.inputs["input"].name
-        val = np.array([0, 0], dtype=np.float16)
-
-        # It's possible there are two ``quantize -> dequantize`` pair in a sequence.
-        # Two pairs should share the same scale and zero_point values.
-        # The name of input var to the 2nd `quantize` is newly created and does not exist in the original uncompressed model.
-        # We make an adjustment by tracing the name of input var of 1st `quantize` to update the 2nd pair.
-        if in_var_name not in activation_stats:
-            # Make an adjustment by checking leading `quantize` `dequantize` pair.
-            prev_dequantize = quantize_op.input.op
-            prev_quantize = prev_dequantize.input.op
-            if prev_quantize.inputs["input"].name in activation_stats:
-                in_var_name = prev_quantize.inputs["input"].name
-
-        val[0], val[1] = (
-            activation_stats[in_var_name]["rmin"],
-            activation_stats[in_var_name]["rmax"],
-        )
-
-        # Numerically the scale and zp won't change if the input array only have two elements:
-        # the min and max of input array. Plus we don't care about quantized values.
-        # That's the trick to re-use quantize_weight util.
-        from coremltools.optimize.coreml._utils import quantize_weight
-
-        _, _scale, _zero_point = quantize_weight(
-            val,
-            axes=0,
-            nbits=8,
-            signed=True,
-            quantization_mode="LINEAR_SYMMETRIC",
-            dtype=types.int8,
-        )
-
-        # New ``quantize -> dequantize``.
-        new_quantize_op = mb.quantize(
-            input=quantize_op.input,
-            scale=_scale,
-            zero_point=_zero_point,
-            output_dtype="int8",
-            name=quantize_op.name,
-            before_op=quantize_op,
-        )
-        new_dequantize_op = mb.dequantize(
-            input=new_quantize_op,
-            scale=_scale,
-            zero_point=_zero_point,
-            name=last_op.name,
-            before_op=quantize_op,
-        )
-
-        # Replace old ``quantize -> dequantize`` with new ``quantize -> dequantize`` to update scale/zero_point.
-        if last_op.enclosing_block.try_replace_uses_of_var_after_op(
-            anchor_op=last_op,
-            end_op=last_op,
-            old_var=last_op.outputs[0],
-            new_var=new_dequantize_op,
-        ):
-            block.remove_ops(ops_to_remove)
-            # Add the new ones to the visited list to avoid revisiting.
-            visited_ops.add(new_quantize_op.op)
-            visited_ops.add(new_dequantize_op.op)
 
         return False

@@ -65,7 +65,7 @@ class random_bernoulli(RandomDistribution):
 
     Returns
     -------
-    <\*, T>
+    <\\*, T>
         * A tensor of the given target output shape filled with random values.
 
     Attributes
@@ -109,7 +109,7 @@ class random_categorical(Operation):
 
     Parameters
     ----------
-    x: <\*D_in, T>
+    x: <\\*D_in, T>
         * N-dimensional tensor which represents ``logits`` (event log-probabilities) or ``probs``
           (event probabilities) depending on ``mode``. The first ``N - 1`` dimensions specifies
           distributions, and the last dimension represents a vector of probabilities.
@@ -131,7 +131,7 @@ class random_categorical(Operation):
 
     Returns
     -------
-    <\*D_in[:-1] + [size], T>
+    <\\*D_in[:-1] + [size], T>
         * A tensor of the given target output shape filled with random values.
 
     Attributes
@@ -188,7 +188,7 @@ class random_normal(RandomDistribution):
 
     Returns
     -------
-    <\*, T>
+    <\\*, T>
         * A tensor of the given target output shape filled with random values.
 
     Attributes
@@ -259,7 +259,7 @@ class random_uniform(RandomDistribution):
 
     Returns
     -------
-    <\*, T>
+    <\\*, T>
         * A tensor of the given target output shape filled with random values.
 
     Attributes

@@ -8,12 +8,12 @@ from collections import OrderedDict
 from typing import List, Optional
 
 import coremltools as ct
-from coremltools.models import MLModel
+from coremltools.converters.mil.frontend.milproto.load import load as milproto_to_pymil
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
-from coremltools.converters.mil.frontend.milproto.load import \
-    load as milproto_to_pymil
+from coremltools.models import MLModel
+
 
 def extract_submodel(
         model: MLModel,

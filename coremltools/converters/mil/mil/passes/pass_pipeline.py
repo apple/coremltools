@@ -88,6 +88,7 @@ _COMMON_PASSES: List[Text] = [
     "common::fuse_transpose_matmul",
     # "expand_high_rank_reshape_and_transpose" must come after "common::merge_consecutive_transposes"
     "common::expand_high_rank_reshape_and_transpose",
+    "common::fuse_stack_split",
     "common::reduce_transposes",
     # "remove_redundant_ops" pass should be applied towards the end, once other graph passes have done their optimizations.
     # For instance, it should come after passes such as "reduce_transpose" that can introduce redundant transposes

@@ -76,7 +76,8 @@ class AbstractActCompressionPass(AbstractQuantizationPass):
                 desc=f"Running activation compression pass {self.__class__.__name__}",
                 unit=" ops",
             ):
-                self.transform_op(op)
+                with mb.set_before_op(op):
+                    self.transform_op(op)
 
         for f in prog.functions.values():
             apply_block(f)
@@ -142,6 +143,21 @@ class insert_prefix_quantize_dequantize_pair(AbstractActCompressionPass):
     SUPPORTED_BINARY_OP_TYPES = ["add"]
     SUPPORTED_OP_TYPES = SUPPORTED_UNARY_OP_TYPES + SUPPORTED_BINARY_OP_TYPES
 
+    # Graph pass option for setting activation stats.
+    _activation_stats = None
+
+    @property
+    def activation_stats(self) -> dict:
+        return self._activation_stats
+
+    @activation_stats.setter
+    def activation_stats(self, activation_stats: dict):
+        if not isinstance(activation_stats, dict):
+            raise ValueError(
+                f"activation_stats only supports dict, but got {type(activation_stats)}"
+            )
+        self._activation_stats = activation_stats
+
     def transform_op(self, op: Operation):
         if op.op_type not in self.SUPPORTED_OP_TYPES:
             return False
@@ -162,19 +178,32 @@ class insert_prefix_quantize_dequantize_pair(AbstractActCompressionPass):
         for k, v in op.inputs.items():
             kargs[k] = v
 
+        from coremltools.optimize.coreml._utils import get_min_and_max_values, quantize_weight
+
         if op.op_type in self.SUPPORTED_UNARY_OP_TYPES:
+            var_name = op.inputs["x"].name
+            val = get_min_and_max_values(self._activation_stats, var_name)
+
+            # Numerically the scale and zero point won't change if the input array only have two elements:
+            # the min and max values of the input array. That's the trick to re-use quantize_weight util.
+            _, _scale, _zero_point = quantize_weight(
+                val,
+                axes=0,
+                nbits=8,
+                signed=True,
+                quantization_mode="LINEAR_SYMMETRIC",
+                dtype=types.int8,
+            )
             new_quantize_op = mb.quantize(
                 input=op.inputs["x"],
-                scale=np.array(1).astype(scale_dtype),
-                zero_point=np.int8(0),
+                scale=_scale,
+                zero_point=_zero_point,
                 output_dtype="int8",
-                before_op=op,
             )
             new_dequantize_op = mb.dequantize(
                 input=new_quantize_op,
-                scale=np.array(1).astype(scale_dtype),
-                zero_point=np.int8(0),
-                before_op=op,
+                scale=_scale,
+                zero_point=_zero_point,
             )
             # Update kargs (input) of ``new_core_op``.
             kargs["x"] = new_dequantize_op
@@ -200,32 +229,52 @@ class insert_prefix_quantize_dequantize_pair(AbstractActCompressionPass):
             if x_is_const != y_is_const:
                 return
 
+            # Input "x"
+            var_name = op.inputs["x"].name
+            val = get_min_and_max_values(self._activation_stats, var_name)
+            _, _scale, _zero_point = quantize_weight(
+                val,
+                axes=0,
+                nbits=8,
+                signed=True,
+                quantization_mode="LINEAR_SYMMETRIC",
+                dtype=types.int8,
+            )
             new_quantize_op_x = mb.quantize(
                 input=op.inputs["x"],
-                scale=np.array(1).astype(scale_dtype),
-                zero_point=np.int8(0),
+                scale=_scale,
+                zero_point=_zero_point,
                 output_dtype="int8",
-                before_op=op,
             )
             new_dequantize_op_x = mb.dequantize(
                 input=new_quantize_op_x,
-                scale=np.array(1).astype(scale_dtype),
-                zero_point=np.int8(0),
-                before_op=op,
+                scale=_scale,
+                zero_point=_zero_point,
+            )
+
+            # Input "y"
+            var_name = op.inputs["y"].name
+            val = get_min_and_max_values(self._activation_stats, var_name)
+            _, _scale, _zero_point = quantize_weight(
+                val,
+                axes=0,
+                nbits=8,
+                signed=True,
+                quantization_mode="LINEAR_SYMMETRIC",
+                dtype=types.int8,
             )
             new_quantize_op_y = mb.quantize(
                 input=op.inputs["y"],
-                scale=np.array(1).astype(scale_dtype),
-                zero_point=np.int8(0),
+                scale=_scale,
+                zero_point=_zero_point,
                 output_dtype="int8",
-                before_op=op,
             )
             new_dequantize_op_y = mb.dequantize(
                 input=new_quantize_op_y,
-                scale=np.array(1).astype(scale_dtype),
-                zero_point=np.int8(0),
-                before_op=op,
+                scale=_scale,
+                zero_point=_zero_point,
             )
+
             # Update kargs (inputs) of ``new_core_op``.
             kargs["x"] = new_dequantize_op_x
             kargs["y"] = new_dequantize_op_y
@@ -233,7 +282,6 @@ class insert_prefix_quantize_dequantize_pair(AbstractActCompressionPass):
         # Update other kargs of ``new_core_op``.
         # These are the same regardless of whether it's a unary or binary op.
         kargs["name"] = op.name
-        kargs["before_op"] = op
         new_core_op = getattr(mb, op.op_type)(**kargs)
         new_core_op.name = op.outputs[0].name
 

@@ -6,16 +6,20 @@
 from typing import List
 
 import numpy as np
+from tqdm import tqdm
 
 import coremltools as ct
+from coremltools import _SPECIFICATION_VERSION_IOS_16
+from coremltools import _logger as logger
+from coremltools.models import MLModel
 
 
+# rdar://137163049 code cleanup.
 class OperationInfo:
     def __init__(self, spec):
         self.dependants = []
         self.dependencies = []
-        outputs = dict([(output.name, output) for output in spec.outputs])
-        self.outputs = outputs
+        self.outputs = dict([(output.name, output) for output in spec.outputs])
         self.spec = spec
 
 
@@ -46,24 +50,16 @@ class ModelInfo:
 
 
 class ModelDebugger:
-    @classmethod
-    def batch(cls, iterable, n=1):
-        l = len(iterable)
-        for index in range(0, l, n):
-            yield iterable[index : min(index + n, l)]
+    @staticmethod
+    def batch(iterable, batch_size: int = 1):
+        return (iterable[idx : idx + batch_size] for idx in range(0, len(iterable), batch_size))
 
     @classmethod
-    def unique(cls, sequence):
-        seen = set()
-        return [x for x in sequence if not (x in seen or seen.add(x))]
+    def unique(cls, sequence: List) -> List:
+        return list(set(sequence))
 
     @classmethod
-    def split_list(cls, list):
-        half = len(list) // 2
-        return list[:half], list[half:]
-
-    @classmethod
-    def get_block_info(cls, block_name, block_spec):
+    def get_block_info(cls, block_name, block_spec) -> BlockInfo:
         operations = {}
         for operation_spec in block_spec.operations:
             operation = OperationInfo(operation_spec)
@@ -95,7 +91,7 @@ class ModelDebugger:
         return BlockInfo(block_name, operations, block_spec)
 
     @classmethod
-    def get_function_info(cls, function_name, function_spec):
+    def get_function_info(cls, function_name, function_spec) -> FunctionInfo:
         blocks = {}
         for block_name, block_spec in function_spec.block_specializations.items():
             blocks[block_name] = cls.get_block_info(block_name, block_spec)
@@ -103,7 +99,7 @@ class ModelDebugger:
         return FunctionInfo(function_name, blocks, function_spec)
 
     @classmethod
-    def get_program_info(cls, program_spec):
+    def get_program_info(cls, program_spec) -> ProgramInfo:
         functions = {}
         for function_name, function_spec in program_spec.functions.items():
             functions[function_name] = cls.get_function_info(function_name, function_spec)
@@ -111,50 +107,40 @@ class ModelDebugger:
         return ProgramInfo(functions, program_spec)
 
     @classmethod
-    def get_model_info(cls, model):
+    def get_model_info(cls, model: MLModel) -> ModelInfo:
         model_spec = model.get_spec()
         return ModelInfo(cls.get_program_info(model_spec.mlProgram), model_spec)
 
     @classmethod
-    def populate_outputs(cls, output_names, all_operations, acc):
-        if len(output_names) == 0:
-            return
-        next_output_names = []
-        operations = [all_operations.get(output_name, None) for output_name in output_names]
-        operations = [operation for operation in operations if operation is not None]
-        acc.extend([output for operation in operations for output in operation.outputs.values()])
-        prev_output_names = [
-            output_name
-            for operation in operations
-            for dependency in operation.dependencies
-            for output_name in dependency.outputs.keys()
-        ]
-        prev_output_names = cls.unique(prev_output_names)
-        cls.populate_outputs(prev_output_names, all_operations, acc)
-
-    @classmethod
-    def get_all_outputs(cls, block_info):
-        acc = []
+    def get_all_outputs(cls, block_info: BlockInfo) -> List[ct.proto.MIL_pb2.NamedValueType]:
+        result: List[ct.proto.MIL_pb2.NamedValueType] = []
         output_names = block_info.spec.outputs
-        cls.populate_outputs(output_names, block_info.operations, acc)
-        return acc
+        while len(output_names) > 0:
+            operations = [
+                block_info.operations[output_name]
+                for output_name in output_names
+                if output_name in block_info.operations
+            ]
+            result.extend(
+                [output for operation in operations for output in operation.outputs.values()]
+            )
+            prev_output_names = [
+                output_name
+                for operation in operations
+                for dependency in operation.dependencies
+                for output_name in dependency.outputs.keys()
+            ]
+            output_names = cls.unique(prev_output_names)
+        return result
 
     @classmethod
-    def get_any_function(cls, model_info):
-        program_info = model_info.program_info
-        function_name = list(program_info.functions.keys())[0]
-        return program_info.functions[function_name]
-
-    @classmethod
-    def get_any_block(cls, model_info):
-        function_info = cls.get_any_function(model_info)
-        block_specialization_name = list(function_info.blocks.keys())[0]
-        return function_info.blocks[block_specialization_name]
+    def get_any_block(cls, model_info: ModelInfo):
+        function_info: FunctionInfo = list(model_info.program_info.functions.values())[0]
+        return list(function_info.blocks.values())[0]
 
     @classmethod
     def clone_spec(cls, spec):
-        spec_class = spec.__class__
-        new_spec = spec_class()
+        new_spec = spec.__class__()
         new_spec.CopyFrom(spec)
         return new_spec
 
@@ -177,7 +163,7 @@ class ModelDebugger:
 
         return data_type_to_feature_type[data_type]
 
-    def __init__(self, model):
+    def __init__(self, model: MLModel):
         self.weights_dir = model.weights_dir
         self.model_info = self.__class__.get_model_info(model)
         self.block_info = self.__class__.get_any_block(self.model_info)
@@ -235,20 +221,22 @@ class ModelDebugger:
 
         return concat_op_info_list
 
-    def get_model_with_intermediate_outputs(
-        self, intermediate_output_names, compute_units=ct.ComputeUnit.ALL
+    def predict_intermediate_outputs(
+        self, inputs, intermediate_output_names, compute_units=ct.ComputeUnit.CPU_ONLY
     ):
+        """Append all intermediate_output_names to model's output, and then use model.predict to get those outputs."""
         model_key = frozenset(intermediate_output_names)
-        model = self.__cached_models.get(model_key)
-        if model is not None:
-            # Found cached model.
-            return model
 
         cloned_spec = self.__class__.clone_spec(self.model_info.spec)
+        if self.model_info.spec.specificationVersion < _SPECIFICATION_VERSION_IOS_16:
+            logger.warning(
+                f"The model has spec version {self.model_info.spec.specificationVersion}, but the minimum "
+                f"version to do activation quantization is {_SPECIFICATION_VERSION_IOS_16}. Forcely updated the spec to {_SPECIFICATION_VERSION_IOS_16} during calibration."
+            )
+            cloned_spec.specificationVersion = max(self.model_info.spec.specificationVersion, 7)
         cloned_model_info = ModelInfo(
             ModelDebugger.get_program_info(cloned_spec.mlProgram), cloned_spec
         )
-        cloned_spec.specificationVersion = max(self.model_info.spec.specificationVersion, 7)
         cloned_block_info = self.__class__.get_any_block(cloned_model_info)
 
         for output_name in intermediate_output_names:
@@ -268,50 +256,15 @@ class ModelDebugger:
             cloned_model_info.spec.description.output.append(cloned_output)
 
         model = ct.models.MLModel(
-            cloned_spec, weights_dir=self.weights_dir, compute_units=compute_units
+            cloned_spec,
+            weights_dir=self.weights_dir,
+            compute_units=compute_units,
+            skip_model_load=False,  # Don't skip model load as we need model prediction to get activations range.
         )
+        return model.predict(inputs)
 
-        self.__cached_models[model_key] = model
-
-        return model
-
-    def get_models_with_intermediate_outputs_safely(
-        self, intermediate_output_names, compute_units=ct.ComputeUnit.ALL
-    ):
-        if len(intermediate_output_names) == 0:
-            return []
-
-        models = []
-        output_names = [intermediate_output_names]
-        while len(output_names) > 0:
-            curr_output_names = output_names[0]
-            del output_names[0]
-            model = None
-            try:
-                # This could fail compilation
-                model = self.get_model_with_intermediate_outputs(curr_output_names, compute_units)
-            except ValueError as ex:
-                print(
-                    f"Failed to create model with intermediate outputs={intermediate_output_names}, error={ex}"
-                )
-                if len(curr_output_names) > 1:
-                    print("Retrying")
-                    # split in two and then retry
-                    xs = self.__class__.split_list(curr_output_names)
-                    output_names.insert(0, xs[1])
-                    output_names.insert(0, xs[0])
-
-            if model is not None:
-                models.append(model)
-
-        return models
-
-    # Clears all cached models
-    def clear_cached_models(self):
-        self.__cached_models.clear()
-
-    # The function will get called for each intermediate output, return `False` if you want to stop the enumeration otherwise `True`.
-    def check_intermediate_output(output_value, output_name, operation, activation_stats_dict):
+    @staticmethod
+    def record_intermediate_output(output_value, output_name, activation_stats_dict):
         tensor_min = np.min(output_value.flatten())
         tensor_max = np.max(output_value.flatten())
         activation_stats_dict[output_name]["rmin"] = tensor_min
@@ -326,47 +279,51 @@ class ModelDebugger:
         else:
             activation_stats_dict[output_name]["rmin"] = tensor_min
             activation_stats_dict[output_name]["rmax"] = tensor_max
-        return True
 
     def step(
         self,
-        step_fn,
         inputs,
         activation_stats_dict,
         intermediate_output_names=None,
         compute_units=ct.ComputeUnit.CPU_ONLY,
-        batch_size=500,
+        op_group_size=-1,
     ):
+        """
+        During activation quantization, to get activations, all intermediate tensors will be added to model's outputs
+        to form a temperary model. Then the temp model's output will be recorded for quantization.
+
+        inputs: Inputs to the model for running `model.predict`.
+        activation_stats_dict: Dictionary to store the min/max of the activation statistics.
+        intermediate_output_names: The output names of the intermediate tensors.
+        compute_units: The compute units to use for temperary model's prediction.
+        op_group_size: If the model is very large, it could lead to the temperary model having thousands of outputs,
+            which may lead to model hanging forever during model loading. To work around this issue, intermediate
+            outputs are grouped into smaller groups, where each time a temperary model will only have `op_group_size`
+            outputs. By default (op_group_size = -1), op_group_size is equal to the number of valid intermediate ops.
+        """
         if intermediate_output_names is None:
             intermediate_output_names = self.get_intermediate_output_names()
+        if len(intermediate_output_names) == 0:
+            return
+        if op_group_size == -1:
+            op_group_size = len(intermediate_output_names)
 
         model_output_names = [output.name for output in self.__model_outputs]
-        model_outputs = None
+        model_outputs = dict()
 
-        batch_size = len(intermediate_output_names)
-        for output_names in self.__class__.batch(intermediate_output_names, batch_size):
-            models = self.get_models_with_intermediate_outputs_safely(output_names, compute_units)
-            for model in models:
-                outputs = model.predict(inputs)
-                # cache model outputs
-                if model_outputs is None:
-                    model_outputs = {
-                        key: value for key, value in outputs.items() if key in model_output_names
-                    }
-                # remove model outputs
-                outputs = {
-                    key: value for key, value in outputs.items() if key not in model_output_names
-                }
-                output_names = list(outputs.keys())
-                for output_name in output_names:
-                    output_value = outputs[output_name]
-                    del outputs[output_name]
-                    operation = self.block_info.operations.get(output_name, None)
-                    if not step_fn(output_value, output_name, operation, activation_stats_dict):
-                        return
-                outputs = {}
+        for output_names in tqdm(
+            self.batch(intermediate_output_names, op_group_size),
+            desc="Running linear_quantize_activations on intermediate tensors batch-by-batch",
+            unit=" batches",
+        ):
+            outputs = self.predict_intermediate_outputs(inputs, output_names, compute_units)
 
-            for (output_name, output_value) in model_outputs.items():
-                operation = self.block_info.operations.get(output_name, None)
-                if not step_fn(output_value, output_name, operation, activation_stats_dict):
-                    return
+            model_outputs.update(
+                {key: value for key, value in outputs.items() if key in model_output_names}
+            )
+            intermediate_outputs = {
+                key: value for key, value in outputs.items() if key not in model_output_names
+            }
+
+            for output_name, output_value in outputs.items():
+                self.record_intermediate_output(output_value, output_name, activation_stats_dict)

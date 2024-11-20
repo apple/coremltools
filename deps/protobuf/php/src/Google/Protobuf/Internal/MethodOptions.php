@@ -8,112 +8,133 @@ use Google\Protobuf\Internal\GPBType;
 use Google\Protobuf\Internal\GPBWire;
 use Google\Protobuf\Internal\RepeatedField;
 use Google\Protobuf\Internal\InputStream;
-
 use Google\Protobuf\Internal\GPBUtil;
 
 /**
- * Protobuf type <code>google.protobuf.MethodOptions</code>
+ * Generated from protobuf message <code>google.protobuf.MethodOptions</code>
  */
 class MethodOptions extends \Google\Protobuf\Internal\Message
 {
     /**
-     * <pre>
      * Is this method deprecated?
      * Depending on the target platform, this can emit Deprecated annotations
      * for the method, or it will be completely ignored; in the very least,
      * this is a formalization for deprecating methods.
-     * </pre>
      *
-     * <code>optional bool deprecated = 33 [default = false];</code>
+     * Generated from protobuf field <code>optional bool deprecated = 33 [default = false];</code>
      */
-    private $deprecated = false;
-    private $has_deprecated = false;
+    protected $deprecated = null;
     /**
-     * <code>optional .google.protobuf.MethodOptions.IdempotencyLevel idempotency_level = 34 [default = IDEMPOTENCY_UNKNOWN];</code>
+     * Generated from protobuf field <code>optional .google.protobuf.MethodOptions.IdempotencyLevel idempotency_level = 34 [default = IDEMPOTENCY_UNKNOWN];</code>
      */
-    private $idempotency_level = 0;
-    private $has_idempotency_level = false;
+    protected $idempotency_level = null;
     /**
-     * <pre>
      * The parser stores options it doesn't recognize here. See above.
-     * </pre>
      *
-     * <code>repeated .google.protobuf.UninterpretedOption uninterpreted_option = 999;</code>
+     * Generated from protobuf field <code>repeated .google.protobuf.UninterpretedOption uninterpreted_option = 999;</code>
      */
     private $uninterpreted_option;
-    private $has_uninterpreted_option = false;
 
-    public function __construct() {
+    /**
+     * Constructor.
+     *
+     * @param array $data {
+     *     Optional. Data for populating the Message object.
+     *
+     *     @type bool $deprecated
+     *           Is this method deprecated?
+     *           Depending on the target platform, this can emit Deprecated annotations
+     *           for the method, or it will be completely ignored; in the very least,
+     *           this is a formalization for deprecating methods.
+     *     @type int $idempotency_level
+     *     @type \Google\Protobuf\Internal\UninterpretedOption[]|\Google\Protobuf\Internal\RepeatedField $uninterpreted_option
+     *           The parser stores options it doesn't recognize here. See above.
+     * }
+     */
+    public function __construct($data = NULL) {
         \GPBMetadata\Google\Protobuf\Internal\Descriptor::initOnce();
-        parent::__construct();
+        parent::__construct($data);
     }
 
     /**
-     * <pre>
      * Is this method deprecated?
      * Depending on the target platform, this can emit Deprecated annotations
      * for the method, or it will be completely ignored; in the very least,
      * this is a formalization for deprecating methods.
-     * </pre>
      *
-     * <code>optional bool deprecated = 33 [default = false];</code>
+     * Generated from protobuf field <code>optional bool deprecated = 33 [default = false];</code>
+     * @return bool
      */
     public function getDeprecated()
     {
-        return $this->deprecated;
+        return isset($this->deprecated) ? $this->deprecated : false;
+    }
+
+    public function hasDeprecated()
+    {
+        return isset($this->deprecated);
+    }
+
+    public function clearDeprecated()
+    {
+        unset($this->deprecated);
     }
 
     /**
-     * <pre>
      * Is this method deprecated?
      * Depending on the target platform, this can emit Deprecated annotations
      * for the method, or it will be completely ignored; in the very least,
      * this is a formalization for deprecating methods.
-     * </pre>
      *
-     * <code>optional bool deprecated = 33 [default = false];</code>
+     * Generated from protobuf field <code>optional bool deprecated = 33 [default = false];</code>
+     * @param bool $var
+     * @return $this
      */
     public function setDeprecated($var)
     {
         GPBUtil::checkBool($var);
         $this->deprecated = $var;
-        $this->has_deprecated = true;
-    }
 
-    public function hasDeprecated()
-    {
-        return $this->has_deprecated;
+        return $this;
     }
 
     /**
-     * <code>optional .google.protobuf.MethodOptions.IdempotencyLevel idempotency_level = 34 [default = IDEMPOTENCY_UNKNOWN];</code>
+     * Generated from protobuf field <code>optional .google.protobuf.MethodOptions.IdempotencyLevel idempotency_level = 34 [default = IDEMPOTENCY_UNKNOWN];</code>
+     * @return int
      */
     public function getIdempotencyLevel()
     {
-        return $this->idempotency_level;
-    }
-
-    /**
-     * <code>optional .google.protobuf.MethodOptions.IdempotencyLevel idempotency_level = 34 [default = IDEMPOTENCY_UNKNOWN];</code>
-     */
-    public function setIdempotencyLevel($var)
-    {
-        GPBUtil::checkEnum($var, \Google\Protobuf\Internal\MethodOptions_IdempotencyLevel::class);
-        $this->idempotency_level = $var;
-        $this->has_idempotency_level = true;
+        return isset($this->idempotency_level) ? $this->idempotency_level : 0;
     }
 
     public function hasIdempotencyLevel()
     {
-        return $this->has_idempotency_level;
+        return isset($this->idempotency_level);
+    }
+
+    public function clearIdempotencyLevel()
+    {
+        unset($this->idempotency_level);
     }
 
     /**
-     * <pre>
+     * Generated from protobuf field <code>optional .google.protobuf.MethodOptions.IdempotencyLevel idempotency_level = 34 [default = IDEMPOTENCY_UNKNOWN];</code>
+     * @param int $var
+     * @return $this
+     */
+    public function setIdempotencyLevel($var)
+    {
+        GPBUtil::checkEnum($var, \Google\Protobuf\Internal\MethodOptions\IdempotencyLevel::class);
+        $this->idempotency_level = $var;
+
+        return $this;
+    }
+
+    /**
      * The parser stores options it doesn't recognize here. See above.
-     * </pre>
      *
-     * <code>repeated .google.protobuf.UninterpretedOption uninterpreted_option = 999;</code>
+     * Generated from protobuf field <code>repeated .google.protobuf.UninterpretedOption uninterpreted_option = 999;</code>
+     * @return \Google\Protobuf\Internal\RepeatedField
      */
     public function getUninterpretedOption()
     {
@@ -121,22 +142,18 @@ class MethodOptions extends \Google\Protobuf\Internal\Message
     }
 
     /**
-     * <pre>
      * The parser stores options it doesn't recognize here. See above.
-     * </pre>
      *
-     * <code>repeated .google.protobuf.UninterpretedOption uninterpreted_option = 999;</code>
+     * Generated from protobuf field <code>repeated .google.protobuf.UninterpretedOption uninterpreted_option = 999;</code>
+     * @param \Google\Protobuf\Internal\UninterpretedOption[]|\Google\Protobuf\Internal\RepeatedField $var
+     * @return $this
      */
-    public function setUninterpretedOption(&$var)
+    public function setUninterpretedOption($var)
     {
         $arr = GPBUtil::checkRepeatedField($var, \Google\Protobuf\Internal\GPBType::MESSAGE, \Google\Protobuf\Internal\UninterpretedOption::class);
         $this->uninterpreted_option = $arr;
-        $this->has_uninterpreted_option = true;
-    }
 
-    public function hasUninterpretedOption()
-    {
-        return $this->has_uninterpreted_option;
+        return $this;
     }
 
 }

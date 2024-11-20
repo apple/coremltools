@@ -96,7 +96,7 @@ class ModuleSKMPalettizerConfig(_ModuleOptimizationConfig):
     table. The ``granularity`` is set to ``per_tensor``, and ``group_size`` is ``None``.
 
     2. **Per-grouped-channel palettization**: In this configuration, the number of channels ``group_size`` along
-    ``channel_axis`` share the same lookup table. For example, for a weight matrix of shape ``(16, 25)``, if we provide 
+    ``channel_axis`` share the same lookup table. For example, for a weight matrix of shape ``(16, 25)``, if we provide
     ``group_size = 8``, the shape of the lookup table would be ``(2, 2^n_bits)``.
 
     .. note::
@@ -230,11 +230,11 @@ class SKMPalettizer(_BaseDataCalibratedModelOptimizer):
     Perform post-training palettization of weights by running a weighted k-means
     on the model weights. The weight values used for weighing different elements of
     a model's weight matrix are computed using the Fisher information matrix, which
-    is an approximation of the Hessian. These weight values indicate how sensitive 
-    a given weight element is: the more sensitive an element, the larger the impact perturbing 
-    or palettizing it has on the model’s loss function. This means that weighted k-means 
-    moves the clusters closer to the sensitive weight values, allowing them to be 
-    represented more exactly. This leads to a lower degradation in model performance 
+    is an approximation of the Hessian. These weight values indicate how sensitive
+    a given weight element is: the more sensitive an element, the larger the impact perturbing
+    or palettizing it has on the model’s loss function. This means that weighted k-means
+    moves the clusters closer to the sensitive weight values, allowing them to be
+    represented more exactly. This leads to a lower degradation in model performance
     after palettization. The Fisher information matrix is computed using a few
     samples of calibration data.
 

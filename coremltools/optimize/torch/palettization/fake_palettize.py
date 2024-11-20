@@ -5,7 +5,6 @@
 
 import contextlib
 import logging as _logging
-from distutils.version import StrictVersion as _StrictVersion
 from typing import Optional as _Optional
 from typing import Tuple as _Tuple
 from typing import Union as _Union
@@ -16,8 +15,6 @@ import torch.nn.functional as _F
 from torch.ao.quantization.observer import ObserverBase as _ObserverBase
 from torch.quantization import FakeQuantize as _FakeQuantize
 
-from coremltools.optimize.torch._utils.torch_utils import get_torch_version as _get_torch_version
-
 from ._efficient_kmeans import _EfficientKMeans
 from ._fake_palettizer_tensor_hook import _FakePalettizerTensorHook
 from ._partitioner import _Partitioner
@@ -26,11 +23,6 @@ from ._utils import get_shard_list as _get_shard_list
 from ._utils import vectorize as _vectorize
 from .palettization_config import DEFAULT_PALETTIZATION_ADVANCED_OPTIONS
 
-# This is the maximum torch version currently supported for supporting the
-# FakePalettizerTensorHook as the backward graph tracing that the pack/unpack method
-# does accepts certain names for functions which have been changed after this
-# torch version
-MAX_TORCH_VERSION_FOR_PALETT_MAX_MEM = "2.0.1"
 
 _logger = _logging.getLogger(__name__)
 
@@ -125,13 +117,6 @@ class FakePalettize(_FakeQuantize, _Partitioner):
         palett_max_mem = advanced_options.get(
             "palett_max_mem", DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["palett_max_mem"]
         )
-        if palett_max_mem < 1:
-            _CURRENT_TORCH_VERSION = _get_torch_version(_torch.__version__)
-            if _CURRENT_TORCH_VERSION > _StrictVersion(MAX_TORCH_VERSION_FOR_PALETT_MAX_MEM):
-                _logger.error(
-                    f"palett_max_mem<1 is only supported till a max torch version "
-                    f"of:{MAX_TORCH_VERSION_FOR_PALETT_MAX_MEM} "
-                )
 
         palett_shard = advanced_options.get(
             "palett_shard", DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["palett_shard"]
@@ -209,6 +194,10 @@ class FakePalettize(_FakeQuantize, _Partitioner):
             "kmeans_error_bnd",
             DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["kmeans_error_bnd"],
         )
+        vector_ch_axis = advanced_options.get(
+            "channel_axis",
+            DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["channel_axis"],
+        )
 
         self._target_module_level_sparsity = 0.0
 
@@ -228,6 +217,7 @@ class FakePalettize(_FakeQuantize, _Partitioner):
             kmeans_batch_threshold,
             kmeans_n_init,
             kmeans_error_bnd,
+            vector_ch_axis,
         )
 
         self.cluster_permute = cluster_permute
@@ -257,9 +247,17 @@ class FakePalettize(_FakeQuantize, _Partitioner):
         self.n_bits = n_bits
         self.cluster_dim = cluster_dim
         self.kmeans_init = kmeans_init
+        self.vector_ch_axis = vector_ch_axis
         self.register_buffer("fake_palett_enabled", _torch.tensor([0], dtype=_torch.uint8))
         self.disable_fake_quant()
         self.disable_observer()
+
+    def reset_parameters(self) -> None:
+        """
+        FSDP expects reset_parameters method to initialize parameters/buffers in submodules
+        FakePalettize has no nn.Parameter/nn.Buffer, so we are creating an empty method
+        """
+        pass
 
     def enable_fake_palett(self, enabled: bool = True) -> None:
         self.fake_palett_enabled[0] = 1 if enabled else 0
@@ -271,7 +269,7 @@ class FakePalettize(_FakeQuantize, _Partitioner):
         cX, pad = list(
             zip(
                 *[
-                    _vectorize(X[partition], self.cluster_dim)
+                    _vectorize(X[partition], self.cluster_dim, self.vector_ch_axis)
                     for i, partition in enumerate(self.partitions)
                 ]
             )
@@ -425,6 +423,7 @@ class FakePalettize(_FakeQuantize, _Partitioner):
                 pad[p],
                 X[partition].size(),
                 self.cluster_dim,
+                self.vector_ch_axis,
             ).to(X.dtype)
 
             self.labels[p] = None
@@ -483,9 +482,13 @@ class FakePalettize(_FakeQuantize, _Partitioner):
 
         for i, p in enumerate(partitions):
             partition = self.partitions[p]
-            X[partition] = _devectorize(tX[i], pad[p], X[partition].size(), self.cluster_dim).to(
-                X.dtype
-            )
+            X[partition] = _devectorize(
+                tX[i],
+                pad[p],
+                X[partition].size(),
+                self.cluster_dim,
+                self.vector_ch_axis,
+            ).to(X.dtype)
             self.labels[p] = None
             self.centroids[p] = centroids[i].detach().to(X.dtype)
             self.cum_inertia[p] += float(cur_inertia[i].detach())
@@ -533,14 +536,16 @@ class FakePalettize(_FakeQuantize, _Partitioner):
                     x_c_dist[:, :1] -= self.prune_threshold
 
                 min_error, labels = x_c_dist.min(dim=-1)
-                self.labels[p] = labels.to(_torch.int).cpu()
+                self.labels[p] = labels.cpu()
 
+            self.labels[p] = self.labels[p].to(_torch.int)
             if X is not None:
                 X[partition] = _devectorize(
                     centroids[self.labels[p]],
                     pad[p],
                     X[partition].size(),
                     self.cluster_dim,
+                    self.vector_ch_axis,
                 ).to(X.dtype)
 
         return X
@@ -562,7 +567,11 @@ class FakePalettize(_FakeQuantize, _Partitioner):
             self.labels[p] = labels[i].to(_torch.int).cpu()
 
             X[partition] = _devectorize(
-                centroids[self.labels[p]], pad[p], X[partition].size(), self.cluster_dim
+                centroids[self.labels[p]],
+                pad[p],
+                X[partition].size(),
+                self.cluster_dim,
+                self.vector_ch_axis,
             ).to(X.dtype)
 
         return X
@@ -647,9 +656,11 @@ class FakePalettize(_FakeQuantize, _Partitioner):
         error_msgs,
     ):
         self.lut_dtype = local_metadata["lut_dtype"]
+        if "per_channel_scaling_factor" in local_metadata:
+            self.per_channel_scaling_factor = local_metadata["per_channel_scaling_factor"]
         self.fake_palett_enabled = _torch.empty(
             state_dict[prefix + "fake_palett_enabled"].size(),
-            device=self.centroids.device,
+            device=self.fake_palett_enabled.device,
         )
         _Partitioner._load_from_state_dict_(
             self,
@@ -697,7 +708,9 @@ class FakePalettize(_FakeQuantize, _Partitioner):
 
         # State dicts can only contain tensors (for DDP), so store infos in the metatadata dict (in particular str)
         destination._metadata[prefix[:-1]]["lut_dtype"] = self.lut_dtype
-        destination[prefix + "per_channel_scaling_factor"] = self.per_channel_scaling_factor
+        destination._metadata[
+            prefix + "per_channel_scaling_factor"
+        ] = self.per_channel_scaling_factor
         _Partitioner._save_to_state_dict_(self, destination, prefix + "palett.", keep_vars)
 
     def __repr__(self):

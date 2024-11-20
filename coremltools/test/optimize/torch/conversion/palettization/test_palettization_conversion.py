@@ -1,14 +1,12 @@
 #  Copyright (c) 2024, Apple Inc. All rights reserved.
 #
-#  Use of this source code is governed, by a BSD-3-clause license that can be
+#  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
-
 
 import pytest
 import torch
 import torch.nn as nn
 
-import coremltools as ct
 import coremltools.test.optimize.torch.conversion.conversion_utils as util
 from coremltools.optimize.torch.palettization import (
     DKMPalettizer,
@@ -23,7 +21,9 @@ from coremltools.test.optimize.torch.utils import count_unique_params
 ct = pytest.importorskip("coremltools")
 cto = pytest.importorskip("coremltools.optimize")
 
+
 # region per_tensor
+@pytest.mark.skipif(ct.utils._macos_version() < (15, 0), reason="Only supported on macOS 15+")
 @pytest.mark.parametrize(
     "config, lut_shape_map",
     [
@@ -63,9 +63,6 @@ def test_palettization_per_tensor(
     lut_shape_map,
     algorithm,
 ):
-    if algorithm == "DKM":
-        # Skip compressing all layers for DKM to reduce test time
-        config["module_name_configs"] = {"conv1": None, "dense1": None}
 
     compressed_model = get_compressed_model(
         algorithm, mnist_model, mnist_example_input, mnist_example_output, config
@@ -78,9 +75,6 @@ def test_palettization_per_tensor(
     max_unique_values = 2**_n_bits
     assert count_unique_params(torch.unique(weight_sample)) <= max_unique_values
 
-    if ct.utils._macos_version() < (15, 0):
-        return
-
     # Convert and validate on coreml model.
     compressed_model_coreml = util.convert_and_verify(
         compressed_model,
@@ -92,6 +86,7 @@ def test_palettization_per_tensor(
 
 
 # region per_channel_scale
+@pytest.mark.skipif(ct.utils._macos_version() < (15, 0), reason="Only supported on macOS 15+")
 @pytest.mark.parametrize(
     "config, lut_shape_map",
     [
@@ -141,9 +136,6 @@ def test_palettization_per_channel_scale(
     lut_shape_map,
     algorithm,
 ):
-    if algorithm == "DKM":
-        # Skip compressing all layers for DKM to reduce test time
-        config["module_name_configs"] = {"conv1": None, "dense1": None}
 
     compressed_model = get_compressed_model(
         algorithm, mnist_model, mnist_example_input, mnist_example_output, config
@@ -156,9 +148,6 @@ def test_palettization_per_channel_scale(
         max_unique_values = 2**_n_bits
         assert count_unique_params(torch.unique(weight_sample)) <= max_unique_values
 
-    if ct.utils._macos_version() < (15, 0):
-        return
-
     compressed_model_coreml = util.convert_and_verify(
         compressed_model,
         mnist_example_input,
@@ -169,6 +158,7 @@ def test_palettization_per_channel_scale(
 
 
 # region grouped_channelwise
+@pytest.mark.skipif(ct.utils._macos_version() < (15, 0), reason="Only supported on macOS 15+")
 @pytest.mark.parametrize(
     "config, lut_shape_map",
     [
@@ -223,8 +213,6 @@ def test_palettization_grouped_channelwise(
         else:
             # remove channel_axis key, which will default to axis 0
             del config["global_config"]["channel_axis"]
-            # Skip compressing all layers for DKM to reduce test time
-            config["module_name_configs"] = {"conv1": None, "dense1": None}
 
     compressed_model = get_compressed_model(
         algorithm, mnist_model, mnist_example_input, mnist_example_output, config
@@ -245,9 +233,6 @@ def test_palettization_grouped_channelwise(
         max_unique_values = 2**_n_bits
         assert count_unique_params(torch.unique(weight_sample)) <= max_unique_values
 
-    if ct.utils._macos_version() < (15, 0):
-        return
-
     compressed_model_coreml = util.convert_and_verify(
         compressed_model,
         mnist_example_input,
@@ -260,6 +245,7 @@ def test_palettization_grouped_channelwise(
 
 
 # region vector
+@pytest.mark.skipif(ct.utils._macos_version() < (15, 0), reason="Only supported on macOS 15+")
 @pytest.mark.parametrize(
     "config, lut_shape_map",
     [
@@ -276,14 +262,24 @@ def test_palettization_grouped_channelwise(
             {
                 "conv2": (1, 1, 1, 1, 16, 4),
             },
-            marks=pytest.mark.xfail(
-                reason="rdar://124474258 ([Compression] Support Vector Palettization in coremltools)"
-            ),
             id="4bits_vector_4",
         ),
     ],
 )
-@pytest.mark.parametrize("algorithm", ["SKM", "PTP", "DKM"])
+@pytest.mark.parametrize(
+    "algorithm",
+    [
+        "SKM",
+        "PTP",
+        "DKM",
+    ],
+)
+@pytest.mark.parametrize(
+    "vector_ch_axis",
+    [
+        0,
+    ],
+)
 def test_palettization_vector(
     mnist_model,
     mnist_example_input,
@@ -291,15 +287,17 @@ def test_palettization_vector(
     config,
     lut_shape_map,
     algorithm,
+    vector_ch_axis,
 ):
+    config["module_name_configs"]["conv2"]["channel_axis"] = vector_ch_axis
     compressed_model = get_compressed_model(
         algorithm, mnist_model, mnist_example_input, mnist_example_output, config
     )
 
     # Validate on torch model.
     _cluster_dim = config["module_name_configs"]["conv2"]["cluster_dim"]
-    weight_sample = (
-        compressed_model.conv2.weight.flatten(1).transpose(0, 1).reshape(-1, _cluster_dim)
+    weight_sample = compressed_model.conv2.weight.transpose(vector_ch_axis, -1).reshape(
+        -1, _cluster_dim
     )
 
     _n_bits = config["module_name_configs"]["conv2"]["n_bits"]
@@ -307,10 +305,9 @@ def test_palettization_vector(
     assert len(torch.unique(weight_sample, dim=0)) <= max_unique_values
 
     # test compression metadata is available
-    assert getattr(compressed_model.conv2, "_COREML_/weight/vector_axis") == torch.tensor(0)
-
-    if ct.utils._macos_version() < (15, 0):
-        return
+    assert getattr(compressed_model.conv2, "_COREML_/weight/vector_axis") == torch.tensor(
+        vector_ch_axis
+    )
 
     compressed_model_coreml = util.convert_and_verify(
         compressed_model,
@@ -323,6 +320,7 @@ def test_palettization_vector(
 # endregion
 
 
+@pytest.mark.skipif(ct.utils._macos_version() < (15, 0), reason="Only supported on macOS 15+")
 @pytest.mark.parametrize(
     "config, lut_shape_map",
     [
@@ -359,9 +357,13 @@ def test_palettization_vector(
     ],
 )
 @pytest.mark.parametrize("lut_dtype", ["int8", "uint8"])
-@pytest.mark.parametrize("algorithm", ["SKM", "PTP", "DKM"])
-@pytest.mark.xfail(
-    reason="rdar://126355261 ([Compression] Support LUT with 8bit values Model Conversion)",
+@pytest.mark.parametrize(
+    "algorithm",
+    [
+        "SKM",
+        "PTP",
+        "DKM",
+    ],
 )
 def test_palettization_int8_lut(
     mnist_model,
@@ -373,10 +375,6 @@ def test_palettization_int8_lut(
     algorithm,
 ):
     config["global_config"]["lut_dtype"] = lut_dtype
-    if algorithm == "DKM":
-        # Skip compressing all layers for DKM to reduce test time
-        config["module_name_configs"] = {"conv1": None, "dense1": None}
-
     compressed_model = get_compressed_model(
         algorithm, mnist_model, mnist_example_input, mnist_example_output, config
     )

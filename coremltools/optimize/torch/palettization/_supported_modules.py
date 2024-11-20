@@ -3,36 +3,76 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from typing import Dict as _Dict
+from typing import List as _List
+from typing import Optional as _Optional
+from typing import Tuple as _Tuple
+from typing import Type as _Type
+
 import torch as _torch
 import torch.nn as _nn
 import torch.nn.functional as _F
+import torch.nn.qat as _nnqat
 
-from .palettization_config import SUPPORTED_PYTORCH_QAT_MODULES
+from coremltools.optimize.torch._utils.python_utils import ClassRegistryMixin as _ClassRegistryMixin
 
 
-def _get_palettization_qat_mappings():
+class DKMPalettizerModulesRegistry(_ClassRegistryMixin):
     """
-    _get_palettization_qat_mappings creates qat_module_mappings supported by coremltools.optimize.torch for palettization. We
-    support three modules already in DEFAULT_QAT_MODULE_MAPPINGS, namely, nn.Linear, nn.Conv2d and
-    nn.Conv3d. Additionally, we have added support for preparation of nn.Conv1d, nn.LayerNorm,
-    nn.MultiheadAttention and nn.Embedding modules.
+    A registry of modules which are supported by :py:class:`DKMPalettizer`.
     """
-    qat_module_mappings = (
-        _torch.quantization.quantization_mappings.get_default_qat_module_mappings()
-    )
-    for k in list(qat_module_mappings.keys()):
-        if k not in SUPPORTED_PYTORCH_QAT_MODULES:
-            del qat_module_mappings[k]
-    qat_module_mappings[Conv1d._FLOAT_MODULE] = Conv1d
-    qat_module_mappings[LayerNorm._FLOAT_MODULE] = LayerNorm
-    qat_module_mappings[MultiheadAttention._FLOAT_MODULE] = MultiheadAttention
-    qat_module_mappings[Embedding._FLOAT_MODULE] = Embedding
 
-    return qat_module_mappings
+    REGISTRY: _Dict[_Type[_nn.Module], _Type[_nn.Module]]
+
+    @classmethod
+    def get_palettizer_module(cls, module: _nn.Module) -> _Optional[_Type[_nn.Module]]:
+        """
+        Return :py:class:`DKMPalettizerModule` corresponding to given module.
+        """
+        if type(module) in cls.REGISTRY:
+            return cls.REGISTRY[type(module)]
+        return None
+
+    @classmethod
+    def get_supported_modules(cls) -> _Tuple[_Type[_nn.Module]]:
+        """
+        Returns all supported module types for :py:class:`DKMPalettizer`.
+        """
+        return tuple(float_mod for float_mod, _ in cls.REGISTRY.items())
 
 
-class Conv1d(_nn.Conv1d):
-    _FLOAT_MODULE = _nn.Conv1d
+class DKMPalettizerModule:
+    _FLOAT_MODULE: _Type
+
+    def __init_subclass__(cls):
+        DKMPalettizerModulesRegistry.register(cls._FLOAT_MODULE)(cls)
+
+    @classmethod
+    def get_palettizable_parameters(cls, module: _nn.Module) -> _List[_Tuple[_torch.Tensor, str]]:
+        """
+        Return a list of parameters of the module which can be palettized
+        """
+        assert hasattr(module, "weight"), (
+            f"No parameter named weight in {type(module)}. Override this method "
+            f"to return parameters which can be palettized."
+        )
+        return [(module.weight, "weight")]
+
+
+class Conv2d(_nnqat.Conv2d, DKMPalettizerModule):
+    pass
+
+
+class Conv3d(_nnqat.Conv3d, DKMPalettizerModule):
+    pass
+
+
+class Linear(_nnqat.Linear, DKMPalettizerModule):
+    pass
+
+
+class Conv1d(_nn.Conv1d, DKMPalettizerModule):
+    _FLOAT_MODULE: _Type = _nn.Conv1d
 
     def forward(self, input):
         qweight = self.weight_fake_quant(self.weight)
@@ -51,7 +91,7 @@ class Conv1d(_nn.Conv1d):
         )
 
     @classmethod
-    def from_float(cls, mod):
+    def from_float(cls, mod: _nn.Module) -> _nn.Module:
         r"""Create a qat module from a float module or qparams_dict
 
         Args: `mod` a float module, either produced by torch.quantization utilities
@@ -96,8 +136,8 @@ class Conv1d(_nn.Conv1d):
         return qat
 
 
-class LayerNorm(_nn.LayerNorm):
-    _FLOAT_MODULE = _nn.LayerNorm
+class LayerNorm(_nn.LayerNorm, DKMPalettizerModule):
+    _FLOAT_MODULE: _Type = _nn.LayerNorm
 
     def forward(self, input):
         return _F.layer_norm(
@@ -109,7 +149,7 @@ class LayerNorm(_nn.LayerNorm):
         )
 
     @classmethod
-    def from_float(cls, mod):
+    def from_float(cls, mod: _nn.Module) -> _nn.Module:
         r"""Create a qat module from a float module or qparams_dict
 
         Args: `mod` a float module, either produced by torch.quantization utilities
@@ -139,8 +179,8 @@ class LayerNorm(_nn.LayerNorm):
         return qat
 
 
-class Embedding(_nn.Embedding):
-    _FLOAT_MODULE = _nn.Embedding
+class Embedding(_nn.Embedding, DKMPalettizerModule):
+    _FLOAT_MODULE: _Type = _nn.Embedding
 
     def forward(self, input):
         qweight = self.weight_fake_quant(self.weight)
@@ -155,7 +195,7 @@ class Embedding(_nn.Embedding):
         )
 
     @classmethod
-    def from_float(cls, mod):
+    def from_float(cls, mod: _nn.Module) -> _nn.Module:
         r"""Create a qat module from a float module or qparams_dict
 
         Args: `mod` a float module, either produced by torch.quantization utilities
@@ -191,10 +231,20 @@ class Embedding(_nn.Embedding):
         return qat
 
 
-class MultiheadAttention(_nn.MultiheadAttention):
-    _FLOAT_MODULE = _nn.MultiheadAttention
+class MultiheadAttention(_nn.MultiheadAttention, DKMPalettizerModule):
+    _FLOAT_MODULE: _Type = _nn.MultiheadAttention
 
-    def forward(self, query, key, value, key_padding_mask=None, need_weights=True, attn_mask=None):
+    def forward(
+        self,
+        query,
+        key,
+        value,
+        key_padding_mask=None,
+        need_weights=True,
+        attn_mask=None,
+        average_attn_weights=True,
+        is_causal=False,
+    ):
         is_batched = query.dim() == 3
         if self.batch_first and is_batched:
             # Ensure that that the "is" property is maintained
@@ -229,6 +279,8 @@ class MultiheadAttention(_nn.MultiheadAttention):
                 q_proj_weight=self.q_proj_weight_fake_quant(self.q_proj_weight),
                 k_proj_weight=self.k_proj_weight_fake_quant(self.k_proj_weight),
                 v_proj_weight=self.v_proj_weight_fake_quant(self.v_proj_weight),
+                average_attn_weights=average_attn_weights,
+                is_causal=is_causal,
             )
         else:
             attn_output, attn_output_weights = _F.multi_head_attention_forward(
@@ -249,6 +301,8 @@ class MultiheadAttention(_nn.MultiheadAttention):
                 key_padding_mask=key_padding_mask,
                 need_weights=need_weights,
                 attn_mask=attn_mask,
+                average_attn_weights=average_attn_weights,
+                is_causal=is_causal,
             )
         if self.batch_first and is_batched:
             return attn_output.transpose(1, 0), attn_output_weights
@@ -256,7 +310,7 @@ class MultiheadAttention(_nn.MultiheadAttention):
             return attn_output, attn_output_weights
 
     @classmethod
-    def from_float(cls, mod):
+    def from_float(cls, mod: _nn.Module) -> _nn.Module:
         r"""Create a palettization module from a float module or qparams_dict
 
         Args: `mod` a float module, either produced by torch.quantization utilities
@@ -298,12 +352,8 @@ class MultiheadAttention(_nn.MultiheadAttention):
 
         return qat
 
-
-def get_palettizable_parameters(module):
-    """
-    Return a list of parameters of the module which can be palettized
-    """
-    if isinstance(module, _nn.MultiheadAttention):
+    @classmethod
+    def get_palettizable_parameters(cls, module: _nn.Module) -> _List[_Tuple[_torch.Tensor, str]]:
         if not module._qkv_same_embed_dim:
             return [
                 (module.out_proj.weight, "out_proj.weight"),
@@ -316,4 +366,3 @@ def get_palettizable_parameters(module):
                 (module.in_proj_weight, "in_proj_weight"),
                 (module.out_proj.weight, "out_proj.weight"),
             ]
-    return [(module.weight, "weight")]

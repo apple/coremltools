@@ -17,11 +17,9 @@ from PIL import Image
 
 import coremltools as ct
 from coremltools._deps import (
-    _HAS_EXECUTORCH,
     _HAS_HF,
     _HAS_TORCH,
     _HAS_TORCHAO,
-    MSG_EXECUTORCH_NOT_FOUND,
     MSG_TORCH_NOT_FOUND,
     MSG_TORCHAO_NOT_FOUND,
 )
@@ -58,9 +56,6 @@ if _HAS_TORCH:
 
 if _HAS_HF:
     from peft import LoraConfig, get_peft_model
-
-if _HAS_EXECUTORCH:
-    import executorch.exir
 
 if _HAS_TORCHAO:
     from torchao.quantization import quant_api
@@ -144,96 +139,6 @@ class TestTorchScriptValidation:
         assert _METADATA_SOURCE_DIALECT in mlmodel.user_defined_metadata
 
         assert mlmodel.user_defined_metadata[_METADATA_SOURCE_DIALECT] == "TorchScript"
-
-
-@pytest.mark.skipif(not _HAS_EXECUTORCH, reason=MSG_EXECUTORCH_NOT_FOUND)
-class TestEXIRValidation:
-    @staticmethod
-    @pytest.mark.parametrize("backend", backends)
-    def test_fp16_io(torch_model, backend):  # TODO (rdar://115845792): Handle fp16 IO dtypes
-        class TestModule(torch.nn.Module):
-            def __init__(self):
-                super(TestModule, self).__init__()
-                self.linear = torch.nn.Linear(10, 20, dtype=torch.float16)
-
-            def forward(self, x):
-                return self.linear(x)
-
-        model = TestModule()
-        model.eval()
-
-        shape = (1, 10)
-        example_inputs = (torch.rand(*shape, dtype=torch.float16),)
-        exir_program_aten = torch.export.export(model, example_inputs)
-        exir_program_edge = executorch.exir.to_edge(exir_program_aten).exported_program()
-
-        # Default deployment target is iOS14 for neuralnetwork and iOS15 for mlprogram,
-        # both are too old to support fp16 io
-        with pytest.raises(
-            ValueError, match=r"To use fp16 input, please set minimum deployment target to iOS16\+"
-        ):
-            ct.convert(exir_program_edge, convert_to=backend[0])
-
-        # fp16 io should work fine for iOS16+
-        if backend[0] == "mlprogram":
-            ct.convert(
-                exir_program_edge,
-                convert_to="mlprogram",
-                minimum_deployment_target=ct.target.iOS16,
-            )
-
-    @staticmethod
-    @pytest.mark.parametrize("backend", backends)
-    def test_inputs(
-        torch_model, backend
-    ):  # TODO: rdar://115845792 ([Executorch] Handle user provided inputs/outputs in the convert API)
-        shape = (2, 10)
-        exir_program_aten = torch.export.export(torch_model, (torch.rand(*shape),))
-        exir_program_edge = executorch.exir.to_edge(exir_program_aten).exported_program()
-
-        with pytest.raises(
-            AssertionError, match=r"'inputs' argument should be None for ExportedProgram"
-        ):
-            ct.convert(
-                exir_program_edge,
-                convert_to=backend[0],
-                inputs=[ct.TensorType(shape=shape)],
-            )
-
-    @staticmethod
-    @pytest.mark.parametrize("backend", backends)
-    def test_outputs(
-        torch_model, backend
-    ):  # TODO: rdar://115845792 ([Executorch] Handle user provided inputs/outputs in the convert API)
-        shape = (3, 10)
-        exir_program_aten = torch.export.export(torch_model, (torch.rand(*shape),))
-        exir_program_edge = executorch.exir.to_edge(exir_program_aten).exported_program()
-
-        with pytest.raises(
-            AssertionError, match=r"'outputs' argument should be None for ExportedProgram"
-        ):
-            ct.convert(
-                exir_program_edge,
-                convert_to=backend[0],
-                outputs=[ct.TensorType(name="result")],
-            )
-
-    @staticmethod
-    @pytest.mark.parametrize("backend", backends)
-    def test_source_dialect_metadata(torch_model, backend):
-        shape = (4, 10)
-        exir_program_aten = torch.export.export(torch_model, (torch.rand(*shape),))
-        exir_program_edge = executorch.exir.to_edge(exir_program_aten).exported_program()
-
-        mlmodel = ct.convert(
-            exir_program_edge,
-            source="pytorch",
-            convert_to=backend[0],
-        )
-
-        assert _METADATA_SOURCE_DIALECT in mlmodel.user_defined_metadata
-
-        assert mlmodel.user_defined_metadata[_METADATA_SOURCE_DIALECT] == "TorchExport::EDGE"
 
 
 @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
@@ -2956,3 +2861,15 @@ class TestTorchao:
 
         with pytest.raises(err_type, match=err_msg):
             ct.convert(exported_model, inputs=inputs, minimum_deployment_target=ct.target.iOS17)
+
+
+class TestUtilsImport:
+    @staticmethod
+    def test_import_construct_matmul():
+        """
+        _construct_matmul is an utility function that used by some 3rd party codes,
+        so here we make sure that this method is exposed.
+        """
+        from coremltools.converters.mil.frontend.torch.ops import _construct_matmul
+
+        assert _construct_matmul is not None

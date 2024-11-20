@@ -5,6 +5,8 @@
 
 import copy
 import os
+import platform
+import shutil
 import tempfile
 from collections import Counter
 
@@ -17,6 +19,12 @@ from coremltools.converters.mil import Builder as mb
 from coremltools.converters.mil import mil
 from coremltools.converters.mil.mil import Function, get_new_symbol, types
 from coremltools.converters.mil.testing_utils import get_op_types_in_program
+from coremltools.models.compute_device import (
+    MLComputeDevice,
+    MLCPUComputeDevice,
+    MLNeuralEngineComputeDevice,
+)
+from coremltools.models.compute_plan import MLComputePlan, MLModelStructure
 
 if _HAS_TORCH:
     import torch
@@ -571,3 +579,226 @@ class TestGraphPassManagement:
                 convert_to="mlprogram",
                 pass_pipeline=pipeline,
             )
+
+
+@pytest.mark.skipif(
+    ct.utils._macos_version() < (14, 0),
+    reason="MLComputeDevice API is available for macos versions >= 14.0.",
+)
+class TestMLComputeDevice:
+    def test_all_compute_devices(self):
+        compute_devices = MLComputeDevice.get_all_compute_devices()
+        assert len(compute_devices) > 0, "Expected at least one compute device to be available."
+        cpu_compute_devices = list(
+            filter(
+                lambda compute_device: isinstance(compute_device, MLCPUComputeDevice),
+                compute_devices,
+            )
+        )
+        assert (
+            len(cpu_compute_devices) == 1
+        ), "Expected exactly one MLCPUComputeDevice to be present."
+
+    def test_available_compute_devices(self):
+        compute_devices = ct.models.MLModel.get_available_compute_devices()
+        assert len(compute_devices) > 0, "Expected at least one compute device to be available."
+
+    def test_neural_engine_core_count(self):
+        compute_devices = MLComputeDevice.get_all_compute_devices()
+        neural_engine_compute_devices = filter(
+            lambda compute_device: isinstance(compute_device, MLNeuralEngineComputeDevice),
+            compute_devices,
+        )
+        neural_engine_compute_device: MLNeuralEngineComputeDevice = next(
+            neural_engine_compute_devices, None
+        )
+        if neural_engine_compute_device is not None:
+            assert (
+                neural_engine_compute_device.total_core_count > 0
+            ), "Expected at least one NeuralEngine core to be available."
+
+
+@pytest.mark.skipif(
+    ct.utils._macos_version() < (14, 4),
+    reason="MLModelStructure API is available for macos versions >= 14.4.",
+)
+class TestMLModelStructure:
+    @staticmethod
+    def _get_test_model(type: str):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20)), mb.TensorSpec(shape=(10, 20))])
+        def prog(x, y):
+            return (mb.add(x=x, y=y), mb.sub(x=x, y=y))
+
+        mlmodel = ct.convert(copy.deepcopy(prog), convert_to=type)
+        return mlmodel
+
+    def test_mlprogram_structure(self):
+        model = TestMLModelStructure._get_test_model(type="mlprogram")
+        model_structure = MLModelStructure.load_from_path(model.get_compiled_model_path())
+        assert model_structure.program is not None, "program must not be None."
+        program = model_structure.program
+        assert program.functions.get("main", None) is not None, "Expected main function."
+        function = program.functions["main"]
+        assert len(function.inputs) == 2
+        block = program.functions["main"].block
+        assert len(block.output_names) == 2
+        assert block is not None, "Specialization block must not be None."
+        VALID_OPERATORS = {"add", "sub", "cast", "const"}
+        for operation in block.operations:
+            assert (
+                operation.operator_name in VALID_OPERATORS
+            ), f"Expected operator to be one of {', '.join(VALID_OPERATORS)}, but got '{operation.operator_name}'."
+
+    def test_neuralnetwork_structure(self):
+        model = TestMLModelStructure._get_test_model(type="neuralnetwork")
+        model_structure = MLModelStructure.load_from_path(model.get_compiled_model_path())
+        assert model_structure.neuralnetwork is not None, "NeuralNetwork must not be None."
+        neuralnetwork = model_structure.neuralnetwork
+        VALID_OPERATORS = {"elementwise", "activation"}
+        for layer in neuralnetwork.layers:
+            assert (
+                layer.type in VALID_OPERATORS
+            ), f"Expected layer type to be one of {', '.join(VALID_OPERATORS)}, but got '{layer.type}'."
+
+
+@pytest.mark.skipif(
+    ct.utils._macos_version() < (14, 4),
+    reason="MLComputePlan API is available for macos versions >= 14.4.",
+)
+class TestMLComputePlan:
+    @staticmethod
+    def _get_test_model(type: str):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20)), mb.TensorSpec(shape=(10, 20))])
+        def prog(x, y):
+            return (mb.add(x=x, y=y), mb.sub(x=x, y=y))
+
+        mlmodel = ct.convert(copy.deepcopy(prog), convert_to=type)
+        return mlmodel
+
+    def test_mlprogram_compute_plan(self):
+        model = TestMLModelStructure._get_test_model(type="mlprogram")
+        compute_plan = MLComputePlan.load_from_path(
+            model.get_compiled_model_path(),
+            compute_units=ct.ComputeUnit.CPU_ONLY,
+        )
+        assert compute_plan is not None, "Compute Plan must not be None."
+        program = compute_plan.model_structure.program
+        for operation in program.functions["main"].block.operations:
+            if operation.operator_name in {"const", "cast"}:
+                continue
+
+            compute_device_usage = compute_plan.get_compute_device_usage_for_mlprogram_operation(
+                operation=operation,
+            )
+
+            assert compute_device_usage is not None
+            assert isinstance(compute_device_usage.preferred_compute_device, MLCPUComputeDevice)
+            assert len(compute_device_usage.supported_compute_devices) > 0
+            for compute_device in compute_device_usage.supported_compute_devices:
+                assert isinstance(compute_device, MLComputeDevice)
+
+            if platform.machine() == "x86_64":
+                pytest.xfail("rdar://140167930 ([CI] Estimated cost assert fails on x86_64)")
+
+            estimated_cost = compute_plan.get_estimated_cost_for_mlprogram_operation(
+                operation=operation,
+            )
+
+            assert estimated_cost is not None
+            assert estimated_cost.weight >= 0.0 and estimated_cost.weight <= 1.0
+
+    def test_neuralnetwork_compute_plan(self):
+        model = TestMLModelStructure._get_test_model(type="neuralnetwork")
+        compute_plan = MLComputePlan.load_from_path(model.get_compiled_model_path())
+        assert compute_plan is not None, "Compute Plan must not be None."
+        neuralnetwork = compute_plan.model_structure.neuralnetwork
+        for layer in neuralnetwork.layers:
+            compute_device_usage = compute_plan.get_compute_device_usage_for_neuralnetwork_layer(
+                layer=layer,
+            )
+
+            assert compute_device_usage is not None
+            assert isinstance(compute_device_usage.preferred_compute_device, MLComputeDevice)
+            assert len(compute_device_usage.supported_compute_devices) > 0
+            for compute_device in compute_device_usage.supported_compute_devices:
+                assert isinstance(compute_device, MLComputeDevice)
+
+
+@pytest.mark.skipif(
+    ct.utils._macos_version() < (13, 0),
+    reason="MLModelAsset API is available for macos versions >= 13.0.",
+)
+class TestMLModelAsset:
+    @staticmethod
+    def _get_test_model(type: str) -> ct.models.MLModel:
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1,)), mb.TensorSpec(shape=(1,))])
+        def prog(x, y):
+            return mb.add(x=mb.square(x=x), y=mb.square(x=y))
+
+        mlmodel = ct.convert(copy.deepcopy(prog), convert_to=type)
+        return mlmodel
+
+    @staticmethod
+    def _get_test_model_with_weights(type: str) -> ct.models.MLModel:
+        @mb.program(input_specs=[mb.TensorSpec(shape=(4, 500))])
+        def linear_prog(input):
+            W = mb.const(val=np.ones((100, 500), dtype=float), name="const_W")
+            out = mb.linear(x=input, weight=W, name="output")
+            return out
+
+        # convert and save model on disk
+        mlmodel = ct.convert(linear_prog, convert_to=type)
+        return mlmodel
+
+    def test_inmemory_model(self):
+        model = TestMLModelAsset._get_test_model(type="mlprogram")
+        model_spec = model.get_spec()
+        spec_data = model_spec.SerializeToString()
+        asset = ct.models.model.MLModelAsset.from_memory(spec_data=spec_data)
+        assert asset is not None, "Asset must not be none."
+        compiled_model = ct.models.CompiledMLModel.from_asset(asset=asset)
+        assert compiled_model is not None, "Compiled model must not be none."
+        result = model.predict(
+            {
+                "x": np.array([1.0]),
+                "y": np.array([2.0]),
+            }
+        )
+        value = next(iter(result.values()))
+        assert np.allclose(value, np.array([5.0])), "Value must be 5.0."
+
+    @staticmethod
+    def _remove_path(path):
+        if os.path.isdir(path):
+            shutil.rmtree(path)
+        else:
+            os.remove(path)
+
+    @pytest.mark.skipif(
+        ct.utils._macos_version() < (15, 0),
+        reason="MLModelAsset blob mapping API is available for macos versions >= 15.0.",
+    )
+    def test_inmemory_model_blob_mapping(self):
+        model = TestMLModelAsset._get_test_model_with_weights(type="mlprogram")
+        weight_file_path = model.weights_dir + "/" + ct.utils._WEIGHTS_FILE_NAME
+        with open(weight_file_path, "rb") as file:
+            weights_data = file.read()
+            model_spec = model.get_spec()
+            spec_data = model_spec.SerializeToString()
+            asset = ct.models.model.MLModelAsset.from_memory(
+                spec_data=spec_data, blob_mapping={"weights/weight.bin": weights_data}
+            )
+            assert asset is not None, "Asset must not be none."
+            compiled_model = ct.models.CompiledMLModel.from_asset(asset=asset)
+            assert compiled_model is not None, "Compiled model must not be none."
+            result = model.predict(
+                {
+                    "input": np.ones((4, 500), dtype=float),
+                }
+            )
+            value = next(iter(result.values()))
+            assert np.allclose(
+                value, np.full((4, 100), 500.0, float)
+            ), "Value must be close to 500.0."
+
+        TestMLModelAsset._remove_path(model.package_path)

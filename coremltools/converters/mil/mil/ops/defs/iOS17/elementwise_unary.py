@@ -26,13 +26,13 @@ class cast(_cast_iOS15):
 
     Parameters
     ----------
-    x: tensor<[\*d], T> (Required)
+    x: tensor<[\\*d], T> (Required)
     dtype: const str (Required)
         * Can be one of the following types: ``int8``, ``uint8``, ``int16``, ``uint16``, ``int32``, ``fp16``, ``fp32``, or ``bool``.
 
     Returns
     -------
-    tensor<[\*d], dtype>
+    tensor<[\\*d], dtype>
         * A tensor of the same shape as ``x``, with type ``dtype``.
 
     Attributes
@@ -69,13 +69,13 @@ class clip(_clip_iOS15):
 
     Parameters
     ----------
-    x: tensor<[\*d], T> (Required)
+    x: tensor<[\\*d], T> (Required)
     alpha: const T (Required)
     beta: const T (Required)
 
     Returns
     -------
-    tensor<[\*d], T>
+    tensor<[\\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
@@ -101,7 +101,7 @@ class inverse(_inverse_iOS15):
 
     Parameters
     ----------
-    x: tensor<[\*d], T> (Required)
+    x: tensor<[\\*d], T> (Required)
     epsilon: const U (Optional, default=1e-4)
         * This is a small constant that is added to the input, before taking its
           inverse, for stability.
@@ -109,7 +109,7 @@ class inverse(_inverse_iOS15):
 
     Returns
     -------
-    tensor<[\*d], T>
+    tensor<[\\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
@@ -138,14 +138,14 @@ class log(_log_iOS15):
 
     Parameters
     ----------
-    x: tensor<[\*d], T> (Required)
+    x: tensor<[\\*d], T> (Required)
     epsilon: const U (Optional, default=1e-45)
         * This is a small constant that is added to the input, before taking log.
         * ``y = log(x + epsilon)``.
 
     Returns
     -------
-    tensor<[\*d], T>
+    tensor<[\\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
@@ -174,7 +174,7 @@ class rsqrt(_rsqrt_iOS15):
 
     Parameters
     ----------
-    x: tensor<[\*d], T> (Required)
+    x: tensor<[\\*d], T> (Required)
     epsilon: const U (Optional, default=1e-12)
         * This is a small constant that is added to the input, before applying the
           ``rsqrt`` function, for stability.
@@ -182,7 +182,7 @@ class rsqrt(_rsqrt_iOS15):
 
     Returns
     -------
-    tensor<[\*d], T>
+    tensor<[\\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes

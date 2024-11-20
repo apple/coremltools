@@ -758,6 +758,19 @@ def test_finalize_without_forward(simple_model):
     assert torch.equal(simple_model.fc2.weight, finalized_model.fc2.weight)
 
 
+# Added to test rdar://130017103 (DKMPalettizerConfig incorrectly sets module_type_configs when initializing with module_name_configs)
+def test_config_initialization_from_module_name_configs(simple_model):
+    palettization_layer_config_dict = {
+        "conv1": ModuleDKMPalettizerConfig(n_bits=5, milestone=0),
+        "fc2": ModuleDKMPalettizerConfig(n_bits=3, milestone=0),
+    }
+
+    config = DKMPalettizerConfig(module_name_configs=palettization_layer_config_dict)
+
+    assert len(config.module_type_configs) == 0
+    assert config.module_name_configs == palettization_layer_config_dict
+
+
 def test_deprecated_api():
     with pytest.raises(DeprecationWarning):
         config = DKMPalettizerConfig.from_dict({"global_config": {"partition_size": 100}})

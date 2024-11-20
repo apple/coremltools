@@ -209,7 +209,7 @@ class complex_fft(operation.Operation):
 
     Parameters
     ----------
-    data: tensor<\*D, T> (Required)
+    data: tensor<\\*D, T> (Required)
         * The input tensor.
     n: const i32 (Optional. Default=None)
         * Signal length. If given, the input will either be zero-padded or trimmed to this length
@@ -228,7 +228,7 @@ class complex_fft(operation.Operation):
 
     Returns
     -------
-    tensor<\*V, complex64>
+    tensor<\\*V, complex64>
         * A complex tensor where real and imag parts have the same shape.
         * If ``n`` is None, real's and imag's shapes are same as the input.
         * If ``n`` is specified, shape is ``V[dim]=n``.
@@ -283,7 +283,7 @@ class complex_fftn(operation.Operation):
 
     Parameters
     ----------
-    data: tensor<\*D, T> (Required)
+    data: tensor<\\*D, T> (Required)
         * The input tensor.
     shapes: const tensor<rank(data), i32> (Optional. Default=None)
         * Signal size in the transformed dimensions. If given, each dimension ``dims[i]`` will
@@ -305,7 +305,7 @@ class complex_fftn(operation.Operation):
 
     Returns
     -------
-    tensor<\*V, complex64>
+    tensor<\\*V, complex64>
         * A complex tensor where real and imag parts have the same shape.
         * If ``shapes`` and ``dims`` are both None, real's and imag's shapes are same as the input.
         * If ``shapes`` or ``dims`` is specified, shape is ``V[dim]=shapes[dim] for dim in dims``.
@@ -366,7 +366,7 @@ class complex_rfft(operation.Operation):
 
     Returns
     -------
-    tensor<\*V, complex64>
+    tensor<\\*V, complex64>
         * Based on the output of FFT, further remove the redundant conjugate part, which means
           ``V[dim] = V[dim] // 2 + 1``.
 
@@ -424,7 +424,7 @@ class complex_rfftn(operation.Operation):
 
     Returns
     -------
-    tensor<\*V, complex64>
+    tensor<\\*V, complex64>
         * Based on the output of N-D FFT, further remove the redundant conjugate part in last dim,
           which means ``V[dims[-1]] = V[dims[-1]] // 2 + 1``.
 
@@ -487,7 +487,7 @@ class complex_ifft(operation.Operation):
 
     Returns
     -------
-    tensor<\*V, T>
+    tensor<\\*V, T>
         * A complex tensor where real and imag parts have the same shape. The shape is the same as
           the input except for the ``dim``:
             * If ``n`` is None, the shape is same as the input.
@@ -548,7 +548,7 @@ class complex_ifftn(operation.Operation):
 
     Returns
     -------
-    tensor<\*V, T>
+    tensor<\\*V, T>
         * A complex tensor where real and imag parts have the same shape. The shape is the same as
           the input except for the ``dim`` in ``dims``:
             * If ``shapes`` and ``dims`` are both None, the shape is same as the input.
@@ -603,7 +603,7 @@ class complex_irfft(operation.Operation):
 
     Returns
     -------
-    tensor<\*V, fp32>
+    tensor<\\*V, fp32>
         * The shape is the same as the input except for the ``dim``:
             * If ``n`` is None, the shape at the `dim` is ``V[dim] = 2 * (D[dim] - 1)``.
             * If ``n`` is specified, the shape at the `dim` is ``V[dim]=n``.
@@ -654,7 +654,7 @@ class complex_irfftn(operation.Operation):
 
     Returns
     -------
-    tensor<\*V, fp32>
+    tensor<\\*V, fp32>
         * The shape is the same as the input except for:
             * If ``shapes`` and ``dims`` are both None, shape at the last dim ``V[-1]``  is
               ``2 * (D[-1] - 1)``.
@@ -780,7 +780,7 @@ class complex_stft(operation.Operation):
 
     Parameters
     ----------
-    input: tensor<\*D, T> (Required)
+    input: tensor<\\*D, T> (Required)
         * The input tensor.
     n_fft: const i32 (Required)
         * Size of the fourier transform.
@@ -797,7 +797,7 @@ class complex_stft(operation.Operation):
 
     Returns
     -------
-    tensor<\*V, complex64>
+    tensor<\\*V, complex64>
         * A complex tensor where real and imag parts have the same shape.
 
     Attributes

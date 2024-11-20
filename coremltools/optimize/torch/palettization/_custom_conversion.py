@@ -3,29 +3,48 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from typing import Dict as _Dict
+from typing import Type as _Type
+
 import torch as _torch
 import torch.nn as _nn
-import torch.nn.qat as _nnqat
 
 from coremltools.optimize.torch._utils.metadata_utils import (
     CompressionMetadata as _CompressionMetadata,
 )
+from coremltools.optimize.torch._utils.python_utils import ClassRegistryMixin as _ClassRegistryMixin
+from coremltools.optimize.torch.palettization._supported_modules import (
+    Conv1d,
+    Conv2d,
+    Conv3d,
+    Embedding,
+    LayerNorm,
+    Linear,
+    MultiheadAttention,
+)
 
-from ._supported_modules import Conv1d, Embedding, LayerNorm, MultiheadAttention
 
-
-class PalettizationCustomConversionBase(_nn.Module):
+class PalettizationConverterRegistry(_ClassRegistryMixin):
     """
-    PalettizationCustomConversionBase is the base class for palettized model conversion. It implements the
+    A registry of converts for converting a palettized module to a
+    finalized module with de-palettized parameters.
+    """
+
+
+class PalettizationConverterBase(_nn.Module):
+    """
+    PalettizationCustomConverterBase is the base class for palettized model conversion. It implements the
     get_finalized_weights method which returns the palettized weights from ``LUT`` and ``indices``
     post-palettization.
     """
 
-    def __init__(self):
-        super().__init__()
+    _OBSERVED_MODULE: _Type
+
+    def __init_subclass__(cls):
+        PalettizationConverterRegistry.register(cls._OBSERVED_MODULE)(cls)
 
     @classmethod
-    def do_attribute_assertions(cls, observed_module: _nn.Module):
+    def validate_observed_module(cls, observed_module: _nn.Module):
         assert hasattr(
             observed_module, "qconfig"
         ), f"Module {type(observed_module)} has no attribute qconfig"
@@ -37,7 +56,7 @@ class PalettizationCustomConversionBase(_nn.Module):
         )
 
     @classmethod
-    def get_finalized_weights(cls, observed_module: _nn.Module):
+    def get_finalized_weights(cls, observed_module: _nn.Module) -> _torch.Tensor:
         if observed_module.weight_fake_quant.partitions:
             return observed_module.weight_fake_quant.forward(observed_module.weight.detach())
         return observed_module.weight
@@ -55,6 +74,9 @@ class PalettizationCustomConversionBase(_nn.Module):
                 for i in range(observed_module.weight.dim() + 2 - lut.dim()):
                     lut = lut.unsqueeze(-3)
                 compression_metadata.lut = lut
+                if getattr(observed_module, dir_key).cluster_dim > 1:
+                    vector_ch_axis = getattr(observed_module, dir_key).vector_ch_axis
+                    compression_metadata.vector_axis = vector_ch_axis
                 if getattr(observed_module, dir_key).enable_per_channel_scale:
                     per_channel_scaling_factor = getattr(
                         observed_module, dir_key
@@ -65,7 +87,7 @@ class PalettizationCustomConversionBase(_nn.Module):
                 compression_metadata.register(return_module)
 
     @classmethod
-    def from_observed(cls, observed_module: _nn.Module):
+    def from_observed(cls, observed_module: _nn.Module) -> _nn.Module:
         """
         The classes that base-class this class will have to implement the ``from_observed`` method to tell the
         convert method what type of a module to return through Pytorch's conversion.
@@ -73,17 +95,16 @@ class PalettizationCustomConversionBase(_nn.Module):
         raise NotImplementedError()
 
 
-class LinearPalettizationConversion(PalettizationCustomConversionBase):
+class LinearPalettizationConverter(PalettizationConverterBase):
     """
     Conversion class for Linear.
     """
 
-    def __init__(self):
-        super().__init__()
+    _OBSERVED_MODULE: _Type = Linear
 
     @classmethod
-    def from_observed(cls, observed_module: _nn.Module):
-        cls.do_attribute_assertions(observed_module)
+    def from_observed(cls, observed_module: _nn.Module) -> _nn.Module:
+        cls.validate_observed_module(observed_module)
         finalized_weights = cls.get_finalized_weights(observed_module)
         return_module = _nn.Linear(
             in_features=observed_module.in_features,
@@ -100,17 +121,16 @@ class LinearPalettizationConversion(PalettizationCustomConversionBase):
         return return_module
 
 
-class Conv1dPalettizationConversion(PalettizationCustomConversionBase):
+class Conv1dPalettizationConverter(PalettizationConverterBase):
     """
     Conversion class for Conv2d.
     """
 
-    def __init__(self):
-        super().__init__()
+    _OBSERVED_MODULE: _Type = Conv1d
 
     @classmethod
-    def from_observed(cls, observed_module: _nn.Module):
-        cls.do_attribute_assertions(observed_module)
+    def from_observed(cls, observed_module: _nn.Module) -> _nn.Module:
+        cls.validate_observed_module(observed_module)
         finalized_weights = cls.get_finalized_weights(observed_module)
         return_module = _nn.Conv1d(
             in_channels=observed_module.in_channels,
@@ -133,17 +153,16 @@ class Conv1dPalettizationConversion(PalettizationCustomConversionBase):
         return return_module
 
 
-class Conv2dPalettizationConversion(PalettizationCustomConversionBase):
+class Conv2dPalettizationConverter(PalettizationConverterBase):
     """
     Conversion class for Conv2d.
     """
 
-    def __init__(self):
-        super().__init__()
+    _OBSERVED_MODULE: _Type = Conv2d
 
     @classmethod
-    def from_observed(cls, observed_module: _nn.Module):
-        cls.do_attribute_assertions(observed_module)
+    def from_observed(cls, observed_module: _nn.Module) -> _nn.Module:
+        cls.validate_observed_module(observed_module)
         finalized_weights = cls.get_finalized_weights(observed_module)
         return_module = _nn.Conv2d(
             in_channels=observed_module.in_channels,
@@ -166,17 +185,16 @@ class Conv2dPalettizationConversion(PalettizationCustomConversionBase):
         return return_module
 
 
-class Conv3dPalettizationConversion(PalettizationCustomConversionBase):
+class Conv3dPalettizationConverter(PalettizationConverterBase):
     """
     Conversion class for Conv3d.
     """
 
-    def __init__(self):
-        super().__init__()
+    _OBSERVED_MODULE: _Type = Conv3d
 
     @classmethod
-    def from_observed(cls, observed_module: _nn.Module):
-        cls.do_attribute_assertions(observed_module)
+    def from_observed(cls, observed_module: _nn.Module) -> _nn.Module:
+        cls.validate_observed_module(observed_module)
         finalized_weights = cls.get_finalized_weights(observed_module)
         return_module = _nn.Conv3d(
             in_channels=observed_module.in_channels,
@@ -199,17 +217,16 @@ class Conv3dPalettizationConversion(PalettizationCustomConversionBase):
         return return_module
 
 
-class LayerNormPalettizationConversion(PalettizationCustomConversionBase):
+class LayerNormPalettizationConverter(PalettizationConverterBase):
     """
     Conversion class for LayerNorm.
     """
 
-    def __init__(self):
-        super().__init__()
+    _OBSERVED_MODULE: _Type = LayerNorm
 
     @classmethod
     def from_observed(cls, observed_module: _nn.Module):
-        cls.do_attribute_assertions(observed_module)
+        cls.validate_observed_module(observed_module)
         finalized_weights = cls.get_finalized_weights(observed_module)
         return_module = _nn.LayerNorm(
             normalized_shape=observed_module.normalized_shape,
@@ -227,16 +244,15 @@ class LayerNormPalettizationConversion(PalettizationCustomConversionBase):
         return return_module
 
 
-class MultiheadAttentionPalettizationConversion(PalettizationCustomConversionBase):
+class MultiheadAttentionPalettizationConverter(PalettizationConverterBase):
     """
     Conversion class for MultiheadAttention.
     """
 
-    def __init__(self):
-        super().__init__()
+    _OBSERVED_MODULE: _Type = MultiheadAttention
 
     @classmethod
-    def do_attribute_assertions(cls, observed_module: _nn.Module):
+    def validate_observed_module(cls, observed_module: _nn.Module):
         assert hasattr(
             observed_module, "qconfig"
         ), f"Module {type(observed_module)} has no attribute qconfig"
@@ -263,8 +279,8 @@ class MultiheadAttentionPalettizationConversion(PalettizationCustomConversionBas
             )
 
     @classmethod
-    def from_observed(cls, observed_module: _nn.Module):
-        cls.do_attribute_assertions(observed_module)
+    def from_observed(cls, observed_module: _nn.Module) -> _nn.Module:
+        cls.validate_observed_module(observed_module)
         add_bias_kv = observed_module.bias_k is not None and observed_module.bias_v is not None
         bias = (
             observed_module.out_proj.bias is not None and observed_module.in_proj_bias is not None
@@ -320,17 +336,16 @@ class MultiheadAttentionPalettizationConversion(PalettizationCustomConversionBas
         return return_module
 
 
-class EmbeddingPalettizationConversion(PalettizationCustomConversionBase):
+class EmbeddingPalettizationConverter(PalettizationConverterBase):
     """
     Conversion class for Embedding.
     """
 
-    def __init__(self):
-        super().__init__()
+    _OBSERVED_MODULE: _Type = Embedding
 
     @classmethod
-    def from_observed(cls, observed_module: _nn.Module):
-        cls.do_attribute_assertions(observed_module)
+    def from_observed(cls, observed_module: _nn.Module) -> _nn.Module:
+        cls.validate_observed_module(observed_module)
         finalized_weights = cls.get_finalized_weights(observed_module)
         return_module = _nn.Embedding(
             num_embeddings=observed_module.num_embeddings,
@@ -350,16 +365,10 @@ class EmbeddingPalettizationConversion(PalettizationCustomConversionBase):
         return return_module
 
 
-# Dictionary to map nnqat modules to Custom Conversion class. Each of these Custom Conversion classes
-# implement a ``from_observed`` method which is used to create original modules from qat modules.
-PALETTIZATION_CONVERT_DICT = {
-    "observed_to_quantized_custom_module_class": {
-        _nnqat.Linear: LinearPalettizationConversion,
-        _nnqat.Conv2d: Conv2dPalettizationConversion,
-        _nnqat.Conv3d: Conv3dPalettizationConversion,
-        Conv1d: Conv1dPalettizationConversion,
-        LayerNorm: LayerNormPalettizationConversion,
-        Embedding: EmbeddingPalettizationConversion,
-        MultiheadAttention: MultiheadAttentionPalettizationConversion,
-    }
-}
+def get_conversion_custom_config_dict() -> _Dict[str, _Dict[_Type, _Type]]:
+    """
+    Returns a dictionary to mapping palettized modules to custom conversion class.
+    A custom conversion class derives from :py:class:`PalettizationCustomConverterBase` and
+    implements a ``from_observed`` method which creates de-palettized from palettized modules.
+    """
+    return {"observed_to_quantized_custom_module_class": PalettizationConverterRegistry.REGISTRY}

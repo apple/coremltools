@@ -31,6 +31,9 @@ from coremltools.optimize.torch.optimization_config import (
     _deprecated_field,
     _validate_module_type_keys_factory,
 )
+from coremltools.optimize.torch.palettization._supported_modules import (
+    DKMPalettizerModulesRegistry as _DKMPalettizerModulesRegistry,
+)
 
 # Default advanced options for palettization
 DEFAULT_PALETTIZATION_ADVANCED_OPTIONS = {
@@ -55,7 +58,7 @@ DEFAULT_PALETTIZATION_ADVANCED_OPTIONS = {
     "per_channel_scaling_factor_scheme": "min_max",
     "percentage_palett_enable": 1.0,
     "kmeans_batch_threshold": 4,
-    "kmeans_n_init": 100,
+    "kmeans_n_init": 10,
     "zero_threshold": 1e-7,
     "kmeans_error_bnd": 0.0,
     "channel_axis": 0,
@@ -475,7 +478,9 @@ class DKMPalettizerConfig(_OptimizationConfig):
         validator=_validators.deep_mapping(
             key_validator=_validators.and_(
                 _validators.instance_of((str, _Callable)),
-                _validate_module_type_keys_factory(list(DEFAULT_PALETTIZATION_SCHEME.keys())),
+                _validate_module_type_keys_factory(
+                    list(_DKMPalettizerModulesRegistry.get_supported_modules())
+                ),
             ),
             value_validator=_validate_dkm_config_type,
             mapping_validator=_validators.instance_of(dict),

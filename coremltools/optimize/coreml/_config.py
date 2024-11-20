@@ -579,7 +579,7 @@ class OpPalettizerConfig(OpCompressorConfig):
     nbits: int
         Number of bits per weight. Required for ``kmeans`` or ``uniform`` mode, but must
         not be set for ``unique`` or ``custom`` mode. A LUT would have
-        2\ :sup:`nbits` entries, where `nbits` can be ``{1, 2, 3, 4, 6, 8}``.
+        2\\ :sup:`nbits` entries, where `nbits` can be ``{1, 2, 3, 4, 6, 8}``.
 
     mode: str
         Determine how the LUT is constructed by specifying one of the following:

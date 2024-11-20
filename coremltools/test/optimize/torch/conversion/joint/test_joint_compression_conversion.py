@@ -3,7 +3,6 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-
 import pytest
 
 ct = pytest.importorskip("coremltools")
@@ -12,7 +11,6 @@ from coremltools.optimize.torch.layerwise_compression import (
     LayerwiseCompressor,
     LayerwiseCompressorConfig,
 )
-from coremltools.optimize.torch.palettization import DKMPalettizer, DKMPalettizerConfig
 from coremltools.optimize.torch.pruning import MagnitudePruner, MagnitudePrunerConfig
 from coremltools.optimize.torch.quantization import LinearQuantizer, LinearQuantizerConfig
 
@@ -54,7 +52,6 @@ def test_joint_pruning_quantization(mnist_model, mnist_example_input):
             "constexpr_sparse_blockwise_shift_scale",
         ],
     )
-
 
 
 @pytest.mark.skipif(ct.utils._macos_version() < (15, 0), reason="Only supported on macOS 15+")

@@ -27,6 +27,7 @@ from coremltools.converters.mil.mil.ops.defs._utils import (
     promote_input_dtypes,
     solve_slice_by_index_shape,
 )
+from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry
 from coremltools.converters.mil.mil.scope import ScopeInfo, ScopeSource
 from coremltools.converters.mil.mil.types import is_bool, nptype_from_builtin
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbolic
@@ -58,6 +59,9 @@ PYTORCH_DEFAULT_VALUE = 2**63 - 1
 VALUE_CLOSE_TO_INFINITY = 1e+38
 
 TORCH_STRING_ARGS = {
+    # div rounding mode
+    "floor",
+    "trunc",
     # conv padding
     "same",
     "valid",
@@ -71,6 +75,9 @@ TORCH_STRING_ARGS = {
     "constant",
     "reflect",
     "replicate",
+
+    # norm
+    "fro",
 }
 
 
@@ -160,7 +167,11 @@ def convert_single_node(context: TranscriptionContext, node: InternalTorchIRNode
     with mb.scope(*scopes):
         if context.frontend == TorchFrontend.TORCHSCRIPT:
             context.quant_context.maybe_handle_quantized_inputs(node)
-        context.prepare_for_conversion(node)
+
+        # Only torch script needs to prepare
+        if context.frontend == TorchFrontend.TORCHSCRIPT:
+            context.convert_input_to_tensor_type(node)
+
         add_op(context, node)
         if _TORCH_OPS_REGISTRY.is_inplace_op(op_lookup):
             context.process_inplace_op(node)
@@ -213,14 +224,24 @@ def _get_bindings(context, alist) -> List[Var]:
 
     for i in alist:
         if isinstance(i, str):
+            """
+            torch.export args can be type of string:
+            1. torch script strictly has name: variable mapping
+            2. certain torch.export args can be strings,
+               e.g. pad type. Since those args were equivalently enums, we introduced TORCH_STRING_ARGS
+            3. some torch.export args can be arbitrary string, hence we just raise an warning.
+
+            rdar://138953006 ([Torch.Export] Enforce `Name: Variable` Mapping in Context)
+            The above radar is tracking if all string can fit in the context.
+            """
             if i in context:
                 results.append(context[i])
             elif i in TORCH_STRING_ARGS:
                 results.append(i)
             else:
-                raise ValueError(
+                logger.warning(
                     f"Binding {i} is neither a name of exisitng var in context, "
-                    "nor a torch string argument"
+                    "nor a torch string argument."
                 )
         elif isinstance(i, (list, tuple)) and all(isinstance(j, int) for j in i):
             results.append(mb.const(val=i))
@@ -372,6 +393,26 @@ def _construct_constant(val, name):
         return None
     else:
         return mb.const(val=val, name=name)
+
+
+def _cast_to(_input: Union[Var, np.ndarray], dtype_str: str, node_name: str) -> Var:
+    """Create a Var to cast from input to target dtype."""
+    valid_dtypes = SSAOpRegistry._get_core_op_cls("cast").supported_dtypes()
+    if dtype_str in valid_dtypes:
+        res = mb.cast(x=_input, dtype=dtype_str)
+    else:
+        np_dtype = types.nptype_from_builtin(types.string_to_builtin(dtype_str))
+        if _np.issubdtype(np_dtype, _np.integer):
+            target_dtype = "int32"
+        elif _np.issubdtype(np_dtype, _np.floating):
+            target_dtype = "fp32"
+        else:
+            raise ValueError(f"Unsupported `to` op ({node_name}) with target dtype {np_dtype}")
+        logger.warning(
+            f"The {dtype_str} is not supported by cast op. Will do best-effort cast to {target_dtype}"
+        )
+        res = mb.cast(x=_input, dtype=target_dtype)
+    return res
 
 
 @register_torch_op
@@ -591,35 +632,37 @@ def norm(context, node):
 
 
 def _vector_norm(x, order, dim, keep_dims, name):
+    if isinstance(order, Var):
+        order = order.val
     # 0 norm is special
-    if order.val == 0:
+    if order == 0:
         # sum(x!=0)
         x = mb.cast(x=x, dtype="fp32")
         temp = mb.not_equal(x=x, y=0.)
         temp = mb.cast(x=temp, dtype='int32')
         temp = mb.reduce_sum(x=temp, axes=dim, keep_dims=keep_dims, name=name)
     # infinity norm is special
-    elif order.val > VALUE_CLOSE_TO_INFINITY:
+    elif order > VALUE_CLOSE_TO_INFINITY:
         # max(abs(x))
         temp = mb.abs(x=x)
         temp = mb.reduce_max(x=temp, axes=dim, keep_dims=keep_dims, name=name)
     # -infinity norm is special
-    elif order.val < -VALUE_CLOSE_TO_INFINITY:
+    elif order < -VALUE_CLOSE_TO_INFINITY:
         # min(abs(x))
         temp = mb.abs(x=x)
         temp = mb.reduce_min(x=temp, axes=dim, keep_dims=keep_dims, name=name)
     # Although 2 norm can fit in the general formula,
     # since it is very common, we have tailored kernel for it
-    elif order.val == 2:
+    elif order == 2:
         temp = mb.reduce_l2_norm(x=x, axes=dim, keep_dims=keep_dims, name=name)
     # use general formula to compute all other norms
     else:
         # sum(abs(x)^{order})^{(1 / order)}
         temp = mb.abs(x=x)
-        x, y = promote_input_dtypes([temp, order.val])
+        x, y = promote_input_dtypes([temp, order])
         temp = mb.pow(x=x, y=y)
         temp = mb.reduce_sum(x=temp, axes=dim, keep_dims=keep_dims)
-        temp = mb.pow(x=temp, y=1.0 / order.val, name=name)
+        temp = mb.pow(x=temp, y=1.0 / order, name=name)
     return temp
 
 
@@ -695,9 +738,21 @@ def narrow(context, node):
 
 @register_torch_op
 def linalg_vector_norm(context, node):
-    x, order, dim, keep_dims, _ = _get_inputs(context, node, expected=5)
-    assert x is not None and keep_dims is not None and order is not None
-    temp = _vector_norm(x=x, order=order, dim=dim, keep_dims=keep_dims, name=node.name)
+    inputs = _get_inputs(
+        context,
+        node,
+        expected={TorchFrontend.TORCHSCRIPT: 5},
+        min_expected={TorchFrontend.TORCHEXPORT: 1, TorchFrontend.EXECUTORCH: 1},
+    )
+    nargs = len(inputs)
+
+    x = inputs[0]
+    order = 2 if nargs < 2 else inputs[1]
+    dim = None if nargs < 3 else inputs[2]
+    keepdim = False if nargs < 4 else inputs[3]
+    assert x is not None and keepdim is not None and order is not None
+
+    temp = _vector_norm(x=x, order=order, dim=dim, keep_dims=keepdim, name=node.name)
     context.add(temp)
 
 
@@ -710,22 +765,33 @@ def linalg_matrix_norm(context, node):
     context.add(temp)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["linalg_norm.ord_str"])
 def linalg_norm(context, node):
-    x, order, dim, keep_dims, _ = _get_inputs(context, node, expected=5)
-    assert x is not None and keep_dims is not None
+    inputs = _get_inputs(
+        context,
+        node,
+        expected={TorchFrontend.TORCHSCRIPT: 5},
+        min_expected={TorchFrontend.TORCHEXPORT: 1, TorchFrontend.EXECUTORCH: 1},
+    )
+    nargs = len(inputs)
+
+    x = inputs[0]
+    order = None if nargs < 2 else inputs[1]
+    dim = None if nargs < 3 else inputs[2]
+    keepdim = False if nargs < 4 else inputs[3]
+
+    assert x is not None and keepdim is not None
     if dim is None:
         dim = _np.arange(x.rank)
     else:
         dim = dim.val
-    if order is None:
-        temp = mb.reduce_l2_norm(x=x, axes=dim, keep_dims=keep_dims, name=node.name)
+
+    if order is None or order == "fro":
+        temp = mb.reduce_l2_norm(x=x, axes=dim, keep_dims=keepdim, name=node.name)
     elif len(dim) == 2:
-        temp = _matrix_norm(
-            x=x, order=order, dim=dim, keep_dims=keep_dims, name=node.name
-        )
+        temp = _matrix_norm(x=x, order=order, dim=dim, keep_dims=keepdim, name=node.name)
     else:
-        temp = _vector_norm(x=x, order=order, dim=dim, keep_dims=keep_dims, name=node.name)
+        temp = _vector_norm(x=x, order=order, dim=dim, keep_dims=keepdim, name=node.name)
     context.add(temp)
 
 
@@ -923,18 +989,21 @@ def pixel_unshuffle(context, node):
     context.add(perm)
 
 
+def _construct_matmul(x: Var, y: Var, name: Optional[str] = None) -> Var:
+    if (len(y.shape) == 2 and len(x.shape) <= 3) and (_is_const(y) or y.is_descendant_of_const):
+        linear_x, weight = x, y
+        transposed_weight = mb.transpose(x=weight, perm=(1, 0))
+        res = mb.linear(x=linear_x, weight=transposed_weight, name=name)
+    else:
+        x, y = promote_input_dtypes([x, y])
+        res = mb.matmul(x=x, y=y, name=name)
+    return res
+
+
 @register_torch_op(torch_alias=["bmm", "mm"])
 def matmul(context, node):
-    inputs = _get_inputs(context, node, expected=2)
-    if (len(inputs[1].shape) == 2 and len(inputs[0].shape) <= 3) and (
-        _is_const(inputs[1]) or inputs[1].is_descendant_of_const
-    ):
-        linear_x, weight = inputs
-        transposed_weight = mb.transpose(x=weight, perm=(1, 0))
-        res = mb.linear(x=linear_x, weight=transposed_weight, name=node.name)
-    else:
-        x, y = promote_input_dtypes([inputs[0], inputs[1]])
-        res = mb.matmul(x=x, y=y, name=node.name)
+    x, y = _get_inputs(context, node, expected=2)
+    res = _construct_matmul(x, y, node.name)
     context.add(res)
 
 
@@ -961,23 +1030,6 @@ def add(context, node):
         x, y = promote_input_dtypes([x, y])
         add_node = mb.add(x=x, y=y, name=node.name)
     context.add(add_node)
-
-
-@register_torch_op
-def cumsum(context, node):
-    inputs = _get_inputs(context, node, min_expected=2)
-    x = inputs[0]
-    if is_bool(x.dtype):
-        x = mb.cast(x=x, dtype='int32')
-    src_dtype = builtin_to_string(x.dtype)
-    dst_dtype = src_dtype
-    if len(inputs) > 2 and inputs[2] and inputs[2].val:
-        dst_dtype = NUM_TO_DTYPE_STRING[inputs[2].val]    
-    
-    if src_dtype != dst_dtype:
-        x = mb.cast(x=x, dtype=dst_dtype)
-    res = mb.cumsum(x=x, axis=inputs[1], name=node.name)
-    context.add(res)
 
 
 @register_torch_op
@@ -1084,7 +1136,7 @@ def _convolution(context, node):
         context, node, bias, stride, padding, dilation, groups, out_padding
     ) -> Tuple[Var]:
         # Only torch.export may have kwargs
-        if context.frontend != TorchFrontend.TORCHEXPORT:
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
             return bias, stride, padding, dilation, groups, out_padding
 
         bias = _get_kwinputs(context, node, "bias", default=[bias])[0]
@@ -1476,74 +1528,113 @@ def eye(context, node):
 
 @register_torch_op
 def elu(context, node):
-    ## Torch port to ATen adds scale and input_scale which is set to 1
-    inputs = _get_inputs(context, node, expected=4)
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected={TorchFrontend.TORCHSCRIPT: 4},
+            min_expected={TorchFrontend.TORCHEXPORT: 1, TorchFrontend.EXECUTORCH: 1},
+        )
+        nargs = len(inputs)
 
-    res = mb.elu(x=inputs[0], alpha=inputs[1], name=node.name)
+        x = inputs[0]
+        alpha = 1 if nargs < 2 else inputs[1]
+
+        return x, alpha
+
+    x, alpha = _parse_positional_args(context, node)
+
+    res = mb.elu(x=x, alpha=alpha, name=node.name)
     context.add(res)
 
 
 @register_torch_op
 def leaky_relu(context, node):
-    inputs = _get_inputs(context, node, expected=2)
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, min_expected=1)
+        nargs = len(inputs)
 
-    res = mb.leaky_relu(x=inputs[0], alpha=inputs[1], name=node.name)
+        x = inputs[0]
+        negative_slope = inputs[1] if nargs > 1 else 0.01
+
+        return x, negative_slope
+
+    def _parse_keyword_args(context, node, negative_slope) -> Var:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return negative_slope
+
+        negative_slope = _get_kwinputs(context, node, "negative_slope", default=[negative_slope])[0]
+        return negative_slope
+
+    x, negative_slope = _parse_positional_args(context, node)
+    negative_slope = _parse_keyword_args(context, node, negative_slope)
+
+    res = mb.leaky_relu(x=x, alpha=negative_slope, name=node.name)
     context.add(res)
 
 
 @register_torch_op
 def rrelu(context, node):
-    inputs = _get_inputs(context, node, expected=5)
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected={TorchFrontend.TORCHSCRIPT: 5},
+            min_expected={TorchFrontend.TORCHEXPORT: 1, TorchFrontend.EXECUTORCH: 1},
+        )
+        nargs = len(inputs)
+
+        x = inputs[0]
+        lower = 0.125 if nargs < 2 else inputs[1].val
+        upper = 1.0 / 3.0 if nargs < 3 else inputs[2].val
+
+        return x, lower, upper
+
+    x, lower, upper = _parse_positional_args(context, node)
 
     # Alpha in evaluation mode is just the average between upper and lower.
-    lower_alpha = inputs[1]
-    upper_alpha = inputs[2]
-    alpha = (lower_alpha.val + upper_alpha.val) / 2
+    alpha = (lower + upper) / 2
 
-    res = mb.leaky_relu(x=inputs[0], alpha=alpha, name=node.name)
+    res = mb.leaky_relu(x=x, alpha=alpha, name=node.name)
     context.add(res)
 
 
 @register_torch_op
 def softplus(context, node):
-    inputs = _get_inputs(context, node, expected=3)
-    x, beta, threshold = inputs[0], inputs[1].val, inputs[2].val
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected={TorchFrontend.TORCHSCRIPT: 3},
+            min_expected={TorchFrontend.TORCHEXPORT: 1, TorchFrontend.EXECUTORCH: 1},
+        )
+        nargs = len(inputs)
 
-    np_type = nptype_from_builtin(x.dtype)
-    b = mb.const(val=np_type(beta))
-    t = mb.const(val=np_type(threshold))
+        x = inputs[0]
+        beta = float(inputs[1].val) if nargs > 1 else 1.0
+        threshold = float(inputs[2].val) if nargs > 2 else 20.0
 
-    # Most softplus operations in the model use default values.
-    # Using fewer operations can improve performance.
-    if beta == 1 and threshold == 20:
+        return x, beta, threshold
+
+    x, beta, threshold = _parse_positional_args(context, node)
+
+    if beta == 1:
+        # this is the special case that Core ML softplus handles
         res = mb.softplus(x=x, name=node.name)
-    elif threshold == 20:
-        x0 = mb.mul(x=x, y=b)
-        x1 = mb.softplus(x=x0)
-        res = mb.real_div(x=x1, y=b)
     else:
-        # Create mask for x*beta <= threshold, then convert mask to 01 tensor (m0).
-        # Use log(m0 + exp(beta*x*m0)) replacing log(1 + exp(beta*x*m0)) * m0.
-        # The log(1)=0 equals mul mask with result.
-        # If you want to implementation torch.softplus with MetalPerformanceShadersGraph, refer to this implementation.
-        # MPSGraph doesn't have softplus currently.
-        # And this implementation is slightly faster than mb.softplus * mask for inference on the GPU.
-        xb = mb.mul(x=x, y=b)
-        m = mb.less_equal(x=xb, y=t)
-
-        x_dtype = TYPE_TO_DTYPE_STRING[x.dtype]
-        m0 = mb.cast(x=m, dtype=x_dtype)
-        xb0 = mb.mul(x=xb, y=m0)
-        exp = mb.exp(x=xb0)
-        exp0 = mb.add(x=exp, y=m0)
-        log = mb.log(x=exp0)
-        log0 = mb.real_div(x=log, y=b)
-
-        m1 = mb.logical_not(x=m)
-        x0 = mb.mul(x=x, y=mb.cast(x=m1, dtype=x_dtype))
-
-        res = mb.add(x=log0, y=x0)
-    context.add(res, torch_name=node.name)
+        if x.rank == 4:
+            # can use Core ML softplus_parametric
+            C = x.shape[1]
+            alpha_br = _np.repeat(1.0 / beta, C).astype("float32")
+            beta_br = _np.repeat(beta, C).astype("float32")
+            res = mb.softplus_parametric(x=x, alpha=alpha_br, beta=beta_br, name=node.name)
+        else:
+            # have to generally decompose
+            beta_mul_x = mb.mul(x=beta, y=x)
+            softplus = mb.softplus(x=beta_mul_x)
+            res = mb.real_div(x=softplus, y=beta, name=node.name)
+    context.add(res)
 
 
 @register_torch_op
@@ -1676,7 +1767,7 @@ def max_pool1d(context, node):
         context.add(pool)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["min.other"])
 def minimum(context, node):
     inputs = _get_inputs(context, node, expected=2)
     x, y = promote_input_dtypes(inputs)
@@ -1687,6 +1778,14 @@ def minimum(context, node):
 
 
 @register_torch_op
+def clamp_max(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    x, y = inputs[0], inputs[1]
+    assert x.dtype == y.dtype
+    out = mb.minimum(x=x, y=y, name=node.name)
+    context.add(out)
+
+@register_torch_op
 def clamp_min(context, node):
     inputs = _get_inputs(context, node, expected=2)
     x, y = inputs[0], inputs[1]
@@ -1695,7 +1794,7 @@ def clamp_min(context, node):
     context.add(out)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["max.other"])
 def maximum(context, node):
     inputs = _get_inputs(context, node, expected=2)
     x, y = promote_input_dtypes(inputs)
@@ -1707,12 +1806,35 @@ def maximum(context, node):
 
 @register_torch_op(torch_alias=["truediv"])
 def div(context, node):
-    inputs = _get_inputs(context, node, expected=[2, 3])
-    x = mb.cast(x=inputs[0], dtype="fp32")
-    y = mb.cast(x=inputs[1], dtype="fp32")
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, expected=[2, 3])
+        nargs = len(inputs)
 
-    if len(inputs) > 2 and inputs[2] is not None:
-        rounding_mode = inputs[2].val
+        x = mb.cast(x=inputs[0], dtype="fp32")
+        y = mb.cast(x=inputs[1], dtype="fp32")
+        if nargs < 3:
+            rounding_mode = None
+        else:
+            rounding_mode_var = inputs[2]
+            if rounding_mode_var is None:
+                rounding_mode = None
+            else:
+                rounding_mode = rounding_mode_var.val
+
+        return x, y, rounding_mode
+
+    def _parse_keyword_args(context, node, rounding_mode) -> Var:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return rounding_mode
+
+        rounding_mode = _get_kwinputs(context, node, "rounding_mode", default=[rounding_mode])[0]
+        return rounding_mode
+
+    x, y, rounding_mode = _parse_positional_args(context, node)
+    rounding_mode = _parse_keyword_args(context, node, rounding_mode)
+
+    if rounding_mode is not None:
         if rounding_mode == "floor":
             # round towards negative infinity
             # e.g.:
@@ -1802,11 +1924,19 @@ def sub(context, node):
     context.add(res)
 
 
+# Various torch reduction ops are unified in this same translation logic
 @register_torch_op(
     torch_alias=[
         "mean.dim",
         "sum",
+        "sum.dim_intlist",
         "logsumexp",
+        "all",
+        "all.dim",
+        "all.dims",
+        "any",
+        "any.dim",
+        "any.dims",
     ]
 )
 def mean(context, node):
@@ -1814,43 +1944,130 @@ def mean(context, node):
         inputs = _get_inputs(context, node, min_expected=1)
         nargs = len(inputs)
 
-        x = inputs[0]
-        dim = inputs[1] if nargs > 1 else None
-        keepdim = inputs[2] if nargs > 2 else False
+        if context.frontend == TorchFrontend.TORCHSCRIPT:
+            x = inputs[0]
+            dim = inputs[1] if nargs > 1 else None
+            keepdim = inputs[2] if nargs > 2 else False
+        else:
+            if node.kind in ("mean", "sum", "all", "any"):
+                x = inputs[0]
+                dim = None
+                keepdim = None
+                # although we would not use dtype, still parse it
+                dtype = inputs[1] if nargs > 1 else None
+            else:
+                x = inputs[0]
+                dim = inputs[1] if nargs > 1 else None
+                keepdim = inputs[2] if nargs > 2 else False
         return x, dim, keepdim
 
+    def _parse_keyword_args(context, node, keepdim) -> Var:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return keepdim
+
+        keepdim = _get_kwinputs(context, node, "keepdim", default=[keepdim])[0]
+        return keepdim
+
+    def _translate_torch_args(dim, keepdim) -> Tuple[Var]:
+        # torch dim means Core ML axes
+        axes = None
+        if dim is not None:
+            # Core ML axes needs to be a list, but if only one dim was specified in torch,
+            # it will be constructed as an int, so we construct a new constant as a list
+            if not isinstance(dim.val, _np.ndarray):
+                axes = mb.const(val=[dim.val], name=dim.name + "_list")
+            elif dim.val.shape == (0,):
+                axes = None
+            else:
+                axes = dim.val
+
+        # torch keepdim means Core ML keep_dims, and Core ML defaults to False
+        keep_dims = None
+        if keepdim is not None:
+            if isinstance(keepdim, Var):
+                keepdim = keepdim.val
+            if keepdim:
+                keep_dims = True
+
+        return axes, keep_dims
+
     x, dim, keepdim = _parse_positional_args(context, node)
-    # torch.export may have kwargs
-    if context.frontend == TorchFrontend.TORCHEXPORT:
-        if keepdim == False:
-            keepdim = _get_kwinputs(context, node, "keepdim", default=[keepdim])[0]
+    keepdim = _parse_keyword_args(context, node, keepdim)
+    axes, keep_dims = _translate_torch_args(dim, keepdim)
 
-    if types.is_bool(x.dtype):
-        # TODO: In the future when MIL op supports bool, we need to use curr_opset_version to decide
-        # if we want to cast or not.
-        x = mb.cast(x=x, dtype="fp32")
-    kwargs = {"x": x, "name": node.name}
-
-    # torch dim means Core ML axes
-    if dim is not None:
-        # Core ML axes needs to be a list, but if only one dim was specified in torch,
-        # it will be constructed as an int, so we construct a new constant as a list
-        if not isinstance(dim.val, _np.ndarray):
-            axes = mb.const(val=[dim.val], name=dim.name + "_list")
-        else:
-            axes = dim.val
+    kwargs = {}
+    if axes is not None:
         kwargs["axes"] = axes
+    if keep_dims is not None:
+        kwargs["keep_dims"] = keep_dims
 
-    # torch keepdim means Core ML keep_dims
-    if keepdim != False:
-        kwargs["keep_dims"] = keepdim
-
-    if node.kind == "sum":
-        res = mb.reduce_sum(**kwargs)
-    elif node.kind == "logsumexp":
-        res = mb.reduce_log_sum_exp(**kwargs)
+    node_kind = node.kind.split(".")[0]
+    if node_kind in ("all", "any"):
+        x = mb.cast(x=x, dtype="int32")
+        kwargs["x"] = x
+        if node_kind == "all":
+            res = mb.reduce_min(**kwargs)
+        else:
+            res = mb.reduce_max(**kwargs)
+        res = mb.cast(x=res, dtype="bool", name=node.name)
     else:
-        res = mb.reduce_mean(**kwargs)
+        if node_kind == "mean":
+            reduction_op_type = "reduce_mean"
+        elif node_kind == "sum":
+            reduction_op_type = "reduce_sum"
+        else:
+            assert node_kind == "logsumexp"
+            reduction_op_type = "reduce_log_sum_exp"
+        if (
+            builtin_to_string(x.dtype)
+            not in SSAOpRegistry._get_core_op_cls(reduction_op_type).supported_dtypes()
+        ):
+            x = mb.cast(x=x, dtype="fp32")
+        kwargs["x"] = x
+        kwargs["name"] = node.name
+        res = getattr(mb, reduction_op_type)(**kwargs)
+
+    context.add(res)
+
+
+@register_torch_op(torch_alias=["logcumsumexp", "_logcumsumexp"])
+def cumsum(context, node):
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, min_expected=2)
+        nargs = len(inputs)
+
+        x = inputs[0]
+        dim = inputs[1]
+        dtype = inputs[2] if nargs > 2 else None
+
+        return x, dim, dtype
+
+    def _parse_keyword_args(context, node, dtype) -> Tuple[Var]:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return dtype
+
+        dtype = _get_kwinputs(context, node, "dtype", default=[dtype])[0]
+        return dtype
+
+    x, dim, dtype = _parse_positional_args(context, node)
+    dtype = _parse_keyword_args(context, node, dtype)
+    if dtype is not None:
+        dtype = NUM_TO_DTYPE_STRING[dtype.val]
+
+    if is_bool(x.dtype):
+        x = mb.cast(x=x, dtype="int32")
+    if node.kind == "cumsum":
+        if dtype is not None and builtin_to_string(x.dtype) != dtype:
+            x = mb.cast(x=x, dtype=dtype)
+        res = mb.cumsum(x=x, axis=dim, name=node.name)
+    else:
+        assert node.kind in ("logcumsumexp", "_logcumsumexp")
+        exp = mb.exp(x=x)
+        cumsumexp = mb.cumsum(x=exp, axis=dim)
+        res = mb.log(x=cumsumexp, name=node.name)
+
     context.add(res)
 
 
@@ -1925,7 +2142,14 @@ def view(context, node):
     if isinstance(shape, list) and all(
         [isinstance(dim, Var) and len(dim.shape) == 0 for dim in shape]
     ):
-        shape = mb.concat(values=shape, axis=0)
+        int_shape = []
+        for size in shape:
+            if size.dtype == types.int32:
+                int_size = size
+            else:
+                int_size = mb.cast(x=size, dtype="int32")
+            int_shape.append(int_size)
+        shape = mb.concat(values=int_shape, axis=0)
 
     shape = mb.cast(x=shape, dtype="int32")
 
@@ -2001,7 +2225,7 @@ def adaptive_avg_pool1d(context, node):
     _adaptive_pool1d(context, node, mb.reduce_mean)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["_adaptive_avg_pool2d"])
 def adaptive_avg_pool2d(context, node):
     _adaptive_pool2d(context, node, mb.avg_pool, mb.reduce_mean)
 
@@ -2076,25 +2300,21 @@ def _adaptive_pool2d_non_fixed_kernel_size_and_stride(x, output_shape, name, red
     '''
 
     pool_results = []
-    for s2, e2 in _get_kernel_indexes_1d_for_adaptive_pooling(x.shape[2], output_shape[0]):
-        for s3, e3 in _get_kernel_indexes_1d_for_adaptive_pooling(x.shape[3], output_shape[1]):
-            cur_kernel = mb.slice_by_index(
-                x=x,
-                begin=[0, 0, s2, s3],
-                end=[x.shape[0], x.shape[1], e2, e3],
-            )
+    for s2, e2 in _get_kernel_indexes_1d_for_adaptive_pooling(x.shape[-2], output_shape[0]):
+        for s3, e3 in _get_kernel_indexes_1d_for_adaptive_pooling(x.shape[-1], output_shape[1]):
+            begin = tuple([0] * (x.rank - 2) + [s2, s3])
+            end = x.shape[: x.rank - 2] + (e2, e3)
+            cur_kernel = mb.slice_by_index(x=x, begin=begin, end=end)
             cur_result = reduce_op(
                 x=cur_kernel,
                 axes=[-2, -1],
                 keep_dims=True
             )
             pool_results.append(cur_result)
+    pool_result = mb.concat(values=pool_results, axis=-1)
 
-    return mb.reshape(
-        x=mb.concat(values=pool_results, axis=-1),
-        shape=[x.shape[0], x.shape[1], output_shape[0], output_shape[1]],
-        name=name,
-    )
+    shape = x.shape[: x.rank - 2] + output_shape
+    return mb.reshape(x=pool_result, shape=shape, name=name)
 
 
 def _adaptive_pool2d(context, node, pool_op, reduce_op):
@@ -2122,13 +2342,24 @@ def _adaptive_pool2d(context, node, pool_op, reduce_op):
             ind - s * (outd - 1)
             for ind, outd, s in zip(x.shape[-2:], output_shape, strides)
         ]
-        result = pool_op(
-            x=x,
-            kernel_sizes=kernel_sizes,
-            strides=strides,
-            pad_type="valid",
-            name=node.name,
-        )
+        if x.rank < 4:
+            axes = [*range(4 - x.rank)]
+            x_expanded = mb.expand_dims(x=x, axes=axes)
+            result_expanded = pool_op(
+                x=x_expanded,
+                kernel_sizes=kernel_sizes,
+                strides=strides,
+                pad_type="valid",
+            )
+            result = mb.squeeze(x=result_expanded, axes=axes, name=node.name)
+        else:
+            result = pool_op(
+                x=x,
+                kernel_sizes=kernel_sizes,
+                strides=strides,
+                pad_type="valid",
+                name=node.name,
+            )
     else:
         result = _adaptive_pool2d_non_fixed_kernel_size_and_stride(
             x, output_shape, node.name, reduce_op
@@ -2137,34 +2368,62 @@ def _adaptive_pool2d(context, node, pool_op, reduce_op):
     context.add(result)
 
 
-@register_torch_op(torch_alias=["_native_batch_norm_legit_no_training"])
+@register_torch_op(
+    torch_alias=[
+        "_native_batch_norm_legit_no_training",
+        "_native_batch_norm_legit.no_stats",
+    ]
+)
 def batch_norm(context, node):
-    inputs = _get_inputs(context, node, expected=[7, 9])
-
-    _input = inputs[0]
-    weight = inputs[1]
-    bias = inputs[2]
-    running_mean = inputs[3]
-    running_var = inputs[4]
-
-    if len(inputs) == 9:
-        # inputs skipped:
-        #   float momentum (6)
-        #   bool cudnn_enabled (8)
-
-        training = inputs[5].val
-        eps = inputs[7]
-    # no: training, cudnn_enabled
-    elif len(inputs) == 7:
-        # inputs skipped:
-        #   float momentum (5)
-        eps = inputs[6]
-
-        training = False
-    else:
-        raise ValueError(
-            f"BatchNorm: got {len(inputs)} inputs, expected 7 or 9"
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected=(6, 7, 9),
         )
+        nargs = len(inputs)
+
+        if node.kind == "_native_batch_norm_legit.no_stats":
+            # inputs skipped:
+            #     float momentum (4)
+            _input = inputs[0]
+            weight = inputs[1]
+            bias = inputs[2]
+            training = inputs[3].val
+            eps = inputs[5]
+            running_mean = None
+            running_var = None
+        elif node.kind == "_native_batch_norm_legit_no_training":
+            assert nargs == 7, "torch _native_batch_norm_legit_no_training has 7 args"
+            # inputs skipped:
+            #     float momentum (5)
+            _input = inputs[0]
+            weight = inputs[1]
+            bias = inputs[2]
+            running_mean = inputs[3]
+            running_var = inputs[4]
+            eps = inputs[6]
+            training = False
+        else:
+            assert node.kind == "batch_norm"
+            assert nargs == 9, "torch batch_norm has 9 args"
+            # inputs skipped:
+            #     float momentum (6)
+            #     bool cudnn_enabled (8)
+            _input = inputs[0]
+            weight = inputs[1]
+            bias = inputs[2]
+            running_mean = inputs[3]
+            running_var = inputs[4]
+            training = inputs[5].val
+            eps = inputs[7]
+
+        return _input, weight, bias, eps, running_mean, running_var, training
+
+    _input, weight, bias, eps, running_mean, running_var, training = _parse_positional_args(
+        context, node
+    )
+
     input_rank = _input.rank
     if input_rank < 2 or input_rank > 5:
         raise ValueError(
@@ -2248,10 +2507,9 @@ def batch_norm(context, node):
         bn = _add_batch_norm()
 
     if node.kind == "_native_batch_norm_legit_no_training":
-        # TODO(rdar://117038279) ([Executorch] Handle/Bind other outputs of `_native_batch_norm_legit_no_training` op during lowering)
-        bn = (bn, None, None)
-
-    context.add(bn, torch_name=node.name)
+        context.add((bn, None, None), torch_name=node.name)
+    else:
+        context.add(bn, torch_name=node.name)
 
 
 @register_torch_op
@@ -2293,7 +2551,7 @@ def group_norm(context, node):
 
     def _parse_keyword_args(context, node, weight, bias) -> Tuple[Var]:
         # Only torch.export may have kwargs
-        if context.frontend != TorchFrontend.TORCHEXPORT:
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
             return weight, bias
 
         weight = _get_kwinputs(context, node, "weight", default=[weight])[0]
@@ -2399,7 +2657,7 @@ def cat(context, node):
 
     def _parse_keyword_args(context, node, dim) -> Var:
         # Only torch.export may have kwargs
-        if context.frontend != TorchFrontend.TORCHEXPORT:
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
             return dim
 
         dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
@@ -3307,253 +3565,438 @@ def _is_float_value(x, threshold=0.001):
     return x - _math.floor(x) > threshold
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["upsample_linear1d.vec"])
 def upsample_linear1d(context, node):
-    inputs = _get_inputs(context, node)
-    x = inputs[0]
-    output_size = inputs[1]
-    align_corners = bool(inputs[2].val)
-    scale = inputs[3]
+    """
+    MIL only has upsample_bilinear (i.e. upsample 2d),
+    so we will use the data dim as height and expand a dummy width dim
+    to call MIL upsample_bilinear then squeeze the dummy width dim
+    """
 
-    scale_factor = None
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected={TorchFrontend.TORCHSCRIPT: 4},
+            min_expected={TorchFrontend.TORCHEXPORT: 3, TorchFrontend.EXECUTORCH: 3},
+        )
+        nargs = len(inputs)
 
-    if scale is not None and scale.val is not None and scale.shape == (1,):
-        # Get the scale factor from provided inputs
-        # This happens when recompute_scale_factor = False
-        scale_factor = scale.val[0]
+        x = inputs[0]
+        output_size = inputs[1]
+        align_corners = bool(inputs[2].val)
 
-        # Currently, we are not supporting recompute_scale_factor = False, align_corners = False with float output size
-        _, _, h = x.shape
-        if not is_symbolic(h):
-            # For the static input shape, we can compute the output size beforehand, and check if it is a float value
-            output_size = h * scale_factor
-            is_float = _is_float_value(output_size)
+        if context.frontend == TorchFrontend.TORCHSCRIPT:
+            scales = None if nargs < 4 else inputs[3]
         else:
-            # For the dynamic input shape, we check if the scale factor itself is float
-            is_float = _is_float_value(scale_factor)
+            suffix = node.kind.split(".")[-1]
+            if suffix == "vec":
+                scale_factors = None if nargs < 4 else inputs[3]
+                if scale_factors is not None:
+                    scales = scale_factors[0]
+                else:
+                    scales = None
+            else:
+                scales = None if nargs < 4 else inputs[3]
 
-        if is_float and not align_corners:
-            msg = (
-                "recompute_scale_factor = False, align_corners = False with float output size is "
-                + "not supported for the upsample op {}".format(node.name)
-            )
-            raise NotImplementedError(msg)
+        return x, output_size, align_corners, scales
 
-    elif isinstance(output_size, list):
+    def _parse_keyword_args(context, node, scales) -> Var:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return scales
+
+        scales = _get_kwinputs(context, node, "scales", default=[scales])[0]
+
+        return scales
+
+    def _translate_torch_args(x, output_size, align_corners, scales) -> Var:
+        scales_h = None
+        scales_w = None
+
+        if scales is not None:
+            # Get the scale factor from provided inputs
+            # This happens when recompute_scale_factor = False
+            scales_h = scales.val
+            if isinstance(scales_h, np.ndarray):
+                scales_h = scales_h.reshape(-1)[0]
+
+            h = x.shape[-1]
+            # Currently, we are not supporting recompute_scale_factor = False, align_corners = False with float output size
+            if not is_symbolic(h):
+                # For the static input shape, we can compute the output size beforehand, and check if it is a float value
+                output_size = h * scales_h
+                is_float = _is_float_value(output_size)
+            else:
+                # For the dynamic input shape, we check if the scale factor itself is float
+                is_float = _is_float_value(scales_h)
+
+            if is_float and not align_corners:
+                raise NotImplementedError(
+                    "recompute_scale_factor = False, align_corners = False with float output size "
+                    f"is not supported for the upsample op {node.name}"
+                )
+
+        elif isinstance(output_size, Var) and output_size.val is not None:
+            # Infer the scale factor from the provided output size
+            scales_h = _get_scales_from_output_size(output_size, x.shape)
+
+        if scales_h is not None:
+            if _is_float_value(scales_h):
+                scales_w = 1.0
+            else:
+                scales_h = int(scales_h)
+
+        return scales_h, scales_w
+
+    x, output_size, align_corners, scales = _parse_positional_args(context, node)
+    scales = _parse_keyword_args(context, node, scales)
+    scales_h, scales_w = _translate_torch_args(x, output_size, align_corners, scales)
+
+    x = mb.expand_dims(x=x, axes=[3])
+    if scales_h is not None:
+        x = mb.upsample_bilinear(
+            x=x,
+            scale_factor_height=scales_h,
+            scale_factor_width=scales_w,
+            align_corners=align_corners,
+        )
+    else:
         # When the input shape is dynamic and recompute_scale_factor = True,
         # we need to trace the graph to find the scale factor.
-        x = mb.expand_dims(x=x, axes=[3])
+        assert (
+            isinstance(output_size, list) and len(output_size) == 1
+        ), "for dynamic shape torch should give [output_size]"
         x = mb.torch_upsample_bilinear(
             x=x,
             output_height=output_size[0],
             output_width=1,
             align_corners=align_corners,
         )
-        x = mb.squeeze(x=x, axes=[3], name=node.name)
-        context.add(x)
-        return
-
-    elif output_size.val is not None:
-        # Infer the scale factor from the provided output size
-        scale_factor = _get_scales_from_output_size(output_size, x.shape)
-
-    # Expand the input to a 4d tensor, and use MIL's upsample_bilinear op
-    x = mb.expand_dims(x=x, axes=[3])
-    x = mb.upsample_bilinear(
-        x=x,
-        scale_factor_height=scale_factor,
-        scale_factor_width=1.,
-        align_corners=align_corners,
-    )
     x = mb.squeeze(x=x, axes=[3], name=node.name)
     context.add(x)
 
 
-@register_torch_op(torch_alias=["upsample_bilinear2d.vec"])
+@register_torch_op(
+    torch_alias=[
+        "upsample_bilinear2d.vec",
+        "_upsample_bilinear2d_aa",
+        "_upsample_bilinear2d_aa.vec",
+    ],
+)
 def upsample_bilinear2d(context, node):
-    inputs = _get_inputs(context, node)
-    _input = inputs[0]
-    output_size = inputs[1]
-    align_corners = bool(inputs[2].val)
-    scale_factors = inputs[3]
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected={TorchFrontend.TORCHSCRIPT: (4, 5)},
+            min_expected={TorchFrontend.TORCHEXPORT: 3, TorchFrontend.EXECUTORCH: 3},
+        )
+        nargs = len(inputs)
 
-    scales_h, scales_w = None, None
+        x = inputs[0]
+        output_size = inputs[1]
+        align_corners = bool(inputs[2].val)
 
-    if (
-        scale_factors is not None
-        and scale_factors.val is not None
-        and scale_factors.rank == 1
-        and scale_factors.shape[0] == 2
-    ):
-        # get scale factors from provided inputs
-        # this happens when recompute_scale_factor = False
-        scale_factors = scale_factors.val
-        scales_h = scale_factors[0]
-        scales_w = scale_factors[1]
+        if context.frontend == TorchFrontend.TORCHSCRIPT:
+            if nargs == 4:
+                scale_factors = inputs[3]
+                if scale_factors is None:
+                    scales_h = None
+                    scales_w = None
+                else:
+                    scales_h = scale_factors.val[0]
+                    scales_w = scale_factors.val[1]
+            else:
+                assert nargs == 5, "Starting from torch 1.5.0, upsample_bilinear2d has 5 inputs"
+                scales_h = inputs[3]
+                scales_w = inputs[4]
+        else:
+            suffix = node.kind.split(".")[-1]
+            if suffix == "vec":
+                scale_factors = None if nargs < 4 else inputs[3]
+                if scale_factors is None:
+                    scales_h = None
+                    scales_w = None
+                else:
+                    scales_h = scale_factors[0]
+                    scales_w = scale_factors[1]
+            else:
+                scales_h = None if nargs < 4 else inputs[3]
+                scales_w = None if nargs < 5 else inputs[4]
 
+        return x, output_size, align_corners, scales_h, scales_w
+
+    def _parse_keyword_args(context, node, scales_h, scales_w) -> Var:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return scales_h, scales_w
+
+        scales_h = _get_kwinputs(context, node, "scales_h", default=[scales_h])[0]
+        scales_w = _get_kwinputs(context, node, "scales_w", default=[scales_w])[0]
+
+        return scales_h, scales_w
+
+    def _translate_torch_args(x, output_size, align_corners, scales_h, scales_w) -> Var:
+        if scales_h is not None and scales_w is not None:
+            # get scale factors from provided inputs
+            # this happens when recompute_scale_factor = False
+            if isinstance(scales_h, Var):
+                scales_h = scales_h.val
+            if isinstance(scales_w, Var):
+                scales_w = scales_w.val
+        elif isinstance(output_size, Var) and output_size.val is not None:
+            # infer scale factors from output sizes
+            # This happens when recompute_scale_factor = True or the output_size is specified
+            scales = _get_scales_from_output_size(output_size, x.shape)
+            if scales:
+                scales_h, scales_w = scales
+        return scales_h, scales_w
+
+    x, output_size, align_corners, scales_h, scales_w = _parse_positional_args(context, node)
+    scales_h, scales_w = _parse_keyword_args(context, node, scales_h, scales_w)
+    scales_h, scales_w = _translate_torch_args(x, output_size, align_corners, scales_h, scales_w)
+
+    if scales_h is not None and scales_w is not None:
         # currently, we are not supporting recompute_scale_factor = False, align_corners = False with float output size
-        _, _, h, w = _input.shape
+        _, _, h, w = x.shape
         if not is_symbolic(h) and not is_symbolic(w):
             # For the static input shape, we can compute the output size beforehand
             output_h = h * scales_h
             output_w = w * scales_w
             is_h_float = _is_float_value(output_h)
             is_w_float = _is_float_value(output_w)
-
         else:
             # For the dynamic input shape, we check if the scale factor itself is float
             is_h_float = _is_float_value(scales_h)
             is_w_float = _is_float_value(scales_w)
 
         if (is_h_float or is_w_float) and not align_corners:
-            msg = (
-                "recompute_scale_factor = False, align_corners = False with float output size is "
-                + "not supported for the upsample op {}".format(node.name)
+            if x.val is not None and (output_size is None or output_size.val is not None):
+                if output_size is not None:
+                    output_size = torch.tensor(output_size.val)
+                upsample_res = (
+                    torch.nn.functional.upsample_bilinear(
+                        torch.tensor(x.val), output_size, [scales_h, scales_w]
+                    )
+                    .detach()
+                    .numpy()
+                )
+                context.add(mb.const(val=upsample_res, name=node.name))
+                return
+            raise NotImplementedError(
+                "recompute_scale_factor = False, align_corners = False with float output size "
+                f"is not supported for the upsample op {node.name}"
             )
-            raise NotImplementedError(msg)
 
-    elif (
-        isinstance(output_size, list)
-        and output_size[0].val is None
-        and output_size[1].val is None
-    ):
+        upsample_bilinear = mb.upsample_bilinear(
+            x=x,
+            scale_factor_height=scales_h,
+            scale_factor_width=scales_w,
+            align_corners=align_corners,
+            name=node.name,
+        )
+    else:
         # the input shape is dynamic and recompute_scale_factor = True
         # need to trace the graph to find the scale factor
         # we define a torch front end op mb.torch_upsample_bilinear to resolve the const scaling factor
-        torch_upsample_bilinear = mb.torch_upsample_bilinear(
-            x=_input,
+        assert (
+            isinstance(output_size, list) and len(output_size) == 2
+        ), "for dynamic shape torch should give [output_size_h, output_size_w]"
+        upsample_bilinear = mb.torch_upsample_bilinear(
+            x=x,
             output_height=output_size[0],
             output_width=output_size[1],
             align_corners=align_corners,
             name=node.name,
         )
-        context.add(torch_upsample_bilinear)
-        return
-    else:
-        # infer scale factors from output sizes
-        # This happens when recompute_scale_factor = True or the output_size is specified
-        scales = _get_scales_from_output_size(output_size, _input.shape)
-        if scales:
-            scales_h, scales_w = scales
-
-    if scales_h is None or scales_w is None:
-        if len(inputs) == 5:
-            # For torch==1.5.0, upsample_bilinear2d has 5 inputs.
-            scales_h = inputs[3]
-            scales_w = inputs[4]
-        else:
-            raise ValueError("Failed to infer scale factors from inputs.")
-
-    upsample_bilinear = mb.upsample_bilinear(
-        x=_input,
-        scale_factor_height=scales_h,
-        scale_factor_width=scales_w,
-        align_corners=align_corners,
-        name=node.name,
-    )
     context.add(upsample_bilinear)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["upsample_nearest1d.vec"])
 def upsample_nearest1d(context, node):
-    inputs = _get_inputs(context, node)
-    x = inputs[0]
-    output_size = inputs[1]
-    scale = inputs[2]
+    """
+    MIL only has upsample_nearest_neighbor 2d,
+    so we will use the data dim as height and expand a dummy width dim
+    to call MIL upsample_nearest_neighbor then squeeze the dummy width dim
+    """
 
-    scale_factor = None
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected={TorchFrontend.TORCHSCRIPT: 3},
+            min_expected={TorchFrontend.TORCHEXPORT: 2, TorchFrontend.EXECUTORCH: 2},
+        )
+        nargs = len(inputs)
 
-    if scale is not None and scale.val is not None and scale.shape == (1,):
-        # Get the scale factor from provided inputs
-        # This happens when recompute_scale_factor = False
-        scale_factor = scale.val[0]
+        x = inputs[0]
+        output_size = inputs[1]
 
-    elif isinstance(output_size, list):
+        if context.frontend == TorchFrontend.TORCHSCRIPT:
+            scales = None if nargs < 3 else inputs[2]
+        else:
+            suffix = node.kind.split(".")[-1]
+            if suffix == "vec":
+                scale_factors = None if nargs < 3 else inputs[2]
+                if scale_factors is not None:
+                    scales = scale_factors[0]
+                else:
+                    scales = None
+            else:
+                scales = None if nargs < 3 else inputs[2]
+
+        return x, output_size, scales
+
+    def _parse_keyword_args(context, node, scales) -> Var:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return scales
+
+        scales = _get_kwinputs(context, node, "scales", default=[scales])[0]
+
+        return scales
+
+    def _translate_torch_args(x, output_size, scales) -> Var:
+        scales_h = None
+        scales_w = None
+
+        if scales is not None:
+            # Get the scale factor from provided inputs
+            # This happens when recompute_scale_factor = False
+            scales_h = scales.val
+            if isinstance(scales_h, np.ndarray):
+                scales_h = scales_h.reshape(-1)[0]
+        elif isinstance(output_size, Var) and output_size.val is not None:
+            # Infer the scale factor from the provided output size
+            scales_h = _get_scales_from_output_size(output_size, x.shape)
+
+        if scales_h is not None:
+            if _is_float_value(scales_h):
+                scales_w = 1.0
+            else:
+                scales_h = int(scales_h)
+
+        return scales_h, scales_w
+
+    x, output_size, scales = _parse_positional_args(context, node)
+    scales = _parse_keyword_args(context, node, scales)
+    scales_h, scales_w = _translate_torch_args(x, output_size, scales)
+
+    x = mb.expand_dims(x=x, axes=[3])
+    if scales_h is not None:
+        x = mb.upsample_nearest_neighbor(
+            x=x,
+            scale_factor_height=scales_h,
+            scale_factor_width=scales_w,
+        )
+    else:
         # When the input shape is dynamic and recompute_scale_factor = True,
         # we need to trace the graph to find the scale factor.
-        x = mb.expand_dims(x=x, axes=[3])
+        assert (
+            isinstance(output_size, list) and len(output_size) == 1
+        ), "for dynamic shape torch should give [output_size]"
         x = mb.torch_upsample_nearest_neighbor(
             x=x,
             output_height=output_size[0],
             output_width=1,
         )
-        x = mb.squeeze(x=x, axes=[3], name=node.name)
-        context.add(x)
-        return
-    else:
-        # Infer scale factors from output sizes
-        scale_factor = _get_scales_from_output_size(output_size, x.shape)
-
-    x = mb.expand_dims(x=x, axes=[3])
-    x = mb.upsample_nearest_neighbor(
-        x=x,
-        scale_factor_height=scale_factor,
-        scale_factor_width=1.,
-    )
     x = mb.squeeze(x=x, axes=[3], name=node.name)
     context.add(x)
 
 
 @register_torch_op(torch_alias=["upsample_nearest2d.vec"])
 def upsample_nearest2d(context, node):
-    inputs = _get_inputs(context, node)
-    _input = inputs[0]
-    scales_h, scales_w = None, None
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected={TorchFrontend.TORCHSCRIPT: (3, 4)},
+            min_expected={TorchFrontend.TORCHEXPORT: 2, TorchFrontend.EXECUTORCH: 2},
+        )
+        nargs = len(inputs)
 
-    output_size = inputs[1]
-    scale_factors = inputs[2]
+        x = inputs[0]
+        output_size = inputs[1]
 
-    if (
-        scale_factors is not None
-        and isinstance(scale_factors, Var)
-        and scale_factors.val is not None
-        and scale_factors.rank == 1
-        and scale_factors.shape[0] == 2
-    ):
-        # get scale factors from provided inputs
-        scale_factors = scale_factors.val
-        scales_h = scale_factors[0]
-        scales_w = scale_factors[1]
-    elif scale_factors is not None and isinstance(scale_factors, list) and len(scale_factors) == 2:
-        # get scale factors from provided inputs
-        scales_h = scale_factors[0]
-        scales_w = scale_factors[1]
-    elif (
-        isinstance(output_size, list)
-        and output_size[0].val is None
-        and output_size[1].val is None
-    ):
+        if context.frontend == TorchFrontend.TORCHSCRIPT:
+            if nargs == 3:
+                scale_factors = inputs[2]
+                if scale_factors is None:
+                    scales_h = None
+                    scales_w = None
+                else:
+                    scales_h = scale_factors.val[0]
+                    scales_w = scale_factors.val[1]
+            else:
+                assert nargs == 4, "Starting from torch 1.5.0, upsample_nearest2d has 4 inputs"
+                scales_h = inputs[2]
+                scales_w = inputs[3]
+        else:
+            suffix = node.kind.split(".")[-1]
+            if suffix == "vec":
+                scale_factors = None if nargs < 3 else inputs[2]
+                if scale_factors is None:
+                    scales_h = None
+                    scales_w = None
+                else:
+                    scales_h = scale_factors[0]
+                    scales_w = scale_factors[1]
+            else:
+                scales_h = None if nargs < 3 else inputs[2]
+                scales_w = None if nargs < 4 else inputs[3]
+
+        return x, output_size, scales_h, scales_w
+
+    def _parse_keyword_args(context, node, scales_h, scales_w) -> Var:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return scales_h, scales_w
+
+        scales_h = _get_kwinputs(context, node, "scales_h", default=[scales_h])[0]
+        scales_w = _get_kwinputs(context, node, "scales_w", default=[scales_w])[0]
+
+        return scales_h, scales_w
+
+    def _translate_torch_args(x, output_size, scales_h, scales_w) -> Var:
+        if scales_h is not None and scales_w is not None:
+            # get scale factors from provided inputs
+            # this happens when recompute_scale_factor = False
+            if isinstance(scales_h, Var):
+                scales_h = scales_h.val
+            if isinstance(scales_w, Var):
+                scales_w = scales_w.val
+
+        elif isinstance(output_size, Var) and output_size.val is not None:
+            # infer scale factors from output sizes
+            # This happens when recompute_scale_factor = True or the output_size is specified
+            scales = _get_scales_from_output_size(output_size, x.shape)
+            if scales:
+                scales_h, scales_w = scales
+
+        return scales_h, scales_w
+
+    x, output_size, scales_h, scales_w = _parse_positional_args(context, node)
+    scales_h, scales_w = _parse_keyword_args(context, node, scales_h, scales_w)
+    scales_h, scales_w = _translate_torch_args(x, output_size, scales_h, scales_w)
+
+    if scales_h is not None and scales_w is not None:
+        upsample_nearest2d = mb.upsample_nearest_neighbor(
+            x=x,
+            scale_factor_height=scales_h,
+            scale_factor_width=scales_w,
+            name=node.name,
+        )
+    else:
         # the input shape is dynamic and recompute_scale_factor = True
         # need to trace the graph to find the scale factor
         # we define a torch front end op mb.torch_upsample_nearest_neighbor to resolve the const scaling factor
-        torch_upsample_nearest2d = mb.torch_upsample_nearest_neighbor(
-            x=_input,
+        upsample_nearest2d = mb.torch_upsample_nearest_neighbor(
+            x=x,
             output_height=output_size[0],
             output_width=output_size[1],
             name=node.name,
         )
-        context.add(torch_upsample_nearest2d)
-        return
-    else:
-        # infer scale factors from output sizes
-        scales = _get_scales_from_output_size(output_size, _input.shape)
-        if scales:
-            scales_h, scales_w = scales
-
-    if scales_h is None or scales_w is None:
-        if len(inputs) == 5:
-            # For torch==1.5.0, upsample_bilinear2d has 5 inputs.
-            scales_h = inputs[3]
-            scales_w = inputs[4]
-        else:
-            raise ValueError("Failed to infer scale factors from inputs.")
-
-    upsample_nearest2d = mb.upsample_nearest_neighbor(
-        x=_input,
-        scale_factor_height=scales_h,
-        scale_factor_width=scales_w,
-        name=node.name,
-    )
     context.add(upsample_nearest2d)
 
 
@@ -3884,8 +4327,7 @@ def select(context, node):
 def getitem(context, node):
     inputs = _get_inputs(context, node, expected=2)
 
-    if inputs[1].val is None:
-        raise AssertionError("Only static item selection supported")
+    assert inputs[1].val is not None, "Only static item selection supported"
 
     try:
         index = int(inputs[1].val)
@@ -3896,7 +4338,7 @@ def getitem(context, node):
 
     if not isinstance(inputs[0], (list, tuple)):
         # For single object with index 0, return this object
-        if index == 0:
+        if isinstance(inputs[0], Var) and index == 0:
             context.add(inputs[0], torch_name=node.name)
             return
         # Otherwise undefined
@@ -3905,10 +4347,10 @@ def getitem(context, node):
 
     out = inputs[0][index]
 
-    if out is None:
-        raise AssertionError(
-            f"coremltools lowering didn't handle/bind value at index {index}. Please inspect the lowering of parent op for its return value"
-        )
+    assert out is not None, (
+        f"coremltools lowering does not handle/bind value at index {index}. "
+        "Please inspect the lowering of parent op for its return value"
+    )
 
     context.add(out, torch_name=node.name)
 
@@ -4170,7 +4612,8 @@ def select_scatter(context, node):
     begin = [0] * x.rank
     begin[dim] = index
     begin = mb.concat(values=begin, axis=0)
-    end = x.shape
+    end = mb.shape(x=x)
+
     # and squeeze dim to do pure indexing on it
     squeeze_mask = [False] * x.rank
     squeeze_mask[dim] = True
@@ -4190,6 +4633,8 @@ def select_scatter(context, node):
 def slice_scatter(context, node):
     inputs = _get_inputs(context, node, min_expected=2)
     x, updates = promote_input_dtypes(inputs[0:2])
+    x_shape = mb.shape(x=x)
+    rank = x.rank
 
     # sanitize and validate dim
     dim = 0 if len(inputs) <= 2 else inputs[2].val
@@ -4205,14 +4650,15 @@ def slice_scatter(context, node):
         start = 0
 
     # sanitize end
+    shape_at_dim = value_at(x_shape, dim)
     if len(inputs) <= 4:
-        end = x.shape[dim]
+        end = shape_at_dim
     else:
         end = inputs[4]
         if end is not None:
-            end = mb.minimum(x=inputs[4], y=x.shape[dim])
+            end = mb.minimum(x=inputs[4], y=shape_at_dim)
         else:
-            end = x.shape[dim]
+            end = shape_at_dim
 
     # get step given different number of inputs
     step = 1 if len(inputs) <= 5 else inputs[5]
@@ -4222,9 +4668,10 @@ def slice_scatter(context, node):
     starts = [0] * x.rank
     starts[dim] = start
     starts = mb.concat(values=starts, axis=0)
-    ends = list(x.shape)
-    ends[dim] = end
+
+    ends = [value_at(x_shape, i) if i != dim else end for i in range(rank)]
     ends = mb.concat(values=ends, axis=0)
+
     steps = [1] * x.rank
     steps[dim] = step
     steps = mb.concat(values=steps, axis=0)
@@ -4318,11 +4765,14 @@ def index_put(context, node):
     indices_type = indices[0].sym_type.get_primitive()
     if types.is_bool(indices_type):
         # indices
-        assert len(indices) == 1, "Unsupported index_put_ usage."
+        if len(indices) != 1:
+            raise AssertionError("Unsupported index_put_ usage.")
         indices = indices[0]
-        assert (
-            indices.shape == x.shape
-        ), f"indices shape {indices.shape} must equal to input shape {x.shape} for index put operation."
+        if indices.shape != x.shape[: len(indices.shape)]:
+            raise AssertionError(
+                f"indices shape {indices.shape} must match input shape {x.shape} "
+                "for index put operation."
+            )
         indices = mb.cast(x=indices, dtype="int32")
         indices = mb.non_zero(x=indices)
 
@@ -4366,6 +4816,13 @@ def index_put(context, node):
             a=indices,
             b=mb.add(x=indices, y=slice_shape),
         )
+
+    # The `scatter_nd` op doesn't support bool for data/updates, so we need to convert them to int32.
+    if types.is_bool(x.dtype):
+        x = mb.cast(x=x, dtype="int32")
+    if types.is_bool(values.dtype):
+        values = mb.cast(x=values, dtype="int32")
+
     result = mb.scatter_nd(data=x, indices=indices, updates=values, mode=mode, name=node.name)
     context.add(result)
 
@@ -4568,45 +5025,74 @@ def index(context, node):
 
 @register_torch_op
 def ones(context, node):
-    inputs = _get_inputs(
-        context,
-        node,
-        expected={TorchFrontend.TORCHSCRIPT: [5, 6]},
-        min_expected={TorchFrontend.TORCHEXPORT: 1, TorchFrontend.EXECUTORCH: 1},
-    )
-    size = inputs[0]
-    # dtype = NUM_TO_TORCH_DTYPE[inputs[1].val] unused
-    # layout = inputs[2] unused
-    # device = inputs[3] unused
-    # requires_grad = inputs[4] unused
-    # out = inputs[5] unused
+    def _parse_positional_args(context, node) -> Tuple[Var, Optional[Var]]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected={TorchFrontend.TORCHSCRIPT: [5, 6]},
+            min_expected={TorchFrontend.TORCHEXPORT: 1, TorchFrontend.EXECUTORCH: 1},
+        )
+        size = inputs[0]
+        dtype = inputs[1] if (len(inputs) > 1 and inputs[1] is not None) else None
+        return size, dtype
+
+    def _parse_keyword_args(context, node, dtype) -> Var:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return dtype
+        dtype = _get_kwinputs(context, node, "dtype", default=[dtype])[0]
+        return dtype
+
+    size, dtype = _parse_positional_args(context, node)
+    dtype = _parse_keyword_args(context, node, dtype)
+
     if isinstance(size, list):
         size = mb.concat(values=size, axis=0)
-    fill = mb.fill(shape=size, value=1.0, name=node.name)
-    context.add(fill)
+    res = mb.fill(shape=size, value=1.0)
+    if dtype is not None:
+        res = _cast_to(res, NUM_TO_DTYPE_STRING[dtype.val], node.name)
+    context.add(res, node.name)
 
 
 @register_torch_op
 def ones_like(context, node):
-    inputs = _get_inputs(context, node, expected=6)
-    x = inputs[0]
+    def _parse_positional_args(context, node) -> Tuple[Var, Optional[Var]]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected={TorchFrontend.TORCHSCRIPT: 6},
+            min_expected={TorchFrontend.TORCHEXPORT: 1, TorchFrontend.EXECUTORCH: 1},
+        )
+        x = inputs[0]
+        dtype = None
+        if len(inputs) > 1 and inputs[1] is not None:
+            dtype = inputs[1]
+        return x, dtype
+
+    def _parse_keyword_args(context, node, dtype) -> Var:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return dtype
+        dtype = _get_kwinputs(context, node, "dtype", default=[dtype])[0]
+        return dtype
+
+    x, dtype = _parse_positional_args(context, node)
+    dtype = _parse_keyword_args(context, node, dtype)
+
     if is_current_opset_version_compatible_with(target.iOS16):
-        fill = mb.fill_like(ref_tensor=x, value=1.0, name=node.name)
+        res = mb.fill_like(ref_tensor=x, value=1.0)
     else:
-        size = mb.shape(x=x)
-        # dtype = NUM_TO_TORCH_DTYPE[inputs[1].val] unused
-        # layout = inputs[2] unused
-        # device = inputs[3] unused
-        # requires_grad = inputs[4] unused
-        # out = inputs[5] unused
-        fill = mb.fill(shape=size, value=1.0, name=node.name)
-    context.add(fill)
+        res = mb.fill(shape=mb.shape(x=x), value=1.0)
+        # By default use input x's dtype.
+        dtype_str = NUM_TO_DTYPE_STRING[dtype.val] if dtype is not None else types.builtin_to_string(x.dtype)
+        res = _cast_to(res, dtype_str, node.name)
+    context.add(res, node.name)
 
 
 @register_torch_op
 def fill(context, node):
     inputs = _get_inputs(context, node, expected=2)
-    shape = inputs[0].shape
+    shape = mb.shape(x=inputs[0])
     value = inputs[1].val
     result = mb.fill(shape=shape, value=value, name=node.name)
     context.add(result)
@@ -4697,6 +5183,23 @@ def rand(context, node):
     shape, _, dtype, _, _ = _get_inputs(context, node)
     dtype = NUM_TO_DTYPE_STRING[TORCH_DTYPE_TO_NUM[dtype.val]] if dtype else "fp32"
     low, high = mb.cast(x=0.0, dtype=dtype), mb.cast(x=1.0, dtype=dtype)
+    rand_uniform = mb.random_uniform(shape=shape, low=low, high=high)
+    context.add(rand_uniform, node.name)
+
+
+@register_torch_op
+def rand_like(context, node):
+    inputs = _get_inputs(
+        context,
+        node,
+        expected={TorchFrontend.TORCHSCRIPT: 6},
+        min_expected={TorchFrontend.TORCHEXPORT: 1, TorchFrontend.EXECUTORCH: 1},
+    )
+    x = inputs[0]
+    dtype = inputs[1] if len(inputs) >= 2 else None
+    dtype = NUM_TO_DTYPE_STRING[dtype.val] if dtype else types.builtin_to_string(x.dtype)
+    low, high = mb.cast(x=0.0, dtype=dtype), mb.cast(x=1.0, dtype=dtype)
+    shape = mb.shape(x=x)
     rand_uniform = mb.random_uniform(shape=shape, low=low, high=high)
     context.add(rand_uniform, node.name)
 
@@ -4845,7 +5348,7 @@ def avg_pool3d(context, node):
         expected={TorchFrontend.TORCHSCRIPT : 7},
         min_expected={TorchFrontend.TORCHEXPORT: 2, TorchFrontend.EXECUTORCH: 2},
     )
-    divisor_override = inputs[6]
+    divisor_override = None if len(inputs) < 7 else inputs[6]
     if divisor_override is not None:
         raise ValueError("divisor_override is not supported for avg_pool3d")
     _avg_pool(context, node, inputs)
@@ -4974,6 +5477,7 @@ def slice(context, node):
         return x, dim, start, end, step
 
     x, dim, start, end, step = _parse_positional_args(context, node)
+
     # torch.export may have kwargs
     if context.frontend == TorchFrontend.TORCHEXPORT:
         if dim == 0:
@@ -4984,9 +5488,11 @@ def slice(context, node):
             end = _get_kwinputs(context, node, "end", default=[end])[0]
         if step == 1:
             step = _get_kwinputs(context, node, "step", default=[step])[0]
+
     # torch start = None means Core ML start = 0
     if start is None:
         start = 0
+
     # dim must be constant
     if isinstance(dim, Var):
         dim = dim.val
@@ -5002,6 +5508,7 @@ def slice(context, node):
     begin_array[dim] = start
     end_array = [s if isinstance(s, int) else 0 for s in x.shape]
     end_mask = [True] * len(x.shape)
+
     if end is not None:
         end_array[dim] = end
         # if end >= x.shape[dim], then end can be ignored, i.e. end_mask[dim] = True
@@ -5043,7 +5550,7 @@ def split(context, node):
 
     def _parse_keyword_args(context, node, dim) -> Var:
         # Only torch.export may have kwargs
-        if context.frontend != TorchFrontend.TORCHEXPORT:
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
             return dim
 
         dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
@@ -5112,67 +5619,76 @@ def unbind(context, node):
 
 @register_torch_op(torch_alias = ["_to_copy"])
 def to(context, node):
-    inputs = _get_inputs(context, node)
-
-    # There are a lot of variants of `to` op.
-    # - When len(inputs) is 7 or 8, we only care about the first two params (input and dtype).
-    # - When len(inputs) == 6, the parameter is (input, _, dtype, non_blocking, copy, memory_format)
-    # - When len(inputs) == 5, the parameter is (input, dtype, non_blocking, copy, memory_format)
-    # - When len(inputs) == 4, the parameter is (input, dtype, non_blocking, copy)
-    # - When len(inputs) == 3, the parameter is (input, non_blocking, copy)
-    # We only use `input` and `dtype`, and `non_blocking` and `copy` are unused.
-    _input = inputs[0]
-
-    target_dtype: Optional[Var]
-    inputs_len = len(inputs)
-    if inputs_len in (4, 5, 7, 8):
-        target_dtype = inputs[1]
-    elif inputs_len == 6:
-        target_dtype = inputs[2]
-    elif inputs_len <= 3:
-        target_dtype = None
-    else:
-        raise ValueError(
-            "Received invalid arguments for PyTorch conversion of op {}".format(node)
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context, node, expected={TorchFrontend.TORCHSCRIPT: (1, 2, 3, 4, 5, 6, 7, 8)}
         )
+        nargs = len(inputs)
 
-    if target_dtype is None:
-        # When target_dtype is None, it means the input's dtype is already the target dtype.
+        _input = inputs[0]
+
+        # There are a lot of variants of `to` op.
+        # - When len(inputs) is 7 or 8, we only care about the first two params (input and dtype).
+        # - When len(inputs) == 6, the parameter is (input, _, dtype, non_blocking, copy, memory_format)
+        # - When len(inputs) == 5, the parameter is (input, dtype, non_blocking, copy, memory_format)
+        # - When len(inputs) == 4, the parameter is (input, dtype, non_blocking, copy)
+        # - When len(inputs) == 3, the parameter is (input, non_blocking, copy)
+        # We only use `input` and `dtype`, and `non_blocking` and `copy` are unused.
+        if context.frontend == TorchFrontend.TORCHSCRIPT:
+            dtype: Optional[Var]
+            if nargs in (4, 5, 7, 8):
+                dtype = inputs[1]
+            elif nargs == 6:
+                dtype = inputs[2]
+            else:
+                dtype = None
+
+            if dtype is None:
+                return _input, dtype
+            elif types.is_scalar(dtype.sym_type) and dtype.val is not None:
+                dtype = dtype.val
+            else:
+                # When the val of dtype is not available, bridge from the np dtype.
+                np_type = nptype_from_builtin(dtype.dtype)
+                dtype = NUMPY_DTYPE_TO_TORCH_NUM[np_type]
+
+        # clearly distinguish each variant of max
+        else:
+            if node.kind in ("to.dtype", "_to_copy") and nargs > 1:
+                dtype = inputs[1]
+            else:
+                dtype = None
+
+        return _input, dtype
+
+    def _parse_keyword_args(context, node, dtype) -> Var:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return dtype
+
+        dtype = _get_kwinputs(context, node, "dtype", default=[dtype])[0]
+        return dtype
+
+    _input, dtype = _parse_positional_args(context, node)
+    dtype = _parse_keyword_args(context, node, dtype)
+
+    if dtype is None:
+        # When dtype is None, it means the input's dtype is already the target dtype.
         context.add(_input, torch_name=node.name)
         return
-    elif types.is_scalar(target_dtype.sym_type) and target_dtype.val is not None:
-        dtype = target_dtype.val
     else:
-        # When the val of dtype is not available, bridge from the np dtype.
-        np_type = nptype_from_builtin(target_dtype.dtype)
-        dtype = NUMPY_DTYPE_TO_TORCH_NUM[np_type]
+        if isinstance(dtype, Var):
+            dtype = dtype.val
 
-    torch_dtype = dtype_to_32bit(NUM_TO_TORCH_DTYPE[dtype])
     if isinstance(_input, Var) and _input.can_be_folded_to_const():
         # numpy -> torch -> torch cast -> numpy
         # This path is needed to use the mapping of passed in dtypes to torch dtypes.
-        casted_input = torch.tensor(_input.val).type(torch_dtype).cpu().numpy()
-        res = mb.const(val=casted_input, name=node.name)
+        torch_dtype = dtype_to_32bit(NUM_TO_TORCH_DTYPE[dtype])
+        res = mb.const(val=torch.tensor(_input.val).type(torch_dtype).cpu().numpy())
     else:
         dtype_str = NUM_TO_DTYPE_STRING[dtype]
-        valid_dtypes = (
-            {"int8", "uint8", "int16", "uint16", "int32", "fp16", "fp32", "bool"}
-            if is_current_opset_version_compatible_with(target.iOS17)
-            else {"int32", "fp16", "fp32", "bool"}
-        )
-        if dtype_str in valid_dtypes:
-            res = mb.cast(x=_input, dtype=dtype_str, name=node.name)
-        else:
-            # For dtype that is not supported by mb.cast, we do it in best-effort to cast it to int
-            # or float based on the dtype.
-            np_dtype = NUM_TO_NUMPY_DTYPE[dtype]
-            if _np.issubdtype(np_dtype, _np.integer):
-                res = mb.cast(x=_input, dtype="int32", name=node.name)
-            elif _np.issubdtype(np_dtype, _np.floating):
-                res = mb.cast(x=_input, dtype="fp32", name=node.name)
-            else:
-                raise ValueError(f"Unsupported op {node} with target dtype {np_dtype}")
-    context.add(res)
+        res = _cast_to(_input, dtype_str, node.name)
+    context.add(res, node.name)
 
 
 @register_torch_op
@@ -5377,7 +5893,7 @@ def arange(context, node):
 
     def _parse_keyword_args(context, node, step) -> Var:
         # Only torch.export may have kwargs
-        if context.frontend != TorchFrontend.TORCHEXPORT:
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
             return step
 
         step = _get_kwinputs(context, node, "step", default=[step])[0]
@@ -5606,8 +6122,9 @@ def new_zeros(context, node):
 
 @register_torch_op
 def scalar_tensor(context, node):
-    value = _get_inputs(context, node, expected=1)[0].val
-    context.add(mb.const(val=value, name=node.name))
+    x = _get_inputs(context, node, expected=[1, 5])[0]
+    res = mb.identity(x=x, name=node.name)
+    context.add(res)
 
 
 @register_torch_op
@@ -5618,58 +6135,69 @@ def dim(context, node):
     context.add(value_at(rank, 0, node.name))
 
 
-@register_torch_op
-def min(context, node):
-    inputs = _get_inputs(context, node, expected=[1, 2, 3])
+def _add_max_min(context, node, reduce_op, reduce_arg_op, alias_op):
+    if context.frontend == TorchFrontend.TORCHSCRIPT:
+        # mimic functionality from https://pytorch.org/docs/stable/generated/torch.min.html
+        # mimic functionality from https://pytorch.org/docs/stable/generated/torch.max.html
 
-    # mimic functionality from https://pytorch.org/docs/stable/generated/torch.min.html
-    if len(inputs) == 1:
-        value = mb.reduce_min(x=inputs[0], axes=None, name=node.name)
-        context.add(value)
-    elif len(inputs) == 2:
-        value = mb.minimum(x=inputs[0], y=inputs[1], name=node.name)
-        context.add(value)
-    elif len(inputs) == 3:
-        _input = inputs[0]
-        dim = inputs[1].val
-        keepdim = inputs[2].val
+        inputs = _get_inputs(context, node, expected=[1, 2, 3])
+        if len(inputs) == 1:
+            value = reduce_op(x=inputs[0], axes=None, name=node.name)
+            context.add(value)
+        elif len(inputs) == 2:
+            value = alias_op(x=inputs[0], y=inputs[1], name=node.name)
+            context.add(value)
+        elif len(inputs) == 3:
+            _input = inputs[0]
+            dim = inputs[1].val
+            keepdim = inputs[2].val
 
-        values = mb.reduce_min(x=_input, axes=[dim], keep_dims=keepdim)
-        indices = mb.reduce_argmin(x=_input, axis=dim, keep_dims=keepdim)
-        assert len(node.outputs) == 2
-        values_name = node.outputs[0]
-        indices_name = node.outputs[1]
-        context.add(values, torch_name=values_name)
-        context.add(indices, torch_name=indices_name)
+            values = reduce_op(x=_input, axes=[dim], keep_dims=keepdim)
+            indices = reduce_arg_op(x=_input, axis=dim, keep_dims=keepdim)
+            assert len(node.outputs) == 2
+            values_name = node.outputs[0]
+            indices_name = node.outputs[1]
+            context.add(values, torch_name=values_name)
+            context.add(indices, torch_name=indices_name)
+
+    else:
+        # clearly distinguish each variant of max
+
+        def _parse_positional_args(context, node) -> Tuple[Var]:
+            inputs = _get_inputs(context, node, min_expected=1)
+            nargs = len(inputs)
+
+            x = inputs[0]
+            dim = None if nargs < 2 else inputs[1].val
+            keepdim = False if nargs < 3 else inputs[2].val
+
+            return x, dim, keepdim
+
+        x, dim, keepdim = _parse_positional_args(context, node)
+
+        func_suffix = node.kind.split(".")
+        if len(func_suffix) == 1:
+            value = reduce_op(x=x, axes=None, name=node.name)
+            context.add(value)
+        elif func_suffix[-1] == "dim":
+            values = reduce_op(x=x, axes=[dim], keep_dims=keepdim)
+            indices = reduce_arg_op(x=x, axis=dim, keep_dims=keepdim)
+            context.add((values, indices), torch_name=node.name)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["max.dim"])
 def max(context, node):
-    inputs = _get_inputs(context, node, expected=[1, 2, 3])
+    _add_max_min(context, node, mb.reduce_max, mb.reduce_argmax, mb.maximum)
 
-    # mimic functionality from https://pytorch.org/docs/stable/generated/torch.max.html
-    if len(inputs) == 1:
-        value = mb.reduce_max(x=inputs[0], axes=None, name=node.name)
-        context.add(value)
-    elif len(inputs) == 2:
-        value = mb.maximum(x=inputs[0], y=inputs[1], name=node.name)
-        context.add(value)
-    elif len(inputs) == 3:
-        _input = inputs[0]
-        dim = inputs[1].val
-        keepdim = inputs[2].val
 
-        values = mb.reduce_max(x=_input, axes=[dim], keep_dims=keepdim)
-        indices = mb.reduce_argmax(x=_input, axis=dim, keep_dims=keepdim)
-        assert len(node.outputs) == 2
-        values_name = node.outputs[0]
-        indices_name = node.outputs[1]
-        context.add(values, torch_name=values_name)
-        context.add(indices, torch_name=indices_name)
+@register_torch_op(torch_alias=["min.dim"])
+def min(context, node):
+    _add_max_min(context, node, mb.reduce_min, mb.reduce_argmin, mb.minimum)
+
 
 def _add_amax_amin(context, node, reduce_op):
-     # mimic functionality from https://pytorch.org/docs/stable/generated/torch.amax.html
-     # mimic functionality from https://pytorch.org/docs/stable/generated/torch.amin.html
+    # mimic functionality from https://pytorch.org/docs/stable/generated/torch.amax.html
+    # mimic functionality from https://pytorch.org/docs/stable/generated/torch.amin.html
     assert len(node.outputs) == 1
 
     all_inputs = _get_inputs(context, node, expected=[2, 3])
@@ -6011,22 +6539,22 @@ def clamp(context, node):
     x = inputs[0]
     min_val = inputs[1] if (len(inputs) > 1 and inputs[1]) else mb.const(val=_np.finfo(_np.float32).min)
     max_val = inputs[2] if (len(inputs) > 2 and inputs[2]) else mb.const(val=_np.finfo(_np.float32).max)
+    x, min_val, max_val = promote_input_dtypes([x, min_val, max_val])
 
-    if isinstance(min_val, Var) and isinstance(max_val, Var) and min_val.val >= max_val.val:
+    if min_val.val is not None and max_val.val is not None and min_val.val >= max_val.val:
         # When min >= max, PyTorch sets all values to max.
         context.add(mb.fill(shape=mb.shape(x=x), value=max_val.val, name=node.name))
         return
 
-    is_input_int = types.is_int(x.dtype)
-    if not types.is_float(x.dtype):
-        # The `mb.clip` op requires parameters from type domain ['fp16', 'fp32'].
-        x = mb.cast(x=x, dtype="fp32")
-    x, min_val, max_val = promote_input_dtypes([x, min_val, max_val])
-    if is_input_int:
-        clip_res = mb.clip(x=x, alpha=min_val, beta=max_val)
-        context.add(mb.cast(x=clip_res, dtype="int32", name=node.name))
+    if min_val.val is None or max_val.val is None or not types.is_float(x.dtype):
+        # The `mb.clip` only support const alpha and beta, and requires the input to be float tensor.
+        # For other cases, need to use `mb.minimum` and `mb.maximum`.
+        res = mb.minimum(x=x, y=max_val)
+        res = mb.maximum(x=res, y=min_val)
     else:
-        context.add(mb.clip(x=x, alpha=min_val, beta=max_val, name=node.name))
+        res = mb.clip(x=x, alpha=min_val, beta=max_val)
+
+    context.add(res, node.name)
 
 
 @register_torch_op
@@ -6070,11 +6598,19 @@ def tril(context, node):
     else:
         diagonal = 0
     if diagonal >= 0:
-        res = mb.band_part(x=x, lower=-1, upper=diagonal, name=node.name)
+        res = mb.band_part(x=x, lower=-1, upper=diagonal)
     else:
         y = mb.band_part(x=x, lower=-diagonal - 1, upper=-1)
-        res = mb.sub(x=x, y=y, name=node.name)
-    context.add(res)
+        use_bool = False
+        if types.is_bool(x.dtype):
+            # The `mb.sub` op doesn't support bool.
+            use_bool = True
+            x = mb.cast(x=x, dtype="int32")
+            y = mb.cast(x=y, dtype="int32")
+        res = mb.sub(x=x, y=y)
+        if use_bool:
+            res = mb.cast(x=res, dtype="bool")
+    context.add(res, node.name)
 
 
 @register_torch_op
@@ -6102,6 +6638,14 @@ def exp2(context, node):
 
 
 @register_torch_op
+def expm1(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    exp = mb.exp(x=inputs[0])
+    expm1 = mb.sub(x=exp, y=1.0, name=node.name)
+    context.add(expm1)
+
+
+@register_torch_op
 def floor(context, node):
     inputs = _get_inputs(context, node, expected=1)
     context.add(mb.floor(x=inputs[0], name=node.name))
@@ -6120,6 +6664,15 @@ def log(context, node):
     if types.is_int(x.dtype):
         x = mb.cast(x=x, dtype="fp32")
     context.add(mb.log(x=x, name=node.name))
+
+
+@register_torch_op
+def log1p(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    x = inputs[0]
+    if types.is_int(x.dtype):
+        x = mb.cast(x=x, dtype="fp32")
+    context.add(mb.log(x=x, epsilon=1.0, name=node.name))
 
 
 @register_torch_op(torch_alias=["round"])
@@ -6809,7 +7362,7 @@ def baddbmm(context, node):
                 logger.warning(
                     f"Casting the `beta`(value={beta.val}) argument of `baddbmm` op {node.name} "
                     f"from {beta.dtype} to {bias.dtype} dtype")
-                beta = mb.cast(x=beta, dtype=TYPE_TO_DTYPE_STRING[bias.dtype])
+                beta = mb.cast(x=beta, dtype=types.builtin_to_string(bias.dtype))
             # Apply scaling factor beta to the bias.
             bias = mb.mul(x=beta, y=bias, name=bias.name + "_scaled")
             context.add(bias)
@@ -7363,45 +7916,6 @@ def tupleindex(context, node):
     context.add(tuple_input[index_input.val], node.name)
 
 
-def _get_causal_attn_mask(is_causal: bool, query_var: Var, key_var: Var) -> Var:
-    assert is_causal
-
-    # create mask of shape (target_seq, source_seq)
-    # s.t the diagonal and lower triangular of the matrix is all 1s
-    # and upper triangular is a large negative number (e.g. -30k)
-    target_seq = query_var.shape[-2]
-    source_seq = key_var.shape[-2]
-    if is_symbolic(target_seq) or is_symbolic(source_seq):
-        raise NotImplementedError(
-            "scaled_dot_product_attention op: "
-            "is_causal flag not handled when sequence length is symbolic"
-        )
-
-    all_ones = mb.fill(value=1.0, shape=(target_seq, source_seq))
-    all_negative_inf = mb.fill(value=-3e4, shape=(target_seq, source_seq))
-    all_ones_lower = mb.band_part(
-        x=all_ones, lower=-1, upper=0
-    )  # will 0 out upper triangle, excluding diag
-    all_negative_inf_upper = mb.band_part(
-        x=all_negative_inf, lower=0, upper=-1
-    )  # will 0 out lower triangle, excluding diag
-    all_negative_inf_diag_only = mb.band_part(x=all_negative_inf_upper, lower=0, upper=0)
-    all_negative_inf_upper_no_diag = mb.sub(x=all_negative_inf_upper, y=all_negative_inf_diag_only)
-    return mb.add(x=all_ones_lower, y=all_negative_inf_upper_no_diag)
-
-
-def _cast_bool_attn_mask(attn_mask: Var, query_var: Var) -> Var:
-    """
-    compute float mask as (1 - cast(bool_mask)) * -30k
-    """
-    assert is_bool(attn_mask.dtype)
-
-    mask = mb.cast(x=attn_mask, dtype=types.builtin_to_string(query_var.dtype))
-    compliment_of_mask = mb.sub(
-        x=_np.array([1.0]).astype(types.nptype_from_builtin(mask.dtype)), y=mask
-    )
-    return mb.mul(x=-3e4, y=compliment_of_mask)
-
 @register_torch_op(
     torch_alias=[
         "_scaled_dot_product_flash_attention_for_cpu",
@@ -7462,10 +7976,21 @@ def scaled_dot_product_attention(context, node):
 
         return q, k, v, attn_mask, dropout, is_causal, scale
 
-    def _check_args(q, k, v, attn_mask, dropout, is_causal, scale) -> None:
+    def _parse_keyword_args(context, node, attn_mask, scale) -> Tuple[Var]:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return attn_mask, scale
+
+        attn_mask = _get_kwinputs(context, node, "attn_mask", default=[attn_mask])[0]
+        scale = _get_kwinputs(context, node, "scale", default=[scale])[0]
+
+        return attn_mask, scale
+
+    def _check_args(q, k, v, attn_mask, dropout, is_causal) -> None:
         if attn_mask is not None and is_causal:
             raise ValueError(
-                "scaled_dot_product_attention op: attn_mask cannot be provided when is_causal is set to True."
+                "scaled_dot_product_attention op: "
+                "attn_mask cannot be provided when is_causal is set to True."
             )
 
         if dropout is not None:
@@ -7493,28 +8018,52 @@ def scaled_dot_product_attention(context, node):
                 "Rank of query and value do not match in scaled_dot_product_attention torch op"
             )
 
-    q, k, v, attn_mask, dropout, is_causal, scale = _parse_positional_args(context, node)
-    # torch.export may have kwargs
-    if context.frontend == TorchFrontend.TORCHEXPORT:
-        if attn_mask is None:
-            attn_mask = _get_kwinputs(context, node, "attn_mask", default=[attn_mask])[0]
-        if scale is None:
-            scale = _get_kwinputs(context, node, "scale", default=[scale])[0]
-    _check_args(q, k, v, attn_mask, dropout, is_causal, scale)
+    def _construct_causal_attn_mask(query_var: Var, key_var: Var) -> Var:
+        # create mask of shape (target_seq, source_seq)
+        # s.t the lower triangular of the matrix are all Trues
+        # and the strict upper triangular are all Falses
+        target_seq = query_var.shape[-2]
+        source_seq = key_var.shape[-2]
+        if is_symbolic(target_seq) or is_symbolic(source_seq):
+            target_seq = value_at(mb.shape(x=query_var), -2)
+            source_seq = value_at(mb.shape(x=key_var), -2)
+        mask_shape = mb.concat(values=(target_seq, source_seq), axis=0)
+        all_trues = mb.fill(shape=mask_shape, value=True)
+        mask = mb.band_part(x=all_trues, lower=-1, upper=0)
+        return mask
 
-    mask = None
-    if is_causal:
-        mask = _get_causal_attn_mask(is_causal, q, k)
-    elif attn_mask is not None:
-        # For ios18-, bool attention mask has to be cast to equivalent floating point attention mask
-        if is_bool(attn_mask.dtype) and not is_current_opset_version_compatible_with(target.iOS18):
-            mask = _cast_bool_attn_mask(attn_mask, q)
-        else:
-            mask = attn_mask
+    def _cast_bool_attn_mask(attn_mask: Var, query_var: Var) -> Var:
+        """
+        compute float mask as (1 - cast(bool_mask)) * -30k
+        """
+        assert is_bool(attn_mask.dtype)
+
+        mask = mb.cast(x=attn_mask, dtype=types.builtin_to_string(query_var.dtype))
+        compliment_of_mask = mb.sub(x=1.0, y=mask)
+        # Use a big enough but not easily fp16-overflow number (e.g. -3e4) as -inf
+        float_mask = mb.mul(x=-3e4, y=compliment_of_mask)
+        return float_mask
+
+    def _translate_torch_args(q, k, attn_mask, is_causal, can_use_fused_sdpa) -> Var:
+        mask = attn_mask
+        if is_causal:
+            mask = _construct_causal_attn_mask(q, k)
+        if mask is not None and is_bool(mask.dtype) and not can_use_fused_sdpa:
+            # In Core ML, only fused sdpa can use bool attention mask
+            # i.e. the decomposition has to use floating point mask
+            mask = _cast_bool_attn_mask(mask, q)
+        return mask
+
+    q, k, v, attn_mask, dropout, is_causal, scale = _parse_positional_args(context, node)
+    attn_mask, scale = _parse_keyword_args(context, node, attn_mask, scale)
+    _check_args(q, k, v, attn_mask, dropout, is_causal)
 
     # Since ios18, Core ML supports scaled_dot_product_attention op
     # It does not have scale, though
-    if is_current_opset_version_compatible_with(target.iOS18) and scale is None:
+    can_use_fused_sdpa = is_current_opset_version_compatible_with(target.iOS18) and scale is None
+    mask = _translate_torch_args(q, k, attn_mask, is_causal, can_use_fused_sdpa)
+
+    if can_use_fused_sdpa:
         # ios18 scaled_dot_product_attention only supports rank >= 3
         is_rank_2 = q.rank == 2
 
@@ -7543,7 +8092,6 @@ def scaled_dot_product_attention(context, node):
         if is_rank_2:
             res = mb.squeeze(x=res, axes=[0], name=node.name)
 
-    # For ios18-, scaled_dot_product_attention has to be decomposed
     else:
         res = _utils._decompose_scaled_dot_product_attention(q, k, v, mask, node.name, scale=scale)
 
@@ -7579,10 +8127,125 @@ def multinomial(context, node):
 
 
 @register_torch_op
+def linalg_inv(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    x = inputs[0]
+    if x.val is None:
+        raise NotImplementedError(
+            "For non-const input, the lowering for Torch `linalg_inv` op is not supported"
+        )
+    context.add(mb.const(val=np.linalg.inv(x.val), name=node.name))
+
+
+def _replace_values_by_bool_mask(data: Var, mask: Var, new_value: Union[int, float]):
+    """Replace the position in data where mask has True element to new_value."""
+    indices = mb.non_zero(x=mb.cast(x=mask, dtype="int32"))
+    # If there is no replacement needed, just use identity op.
+    if 0 in indices.shape:
+        return mb.identity(x=data)
+
+    # Expand the replacement value to the compatible shape for scatter_nd.
+    replacement_values = mb.expand_dims(x=new_value, axes=[0])
+    reps = mb.expand_dims(x=value_at(mb.shape(x=indices), 0), axes=[0])
+    replacement_values = mb.tile(x=replacement_values, reps=reps)
+
+    # Replace all nan to the corresponding values.
+    return mb.scatter_nd(data=data, indices=indices, updates=replacement_values, mode="update")
+
+
+@register_torch_op
+def nan_to_num(context, node):
+    inputs = _get_inputs(context, node, expected=4)
+    x = inputs[0]
+    nan = inputs[1].val if inputs[1] is not None else 0.0
+    posinf = inputs[2].val if inputs[2] is not None else None
+    neginf = inputs[3].val if inputs[3] is not None else None
+    if posinf is None:
+        posinf = types.type_mapping.builtin_to_range(x.dtype).high
+    if neginf is None:
+        neginf = types.type_mapping.builtin_to_range(x.dtype).low
+
+    if x.val is not None:
+        res = mb.const(val=np.nan_to_num(x.val, nan=nan, posinf=posinf, neginf=neginf))
+    else:
+        # Find indices of NaN based on "NaN is never equal to itself".
+        nan_indices_mask = mb.not_equal(x=x, y=x)
+        res = _replace_values_by_bool_mask(x, nan_indices_mask, nan)
+
+        # Find indices of Inf based on "Inf times zero becomes NaN".
+        x_times_zero = mb.mul(x=x, y=0.0)
+        inf_indices_mask = mb.not_equal(x=x_times_zero, y=x_times_zero)
+        posinf_indices_mask = mb.logical_and(x=inf_indices_mask, y=mb.greater(x=x, y=0.0))
+        neginf_indices_mask = mb.logical_and(x=inf_indices_mask, y=mb.less(x=x, y=0.0))
+        res = _replace_values_by_bool_mask(res, posinf_indices_mask, posinf)
+        res = _replace_values_by_bool_mask(res, neginf_indices_mask, neginf)
+
+    context.add(res, node.name)
+
+
+@register_torch_op
+def cumprod(context, node):
+    inputs = _get_inputs(context, node, expected=3)
+    x = inputs[0]
+    dim = inputs[1].val
+
+    size = x.shape[dim]
+    if is_symbolic(size):
+        raise NotImplementedError(
+            "For symbolic shape input, the lowering for Torch `cumprod` op is not supported"
+        )
+    for idx in range(1, size):
+        # For each element, multiply it with the previous element.
+        prev_element = mb.gather(x=x, indices=[idx - 1], axis=dim)
+        x = mb.scatter(data=x, indices=[idx], updates=prev_element, axis=dim, mode="mul")
+
+    context.add(x, node.name)
+
+
+@register_torch_op
+def searchsorted(context, node):
+    inputs = _get_inputs(context, node, expected=6)
+    sorted_sequence = inputs[0]
+    values = inputs[1]
+    side = inputs[4].val if inputs[4] is not None else False
+    if side is not None:
+        # The `side` parameter is preferred than `right` in torch.
+        right = side == "right"
+    else:
+        # If side is not specified, use the `right` parameter to determine.
+        right = inputs[3].val if inputs[3] is not None else False
+
+    if sorted_sequence.rank != values.rank:
+        raise NotImplementedError(
+            "Not support `searchsorted` op with different ranks of "
+            f"`sorted_sequence` ({sorted_sequence.rank}) and `values` ({values.rank})."
+        )
+    if is_symbolic(values.shape[-1]):
+        raise NotImplementedError(
+            "Not support `searchsorted` op for `values` with symbolic last dim."
+        )
+
+    # Assume `sorted_sequence` has shape [..., M] and `values` has shape [..., N]
+    # First tile the sorted_sequence to [..., N, M], and make values to [..., N, 1].
+    # Then count the number of smaller elements in tiles `sorted_sequence` for each element in `values`.
+    # It will get the result index with shape [..., N].
+    tile_reps = [1] * (sorted_sequence.rank + 1)
+    tile_reps[-2] = values.shape[-1]
+    tiled_sorted_sequence = mb.tile(x=mb.expand_dims(x=sorted_sequence, axes=[-2]), reps=tile_reps)
+    values = mb.expand_dims(x=values, axes=[-1])
+    if right:
+        count_smaller_num = mb.greater_equal(x=values, y=tiled_sorted_sequence)
+    else:
+        count_smaller_num = mb.greater(x=values, y=tiled_sorted_sequence)
+    res = mb.reduce_sum(x=mb.cast(x=count_smaller_num, dtype="int32"), axes=[-1], keep_dims=False)
+    context.add(res, node.name)
+
+
+@register_torch_op
 def one_hot(context, node):
     inputs = _get_inputs(context, node, expected=2)
     labels = inputs[0]
     num_classes = inputs[1].val
-    
+
     res = mb.one_hot(indices=labels, one_hot_vector_size=num_classes, name=node.name)
     context.add(res)

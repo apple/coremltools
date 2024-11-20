@@ -29,41 +29,41 @@ class RegistryMixin:
     REGISTRY = None
 
     @classmethod
-    def register(cls, name: str):
+    def register(cls, key: _Any):
         if cls.REGISTRY is None:
             cls.REGISTRY = _OrderedDict()
 
         def inner_wrapper(wrapped_obj):
-            if name in cls.REGISTRY:
+            if key in cls.REGISTRY:
                 _logger.warning(
-                    f"Name: {name} is already registered with object: {cls.REGISTRY[name].__name__} "
+                    f"Key: {key} is already registered with object: {cls.REGISTRY[key].__name__} "
                     f"in registry: {cls.__name__}"
-                    f"Over-writing the name with new class: {wrapped_obj.__name__}"
+                    f"Over-writing the key with new class: {wrapped_obj.__name__}"
                 )
-            cls.REGISTRY[name] = wrapped_obj
+            cls.REGISTRY[key] = wrapped_obj
             return wrapped_obj
 
         return inner_wrapper
 
     @classmethod
-    def _get_object(cls, name: str):
-        if name in cls.REGISTRY:
-            return cls.REGISTRY[name]
+    def _get_object(cls, key: _Any):
+        if key in cls.REGISTRY:
+            return cls.REGISTRY[key]
         raise NotImplementedError(
-            f"No object is registered with name: {name} in registry {cls.__name__}."
+            f"No object is registered with key: {key} in registry {cls.__name__}."
         )
 
 
 class ClassRegistryMixin(RegistryMixin):
     @classmethod
-    def get_class(cls, name: str):
-        return cls._get_object(name)
+    def get_class(cls, key: _Any):
+        return cls._get_object(key)
 
 
 class FunctionRegistryMixin(RegistryMixin):
     @classmethod
-    def get_function(cls, name: str):
-        return cls._get_object(name)
+    def get_function(cls, key: _Any):
+        return cls._get_object(key)
 
 
 class DictableDataClass:

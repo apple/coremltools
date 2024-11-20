@@ -22,11 +22,15 @@ class insert_image_preprocessing_ops(AbstractGraphPass):
     def apply(self, prog):
         for f_name, f in prog.functions.items():
             if f_name == 'main':
-                _insert_image_preprocessing_ops(f, prog)
+                if len(f.operations) == 0:
+                    continue
+                # The new image processing ops will be inserted in front of the first op in the function
+                with mb.set_before_op(f.operations[0]):
+                    _insert_image_preprocessing_ops(f)
 
 @block_context_manager
-def _insert_image_preprocessing_ops(block, prog):
-    input_types = list(prog.functions["main"].input_types)
+def _insert_image_preprocessing_ops(block):
+    input_types = list(block.input_types)
 
     for input_type in input_types:
         if isinstance(input_type, ImageType):
@@ -41,23 +45,34 @@ def _insert_image_preprocessing_ops(block, prog):
             last_output = input_var
             input_nptype = nptype_from_builtin(type(last_output.dtype()))
             if input_type.scale != 1:
-                last_output = mb.mul(x=last_output,
-                                     y=np.array(input_type.scale, dtype=input_nptype),
-                                     before_op=first_op, name=input_var.name + "__scaled__")
+                last_output = mb.mul(
+                    x=last_output,
+                    y=np.array(input_type.scale, dtype=input_nptype),
+                    name=input_var.name + "__scaled__",
+                )
             if has_bias:
-                if input_type.color_layout in (ColorLayout.GRAYSCALE, ColorLayout.GRAYSCALE_FLOAT16):
-                    last_output = mb.add(x=last_output,
-                                         y=np.array(input_type.bias, dtype=input_nptype),
-                                         before_op=first_op, name=input_var.name + "__biased__")
+                if input_type.color_layout in (
+                    ColorLayout.GRAYSCALE,
+                    ColorLayout.GRAYSCALE_FLOAT16,
+                ):
+                    last_output = mb.add(
+                        x=last_output,
+                        y=np.array(input_type.bias, dtype=input_nptype),
+                        name=input_var.name + "__biased__",
+                    )
                 else:
                     if len(last_output.shape) == 3:
-                        last_output = mb.add(x=last_output,
-                                             y=np.array(input_type.bias, dtype=input_nptype).reshape([3, 1, 1]),
-                                             before_op=first_op, name=input_var.name + "__biased__")
+                        last_output = mb.add(
+                            x=last_output,
+                            y=np.array(input_type.bias, dtype=input_nptype).reshape([3, 1, 1]),
+                            name=input_var.name + "__biased__",
+                        )
                     elif len(last_output.shape) == 4:
-                        last_output = mb.add(x=last_output,
-                                             y=np.array(input_type.bias, dtype=input_nptype).reshape([1, 3, 1, 1]),
-                                             before_op=first_op, name=input_var.name + "__biased__")
+                        last_output = mb.add(
+                            x=last_output,
+                            y=np.array(input_type.bias, dtype=input_nptype).reshape([1, 3, 1, 1]),
+                            name=input_var.name + "__biased__",
+                        )
                     else:
                         raise TypeError("Unsupported rank for image input type.")
 

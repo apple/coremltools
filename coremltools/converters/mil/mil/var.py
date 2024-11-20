@@ -5,7 +5,7 @@
 
 import copy
 from collections import defaultdict
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -226,8 +226,7 @@ class Var:
     def sym_type(self):
         return self._sym_type
 
-    @property
-    def shape(self):
+    def _get_shape(self) -> Tuple[int]:
         if types.is_tensor(self._sym_type):
             return self._sym_type.get_shape()
         if types.is_state(self._sym_type):
@@ -237,11 +236,14 @@ class Var:
         return tuple()
 
     @property
+    def shape(self) -> Tuple[int]:
+        return self._get_shape()
+
+    @property
     def rank(self):
         return len(self.shape)
 
-    @property
-    def dtype(self):
+    def _get_dtype(self) -> type:
         if types.is_tensor(self._sym_type):
             return self._sym_type.get_primitive()
         if types.is_state(self._sym_type):
@@ -249,6 +251,10 @@ class Var:
             assert types.is_tensor(wrapped_type), "only tensor type is supported in state type."
             return wrapped_type.get_primitive()
         return self._sym_type
+
+    @property
+    def dtype(self) -> type:
+        return self._get_dtype()
 
     @property
     def sym_val(self):

@@ -16,7 +16,6 @@ from coremltools.optimize.torch.palettization._utils import devectorize, vectori
     [
         (2, (2, 3, 4), (12, 2), torch.tensor([0, 12])),
         (2, (4, 3, 2), (12, 2), torch.tensor([0, 6])),
-        (3, (2, 3, 4), (8, 3), torch.tensor([0, 12, 4])),
         (3, (4, 3, 2), (8, 3), torch.tensor([0, 6, 12])),
     ],
 )

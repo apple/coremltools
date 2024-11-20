@@ -6,6 +6,7 @@
 
 import itertools
 
+import numpy as np
 import pytest
 
 from coremltools.converters.mil.mil import Builder as mb
@@ -18,6 +19,34 @@ from coremltools.converters.mil.testing_utils import (
 
 
 class TestMaterializeSymbolicShapeProgram:
+    @staticmethod
+    def test_weight_id_pass_down():
+        """
+        When materializing dynamic shape of a program, the weight_id need to be passed down to the created function
+        """
+        symbolic_shape = (get_new_symbol(), get_new_symbol())
+        fixed_shape = (2, 3)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=symbolic_shape)])
+        def prog(x):
+            y = mb.const(val=np.random.rand(*fixed_shape), name="y")
+            return mb.add(x=x, y=y)
+
+        graph_pass = PASS_REGISTRY["common::materialize_symbolic_shape_program"]
+        graph_pass.function_name_to_materialization_map = {
+            "main": {"x": fixed_shape},
+            "main_2": {"x": fixed_shape},
+        }
+        apply_pass_and_basic_check(
+            prog, graph_pass, skip_output_shape_check=True, skip_function_name_check=True
+        )
+
+        # check that the weight_id is passed down
+        for block in prog.functions.values():
+            const_ops = block.find_ops(op_type="const")
+            assert len(const_ops) == 1
+            assert const_ops[0].weight_id == "const_y_weight_id"
+
     @pytest.mark.parametrize("override_main_function", (True, False))
     def test_simple(self, override_main_function):
         """

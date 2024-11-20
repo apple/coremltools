@@ -71,9 +71,6 @@ def load(
     """
 
     if _HAS_TORCH_EXPORT_API and isinstance(spec, ExportedProgram):
-        # TODO: rdar://115845792 ([Executorch] Handle user provided inputs/outputs in the convert API)
-        if states:
-            raise AssertionError("'states' argument should be None for ExportedProgram")
         model = spec
     else:
         model = _torchscript_from_spec(spec)

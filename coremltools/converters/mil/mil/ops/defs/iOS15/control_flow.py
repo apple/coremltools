@@ -143,7 +143,7 @@ class Const(Operation):
 
     Parameters
     ----------
-    val: const<\*,T> (Required)
+    val: const<\\*,T> (Required)
 
     mode: immediate_value, file_value (Optional)
         * Determines how the constant value is stored in the internal MIL format.
@@ -152,7 +152,7 @@ class Const(Operation):
 
     Returns
     -------
-    const<\*,T>
+    const<\\*,T>
 
     Attributes
     ----------
@@ -222,7 +222,7 @@ class Const(Operation):
         return builtin_type, value
 
     @property
-    def weight_id(self) -> int:
+    def weight_id(self) -> str:
         """
         Weight id for the const. It is used for weight sharing across multiple functions.
         Constants sharing the same weight_id will use the same blob file value when
@@ -231,11 +231,11 @@ class Const(Operation):
         return self._weight_id
 
     @weight_id.setter
-    def weight_id(self, val: int) -> None:
+    def weight_id(self, val: str) -> None:
         """
         Set weight id for the const.
         """
-        assert isinstance(val, int), f"weight_id must be type of int. Got {type(val)}."
+        assert isinstance(val, str), f"weight_id must be type of str. Got {type(val)}."
         assert self._weight_id is None, f"cannot set {self.name} weight_id twice."
         self._weight_id = val
 
@@ -272,20 +272,20 @@ class select(Operation):
 
     Parameters
     ----------
-    cond: tensor<[\*D1], B> (Required)
+    cond: tensor<[\\*D1], B> (Required)
         * Tensor. When ``True``, select element from ``x``, otherwise, ``y``.
 
-    a: tensor<[\*D2], T> (Optional)
+    a: tensor<[\\*D2], T> (Optional)
         * Values selected at indices where ``cond`` is ``True``.
         * Default is ``None``.
 
-    b: tensor<[\*D3], T> (Optional)
+    b: tensor<[\\*D3], T> (Optional)
         * Values selected at indices where ``cond`` is ``False``.
         * Default is ``None``.
 
     Returns
     -------
-    tensor<[\*D_out], T> or tensor<[n, len(D1)], int32>
+    tensor<[\\*D_out], T> or tensor<[n, len(D1)], int32>
         *  If ``a, b`` are both provided, the return shape is based on broadcast rules
            from ``cond, a, b``.
         *  If ``a, b`` are ``None``, the return shape is 2-D, where the first dimension
@@ -723,14 +723,14 @@ class list_read(Operation):
 
     Parameters
     ----------
-    ls: List[\*] (Required)
+    ls: List[\\*] (Required)
 
     index: <i32> (Required)
         * Size of the list.
 
     Returns
     -------
-    <\*,T>
+    <\\*,T>
         * The element's value.
 
     Attributes
@@ -761,14 +761,14 @@ class list_gather(Operation):
 
     Parameters
     ----------
-    ls: List[\*] (Required)
+    ls: List[\\*] (Required)
 
-    indices: <K,i32> (Required)
+    indices: <K, i32> (Required)
         * Gather from indices, whose element must be in ``[0, ls.length)`` at runtime.
 
     Returns
     -------
-    <\*K,T>
+    <\\*K, T>
         * Selected tensors packed into a ``len(ls.elem_shape)+1`` rank tensor.
         * ``K[0] == len(indices)``.
 

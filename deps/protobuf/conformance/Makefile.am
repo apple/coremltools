@@ -4,6 +4,11 @@ conformance_protoc_inputs =                                    \
   conformance.proto                                            \
   $(top_srcdir)/src/google/protobuf/test_messages_proto3.proto
 
+# proto2 input files, should be separated with proto3, as we
+# can't generate proto2 files for php.
+conformance_proto2_protoc_inputs =                             \
+  $(top_srcdir)/src/google/protobuf/test_messages_proto2.proto
+
 well_known_type_protoc_inputs =                                \
   $(top_srcdir)/src/google/protobuf/any.proto                  \
   $(top_srcdir)/src/google/protobuf/duration.proto             \
@@ -64,6 +69,7 @@ other_language_protoc_outputs =                                \
   com/google/protobuf/ValueOrBuilder.java                      \
   com/google/protobuf/WrappersProto.java                       \
   com/google/protobuf_test_messages/proto3/TestMessagesProto3.java \
+  com/google/protobuf_test_messages/proto2/TestMessagesProto2.java \
   google/protobuf/any.pb.cc                                    \
   google/protobuf/any.pb.h                                     \
   google/protobuf/any.rb                                       \
@@ -80,12 +86,17 @@ other_language_protoc_outputs =                                \
   google/protobuf/struct.pb.h                                  \
   google/protobuf/struct.rb                                    \
   google/protobuf/struct_pb2.py                                \
+  google/protobuf/TestMessagesProto2.pbobjc.h                  \
+  google/protobuf/TestMessagesProto2.pbobjc.m                  \
   google/protobuf/TestMessagesProto3.pbobjc.h                  \
   google/protobuf/TestMessagesProto3.pbobjc.m                  \
   google/protobuf/test_messages_proto3.pb.cc                   \
   google/protobuf/test_messages_proto3.pb.h                    \
+  google/protobuf/test_messages_proto2.pb.cc                   \
+  google/protobuf/test_messages_proto2.pb.h                    \
   google/protobuf/test_messages_proto3_pb.rb                   \
   google/protobuf/test_messages_proto3_pb2.py                  \
+  google/protobuf/test_messages_proto2_pb2.py                  \
   google/protobuf/timestamp.pb.cc                              \
   google/protobuf/timestamp.pb.h                               \
   google/protobuf/timestamp.rb                                 \
@@ -96,6 +107,7 @@ other_language_protoc_outputs =                                \
   google/protobuf/wrappers_pb2.py                              \
   Conformance/ConformanceRequest.php                           \
   Conformance/ConformanceResponse.php                          \
+  Conformance/FailureSet.php                                   \
   Conformance/WireFormat.php                                   \
   GPBMetadata/Conformance.php                                  \
   GPBMetadata/Google/Protobuf/Any.php                          \
@@ -195,22 +207,27 @@ EXTRA_DIST =                  \
 
 conformance_test_runner_LDADD = $(top_srcdir)/src/libprotobuf.la
 conformance_test_runner_SOURCES = conformance_test.h conformance_test.cc \
+                                  conformance_test_main.cc               \
+                                  binary_json_conformance_suite.h        \
+                                  binary_json_conformance_suite.cc       \
+                                  text_format_conformance_suite.h        \
+                                  text_format_conformance_suite.cc       \
                                   conformance_test_runner.cc             \
                                   third_party/jsoncpp/json.h             \
                                   third_party/jsoncpp/jsoncpp.cpp
-nodist_conformance_test_runner_SOURCES = conformance.pb.cc google/protobuf/test_messages_proto3.pb.cc
+nodist_conformance_test_runner_SOURCES = conformance.pb.cc google/protobuf/test_messages_proto3.pb.cc google/protobuf/test_messages_proto2.pb.cc
 conformance_test_runner_CPPFLAGS = -I$(top_srcdir)/src -I$(srcdir)
 conformance_test_runner_CXXFLAGS = -std=c++11
-# Explicit deps beacuse BUILT_SOURCES are only done before a "make all/check"
+# Explicit deps because BUILT_SOURCES are only done before a "make all/check"
 # so a direct "make test_cpp" could fail if parallel enough.
 conformance_test_runner-conformance_test.$(OBJEXT): conformance.pb.h
 conformance_test_runner-conformance_test_runner.$(OBJEXT): conformance.pb.h
 
 conformance_cpp_LDADD = $(top_srcdir)/src/libprotobuf.la
 conformance_cpp_SOURCES = conformance_cpp.cc
-nodist_conformance_cpp_SOURCES = conformance.pb.cc google/protobuf/test_messages_proto3.pb.cc
+nodist_conformance_cpp_SOURCES = conformance.pb.cc google/protobuf/test_messages_proto3.pb.cc google/protobuf/test_messages_proto2.pb.cc
 conformance_cpp_CPPFLAGS = -I$(top_srcdir)/src
-# Explicit dep beacuse BUILT_SOURCES are only done before a "make all/check"
+# Explicit dep because BUILT_SOURCES are only done before a "make all/check"
 # so a direct "make test_cpp" could fail if parallel enough.
 conformance_cpp-conformance_cpp.$(OBJEXT): conformance.pb.h
 
@@ -219,16 +236,16 @@ if OBJC_CONFORMANCE_TEST
 bin_PROGRAMS += conformance-objc
 
 conformance_objc_SOURCES = conformance_objc.m ../objectivec/GPBProtocolBuffers.m
-nodist_conformance_objc_SOURCES = Conformance.pbobjc.m google/protobuf/TestMessagesProto3.pbobjc.m
+nodist_conformance_objc_SOURCES = Conformance.pbobjc.m google/protobuf/TestMessagesProto2.pbobjc.m google/protobuf/TestMessagesProto3.pbobjc.m
 # On travis, the build fails without the isysroot because whatever system
 # headers are being found don't include generics support for
 # NSArray/NSDictionary, the only guess is their image at one time had an odd
 # setup for Xcode and old frameworks are being found.
 conformance_objc_CPPFLAGS = -I$(top_srcdir)/objectivec -isysroot `xcrun --sdk macosx --show-sdk-path`
 conformance_objc_LDFLAGS = -framework Foundation
-# Explicit dep beacuse BUILT_SOURCES are only done before a "make all/check"
+# Explicit dep because BUILT_SOURCES are only done before a "make all/check"
 # so a direct "make test_objc" could fail if parallel enough.
-conformance_objc-conformance_objc.$(OBJEXT): Conformance.pbobjc.h google/protobuf/TestMessagesProto3.pbobjc.h
+conformance_objc-conformance_objc.$(OBJEXT): Conformance.pbobjc.h google/protobuf/TestMessagesProto2.pbobjc.h google/protobuf/TestMessagesProto3.pbobjc.h
 
 endif
 
@@ -242,9 +259,10 @@ google-protobuf:
 if USE_EXTERNAL_PROTOC
 
 # Some implementations include pre-generated versions of well-known types.
-protoc_middleman: $(conformance_protoc_inputs) $(well_known_type_protoc_inputs) google-protobuf
+protoc_middleman: $(conformance_protoc_inputs) $(conformance_proto2_protoc_inputs) $(well_known_type_protoc_inputs) google-protobuf
 	$(PROTOC) -I$(srcdir) -I$(top_srcdir) --cpp_out=. --java_out=. --ruby_out=. --objc_out=. --python_out=. --php_out=. --js_out=import_style=commonjs,binary:. $(conformance_protoc_inputs)
-	$(PROTOC) -I$(srcdir) -I$(top_srcdir) --cpp_out=. --java_out=. --ruby_out=. --python_out=. --php_out=. --js_out=import_style=commonjs,binary:google-protobuf $(well_known_type_protoc_inputs)
+	$(PROTOC) -I$(srcdir) -I$(top_srcdir) --cpp_out=. --java_out=. --ruby_out=. --objc_out=. --python_out=. --js_out=import_style=commonjs,binary:. $(conformance_proto2_protoc_inputs)
+	$(PROTOC) -I$(srcdir) -I$(top_srcdir) --cpp_out=. --java_out=. --ruby_out=. --python_out=. --js_out=import_style=commonjs,binary:google-protobuf $(well_known_type_protoc_inputs)
 	## $(PROTOC) -I$(srcdir) -I$(top_srcdir) --java_out=lite:lite $(conformance_protoc_inputs) $(well_known_type_protoc_inputs)
 	touch protoc_middleman
 
@@ -253,9 +271,10 @@ else
 # We have to cd to $(srcdir) before executing protoc because $(protoc_inputs) is
 # relative to srcdir, which may not be the same as the current directory when
 # building out-of-tree.
-protoc_middleman: $(top_srcdir)/src/protoc$(EXEEXT) $(conformance_protoc_inputs) $(well_known_type_protoc_inputs) google-protobuf
+protoc_middleman: $(top_srcdir)/src/protoc$(EXEEXT) $(conformance_protoc_inputs) $(conformance_proto2_protoc_inputs) $(well_known_type_protoc_inputs) google-protobuf
 	oldpwd=`pwd` && ( cd $(srcdir) && $$oldpwd/../src/protoc$(EXEEXT) -I. -I$(top_srcdir)/src --cpp_out=$$oldpwd --java_out=$$oldpwd --ruby_out=$$oldpwd --objc_out=$$oldpwd --python_out=$$oldpwd --php_out=$$oldpwd --js_out=import_style=commonjs,binary:$$oldpwd $(conformance_protoc_inputs) )
-	oldpwd=`pwd` && ( cd $(srcdir) && $$oldpwd/../src/protoc$(EXEEXT) -I. -I$(top_srcdir)/src --cpp_out=$$oldpwd --java_out=$$oldpwd --ruby_out=$$oldpwd --python_out=$$oldpwd --php_out=$$oldpwd --js_out=import_style=commonjs,binary:$$oldpwd/google-protobuf $(well_known_type_protoc_inputs) )
+	oldpwd=`pwd` && ( cd $(srcdir) && $$oldpwd/../src/protoc$(EXEEXT) -I. -I$(top_srcdir)/src --cpp_out=$$oldpwd --java_out=$$oldpwd --ruby_out=$$oldpwd --objc_out=$$oldpwd --python_out=$$oldpwd --js_out=import_style=commonjs,binary:$$oldpwd $(conformance_proto2_protoc_inputs) )
+	oldpwd=`pwd` && ( cd $(srcdir) && $$oldpwd/../src/protoc$(EXEEXT) -I. -I$(top_srcdir)/src --cpp_out=$$oldpwd --java_out=$$oldpwd --ruby_out=$$oldpwd --python_out=$$oldpwd --js_out=import_style=commonjs,binary:$$oldpwd/google-protobuf $(well_known_type_protoc_inputs) )
 	## @mkdir -p lite
 	## oldpwd=`pwd` && ( cd $(srcdir) && $$oldpwd/../src/protoc$(EXEEXT) -I. -I$(top_srcdir)/src --java_out=lite:$$oldpwd/lite $(conformance_protoc_inputs) $(well_known_type_protoc_inputs) )
 	touch protoc_middleman
@@ -266,15 +285,13 @@ $(protoc_outputs): protoc_middleman
 
 $(other_language_protoc_outputs): protoc_middleman
 
-BUILT_SOURCES = $(protoc_outputs) $(other_language_protoc_outputs)
-
 CLEANFILES = $(protoc_outputs) protoc_middleman javac_middleman conformance-java javac_middleman_lite conformance-java-lite conformance-csharp conformance-php conformance-php-c $(other_language_protoc_outputs)
 
 MAINTAINERCLEANFILES =   \
   Makefile.in
 
 javac_middleman: ConformanceJava.java protoc_middleman $(other_language_protoc_outputs)
-	jar=`ls ../java/util/target/*jar-with-dependencies.jar` && javac -classpath ../java/target/classes:$$jar ConformanceJava.java com/google/protobuf/conformance/Conformance.java com/google/protobuf_test_messages/proto3/TestMessagesProto3.java
+	jar=`ls ../java/util/target/*jar-with-dependencies.jar` && javac -classpath ../java/target/classes:$$jar ConformanceJava.java com/google/protobuf/conformance/Conformance.java com/google/protobuf_test_messages/proto3/TestMessagesProto3.java com/google/protobuf_test_messages/proto2/TestMessagesProto2.java
 	@touch javac_middleman
 
 conformance-java: javac_middleman
@@ -299,13 +316,13 @@ conformance-java-lite: javac_middleman_lite
 conformance-csharp: $(other_language_protoc_outputs)
 	@echo "Writing shortcut script conformance-csharp..."
 	@echo '#! /bin/sh' > conformance-csharp
-	@echo 'dotnet ../csharp/src/Google.Protobuf.Conformance/bin/Release/netcoreapp1.0/Google.Protobuf.Conformance.dll "$$@"' >> conformance-csharp
+	@echo 'dotnet ../csharp/src/Google.Protobuf.Conformance/bin/Release/netcoreapp2.1/Google.Protobuf.Conformance.dll "$$@"' >> conformance-csharp
 	@chmod +x conformance-csharp
 
 conformance-php:
 	@echo "Writing shortcut script conformance-php..."
 	@echo '#! /bin/sh' > conformance-php
-	@echo 'php  ./conformance_php.php' >> conformance-php
+	@echo 'php -d auto_prepend_file=autoload.php ./conformance_php.php' >> conformance-php
 	@chmod +x conformance-php
 
 conformance-php-c:
@@ -316,33 +333,36 @@ conformance-php-c:
 
 # Targets for actually running tests.
 test_cpp: protoc_middleman conformance-test-runner conformance-cpp
-	./conformance-test-runner --enforce_recommended --failure_list failure_list_cpp.txt ./conformance-cpp
+	./conformance-test-runner --enforce_recommended --failure_list failure_list_cpp.txt --text_format_failure_list text_format_failure_list_cpp.txt ./conformance-cpp
 
 test_java: protoc_middleman conformance-test-runner conformance-java
-	./conformance-test-runner --enforce_recommended --failure_list failure_list_java.txt ./conformance-java
+	./conformance-test-runner --enforce_recommended --failure_list failure_list_java.txt --text_format_failure_list text_format_failure_list_java.txt ./conformance-java
 
 test_java_lite: protoc_middleman conformance-test-runner conformance-java-lite
 	./conformance-test-runner --enforce_recommended ./conformance-java-lite
 
 test_csharp: protoc_middleman conformance-test-runner conformance-csharp
-	./conformance-test-runner --enforce_recommended --failure_list failure_list_csharp.txt ./conformance-csharp
+	./conformance-test-runner --enforce_recommended --failure_list failure_list_csharp.txt --text_format_failure_list text_format_failure_list_csharp.txt ./conformance-csharp
 
 test_ruby: protoc_middleman conformance-test-runner $(other_language_protoc_outputs)
-	RUBYLIB=../ruby/lib:. ./conformance-test-runner --enforce_recommended --failure_list failure_list_ruby.txt ./conformance_ruby.rb
+	RUBYLIB=../ruby/lib:. ./conformance-test-runner --enforce_recommended --failure_list failure_list_ruby.txt --text_format_failure_list text_format_failure_list_ruby.txt ./conformance_ruby.rb
+
+test_jruby: protoc_middleman conformance-test-runner $(other_language_protoc_outputs)
+	RUBYLIB=../ruby/lib:. ./conformance-test-runner --enforce_recommended --failure_list failure_list_jruby.txt --text_format_failure_list text_format_failure_list_jruby.txt ./conformance_ruby.rb
 
 test_php: protoc_middleman conformance-test-runner conformance-php $(other_language_protoc_outputs)
-	./conformance-test-runner --enforce_recommended --failure_list failure_list_php.txt ./conformance-php
+	./conformance-test-runner --enforce_recommended --failure_list failure_list_php.txt --text_format_failure_list text_format_failure_list_php.txt ./conformance-php
 
 test_php_c: protoc_middleman conformance-test-runner conformance-php-c $(other_language_protoc_outputs)
-	./conformance-test-runner --enforce_recommended --failure_list failure_list_php_c.txt ./conformance-php-c
+	./conformance-test-runner --enforce_recommended --failure_list failure_list_php_c.txt --text_format_failure_list text_format_failure_list_php.txt ./conformance-php-c
 
 # These depend on library paths being properly set up.  The easiest way to
 # run them is to just use "tox" from the python dir.
 test_python: protoc_middleman conformance-test-runner
-	./conformance-test-runner --enforce_recommended --failure_list failure_list_python.txt ./conformance_python.py
+	./conformance-test-runner --enforce_recommended --failure_list failure_list_python.txt --text_format_failure_list text_format_failure_list_python.txt ./conformance_python.py
 
 test_python_cpp: protoc_middleman conformance-test-runner
-	./conformance-test-runner --enforce_recommended --failure_list failure_list_python_cpp.txt ./conformance_python.py
+	./conformance-test-runner --enforce_recommended --failure_list failure_list_python_cpp.txt --text_format_failure_list text_format_failure_list_python_cpp.txt ./conformance_python.py
 
 test_nodejs: protoc_middleman conformance-test-runner $(other_language_protoc_outputs)
 	NODE_PATH=../js:. ./conformance-test-runner --enforce_recommended --failure_list failure_list_js.txt ./conformance_nodejs.js

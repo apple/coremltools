@@ -97,7 +97,7 @@ class topk(_topk_iOS16):
 
     Parameters
     ----------
-    x: <\*?, T> (Required)
+    x: <\\*?, T> (Required)
         * Input tensor.
     k: const<K> (Optional)
         * Defaults to ``1``.
@@ -122,10 +122,10 @@ class topk(_topk_iOS16):
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * Values of top/bottom ``k`` elements.
 
-    tensor<\*?, U>
+    tensor<\\*?, U>
         * Only returned when ``return_indices = True``
         * Indices of the top/bottom ``k`` elements along axis.
         * U is int32 or uint16 determined by ``output_indices_dtype`` (int32 by default).

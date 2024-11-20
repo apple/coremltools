@@ -5,7 +5,7 @@
 
 import math
 from collections import namedtuple
-from typing import List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -57,6 +57,9 @@ def quantize_weight(
 ) -> Tuple[np.ndarray, np.ndarray, Optional[np.ndarray]]:
     """Get quantized data along with metadata (scale, zero_point)."""
     if not np.issubdtype(weight.dtype, np.floating):
+        # In principle, all dtypes are quantizable, e.g. int can be cast to float then quantize
+        # In practise, Core ML constexpr dequantization ops return float,
+        # so such constexpr can only replace float const
         raise ValueError("Only floating numpy arrays are supported.")
 
     val_min = np.amin(weight, axis=axes, keepdims=True)
@@ -486,19 +489,31 @@ def ios16_lut_params_to_ios18(lut_params: LutParamsIos16) -> LutParams:
 
 def ios18_lut_params_to_ios16(lut_params: LutParams) -> LutParamsIos16:
     """The iOS16 lut params pack indices into bytes, and need a `shape` parameter."""
+    if len(lut_params.lut.shape) < 3:
+        raise ValueError(
+            "lut should have at least three dimensions, with shape [..., num_palettes, vector_size]."
+        )
     for idx, dim_size in enumerate(lut_params.lut.shape[:-2]):
         if dim_size > 1:
             raise AssertionError(
-                "The iOS16 only supports per-tensor lut, but got more than one "
+                "The pre-iOS18 palettization only supports per-tensor lut, but got more than one "
                 f"lut on {idx}th axis. LUT shape: {lut_params.lut.shape}"
+                "\nPlease set the minimum_deployment_target to iOS18 or later."
             )
+    if lut_params.lut.shape[-1] > 1:
+        raise ValueError(
+            "Vector palettization (lut last dim > 1) is only supported in iOS18+. "
+            "Please set the minimum_deployment_target to iOS18 or later."
+        )
 
     num_palettes = lut_params.lut.shape[-2]
     nbits = int(math.log2(num_palettes))
     return LutParamsIos16(
         lut=lut_params.lut.reshape((num_palettes,)),
         indices=pack_elements_into_bits(lut_params.indices, nbits),
-        shape=lut_params.indices.shape,
+        shape=np.array(
+            lut_params.indices.shape, dtype=np.uint32
+        ),  # The op requires shape parameter to be uint32.
     )
 
 
@@ -622,3 +637,20 @@ def restore_elements_from_packed_bits(
     if are_packed_values_signed:
         restored_elements = restored_elements.astype(np.int8)
     return restored_elements
+
+
+def get_min_and_max_values(
+    activation_stats: Dict[str, float],
+    var_name: str,
+) -> np.ndarray:
+    """
+    Utility to get the "rmin" and "rmax" values for a given var name in activation quantization.
+    """
+    if activation_stats is None:
+        raise AssertionError(
+            "'activation_stats' is required for calibration in activation quantization."
+        )
+
+    return np.array(
+        [activation_stats[var_name]["rmin"], activation_stats[var_name]["rmax"]], dtype=np.float16
+    )

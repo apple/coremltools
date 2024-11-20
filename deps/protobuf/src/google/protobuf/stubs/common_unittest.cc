@@ -31,8 +31,10 @@
 // Author: kenton@google.com (Kenton Varda)
 
 #include <vector>
+#include <google/protobuf/stubs/callback.h>
 #include <google/protobuf/stubs/casts.h>
 #include <google/protobuf/stubs/common.h>
+#include <google/protobuf/stubs/logging.h>
 #include <google/protobuf/stubs/strutil.h>
 #include <google/protobuf/stubs/substitute.h>
 
@@ -51,7 +53,7 @@ TEST(VersionTest, VersionMatchesConfig) {
   // Verify that the version string specified in config.h matches the one
   // in common.h.  The config.h version is a string which may have a suffix
   // like "beta" or "rc1", so we remove that.
-  string version = PACKAGE_VERSION;
+  std::string version = PACKAGE_VERSION;
   int pos = 0;
   while (pos < version.size() &&
          (ascii_isdigit(version[pos]) || version[pos] == '.')) {
@@ -75,10 +77,10 @@ TEST(CommonTest, IntMinMaxConstants) {
   EXPECT_EQ(0, kuint64max + 1);
 }
 
-vector<string> captured_messages_;
+std::vector<std::string> captured_messages_;
 
 void CaptureLog(LogLevel level, const char* filename, int line,
-                const string& message) {
+                const std::string& message) {
   captured_messages_.push_back(
     strings::Substitute("$0 $1:$2: $3",
       implicit_cast<int>(level), filename, line, message));
@@ -91,7 +93,7 @@ TEST(LoggingTest, DefaultLogging) {
   GOOGLE_LOG(WARNING) << "A warning.";
   GOOGLE_LOG(ERROR  ) << "An error.";
 
-  string text = GetCapturedTestStderr();
+  std::string text = GetCapturedTestStderr();
   EXPECT_EQ(
     "[libprotobuf INFO " __FILE__ ":" + SimpleItoa(line + 1) + "] A message.\n"
     "[libprotobuf WARNING " __FILE__ ":" + SimpleItoa(line + 2) + "] A warning.\n"
@@ -100,16 +102,16 @@ TEST(LoggingTest, DefaultLogging) {
 }
 
 TEST(LoggingTest, NullLogging) {
-  LogHandler* old_handler = SetLogHandler(NULL);
+  LogHandler* old_handler = SetLogHandler(nullptr);
 
   CaptureTestStderr();
   GOOGLE_LOG(INFO   ) << "A message.";
   GOOGLE_LOG(WARNING) << "A warning.";
   GOOGLE_LOG(ERROR  ) << "An error.";
 
-  EXPECT_TRUE(SetLogHandler(old_handler) == NULL);
+  EXPECT_TRUE(SetLogHandler(old_handler) == nullptr);
 
-  string text = GetCapturedTestStderr();
+  std::string text = GetCapturedTestStderr();
   EXPECT_EQ("", text);
 }
 
@@ -165,10 +167,10 @@ class ClosureTest : public testing::Test {
   static void SetA123Function() { current_instance_->a_ = 123; }
 
   void SetAMethod(int a)         { a_ = a; }
-  void SetCMethod(string c)      { c_ = c; }
+  void SetCMethod(std::string c) { c_ = c; }
 
   static void SetAFunction(int a)         { current_instance_->a_ = a; }
-  static void SetCFunction(string c)      { current_instance_->c_ = c; }
+  static void SetCFunction(std::string c) { current_instance_->c_ = c; }
 
   void SetABMethod(int a, const char* b)  { a_ = a; b_ = b; }
   static void SetABFunction(int a, const char* b) {
@@ -179,9 +181,9 @@ class ClosureTest : public testing::Test {
   virtual void SetUp() {
     current_instance_ = this;
     a_ = 0;
-    b_ = NULL;
+    b_ = nullptr;
     c_.clear();
-    permanent_closure_ = NULL;
+    permanent_closure_ = nullptr;
   }
 
   void DeleteClosureInCallback() {
@@ -190,13 +192,13 @@ class ClosureTest : public testing::Test {
 
   int a_;
   const char* b_;
-  string c_;
+  std::string c_;
   Closure* permanent_closure_;
 
   static ClosureTest* current_instance_;
 };
 
-ClosureTest* ClosureTest::current_instance_ = NULL;
+ClosureTest* ClosureTest::current_instance_ = nullptr;
 
 TEST_F(ClosureTest, TestClosureFunction0) {
   Closure* closure = NewCallback(&SetA123Function);
@@ -229,15 +231,15 @@ TEST_F(ClosureTest, TestClosureMethod1) {
 }
 
 TEST_F(ClosureTest, TestClosureFunction1String) {
-  Closure* closure = NewCallback(&SetCFunction, string("test"));
+  Closure* closure = NewCallback(&SetCFunction, std::string("test"));
   EXPECT_NE("test", c_);
   closure->Run();
   EXPECT_EQ("test", c_);
 }
 
 TEST_F(ClosureTest, TestClosureMethod1String) {
-  Closure* closure = NewCallback(current_instance_,
-                                 &ClosureTest::SetCMethod, string("test"));
+  Closure* closure = NewCallback(current_instance_, &ClosureTest::SetCMethod,
+                                 std::string("test"));
   EXPECT_NE("test", c_);
   closure->Run();
   EXPECT_EQ("test", c_);
@@ -321,7 +323,7 @@ TEST_F(ClosureTest, TestPermanentClosureFunction2) {
   EXPECT_EQ(789, a_);
   EXPECT_EQ(cstr, b_);
   a_ = 0;
-  b_ = NULL;
+  b_ = nullptr;
   closure->Run();
   EXPECT_EQ(789, a_);
   EXPECT_EQ(cstr, b_);
@@ -338,7 +340,7 @@ TEST_F(ClosureTest, TestPermanentClosureMethod2) {
   EXPECT_EQ(789, a_);
   EXPECT_EQ(cstr, b_);
   a_ = 0;
-  b_ = NULL;
+  b_ = nullptr;
   closure->Run();
   EXPECT_EQ(789, a_);
   EXPECT_EQ(cstr, b_);

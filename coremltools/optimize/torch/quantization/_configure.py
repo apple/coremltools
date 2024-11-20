@@ -206,7 +206,7 @@ class QATConfigurationHandler:
             if (
                 hasattr(module, "weight_fake_quant")
                 and module.weight_fake_quant is not None
-                and hasattr(module, "set_device")
+                and hasattr(module.weight_fake_quant, "set_device")
             ):
                 module.weight_fake_quant.set_device(self._device)
             elif not name.endswith(".weight_fake_quant") and hasattr(module, "set_device"):

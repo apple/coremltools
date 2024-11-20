@@ -71,7 +71,7 @@ def get_n_bits_from_dtype(dtype: _Union[str, _torch.dtype]) -> int:
         )
 
 
-def get_sign_from_dtype(dtype: _Union[str, _torch.dtype]) -> int:
+def is_signed_dtype(dtype: _Union[str, _torch.dtype]) -> bool:
     if type(dtype) is _torch.dtype:
         dtype_info = _get_dtype_info(dtype)
         return dtype_info.min < 0
@@ -100,6 +100,7 @@ def maybe_convert_str_to_dtype(dtype: _Union[str, _torch.dtype]) -> _torch.dtype
         "int3": _torch.int8,
         "fp8_e4m3": _torch.float8_e4m3fn,
         "fp8_e5m2": _torch.float8_e5m2,
+        "float16": _torch.float16,
     }
     if isinstance(dtype, str):
         dtype = dtype.lower()
@@ -210,3 +211,11 @@ def get_torch_version(version):
     version_regex = r"\d+\.\d+\.\d+"
     version = _re.search(version_regex, str(version)).group(0)
     return _StrictVersion(version)
+
+
+def normalize_fsdp_module_name(module_name: str) -> str:
+    """
+    FSDP flattens model parameters leading to change in module names.
+    helper method to return original module name
+    """
+    return _re.sub(r"_fsdp_\w+.", "", module_name)

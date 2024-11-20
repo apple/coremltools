@@ -6,7 +6,6 @@
 import os
 import shutil
 import tempfile
-import unittest
 
 import numpy as np
 import pytest
@@ -183,8 +182,8 @@ class TestWeightIDSharing:
 
             # const 1 and 2 share the same weight id, so they should be serialized
             # as the same blob value
-            const_1.op.weight_id = 0
-            const_2.op.weight_id = 0
+            const_1.op.weight_id = "0"
+            const_2.op.weight_id = "0"
 
             x = mb.add(x=x, y=const_1)
             x = mb.add(x=x, y=const_2)
@@ -192,6 +191,7 @@ class TestWeightIDSharing:
 
             return x
 
+        # skip all passes to avoid running the const_deduplicate pass
         prog.skip_all_passes = True
         mlmodel = ct.convert(
             prog,
@@ -202,7 +202,7 @@ class TestWeightIDSharing:
 
         mil_file = open(os.path.join(mlmodel.get_compiled_model_path(), "model.mil"))
         mil_txt = mil_file.read()
-
+        # In the above model, const_1 and const_2 are going to share the same blob file value.
         assert (
             'tensor<fp32, [500]> const_1 = const()[name = tensor<string, []>("const_1"), val = tensor<fp32, [500]>(BLOBFILE(path = tensor<string, []>("@model_path/weights/weight.bin"), offset = tensor<uint64, []>(64)))];'
             in mil_txt
@@ -232,7 +232,7 @@ class TestWeightIDSharing:
         )
         def func(x):
             const_1 = mb.const(val=val, name="const_1")
-            const_1.op.weight_id = 0
+            const_1.op.weight_id = "0"
             return mb.add(x=x, y=const_1)
 
         @mb.function(
@@ -243,7 +243,7 @@ class TestWeightIDSharing:
             const_2 = mb.const(val=val, name="const_2")
             const_3 = mb.const(val=val, name="const_3")
             # const_3 shared the same blob file value with const_1 in another function
-            const_3.op.weight_id = 0
+            const_3.op.weight_id = "0"
 
             x = mb.add(x=x, y=const_2)
             return mb.add(x=x, y=const_3)
@@ -251,7 +251,9 @@ class TestWeightIDSharing:
         prog = mil.Program()
         prog.add_function("main", func)
         prog.add_function("func_1", func_1)
+        prog.export_as_multifunction = True
 
+        # skip all passes to avoid running the const_deduplicate pass
         prog.skip_all_passes = True
         mlmodel = _mil_convert(
             prog,
@@ -264,7 +266,7 @@ class TestWeightIDSharing:
 
         mil_file = open(os.path.join(mlmodel.get_compiled_model_path(), "model.mil"))
         mil_txt = mil_file.read()
-
+        # In the above model, const_1 and const_3 are going to share the same blob file value.
         assert (
             'tensor<fp32, [500]> const_3 = const()[name = string("const_3"), val = tensor<fp32, [500]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(64)))];'
             in mil_txt

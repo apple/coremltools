@@ -37,18 +37,18 @@ class scaled_dot_product_attention(Operation):
 
     Mask can either be bool or float matching query, key, or value. For bool, it indicates
     whether the element should take part in the attention. Floats are added to the attention score.
-    Mask shape must be broadcastable to ``[B, \*?, L, S]``.
+    Mask shape must be broadcastable to ``[B, \\*?, L, S]``.
 
     Parameters
     ----------
-    query: tensor<[B, \*?, L, E], T> (Required)
-    key: tensor<[B, \*?, S, E], T> (Required)
-    value: tensor<[B, \*?, S, EV], T> (Required)
-    attn_mask: tensor<[\*?, S], M> (Optional)
+    query: tensor<[B, \\*?, L, E], T> (Required)
+    key: tensor<[B, \\*?, S, E], T> (Required)
+    value: tensor<[B, \\*?, S, EV], T> (Required)
+    attn_mask: tensor<[\\*?, S], M> (Optional)
 
     Returns
     -------
-    tensor<[B, \*?, L, EV], T>
+    tensor<[B, \\*?, L, EV], T>
 
     Attributes
     ----------

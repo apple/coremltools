@@ -36,6 +36,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 //%PDDM-EXPAND DECLARE_ARRAYS()
 // This block of code is generated, do not edit it directly.
+// clang-format off
 
 #pragma mark - Int32
 
@@ -134,7 +135,7 @@ NS_ASSUME_NONNULL_BEGIN
  *   **idx**:   The index of the current value.
  *   **stop**:  A pointer to a boolean that when set stops the enumeration.
  **/
-- (void)enumerateValuesWithBlock:(void (^)(int32_t value, NSUInteger idx, BOOL *stop))block;
+- (void)enumerateValuesWithBlock:(void (NS_NOESCAPE ^)(int32_t value, NSUInteger idx, BOOL *stop))block;
 
 /**
  * Enumerates the values on this array with the given block.
@@ -146,7 +147,7 @@ NS_ASSUME_NONNULL_BEGIN
  *   **stop**:  A pointer to a boolean that when set stops the enumeration.
  **/
 - (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
-                        usingBlock:(void (^)(int32_t value, NSUInteger idx, BOOL *stop))block;
+                        usingBlock:(void (NS_NOESCAPE ^)(int32_t value, NSUInteger idx, BOOL *stop))block;
 
 /**
  * Adds a value to this array.
@@ -306,7 +307,7 @@ NS_ASSUME_NONNULL_BEGIN
  *   **idx**:   The index of the current value.
  *   **stop**:  A pointer to a boolean that when set stops the enumeration.
  **/
-- (void)enumerateValuesWithBlock:(void (^)(uint32_t value, NSUInteger idx, BOOL *stop))block;
+- (void)enumerateValuesWithBlock:(void (NS_NOESCAPE ^)(uint32_t value, NSUInteger idx, BOOL *stop))block;
 
 /**
  * Enumerates the values on this array with the given block.
@@ -318,7 +319,7 @@ NS_ASSUME_NONNULL_BEGIN
  *   **stop**:  A pointer to a boolean that when set stops the enumeration.
  **/
 - (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
-                        usingBlock:(void (^)(uint32_t value, NSUInteger idx, BOOL *stop))block;
+                        usingBlock:(void (NS_NOESCAPE ^)(uint32_t value, NSUInteger idx, BOOL *stop))block;
 
 /**
  * Adds a value to this array.
@@ -478,7 +479,7 @@ NS_ASSUME_NONNULL_BEGIN
  *   **idx**:   The index of the current value.
  *   **stop**:  A pointer to a boolean that when set stops the enumeration.
  **/
-- (void)enumerateValuesWithBlock:(void (^)(int64_t value, NSUInteger idx, BOOL *stop))block;
+- (void)enumerateValuesWithBlock:(void (NS_NOESCAPE ^)(int64_t value, NSUInteger idx, BOOL *stop))block;
 
 /**
  * Enumerates the values on this array with the given block.
@@ -490,7 +491,7 @@ NS_ASSUME_NONNULL_BEGIN
  *   **stop**:  A pointer to a boolean that when set stops the enumeration.
  **/
 - (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
-                        usingBlock:(void (^)(int64_t value, NSUInteger idx, BOOL *stop))block;
+                        usingBlock:(void (NS_NOESCAPE ^)(int64_t value, NSUInteger idx, BOOL *stop))block;
 
 /**
  * Adds a value to this array.
@@ -650,7 +651,7 @@ NS_ASSUME_NONNULL_BEGIN
  *   **idx**:   The index of the current value.
  *   **stop**:  A pointer to a boolean that when set stops the enumeration.
  **/
-- (void)enumerateValuesWithBlock:(void (^)(uint64_t value, NSUInteger idx, BOOL *stop))block;
+- (void)enumerateValuesWithBlock:(void (NS_NOESCAPE ^)(uint64_t value, NSUInteger idx, BOOL *stop))block;
 
 /**
  * Enumerates the values on this array with the given block.
@@ -662,7 +663,7 @@ NS_ASSUME_NONNULL_BEGIN
  *   **stop**:  A pointer to a boolean that when set stops the enumeration.
  **/
 - (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
-                        usingBlock:(void (^)(uint64_t value, NSUInteger idx, BOOL *stop))block;
+                        usingBlock:(void (NS_NOESCAPE ^)(uint64_t value, NSUInteger idx, BOOL *stop))block;
 
 /**
  * Adds a value to this array.
@@ -822,7 +823,7 @@ NS_ASSUME_NONNULL_BEGIN
  *   **idx**:   The index of the current value.
  *   **stop**:  A pointer to a boolean that when set stops the enumeration.
  **/
-- (void)enumerateValuesWithBlock:(void (^)(float value, NSUInteger idx, BOOL *stop))block;
+- (void)enumerateValuesWithBlock:(void (NS_NOESCAPE ^)(float value, NSUInteger idx, BOOL *stop))block;
 
 /**
  * Enumerates the values on this array with the given block.
@@ -834,7 +835,7 @@ NS_ASSUME_NONNULL_BEGIN
  *   **stop**:  A pointer to a boolean that when set stops the enumeration.
  **/
 - (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
-                        usingBlock:(void (^)(float value, NSUInteger idx, BOOL *stop))block;
+                        usingBlock:(void (NS_NOESCAPE ^)(float value, NSUInteger idx, BOOL *stop))block;
 
 /**
  * Adds a value to this array.
@@ -994,7 +995,7 @@ NS_ASSUME_NONNULL_BEGIN
  *   **idx**:   The index of the current value.
  *   **stop**:  A pointer to a boolean that when set stops the enumeration.
  **/
-- (void)enumerateValuesWithBlock:(void (^)(double value, NSUInteger idx, BOOL *stop))block;
+- (void)enumerateValuesWithBlock:(void (NS_NOESCAPE ^)(double value, NSUInteger idx, BOOL *stop))block;
 
 /**
  * Enumerates the values on this array with the given block.
@@ -1006,7 +1007,7 @@ NS_ASSUME_NONNULL_BEGIN
  *   **stop**:  A pointer to a boolean that when set stops the enumeration.
  **/
 - (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
-                        usingBlock:(void (^)(double value, NSUInteger idx, BOOL *stop))block;
+                        usingBlock:(void (NS_NOESCAPE ^)(double value, NSUInteger idx, BOOL *stop))block;
 
 /**
  * Adds a value to this array.
@@ -1166,7 +1167,7 @@ NS_ASSUME_NONNULL_BEGIN
  *   **idx**:   The index of the current value.
  *   **stop**:  A pointer to a boolean that when set stops the enumeration.
  **/
-- (void)enumerateValuesWithBlock:(void (^)(BOOL value, NSUInteger idx, BOOL *stop))block;
+- (void)enumerateValuesWithBlock:(void (NS_NOESCAPE ^)(BOOL value, NSUInteger idx, BOOL *stop))block;
 
 /**
  * Enumerates the values on this array with the given block.
@@ -1178,7 +1179,7 @@ NS_ASSUME_NONNULL_BEGIN
  *   **stop**:  A pointer to a boolean that when set stops the enumeration.
  **/
 - (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
-                        usingBlock:(void (^)(BOOL value, NSUInteger idx, BOOL *stop))block;
+                        usingBlock:(void (NS_NOESCAPE ^)(BOOL value, NSUInteger idx, BOOL *stop))block;
 
 /**
  * Adds a value to this array.
@@ -1369,7 +1370,7 @@ NS_ASSUME_NONNULL_BEGIN
  *   **idx**:   The index of the current value.
  *   **stop**:  A pointer to a boolean that when set stops the enumeration.
  **/
-- (void)enumerateValuesWithBlock:(void (^)(int32_t value, NSUInteger idx, BOOL *stop))block;
+- (void)enumerateValuesWithBlock:(void (NS_NOESCAPE ^)(int32_t value, NSUInteger idx, BOOL *stop))block;
 
 /**
  * Enumerates the values on this array with the given block.
@@ -1381,7 +1382,7 @@ NS_ASSUME_NONNULL_BEGIN
  *   **stop**:  A pointer to a boolean that when set stops the enumeration.
  **/
 - (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
-                        usingBlock:(void (^)(int32_t value, NSUInteger idx, BOOL *stop))block;
+                        usingBlock:(void (NS_NOESCAPE ^)(int32_t value, NSUInteger idx, BOOL *stop))block;
 
 // These methods bypass the validationFunc to provide access to values that were not
 // known at the time the binary was compiled.
@@ -1403,7 +1404,7 @@ NS_ASSUME_NONNULL_BEGIN
  *   **idx**:   The index of the current value.
  *   **stop**:  A pointer to a boolean that when set stops the enumeration.
  **/
-- (void)enumerateRawValuesWithBlock:(void (^)(int32_t value, NSUInteger idx, BOOL *stop))block;
+- (void)enumerateRawValuesWithBlock:(void (NS_NOESCAPE ^)(int32_t value, NSUInteger idx, BOOL *stop))block;
 
 /**
  * Enumerates the values on this array with the given block.
@@ -1415,7 +1416,7 @@ NS_ASSUME_NONNULL_BEGIN
  *   **stop**:  A pointer to a boolean that when set stops the enumeration.
  **/
 - (void)enumerateRawValuesWithOptions:(NSEnumerationOptions)opts
-                           usingBlock:(void (^)(int32_t value, NSUInteger idx, BOOL *stop))block;
+                           usingBlock:(void (NS_NOESCAPE ^)(int32_t value, NSUInteger idx, BOOL *stop))block;
 
 // If value is not a valid enumerator as defined by validationFunc, these
 // methods will assert in debug, and will log in release and assign the value
@@ -1535,6 +1536,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+// clang-format on
 //%PDDM-EXPAND-END DECLARE_ARRAYS()
 
 NS_ASSUME_NONNULL_END
@@ -1779,7 +1781,7 @@ NS_ASSUME_NONNULL_END
 //% *   **idx**:   The index of the current value.
 //% *   **stop**:  A pointer to a boolean that when set stops the enumeration.
 //% **/
-//%- (void)enumerateRawValuesWithBlock:(void (^)(TYPE value, NSUInteger idx, BOOL *stop))block;
+//%- (void)enumerateRawValuesWithBlock:(void (NS_NOESCAPE ^)(TYPE value, NSUInteger idx, BOOL *stop))block;
 //%
 //%/**
 //% * Enumerates the values on this array with the given block.
@@ -1791,7 +1793,7 @@ NS_ASSUME_NONNULL_END
 //% *   **stop**:  A pointer to a boolean that when set stops the enumeration.
 //% **/
 //%- (void)enumerateRawValuesWithOptions:(NSEnumerationOptions)opts
-//%                           usingBlock:(void (^)(TYPE value, NSUInteger idx, BOOL *stop))block;
+//%                           usingBlock:(void (NS_NOESCAPE ^)(TYPE value, NSUInteger idx, BOOL *stop))block;
 //%
 //%// If value is not a valid enumerator as defined by validationFunc, these
 //%// methods will assert in debug, and will log in release and assign the value
@@ -1821,7 +1823,7 @@ NS_ASSUME_NONNULL_END
 //% *   **idx**:   The index of the current value.
 //% *   **stop**:  A pointer to a boolean that when set stops the enumeration.
 //% **/
-//%- (void)enumerateValuesWithBlock:(void (^)(TYPE value, NSUInteger idx, BOOL *stop))block;
+//%- (void)enumerateValuesWithBlock:(void (NS_NOESCAPE ^)(TYPE value, NSUInteger idx, BOOL *stop))block;
 //%
 //%/**
 //% * Enumerates the values on this array with the given block.
@@ -1833,7 +1835,7 @@ NS_ASSUME_NONNULL_END
 //% *   **stop**:  A pointer to a boolean that when set stops the enumeration.
 //% **/
 //%- (void)enumerateValuesWithOptions:(NSEnumerationOptions)opts
-//%                        usingBlock:(void (^)(TYPE value, NSUInteger idx, BOOL *stop))block;
+//%                        usingBlock:(void (NS_NOESCAPE ^)(TYPE value, NSUInteger idx, BOOL *stop))block;
 
 //%PDDM-DEFINE ARRAY_MUTABLE_INTERFACE(NAME, TYPE, HELPER_NAME)
 //%/**

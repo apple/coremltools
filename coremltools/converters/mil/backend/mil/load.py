@@ -162,7 +162,9 @@ class MILProtoExporter:
         # use the cached file value
         weight_id = var.op.weight_id
         if weight_id is None:
-            return create_file_value_helper()
+            # The weight_id is only for const across functions.
+            # For caching vars within a function, we use block (function) name + var name.
+            weight_id = f"{var.op.enclosing_block.name}_{var.name}"
 
         if weight_id in self.weight_id_to_file_value:
             assert weight_id is not None, "invalid weight_id"
@@ -605,7 +607,6 @@ class CoreMLProtoExporter:
         classifier_config: ClassifierConfig,
         convert_to: str,
         convert_from: str,
-        export_multi_functions: bool,
     ):
         self.prog = prog
         self.mil_proto = mil_proto
@@ -614,7 +615,7 @@ class CoreMLProtoExporter:
         self.classifier_config = classifier_config
         self.convert_to = convert_to
         self.convert_from = convert_from
-        self.export_multi_functions = export_multi_functions
+        self.export_as_multifunction = self.prog.export_as_multifunction
         self.prog.validate(check_essential_scope=True)
 
     @staticmethod
@@ -952,7 +953,7 @@ class CoreMLProtoExporter:
         Utils to get a coreml model description.
         For the multifunction export, we utilize the FunctionDescription proto message.
         """
-        if self.export_multi_functions:
+        if self.export_as_multifunction:
             # For multifunction export, we use the FunctionDescription
             if specification_version < _SPECIFICATION_VERSION_IOS_18:
                 raise ValueError(
@@ -1090,6 +1091,5 @@ def load(
         classifier_config=kwargs.get("classifier_config", None),
         convert_to=kwargs.get("convert_to", None),
         convert_from=kwargs.get("convert_from", None),
-        export_multi_functions=kwargs.get("export_multi_functions", False),
     )
     return coreml_proto_exporter.export(specification_version)

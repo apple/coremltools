@@ -85,8 +85,8 @@ class TestConstDeduplication:
         expected_ops = ["const", "const", "const", "add", "add", "add", "add"]
         assert get_op_types_in_block(main_func, skip_const_ops=False) == expected_ops
         const_ops = main_func.find_ops(op_type="const")
-        assert const_ops[0].weight_id == 0
-        assert const_ops[1].weight_id == 1
+        assert const_ops[0].weight_id == "0"
+        assert const_ops[1].weight_id == "1"
         assert const_ops[2].weight_id is None
 
         func_1 = prog.functions["func_1"]
@@ -98,8 +98,8 @@ class TestConstDeduplication:
         ]
         assert get_op_types_in_block(func_1, skip_const_ops=False) == expected_ops
         const_ops = func_1.find_ops(op_type="const")
-        assert const_ops[0].weight_id == 0
-        assert const_ops[1].weight_id == 1
+        assert const_ops[0].weight_id == "0"
+        assert const_ops[1].weight_id == "1"
 
     def test_const_deduplication_cross_functions_from_same_source(self):
         """
@@ -146,9 +146,9 @@ class TestConstDeduplication:
 
         for func in [prog.functions["func_1"], prog.functions["func_2"]]:
             const_ops = func.find_ops(op_type="const")
-            assert const_ops[0].weight_id == 0
-            assert const_ops[1].weight_id == 1
-            assert const_ops[2].weight_id == 2
+            assert const_ops[0].weight_id == "0"
+            assert const_ops[1].weight_id == "1"
+            assert const_ops[2].weight_id == "2"
 
     @staticmethod
     def test_const_deduplication_with_threshold():
@@ -434,6 +434,36 @@ class TestConstDeduplication:
         prev_prog, _, _ = apply_pass_and_basic_check(prog, "common::const_deduplication")
         assert_op_count_match(prev_prog, expect=8, op="const")
         assert_op_count_match(prog, expect=6, op="const")
+
+    def test_const_mask_deduplication(self):
+        """The same mask used by constexpr_sparse_blockwise_shift_scale and constexpr_sparse_to_dense is deduped."""
+        mask_val = np.random.randint(low=0, high=2, size=(32, 32)).astype(types.np_uint1_dtype)
+        nonzero_data_val = np.random.randint(low=1, high=100, size=(np.sum(mask_val),)).astype(
+            np.int8
+        )
+
+        @mb.program(input_specs=[], opset_version=ct.target.iOS18)
+        def prog():
+            mask, nonzero_data = mb.constexpr_sparse_blockwise_shift_scale(
+                data_mask=mb.const(val=mask_val),
+                nonzero_data=nonzero_data_val,
+                scale=np.array([[0.1]]),
+                offset=np.array([[1]]).astype(np.int8),
+            )
+            return mb.constexpr_sparse_to_dense(
+                nonzero_data=nonzero_data,
+                mask=mb.const(val=mask_val),
+            )
+
+        prev_prog, _, _ = apply_pass_and_basic_check(prog, "common::const_deduplication")
+        assert_op_count_match(prev_prog, expect=5, op="const")
+        # The `data_mask` and `mask` which have the same val (mask_val) are deduplicated.
+        assert_op_count_match(prog, expect=4, op="const")
+        quantize_op = prog.functions["main"].find_ops(
+            op_type="constexpr_sparse_blockwise_shift_scale"
+        )[0]
+        sparse_to_dense_op = prog.functions["main"].find_ops(op_type="constexpr_sparse_to_dense")[0]
+        assert quantize_op.data_mask == sparse_to_dense_op.mask
 
 
 class TestConstElimination:

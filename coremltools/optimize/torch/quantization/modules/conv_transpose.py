@@ -4,7 +4,6 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 # Original implementation from https://github.com/pytorch/pytorch/blob/main/torch/ao/nn/qat/modules/conv.py
-# Copyright (c) 2016 Facebook, Inc (Adam Paszke)
 
 from typing import List as _List
 from typing import Optional as _Optional
@@ -18,8 +17,6 @@ from torch import Tensor as _Tensor
 from torch.ao.nn.intrinsic import _FusedModule
 from torch.nn.common_types import _size_1_t, _size_2_t, _size_3_t
 from torch.nn.modules.utils import _pair, _single, _triple
-
-torch.manual_seed(0)
 
 __all__ = ["ConvTranspose1d", "ConvTranspose2d", "ConvTranspose3d"]
 MOD = _TypeVar("MOD", bound=nn.modules.conv._ConvTransposeNd)

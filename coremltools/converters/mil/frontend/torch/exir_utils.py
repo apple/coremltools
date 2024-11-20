@@ -55,7 +55,6 @@ def _construct_ct_tensor_type_from_torch(
     symbol_name_to_ct_range_dim: Dict[str, RangeDim],
 ) -> TensorType:
     coreml_dtype = TORCH_DTYPE_TO_MIL_DTYPE[tensor.dtype]
-    # TODO (rdar://115845792): Once we support user inputs, we can migrate this check to inputs validation
     if coreml_dtype == types.int16:
         coreml_dtype = types.int32
         logger.warning(
@@ -228,6 +227,12 @@ def _extract_inputs_from_exir_program(
                 raise NotImplementedError(
                     "Placeholder val must be a tensor or fake tensor, "
                     f"but got type {type(val)}, value {str(val)}"
+                )
+            if val.dim_order() != tuple(range(val.dim())):
+                # TODO (rdar://139251491) Core ML can support a special case:
+                # rank-4 (0, 2, 3, 1) dim order, i.e. ct.ImageType(channel_first=False)
+                raise NotImplementedError(
+                    "Core ML does not have general support for non-contiguous dim order"
                 )
             torch_user_inputs[node.name] = val
 

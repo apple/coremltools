@@ -32,6 +32,7 @@ class Program:
         self.functions = {}
         self.skip_all_passes = False
         self.default_function_name = "main"
+        self.export_as_multifunction = False
 
     def _add_essential_scope_source(
         self, scope_source: Union[ScopeSource, List[ScopeSource]]

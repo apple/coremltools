@@ -4,79 +4,13 @@
 
 namespace Google\Protobuf\Internal;
 
-use Google\Protobuf\Internal\GPBType;
-use Google\Protobuf\Internal\GPBWire;
-use Google\Protobuf\Internal\RepeatedField;
-use Google\Protobuf\Internal\InputStream;
-
-use Google\Protobuf\Internal\GPBUtil;
-
-/**
- * Protobuf type <code>google.protobuf.DescriptorProto.ExtensionRange</code>
- */
-class DescriptorProto_ExtensionRange extends \Google\Protobuf\Internal\Message
-{
+if (false) {
     /**
-     * <code>optional int32 start = 1;</code>
+     * This class is deprecated. Use Google\Protobuf\Internal\DescriptorProto\ExtensionRange instead.
+     * @deprecated
      */
-    private $start = 0;
-    private $has_start = false;
-    /**
-     * <code>optional int32 end = 2;</code>
-     */
-    private $end = 0;
-    private $has_end = false;
-
-    public function __construct() {
-        \GPBMetadata\Google\Protobuf\Internal\Descriptor::initOnce();
-        parent::__construct();
-    }
-
-    /**
-     * <code>optional int32 start = 1;</code>
-     */
-    public function getStart()
-    {
-        return $this->start;
-    }
-
-    /**
-     * <code>optional int32 start = 1;</code>
-     */
-    public function setStart($var)
-    {
-        GPBUtil::checkInt32($var);
-        $this->start = $var;
-        $this->has_start = true;
-    }
-
-    public function hasStart()
-    {
-        return $this->has_start;
-    }
-
-    /**
-     * <code>optional int32 end = 2;</code>
-     */
-    public function getEnd()
-    {
-        return $this->end;
-    }
-
-    /**
-     * <code>optional int32 end = 2;</code>
-     */
-    public function setEnd($var)
-    {
-        GPBUtil::checkInt32($var);
-        $this->end = $var;
-        $this->has_end = true;
-    }
-
-    public function hasEnd()
-    {
-        return $this->has_end;
-    }
-
+    class DescriptorProto_ExtensionRange {}
 }
+class_exists(DescriptorProto\ExtensionRange::class);
+@trigger_error('Google\Protobuf\Internal\DescriptorProto_ExtensionRange is deprecated and will be removed in the next major release. Use Google\Protobuf\Internal\DescriptorProto\ExtensionRange instead', E_USER_DEPRECATED);
 

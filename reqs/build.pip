@@ -2,6 +2,7 @@ numpy==1.21.0; platform_machine == "arm64" and python_version < "3.9"
 numpy<1.20; platform_machine != "arm64" and python_version < "3.9"
 numpy==2.0.0; python_version >= "3.9"
 
+pytest
 six
 sympy
 tqdm

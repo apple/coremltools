@@ -54,6 +54,28 @@ def test_ptq_default_config():
 
 
 @pytest.mark.parametrize(
+    "dtype,n_bits",
+    [
+        ["int4", 4],
+        ["uint4", 4],
+        ["int8", 8],
+        ["uint8", 8],
+        [torch.int8, 8],
+        [torch.uint8, 8],
+    ],
+)
+def test_ptq_config_n_bits(dtype, n_bits):
+    config = PostTrainingQuantizerConfig.from_dict(
+        {
+            "global_config": {
+                "weight_dtype": dtype,
+            }
+        }
+    )
+    assert config.global_config.weight_n_bits == n_bits
+
+
+@pytest.mark.parametrize(
     "module",
     [
         torch.nn.Linear(10, 10),
@@ -278,8 +300,25 @@ def test_ptq_post_compress_multihead(
     )
 
 
-def test_ptq_compression_metadata():
-    config = PostTrainingQuantizerConfig()
+@pytest.mark.parametrize(
+    "weight_dtype,n_bits",
+    [
+        ["int4", 4],
+        ["uint4", 4],
+        ["int8", 8],
+        ["uint8", 8],
+    ],
+)
+@pytest.mark.parametrize("qscheme", ["symmetric", "affine"])
+def test_ptq_compression_metadata(weight_dtype, n_bits, qscheme):
+    config = PostTrainingQuantizerConfig.from_dict(
+        {
+            "global_config": {
+                "quantization_scheme": qscheme,
+                "weight_dtype": weight_dtype,
+            }
+        }
+    )
     ptq = PostTrainingQuantizer(torch.nn.Linear(10, 10), config)
     model = ptq.compress()
 
@@ -289,4 +328,9 @@ def test_ptq_compression_metadata():
     assert torch.IntTensor([CompressionType.quantization.value]) == getattr(
         model, "_COREML_/weight/compression_type"
     )
-    assert torch.IntTensor([8]) == getattr(model, "_COREML_/weight/quantization_n_bits")
+    assert torch.IntTensor([n_bits]) == getattr(model, "_COREML_/weight/quantization_n_bits")
+    scale = getattr(model, "_COREML_/weight/quantization_scale")
+    quant_weight = model.weight / scale
+    if hasattr(model, "_COREML_/weight/zero_point"):
+        quant_weight += getattr(model, "_COREML_/weight/zero_point")
+    assert (quant_weight.max() - quant_weight.min()) <= (2**n_bits - 1)

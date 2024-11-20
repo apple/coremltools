@@ -256,7 +256,7 @@ class ScopeInfo:
                 raise ValueError(f"EXIR_DEBUG_HANDLE scope cannot have len > 1. Got {self.data}.")
 
 
-class ScopeContextManger:
+class ScopeContextManager:
     def __init__(
         self,
         *scopes: List[ScopeInfo],

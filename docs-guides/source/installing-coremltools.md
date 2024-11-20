@@ -4,7 +4,7 @@ This page describes how to install the [`coremltools`](https://github.com/apple/
 
 ```{admonition} Supported Python and MacOS Versions
 
-The current version of coremltools ([version 7.1](https://github.com/apple/coremltools)) includes wheels for Python 3.7, 3.8, 3.9, 3.10, and 3.11. The last stable release of coremltools to support Python 2 is version 4.0.
+The current version of coremltools ([version 8.0](https://github.com/apple/coremltools)) includes wheels for Python 3.7, 3.8, 3.9, 3.10, 3.11, and 3.12. The last stable release of coremltools to support Python 2 is version 4.0.
 
 The supported MacOS versions are as follows:
 

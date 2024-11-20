@@ -8,416 +8,607 @@ use Google\Protobuf\Internal\GPBType;
 use Google\Protobuf\Internal\GPBWire;
 use Google\Protobuf\Internal\RepeatedField;
 use Google\Protobuf\Internal\InputStream;
-
 use Google\Protobuf\Internal\GPBUtil;
 
 /**
- * <pre>
  * Describes a field within a message.
- * </pre>
  *
- * Protobuf type <code>google.protobuf.FieldDescriptorProto</code>
+ * Generated from protobuf message <code>google.protobuf.FieldDescriptorProto</code>
  */
 class FieldDescriptorProto extends \Google\Protobuf\Internal\Message
 {
     /**
-     * <code>optional string name = 1;</code>
+     * Generated from protobuf field <code>optional string name = 1;</code>
      */
-    private $name = '';
-    private $has_name = false;
+    protected $name = null;
     /**
-     * <code>optional int32 number = 3;</code>
+     * Generated from protobuf field <code>optional int32 number = 3;</code>
      */
-    private $number = 0;
-    private $has_number = false;
+    protected $number = null;
     /**
-     * <code>optional .google.protobuf.FieldDescriptorProto.Label label = 4;</code>
+     * Generated from protobuf field <code>optional .google.protobuf.FieldDescriptorProto.Label label = 4;</code>
      */
-    private $label = 0;
-    private $has_label = false;
+    protected $label = null;
     /**
-     * <pre>
      * If type_name is set, this need not be set.  If both this and type_name
      * are set, this must be one of TYPE_ENUM, TYPE_MESSAGE or TYPE_GROUP.
-     * </pre>
      *
-     * <code>optional .google.protobuf.FieldDescriptorProto.Type type = 5;</code>
+     * Generated from protobuf field <code>optional .google.protobuf.FieldDescriptorProto.Type type = 5;</code>
      */
-    private $type = 0;
-    private $has_type = false;
+    protected $type = null;
     /**
-     * <pre>
      * For message and enum types, this is the name of the type.  If the name
      * starts with a '.', it is fully-qualified.  Otherwise, C++-like scoping
      * rules are used to find the type (i.e. first the nested types within this
      * message are searched, then within the parent, on up to the root
      * namespace).
-     * </pre>
      *
-     * <code>optional string type_name = 6;</code>
+     * Generated from protobuf field <code>optional string type_name = 6;</code>
      */
-    private $type_name = '';
-    private $has_type_name = false;
+    protected $type_name = null;
     /**
-     * <pre>
      * For extensions, this is the name of the type being extended.  It is
      * resolved in the same manner as type_name.
-     * </pre>
      *
-     * <code>optional string extendee = 2;</code>
+     * Generated from protobuf field <code>optional string extendee = 2;</code>
      */
-    private $extendee = '';
-    private $has_extendee = false;
+    protected $extendee = null;
     /**
-     * <pre>
      * For numeric types, contains the original text representation of the value.
      * For booleans, "true" or "false".
      * For strings, contains the default text contents (not escaped in any way).
-     * For bytes, contains the C escaped value.  All bytes &gt;= 128 are escaped.
+     * For bytes, contains the C escaped value.  All bytes >= 128 are escaped.
      * TODO(kenton):  Base-64 encode?
-     * </pre>
      *
-     * <code>optional string default_value = 7;</code>
+     * Generated from protobuf field <code>optional string default_value = 7;</code>
      */
-    private $default_value = '';
-    private $has_default_value = false;
+    protected $default_value = null;
     /**
-     * <pre>
      * If set, gives the index of a oneof in the containing type's oneof_decl
      * list.  This field is a member of that oneof.
-     * </pre>
      *
-     * <code>optional int32 oneof_index = 9;</code>
+     * Generated from protobuf field <code>optional int32 oneof_index = 9;</code>
      */
-    private $oneof_index = 0;
-    private $has_oneof_index = false;
+    protected $oneof_index = null;
     /**
-     * <pre>
      * JSON name of this field. The value is set by protocol compiler. If the
      * user has set a "json_name" option on this field, that option's value
      * will be used. Otherwise, it's deduced from the field's name by converting
      * it to camelCase.
-     * </pre>
      *
-     * <code>optional string json_name = 10;</code>
+     * Generated from protobuf field <code>optional string json_name = 10;</code>
      */
-    private $json_name = '';
-    private $has_json_name = false;
+    protected $json_name = null;
     /**
-     * <code>optional .google.protobuf.FieldOptions options = 8;</code>
+     * Generated from protobuf field <code>optional .google.protobuf.FieldOptions options = 8;</code>
      */
-    private $options = null;
-    private $has_options = false;
+    protected $options = null;
+    /**
+     * If true, this is a proto3 "optional". When a proto3 field is optional, it
+     * tracks presence regardless of field type.
+     * When proto3_optional is true, this field must be belong to a oneof to
+     * signal to old proto3 clients that presence is tracked for this field. This
+     * oneof is known as a "synthetic" oneof, and this field must be its sole
+     * member (each proto3 optional field gets its own synthetic oneof). Synthetic
+     * oneofs exist in the descriptor only, and do not generate any API. Synthetic
+     * oneofs must be ordered after all "real" oneofs.
+     * For message fields, proto3_optional doesn't create any semantic change,
+     * since non-repeated message fields always track presence. However it still
+     * indicates the semantic detail of whether the user wrote "optional" or not.
+     * This can be useful for round-tripping the .proto file. For consistency we
+     * give message fields a synthetic oneof also, even though it is not required
+     * to track presence. This is especially important because the parser can't
+     * tell if a field is a message or an enum, so it must always create a
+     * synthetic oneof.
+     * Proto2 optional fields do not set this flag, because they already indicate
+     * optional with `LABEL_OPTIONAL`.
+     *
+     * Generated from protobuf field <code>optional bool proto3_optional = 17;</code>
+     */
+    protected $proto3_optional = null;
 
-    public function __construct() {
+    /**
+     * Constructor.
+     *
+     * @param array $data {
+     *     Optional. Data for populating the Message object.
+     *
+     *     @type string $name
+     *     @type int $number
+     *     @type int $label
+     *     @type int $type
+     *           If type_name is set, this need not be set.  If both this and type_name
+     *           are set, this must be one of TYPE_ENUM, TYPE_MESSAGE or TYPE_GROUP.
+     *     @type string $type_name
+     *           For message and enum types, this is the name of the type.  If the name
+     *           starts with a '.', it is fully-qualified.  Otherwise, C++-like scoping
+     *           rules are used to find the type (i.e. first the nested types within this
+     *           message are searched, then within the parent, on up to the root
+     *           namespace).
+     *     @type string $extendee
+     *           For extensions, this is the name of the type being extended.  It is
+     *           resolved in the same manner as type_name.
+     *     @type string $default_value
+     *           For numeric types, contains the original text representation of the value.
+     *           For booleans, "true" or "false".
+     *           For strings, contains the default text contents (not escaped in any way).
+     *           For bytes, contains the C escaped value.  All bytes >= 128 are escaped.
+     *           TODO(kenton):  Base-64 encode?
+     *     @type int $oneof_index
+     *           If set, gives the index of a oneof in the containing type's oneof_decl
+     *           list.  This field is a member of that oneof.
+     *     @type string $json_name
+     *           JSON name of this field. The value is set by protocol compiler. If the
+     *           user has set a "json_name" option on this field, that option's value
+     *           will be used. Otherwise, it's deduced from the field's name by converting
+     *           it to camelCase.
+     *     @type \Google\Protobuf\Internal\FieldOptions $options
+     *     @type bool $proto3_optional
+     *           If true, this is a proto3 "optional". When a proto3 field is optional, it
+     *           tracks presence regardless of field type.
+     *           When proto3_optional is true, this field must be belong to a oneof to
+     *           signal to old proto3 clients that presence is tracked for this field. This
+     *           oneof is known as a "synthetic" oneof, and this field must be its sole
+     *           member (each proto3 optional field gets its own synthetic oneof). Synthetic
+     *           oneofs exist in the descriptor only, and do not generate any API. Synthetic
+     *           oneofs must be ordered after all "real" oneofs.
+     *           For message fields, proto3_optional doesn't create any semantic change,
+     *           since non-repeated message fields always track presence. However it still
+     *           indicates the semantic detail of whether the user wrote "optional" or not.
+     *           This can be useful for round-tripping the .proto file. For consistency we
+     *           give message fields a synthetic oneof also, even though it is not required
+     *           to track presence. This is especially important because the parser can't
+     *           tell if a field is a message or an enum, so it must always create a
+     *           synthetic oneof.
+     *           Proto2 optional fields do not set this flag, because they already indicate
+     *           optional with `LABEL_OPTIONAL`.
+     * }
+     */
+    public function __construct($data = NULL) {
         \GPBMetadata\Google\Protobuf\Internal\Descriptor::initOnce();
-        parent::__construct();
+        parent::__construct($data);
     }
 
     /**
-     * <code>optional string name = 1;</code>
+     * Generated from protobuf field <code>optional string name = 1;</code>
+     * @return string
      */
     public function getName()
     {
-        return $this->name;
+        return isset($this->name) ? $this->name : '';
+    }
+
+    public function hasName()
+    {
+        return isset($this->name);
+    }
+
+    public function clearName()
+    {
+        unset($this->name);
     }
 
     /**
-     * <code>optional string name = 1;</code>
+     * Generated from protobuf field <code>optional string name = 1;</code>
+     * @param string $var
+     * @return $this
      */
     public function setName($var)
     {
         GPBUtil::checkString($var, True);
         $this->name = $var;
-        $this->has_name = true;
-    }
 
-    public function hasName()
-    {
-        return $this->has_name;
+        return $this;
     }
 
     /**
-     * <code>optional int32 number = 3;</code>
+     * Generated from protobuf field <code>optional int32 number = 3;</code>
+     * @return int
      */
     public function getNumber()
     {
-        return $this->number;
+        return isset($this->number) ? $this->number : 0;
+    }
+
+    public function hasNumber()
+    {
+        return isset($this->number);
+    }
+
+    public function clearNumber()
+    {
+        unset($this->number);
     }
 
     /**
-     * <code>optional int32 number = 3;</code>
+     * Generated from protobuf field <code>optional int32 number = 3;</code>
+     * @param int $var
+     * @return $this
      */
     public function setNumber($var)
     {
         GPBUtil::checkInt32($var);
         $this->number = $var;
-        $this->has_number = true;
-    }
 
-    public function hasNumber()
-    {
-        return $this->has_number;
+        return $this;
     }
 
     /**
-     * <code>optional .google.protobuf.FieldDescriptorProto.Label label = 4;</code>
+     * Generated from protobuf field <code>optional .google.protobuf.FieldDescriptorProto.Label label = 4;</code>
+     * @return int
      */
     public function getLabel()
     {
-        return $this->label;
-    }
-
-    /**
-     * <code>optional .google.protobuf.FieldDescriptorProto.Label label = 4;</code>
-     */
-    public function setLabel($var)
-    {
-        GPBUtil::checkEnum($var, \Google\Protobuf\Internal\FieldDescriptorProto_Label::class);
-        $this->label = $var;
-        $this->has_label = true;
+        return isset($this->label) ? $this->label : 0;
     }
 
     public function hasLabel()
     {
-        return $this->has_label;
+        return isset($this->label);
+    }
+
+    public function clearLabel()
+    {
+        unset($this->label);
     }
 
     /**
-     * <pre>
+     * Generated from protobuf field <code>optional .google.protobuf.FieldDescriptorProto.Label label = 4;</code>
+     * @param int $var
+     * @return $this
+     */
+    public function setLabel($var)
+    {
+        GPBUtil::checkEnum($var, \Google\Protobuf\Internal\FieldDescriptorProto\Label::class);
+        $this->label = $var;
+
+        return $this;
+    }
+
+    /**
      * If type_name is set, this need not be set.  If both this and type_name
      * are set, this must be one of TYPE_ENUM, TYPE_MESSAGE or TYPE_GROUP.
-     * </pre>
      *
-     * <code>optional .google.protobuf.FieldDescriptorProto.Type type = 5;</code>
+     * Generated from protobuf field <code>optional .google.protobuf.FieldDescriptorProto.Type type = 5;</code>
+     * @return int
      */
     public function getType()
     {
-        return $this->type;
-    }
-
-    /**
-     * <pre>
-     * If type_name is set, this need not be set.  If both this and type_name
-     * are set, this must be one of TYPE_ENUM, TYPE_MESSAGE or TYPE_GROUP.
-     * </pre>
-     *
-     * <code>optional .google.protobuf.FieldDescriptorProto.Type type = 5;</code>
-     */
-    public function setType($var)
-    {
-        GPBUtil::checkEnum($var, \Google\Protobuf\Internal\FieldDescriptorProto_Type::class);
-        $this->type = $var;
-        $this->has_type = true;
+        return isset($this->type) ? $this->type : 0;
     }
 
     public function hasType()
     {
-        return $this->has_type;
+        return isset($this->type);
+    }
+
+    public function clearType()
+    {
+        unset($this->type);
     }
 
     /**
-     * <pre>
+     * If type_name is set, this need not be set.  If both this and type_name
+     * are set, this must be one of TYPE_ENUM, TYPE_MESSAGE or TYPE_GROUP.
+     *
+     * Generated from protobuf field <code>optional .google.protobuf.FieldDescriptorProto.Type type = 5;</code>
+     * @param int $var
+     * @return $this
+     */
+    public function setType($var)
+    {
+        GPBUtil::checkEnum($var, \Google\Protobuf\Internal\FieldDescriptorProto\Type::class);
+        $this->type = $var;
+
+        return $this;
+    }
+
+    /**
      * For message and enum types, this is the name of the type.  If the name
      * starts with a '.', it is fully-qualified.  Otherwise, C++-like scoping
      * rules are used to find the type (i.e. first the nested types within this
      * message are searched, then within the parent, on up to the root
      * namespace).
-     * </pre>
      *
-     * <code>optional string type_name = 6;</code>
+     * Generated from protobuf field <code>optional string type_name = 6;</code>
+     * @return string
      */
     public function getTypeName()
     {
-        return $this->type_name;
+        return isset($this->type_name) ? $this->type_name : '';
+    }
+
+    public function hasTypeName()
+    {
+        return isset($this->type_name);
+    }
+
+    public function clearTypeName()
+    {
+        unset($this->type_name);
     }
 
     /**
-     * <pre>
      * For message and enum types, this is the name of the type.  If the name
      * starts with a '.', it is fully-qualified.  Otherwise, C++-like scoping
      * rules are used to find the type (i.e. first the nested types within this
      * message are searched, then within the parent, on up to the root
      * namespace).
-     * </pre>
      *
-     * <code>optional string type_name = 6;</code>
+     * Generated from protobuf field <code>optional string type_name = 6;</code>
+     * @param string $var
+     * @return $this
      */
     public function setTypeName($var)
     {
         GPBUtil::checkString($var, True);
         $this->type_name = $var;
-        $this->has_type_name = true;
-    }
 
-    public function hasTypeName()
-    {
-        return $this->has_type_name;
+        return $this;
     }
 
     /**
-     * <pre>
      * For extensions, this is the name of the type being extended.  It is
      * resolved in the same manner as type_name.
-     * </pre>
      *
-     * <code>optional string extendee = 2;</code>
+     * Generated from protobuf field <code>optional string extendee = 2;</code>
+     * @return string
      */
     public function getExtendee()
     {
-        return $this->extendee;
+        return isset($this->extendee) ? $this->extendee : '';
+    }
+
+    public function hasExtendee()
+    {
+        return isset($this->extendee);
+    }
+
+    public function clearExtendee()
+    {
+        unset($this->extendee);
     }
 
     /**
-     * <pre>
      * For extensions, this is the name of the type being extended.  It is
      * resolved in the same manner as type_name.
-     * </pre>
      *
-     * <code>optional string extendee = 2;</code>
+     * Generated from protobuf field <code>optional string extendee = 2;</code>
+     * @param string $var
+     * @return $this
      */
     public function setExtendee($var)
     {
         GPBUtil::checkString($var, True);
         $this->extendee = $var;
-        $this->has_extendee = true;
-    }
 
-    public function hasExtendee()
-    {
-        return $this->has_extendee;
+        return $this;
     }
 
     /**
-     * <pre>
      * For numeric types, contains the original text representation of the value.
      * For booleans, "true" or "false".
      * For strings, contains the default text contents (not escaped in any way).
-     * For bytes, contains the C escaped value.  All bytes &gt;= 128 are escaped.
+     * For bytes, contains the C escaped value.  All bytes >= 128 are escaped.
      * TODO(kenton):  Base-64 encode?
-     * </pre>
      *
-     * <code>optional string default_value = 7;</code>
+     * Generated from protobuf field <code>optional string default_value = 7;</code>
+     * @return string
      */
     public function getDefaultValue()
     {
-        return $this->default_value;
+        return isset($this->default_value) ? $this->default_value : '';
+    }
+
+    public function hasDefaultValue()
+    {
+        return isset($this->default_value);
+    }
+
+    public function clearDefaultValue()
+    {
+        unset($this->default_value);
     }
 
     /**
-     * <pre>
      * For numeric types, contains the original text representation of the value.
      * For booleans, "true" or "false".
      * For strings, contains the default text contents (not escaped in any way).
-     * For bytes, contains the C escaped value.  All bytes &gt;= 128 are escaped.
+     * For bytes, contains the C escaped value.  All bytes >= 128 are escaped.
      * TODO(kenton):  Base-64 encode?
-     * </pre>
      *
-     * <code>optional string default_value = 7;</code>
+     * Generated from protobuf field <code>optional string default_value = 7;</code>
+     * @param string $var
+     * @return $this
      */
     public function setDefaultValue($var)
     {
         GPBUtil::checkString($var, True);
         $this->default_value = $var;
-        $this->has_default_value = true;
-    }
 
-    public function hasDefaultValue()
-    {
-        return $this->has_default_value;
+        return $this;
     }
 
     /**
-     * <pre>
      * If set, gives the index of a oneof in the containing type's oneof_decl
      * list.  This field is a member of that oneof.
-     * </pre>
      *
-     * <code>optional int32 oneof_index = 9;</code>
+     * Generated from protobuf field <code>optional int32 oneof_index = 9;</code>
+     * @return int
      */
     public function getOneofIndex()
     {
-        return $this->oneof_index;
+        return isset($this->oneof_index) ? $this->oneof_index : 0;
+    }
+
+    public function hasOneofIndex()
+    {
+        return isset($this->oneof_index);
+    }
+
+    public function clearOneofIndex()
+    {
+        unset($this->oneof_index);
     }
 
     /**
-     * <pre>
      * If set, gives the index of a oneof in the containing type's oneof_decl
      * list.  This field is a member of that oneof.
-     * </pre>
      *
-     * <code>optional int32 oneof_index = 9;</code>
+     * Generated from protobuf field <code>optional int32 oneof_index = 9;</code>
+     * @param int $var
+     * @return $this
      */
     public function setOneofIndex($var)
     {
         GPBUtil::checkInt32($var);
         $this->oneof_index = $var;
-        $this->has_oneof_index = true;
-    }
 
-    public function hasOneofIndex()
-    {
-        return $this->has_oneof_index;
+        return $this;
     }
 
     /**
-     * <pre>
      * JSON name of this field. The value is set by protocol compiler. If the
      * user has set a "json_name" option on this field, that option's value
      * will be used. Otherwise, it's deduced from the field's name by converting
      * it to camelCase.
-     * </pre>
      *
-     * <code>optional string json_name = 10;</code>
+     * Generated from protobuf field <code>optional string json_name = 10;</code>
+     * @return string
      */
     public function getJsonName()
     {
-        return $this->json_name;
+        return isset($this->json_name) ? $this->json_name : '';
+    }
+
+    public function hasJsonName()
+    {
+        return isset($this->json_name);
+    }
+
+    public function clearJsonName()
+    {
+        unset($this->json_name);
     }
 
     /**
-     * <pre>
      * JSON name of this field. The value is set by protocol compiler. If the
      * user has set a "json_name" option on this field, that option's value
      * will be used. Otherwise, it's deduced from the field's name by converting
      * it to camelCase.
-     * </pre>
      *
-     * <code>optional string json_name = 10;</code>
+     * Generated from protobuf field <code>optional string json_name = 10;</code>
+     * @param string $var
+     * @return $this
      */
     public function setJsonName($var)
     {
         GPBUtil::checkString($var, True);
         $this->json_name = $var;
-        $this->has_json_name = true;
-    }
 
-    public function hasJsonName()
-    {
-        return $this->has_json_name;
+        return $this;
     }
 
     /**
-     * <code>optional .google.protobuf.FieldOptions options = 8;</code>
+     * Generated from protobuf field <code>optional .google.protobuf.FieldOptions options = 8;</code>
+     * @return \Google\Protobuf\Internal\FieldOptions|null
      */
     public function getOptions()
     {
         return $this->options;
     }
 
+    public function hasOptions()
+    {
+        return isset($this->options);
+    }
+
+    public function clearOptions()
+    {
+        unset($this->options);
+    }
+
     /**
-     * <code>optional .google.protobuf.FieldOptions options = 8;</code>
+     * Generated from protobuf field <code>optional .google.protobuf.FieldOptions options = 8;</code>
+     * @param \Google\Protobuf\Internal\FieldOptions $var
+     * @return $this
      */
-    public function setOptions(&$var)
+    public function setOptions($var)
     {
         GPBUtil::checkMessage($var, \Google\Protobuf\Internal\FieldOptions::class);
         $this->options = $var;
-        $this->has_options = true;
+
+        return $this;
     }
 
-    public function hasOptions()
+    /**
+     * If true, this is a proto3 "optional". When a proto3 field is optional, it
+     * tracks presence regardless of field type.
+     * When proto3_optional is true, this field must be belong to a oneof to
+     * signal to old proto3 clients that presence is tracked for this field. This
+     * oneof is known as a "synthetic" oneof, and this field must be its sole
+     * member (each proto3 optional field gets its own synthetic oneof). Synthetic
+     * oneofs exist in the descriptor only, and do not generate any API. Synthetic
+     * oneofs must be ordered after all "real" oneofs.
+     * For message fields, proto3_optional doesn't create any semantic change,
+     * since non-repeated message fields always track presence. However it still
+     * indicates the semantic detail of whether the user wrote "optional" or not.
+     * This can be useful for round-tripping the .proto file. For consistency we
+     * give message fields a synthetic oneof also, even though it is not required
+     * to track presence. This is especially important because the parser can't
+     * tell if a field is a message or an enum, so it must always create a
+     * synthetic oneof.
+     * Proto2 optional fields do not set this flag, because they already indicate
+     * optional with `LABEL_OPTIONAL`.
+     *
+     * Generated from protobuf field <code>optional bool proto3_optional = 17;</code>
+     * @return bool
+     */
+    public function getProto3Optional()
     {
-        return $this->has_options;
+        return isset($this->proto3_optional) ? $this->proto3_optional : false;
+    }
+
+    public function hasProto3Optional()
+    {
+        return isset($this->proto3_optional);
+    }
+
+    public function clearProto3Optional()
+    {
+        unset($this->proto3_optional);
+    }
+
+    /**
+     * If true, this is a proto3 "optional". When a proto3 field is optional, it
+     * tracks presence regardless of field type.
+     * When proto3_optional is true, this field must be belong to a oneof to
+     * signal to old proto3 clients that presence is tracked for this field. This
+     * oneof is known as a "synthetic" oneof, and this field must be its sole
+     * member (each proto3 optional field gets its own synthetic oneof). Synthetic
+     * oneofs exist in the descriptor only, and do not generate any API. Synthetic
+     * oneofs must be ordered after all "real" oneofs.
+     * For message fields, proto3_optional doesn't create any semantic change,
+     * since non-repeated message fields always track presence. However it still
+     * indicates the semantic detail of whether the user wrote "optional" or not.
+     * This can be useful for round-tripping the .proto file. For consistency we
+     * give message fields a synthetic oneof also, even though it is not required
+     * to track presence. This is especially important because the parser can't
+     * tell if a field is a message or an enum, so it must always create a
+     * synthetic oneof.
+     * Proto2 optional fields do not set this flag, because they already indicate
+     * optional with `LABEL_OPTIONAL`.
+     *
+     * Generated from protobuf field <code>optional bool proto3_optional = 17;</code>
+     * @param bool $var
+     * @return $this
+     */
+    public function setProto3Optional($var)
+    {
+        GPBUtil::checkBool($var);
+        $this->proto3_optional = $var;
+
+        return $this;
     }
 
 }

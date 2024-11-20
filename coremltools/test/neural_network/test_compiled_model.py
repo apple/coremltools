@@ -18,8 +18,7 @@ from coremltools.proto import Model_pb2
 
 class TestCompiledModel:
 
-    @classmethod
-    def setup(self):
+    def setup_class(self):
         spec = Model_pb2.Model()
         spec.specificationVersion = 1
         input_ = spec.description.input.add()

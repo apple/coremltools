@@ -66,7 +66,7 @@ Result CoreML::validateInt64Parameter(const std::string& parameterName, const Sp
 
 Result CoreML::validateDoubleParameter(const std::string& parameterName, const Specification::DoubleParameter& doubleParameter) {
 
-    const ::google::protobuf::double_t defaultValue = doubleParameter.defaultvalue();
+    auto defaultValue = doubleParameter.defaultvalue();
 
     if (doubleParameter.has_range()) {
         const Specification::DoubleRange& range = doubleParameter.range();
