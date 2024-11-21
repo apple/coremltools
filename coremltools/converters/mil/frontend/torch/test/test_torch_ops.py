@@ -426,22 +426,24 @@ class TestNLLLoss(TorchBaseTest):
 
 class TestArgSort(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape, axis, descending",
+        "compute_unit, backend, frontend, shape, axis, descending",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             COMMON_SHAPES,
             [-1, 0],
             [True, False],
         ),
     )
-    def test_argsort(self, compute_unit, backend, shape, axis, descending):
+    def test_argsort(self, compute_unit, backend, frontend, shape, axis, descending):
         model = ModuleWrapper(
             function=torch.argsort, kwargs={"dim": axis, "descending": descending}
         )
         TorchBaseTest.run_compare_torch(
             shape,
             model,
+            frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
         )
@@ -449,20 +451,22 @@ class TestArgSort(TorchBaseTest):
 
 class TestSort(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape, axis, descending",
+        "compute_unit, backend, frontend, shape, axis, descending",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             COMMON_SHAPES,
             [-1, 0],
             [True, False],
         ),
     )
-    def test_sort(self, compute_unit, backend, shape, axis, descending):
+    def test_sort(self, compute_unit, backend, frontend, shape, axis, descending):
         model = ModuleWrapper(function=torch.sort, kwargs={"dim": axis, "descending": descending})
         TorchBaseTest.run_compare_torch(
             shape,
             model,
+            frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
         )

@@ -6329,24 +6329,81 @@ def amin(context, node):
 
 @register_torch_op
 def argsort(context, node):
-    inputs = _get_inputs(context, node, expected=3)
-    ascending = mb.logical_not(x=inputs[2])
-    argsort = mb.argsort(x=inputs[0], axis=inputs[1], ascending=ascending, name=node.name)
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected={TorchFrontend.TORCHSCRIPT: 3},
+            min_expected={TorchFrontend.TORCHEXPORT: 1, TorchFrontend.EXECUTORCH: 1},
+        )
+        nargs = len(inputs)
+
+        x = inputs[0]
+        dim = inputs[1] if nargs > 1 else -1
+        descending = inputs[2] if nargs > 2 else False
+
+        return x, dim, descending
+
+    def _parse_keyword_args(context, node, dim, descending) -> Tuple[Var]:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return dim, descending
+
+        dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
+        descending = _get_kwinputs(context, node, "descending", default=[descending])[0]
+
+        return dim, descending
+
+    x, dim, descending = _parse_positional_args(context, node)
+    dim, descending = _parse_keyword_args(context, node, dim, descending)
+
+    ascending = mb.logical_not(x=descending)
+    argsort = mb.argsort(x=x, axis=dim, ascending=ascending, name=node.name)
     context.add(argsort)
 
 
 @register_torch_op
 def sort(context, node):
-    inputs = _get_inputs(context, node)
-    _input = inputs[0]
-    axis = inputs[1].val
-    ascending = not inputs[2].val
-    indices_name = node.outputs[1]
-    values_name = node.outputs[0]
-    indices = mb.argsort(x=_input, axis=axis, ascending=ascending, name=indices_name)
-    values = mb.gather_along_axis(x=_input, indices=indices, axis=axis, name=values_name)
-    context.add(values, torch_name=values_name)
-    context.add(indices, torch_name=indices_name)
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected={TorchFrontend.TORCHSCRIPT: 3},
+            min_expected={TorchFrontend.TORCHEXPORT: 1, TorchFrontend.EXECUTORCH: 1},
+        )
+        nargs = len(inputs)
+
+        x = inputs[0]
+        dim = inputs[1] if nargs > 1 else -1
+        descending = inputs[2] if nargs > 2 else False
+
+        return x, dim, descending
+
+    def _parse_keyword_args(context, node, dim, descending) -> Tuple[Var]:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return dim, descending
+
+        dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
+        descending = _get_kwinputs(context, node, "descending", default=[descending])[0]
+
+        return dim, descending
+
+    x, dim, descending = _parse_positional_args(context, node)
+    dim, descending = _parse_keyword_args(context, node, dim, descending)
+
+    ascending = mb.logical_not(x=descending)
+    if context.frontend == TorchFrontend.TORCHSCRIPT:
+        indices_name = node.outputs[1]
+        values_name = node.outputs[0]
+        indices = mb.argsort(x=x, axis=dim, ascending=ascending, name=indices_name)
+        values = mb.gather_along_axis(x=x, indices=indices, axis=dim, name=values_name)
+        context.add(values, torch_name=values_name)
+        context.add(indices, torch_name=indices_name)
+    else:
+        indices = mb.argsort(x=x, axis=dim, ascending=ascending)
+        values = mb.gather_along_axis(x=x, indices=indices, axis=dim)
+        context.add((values, indices), torch_name=node.name)
 
 
 @register_torch_op
