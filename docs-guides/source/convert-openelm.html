@@ -449,9 +449,9 @@ pip<span class="w"> </span>install<span class="w"> </span>coremltools
 </pre></div>
 </div>
 <p>At the time of creating this example, the author environment is</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>torch              2.4.1
-transformers       4.45.1
-coremltools        8.0
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>torch              2.5.1
+transformers       4.46.3
+coremltools        8.1
 </pre></div>
 </div>
 </section>
@@ -488,9 +488,6 @@ coremltools        8.0
     <span class="n">torch_model</span><span class="p">,</span>
     <span class="p">(</span><span class="n">example_input_ids</span><span class="p">,),</span>
     <span class="n">dynamic_shapes</span><span class="o">=</span><span class="n">dynamic_shapes</span><span class="p">,</span>
-    <span class="c1"># Because of https://github.com/pytorch/pytorch/issues/133252</span>
-    <span class="c1"># we need to use strict=False until torch 2.5</span>
-    <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>

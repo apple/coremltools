@@ -548,13 +548,9 @@ pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </s
     <span class="n">classifier_config</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">ClassifierConfig</span><span class="p">(</span><span class="n">class_labels</span><span class="p">),</span>
     <span class="n">compute_units</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">,</span>
 <span class="p">)</span>
-</pre></div>
-</div>
-<p>Torch.export path does not support image input yet (as of Core ML Tools 8.0), so it still uses tensor input</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Using image_input in the inputs parameter:</span>
-<span class="c1"># Convert to Core ML using the Unified Conversion API.</span>
 <span class="n">mlmodel_from_export</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
     <span class="n">exported_program</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">image_input</span><span class="p">],</span>
     <span class="n">classifier_config</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">ClassifierConfig</span><span class="p">(</span><span class="n">class_labels</span><span class="p">),</span>
     <span class="n">compute_units</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">,</span>
 <span class="p">)</span>
@@ -562,7 +558,7 @@ pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </s
 </div>
 <p>Save the ML program using the <code class="docutils literal notranslate"><span class="pre">.mlpackage</span></code> extension. It may also be helpful to display a confirmation message:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Save the converted model.</span>
-<span class="n">mlmodel_from_trace</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;mobilenet.mlpackage&quot;</span><span class="p">)</span>
+<span class="n">mlmodel_from_export</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;mobilenet.mlpackage&quot;</span><span class="p">)</span>
 <span class="c1"># Print a confirmation message.</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;model converted and saved&quot;</span><span class="p">)</span>
 </pre></div>
@@ -641,7 +637,7 @@ class name: ant, raw score value: 8.257798194885254
 <span id="index-3"></span><h3>Get the protobuf spec<a class="headerlink" href="#get-the-protobuf-spec" title="Link to this heading">#</a></h3>
 <p>To get the fields and types used in the model, get the protobuf spec with <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.model.MLModel.get_spec">get_spec()</a>, and select the <code class="docutils literal notranslate"><span class="pre">dictionaryType</span></code> output to use for displaying the results:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get the protobuf spec of the model.</span>
-<span class="n">spec</span> <span class="o">=</span> <span class="n">mlmodel_from_trace</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
+<span class="n">spec</span> <span class="o">=</span> <span class="n">mlmodel_from_export</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
 <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">output</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;dictionaryType&quot;</span><span class="p">:</span>
         <span class="n">coreml_dict_name</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">name</span>
@@ -653,54 +649,39 @@ class name: ant, raw score value: 8.257798194885254
 <h3>Make a Prediction with Core ML and Print Outputs<a class="headerlink" href="#make-a-prediction-with-core-ml-and-print-outputs" title="Link to this heading">#</a></h3>
 <p>You can now make a prediction with the converted model, using the test image. To learn more about making predictions, see <a class="reference internal" href="model-prediction.html"><span class="doc std std-doc">Model Prediction</span></a>. The code for <code class="docutils literal notranslate"><span class="pre">coreml_out_dict[&quot;classLabel&quot;]</span></code> returns the top-level class label.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Make a prediction with the Core ML version of the model.</span>
-<span class="n">coreml_out_dict</span> <span class="o">=</span> <span class="n">mlmodel_from_trace</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">img</span><span class="p">})</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;coreml predictions: &quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;top class label: &quot;</span><span class="p">,</span> <span class="n">coreml_out_dict</span><span class="p">[</span><span class="s2">&quot;classLabel&quot;</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">predict_with_coreml</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">):</span>
+    <span class="n">coreml_out_dict</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">img</span><span class="p">})</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;top class label: &quot;</span><span class="p">,</span> <span class="n">coreml_out_dict</span><span class="p">[</span><span class="s2">&quot;classLabel&quot;</span><span class="p">])</span>
 
-<span class="n">coreml_prob_dict</span> <span class="o">=</span> <span class="n">coreml_out_dict</span><span class="p">[</span><span class="n">coreml_dict_name</span><span class="p">]</span>
+    <span class="n">coreml_prob_dict</span> <span class="o">=</span> <span class="n">coreml_out_dict</span><span class="p">[</span><span class="n">coreml_dict_name</span><span class="p">]</span>
 
-<span class="n">values_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">coreml_prob_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
-<span class="n">keys_vector</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">coreml_prob_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-<span class="n">top_3_indices_coreml</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="o">-</span><span class="n">values_vector</span><span class="p">)[:</span><span class="mi">3</span><span class="p">]</span>
-<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
-    <span class="n">idx</span> <span class="o">=</span> <span class="n">top_3_indices_coreml</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-    <span class="n">score_value</span> <span class="o">=</span> <span class="n">values_vector</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-    <span class="n">class_id</span> <span class="o">=</span> <span class="n">keys_vector</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;class name: </span><span class="si">{}</span><span class="s2">, raw score value: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">class_id</span><span class="p">,</span> <span class="n">score_value</span><span class="p">))</span>
+    <span class="n">values_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">coreml_prob_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+    <span class="n">keys_vector</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">coreml_prob_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">top_3_indices_coreml</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="o">-</span><span class="n">values_vector</span><span class="p">)[:</span><span class="mi">3</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">top_3_indices_coreml</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">score_value</span> <span class="o">=</span> <span class="n">values_vector</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="n">class_id</span> <span class="o">=</span> <span class="n">keys_vector</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;class name: </span><span class="si">{}</span><span class="s2">, raw score value: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">class_id</span><span class="p">,</span> <span class="n">score_value</span><span class="p">))</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;coreml (converted from torch.jit.trace) predictions: &quot;</span><span class="p">)</span>
+<span class="n">predict_with_coreml</span><span class="p">(</span><span class="n">mlmodel_from_trace</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;coreml (converted from torch.export) predictions: &quot;</span><span class="p">)</span>
+<span class="n">predict_with_coreml</span><span class="p">(</span><span class="n">mlmodel_from_export</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>When you run this example, the output should be something like the following, using the image of a daisy as the input:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>coreml predictions: 
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>coreml (converted from torch.jit.trace) predictions: 
 top class label:  daisy
 class name: daisy, raw score value: 15.8046875
 class name: vase, raw score value: 8.4921875
 class name: ant, raw score value: 8.2109375
-</pre></div>
-</div>
-<p>The model converted from torch.export will need to use the image tensor same to torch</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Make a prediction with the Core ML version of the model.</span>
-<span class="n">coreml_out_dict</span> <span class="o">=</span> <span class="n">mlmodel_from_export</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">img_torch</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()})</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;coreml predictions: &quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;top class label: &quot;</span><span class="p">,</span> <span class="n">coreml_out_dict</span><span class="p">[</span><span class="s2">&quot;classLabel&quot;</span><span class="p">])</span>
-
-<span class="n">coreml_prob_dict</span> <span class="o">=</span> <span class="n">coreml_out_dict</span><span class="p">[</span><span class="n">coreml_dict_name</span><span class="p">]</span>
-
-<span class="n">values_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">coreml_prob_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
-<span class="n">keys_vector</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">coreml_prob_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-<span class="n">top_3_indices_coreml</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="o">-</span><span class="n">values_vector</span><span class="p">)[:</span><span class="mi">3</span><span class="p">]</span>
-<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
-    <span class="n">idx</span> <span class="o">=</span> <span class="n">top_3_indices_coreml</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-    <span class="n">score_value</span> <span class="o">=</span> <span class="n">values_vector</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-    <span class="n">class_id</span> <span class="o">=</span> <span class="n">keys_vector</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;class name: </span><span class="si">{}</span><span class="s2">, raw score value: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">class_id</span><span class="p">,</span> <span class="n">score_value</span><span class="p">))</span>
-</pre></div>
-</div>
-<p>When you run this example, the output should be something like the following, using the image of a daisy as the input:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>coreml predictions: 
+coreml (converted from torch.export) predictions: 
 top class label:  daisy
-class name: daisy, raw score value: 15.7890625
-class name: vase, raw score value: 8.546875
-class name: ant, raw score value: 8.34375
+class name: daisy, raw score value: 15.8046875
+class name: vase, raw score value: 8.4921875
+class name: ant, raw score value: 8.2109375
 </pre></div>
 </div>
 <p>As you can see from the results, the converted model performs very closely to the original model — the raw score values are very similar.</p>

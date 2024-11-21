@@ -503,6 +503,10 @@
 <p class="admonition-title">Enumerated Shapes with Multi-input Models</p>
 <p>For a multi-input model, only one of the inputs can be marked with <code class="docutils literal notranslate"><span class="pre">EnumeratedShapes</span></code>; the rest must have fixed single shapes. If you require multiple inputs to be flexible, set the range for each dimension.</p>
 </div>
+<div class="admonition-torch-export-dynamism admonition">
+<p class="admonition-title">Torch.Export Dynamism</p>
+<p>If the source PyTorch model is exported by <a class="reference external" href="https://pytorch.org/docs/stable/export.html#torch.export.export"><code class="docutils literal notranslate"><span class="pre">torch.export.export</span></code></a>, then user will need to <a class="reference external" href="https://pytorch.org/docs/stable/export.html#expressing-dynamism">express dynamism in torch.export</a>, and only the torch.export dynamic dimensions are allowed to have more-than-1 possible sizes, see <a class="reference internal" href="model-exporting.html"><span class="doc std std-doc">Model Exporting</span></a>.</p>
+</div>
 </section>
 <section id="set-the-range-for-each-dimension">
 <span id="index-2"></span><h2>Set the Range for Each Dimension<a class="headerlink" href="#set-the-range-for-each-dimension" title="Link to this heading">#</a></h2>
