@@ -5518,10 +5518,11 @@ class TestEinsum(TorchBaseTest):
 
 class TestSqueeze(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, rank_and_axis",
+        "compute_unit, backend, frontend, rank_and_axis",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [
                 (2, 1),
                 (2, 0),
@@ -5534,7 +5535,7 @@ class TestSqueeze(TorchBaseTest):
             ],
         ),
     )
-    def test_squeeze(self, compute_unit, backend, rank_and_axis):
+    def test_squeeze(self, compute_unit, backend, frontend, rank_and_axis):
         rank, axis = rank_and_axis
         input_shape = list(np.random.randint(low=2, high=10, size=rank))
         if axis is not None:
@@ -5543,19 +5544,21 @@ class TestSqueeze(TorchBaseTest):
             input_shape[0] = 1
         input_shape = tuple(input_shape)
         model = ModuleWrapper(function=torch.squeeze, kwargs={"dim": axis} if axis else {})
-        self.run_compare_torch(input_shape, model, backend=backend, compute_unit=compute_unit)
+        self.run_compare_torch(
+            input_shape, model, frontend=frontend, backend=backend, compute_unit=compute_unit
+        )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, dynamic, dim",
-        itertools.product(compute_units, backends, [True, False], [None, 0, 2, (1,), (1, 2)]),
+        "compute_unit, backend, frontend, dynamic, dim",
+        itertools.product(
+            compute_units, backends, frontends, [True, False], [None, 0, 2, (1,), (1, 2)]
+        ),
     )
-    def test_squeeze_non_single_element_dim(self, compute_unit, backend, dynamic, dim):
+    def test_squeeze_non_single_element_dim(self, compute_unit, backend, frontend, dynamic, dim):
         if backend[0] == "neuralnetwork":
             pytest.skip("neuralnetwork backend doesn't support squeeze a not-1 dimension")
         if dynamic and compute_unit == ct.ComputeUnit.CPU_ONLY:
             pytest.skip("CPU behaves differently from PyTorch for dropping dynamic dim.")
-        if compute_unit == ct.ComputeUnit.CPU_ONLY and dim in {0, (1,), (1, 2)}:
-            pytest.xfail("CPU failed non-single-dim squeeze (rdar://124555262)")
 
         input_shape = (2, 3, 1)
         model = ModuleWrapper(function=torch.squeeze, kwargs=None if dim is None else {"dim": dim})
@@ -5574,6 +5577,7 @@ class TestSqueeze(TorchBaseTest):
         self.run_compare_torch(
             input_shape,
             model,
+            frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
             converter_input_type=converter_input_type,

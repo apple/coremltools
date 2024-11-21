@@ -2187,19 +2187,57 @@ def cumsum(context, node):
     context.add(res)
 
 
-@register_torch_op(torch_alias=["squeeze.dim", "squeeze_copy.dim", "squeeze_copy.dims"])
+@register_torch_op(
+    torch_alias=[
+        "squeeze.dim",
+        "squeeze.dims",
+        "squeeze_copy",
+        "squeeze_copy.dim",
+        "squeeze_copy.dims",
+    ]
+)
 def squeeze(context, node):
-    inputs = _get_inputs(context, node)
-    if len(inputs) == 1:
-        res = mb.squeeze(x=inputs[0], name=node.name)
-    elif len(inputs) == 2:
-        dims = inputs[1].val
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, expected=(1, 2))
+        nargs = len(inputs)
+        x = inputs[0]
+        dims = inputs[1] if nargs > 1 else None
+        return x, dims
+
+    def _translate_torch_args(x: Var, dims: Var) -> Tuple[int]:
+        if isinstance(dims, Var):
+            dims = dims.val
+        if dims is None:
+            return None
+
+        # wrap `dims` into a tuple
         try:
             dims = (int(dims),)
         except:
             pass
-        res = mb.squeeze(x=inputs[0], axes=dims, name=node.name)
-    context.add(res)
+        # squeeze all dims is the default behaviour
+        if list(dims) == [*range(x.rank)]:
+            return None
+        # CPU fails non-single-dim squeeze (rdar://124555262)
+        # so let us filter out the non-single dims
+        filtered_dims = []
+        for dim in dims:
+            if x.shape[dim] == 1:
+                filtered_dims.append(int(dim))
+        return tuple(filtered_dims)
+
+    x, dims = _parse_positional_args(context, node)
+    axes = _translate_torch_args(x, dims)
+
+    if axes is None:
+        res = mb.squeeze(x=x, name=node.name)
+        context.add(res)
+    elif axes == ():
+        # no axis to be squeezed, noop
+        context.add(x, torch_name=node.name)
+    else:
+        res = mb.squeeze(x=x, axes=axes, name=node.name)
+        context.add(res)
 
 
 @register_torch_op(torch_alias=["unsqueeze_copy"])
