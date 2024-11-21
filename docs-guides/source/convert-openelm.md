@@ -23,9 +23,9 @@ pip install coremltools
 
 At the time of creating this example, the author environment is
 ```text Output
-torch              2.4.1
-transformers       4.45.1
-coremltools        8.0
+torch              2.5.1
+transformers       4.46.3
+coremltools        8.1
 ```
 
 ## Import Libraries and Set Up the Model
@@ -66,9 +66,6 @@ exported_program = torch.export.export(
     torch_model,
     (example_input_ids,),
     dynamic_shapes=dynamic_shapes,
-    # Because of https://github.com/pytorch/pytorch/issues/133252
-    # we need to use strict=False until torch 2.5
-    strict=False,
 )
 ```
 
