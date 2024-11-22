@@ -6172,12 +6172,14 @@ def meshgrid(context, node):
         "feature_dropout",
         "lift_fresh",
         "lift_fresh_copy",
+        "sym_constrain_range",
+        "sym_constrain_range_for_size",
     ]
 )
 def noop(context, node):
     logger.info(f"Setting pytorch op: {node.kind} to no-op.")
     # These noops do not produce output
-    if node.kind in ("_assert_scalar",):
+    if node.kind in ("_assert_scalar", "sym_constrain_range", "sym_constrain_range_for_size"):
         return
     # Other noops return input as output
     else:
@@ -7067,54 +7069,74 @@ def neg(context, node):
     x, y = promote_input_dtypes([inputs[0], -1])
     context.add(mb.mul(x=x, y=y, name=node.name))
 
+
 @register_torch_op
 def topk(context, node):
-    inputs = _get_inputs(context, node)
-    kwargs = {"name": node.name, "x": inputs[0], "k": inputs[1]}
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, expected=(2, 3, 4, 5))
+        nargs = len(inputs)
 
-    if len(inputs) > 6:
-        raise Exception("Number of inputs to topk exceeds 6")
-    # optional: @axis
-    if len(inputs) > 2:
-        if inputs[2] is not None:
-            kwargs["axis"] = inputs[2].val
+        x = inputs[0]
+        k = inputs[1]
 
-    # optional: @ascending
-    if len(inputs) > 3:
-        largest = inputs[3].val
-        kwargs["ascending"] = not largest
+        dim = inputs[2] if nargs > 2 else -1
+        largest = inputs[3] if nargs > 3 else True
+        sorted = inputs[4] if nargs > 4 else True
 
-    # last inputs to topk are optional - sorted and out.
-    sort = True
-    if len(inputs) > 4:
-        if inputs[4].val is False and not is_current_opset_version_compatible_with(target.iOS16):
+        return x, k, dim, largest, sorted
+
+    def _parse_keyword_args(context, node, dim, largest, sorted) -> Tuple[Var]:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return dim, largest, sorted
+
+        dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
+        largest = _get_kwinputs(context, node, "largest", default=[largest])[0]
+        sorted = _get_kwinputs(context, node, "sorted", default=[sorted])[0]
+
+        return dim, largest, sorted
+
+    def _translate_torch_args(dim, largest, sorted) -> Tuple[Var]:
+        if isinstance(dim, Var):
+            dim = dim.val
+
+        if isinstance(largest, Var):
+            largest = largest.val
+
+        if isinstance(sorted, Var):
+            sorted = sorted.val
+        if not sorted and not is_current_opset_version_compatible_with(target.iOS16):
             raise Exception("For opset <= iOS16, only sorted=True supported for the topk")
-        sort = inputs[4].val
 
-    if len(inputs) > 5:
-        if inputs[5] is not None:
-            raise Exception(
-                "Unsupported value for argument 'out' in topk. Supported values: None, but input "
-                "is {}".format(inputs[5].val)
-            )
+        return dim, not largest, sorted
 
+    x, k, dim, largest, sorted = _parse_positional_args(context, node)
+    dim, largest, sorted = _parse_keyword_args(context, node, dim, largest, sorted)
+    axis, ascending, sort = _translate_torch_args(dim, largest, sorted)
+
+    kwargs = {"name": node.name, "x": x, "k": k, "axis": axis, "ascending": ascending}
     if is_current_opset_version_compatible_with(target.iOS16):
         kwargs["sort"] = sort
+    # if axis is not None:
+    #     kwargs["axis"] = axis
+    # if ascending is not None and ascending:
+    #     kwargs["ascending"] = ascending
+    # if sort is not None and not sort:
+    #     kwargs["sort"] = sort
 
     if kwargs["k"].val is None:
         res = _utils.dynamic_topk(
-                x=kwargs["x"],
-                k=kwargs["k"],
-                axis=kwargs["axis"],
-                ascending=kwargs["ascending"]
+            x=kwargs["x"], k=kwargs["k"], axis=kwargs["axis"], ascending=kwargs["ascending"]
         )
     else:
         res = mb.topk(**kwargs)
-
-    values_name = node.outputs[0]
-    indices_name = node.outputs[1]
-    context.add(res[0], torch_name=values_name)
-    context.add(res[1], torch_name=indices_name)
+    if context.frontend == TorchFrontend.TORCHSCRIPT:
+        values_name = node.outputs[0]
+        indices_name = node.outputs[1]
+        context.add(res[0], torch_name=values_name)
+        context.add(res[1], torch_name=indices_name)
+    else:
+        context.add(res, torch_name=node.name)
 
 
 def _var(

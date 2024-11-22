@@ -8009,72 +8009,87 @@ class TestZeros(TorchBaseTest):
 
 class TestTopk(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, largest, sort, dynamic, shape_dim_k",
+        "compute_unit, backend, frontend, largest, sort, dynamic, shape_dim_k",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [True, False],
             [True, False],
             [True, False],
             [((4, 6, 7, 3), -1, 2), ((10, 3, 4), 2, 2), ((5,), 0, 2)],
         ),
     )
-    def test_topk(self, compute_unit, backend, largest, sort, dynamic, shape_dim_k):
+    def test_topk(self, compute_unit, backend, frontend, largest, sort, dynamic, shape_dim_k):
         if not sort and backend[0] == "neuralnetwork":
             pytest.xfail("iOS16 version topk needed for sort = False")
         if not sort and _macos_version() < (13, 0):
             pytest.skip("New functionality in macOS13/iOS16")
-        if (
-            backend[0] == "mlprogram"
-            and largest
-            and sort
-            and not dynamic
-            and shape_dim_k == ((4, 6, 7, 3), -1, 2)
-        ):
-            pytest.xfail(
-                "rdar://132358055 Why It Randomly Numerically Fails on CI but Cannot Reproduce Locally "
-            )
+        if frontend == TorchFrontend.EXECUTORCH and dynamic:
+            pytest.skip("ExecuTorch cannot handle torch._check")
 
         input_shape = shape_dim_k[0]
         dim = shape_dim_k[1]
         k = shape_dim_k[2]
 
-        class TopkModel(nn.Module):
-            def forward(self, x, y):
-                if dynamic:
-                    nonlocal k
-                    k = torch.min(y)
-                topk = torch.topk(x, k, dim=dim, largest=largest, sorted=sort)
-                values, indices = topk.values, topk.indices
-                if not sort:
-                    values, _ = torch.sort(values, dim=dim)
-                    indices, _ = torch.sort(indices, dim=dim)
-                return values, indices, y + 1
+        if frontend == TorchFrontend.TORCHSCRIPT:
+
+            class TopkModel(nn.Module):
+                def forward(self, x, y):
+                    if dynamic:
+                        nonlocal k
+                        k = torch.min(y)
+                    topk = torch.topk(x, k, dim=dim, largest=largest, sorted=sort)
+                    values, indices = topk.values, topk.indices
+                    if not sort:
+                        values, _ = torch.sort(values, dim=dim)
+                        indices, _ = torch.sort(indices, dim=dim)
+                    return values, indices, y + 1
+
+        else:
+
+            class TopkModel(nn.Module):
+                def forward(self, x, y):
+                    if dynamic:
+                        nonlocal k
+                        k = torch.amin(y).item()
+                        torch._check_is_size(k)
+                        torch._check(k > 0)
+                        torch._check(k < x.size(dim))
+                    topk = torch.topk(x, k, dim=dim, largest=largest, sorted=sort)
+                    values, indices = topk.values, topk.indices
+                    if not sort:
+                        values, _ = torch.sort(values, dim=dim)
+                        indices, _ = torch.sort(indices, dim=dim)
+                    return values, indices, y + 1
+
+        model = TopkModel()
 
         input_data = torch.rand(input_shape)
         k_list = torch.tensor([k + 1, k, k + 2])
-
-        model = TopkModel()
         expected_results = model(input_data, k_list)
+
         self.run_compare_torch(
             [input_data, k_list],
             model,
             expected_results=expected_results,
             input_as_shape=False,
+            frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
             minimum_deployment_target=ct.target.iOS16 if not sort else None,
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, x_dtype",
+        "compute_unit, backend, frontend, x_dtype",
         itertools.product(
             compute_units,
             [("mlprogram", "fp16")],
+            frontends,
             [np.float32, np.float16, np.int32, np.int16, np.uint16],
         ),
     )
-    def test_topk_ios17(self, compute_unit, backend, x_dtype):
+    def test_topk_ios17(self, compute_unit, backend, frontend, x_dtype):
         if x_dtype == np.float16:
             pytest.skip("PyTorch doesn't support fp16 topk.")
         if x_dtype == np.uint16:
@@ -8097,6 +8112,7 @@ class TestTopk(TorchBaseTest):
             model,
             expected_results=expected_results,
             input_as_shape=False,
+            frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
             minimum_deployment_target=ct.target.iOS17,
