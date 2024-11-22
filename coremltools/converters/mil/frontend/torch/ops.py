@@ -6354,16 +6354,44 @@ def min(context, node):
 
 
 def _add_amax_amin(context, node, reduce_op):
-    # mimic functionality from https://pytorch.org/docs/stable/generated/torch.amax.html
-    # mimic functionality from https://pytorch.org/docs/stable/generated/torch.amin.html
-    assert len(node.outputs) == 1
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, expected=(1, 2, 3))
+        nargs = len(inputs)
 
-    all_inputs = _get_inputs(context, node, expected=[2, 3])
-    _input = all_inputs[0]
-    dim = [all_inputs[1].val] if type(all_inputs[1].val) == int else [x for x in all_inputs[1].val]
-    keepdim = all_inputs[2] if len(all_inputs) == 3 else False
+        x = inputs[0]
+        dim = inputs[1] if nargs > 1 else []
+        keepdim = inputs[2] if nargs > 2 else False
 
-    context.add(reduce_op(x=_input, axes=dim, keep_dims=keepdim), torch_name=node.outputs[0])
+        return x, dim, keepdim
+
+    def _parse_keyword_args(context, node, dim, keepdim) -> Tuple[Var]:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return dim, keepdim
+
+        dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
+        keepdim = _get_kwinputs(context, node, "keepdim", default=[keepdim])[0]
+
+        return dim, keepdim
+
+    def _translate_torch_args(dim) -> Var:
+        if isinstance(dim, Var):
+            dim = dim.val
+        if dim is None or len(dim) == 0:
+            axes = None
+        else:
+            if isinstance(dim, int):
+                axes = [dim]
+            else:
+                axes = [axis for axis in dim]
+        return axes
+
+    x, dim, keepdim = _parse_positional_args(context, node)
+    dim, keepdim = _parse_keyword_args(context, node, dim, keepdim)
+    axes = _translate_torch_args(dim)
+
+    result = reduce_op(x=x, axes=axes, keep_dims=keepdim, name=node.name)
+    context.add(result)
 
 @register_torch_op
 def amax(context, node):
