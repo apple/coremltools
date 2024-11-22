@@ -4097,14 +4097,10 @@ class TestBoolOps(TorchBaseTest):
 
 class TestFull(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, rank",
-        itertools.product(
-            compute_units,
-            backends,
-            [1, 3],
-        ),
+        "compute_unit, backend, frontend, rank",
+        itertools.product(compute_units, backends, frontends, [1, 3]),
     )
-    def test_full_dynamic(self, compute_unit, backend, rank):
+    def test_full_dynamic(self, compute_unit, backend, frontend, rank):
         class FullDynamicModel(nn.Module):
             def forward(self, x):
                 if rank == 1:
@@ -4115,6 +4111,9 @@ class TestFull(TorchBaseTest):
                     x = torch.zeros(h, w, d)
                 return torch.full(x.shape, fill_value=3.14)
 
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("torch._ops.aten._assert_async.msg is not Aten Canonical")
+
         input_shape = np.random.randint(low=2, high=6, size=rank)
         torch_in = torch.tensor(input_shape, dtype=torch.int32)
         model = FullDynamicModel().eval()
@@ -4124,15 +4123,17 @@ class TestFull(TorchBaseTest):
             model,
             expected_results=torch_out,
             input_as_shape=False,
+            frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape_val",
+        "compute_unit, backend, frontend, shape_val",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [
                 [(1,), 0.0],
                 [(2, 3), 3.1415],
@@ -4140,7 +4141,7 @@ class TestFull(TorchBaseTest):
             ],
         ),
     )
-    def test_full_static(self, compute_unit, backend, shape_val):
+    def test_full_static(self, compute_unit, backend, frontend, shape_val):
         shape, val = shape_val
 
         class FullStaticModel(nn.Module):
@@ -4148,14 +4149,19 @@ class TestFull(TorchBaseTest):
                 return torch.full(x.shape, fill_value=val)
 
         self.run_compare_torch(
-            shape, FullStaticModel().eval(), backend=backend, compute_unit=compute_unit
+            shape,
+            FullStaticModel().eval(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape_val",
+        "compute_unit, backend, frontend, shape_val",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [
                 [(1,), 0.0],
                 [(2, 3), 3.1415],
@@ -4163,7 +4169,7 @@ class TestFull(TorchBaseTest):
             ],
         ),
     )
-    def test_full_scalar(self, compute_unit, backend, shape_val):
+    def test_full_scalar(self, compute_unit, backend, frontend, shape_val):
         shape, val = shape_val
 
         class FullScalarModel(nn.Module):
@@ -4171,11 +4177,15 @@ class TestFull(TorchBaseTest):
                 return x / torch.full([], fill_value=val)
 
         self.run_compare_torch(
-            shape, FullScalarModel().eval(), backend=backend, compute_unit=compute_unit
+            shape,
+            FullScalarModel().eval(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape_val",
+        "compute_unit, backend, frontend, shape_val",
         itertools.product(
             compute_units,
             [
@@ -4185,6 +4195,7 @@ class TestFull(TorchBaseTest):
                 ["mlprogram", "fp16", ct.target.iOS16],
                 ["mlprogram", "fp32", ct.target.iOS16],
             ],
+            frontends,
             [
                 [(1,), 0.0],
                 [(2, 3), 3.1415],
@@ -4192,7 +4203,7 @@ class TestFull(TorchBaseTest):
             ],
         ),
     )
-    def test_full_like(self, compute_unit, backend, shape_val):
+    def test_full_like(self, compute_unit, backend, frontend, shape_val):
         if _macos_version() < (13, 0) and backend[2] == ct.target.iOS16:
             pytest.skip("iOS16 target not available on macOS 13")
         shape, val = shape_val
@@ -4204,6 +4215,7 @@ class TestFull(TorchBaseTest):
         self.run_compare_torch(
             shape,
             FullLikeModel().eval(),
+            frontend=frontend,
             backend=backend[:2],
             compute_unit=compute_unit,
             minimum_deployment_target=backend[2],
@@ -4236,14 +4248,10 @@ class TestDim(TorchBaseTest):
 
 class TestNewZeros(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, rank",
-        itertools.product(
-            compute_units,
-            backends,
-            [1, 3],
-        ),
+        "compute_unit, backend, frontend, rank",
+        itertools.product(compute_units, backends, frontends, [1, 3]),
     )
-    def test_new_zeros_dynamic(self, compute_unit, backend, rank):
+    def test_new_zeros_dynamic(self, compute_unit, backend, frontend, rank):
         class ZerosDynamicModel(nn.Module):
             def forward(self, x):
                 if rank == 1:
@@ -4254,6 +4262,9 @@ class TestNewZeros(TorchBaseTest):
                     x = torch.zeros(h, w, d)
                 return x.new_zeros(x.shape)
 
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("torch._ops.aten._assert_async.msg is not Aten Canonical")
+
         input_shape = np.random.randint(low=2, high=6, size=rank)
         torch_in = torch.tensor(input_shape, dtype=torch.int32)
         model = ZerosDynamicModel().eval()
@@ -4263,15 +4274,17 @@ class TestNewZeros(TorchBaseTest):
             model,
             expected_results=torch_out,
             input_as_shape=False,
+            frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape",
+        "compute_unit, backend, frontend, shape",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [
                 (1,),
                 (2, 3),
@@ -4279,7 +4292,7 @@ class TestNewZeros(TorchBaseTest):
             ],
         ),
     )
-    def test_new_zeros_static(self, compute_unit, backend, shape):
+    def test_new_zeros_static(self, compute_unit, backend, frontend, shape):
         class ZerosStaticModel(nn.Module):
             def __init__(self):
                 super(ZerosStaticModel, self).__init__()
@@ -4288,20 +4301,20 @@ class TestNewZeros(TorchBaseTest):
                 return x.new_zeros(x.shape)
 
         self.run_compare_torch(
-            shape, ZerosStaticModel().eval(), backend=backend, compute_unit=compute_unit
+            shape,
+            ZerosStaticModel().eval(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
         )
 
 
 class TestNewFull(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, rank",
-        itertools.product(
-            compute_units,
-            backends,
-            [1, 3],
-        ),
+        "compute_unit, backend, frontend, rank",
+        itertools.product(compute_units, backends, frontends, [1, 3]),
     )
-    def test_new_full_dynamic(self, compute_unit, backend, rank):
+    def test_new_full_dynamic(self, compute_unit, backend, frontend, rank):
         class FullDynamicModel(nn.Module):
             def forward(self, x):
                 if rank == 1:
@@ -4312,6 +4325,9 @@ class TestNewFull(TorchBaseTest):
                     x = torch.zeros(h, w, d)
                 return x.new_full(x.shape, fill_value=3.14)
 
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("torch._ops.aten._assert_async.msg is not Aten Canonical")
+
         input_shape = np.random.randint(low=2, high=6, size=rank)
         torch_in = torch.tensor(input_shape, dtype=torch.int32)
         model = FullDynamicModel().eval()
@@ -4321,15 +4337,17 @@ class TestNewFull(TorchBaseTest):
             model,
             expected_results=torch_out,
             input_as_shape=False,
+            frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape_val",
+        "compute_unit, backend, frontend, shape_val",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [
                 [(1,), 0.0],
                 [(2, 3), 3.1415],
@@ -4337,7 +4355,7 @@ class TestNewFull(TorchBaseTest):
             ],
         ),
     )
-    def test_new_full_static(self, compute_unit, backend, shape_val):
+    def test_new_full_static(self, compute_unit, backend, frontend, shape_val):
         shape, val = shape_val
 
         class FullStaticModel(nn.Module):
@@ -4345,7 +4363,11 @@ class TestNewFull(TorchBaseTest):
                 return x.new_full(x.shape, fill_value=val)
 
         self.run_compare_torch(
-            shape, FullStaticModel().eval(), backend=backend, compute_unit=compute_unit
+            shape,
+            FullStaticModel().eval(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
         )
 
 
@@ -7800,14 +7822,10 @@ class TestCopy(TorchBaseTest):
 
 class TestZeros(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, rank",
-        itertools.product(
-            compute_units,
-            backends,
-            [1, 3],
-        ),
+        "compute_unit, backend, frontend, rank",
+        itertools.product(compute_units, backends, frontends, [1, 3]),
     )
-    def test_zeros_like_static(self, compute_unit, backend, rank):
+    def test_zeros_like_static(self, compute_unit, backend, frontend, rank):
         class ZerosLikeStaticModel(nn.Module):
             def forward(self, x):
                 return torch.zeros_like(x)
@@ -7816,11 +7834,11 @@ class TestZeros(TorchBaseTest):
         input_shape = tuple(input_shape)
         model = ZerosLikeStaticModel()
         self.run_compare_torch(
-            input_shape, model, backend=backend, compute_unit=compute_unit
+            input_shape, model, frontend=frontend, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, rank",
+        "compute_unit, backend, frontend, rank",
         itertools.product(
             compute_units,
             [
@@ -7830,12 +7848,15 @@ class TestZeros(TorchBaseTest):
                 ["mlprogram", "fp16", ct.target.iOS16],
                 ["mlprogram", "fp32", ct.target.iOS16],
             ],
+            frontends,
             [1, 3],
         ),
     )
-    def test_zeros_like_dynamic(self, compute_unit, backend, rank):
+    def test_zeros_like_dynamic(self, compute_unit, backend, frontend, rank):
         if _macos_version() < (13, 0) and backend[2] == ct.target.iOS16:
             pytest.skip("iOS16 target not available on macOS 13")
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("torch._ops.aten._assert_async.msg is not Aten Canonical")
 
         class ZerosLikeDynamicModel(nn.Module):
             def forward(self, x):
@@ -7856,19 +7877,16 @@ class TestZeros(TorchBaseTest):
             model,
             expected_results=torch_out,
             input_as_shape=False,
+            frontend=frontend,
             backend=backend[:2],
             compute_unit=compute_unit,
             minimum_deployment_target=backend[2],
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend",
-        itertools.product(
-            compute_units,
-            backends,
-        )
+        "compute_unit, backend, frontend", itertools.product(compute_units, backends, frontends)
     )
-    def test_zeros_like_static_fold_to_const(self, compute_unit, backend):
+    def test_zeros_like_static_fold_to_const(self, compute_unit, backend, frontend):
         class TestModel(nn.Module):
             def forward(self, x):
                 x = torch.arange(0, 3)
@@ -7876,24 +7894,17 @@ class TestZeros(TorchBaseTest):
 
         model = TestModel()
         mlmodel = self.run_compare_torch(
-            [(1, 2, 3)],
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            [(1, 2, 3)], model, frontend=frontend, backend=backend, compute_unit=compute_unit
         )
         prog = mlmodel[1]._mil_program
         # The empty_like op is folded to const, so there is no fill nor fill_like op.
         assert len(prog.find_ops(op_type="fill")) + len(prog.find_ops(op_type="fill_like")) == 0
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, rank",
-        itertools.product(
-            compute_units,
-            backends,
-            [1, 3],
-        ),
+        "compute_unit, backend, frontend, rank",
+        itertools.product(compute_units, backends, frontends, [1, 3]),
     )
-    def test_zeros_static(self, compute_unit, backend, rank):
+    def test_zeros_static(self, compute_unit, backend, frontend, rank):
         class ZerosStaticModel(nn.Module):
             def forward(self, x):
                 if rank == 1:
@@ -7905,18 +7916,17 @@ class TestZeros(TorchBaseTest):
         input_shape = tuple(input_shape)
         model = ZerosStaticModel()
         self.run_compare_torch(
-            input_shape, model, backend=backend, compute_unit=compute_unit
+            input_shape, model, frontend=frontend, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, rank",
-        itertools.product(
-            compute_units,
-            backends,
-            [1, 3],
-        ),
+        "compute_unit, backend, frontend, rank",
+        itertools.product(compute_units, backends, frontends, [1, 3]),
     )
-    def test_zeros_dynamic(self, compute_unit, backend, rank):
+    def test_zeros_dynamic(self, compute_unit, backend, frontend, rank):
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("torch._ops.aten._assert_async.msg is not Aten Canonical")
+
         class ZerosDynamicModel(nn.Module):
             def forward(self, x):
                 if rank == 1:
@@ -7936,28 +7946,22 @@ class TestZeros(TorchBaseTest):
             model,
             expected_results=torch_out,
             input_as_shape=False,
+            frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend",
-        itertools.product(
-            compute_units,
-            backends,
-        )
+        "compute_unit, backend, frontend", itertools.product(compute_units, backends, frontends)
     )
-    def test_zeros_static_fold_to_const(self, compute_unit, backend):
+    def test_zeros_static_fold_to_const(self, compute_unit, backend, frontend):
         class TestModel(nn.Module):
             def forward(self, x):
                 return torch.zeros(2, 3, 5)
 
         model = TestModel()
         mlmodel = self.run_compare_torch(
-            [(1, 2, 3)],
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            [(1, 2, 3)], model, frontend=frontend, backend=backend, compute_unit=compute_unit
         )
         prog = mlmodel[1]._mil_program
         # The zeros op is folded to const.
@@ -7979,30 +7983,52 @@ class TestZeros(TorchBaseTest):
             assert len(prog.find_ops(op_type="fill")) == 1
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, is_dynamic, src_dtype, dst_dtype",
+        "compute_unit, backend, frontend, is_dynamic, src_dtype, dst_dtype",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [True, False],
             [torch.float16, torch.float32, torch.int32, torch.bool],
             [torch.float16, torch.float32, torch.int32, torch.bool],
         ),
     )
-    def test_zeros_like_types(self, compute_unit, backend, is_dynamic, src_dtype, dst_dtype):
-        target, type = None, None
+    def test_zeros_like_types(
+        self, compute_unit, backend, frontend, is_dynamic, src_dtype, dst_dtype
+    ):
+        if frontend == TorchFrontend.TORCHSCRIPT:
+            input_data = torch.tensor([3], dtype=src_dtype)
+            model = ModuleWrapper(function=torch.zeros_like, kwargs={"dtype": dst_dtype})
+        else:
+            input_data = torch.tensor([3, 4], dtype=src_dtype)
+
+            class Model(torch.nn.Module):
+                def __init__(self, dtype):
+                    super().__init__()
+                    self.dtype = dtype
+
+                def forward(self, x):
+                    return torch.zeros_like(x, dtype=self.dtype)
+
+            model = Model(dst_dtype)
+        model.eval()
+
+        target, type, torch_export_dynamic_shapes = None, None, None
         if src_dtype == torch.float16 or dst_dtype == torch.float16:
             target = ct.target.iOS16
         if is_dynamic:
             type = [ct.TensorType(shape=ct.Shape([ct.RangeDim(1, 1_000)]))]
-        model = ModuleWrapper(function=torch.zeros_like, kwargs={"dtype": dst_dtype}).eval()
+            torch_export_dynamic_shapes = {"x": {0: torch.export.Dim(name="batch", max=1000)}}
 
         self.run_compare_torch(
-            torch.tensor([3], dtype=src_dtype),
+            input_data,
             model,
             input_as_shape=False,
+            frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
             converter_input_type=type,
+            torch_export_dynamic_shapes=torch_export_dynamic_shapes,
             minimum_deployment_target=target,
         )
 
