@@ -6190,14 +6190,36 @@ def noop(context, node):
 
 @register_torch_op
 def argmax(context, node):
-    inputs = _get_inputs(context, node)
-    x = inputs[0]
-    axis = inputs[1]
-    keep_dims = inputs[2]
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, expected=(1, 2, 3))
+        nargs = len(inputs)
+
+        x = inputs[0]
+        dim = inputs[1] if nargs > 1 else None
+        keepdim = inputs[2] if nargs > 2 else False
+        return x, dim, keepdim
+
+    def _parse_keyword_args(context, node, dim, keepdim) -> Tuple[Var]:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return dim, keepdim
+
+        dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
+        keepdim = _get_kwinputs(context, node, "keepdim", default=[keepdim])[0]
+
+        return dim, keepdim
+
+    x, dim, keepdim = _parse_positional_args(context, node)
+    dim, keepdim = _parse_keyword_args(context, node, dim, keepdim)
+    if isinstance(dim, Var):
+        dim = dim.val
+    if isinstance(keepdim, Var):
+        keepdim = keepdim.val
+
     if types.is_int(x.dtype) and x.dtype._width == 64:
         # MIL reduce_argmax doesn't support int64.
         x = mb.cast(x=x, dtype="int32")
-    res = mb.reduce_argmax(x=x, axis=axis, keep_dims=keep_dims, name=node.name)
+    res = mb.reduce_argmax(x=x, axis=dim, keep_dims=keepdim, name=node.name)
     context.add(res)
 
 

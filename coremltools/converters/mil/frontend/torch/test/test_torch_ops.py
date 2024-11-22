@@ -11716,10 +11716,11 @@ class TestRoll(TorchBaseTest):
 
 class TestArgmax(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape, axis, input_dtype",
+        "compute_unit, backend, frontend, shape, axis, input_dtype",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             COMMON_SHAPES,
             [-1, 0],
             [np.float32, np.int32, np.int64],
@@ -11729,6 +11730,7 @@ class TestArgmax(TorchBaseTest):
         self,
         compute_unit,
         backend: Tuple[str, str],
+        frontend: TorchFrontend,
         shape: Tuple[int],
         axis: int,
         input_dtype: np.dtype,
@@ -11742,6 +11744,7 @@ class TestArgmax(TorchBaseTest):
             model,
             expected_results=expected_results,
             input_as_shape=False,
+            frontend=frontend,
             backend=backend,
             converter_input_type=converter_input_type,
             compute_unit=compute_unit,
