@@ -7424,38 +7424,73 @@ class TestRepeatInterleave(TorchBaseTest):
         )
 
 
-class TestStd(TorchBaseTest):
+class TestVarStd(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, unbiased",
-        itertools.product(compute_units, backends, [True, False]),
+        "compute_unit, backend, frontend, torch_op, unbiased",
+        itertools.product(
+            compute_units, backends, frontends, [torch.var, torch.std], [True, False]
+        ),
     )
-    def test_std_2_inputs(self, compute_unit, backend, unbiased):
-        model = ModuleWrapper(function=torch.std, kwargs={"unbiased": unbiased})
+    def test_var_std_2_inputs(self, compute_unit, backend, frontend, torch_op, unbiased):
+        model = ModuleWrapper(function=torch_op, kwargs={"unbiased": unbiased})
         x = torch.randn(1, 5, 10) * 3
-        out = torch.std(x, unbiased=unbiased).unsqueeze(0)
+        out = torch_op(x, unbiased=unbiased).unsqueeze(0)
         self.run_compare_torch(
             x,
             model,
             expected_results=out,
             input_as_shape=False,
+            frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, unbiased, dim, keepdim",
+        "compute_unit, backend, frontend, torch_op, unbiased, dim, keepdim",
         itertools.product(
-            compute_units, backends, [True, False], [[0, 2], [1], [2]], [True, False]
+            compute_units,
+            backends,
+            frontends,
+            [torch.var, torch.std],
+            [True, False],
+            [[0, 2], [1], [2]],
+            [True, False],
         ),
     )
-    def test_std_4_inputs(self, compute_unit, backend, unbiased, dim, keepdim):
+    def test_var_std_4_inputs(
+        self, compute_unit, backend, frontend, torch_op, unbiased, dim, keepdim
+    ):
         model = ModuleWrapper(
-            function=torch.std,
+            function=torch_op,
             kwargs={"unbiased": unbiased, "dim": dim, "keepdim": keepdim},
         )
         input_shape = (2, 5, 10)
         self.run_compare_torch(
-            input_shape, model, backend=backend, compute_unit=compute_unit
+            input_shape, model, frontend=frontend, backend=backend, compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, torch_op, correction, dim, keepdim",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [torch.var, torch.std],
+            [0, 1],
+            [[0, 2], [1], [2]],
+            [True, False],
+        ),
+    )
+    def test_var_std_with_correction(
+        self, compute_unit, backend, frontend, torch_op, correction, dim, keepdim
+    ):
+        model = ModuleWrapper(
+            function=torch_op,
+            kwargs={"correction": correction, "dim": dim, "keepdim": keepdim},
+        )
+        input_shape = (2, 5, 10)
+        self.run_compare_torch(
+            input_shape, model, frontend=frontend, backend=backend, compute_unit=compute_unit
         )
 
 
