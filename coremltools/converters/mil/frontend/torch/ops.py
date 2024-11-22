@@ -7807,26 +7807,30 @@ def _scatter(context, inputs, mode, name):
     indices = inputs[2]
     updates = inputs[3]
     if types.is_scalar(updates.sym_type):
-        updates = mb.fill(shape=indices.shape, value=updates.val, name=name)
-    result = mb.scatter_along_axis(data=data, indices=indices, updates=updates,
-                                   axis=axis, mode=mode, name=name)
+        updates = mb.fill(shape=indices.shape, value=updates.val)
+    result = mb.scatter_along_axis(
+        data=data, indices=indices, updates=updates, axis=axis, mode=mode, name=name
+    )
     context.add(result)
 
 
-@register_torch_op
+@register_torch_op(
+    torch_alias=["scatter.src", "scatter.value", "scatter.reduce", "scatter.value_reduce"]
+)
 def scatter(context, node):
-    inputs = _get_inputs(context, node)
-    assert len(inputs) in (4, 5)
+    inputs = _get_inputs(context, node, expected=(4, 5))
 
-    # Determine reduce/mode parameter
-    if len(inputs) == 5:
-        mode = inputs[4].val
-        if mode == 'multiply':
-            mode = 'mul'
-        else:
-            assert mode == 'add'
-    else:
-        mode = 'update'
+    reduce = inputs[4].val if len(inputs) > 4 else "update"
+    if context.frontend in TORCH_EXPORT_BASED_FRONTENDS:
+        # torch.export may have `mode` in kwarg `reduce`
+        reduce = _get_kwinputs(context, node, "reduce", default=[reduce])[0]
+    if isinstance(reduce, Var):
+        reduce = reduce.val
+
+    mode = reduce
+    if mode == "multiply":
+        mode = "mul"
+    assert mode in ("update", "add", "mul")
 
     _scatter(context, inputs, mode, node.name)
 

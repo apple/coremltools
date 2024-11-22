@@ -10875,10 +10875,11 @@ class TestBaddbmm(TorchBaseTest):
 
 class TestScatter(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, shapes_dims, minimum_deployment_target",
+        "compute_unit, backend, frontend, shapes_dims, minimum_deployment_target",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [
                 [(10,), (0, -1)],
                 [(2, 3), (1, -1)],
@@ -10887,7 +10888,7 @@ class TestScatter(TorchBaseTest):
             [None, ct.target.iOS17],
         ),
     )
-    def test_scatter(self, compute_unit, backend, shapes_dims, minimum_deployment_target):
+    def test_scatter(self, compute_unit, backend, frontend, shapes_dims, minimum_deployment_target):
         class TestModel(nn.Module):
             def __init__(self, dim, shapes):
                 super(TestModel, self).__init__()
@@ -10896,6 +10897,8 @@ class TestScatter(TorchBaseTest):
                 self.index = torch.randint(0, shapes[dim], size=shapes)
 
             def forward(self, x):
+                if frontend in TORCH_EXPORT_BASED_FRONTENDS:
+                    x = x.clone()
                 return x.scatter_(self.dim, self.index, self.source)
 
         shapes, dims = shapes_dims
@@ -10904,16 +10907,18 @@ class TestScatter(TorchBaseTest):
             self.run_compare_torch(
                 shapes,
                 m,
+                frontend=frontend,
                 backend=backend,
                 compute_unit=compute_unit,
                 minimum_deployment_target=minimum_deployment_target,
             )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shapes_dims, minimum_deployment_target",
+        "compute_unit, backend, frontend, shapes_dims, minimum_deployment_target",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [
                 [(10,), (0, -1)],
                 [(2, 3), (1, -1)],
@@ -10923,7 +10928,7 @@ class TestScatter(TorchBaseTest):
         ),
     )
     def test_scatter_with_scalar_source(
-        self, compute_unit, backend, shapes_dims, minimum_deployment_target
+        self, compute_unit, backend, frontend, shapes_dims, minimum_deployment_target
     ):
         class TestModel(nn.Module):
             def __init__(self, dim, shapes):
@@ -10933,6 +10938,8 @@ class TestScatter(TorchBaseTest):
                 self.index = torch.randint(0, shapes[dim], size=shapes)
 
             def forward(self, x):
+                if frontend in TORCH_EXPORT_BASED_FRONTENDS:
+                    x = x.clone()
                 return x.scatter_(self.dim, self.index, self.source)
 
         shapes, dims = shapes_dims
@@ -10941,16 +10948,18 @@ class TestScatter(TorchBaseTest):
             self.run_compare_torch(
                 shapes,
                 m,
+                frontend=frontend,
                 backend=backend,
                 compute_unit=compute_unit,
                 minimum_deployment_target=minimum_deployment_target,
             )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shapes_dims, mode, minimum_deployment_target",
+        "compute_unit, backend, frontend, shapes_dims, mode, minimum_deployment_target",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [
                 [(10,), (0, -1)],
                 [(2, 3), (1, -1)],
@@ -10960,7 +10969,9 @@ class TestScatter(TorchBaseTest):
             [None, ct.target.iOS17],
         ),
     )
-    def test_scatter_with_reduce(self, compute_unit, backend, shapes_dims, mode, minimum_deployment_target):
+    def test_scatter_with_reduce(
+        self, compute_unit, backend, frontend, shapes_dims, mode, minimum_deployment_target
+    ):
         class TestModel(nn.Module):
             def __init__(self, dim, shapes, mode):
                 super(TestModel, self).__init__()
@@ -10970,7 +10981,12 @@ class TestScatter(TorchBaseTest):
                 self.index = torch.randint(0, shapes[dim], size=shapes)
 
             def forward(self, x):
+                if frontend in TORCH_EXPORT_BASED_FRONTENDS:
+                    x = x.clone()
                 return x.scatter_(self.dim, self.index, self.source, reduce=self.mode)
+
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("torch._ops.aten.scatter.reduce is not Aten Canonical")
 
         shapes, dims = shapes_dims
         for dim in dims:
@@ -10978,16 +10994,18 @@ class TestScatter(TorchBaseTest):
             self.run_compare_torch(
                 shapes,
                 m,
+                frontend=frontend,
                 backend=backend,
                 compute_unit=compute_unit,
                 minimum_deployment_target=minimum_deployment_target,
             )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shapes_dims, minimum_deployment_target",
+        "compute_unit, backend, frontend, shapes_dims, minimum_deployment_target",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [
                 [(10,), (0, -1)],
                 [(2, 3), (1, -1)],
@@ -10996,7 +11014,9 @@ class TestScatter(TorchBaseTest):
             [None, ct.target.iOS17],
         ),
     )
-    def test_scatter_add(self, compute_unit, backend, shapes_dims, minimum_deployment_target):
+    def test_scatter_add(
+        self, compute_unit, backend, frontend, shapes_dims, minimum_deployment_target
+    ):
         class TestModel(nn.Module):
             def __init__(self, dim, shapes):
                 super(TestModel, self).__init__()
@@ -11005,24 +11025,27 @@ class TestScatter(TorchBaseTest):
                 self.index = torch.randint(0, shapes[dim], size=shapes)
 
             def forward(self, x):
+                if frontend in TORCH_EXPORT_BASED_FRONTENDS:
+                    x = x.clone()
                 return x.scatter_add_(self.dim, self.index, self.source)
 
         shapes, dims = shapes_dims
         for dim in dims:
             m = TestModel(dim, shapes)
             self.run_compare_torch(
-                shapes, m, backend=backend, compute_unit=compute_unit,
+                shapes,
+                m,
+                frontend=frontend,
+                backend=backend,
+                compute_unit=compute_unit,
                 minimum_deployment_target=minimum_deployment_target,
             )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend",
-        itertools.product(
-            compute_units,
-            [("mlprogram", "fp16")],
-        ),
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, [("mlprogram", "fp16")], frontends),
     )
-    def test_scatter_with_invalid_indices(self, compute_unit, backend):
+    def test_scatter_with_invalid_indices(self, compute_unit, backend, frontend):
         """
         As PyTorch's `scatter_` and `scatter_add_` do verify indices and error out for negative
         and out-of-bound indices, it doesn't involve the PyMIL validation.
@@ -11042,6 +11065,7 @@ class TestScatter(TorchBaseTest):
             self.run_compare_torch(
                 (1, 4),
                 ScatterModel(),
+                frontend=frontend,
                 backend=backend,
                 compute_unit=compute_unit,
                 minimum_deployment_target=ct.target.iOS17,
@@ -11051,6 +11075,7 @@ class TestScatter(TorchBaseTest):
             self.run_compare_torch(
                 (1, 4),
                 ScatterAddModel(),
+                frontend=frontend,
                 backend=backend,
                 compute_unit=compute_unit,
                 minimum_deployment_target=ct.target.iOS17,
