@@ -8659,8 +8659,8 @@ class TestNonZero(TorchBaseTest):
         ),
     )
     def test_non_zero(self, compute_unit, backend, frontend, rank, as_tuple):
-        if frontend in TORCH_EXPORT_BASED_FRONTENDS:
-            pytest.skip("Cannot support _assert_async")
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("torch._ops.aten._assert_async.msg is not Aten Canonical")
 
         if rank == 1:
             input_shape = 10
