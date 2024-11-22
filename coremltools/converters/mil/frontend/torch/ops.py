@@ -6195,12 +6195,16 @@ def noop(context, node):
 @register_torch_op
 def argmax(context, node):
     def _parse_positional_args(context, node) -> Tuple[Var]:
-        inputs = _get_inputs(context, node, expected=(1, 2, 3))
+        inputs = _get_inputs(context, node, expected=(1, 2, 3, 4))
         nargs = len(inputs)
 
         x = inputs[0]
+
         dim = inputs[1] if nargs > 1 else None
         keepdim = inputs[2] if nargs > 2 else False
+
+        # When node.kind == argmax.out, there can be 1 more arg `Tensor(a!) out`,
+        # which is for in-place mutation, so we ignore it since Core ML is functional
         return x, dim, keepdim
 
     def _parse_keyword_args(context, node, dim, keepdim) -> Tuple[Var]:
@@ -7127,7 +7131,7 @@ def neg(context, node):
 @register_torch_op
 def topk(context, node):
     def _parse_positional_args(context, node) -> Tuple[Var]:
-        inputs = _get_inputs(context, node, expected=(2, 3, 4, 5))
+        inputs = _get_inputs(context, node, expected=(2, 3, 4, 5, 6, 7))
         nargs = len(inputs)
 
         x = inputs[0]
@@ -7137,6 +7141,9 @@ def topk(context, node):
         largest = inputs[3] if nargs > 3 else True
         sorted = inputs[4] if nargs > 4 else True
 
+        # When node.kind == topk.values, there can be 2 more args
+        # `Tensor(a!) values` and `Tensor(b!) indices`, which are for in-place mutation,
+        # so we ignore them since Core ML is functional
         return x, k, dim, largest, sorted
 
     def _parse_keyword_args(context, node, dim, largest, sorted) -> Tuple[Var]:
