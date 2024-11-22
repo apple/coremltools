@@ -11753,15 +11753,16 @@ class TestArgmax(TorchBaseTest):
 
 class TestStack(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, rank, num",
+        "compute_unit, backend, frontend, rank, num",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [1, 3],
             [1, 3],
         ),
     )
-    def test_stack(self, compute_unit, backend, rank, num):
+    def test_stack(self, compute_unit, backend, frontend, rank, num):
         input_shape = np.random.randint(low=1, high=6, size=rank)
         for dim in [None] + list(range(rank + 1)):
             class StackModel(torch.nn.Module):
@@ -11774,20 +11775,27 @@ class TestStack(TorchBaseTest):
             TorchBaseTest.run_compare_torch(
                 [input_shape] * num,
                 StackModel(),
+                frontend=frontend,
                 backend=backend,
                 compute_unit=compute_unit,
             )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, dim, default_dynamic_size",
+        "compute_unit, backend, frontend, dim, default_dynamic_size",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [None, 0, 1, -1],
             [2, 4],
         ),
     )
-    def test_stack_dynamic_range_dim(self, compute_unit, backend, dim, default_dynamic_size):
+    def test_stack_dynamic_range_dim(
+        self, compute_unit, backend, frontend, dim, default_dynamic_size
+    ):
+        if frontend in TORCH_EXPORT_BASED_FRONTENDS:
+            pytest.skip("torch.export Node arity mismatch; expected 1, but got 3")
+
         class StackModel(torch.nn.Module):
             def forward(self, *inputs):
                 if dim is None:
@@ -11795,14 +11803,14 @@ class TestStack(TorchBaseTest):
                 else:
                     return torch.stack(inputs, dim=dim)
 
-        dynamic_tensor_type = ct.TensorType(
-            shape=(2, 3, ct.RangeDim(upper_bound=10, default=default_dynamic_size))
-        )
+        range_dim_coreml = ct.RangeDim(upper_bound=10, default=default_dynamic_size)
         converter_input_type = [
             ct.TensorType(shape=(2, 3, 4)),
             ct.TensorType(shape=(2, 3, 4)),
-            dynamic_tensor_type,
+            ct.TensorType(shape=(2, 3, range_dim_coreml)),
         ]
+        range_dim_torch = torch.export.Dim(name="range_dim", max=10)
+        torch_export_dynamic_shapes = ({}, {}, {2: range_dim_torch})
 
         pytest_context_manager = nullcontext()
         if default_dynamic_size != 4:
@@ -11816,19 +11824,20 @@ class TestStack(TorchBaseTest):
                 [(2, 3, 4)] * 3,
                 StackModel(),
                 converter_input_type=converter_input_type,
+                torch_export_dynamic_shapes=torch_export_dynamic_shapes,
+                frontend=frontend,
                 backend=backend,
                 compute_unit=compute_unit,
             )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend",
-        itertools.product(
-            compute_units,
-            backends,
-        ),
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
     )
-    def test_stack_dynamic_from_input(self, compute_unit, backend):
+    def test_stack_dynamic_from_input(self, compute_unit, backend, frontend):
         """The dynamic dimension comes from input directly instead of using RangeDim."""
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("ExecuTorch dynamic shape propagation error")
 
         class StackModel(torch.nn.Module):
             def forward(self, render_size):
@@ -11850,6 +11859,7 @@ class TestStack(TorchBaseTest):
             StackModel(),
             input_as_shape=False,
             converter_input_type=converter_input_type,
+            frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
         )

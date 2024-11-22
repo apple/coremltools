@@ -2833,16 +2833,20 @@ def stack(context, node):
         nargs = len(inputs)
 
         tensors = inputs[0]
-
         dim = inputs[1] if nargs > 1 else 0
 
         return tensors, dim
 
+    def _parse_keyword_args(context, node, dim) -> Var:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return dim
+
+        dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
+        return dim
+
     tensors, dim = _parse_positional_args(context, node)
-    # torch.export may have kwargs
-    if context.frontend == TorchFrontend.TORCHEXPORT:
-        if dim == 0:
-            dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
+    dim = _parse_keyword_args(context, node, dim)
     if isinstance(dim, Var):
         dim = dim.val
 
