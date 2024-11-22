@@ -7818,17 +7818,30 @@ def glu(context, node):
     Applies the gated linear unit function GLU(a,b)=a⊗σ(b) where a is the first half of the input matrices and b is the
     second half.
     """
-    assert len(node.outputs) == 1
-    inputs = _get_inputs(context, node, expected=2)
-    input, axis = inputs
 
-    first_half, second_half = mb.split(x=input, num_splits=2, axis=axis.val, name=node.name + "_split")
-    context.add(first_half)
-    context.add(second_half)
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, expected=(1, 2))
+        nargs = len(inputs)
 
+        x = inputs[0]
+        dim = inputs[1] if nargs > 1 else -1
+        return x, dim
+
+    def _parse_keyword_args(context, node, dim) -> Var:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return dim
+
+        dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
+        return dim
+
+    x, dim = _parse_positional_args(context, node)
+    dim = _parse_keyword_args(context, node, dim)
+    if isinstance(dim, Var):
+        dim = dim.val
+
+    first_half, second_half = mb.split(x=x, num_splits=2, axis=dim, name=node.name + "_split")
     sigmoid_second_half = mb.sigmoid(x=second_half, name=second_half.name + "_sigmoid")
-    context.add(sigmoid_second_half)
-
     glu_node = mb.mul(x=first_half, y=sigmoid_second_half, name=node.name)
     context.add(glu_node)
 

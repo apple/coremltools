@@ -11213,19 +11213,22 @@ class TestDuplicateOutputTensors(TorchBaseTest):
 
 class TestGlu(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, shapes",
+        "compute_unit, backend, frontend, shapes",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [(2, 4, 6, 8), (6, 2, 10)],
         ),
     )
-    def test_glu(self, compute_unit, backend, shapes):
+    def test_glu(self, compute_unit, backend, frontend, shapes):
         # The dim specified for GLU shouldn't exceed the max dim in input.
         glu_dim_list = [-1] + [i for i in range(len(shapes))]
         for glu_dim in glu_dim_list:
             model = torch.nn.GLU(glu_dim)
-            self.run_compare_torch(shapes, model, backend=backend, compute_unit=compute_unit)
+            self.run_compare_torch(
+                shapes, model, frontend=frontend, backend=backend, compute_unit=compute_unit
+            )
 
 
 class TestHstack(TorchBaseTest):
