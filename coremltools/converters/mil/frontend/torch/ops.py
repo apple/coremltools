@@ -2187,19 +2187,57 @@ def cumsum(context, node):
     context.add(res)
 
 
-@register_torch_op(torch_alias=["squeeze.dim", "squeeze_copy.dim", "squeeze_copy.dims"])
+@register_torch_op(
+    torch_alias=[
+        "squeeze.dim",
+        "squeeze.dims",
+        "squeeze_copy",
+        "squeeze_copy.dim",
+        "squeeze_copy.dims",
+    ]
+)
 def squeeze(context, node):
-    inputs = _get_inputs(context, node)
-    if len(inputs) == 1:
-        res = mb.squeeze(x=inputs[0], name=node.name)
-    elif len(inputs) == 2:
-        dims = inputs[1].val
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, expected=(1, 2))
+        nargs = len(inputs)
+        x = inputs[0]
+        dims = inputs[1] if nargs > 1 else None
+        return x, dims
+
+    def _translate_torch_args(x: Var, dims: Var) -> Tuple[int]:
+        if isinstance(dims, Var):
+            dims = dims.val
+        if dims is None:
+            return None
+
+        # wrap `dims` into a tuple
         try:
             dims = (int(dims),)
         except:
             pass
-        res = mb.squeeze(x=inputs[0], axes=dims, name=node.name)
-    context.add(res)
+        # squeeze all dims is the default behaviour
+        if list(dims) == [*range(x.rank)]:
+            return None
+        # CPU fails non-single-dim squeeze (rdar://124555262)
+        # so let us filter out the non-single dims
+        filtered_dims = []
+        for dim in dims:
+            if x.shape[dim] == 1:
+                filtered_dims.append(int(dim))
+        return tuple(filtered_dims)
+
+    x, dims = _parse_positional_args(context, node)
+    axes = _translate_torch_args(x, dims)
+
+    if axes is None:
+        res = mb.squeeze(x=x, name=node.name)
+        context.add(res)
+    elif axes == ():
+        # no axis to be squeezed, noop
+        context.add(x, torch_name=node.name)
+    else:
+        res = mb.squeeze(x=x, axes=axes, name=node.name)
+        context.add(res)
 
 
 @register_torch_op(torch_alias=["unsqueeze_copy"])
@@ -2697,9 +2735,11 @@ def group_norm(context, node):
 
     x = mb.reshape(x=x, shape=new_shape)
     mean = mb.reduce_mean(x=x, axes=axes_, keep_dims=True)
-    var = _std(x, axes_, True, False, eps)
+    var = _var(x, axes=axes_, keep_dims=True, unbiased=False)
+    var_plus_eps = mb.add(x=var, y=eps)
+    std = mb.sqrt(x=var_plus_eps)
     x = mb.sub(x=x, y=mean)
-    x = mb.real_div(x=x, y=var)
+    x = mb.real_div(x=x, y=std)
     x = mb.reshape(x=x, shape=input_shape)
     if weight is not None:
         weight = mb.reshape(x=weight, shape=weight_shape)
@@ -2793,16 +2833,20 @@ def stack(context, node):
         nargs = len(inputs)
 
         tensors = inputs[0]
-
         dim = inputs[1] if nargs > 1 else 0
 
         return tensors, dim
 
+    def _parse_keyword_args(context, node, dim) -> Var:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return dim
+
+        dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
+        return dim
+
     tensors, dim = _parse_positional_args(context, node)
-    # torch.export may have kwargs
-    if context.frontend == TorchFrontend.TORCHEXPORT:
-        if dim == 0:
-            dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
+    dim = _parse_keyword_args(context, node, dim)
     if isinstance(dim, Var):
         dim = dim.val
 
@@ -6132,12 +6176,14 @@ def meshgrid(context, node):
         "feature_dropout",
         "lift_fresh",
         "lift_fresh_copy",
+        "sym_constrain_range",
+        "sym_constrain_range_for_size",
     ]
 )
 def noop(context, node):
     logger.info(f"Setting pytorch op: {node.kind} to no-op.")
     # These noops do not produce output
-    if node.kind in ("_assert_scalar",):
+    if node.kind in ("_assert_scalar", "sym_constrain_range", "sym_constrain_range_for_size"):
         return
     # Other noops return input as output
     else:
@@ -6148,14 +6194,40 @@ def noop(context, node):
 
 @register_torch_op
 def argmax(context, node):
-    inputs = _get_inputs(context, node)
-    x = inputs[0]
-    axis = inputs[1]
-    keep_dims = inputs[2]
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, expected=(1, 2, 3, 4))
+        nargs = len(inputs)
+
+        x = inputs[0]
+
+        dim = inputs[1] if nargs > 1 else None
+        keepdim = inputs[2] if nargs > 2 else False
+
+        # When node.kind == argmax.out, there can be 1 more arg `Tensor(a!) out`,
+        # which is for in-place mutation, so we ignore it since Core ML is functional
+        return x, dim, keepdim
+
+    def _parse_keyword_args(context, node, dim, keepdim) -> Tuple[Var]:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return dim, keepdim
+
+        dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
+        keepdim = _get_kwinputs(context, node, "keepdim", default=[keepdim])[0]
+
+        return dim, keepdim
+
+    x, dim, keepdim = _parse_positional_args(context, node)
+    dim, keepdim = _parse_keyword_args(context, node, dim, keepdim)
+    if isinstance(dim, Var):
+        dim = dim.val
+    if isinstance(keepdim, Var):
+        keepdim = keepdim.val
+
     if types.is_int(x.dtype) and x.dtype._width == 64:
         # MIL reduce_argmax doesn't support int64.
         x = mb.cast(x=x, dtype="int32")
-    res = mb.reduce_argmax(x=x, axis=axis, keep_dims=keep_dims, name=node.name)
+    res = mb.reduce_argmax(x=x, axis=dim, keep_dims=keepdim, name=node.name)
     context.add(res)
 
 
@@ -6312,16 +6384,44 @@ def min(context, node):
 
 
 def _add_amax_amin(context, node, reduce_op):
-    # mimic functionality from https://pytorch.org/docs/stable/generated/torch.amax.html
-    # mimic functionality from https://pytorch.org/docs/stable/generated/torch.amin.html
-    assert len(node.outputs) == 1
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, expected=(1, 2, 3))
+        nargs = len(inputs)
 
-    all_inputs = _get_inputs(context, node, expected=[2, 3])
-    _input = all_inputs[0]
-    dim = [all_inputs[1].val] if type(all_inputs[1].val) == int else [x for x in all_inputs[1].val]
-    keepdim = all_inputs[2] if len(all_inputs) == 3 else False
+        x = inputs[0]
+        dim = inputs[1] if nargs > 1 else []
+        keepdim = inputs[2] if nargs > 2 else False
 
-    context.add(reduce_op(x=_input, axes=dim, keep_dims=keepdim), torch_name=node.outputs[0])
+        return x, dim, keepdim
+
+    def _parse_keyword_args(context, node, dim, keepdim) -> Tuple[Var]:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return dim, keepdim
+
+        dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
+        keepdim = _get_kwinputs(context, node, "keepdim", default=[keepdim])[0]
+
+        return dim, keepdim
+
+    def _translate_torch_args(dim) -> Var:
+        if isinstance(dim, Var):
+            dim = dim.val
+        if dim is None or len(dim) == 0:
+            axes = None
+        else:
+            if isinstance(dim, int):
+                axes = [dim]
+            else:
+                axes = [axis for axis in dim]
+        return axes
+
+    x, dim, keepdim = _parse_positional_args(context, node)
+    dim, keepdim = _parse_keyword_args(context, node, dim, keepdim)
+    axes = _translate_torch_args(dim)
+
+    result = reduce_op(x=x, axes=axes, keep_dims=keepdim, name=node.name)
+    context.add(result)
 
 @register_torch_op
 def amax(context, node):
@@ -7027,95 +7127,115 @@ def neg(context, node):
     x, y = promote_input_dtypes([inputs[0], -1])
     context.add(mb.mul(x=x, y=y, name=node.name))
 
+
 @register_torch_op
 def topk(context, node):
-    inputs = _get_inputs(context, node)
-    kwargs = {"name": node.name, "x": inputs[0], "k": inputs[1]}
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, expected=(2, 3, 4, 5, 6, 7))
+        nargs = len(inputs)
 
-    if len(inputs) > 6:
-        raise Exception("Number of inputs to topk exceeds 6")
-    # optional: @axis
-    if len(inputs) > 2:
-        if inputs[2] is not None:
-            kwargs["axis"] = inputs[2].val
+        x = inputs[0]
+        k = inputs[1]
 
-    # optional: @ascending
-    if len(inputs) > 3:
-        largest = inputs[3].val
-        kwargs["ascending"] = not largest
+        dim = inputs[2] if nargs > 2 else -1
+        largest = inputs[3] if nargs > 3 else True
+        sorted = inputs[4] if nargs > 4 else True
 
-    # last inputs to topk are optional - sorted and out.
-    sort = True
-    if len(inputs) > 4:
-        if inputs[4].val is False and not is_current_opset_version_compatible_with(target.iOS16):
+        # When node.kind == topk.values, there can be 2 more args
+        # `Tensor(a!) values` and `Tensor(b!) indices`, which are for in-place mutation,
+        # so we ignore them since Core ML is functional
+        return x, k, dim, largest, sorted
+
+    def _parse_keyword_args(context, node, dim, largest, sorted) -> Tuple[Var]:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return dim, largest, sorted
+
+        dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
+        largest = _get_kwinputs(context, node, "largest", default=[largest])[0]
+        sorted = _get_kwinputs(context, node, "sorted", default=[sorted])[0]
+
+        return dim, largest, sorted
+
+    def _translate_torch_args(dim, largest, sorted) -> Tuple[Var]:
+        if isinstance(dim, Var):
+            dim = dim.val
+
+        if isinstance(largest, Var):
+            largest = largest.val
+
+        if isinstance(sorted, Var):
+            sorted = sorted.val
+        if not sorted and not is_current_opset_version_compatible_with(target.iOS16):
             raise Exception("For opset <= iOS16, only sorted=True supported for the topk")
-        sort = inputs[4].val
 
-    if len(inputs) > 5:
-        if inputs[5] is not None:
-            raise Exception(
-                "Unsupported value for argument 'out' in topk. Supported values: None, but input "
-                "is {}".format(inputs[5].val)
-            )
+        return dim, not largest, sorted
 
+    x, k, dim, largest, sorted = _parse_positional_args(context, node)
+    dim, largest, sorted = _parse_keyword_args(context, node, dim, largest, sorted)
+    axis, ascending, sort = _translate_torch_args(dim, largest, sorted)
+
+    kwargs = {"name": node.name, "x": x, "k": k, "axis": axis, "ascending": ascending}
     if is_current_opset_version_compatible_with(target.iOS16):
         kwargs["sort"] = sort
+    # if axis is not None:
+    #     kwargs["axis"] = axis
+    # if ascending is not None and ascending:
+    #     kwargs["ascending"] = ascending
+    # if sort is not None and not sort:
+    #     kwargs["sort"] = sort
 
     if kwargs["k"].val is None:
         res = _utils.dynamic_topk(
-                x=kwargs["x"],
-                k=kwargs["k"],
-                axis=kwargs["axis"],
-                ascending=kwargs["ascending"]
+            x=kwargs["x"], k=kwargs["k"], axis=kwargs["axis"], ascending=kwargs["ascending"]
         )
     else:
         res = mb.topk(**kwargs)
+    if context.frontend == TorchFrontend.TORCHSCRIPT:
+        values_name = node.outputs[0]
+        indices_name = node.outputs[1]
+        context.add(res[0], torch_name=values_name)
+        context.add(res[1], torch_name=indices_name)
+    else:
+        context.add(res, torch_name=node.name)
 
-    values_name = node.outputs[0]
-    indices_name = node.outputs[1]
-    context.add(res[0], torch_name=values_name)
-    context.add(res[1], torch_name=indices_name)
 
+def _var(
+    x: Var,
+    axes: Tuple[int] = None,
+    keep_dims: bool = False,
+    unbiased: bool = None,
+    correction: float = None,
+):
+    if unbiased is not None and correction is not None:
+        raise ValueError("Cannot specify both unbiased and correction in var")
 
-def _std(x, axes, keep_dim, unbiased, eps):
-    need_rescale = False
-    if unbiased:
-        # If "unbiased" is True,
-        # then we need to divide by "N-1" (instead of "N") to compute the mean of (x-E[x])^2
-        # for an unbiased estimate of the variance /  standard deviation.
-        # In the sequence of MIL ops added below, we first compute the mean using "N", and only if its unbiased
-        # we rescale later, the final result.
-        # We ignore the "unbiased" flag, if any of the dimensions involved in this operation are dynamic
-        # (we could have still handled that case by using "get_shape" etc ops, but we don't do that here,
-        # trading performance for numerical accuracy)
-        if axes is None:
-            if not any_symbolic(x.shape) and _np.prod(x.shape) > 1:
-                N = _np.prod(x.shape)
-                need_rescale = True
-        else:
-            dims = []
-            # collect dimensions corresponding to "axes"
-            for axis in axes:
-                dims.append(x.shape[axis])
-            if all([not is_symbolic(s) for s in dims]):
-                N = _np.prod(dims)
-                if N > 1:
-                    need_rescale = True
-    if need_rescale:
-        rescale_factor = _np.sqrt(N / float(N - 1))
-
+    # compute biased variance
     x_mean = mb.reduce_mean(x=x, axes=axes, keep_dims=True)
     x_demeaned = mb.sub(x=x, y=x_mean)
     x_demeaned_square = mb.square(x=x_demeaned)
-    x_demeaned_square_mean = mb.reduce_mean(x=x_demeaned_square, axes=axes, keep_dims=keep_dim)
-    if eps > 0:
-        x_demeaned_square_mean = mb.add(x=x_demeaned_square_mean, y=eps)
-    if need_rescale:
-        y_before_scale = mb.sqrt(x=x_demeaned_square_mean)
-        y = mb.mul(x=y_before_scale, y=rescale_factor)
-    else:
-        y = mb.sqrt(x=x_demeaned_square_mean)
-    return y
+    variance = mb.reduce_mean(x=x_demeaned_square, axes=axes, keep_dims=keep_dims)
+
+    # debias / correct if requested
+    if unbiased or correction is not None:
+        shape = mb.shape(x=x)
+        if axes is None:
+            numel = mb.reduce_prod(x=shape)
+        else:
+            sizes = mb.concat(values=[value_at(shape, axis) for axis in axes], axis=0)
+            numel = mb.reduce_prod(x=sizes)
+        numel_fp = mb.cast(x=numel, dtype="fp32")
+        if unbiased:
+            numel_minus_1_fp = mb.sub(x=numel_fp, y=1.0)
+            scale = mb.real_div(x=numel_fp, y=numel_minus_1_fp)
+        else:
+            correction_fp = mb.cast(x=correction, dtype="fp32")
+            numel_corrected_fp = mb.sub(x=numel_fp, y=correction_fp)
+            scale = mb.real_div(x=numel_fp, y=numel_corrected_fp)
+        variance = mb.mul(x=variance, y=scale)
+
+    return variance
+
 
 @register_torch_op
 def numel(context, node):
@@ -7125,27 +7245,247 @@ def numel(context, node):
     x = mb.reduce_prod(x=x, axes=[0], name=node.name)
     context.add(x)
 
-@register_torch_op
-def std(context, node):
-    inputs = _get_inputs(context, node)
-    x = inputs[0]
-    if not (len(inputs) == 2 or len(inputs) == 4):
-        raise ValueError("Number of inputs to the 'std' op must be"
-                         "2 or 4")
 
-    keep_dim = False
-    axes = None
-    if len(inputs) == 2:
-        unbiased = inputs[1].val
-    if len(inputs) == 4:
-        axes = inputs[1].val
-        if isinstance(axes, int):
-            axes = [axes]
-        unbiased = inputs[2].val
-        keep_dim = inputs[3].val
+@register_torch_op(torch_alias=["var.dim"])
+def var(context, node):
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, expected=(1, 2, 3, 4))
+        nargs = len(inputs)
 
-    y = _std(x, axes, keep_dim, unbiased, 0)
+        x = inputs[0]
+
+        if context.frontend == TorchFrontend.TORCHSCRIPT:
+            # torch.jit.trace does not distinguish by name `std` and `std.dim`,
+            # instead by nargs 2 or 4
+            keepdim = False
+            dim = None
+            if len(inputs) == 2:
+                unbiased = inputs[1]
+            if len(inputs) == 4:
+                dim = inputs[1]
+                unbiased = inputs[2]
+                keepdim = inputs[3]
+        else:
+            if node.kind == "var":
+                unbiased = inputs[1] if nargs > 1 else True
+                dim = None
+                keepdim = False
+            else:
+                assert node.kind == "var.dim"
+                assert nargs > 1
+                dim = inputs[1]
+                unbiased = inputs[2] if nargs > 2 else True
+                keepdim = inputs[3] if nargs > 3 else False
+
+        return x, dim, unbiased, keepdim
+
+    def _parse_keyword_args(context, node, dim, unbiased, keepdim) -> Tuple[Var]:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return dim, unbiased, keepdim
+
+        dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
+        unbiased = _get_kwinputs(context, node, "unbiased", default=[unbiased])[0]
+        keepdim = _get_kwinputs(context, node, "keepdim", default=[keepdim])[0]
+
+        return dim, unbiased, keepdim
+
+    def _translate_torch_args(dim, unbiased, keepdim) -> Tuple[Var]:
+        if isinstance(dim, Var):
+            dim = dim.val
+        try:
+            dim = (int(dim),)
+        except:
+            pass
+
+        if isinstance(unbiased, Var):
+            unbiased = unbiased.val
+
+        if isinstance(keepdim, Var):
+            keepdim = keepdim.val
+
+        return dim, unbiased, keepdim
+
+    x, dim, unbiased, keepdim = _parse_positional_args(context, node)
+    dim, unbiased, keepdim = _parse_keyword_args(context, node, dim, unbiased, keepdim)
+    axes, unbiased, keep_dims = _translate_torch_args(dim, unbiased, keepdim)
+
+    y = _var(x, axes=axes, keep_dims=keep_dims, unbiased=unbiased)
     context.add(y, node.name)
+
+
+@register_torch_op(torch_alias=["var.correction"])
+def var_correction(context, node):
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, expected=(1, 2, 3, 4))
+        nargs = len(inputs)
+
+        x = inputs[0]
+        dim = inputs[1] if nargs > 1 else None
+        correction = inputs[2] if nargs > 2 else None
+        keepdim = inputs[3] if nargs > 3 else False
+
+        return x, dim, correction, keepdim
+
+    def _parse_keyword_args(context, node, dim, correction, keepdim) -> Tuple[Var]:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return dim, correction, keepdim
+
+        dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
+        correction = _get_kwinputs(context, node, "correction", default=[correction])[0]
+        keepdim = _get_kwinputs(context, node, "keepdim", default=[keepdim])[0]
+
+        return dim, correction, keepdim
+
+    def _translate_torch_args(dim, correction, keepdim) -> Tuple[Var]:
+        if isinstance(dim, Var):
+            dim = dim.val
+        try:
+            dim = (int(dim),)
+        except:
+            pass
+
+        if isinstance(correction, Var):
+            correction = correction.val
+
+        if isinstance(keepdim, Var):
+            keepdim = keepdim.val
+
+        return dim, correction, keepdim
+
+    x, dim, correction, keepdim = _parse_positional_args(context, node)
+    dim, correction, keepdim = _parse_keyword_args(context, node, dim, correction, keepdim)
+    axes, correction, keep_dims = _translate_torch_args(dim, correction, keepdim)
+
+    y = _var(x, axes=axes, keep_dims=keep_dims, correction=correction)
+    context.add(y, node.name)
+
+
+@register_torch_op(torch_alias=["std.dim"])
+def std(context, node):
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected={
+                TorchFrontend.TORCHSCRIPT: (2, 4),
+                TorchFrontend.TORCHEXPORT: (1, 2, 3, 4),
+                TorchFrontend.EXECUTORCH: (1, 2, 3, 4),
+            },
+        )
+        nargs = len(inputs)
+
+        x = inputs[0]
+
+        if context.frontend == TorchFrontend.TORCHSCRIPT:
+            # torch.jit.trace does not distinguish by name `std` and `std.dim`,
+            # instead by nargs 2 or 4
+            keepdim = False
+            dim = None
+            if len(inputs) == 2:
+                unbiased = inputs[1]
+            if len(inputs) == 4:
+                dim = inputs[1]
+                unbiased = inputs[2]
+                keepdim = inputs[3]
+        else:
+            if node.kind == "std":
+                unbiased = inputs[1] if nargs > 1 else True
+                dim = None
+                keepdim = False
+            else:
+                assert node.kind == "std.dim"
+                assert nargs > 1
+                dim = inputs[1]
+                unbiased = inputs[2] if nargs > 2 else True
+                keepdim = inputs[3] if nargs > 3 else False
+
+        return x, dim, unbiased, keepdim
+
+    def _parse_keyword_args(context, node, dim, unbiased, keepdim) -> Tuple[Var]:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return dim, unbiased, keepdim
+
+        dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
+        unbiased = _get_kwinputs(context, node, "unbiased", default=[unbiased])[0]
+        keepdim = _get_kwinputs(context, node, "keepdim", default=[keepdim])[0]
+
+        return dim, unbiased, keepdim
+
+    def _translate_torch_args(dim, unbiased, keepdim) -> Tuple[Var]:
+        if isinstance(dim, Var):
+            dim = dim.val
+        try:
+            dim = (int(dim),)
+        except:
+            pass
+
+        if isinstance(unbiased, Var):
+            unbiased = unbiased.val
+
+        if isinstance(keepdim, Var):
+            keepdim = keepdim.val
+
+        return dim, unbiased, keepdim
+
+    x, dim, unbiased, keepdim = _parse_positional_args(context, node)
+    dim, unbiased, keepdim = _parse_keyword_args(context, node, dim, unbiased, keepdim)
+    axes, unbiased, keep_dims = _translate_torch_args(dim, unbiased, keepdim)
+
+    variance = _var(x, axes=axes, keep_dims=keep_dims, unbiased=unbiased)
+    standard_deviation = mb.sqrt(x=variance)
+    context.add(standard_deviation, node.name)
+
+
+@register_torch_op(torch_alias=["std.correction"])
+def std_correction(context, node):
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, expected=(1, 2, 3, 4))
+        nargs = len(inputs)
+
+        x = inputs[0]
+        dim = inputs[1] if nargs > 1 else None
+        correction = inputs[2] if nargs > 2 else None
+        keepdim = inputs[3] if nargs > 3 else False
+
+        return x, dim, correction, keepdim
+
+    def _parse_keyword_args(context, node, dim, correction, keepdim) -> Tuple[Var]:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return dim, correction, keepdim
+
+        dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
+        correction = _get_kwinputs(context, node, "correction", default=[correction])[0]
+        keepdim = _get_kwinputs(context, node, "keepdim", default=[keepdim])[0]
+
+        return dim, correction, keepdim
+
+    def _translate_torch_args(dim, correction, keepdim) -> Tuple[Var]:
+        if isinstance(dim, Var):
+            dim = dim.val
+        try:
+            dim = (int(dim),)
+        except:
+            pass
+
+        if isinstance(correction, Var):
+            correction = correction.val
+
+        if isinstance(keepdim, Var):
+            keepdim = keepdim.val
+
+        return dim, correction, keepdim
+
+    x, dim, correction, keepdim = _parse_positional_args(context, node)
+    dim, correction, keepdim = _parse_keyword_args(context, node, dim, correction, keepdim)
+    axes, correction, keep_dims = _translate_torch_args(dim, correction, keepdim)
+
+    variance = _var(x, axes=axes, keep_dims=keep_dims, correction=correction)
+    standard_deviation = mb.sqrt(x=variance)
+    context.add(standard_deviation, node.name)
 
 
 @register_torch_op
@@ -7474,26 +7814,30 @@ def _scatter(context, inputs, mode, name):
     indices = inputs[2]
     updates = inputs[3]
     if types.is_scalar(updates.sym_type):
-        updates = mb.fill(shape=indices.shape, value=updates.val, name=name)
-    result = mb.scatter_along_axis(data=data, indices=indices, updates=updates,
-                                   axis=axis, mode=mode, name=name)
+        updates = mb.fill(shape=indices.shape, value=updates.val)
+    result = mb.scatter_along_axis(
+        data=data, indices=indices, updates=updates, axis=axis, mode=mode, name=name
+    )
     context.add(result)
 
 
-@register_torch_op
+@register_torch_op(
+    torch_alias=["scatter.src", "scatter.value", "scatter.reduce", "scatter.value_reduce"]
+)
 def scatter(context, node):
-    inputs = _get_inputs(context, node)
-    assert len(inputs) in (4, 5)
+    inputs = _get_inputs(context, node, expected=(4, 5))
 
-    # Determine reduce/mode parameter
-    if len(inputs) == 5:
-        mode = inputs[4].val
-        if mode == 'multiply':
-            mode = 'mul'
-        else:
-            assert mode == 'add'
-    else:
-        mode = 'update'
+    reduce = inputs[4].val if len(inputs) > 4 else "update"
+    if context.frontend in TORCH_EXPORT_BASED_FRONTENDS:
+        # torch.export may have `mode` in kwarg `reduce`
+        reduce = _get_kwinputs(context, node, "reduce", default=[reduce])[0]
+    if isinstance(reduce, Var):
+        reduce = reduce.val
+
+    mode = reduce
+    if mode == "multiply":
+        mode = "mul"
+    assert mode in ("update", "add", "mul")
 
     _scatter(context, inputs, mode, node.name)
 
@@ -7511,17 +7855,30 @@ def glu(context, node):
     Applies the gated linear unit function GLU(a,b)=a⊗σ(b) where a is the first half of the input matrices and b is the
     second half.
     """
-    assert len(node.outputs) == 1
-    inputs = _get_inputs(context, node, expected=2)
-    input, axis = inputs
 
-    first_half, second_half = mb.split(x=input, num_splits=2, axis=axis.val, name=node.name + "_split")
-    context.add(first_half)
-    context.add(second_half)
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, expected=(1, 2))
+        nargs = len(inputs)
 
+        x = inputs[0]
+        dim = inputs[1] if nargs > 1 else -1
+        return x, dim
+
+    def _parse_keyword_args(context, node, dim) -> Var:
+        # Only torch.export may have kwargs
+        if context.frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            return dim
+
+        dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
+        return dim
+
+    x, dim = _parse_positional_args(context, node)
+    dim = _parse_keyword_args(context, node, dim)
+    if isinstance(dim, Var):
+        dim = dim.val
+
+    first_half, second_half = mb.split(x=x, num_splits=2, axis=dim, name=node.name + "_split")
     sigmoid_second_half = mb.sigmoid(x=second_half, name=second_half.name + "_sigmoid")
-    context.add(sigmoid_second_half)
-
     glu_node = mb.mul(x=first_half, y=sigmoid_second_half, name=node.name)
     context.add(glu_node)
 
