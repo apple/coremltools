@@ -258,11 +258,13 @@ class MLModelStructure:
 
         Returns
         -------
-        MLModelStructure: An instance of MLModelStructure.
+        MLModelStructure
+            An instance of MLModelStructure.
 
         Examples
         --------
         .. sourcecode:: python
+        
             model_structure = coremltools.models.compute_plan.MLModelStructure.load_from_path(
                 model.get_compiled_path()
             )
@@ -279,6 +281,7 @@ class MLModelStructure:
             else:
                 # The model type is something else.
                 pass
+        
         """
 
         if _MLModelProxy is None:
@@ -371,7 +374,7 @@ class MLComputePlan:
 
         Returns
         -------
-        Optional[MLComputePlanDeviceUsage]:
+        Optional[MLComputePlanDeviceUsage]
             The anticipated compute devices that would be used for executing the layer or ``None`` if the usage couldn't be determined.
         """
         return self.__proxy__.get_compute_device_usage_for_neuralnetwork_layer(layer)
@@ -418,6 +421,7 @@ class MLComputePlan:
         Examples
         --------
         .. sourcecode:: python
+
             compute_plan = coremltools.models.compute_plan.MLComputePlan.load_from_path(
                 model.get_compiled_path()
             )
