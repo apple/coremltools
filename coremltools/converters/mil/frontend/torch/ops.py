@@ -1546,7 +1546,6 @@ def linspace(context, node):
     nums = inputs[2]
     start = mb.cast(x=start, dtype="fp32")
     end = mb.cast(x=end, dtype="fp32")
-    nums = mb.cast(x=nums, dtype="int32")
 
     if start.can_be_folded_to_const() and end.can_be_folded_to_const() and nums.can_be_folded_to_const():
         start_val = start.val
