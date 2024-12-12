@@ -3830,3 +3830,24 @@ class TestGetActivationStats(TestCompressionPasses):
         # Since mlmodel has a concat with 2 inputs and 1 output, we should see at least 3 rmin/rmax pairs are identical in activation_stats.
         # If we dedup rmin/rmax pairs with identical values, the length of unique values should at least reduced by 2 compared with original one.
         assert len(activation_stats) - len(activation_stats_unique) >= 2
+
+    def test_get_activation_calibration_stats_excludes_model_outputs(self):
+        """
+        The activation calibration stats shouldn't include the model's final outputs.
+        """
+        # Prepare sample data
+        sample_data = []
+        for _ in range(3):
+            input_data = np.random.rand(5, 10, 4, 4)
+            sample_data.append({"data": input_data})
+
+        # Loading a floating point mlmodel
+        mlmodel = self._get_test_mlmodel_conv_relu()
+
+        activation_stats = _get_activation_calibration_stats(mlmodel, sample_data)
+
+        model_spec = mlmodel.get_spec()
+        output_count = len(mlmodel.get_spec().description.output)
+        for i in range(0, output_count):
+            output_name = model_spec.description.output[i].name
+            assert output_name not in activation_stats
