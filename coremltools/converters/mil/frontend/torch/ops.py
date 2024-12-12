@@ -1570,8 +1570,8 @@ def linspace(context, node):
             step = mb.real_div(x=x, y=y)
 
             arange = mb.range_1d(start=0.0, end=mb.cast(x=nums, dtype="fp32"), step=1.0)
-            shifted_arange = mb.add(x=arange, y=start)
-            res = mb.mul(x=shifted_arange, y=step, name=node.name)
+            scaled_arange = mb.mul(x=arange, y=step)
+            res = mb.add(x=scaled_arange, y=start, name=node.name)
 
     context.add(res)
 
