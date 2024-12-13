@@ -219,7 +219,7 @@ An example how to update the output data types:
 
 ```python
 from coremltools.models.model import MLModel
-from coremltools.utils import change_array_output_type
+from coremltools.utils import change_input_output_tensor_type
 from coremltools.proto.FeatureTypes_pb2 import ArrayFeatureType
 
 model = MLModel("my_model.mlpackage")
@@ -234,7 +234,7 @@ updated_model.save("my_updated_model.mlpackage")
 Another example is showing how to update data types of all the function inputs:
 ```python
 from coremltools.models.model import MLModel
-from coremltools.utils import change_array_output_type
+from coremltools.utils import change_input_output_tensor_type
 from coremltools.proto.FeatureTypes_pb2 import ArrayFeatureType
 
 model = MLModel("my_model.mlpackage")
