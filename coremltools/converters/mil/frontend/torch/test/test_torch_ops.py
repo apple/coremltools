@@ -5182,7 +5182,7 @@ class TestLinspace(TorchBaseTest):
             compute_units,
             backends,
             [(-0.1, -0.7), (1, 10)],
-            [1, 2, 100],
+            [1, 2, 10, 100],
         ),
     )
     def test_linspace_dynamic(self, compute_unit, backend, start_end, steps):
