@@ -2297,11 +2297,11 @@ def change_input_output_tensor_type(
     .. sourcecode:: python
 
         from coremltools.models.model import MLModel
-        from coremltools.utils import change_array_output_type
+        from coremltools.utils import change_input_output_tensor_type
         from coremltools.proto.FeatureTypes_pb2 import ArrayFeatureType
 
         model = MLModel("my_model.mlpackage")
-        updated_model = change_output_tensor_type(
+        updated_model = change_input_output_tensor_type(
             ml_model=model,
             from_type=ArrayFeatureType.FLOAT32,
             to_type=ArrayFeatureType.FLOAT16,
