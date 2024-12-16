@@ -147,3 +147,11 @@ symbol_transform
 .. automodule:: coremltools.converters.mil.mil.passes.defs.symbol_transform
 
     .. autoclass:: materialize_symbolic_shape_program
+
+
+scaled_dot_product_attention
+---------------------------------------------------------
+
+.. automodule:: coremltools.converters.mil.mil.passes.defs.scaled_dot_product_attention_sliced_q
+
+    .. autoclass:: scaled_dot_product_attention_sliced_q
