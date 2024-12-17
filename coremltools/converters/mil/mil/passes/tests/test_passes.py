@@ -7424,8 +7424,7 @@ class TestScaledDotProductAttentionSlicedQ:
 
         return model_inputs, coreml_model_inputs
 
-    @staticmethod
-    def verify_sdpa_outputs(example_inputs: Dict[str, torch.Tensor]):
+    def verify_sdpa_outputs(self, example_inputs: Dict[str, torch.Tensor]):
         pipeline_1 = ct.PassPipeline.DEFAULT
 
         pipeline_2 = ct.PassPipeline.DEFAULT
@@ -7441,8 +7440,8 @@ class TestScaledDotProductAttentionSlicedQ:
             "common::scaled_dot_product_attention_sliced_q", {"min_seq_length": 256, "seq_length_divider": 32}
         )
 
-        model = TestScaledDotProductAttentionSlicedQ.AttentionPyTorch()
-        model_inputs, coreml_model_inputs = TestScaledDotProductAttentionSlicedQ._get_trace_coreml_inputs(example_inputs)
+        model = self.AttentionPyTorch()
+        model_inputs, coreml_model_inputs = self._get_trace_coreml_inputs(example_inputs)
 
         coreml_models = [
             ct.convert(
@@ -7482,27 +7481,25 @@ class TestScaledDotProductAttentionSlicedQ:
         outputs = [list(coreml_model.predict(predict_inputs).values())[0] for coreml_model in coreml_models]
 
         for i in range(1, len(outputs)):
-            mean_squared_error = np.mean((outputs[0] - outputs[i]) ** 2)
-            assert mean_squared_error < 0.0001
+            np.testing.assert_allclose(outputs[0], outputs[i], rtol=0.01, strict=True)
 
-    @staticmethod
-    def test_scaled_dot_product_attention_sliced():
+    def test_scaled_dot_product_attention_sliced(self):
         # Confirm the basic scenario.
-        example_inputs = TestScaledDotProductAttentionSlicedQ._get_example_inputs()
-        TestScaledDotProductAttentionSlicedQ.verify_sdpa_outputs(example_inputs)
+        example_inputs = self._get_example_inputs()
+        self.verify_sdpa_outputs(example_inputs)
 
         # Confirm sdpa with Q, K and V as 4D tensors.
-        example_inputs = TestScaledDotProductAttentionSlicedQ._get_example_inputs(shape_size=4)
-        TestScaledDotProductAttentionSlicedQ.verify_sdpa_outputs(example_inputs)
+        example_inputs = self._get_example_inputs(shape_size=4)
+        self.verify_sdpa_outputs(example_inputs)
 
         # Confirm sdpa with attn_mask as a bias.
-        example_inputs = TestScaledDotProductAttentionSlicedQ._get_example_inputs(attn_mask_dtype=torch.float16)
-        TestScaledDotProductAttentionSlicedQ.verify_sdpa_outputs(example_inputs)
+        example_inputs = self._get_example_inputs(attn_mask_dtype=torch.float16)
+        self.verify_sdpa_outputs(example_inputs)
 
         # Confirm sdpa with attn_mask as boolean flags.
-        example_inputs = TestScaledDotProductAttentionSlicedQ._get_example_inputs(attn_mask_dtype=torch.bool)
-        TestScaledDotProductAttentionSlicedQ.verify_sdpa_outputs(example_inputs)
+        example_inputs = self._get_example_inputs(attn_mask_dtype=torch.bool)
+        self.verify_sdpa_outputs(example_inputs)
 
         # Confirm sdpa works well with different shapes for Q and K & V.
-        example_inputs = TestScaledDotProductAttentionSlicedQ._get_example_inputs(qkv_same_shape=False)
-        TestScaledDotProductAttentionSlicedQ.verify_sdpa_outputs(example_inputs)
+        example_inputs = self._get_example_inputs(qkv_same_shape=False)
+        self.verify_sdpa_outputs(example_inputs)
