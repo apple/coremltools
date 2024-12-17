@@ -531,7 +531,7 @@ class CoreMLQuantizer(_TorchQuantizer):
             .. code-block:: python
 
                 import torch.nn as nn
-                from torch._export import capture_pre_autograd_graph
+                from torch.export import export_for_training
                 from torch.ao.quantization.quantize_pt2e import convert_pt2e, prepare_qat_pt2e
 
                 from coremltools.optimize.torch.quantization._coreml_quantizer import CoreMLQuantizer
@@ -562,7 +562,7 @@ class CoreMLQuantizer(_TorchQuantizer):
                 example_inputs = torch.randn(1, 1, 28, 28)
 
                 # create export graph
-                exported_model = capture_pre_autograd_graph(model, (example_inputs,))
+                exported_model = export_for_training(model, (example_inputs,)).module()
 
                 # prepare the model to insert FakeQuantize layers for QAT
                 prepared_model = prepare_qat_pt2e(exported_model, quantizer)
