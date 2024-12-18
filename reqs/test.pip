@@ -53,7 +53,7 @@ pytest-timeout
 
 transformers==4.26.0; platform_machine != "arm64"
 transformers==4.38.2; platform_machine == "arm64"
-peft
+peft==0.13.2
 
 # coremltools.optimize.torch
 filelock==3.6.0
