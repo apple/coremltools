@@ -1,0 +1,573 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Post-Training Compression &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Post-Training Compression</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/source/coremltools.optimize.coreml.post_training_quantization.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-coremltools.optimize.coreml">
+<span id="post-training-compression"></span><h1>Post-Training Compression<a class="headerlink" href="#module-coremltools.optimize.coreml" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="coremltools.optimize.coreml.linear_quantize_weights">
+<span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">linear_quantize_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_post_training_quantization.html#linear_quantize_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.linear_quantize_weights" title="Link to this definition"></a></dt>
+<dd><p>Utility function to convert a float precision MLModel of type <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>, which uses
+float-precision weights, into a compressed MLModel that uses n-bit weights (currently only
+support n=4 and n=8). This is achieved by converting the float weight values that are stored in
+the <code class="docutils literal notranslate"><span class="pre">const</span></code> op into the <code class="docutils literal notranslate"><span class="pre">constexpr_affine_dequantize</span></code> or <code class="docutils literal notranslate"><span class="pre">constexpr_blockwise_shift_scale</span></code>
+op (based on model’s minimum deployment target).</p>
+<p>This function uses linear quantization on the float weights, providing up to 4x (for 4-bit)
+savings in storage compared to float 16, or up to 4x savings compared to float 32.
+All computation at runtime uses float precision; the precision of the intermediate
+tensors and the compute precision of the ops are not altered.</p>
+<p>For each weight, this utility function converts the weight into the int4/8 or uint4/8 type using
+either <cite>linear interpolation</cite> (<code class="docutils literal notranslate"><span class="pre">&quot;linear&quot;</span></code> mode) or <cite>linear symmetric interpolation</cite>
+(<code class="docutils literal notranslate"><span class="pre">&quot;linear_symmetric&quot;</span></code> mode, the default).</p>
+<p><strong>Linear interpolation</strong></p>
+<p>The following description uses 8-bit quantization to illustrate, and 4-bit is similar to it.</p>
+<p>Linear interpolation (<code class="docutils literal notranslate"><span class="pre">&quot;linear&quot;</span></code> mode) maps the min/max of the float
+range to the 8-bit integer range <code class="docutils literal notranslate"><span class="pre">[low,</span> <span class="pre">high]</span></code> using a zero point (also called quantization bias, or
+offset) and a scale factor. For the int8 quantization, <code class="docutils literal notranslate"><span class="pre">[low,</span> <span class="pre">high]</span> <span class="pre">=</span> <span class="pre">[-128,</span> <span class="pre">127]</span></code>, while uint8
+quantization uses range <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">255]</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;linear&quot;</span></code> mode uses the quantization formula:</p>
+<div class="math notranslate nohighlight">
+\[w_r = s * (w_q - z)\]</div>
+<p>Where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(w_r\)</span> and  <span class="math notranslate nohighlight">\(s\)</span> are of type float.</p></li>
+<li><p><span class="math notranslate nohighlight">\(w_r`\)</span> represents the float precision weight.</p></li>
+<li><p><span class="math notranslate nohighlight">\(s\)</span> represents the scale.</p></li>
+<li><p><span class="math notranslate nohighlight">\(w_q\)</span> and <span class="math notranslate nohighlight">\(z\)</span> are of type 8-bit integer.</p></li>
+<li><p><span class="math notranslate nohighlight">\(w_q\)</span> represents quantized weight.</p></li>
+<li><p><span class="math notranslate nohighlight">\(z\)</span> represents the zero point.</p></li>
+</ul>
+</div></blockquote>
+<p>Quantized weights are computed as follows:</p>
+<div class="math notranslate nohighlight">
+\[w_q = cast\_to\_8\_bit\_integer(w_r / s + cast\_to\_float(z))\]</div>
+<p>Note: <span class="math notranslate nohighlight">\(cast\_to\_8\_bit\_integer\)</span> is the process of clipping the input to range <code class="docutils literal notranslate"><span class="pre">[low,</span> <span class="pre">high]</span></code> followed by rounding and casting to 8-bit integer.</p>
+<p>In <code class="docutils literal notranslate"><span class="pre">&quot;linear&quot;</span></code> mode, <code class="docutils literal notranslate"><span class="pre">s,</span> <span class="pre">z</span></code> are computed by mapping the original float range
+<code class="docutils literal notranslate"><span class="pre">[A,</span> <span class="pre">B]</span></code> into the 8-bit integer range <code class="docutils literal notranslate"><span class="pre">[-128,</span> <span class="pre">127]</span></code> or <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">255]</span></code>. That is, you are solving the
+following linear equations:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">B</span> <span class="pre">=</span> <span class="pre">s</span> <span class="pre">*</span> <span class="pre">(high</span> <span class="pre">-</span> <span class="pre">z)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">=</span> <span class="pre">s</span> <span class="pre">*</span> <span class="pre">(low</span> <span class="pre">-</span> <span class="pre">z)</span></code></p></li>
+</ul>
+</div></blockquote>
+<p>The equations result in the following:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">s</span> <span class="pre">=</span> <span class="pre">(B</span> <span class="pre">-</span> <span class="pre">A)</span> <span class="pre">/</span> <span class="pre">(high</span> <span class="pre">-</span> <span class="pre">low)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">z</span> <span class="pre">=</span> <span class="pre">cast_to_8_bit_integer((low</span> <span class="pre">*</span> <span class="pre">B</span> <span class="pre">-</span> <span class="pre">high</span> <span class="pre">*</span> <span class="pre">A)</span> <span class="pre">/</span> <span class="pre">(B</span> <span class="pre">-</span> <span class="pre">A))</span></code></p></li>
+</ul>
+</div></blockquote>
+<p>When the rank of weight <code class="docutils literal notranslate"><span class="pre">w</span></code> is 1, then <code class="docutils literal notranslate"><span class="pre">s</span></code> and <code class="docutils literal notranslate"><span class="pre">z</span></code> are both scalars. When the
+rank of the weight is greater than 1, then <code class="docutils literal notranslate"><span class="pre">s</span></code> and <code class="docutils literal notranslate"><span class="pre">z</span></code> are both vectors. In that
+case, scales are computed per <cite>channel</cite>, in which <cite>channel</cite> is the output dimension,
+which corresponds to the first dimension for ops such as <code class="docutils literal notranslate"><span class="pre">conv</span></code> and <code class="docutils literal notranslate"><span class="pre">linear</span></code>, and
+the second dimension for the <code class="docutils literal notranslate"><span class="pre">conv_transpose</span></code> op.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">&quot;linear&quot;</span></code> mode, <span class="math notranslate nohighlight">\(A = min(w_r)\)</span>, <span class="math notranslate nohighlight">\(B = max(w_r)\)</span>.</p>
+<p><strong>Linear symmetric interpolation</strong></p>
+<p>With linear symmetric interpolation (<code class="docutils literal notranslate"><span class="pre">&quot;linear_symmetric&quot;</span></code> mode, the default), rather than
+mapping the exact min/max of the float range to the quantized range, the function
+chooses the maximum absolute value between the min/max, which results in a
+floating-point range that is symmetric with respect to zero. This also makes the resulting zero
+point <code class="docutils literal notranslate"><span class="pre">0</span></code> for int8 weight and <code class="docutils literal notranslate"><span class="pre">127</span></code> for uint8 weight.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">&quot;linear_symmetric&quot;</span></code> mode:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(A = -R\)</span> and <span class="math notranslate nohighlight">\(B = R\)</span>, where <span class="math notranslate nohighlight">\(R = max(abs(w_r))\)</span>.</p></li>
+<li><p>This function maps to the range of <code class="docutils literal notranslate"><span class="pre">[-127,</span> <span class="pre">127]</span></code> for int8 weight and <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">254]</span></code> for uint8 weight.</p></li>
+<li><p>The result is <code class="docutils literal notranslate"><span class="pre">s=(B-A)/254</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">s=2R/254</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">s=R/127</span></code>.</p></li>
+<li><dl class="simple">
+<dt>Solving for <code class="docutils literal notranslate"><span class="pre">z</span></code>:</dt><dd><ul>
+<li><p>int8:  <code class="docutils literal notranslate"><span class="pre">z</span> <span class="pre">=</span> <span class="pre">(-127</span> <span class="pre">*</span> <span class="pre">R</span> <span class="pre">+</span> <span class="pre">127</span> <span class="pre">*</span> <span class="pre">R)/2R</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">z=0</span></code>.</p></li>
+<li><p>uint8: <code class="docutils literal notranslate"><span class="pre">z</span> <span class="pre">=</span> <span class="pre">(0</span> <span class="pre">*</span> <span class="pre">R</span> <span class="pre">+</span> <span class="pre">254</span> <span class="pre">*</span> <span class="pre">R)/2R</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">z=127</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>mlmodel: MLModel</strong></dt><dd><p>Model to be quantized. This MLModel should be of type <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>.</p>
+</dd>
+<dt><strong>config: OptimizationConfig</strong></dt><dd><p>An <a class="reference internal" href="coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.OptimizationConfig" title="coremltools.optimize.coreml.OptimizationConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationConfig</span></code></a> object that specifies the parameters for weight quantization.</p>
+</dd>
+<dt><strong>joint_compression: bool</strong></dt><dd><p>Specification of whether or not to further compress the already-compressed input MLModel to a
+jointly compressed MLModel. See the <cite>blockwise_palettize_weights</cite> graph pass for information
+about which compression schemas could be further jointly palettized.</p>
+<p>Take “palettize + quantize” as an example of joint compression, where the input MLModel is already
+palettized, and the palettization’s lookup table will be further quantized. In such an example,
+the weight values are represented by <code class="docutils literal notranslate"><span class="pre">constexpr_blockwise_shift_scale</span></code> + <code class="docutils literal notranslate"><span class="pre">constexpr_lut_to_dense</span></code> ops:
+lut(int8) -&gt; constexpr_blockwise_shift_scale -&gt; lut(fp16) -&gt; constexpr_lut_to_dense -&gt; dense(fp16)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>model: MLModel</dt><dd><p>The quantized MLModel instance.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="kn">import</span> <span class="nn">coremltools.optimize</span> <span class="k">as</span> <span class="nn">cto</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">)</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OptimizationConfig</span><span class="p">(</span>
+    <span class="n">global_config</span><span class="o">=</span><span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OpLinearQuantizerConfig</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;linear_symmetric&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">compressed_model</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">linear_quantize_weights</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="coremltools.optimize.coreml.prune_weights">
+<span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">prune_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_post_training_quantization.html#prune_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.prune_weights" title="Link to this definition"></a></dt>
+<dd><p>Utility function to convert a float precision MLModel of type <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code> to a
+compressed MLModel using sparse representation. The <code class="docutils literal notranslate"><span class="pre">const</span></code> ops storing weight
+values are replaced by <code class="docutils literal notranslate"><span class="pre">constexpr_sparse_to_dense</span></code> ops.</p>
+<p>This function is useful if the model is trained with pruning techniques so that
+a lot of weights have zero values. If a large percentage of weight values are zero,
+a sparse representation is more efficient than a dense one (the default).</p>
+<p>The sparsified weights are stored in a bit mask. If the weight values are
+<code class="docutils literal notranslate"><span class="pre">{0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">56.3}</span></code>, its sparse representation contains a bit mask with
+ones on locations where the value is non-zero: <code class="docutils literal notranslate"><span class="pre">00000001b</span></code>. This is accompanied by
+non-zero data, which is a size-1 vector of value <code class="docutils literal notranslate"><span class="pre">{56.3}</span></code>.</p>
+<p>For example, given the following:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">weight</span> <span class="pre">=</span> <span class="pre">[0.3,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0.5,</span> <span class="pre">0,</span> <span class="pre">0]</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">non_zero_data,</span> <span class="pre">bit_mask</span> <span class="pre">=</span> <span class="pre">sparsify(weight)</span></code></p></li>
+</ul>
+</div></blockquote>
+<p>The indices of the non-zero elements are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">non_zero_data</span> <span class="pre">=</span> <span class="pre">[0.3,</span> <span class="pre">0.5]</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bit_mask</span> <span class="pre">=</span> <span class="pre">&quot;100100&quot;</span></code></p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>mlmodel: MLModel</strong></dt><dd><p>Model to be sparsified. This MLModel should be of type <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>.</p>
+</dd>
+<dt><strong>config: OptimizationConfig</strong></dt><dd><p>An <a class="reference internal" href="coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.OptimizationConfig" title="coremltools.optimize.coreml.OptimizationConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationConfig</span></code></a> object that specifies the parameters for weight pruning.</p>
+</dd>
+<dt><strong>joint_compression: bool</strong></dt><dd><p>Specification of whether or not to further prune the already-compressed input MLModel to a
+jointly compressed MLModel. See the <cite>prune_weights</cite> graph pass for information
+about which compression schemas could be further pruned.</p>
+<p>Take “quantize + prune” as an example of joint compression, where the input MLModel is already
+quantized, and it will be further pruned. In such an example, the weight values are
+represented by <code class="docutils literal notranslate"><span class="pre">constexpr_sparse_blockwise_shift_scale</span></code> + <code class="docutils literal notranslate"><span class="pre">constexpr_sparse_to_dense</span></code> ops:
+quantized(sparse) -&gt; constexpr_sparse_blockwise_shift_scale -&gt; weight(sparse) -&gt; constexpr_sparse_to_dense -&gt; weight(dense)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>model: MLModel</dt><dd><p>The sparse MLModel instance.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="kn">import</span> <span class="nn">coremltools.optimize</span> <span class="k">as</span> <span class="nn">cto</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">)</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OptimizationConfig</span><span class="p">(</span>
+    <span class="n">global_config</span><span class="o">=</span><span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OpThresholdPrunerConfig</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">compressed_model</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">prune_weights</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="coremltools.optimize.coreml.palettize_weights">
+<span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">palettize_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_post_training_quantization.html#palettize_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.palettize_weights" title="Link to this definition"></a></dt>
+<dd><p>Utility function to convert a float precision MLModel of type <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code> to a
+compressed MLModel by reducing the overall number of weights using one or more lookup tables
+(LUT). A LUT contains a list of float values. An <code class="docutils literal notranslate"><span class="pre">n-bit</span></code> LUT has <span class="math notranslate nohighlight">\(2^{n-bits}\)</span> entries.</p>
+<p>For example, a float weight vector such as <code class="docutils literal notranslate"><span class="pre">{0.3,</span> <span class="pre">0.3,</span> <span class="pre">0.5,</span> <span class="pre">0.5}</span></code> can be compressed
+using a 1-bit LUT: <code class="docutils literal notranslate"><span class="pre">{0.3,</span> <span class="pre">0.5}</span></code>. In this case the float vector can be replaced
+with a 1-bit vector <code class="docutils literal notranslate"><span class="pre">{0,</span> <span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">1}</span></code>.</p>
+<p>This function iterates over all the weights in the <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>, discretizes its values,
+and constructs the LUT according to the algorithm specified in <code class="docutils literal notranslate"><span class="pre">mode</span></code>. The float
+values are then converted to the <code class="docutils literal notranslate"><span class="pre">n-bit</span></code> values, and the LUT is saved alongside each
+weight. The <code class="docutils literal notranslate"><span class="pre">const</span></code> ops storing weight values are replaced by
+<code class="docutils literal notranslate"><span class="pre">constexpr_lut_to_dense</span></code> ops.</p>
+<p>At runtime, the LUT and the <code class="docutils literal notranslate"><span class="pre">n-bit</span></code> values are used to reconstruct the float weight
+values, which are then used to perform the float operation the weight is feeding into.</p>
+<p>Consider the following example of <code class="docutils literal notranslate"><span class="pre">&quot;uniform&quot;</span></code> mode (a linear histogram):</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">nbits</span> <span class="pre">=</span> <span class="pre">4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mode</span> <span class="pre">=</span> <span class="pre">&quot;uniform&quot;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">weight</span> <span class="pre">=</span> <span class="pre">[0.11,</span> <span class="pre">0.19,</span> <span class="pre">0.3,</span> <span class="pre">0.08,</span> <span class="pre">0.0,</span> <span class="pre">0.02]</span></code></p></li>
+</ul>
+</div></blockquote>
+<p>The weight can be converted to a palette with indices <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3]</span></code> (2 bits). The
+indices are a byte array.</p>
+<p>The data range <code class="docutils literal notranslate"><span class="pre">[0.0,</span> <span class="pre">0.3]</span></code> is divided into four partitions linearly, which is
+<code class="docutils literal notranslate"><span class="pre">[0.0,</span> <span class="pre">0.1,</span> <span class="pre">0.2,</span> <span class="pre">0.3]</span></code>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>The LUT would be <code class="docutils literal notranslate"><span class="pre">[0.0,</span> <span class="pre">0.1,</span> <span class="pre">0.2,</span> <span class="pre">0.3]</span></code>.</p></li>
+<li><p>The weight is rounded to <code class="docutils literal notranslate"><span class="pre">[0.1,</span> <span class="pre">0.2,</span> <span class="pre">0.3,</span> <span class="pre">0.1,</span> <span class="pre">0.0,</span> <span class="pre">0.0]</span></code> and represented in
+the palette as indices <code class="docutils literal notranslate"><span class="pre">[01b,</span> <span class="pre">10b,</span> <span class="pre">11b,</span> <span class="pre">01b,</span> <span class="pre">00b,</span> <span class="pre">00b]</span></code>.</p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>mlmodel: MLModel</strong></dt><dd><p>Model to be converted by a LUT. This MLModel should be of type <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>.</p>
+</dd>
+<dt><strong>config: OptimizationConfig</strong></dt><dd><p>An <a class="reference internal" href="coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.OptimizationConfig" title="coremltools.optimize.coreml.OptimizationConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationConfig</span></code></a> object that specifies the parameters for weight palettization.</p>
+</dd>
+<dt><strong>joint_compression: bool</strong></dt><dd><p>Specification of whether or not to further compress the already-compressed input MLModel to a
+jointly compressed MLModel. See the <cite>channelwise_palettize_weights</cite> graph pass for information
+about which compression schemas could be further jointly palettized.</p>
+<p>Take “prune + palettize” as an example of joint compression, where the input MLModel is already
+pruned, and the non-zero entries will be further palettized. In such an example, the weight values are
+represented by <code class="docutils literal notranslate"><span class="pre">constexpr_lut_to_sparse</span></code> + <code class="docutils literal notranslate"><span class="pre">constexpr_sparse_to_dense</span></code> ops:
+<code class="docutils literal notranslate"><span class="pre">lut(sparse)</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">constexpr_lut_to_sparse</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">weight(sparse)</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">constexpr_sparse_to_dense</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">weight(dense)</span></code></p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>model: MLModel</dt><dd><p>The palettized MLModel instance.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="kn">import</span> <span class="nn">coremltools.optimize</span> <span class="k">as</span> <span class="nn">cto</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">)</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OptimizationConfig</span><span class="p">(</span>
+    <span class="n">global_config</span><span class="o">=</span><span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OpPalettizerConfig</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;kmeans&quot;</span><span class="p">,</span> <span class="n">nbits</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">compressed_model</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">palettize_weights</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="coremltools.optimize.coreml.decompress_weights">
+<span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">decompress_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_post_training_quantization.html#decompress_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.decompress_weights" title="Link to this definition"></a></dt>
+<dd><p>Utility function to convert weights that are sparse or palettized or affine quantized, back to the float format.
+That is, convert any of the following three ops to <code class="docutils literal notranslate"><span class="pre">mb.const</span></code>:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">constexpr_affine_dequantize</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">constexpr_lut_to_dense</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">constexpr_sparse_to_dense</span></code></p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mlmodel: MLModel</strong></dt><dd><p>Model which will be decompressed.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>model: MLModel</dt><dd><p>The MLModel with no <code class="docutils literal notranslate"><span class="pre">constexpr</span></code> ops included.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_compressed_model.mlpackage&quot;</span><span class="p">)</span>
+<span class="n">decompressed_model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">optimize</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">decompress_weights</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="coremltools.optimize.coreml.get_weights_metadata">
+<span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">get_weights_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_post_training_quantization.html#get_weights_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.get_weights_metadata" title="Link to this definition"></a></dt>
+<dd><p>Utility function to get the weights metadata as a dictionary, which maps the weight’s name to its corresponding CoreMLWeightMetaData.</p>
+<p>CoreMLWeightMetaData contains the following attributes:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">val</span></code>: The weight data.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sparsity</span></code>: the percentile of the element whose absolute value <code class="docutils literal notranslate"><span class="pre">&lt;=</span> <span class="pre">1e-12</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">unique_values</span></code>: number of unique values in the weight.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">child_ops</span></code>: meta information of the child ops in which the weight is feeding into.</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mlmodel: MLModel</strong></dt><dd><p>Model in which the weight metadata is retrieved from.</p>
+</dd>
+<dt><strong>weight_threshold: int</strong></dt><dd><ul class="simple">
+<li><p>The size threshold, above which weights are returned. That is, a weight tensor is included in the resulting dictionary only if its total number of elements are greater than <code class="docutils literal notranslate"><span class="pre">weight_threshold</span></code>.
+For example, if <code class="docutils literal notranslate"><span class="pre">weight_threshold</span> <span class="pre">=</span> <span class="pre">1024</span></code> and a weight tensor is of shape <code class="docutils literal notranslate"><span class="pre">[10,</span> <span class="pre">20,</span> <span class="pre">1,</span> <span class="pre">1]</span></code>, hence <code class="docutils literal notranslate"><span class="pre">200</span></code>
+elements, it will not be returned by the <code class="docutils literal notranslate"><span class="pre">get_weights_metadata</span></code> API.</p></li>
+<li><p>If not provided, it will be set to <code class="docutils literal notranslate"><span class="pre">2048</span></code>, in which weights bigger than <code class="docutils literal notranslate"><span class="pre">2048</span></code> elements are returned.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict[str, CoreMLWeightMetaData]</dt><dd><p>A dict that maps weight’s name to its metadata.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>In this example, there are two weights whose sizes are greater than <code class="docutils literal notranslate"><span class="pre">2048</span></code>.
+A weight named <code class="docutils literal notranslate"><span class="pre">conv_1_weight</span></code> is feeding into a <code class="docutils literal notranslate"><span class="pre">conv</span></code> op named <code class="docutils literal notranslate"><span class="pre">conv_1</span></code>,
+while another weight named <code class="docutils literal notranslate"><span class="pre">linear_1_weight</span></code> is feeding into a <code class="docutils literal notranslate"><span class="pre">linear</span></code> op named <code class="docutils literal notranslate"><span class="pre">linear_1</span></code>.
+You can access the metadata by <code class="docutils literal notranslate"><span class="pre">weight_metadata_dict[&quot;conv_1_weight&quot;]</span></code>, and so on.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">)</span>
+<span class="n">weight_metadata_dict</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">optimize</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">get_weights_metadata</span><span class="p">(</span>
+    <span class="n">mlmodel</span><span class="p">,</span> <span class="n">weight_threshold</span><span class="o">=</span><span class="mi">2048</span>
+<span class="p">)</span>
+
+<span class="c1"># get the weight names with size &gt; 25600</span>
+<span class="n">large_weights</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">weight_metadata_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;=</span> <span class="mi">25600</span><span class="p">:</span>
+        <span class="n">large_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+<span class="c1"># get the weight names with sparsity &gt;= 50%</span>
+<span class="n">sparse_weights</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">weight_metadata_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">sparsity</span> <span class="o">&gt;=</span> <span class="mf">0.5</span><span class="p">:</span>
+        <span class="n">sparse_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+<span class="c1"># get the weight names with unique elements &lt;= 16</span>
+<span class="n">palettized_weights</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">weight_metadata_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">unique_values</span> <span class="o">&lt;=</span> <span class="mi">16</span><span class="p">:</span>
+        <span class="n">palettized_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+<span class="c1"># print out the dictionary</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">weight_metadata_dict</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The output from the above example would be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conv_1_weight</span>
+<span class="p">[</span>
+    <span class="n">val</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">sparsity</span><span class="p">:</span> <span class="mf">0.5</span>
+    <span class="n">unique_values</span><span class="p">:</span> <span class="mi">4097</span>
+    <span class="n">child_ops</span><span class="p">:</span> <span class="p">[</span>
+        <span class="n">conv</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">conv_1</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">conv_1_weight</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+    <span class="p">]</span>
+<span class="p">]</span>
+<span class="n">linear_1_weight</span>
+<span class="p">[</span>
+    <span class="n">val</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">sparsity</span><span class="p">:</span> <span class="mf">0.2501220703125</span>
+    <span class="n">unique_values</span><span class="p">:</span> <span class="mi">4</span>
+    <span class="n">child_ops</span><span class="p">:</span> <span class="p">[</span>
+        <span class="n">linear</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">linear_1</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">linear_1_weight</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+    <span class="p">]</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.optimize.coreml.CoreMLWeightMetaData">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">CoreMLWeightMetaData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sparsity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">child_ops</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.CoreMLOpMetaData" title="coremltools.optimize.coreml._post_training_quantization.CoreMLOpMetaData"><span class="pre">CoreMLOpMetaData</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_post_training_quantization.html#CoreMLWeightMetaData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.CoreMLWeightMetaData" title="Link to this definition"></a></dt>
+<dd><p>A container class that stores weight meta data.</p>
+<p>The class has the following attributes:</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>val: numpy.ndarray</strong></dt><dd><p>The weight data.</p>
+</dd>
+<dt><strong>sparsity: float</strong></dt><dd><p>The percentile of the element whose absolute value <code class="docutils literal notranslate"><span class="pre">&lt;=</span> <span class="pre">1e-12</span></code>.</p>
+</dd>
+<dt><strong>unique_values: int</strong></dt><dd><p>Number of unique values in the weight.</p>
+</dd>
+<dt><strong>child_ops: list[CoreMLOpMetaData]</strong></dt><dd><p>A list of <code class="docutils literal notranslate"><span class="pre">CoreMLOpMetaData</span></code> which contains information of child ops in which the weight is feeding into.</p>
+<p>The attributes can be accessed by:
+<code class="docutils literal notranslate"><span class="pre">child_ops[idx].op_type</span></code>: The operation type of the <code class="docutils literal notranslate"><span class="pre">idx</span></code> ‘th child op.
+<code class="docutils literal notranslate"><span class="pre">child_ops[idx].name</span></code>: The name of the <code class="docutils literal notranslate"><span class="pre">idx</span></code> ‘th child op.</p>
+<p>Other op-dependant attributes also can be accessed. For instance, if <code class="docutils literal notranslate"><span class="pre">idx</span></code> ‘th child op is a <code class="docutils literal notranslate"><span class="pre">conv</span></code> layer,
+<code class="docutils literal notranslate"><span class="pre">child_ops[idx].weight</span></code> will return its weight name.</p>
+<p>For more details, please refer to the <code class="docutils literal notranslate"><span class="pre">CoreMLOpMetaData</span></code> doc string.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.coreml</span> <span class="kn">import</span> <span class="n">CoreMLWeightMetaData</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="n">meta_data</span> <span class="o">=</span> <span class="n">CoreMLWeightMetaData</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">meta_data</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Outputs:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
+    <span class="n">val</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">sparsity</span><span class="p">:</span> <span class="mf">0.5</span>
+    <span class="n">unique_values</span><span class="p">:</span> <span class="mi">3</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.optimize.coreml.CoreMLOpMetaData">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">CoreMLOpMetaData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_name_mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_post_training_quantization.html#CoreMLOpMetaData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.CoreMLOpMetaData" title="Link to this definition"></a></dt>
+<dd><p>A container class that stores op meta data.</p>
+<p>The class has the following attributes:</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>op_type: str</strong></dt><dd><p>The type of the op. For instance: <code class="docutils literal notranslate"><span class="pre">conv</span></code>, <code class="docutils literal notranslate"><span class="pre">linear</span></code>, and so on.</p>
+</dd>
+<dt><strong>name: str</strong></dt><dd><p>The name of the op.</p>
+</dd>
+<dt><strong>params_name_mapping: dict[str, str]</strong></dt><dd><p>A dict that maps the op’s constant parameters to its corresponding weight name.
+For instance, given a <code class="docutils literal notranslate"><span class="pre">conv</span></code> op with <code class="docutils literal notranslate"><span class="pre">params_name_mapping</span></code>,</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;weight&quot;</span><span class="p">:</span> <span class="s2">&quot;conv_1_weight&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;bias&quot;</span><span class="p">:</span> <span class="s2">&quot;conv_1_bias&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>means that the weight and bias of this op are named <code class="docutils literal notranslate"><span class="pre">conv_1_weight</span></code>,  <code class="docutils literal notranslate"><span class="pre">conv_1_bias</span></code>, respectively.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

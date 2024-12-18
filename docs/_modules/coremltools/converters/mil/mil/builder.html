@@ -1,0 +1,564 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.converters.mil.mil.builder &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters.mil.mil.builder</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.converters.mil.mil.builder</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright (c) 2020, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="kn">import</span> <span class="nn">numbers</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Type</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_logger</span> <span class="k">as</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil</span> <span class="kn">import</span> <span class="n">mil</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil._deployment_compatibility</span> <span class="kn">import</span> <span class="n">AvailableTarget</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.symbolic</span> <span class="kn">import</span> <span class="n">any_symbolic</span>
+
+<span class="kn">from</span> <span class="nn">.block</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">curr_block</span>
+<span class="kn">from</span> <span class="nn">.input_type</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">InternalInputType</span><span class="p">,</span>
+    <span class="n">ListOrTensorOrDictInputType</span><span class="p">,</span>
+    <span class="n">TensorInputType</span><span class="p">,</span>
+    <span class="n">TupleInputType</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.program</span> <span class="kn">import</span> <span class="n">Placeholder</span><span class="p">,</span> <span class="n">StateTensorPlaceholder</span>
+<span class="kn">from</span> <span class="nn">.scope</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">SCOPE_STACK</span><span class="p">,</span>
+    <span class="n">VALID_OPS_TO_COPY_SCOPE_INFO</span><span class="p">,</span>
+    <span class="n">ScopeContextManager</span><span class="p">,</span>
+    <span class="n">ScopeInfo</span><span class="p">,</span>
+    <span class="n">ScopeSource</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.var</span> <span class="kn">import</span> <span class="n">InternalVar</span><span class="p">,</span> <span class="n">Var</span>
+
+<span class="n">_BEFORE_OP_STACK</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s2">&quot;mil.Operation&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">def</span> <span class="nf">is_python_value</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">generic</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">))</span>
+        <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Number</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">is_python_value</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">val</span><span class="p">))</span>
+    <span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">BeforeOpContextManager</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">before_op</span><span class="p">:</span> <span class="s2">&quot;mil.Operation&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A context manager which makes the operations created within it contructed before the target ``before_op``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        before_op: Operation</span>
+<span class="sd">            * The anchor op where the new op is going to be created at (right before `before_op`).</span>
+<span class="sd">            * If the users explicity specify ``before_op`` when creating ``Operation`` object under this context manager, the builder</span>
+<span class="sd">              will respect the one provided by the users.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">before_op</span><span class="p">,</span> <span class="n">mil</span><span class="o">.</span><span class="n">Operation</span><span class="p">)</span> <span class="ow">and</span> <span class="n">before_op</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;mb.set_before_op only accepts input of type Operation. Got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">before_op</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">before_op</span> <span class="o">=</span> <span class="n">before_op</span>
+
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">_BEFORE_OP_STACK</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">before_op</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+        <span class="n">_BEFORE_OP_STACK</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Builder">
+<a class="viewcode-back" href="../../../../../source/coremltools.converters.mil.html#coremltools.converters.mil.mil.Builder">[docs]</a>
+<span class="k">class</span> <span class="nc">Builder</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class is a singleton builder to construct a MIL program. For more</span>
+<span class="sd">    information, see `Create a MIL program &lt;https://coremltools.readme.io/docs/model-intermediate-language#create-a-mil-program&gt;`_.</span>
+
+<span class="sd">    Importing ``.ops`` triggers the installation of all MIL ops into the Builder.</span>
+<span class="sd">    For details on each op, see `MIL ops &lt;https://apple.github.io/coremltools/source/coremltools.converters.mil.mil.ops.defs.html&gt;`_.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &gt;&gt;&gt; from coremltools.converters.mil.mil import Builder as mb</span>
+<span class="sd">    &gt;&gt;&gt; from coremltools.converters.mil.mil import Program, Function</span>
+
+<span class="sd">    &gt;&gt;&gt; prog = Program()</span>
+<span class="sd">    &gt;&gt;&gt; func_inputs = {&quot;x&quot;: mb.placeholder(shape=[2,3]),</span>
+<span class="sd">    &gt;&gt;&gt;                &quot;y&quot;: mb.placeholder(shape=[2,3])}</span>
+<span class="sd">    &gt;&gt;&gt; with Function(func_inputs) as ssa_fun:</span>
+<span class="sd">    &gt;&gt;&gt;   x, y = ssa_fun.inputs[&#39;x&#39;], ssa_fun.inputs[&#39;y&#39;]</span>
+<span class="sd">    &gt;&gt;&gt;   res_var = mb.add(x=x, y=y) # created within ssa_fun block</span>
+<span class="sd">    &gt;&gt;&gt;   ssa_fun.set_outputs([res_var])</span>
+<span class="sd">    &gt;&gt;&gt; prog.add_function(&quot;main&quot;, ssa_fun)</span>
+
+<span class="sd">    &gt;&gt;&gt; # Importing ops triggers installation of all ops into Builder.</span>
+<span class="sd">    &gt;&gt;&gt; from .ops import defs as _ops</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name_count</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_free_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="n">new_name</span> <span class="o">=</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">name_count</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">name_count</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">new_name</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_maybe_set_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">op_type</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;name&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_free_name</span><span class="p">(</span><span class="n">op_type</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">kwargs</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_add_const</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">before_op</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_python_value</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+            <span class="n">err_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Cannot add const </span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">if</span> <span class="n">any_symbolic</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+                <span class="n">err_msg</span> <span class="o">+=</span> <span class="p">(</span>
+                    <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Python native vals (list, tuple), np.array that are &quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot;operation inputs cannot have symbolic values. Consider feeding &quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot;symbolic shape in through placeholder and use mb.shape() &quot;</span>
+                    <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;operator. Input </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+        <span class="n">const_name</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_free_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Adding const op &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">const_name</span><span class="p">))</span>
+        <span class="n">output_var</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">const</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="n">val</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">const_name</span><span class="p">,</span>
+            <span class="n">before_op</span><span class="o">=</span><span class="n">before_op</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">output_var</span>
+
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_create_vars</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">input_spec</span><span class="p">,</span> <span class="n">op_name</span><span class="p">,</span> <span class="n">before_op</span><span class="p">,</span>
+        <span class="n">candidate_kv</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        For each key K in `candidate_kv`, create a Var if the</span>
+<span class="sd">        following are satisfied:</span>
+
+<span class="sd">        - K exists in input_spec and is not an InternalInputType</span>
+<span class="sd">        - candidate_kv[K] is not already a Var</span>
+
+<span class="sd">        Inputs</span>
+<span class="sd">        ------</span>
+<span class="sd">        - candidate_kv: Dict[str, Any]</span>
+<span class="sd">          Key-values may be inputs to an op (whose inputs is defined by</span>
+<span class="sd">          input_spec)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        - var_kv: Dict[str, Var]</span>
+<span class="sd">          For the K satisfying the above, var_kv[K] is the newly</span>
+<span class="sd">          created Var</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">update_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">candidate_kv</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">Var</span><span class="p">):</span>
+                <span class="k">continue</span> <span class="c1"># already a Var</span>
+
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">input_spec</span><span class="o">.</span><span class="n">input_types</span><span class="p">:</span>
+                <span class="k">continue</span> <span class="c1"># k is not an op input</span>
+
+            <span class="n">in_type</span> <span class="o">=</span> <span class="n">input_spec</span><span class="o">.</span><span class="n">input_types</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="n">InternalInputType</span><span class="p">):</span>
+                <span class="n">new_var_name</span> <span class="o">=</span> <span class="n">op_name</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">k</span>
+                <span class="n">var</span> <span class="o">=</span> <span class="n">InternalVar</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">new_var_name</span><span class="p">)</span>
+                <span class="n">curr_block</span><span class="p">()</span><span class="o">.</span><span class="n">add_internal_var</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+                <span class="n">update_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">var</span>
+                <span class="k">continue</span> <span class="c1"># Not a regular Var</span>
+
+            <span class="n">new_var_name</span> <span class="o">=</span> <span class="n">op_name</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">k</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="n">TupleInputType</span><span class="p">):</span>
+                <span class="n">var</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="si">}</span><span class="s2"> for TupleInputType param.&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">Var</span><span class="p">):</span>
+                        <span class="n">var</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                        <span class="k">continue</span>
+                    <span class="n">var</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="bp">cls</span><span class="o">.</span><span class="n">_add_const</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">new_var_name</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span>
+                          <span class="n">before_op</span><span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="n">update_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">var</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="p">(</span><span class="n">TensorInputType</span><span class="p">,</span> <span class="n">ListOrTensorOrDictInputType</span><span class="p">)):</span>
+                <span class="n">var</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_add_const</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">new_var_name</span><span class="p">,</span> <span class="n">before_op</span><span class="p">)</span>
+                <span class="n">update_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">var</span>
+
+        <span class="k">return</span> <span class="n">update_dict</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_add_op</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">op_cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add an op of type `op_cls` (e.g., convolution) to current block.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_maybe_set_name</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">op_cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;Adding op &#39;</span><span class="si">{}</span><span class="s2">&#39; of type </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span> <span class="n">op_cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># If before_op is explicitly passed, the builder will respect it,</span>
+        <span class="c1"># otherwise it will refer to _BEFORE_OP_STACK.</span>
+        <span class="n">before_op</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;before_op&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">before_op</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">_BEFORE_OP_STACK</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">before_op</span> <span class="o">=</span> <span class="n">_BEFORE_OP_STACK</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># Shallow copy list inputs to ensure op inputs are immutable</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="k">else</span> <span class="n">v</span><span class="p">[:]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_create_vars</span><span class="p">(</span>
+            <span class="n">input_spec</span><span class="o">=</span><span class="n">op_cls</span><span class="o">.</span><span class="n">input_spec</span><span class="p">,</span>
+            <span class="n">op_name</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span> <span class="n">before_op</span><span class="o">=</span><span class="n">before_op</span><span class="p">,</span>
+            <span class="n">candidate_kv</span><span class="o">=</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;enclosing_block&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">curr_block</span><span class="p">()</span>
+
+        <span class="c1"># Add scope information</span>
+        <span class="n">current_scopes</span> <span class="o">=</span> <span class="n">SCOPE_STACK</span><span class="o">.</span><span class="n">get_curr_scopes</span><span class="p">()</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;scopes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_scopes</span>
+        <span class="n">new_op</span> <span class="o">=</span> <span class="n">op_cls</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># We record if the op is created under graph pass</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">current_scopes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">ScopeSource</span><span class="o">.</span><span class="n">COREMLTOOLS_GRAPH_PASS</span> <span class="ow">in</span> <span class="n">current_scopes</span><span class="p">:</span>
+            <span class="n">VALID_OPS_TO_COPY_SCOPE_INFO</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_op</span><span class="p">)</span>
+
+        <span class="c1"># Initialize optional input Vars if it wasn&#39;t in kwargs</span>
+        <span class="n">default_inputs</span> <span class="o">=</span> <span class="n">new_op</span><span class="o">.</span><span class="n">default_inputs</span><span class="p">()</span>
+        <span class="c1"># Shallow copy list inputs to ensure op inputs are immutable</span>
+        <span class="n">missing_optional_vals</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="k">else</span> <span class="n">v</span><span class="p">[:]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">default_inputs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
+        <span class="n">missing_optional_vars</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_create_vars</span><span class="p">(</span>
+            <span class="n">input_spec</span><span class="o">=</span><span class="n">op_cls</span><span class="o">.</span><span class="n">input_spec</span><span class="p">,</span>
+            <span class="n">op_name</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span> <span class="n">before_op</span><span class="o">=</span><span class="n">before_op</span><span class="p">,</span>
+            <span class="n">candidate_kv</span><span class="o">=</span><span class="n">missing_optional_vals</span><span class="p">)</span>
+        <span class="n">new_op</span><span class="o">.</span><span class="n">set_inputs</span><span class="p">(</span><span class="n">type_inference</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">missing_optional_vars</span><span class="p">)</span>
+
+        <span class="n">curr_block</span><span class="p">()</span><span class="o">.</span><span class="n">_insert_op_before</span><span class="p">(</span><span class="n">new_op</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">before_op</span><span class="p">)</span>
+        <span class="n">new_op</span><span class="o">.</span><span class="n">build_nested_blocks</span><span class="p">()</span>
+        <span class="n">new_op</span><span class="o">.</span><span class="n">type_value_inference</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">new_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">new_op</span><span class="o">.</span><span class="n">outputs</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">placeholder</span><span class="p">(</span>
+        <span class="n">shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="n">dtype</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Type</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">allow_rank0_input</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Placeholder</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Placeholder</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">allow_rank0_input</span><span class="o">=</span><span class="n">allow_rank0_input</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">TensorSpec</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Placeholder</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">StateTensorSpec</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">StateTensorPlaceholder</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">state_tensor_placeholder</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">StateTensorPlaceholder</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_create_function</span><span class="p">(</span>
+        <span class="n">main_block</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+        <span class="n">input_specs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Placeholder</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">opset_version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AvailableTarget</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Utility to construct a pymil function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">input_specs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">input_specs</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># validate number of function inputs</span>
+        <span class="n">num_args</span> <span class="o">=</span> <span class="n">main_block</span><span class="o">.</span><span class="vm">__code__</span><span class="o">.</span><span class="n">co_argcount</span>
+        <span class="n">arg_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">main_block</span><span class="o">.</span><span class="vm">__code__</span><span class="o">.</span><span class="n">co_varnames</span><span class="p">)[:</span><span class="n">num_args</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_specs</span><span class="p">)</span> <span class="o">!=</span> <span class="n">num_args</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">main_block</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> expects </span><span class="si">{</span><span class="n">num_args</span><span class="si">}</span><span class="s2"> inputs: </span><span class="si">{</span><span class="n">arg_names</span><span class="si">}</span><span class="s2">. Got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">input_specs</span><span class="p">)</span><span class="si">}</span><span class="s2"> input_specs.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># create the function</span>
+        <span class="n">input_spec_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">arg_names</span><span class="p">,</span> <span class="n">input_specs</span><span class="p">)}</span>
+        <span class="k">with</span> <span class="n">Function</span><span class="p">(</span><span class="n">input_spec_dict</span><span class="p">,</span> <span class="n">opset_version</span><span class="p">)</span> <span class="k">as</span> <span class="n">func</span><span class="p">:</span>
+            <span class="n">input_vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">func</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">arg_names</span><span class="p">]</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="n">main_block</span><span class="p">(</span><span class="o">*</span><span class="n">input_vars</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="n">outputs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">outputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">outputs</span><span class="p">]</span>
+            <span class="n">func</span><span class="o">.</span><span class="n">set_outputs</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+
+        <span class="c1"># infer the opset version if not provided</span>
+        <span class="n">max_opset_version</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">get_max_opset_version_and_op</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">opset_version</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">func</span><span class="o">.</span><span class="n">opset_version</span> <span class="o">=</span> <span class="n">max_opset_version</span>
+
+        <span class="k">return</span> <span class="n">func</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">function</span><span class="p">(</span>
+        <span class="n">input_specs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Placeholder</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">opset_version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AvailableTarget</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The ``mb.function`` decorator creates a MIL function.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_specs: List[TensorSpec]</span>
+<span class="sd">            Describes the function inputs</span>
+
+<span class="sd">        opset_version: AvailableTarget enum</span>
+<span class="sd">            Describes the opset version of the function</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import coremltools as ct</span>
+<span class="sd">        &gt;&gt;&gt; @mb.function(input_specs=[mb.TensorSpec(shape=(1,2))], opset_version=ct.target.iOS16)</span>
+<span class="sd">        &gt;&gt;&gt; def func(a):</span>
+<span class="sd">        &gt;&gt;&gt;     return mb.add(x=a, y=2)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="n">main_block</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">Builder</span><span class="o">.</span><span class="n">_create_function</span><span class="p">(</span><span class="n">main_block</span><span class="p">,</span> <span class="n">input_specs</span><span class="p">,</span> <span class="n">opset_version</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">wrapper</span>
+
+<div class="viewcode-block" id="Builder.program">
+<a class="viewcode-back" href="../../../../../source/coremltools.converters.mil.html#coremltools.converters.mil.mil.Builder.program">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">program</span><span class="p">(</span>
+        <span class="n">input_specs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Placeholder</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">opset_version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AvailableTarget</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">function_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;main&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The ``mb.program`` decorator creates a MIL program with a single</span>
+<span class="sd">        function with name ``function_name``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_specs: List[TensorSpec]</span>
+<span class="sd">            Describes the function inputs</span>
+
+<span class="sd">        opset_version: AvailableTarget enum</span>
+<span class="sd">            Describes the opset version of the program</span>
+
+<span class="sd">        function_name: str</span>
+<span class="sd">            Name of the function</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import coremltools as ct</span>
+<span class="sd">        &gt;&gt;&gt; from coremltools.converters.mil.mil import Builder as mb</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; @mb.program(input_specs=[mb.TensorSpec(shape=(1,2))], opset_version=ct.target.iOS16)</span>
+<span class="sd">        &gt;&gt;&gt; def prog(a):</span>
+<span class="sd">        &gt;&gt;&gt;     return mb.add(x=a, y=2)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="n">main_block</span><span class="p">):</span>
+            <span class="n">function</span> <span class="o">=</span> <span class="n">Builder</span><span class="o">.</span><span class="n">_create_function</span><span class="p">(</span><span class="n">main_block</span><span class="p">,</span> <span class="n">input_specs</span><span class="p">,</span> <span class="n">opset_version</span><span class="p">)</span>
+            <span class="n">program</span> <span class="o">=</span> <span class="n">mil</span><span class="o">.</span><span class="n">Program</span><span class="p">()</span>
+            <span class="n">program</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">function_name</span><span class="p">,</span> <span class="n">function</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">program</span>
+        <span class="k">return</span> <span class="n">wrapper</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">set_before_op</span><span class="p">(</span><span class="n">before_op</span><span class="p">:</span> <span class="s2">&quot;mil.Operation&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BeforeOpContextManager</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The ``mb.set_before_op`` creates a context manager, which makes the operations created within it contructed before the target ``before_op``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        before_op: Operation</span>
+<span class="sd">            * The anchor op where the new op is going to be created at (right before `before_op`).</span>
+<span class="sd">            * If the users explicity specify ``before_op`` when creating ``Operation`` object under this context manager, the builder</span>
+<span class="sd">              will respect the one provided by the users.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">BeforeOpContextManager</span><span class="p">(</span><span class="n">before_op</span><span class="o">=</span><span class="n">before_op</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">scope</span><span class="p">(</span>
+        <span class="o">*</span><span class="n">scopes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ScopeInfo</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScopeContextManager</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The ``mb.scope`` creates a context manager, which makes the operations created within it have the corresponding scope information.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        scopes: Optional[List[ScopeInfo]] (Optional)</span>
+<span class="sd">            * A list of ScopeInfo under the context manager.</span>
+<span class="sd">            * The source in each ScopeInfo cannot be duplicated.</span>
+<span class="sd">            * If not provided, this context manager does no affects.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        The following is an example of creating a scope for torchscript module heirarchy with type and name information.</span>
+
+<span class="sd">        .. sourcecode:: python</span>
+
+<span class="sd">            @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])</span>
+<span class="sd">            def prog(x):</span>
+<span class="sd">                with mb.scope(</span>
+<span class="sd">                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=[&quot;Module1&quot;]),</span>
+<span class="sd">                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=[&quot;module_1&quot;]),</span>
+<span class="sd">                ):</span>
+<span class="sd">                    return mb.add(x=x, y=4.3, name=&quot;add_1&quot;)</span>
+
+
+<span class="sd">        In the previous example, the &quot;add_1&quot; op will have two scope attributes, for torchscipt module type and name:</span>
+<span class="sd">            * TORCHSCRIPT_MODULE_TYPE: [&quot;Module1&quot;]</span>
+<span class="sd">            * TORCHSCRIPT_MODULE_NAME: [&quot;module_1&quot;]</span>
+
+<span class="sd">        The following is an example of creating nested scopes:</span>
+
+<span class="sd">        .. sourcecode:: python</span>
+
+<span class="sd">            @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])</span>
+<span class="sd">            def prog(x):</span>
+<span class="sd">                with mb.scope(</span>
+<span class="sd">                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=[&quot;Module1&quot;]),</span>
+<span class="sd">                ):</span>
+<span class="sd">                    x = mb.add(x=x, y=4.3, name=&quot;add_1&quot;)</span>
+<span class="sd">                    with mb.scope(</span>
+<span class="sd">                        ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=[&quot;Module2&quot;]),</span>
+<span class="sd">                        ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=[&quot;module_2&quot;]),</span>
+<span class="sd">                    ):</span>
+<span class="sd">                        return mb.add(x=x, y=3.2, name=&quot;add_2&quot;)</span>
+
+<span class="sd">        In the previous example, the &quot;add_1&quot; op would have a scope attribute:</span>
+<span class="sd">            * TORCHSCRIPT_MODULE_TYPE: [&quot;Module1&quot;]</span>
+
+<span class="sd">        while the &quot;add_2&quot; op would have scope attributes:</span>
+<span class="sd">            * TORCHSCRIPT_MODULE_TYPE: [&quot;Module1&quot;, &quot;Module2&quot;]</span>
+<span class="sd">            * TORCHSCRIPT_MODULE_NAME: [&quot;module_2&quot;]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">ScopeContextManager</span><span class="p">(</span><span class="o">*</span><span class="n">scopes</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

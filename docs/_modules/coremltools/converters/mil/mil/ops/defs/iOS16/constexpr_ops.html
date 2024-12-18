@@ -1,0 +1,528 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+      <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright (c) 2023, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">types</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="n">InputSpec</span><span class="p">,</span> <span class="n">TensorInputType</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="n">Operation</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs.iOS16</span> <span class="kn">import</span> <span class="n">_IOS16_TARGET</span>
+
+
+<div class="viewcode-block" id="constexpr_affine_dequantize">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops.constexpr_affine_dequantize">[docs]</a>
+<span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS16_TARGET</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">constexpr_affine_dequantize</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A compile-time operation that returns a constant output value upon dequantizing its constant inputs.</span>
+
+<span class="sd">    This operation is used to represent constant 8-bit quantized data with affine/linear quantization.</span>
+<span class="sd">    The quantized data is stored in the parameter ``quantized_data``.</span>
+<span class="sd">    The other parameters -- ``scale``, ``zero_point``, and ``axis`` -- describe how</span>
+<span class="sd">    unquantized values can be extracted from it, using the equation for affine/linear quantization:</span>
+
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        unquantized_data = scale * (quantized_data - zero_point)</span>
+
+<span class="sd">    Although all of the parameters of this op are constants, this op is not constant folded</span>
+<span class="sd">    to a single const op at the time of model serialization. The unquantized output will</span>
+<span class="sd">    be decompressed later, based on the implementation detail (either at model load time or runtime).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    quantized_data: const tensor&lt;SrcT, [1..]&gt; (Required)</span>
+
+<span class="sd">    zero_point: const tensor&lt;ZeroPointT, [0..1]&gt; (Required)</span>
+<span class="sd"> 	   * ``zero_point`` can be either a scalar or a vector.</span>
+<span class="sd"> 	   * ``zero_point`` follows similar broadcasting rules and size constraints as ``scale``.</span>
+
+<span class="sd">    scale: const tensor&lt;DstT, [0..1]&gt; (Required)</span>
+<span class="sd">       * ``scale`` can be either a scalar or a vector.</span>
+<span class="sd">       * If ``scale`` is a vector, for implementation it is broadcast to the following shape:</span>
+<span class="sd">          * The rank of ``scale`` becomes the same as the rank of ``quantized_data``.</span>
+<span class="sd">          * The constraint: ``size(scale-vector) == quantized_data.shape[axis]``.</span>
+<span class="sd">          * For ``i == axis``, ``scale.shape[i] == quantized_data.shape[i]``.</span>
+<span class="sd">          * For ``i != axis``, ``scale.shape == 1``.</span>
+<span class="sd">            For example, assume ``quantized_data.shape = (2, 3, 4, 5)`` and ``axis = 1``.</span>
+<span class="sd">            If ``scale`` is a vector, then ``scale.size`` needs to be equal to</span>
+<span class="sd">            ``quantized_data.shape[axis] i.e = 3``, which would be broadcast to ``(1, 3, 1, 1)``.</span>
+
+<span class="sd">    axis: const tensor&lt;int32, []&gt; (Required)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    const tensor&lt;DstT, [1..]&gt;</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SrcT: uint8, int8</span>
+<span class="sd">    ZeroPointT: uint8, int8, fp32</span>
+<span class="sd">    DstT: fp16, fp32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">quantized_data</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;SrcT&quot;</span><span class="p">),</span>
+        <span class="n">zero_point</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;ZeroPointT&quot;</span><span class="p">),</span>
+        <span class="n">scale</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;DstT&quot;</span><span class="p">),</span>
+        <span class="n">axis</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;SrcT&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">),</span>
+        <span class="s2">&quot;ZeroPointT&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+        <span class="s2">&quot;DstT&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">assert_is_scalar_or_vector</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">rank</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Parameter </span><span class="si">{}</span><span class="s2"> needs to be either a scalar or vector&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">assert_vector_size_same_as_axial_dimension</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">axis_dim_size</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">param</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">axis_dim_size</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Parameter </span><span class="si">{}</span><span class="s2">, if vector, needs to have same size as the dimension size along the parameter quantized_data&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">name</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="n">rank</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">rank</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">rank</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span> <span class="o">&gt;=</span> <span class="n">rank</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Parameter axis needs to be in the range -quantized_data.rank &lt;= axis &lt; quantized_data.rank&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">assert_is_scalar_or_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="s2">&quot;scale&quot;</span><span class="p">)</span>
+        <span class="n">assert_is_scalar_or_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zero_point</span><span class="p">,</span> <span class="s2">&quot;zero_point&quot;</span><span class="p">)</span>
+
+        <span class="n">assert_vector_size_same_as_axial_dimension</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span><span class="p">],</span> <span class="s2">&quot;scale&quot;</span>
+        <span class="p">)</span>
+        <span class="n">assert_vector_size_same_as_axial_dimension</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">zero_point</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span><span class="p">],</span> <span class="s2">&quot;zero_point&quot;</span>
+        <span class="p">)</span>
+
+        <span class="n">dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">materialized_val_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero_point</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">is_all_zeros</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">zero_point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">promote_rank_to_same_as_quantized_data</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">zero_point</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">val</span> <span class="o">==</span> <span class="n">zero_point</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">promote_rank_to_same_as_quantized_data</span><span class="p">(</span>
+        <span class="n">param</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">quantized_data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Promote param (i.e. zero point or scale) rank to same as quantized data,</span>
+<span class="sd">        so subtraction or multiplication can happen properly on the specified axis</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span> <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">axis</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">axes</span><span class="p">))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">decompress</span><span class="p">(</span>
+        <span class="n">quantized_data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">zero_point</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">axis</span> <span class="o">=</span> <span class="n">axis</span> <span class="k">if</span> <span class="n">axis</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">axis</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">sc</span> <span class="o">=</span> <span class="n">constexpr_affine_dequantize</span><span class="o">.</span><span class="n">promote_rank_to_same_as_quantized_data</span><span class="p">(</span>
+            <span class="n">scale</span><span class="p">,</span> <span class="n">quantized_data</span><span class="p">,</span> <span class="n">axis</span>
+        <span class="p">)</span>
+        <span class="n">zp</span> <span class="o">=</span> <span class="n">constexpr_affine_dequantize</span><span class="o">.</span><span class="n">promote_rank_to_same_as_quantized_data</span><span class="p">(</span>
+            <span class="n">zero_point</span><span class="p">,</span> <span class="n">quantized_data</span><span class="p">,</span> <span class="n">axis</span>
+        <span class="p">)</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">sc</span> <span class="o">*</span> <span class="p">(</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">-</span> <span class="n">zp</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">val</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">scale</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="constexpr_cast">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops.constexpr_cast">[docs]</a>
+<span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS16_TARGET</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">constexpr_cast</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A compile-time operation that returns a constant output value upon casting its constant input.</span>
+
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        Expression: output = constexpr_cast(source_val, output_dtype=&quot;fp32&quot;)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    source_val: const tensor&lt;SrcT, [...]&gt; (Required)</span>
+
+<span class="sd">    output_dtype: const tensor&lt;string, []&gt; (Required)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    const tensor&lt;DstT, [...]&gt;</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    SrcT: fp16</span>
+<span class="sd">    DstT: fp32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">source_val</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">),</span>
+        <span class="n">output_dtype</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">string_to_builtin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dtype</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dtype</span> <span class="o">!=</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Only output_dtype = fp32 is supported&quot;</span><span class="p">)</span>
+
+        <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_val</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">materialized_val_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source_val</span><span class="o">.</span><span class="n">val</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="constexpr_lut_to_dense">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops.constexpr_lut_to_dense">[docs]</a>
+<span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS16_TARGET</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">constexpr_lut_to_dense</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A compile-time operation that returns a constant output value upon decompressing</span>
+<span class="sd">    a look-up table (LUT) to a dense tensor.</span>
+
+<span class="sd">    This operation is used to store constant weights in a LUT format (also known as</span>
+<span class="sd">    `palettized` weights). A LUT is a mapping from index to values.</span>
+<span class="sd">    Weights are quantized and stored as indices (or keys) into the LUT.</span>
+<span class="sd">    Before computation, these keys are mapped to corresponding values in the LUT.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    indices: const tensor&lt;uint8, [M]&gt; (Required)</span>
+
+<span class="sd">    lut: const tensor&lt;T, [NUM_PALETTES]&gt; (Required)</span>
+
+<span class="sd">    shape: const tensor&lt;uint32, [K]&gt; (Required)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    * Any data is packed and read in a row-major order.</span>
+<span class="sd">    * ``NUM_PALETTES`` can be one of ``{2, 4, 16, 64 or 256}``.</span>
+<span class="sd">    * ``n_bits = log2(NUM_PALETTES)`` can thus be one of ``{1, 2, 4, 6, 8}``.</span>
+<span class="sd">    * Indices are packed in bytes of size ``M``, where ``M = ceil(n_bits * product(shape) / 8)``.</span>
+
+<span class="sd">    The bit fields are packed one byte at a time, starting with the least significant bit (LSB) and</span>
+<span class="sd">    moving upward to the most significant bit (MSB). It follows, naturally, that if an index is split</span>
+<span class="sd">    across two bytes, the LSBs of that index is filled over the MSBs of current byte, and the remaining</span>
+<span class="sd">    bits of the same index are filled in the LSBs of the next byte.</span>
+
+<span class="sd">    For example:</span>
+
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        if n_bits = 2, shape = (5,) =&gt; M = 2 bytes</span>
+
+<span class="sd">                    MSB             LSB</span>
+<span class="sd">                     |               |</span>
+<span class="sd">        indices =  | 01   10   11   00 | xx   xx   xx   11 |      &lt;== packed elements</span>
+<span class="sd">                   | i3 | i2 | i1 | i0 | -- | -- | -- | i4 |      &lt;== tagged element ids</span>
+<span class="sd">                   |      byte 0       |       byte 1      |      &lt;== tagged bytes</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    const tensor&lt;T, [...]&gt;</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: uint8, int8, fp16, fp32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">indices</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">),</span>
+        <span class="n">lut</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">shape</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">uint32</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">assert_is_vector</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Parameter </span><span class="si">{}</span><span class="s2"> needs to have rank == 1&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+
+        <span class="n">assert_is_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span> <span class="s2">&quot;indices&quot;</span><span class="p">)</span>
+        <span class="n">assert_is_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lut</span><span class="p">,</span> <span class="s2">&quot;lut&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lut</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">256</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Parameter lut should be a vector of size from one of {2, 4, 16, 64, 256}&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">nbits</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lut</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">output_size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">nbits</span> <span class="o">*</span> <span class="p">(</span><span class="n">output_size</span> <span class="o">/</span> <span class="mf">8.0</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+                <span class="s2">&quot;Constraint violated, M = ceil(n_bits * product(shape) / 8) where M = indices.size&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lut</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">val</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">materialized_val_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lut</span><span class="o">.</span><span class="n">val</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="o">.</span><span class="n">val</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">val</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">decompress</span><span class="p">(</span><span class="n">lut</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
+        <span class="c1"># Import here to avoid circular import.</span>
+        <span class="kn">from</span> <span class="nn">coremltools.optimize.coreml</span> <span class="kn">import</span> <span class="n">_utils</span> <span class="k">as</span> <span class="n">optimize_utils</span>
+
+        <span class="n">nbits</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">lut</span><span class="o">.</span><span class="n">size</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">optimize_utils</span><span class="o">.</span><span class="n">restore_elements_from_packed_bits</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">shape</span><span class="p">))</span>
+        <span class="n">flatten_val</span> <span class="o">=</span> <span class="n">lut</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">flatten_val</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="constexpr_sparse_to_dense">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops.constexpr_sparse_to_dense">[docs]</a>
+<span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS16_TARGET</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">constexpr_sparse_to_dense</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A compile-time operation that returns a constant output value upon de-sparsification of its constant inputs.</span>
+
+<span class="sd">    This operation represents unstructured sparsity and uses bit mask binary representation.</span>
+<span class="sd">    If a bit is set, then the corresponding element in the output tensor is non-zero and the</span>
+<span class="sd">    value is read from the ``nonzero_data`` attribute. Likewise, if the bit is not set,</span>
+<span class="sd">    then the corresponding element in the output tensor is zero.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nonzero_data: const tensor&lt;T, [D]&gt; (Required)</span>
+
+<span class="sd">    mask: const tensor&lt;uint8, [M]&gt; (Required)</span>
+
+<span class="sd">    shape: const tensor&lt;uint32, [K]&gt; (Required)</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">    * Any data is packed and read in a row-major order.</span>
+<span class="sd">    * ``mask`` contains ``M`` bytes, where ``M = ceil( product(shape) / 8)``. That is, each bit</span>
+<span class="sd">      field corresponds to one element in the output tensor.</span>
+<span class="sd">    * ``D ==`` the total number of set bits in ``mask``.</span>
+
+<span class="sd">    The bit fields are packed one byte at a time, starting with the least significant bit and</span>
+<span class="sd">    moving up to the most significant bit.</span>
+
+<span class="sd">    For example:</span>
+
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        shape = (5,) =&gt; M = 1 bytes</span>
+
+<span class="sd">                   MSB                  LSB</span>
+<span class="sd">                    |                    |</span>
+<span class="sd">        mask    =  |x  x  x  0  1  1  0  0 |      &lt;== packed elements</span>
+<span class="sd">                   |--|--|--|i4|i3|i2|i1|i0|      &lt;== tagged element ids</span>
+<span class="sd">                   |      byte 0           |      &lt;== tagged bytes</span>
+
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    const tensor&lt;T, [...]&gt;</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: uint8, int8, fp16, fp32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">nonzero_data</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">mask</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">),</span>
+        <span class="n">shape</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">uint32</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">assert_is_vector</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Parameter </span><span class="si">{}</span><span class="s2"> needs to have rank == 1&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+
+        <span class="n">assert_is_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nonzero_data</span><span class="p">,</span> <span class="s2">&quot;nonzero_data&quot;</span><span class="p">)</span>
+        <span class="n">assert_is_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span> <span class="s2">&quot;mask&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">bin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s2">&quot;1&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">val</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonzero_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+                <span class="s2">&quot;Number of set bits in mask needs to be equal to number of elements in parameter nonzero_data&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">output_size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">output_size</span> <span class="o">/</span> <span class="mf">8.0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+                <span class="s2">&quot;Constraint Violated: M = ceil( product(shape) / 8) where M = mask.size&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">bitarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unpackbits</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">bitorder</span><span class="o">=</span><span class="s2">&quot;little&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">bitarray</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">output_size</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">bitarray</span><span class="p">))):</span>
+            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">&quot;Padded bits in mask should be unset or equals to zero&quot;</span><span class="p">)</span>
+
+        <span class="n">dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonzero_data</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">val</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">materialized_val_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nonzero_data</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">decompress</span><span class="p">(</span><span class="n">nonzero_data</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
+        <span class="n">flattend_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">nonzero_data</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="n">flattend_val</span><span class="p">[</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unpackbits</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">bitorder</span><span class="o">=</span><span class="s2">&quot;little&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="n">nonzero_data</span>
+        <span class="k">return</span> <span class="n">flattend_val</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

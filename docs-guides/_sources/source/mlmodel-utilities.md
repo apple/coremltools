@@ -219,7 +219,7 @@ An example how to update the output data types:
 
 ```python
 from coremltools.models.model import MLModel
-from coremltools.utils import change_array_output_type
+from coremltools.utils import change_input_output_tensor_type
 from coremltools.proto.FeatureTypes_pb2 import ArrayFeatureType
 
 model = MLModel("my_model.mlpackage")
@@ -234,7 +234,7 @@ updated_model.save("my_updated_model.mlpackage")
 Another example is showing how to update data types of all the function inputs:
 ```python
 from coremltools.models.model import MLModel
-from coremltools.utils import change_array_output_type
+from coremltools.utils import change_input_output_tensor_type
 from coremltools.proto.FeatureTypes_pb2 import ArrayFeatureType
 
 model = MLModel("my_model.mlpackage")
@@ -257,3 +257,85 @@ Optional arguments:
 Special values for `input_names` and `output_names` arguments:
 * an empty list means nothing will be modified (default for `input_names`)
 * a list containing `"*"` string means all relevant inputs/outputs will be modified (those that will match the `from_type` type)
+
+## Compute Plan
+
+In certain situations, you may want to evaluate the computational needs of a Core ML model before deploying it. 
+The `MLComputePlan` class is designed for this purpose, allowing you to get insights into the resources and costs
+associated with using the model.
+
+Here’s what you can do with `MLComputePlan`:
+- Model Structure: Examine the model structure.
+- Compute Device Usage: Get insights into the compute devices that would be used for executing an ML Program operation/ NeuralNetwork layer.
+- Estimated Cost: Get the estimated cost of executing an ML Program operation.
+
+An example on how to use `MLComputePlan` to get the estimated cost and compute device usages for the operations in an ML Program:
+
+```python
+import coremltools as ct
+# Path to the compiled ML Program model.
+compiled_model_path = "my_model.mlmodelc"
+# Load the compute plan of a model.
+compute_plan = ct.models.MLComputePlan.compute_plan.load_from_path(
+    path=compiled_model_path,
+    compute_units=ct.ComputeUnits.ALL,
+)
+# Get the model structure.
+program = compute_plan.model_structure.program
+mainFunction = program.functions["main"]
+for operation in mainFunction.block.operations:
+    # Get the compute device usage for the operation.
+    compute_device_usage = (
+        compute_plan.get_compute_device_usage_for_mlprogram_operation(operation)
+    )
+    # Get the estimated cost of executing the operation.
+    estimated_cost = compute_plan.get_estimated_cost_for_mlprogram_operation(operation)
+```
+
+## In-memory Model
+If you are using an in-memory model in your application, you can easily test the workflow with `MLModelAsset`. The `MLModelAsset` class includes 
+the `MLModelAsset.from_memory` API, which enables you to load a model directly from the model's in-memory specification data. Once loaded, you
+can use the model to make predictions.
+
+An example on how to use `MLModelAsset` to load an `MLCompiledModel` from in-memory specification data:
+
+```python
+import coremltools as ct
+# Path to the model.
+model = MLModel("my_model.model")
+model_spec = model.get_spec()
+spec_data = model_spec.SerializeToString()
+asset = ct.models.model.MLModelAsset.from_memory(spec_data=spec_data)
+compiled_model = ct.models.CompiledMLModel.from_asset(asset=asset)
+result = compiled_model.predict(
+    {
+        "x": np.array([1.0]),
+        "y": np.array([2.0]),
+    }
+)
+```
+
+Another example on how to use `MLModelAsset` to load a MLCompiledModel from in-memory specification data where the specification has external blob file references :
+
+
+```python
+import coremltools as ct
+# Path to the model.
+mlmodel = MLModel("my_model.mlpackage")
+weight_file_path = mlmodel.weights_dir + "/weight.bin"
+with open(weight_file_path, "rb") as file:
+    weights_data = file.read()
+    model_spec = model.get_spec()
+    spec_data = model_spec.SerializeToString()
+    # Provide the weights data as `blob_mapping`.
+    asset = ct.models.model.MLModelAsset.from_memory(
+        spec_data=spec_data, blob_mapping={"weights/weight.bin": weights_data}
+    )
+    compiled_model = ct.models.CompiledMLModel.from_asset(asset=asset)
+    result = compiled_model.predict(
+      {
+          "x": np.array([1.0]),
+          "y": np.array([2.0]),
+      }
+    )    
+```

@@ -1,0 +1,778 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.optimize.coreml._post_training_quantization &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.optimize.coreml._post_training_quantization</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.optimize.coreml._post_training_quantization</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2023, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">attrs</span> <span class="kn">import</span> <span class="n">define</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">validators</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend.milproto</span> <span class="kn">import</span> <span class="n">load</span> <span class="k">as</span> <span class="n">_milproto_to_pymil</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span> <span class="kn">import</span> <span class="n">PassOption</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.pass_registry</span> <span class="kn">import</span> <span class="n">PASS_REGISTRY</span>
+<span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">model</span> <span class="k">as</span> <span class="n">_model</span>
+<span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">utils</span> <span class="k">as</span> <span class="n">_model_utils</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.coreml</span> <span class="kn">import</span> <span class="n">OptimizationConfig</span> <span class="k">as</span> <span class="n">_OptimizationConfig</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.coreml._config</span> <span class="kn">import</span> <span class="n">_MetaDataDict</span>
+
+<span class="kn">from</span> <span class="nn">._quantization_passes</span> <span class="kn">import</span> <span class="n">WeightDecompressor</span> <span class="k">as</span> <span class="n">_WeightDecompressor</span>
+
+
+<span class="k">def</span> <span class="nf">_is_valid_const</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">weight_threshold</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">val</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;=</span> <span class="n">weight_threshold</span>
+
+
+<span class="k">def</span> <span class="nf">_multifunction_unsupported</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The decorator marks the PTQ API that doesn&#39;t support the multifunction model.</span>
+<span class="sd">    We should use this decorator until the radar is fixed:</span>
+<span class="sd">    rdar://126084385 ([Infra] Figure out the story of PTQ or other passes operate on loaded Mutli-function model)</span>
+
+<span class="sd">    Note that the API must take `mlmodel` with type of `MLModel` as an input.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">decorator</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">num_args</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__code__</span><span class="o">.</span><span class="n">co_argcount</span>
+        <span class="n">arg_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="vm">__code__</span><span class="o">.</span><span class="n">co_varnames</span><span class="p">)[:</span><span class="n">num_args</span><span class="p">]</span>
+        <span class="n">param_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">arg_names</span><span class="p">,</span> <span class="n">args</span><span class="p">)}</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">param_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mlmodel&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;Function </span><span class="si">{</span><span class="n">func</span><span class="si">}</span><span class="s1"> decorated with _multifunction_unsupported must takes &quot;mlmodel&quot; as an input.&#39;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">_is_multifunction</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">func</span><span class="si">}</span><span class="s2"> is not supported for a multifunction model.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="n">decorator</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__doc__</span>
+    <span class="k">return</span> <span class="n">decorator</span>
+
+
+<div class="viewcode-block" id="linear_quantize_weights">
+<a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.quantization.html#coremltools.optimize.coreml.linear_quantize_weights">[docs]</a>
+<span class="nd">@_multifunction_unsupported</span>
+<span class="k">def</span> <span class="nf">linear_quantize_weights</span><span class="p">(</span>
+    <span class="n">mlmodel</span><span class="p">:</span> <span class="n">_model</span><span class="o">.</span><span class="n">MLModel</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">_OptimizationConfig</span><span class="p">,</span> <span class="n">joint_compression</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Utility function to convert a float precision MLModel of type ``mlprogram``, which uses</span>
+<span class="sd">    float-precision weights, into a compressed MLModel that uses n-bit weights (currently only</span>
+<span class="sd">    support n=4 and n=8). This is achieved by converting the float weight values that are stored in</span>
+<span class="sd">    the ``const`` op into the ``constexpr_affine_dequantize`` or ``constexpr_blockwise_shift_scale``</span>
+<span class="sd">    op (based on model&#39;s minimum deployment target).</span>
+
+<span class="sd">    This function uses linear quantization on the float weights, providing up to 4x (for 4-bit)</span>
+<span class="sd">    savings in storage compared to float 16, or up to 4x savings compared to float 32.</span>
+<span class="sd">    All computation at runtime uses float precision; the precision of the intermediate</span>
+<span class="sd">    tensors and the compute precision of the ops are not altered.</span>
+
+<span class="sd">    For each weight, this utility function converts the weight into the int4/8 or uint4/8 type using</span>
+<span class="sd">    either `linear interpolation` (``&quot;linear&quot;`` mode) or `linear symmetric interpolation`</span>
+<span class="sd">    (``&quot;linear_symmetric&quot;`` mode, the default).</span>
+
+<span class="sd">    **Linear interpolation**</span>
+
+<span class="sd">    The following description uses 8-bit quantization to illustrate, and 4-bit is similar to it.</span>
+
+<span class="sd">    Linear interpolation (``&quot;linear&quot;`` mode) maps the min/max of the float</span>
+<span class="sd">    range to the 8-bit integer range ``[low, high]`` using a zero point (also called quantization bias, or</span>
+<span class="sd">    offset) and a scale factor. For the int8 quantization, ``[low, high] = [-128, 127]``, while uint8</span>
+<span class="sd">    quantization uses range ``[0, 255]``.</span>
+
+<span class="sd">    ``&quot;linear&quot;`` mode uses the quantization formula:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       w_r = s * (w_q - z)</span>
+
+<span class="sd">    Where:</span>
+
+<span class="sd">        * :math:`w_r` and  :math:`s` are of type float.</span>
+<span class="sd">        * :math:`w_r`` represents the float precision weight.</span>
+<span class="sd">        * :math:`s` represents the scale.</span>
+<span class="sd">        * :math:`w_q` and :math:`z` are of type 8-bit integer.</span>
+<span class="sd">        * :math:`w_q` represents quantized weight.</span>
+<span class="sd">        * :math:`z` represents the zero point.</span>
+
+<span class="sd">    Quantized weights are computed as follows:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       w_q = cast\\_to\\_8\\_bit\\_integer(w_r / s + cast\\_to\\_float(z))</span>
+
+<span class="sd">    Note: :math:`cast\\_to\\_8\\_bit\\_integer` is the process of clipping the input to range ``[low, high]`` followed by rounding and casting to 8-bit integer.</span>
+
+<span class="sd">    In ``&quot;linear&quot;`` mode, ``s, z`` are computed by mapping the original float range</span>
+<span class="sd">    ``[A, B]`` into the 8-bit integer range ``[-128, 127]`` or ``[0, 255]``. That is, you are solving the</span>
+<span class="sd">    following linear equations:</span>
+
+<span class="sd">        * ``B = s * (high - z)``</span>
+<span class="sd">        * ``A = s * (low - z)``</span>
+
+<span class="sd">    The equations result in the following:</span>
+
+<span class="sd">        * ``s = (B - A) / (high - low)``</span>
+<span class="sd">        * ``z = cast_to_8_bit_integer((low * B - high * A) / (B - A))``</span>
+
+<span class="sd">    When the rank of weight ``w`` is 1, then ``s`` and ``z`` are both scalars. When the</span>
+<span class="sd">    rank of the weight is greater than 1, then ``s`` and ``z`` are both vectors. In that</span>
+<span class="sd">    case, scales are computed per `channel`, in which `channel` is the output dimension,</span>
+<span class="sd">    which corresponds to the first dimension for ops such as ``conv`` and ``linear``, and</span>
+<span class="sd">    the second dimension for the ``conv_transpose`` op.</span>
+
+<span class="sd">    For ``&quot;linear&quot;`` mode, :math:`A = min(w_r)`, :math:`B = max(w_r)`.</span>
+
+<span class="sd">    **Linear symmetric interpolation**</span>
+
+<span class="sd">    With linear symmetric interpolation (``&quot;linear_symmetric&quot;`` mode, the default), rather than</span>
+<span class="sd">    mapping the exact min/max of the float range to the quantized range, the function</span>
+<span class="sd">    chooses the maximum absolute value between the min/max, which results in a</span>
+<span class="sd">    floating-point range that is symmetric with respect to zero. This also makes the resulting zero</span>
+<span class="sd">    point ``0`` for int8 weight and ``127`` for uint8 weight.</span>
+
+<span class="sd">    For ``&quot;linear_symmetric&quot;`` mode:</span>
+
+<span class="sd">       * :math:`A = -R` and :math:`B = R`, where :math:`R = max(abs(w_r))`.</span>
+<span class="sd">       * This function maps to the range of ``[-127, 127]`` for int8 weight and ``[0, 254]`` for uint8 weight.</span>
+<span class="sd">       * The result is ``s=(B-A)/254`` -&gt; ``s=2R/254`` -&gt; ``s=R/127``.</span>
+<span class="sd">       * Solving for ``z``:</span>
+<span class="sd">            * int8:  ``z = (-127 * R + 127 * R)/2R`` -&gt; ``z=0``.</span>
+<span class="sd">            * uint8: ``z = (0 * R + 254 * R)/2R`` -&gt; ``z=127``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mlmodel: MLModel</span>
+<span class="sd">        Model to be quantized. This MLModel should be of type ``mlprogram``.</span>
+
+<span class="sd">    config: OptimizationConfig</span>
+<span class="sd">        An :py:class:`OptimizationConfig` object that specifies the parameters for weight quantization.</span>
+
+<span class="sd">    joint_compression: bool</span>
+<span class="sd">        Specification of whether or not to further compress the already-compressed input MLModel to a</span>
+<span class="sd">        jointly compressed MLModel. See the `blockwise_palettize_weights` graph pass for information </span>
+<span class="sd">        about which compression schemas could be further jointly palettized.</span>
+
+<span class="sd">        Take &quot;palettize + quantize&quot; as an example of joint compression, where the input MLModel is already </span>
+<span class="sd">        palettized, and the palettization&#39;s lookup table will be further quantized. In such an example, </span>
+<span class="sd">        the weight values are represented by ``constexpr_blockwise_shift_scale`` + ``constexpr_lut_to_dense`` ops:</span>
+<span class="sd">        lut(int8) -&gt; constexpr_blockwise_shift_scale -&gt; lut(fp16) -&gt; constexpr_lut_to_dense -&gt; dense(fp16)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    model: MLModel</span>
+<span class="sd">        The quantized MLModel instance.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        import coremltools as ct</span>
+<span class="sd">        import coremltools.optimize as cto</span>
+
+<span class="sd">        model = ct.coreml.models.MLModel(&quot;my_model.mlpackage&quot;)</span>
+<span class="sd">        config = cto.coreml.OptimizationConfig(</span>
+<span class="sd">            global_config=cto.coreml.OpLinearQuantizerConfig(mode=&quot;linear_symmetric&quot;)</span>
+<span class="sd">        )</span>
+<span class="sd">        compressed_model = cto.coreml.linear_quantize_weights(model, config)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">blockwise_weight_quantizer</span> <span class="o">=</span> <span class="n">PASS_REGISTRY</span><span class="p">[</span><span class="s2">&quot;compression::linear_quantize_weights&quot;</span><span class="p">]</span>
+    <span class="n">blockwise_weight_quantizer</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">PassOption</span><span class="p">(</span><span class="s2">&quot;config&quot;</span><span class="p">,</span> <span class="n">config</span><span class="p">),</span> <span class="n">PassOption</span><span class="p">(</span><span class="s2">&quot;joint_compression&quot;</span><span class="p">,</span> <span class="n">joint_compression</span><span class="p">)]</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">_model_utils</span><span class="o">.</span><span class="n">_apply_graph_pass</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">blockwise_weight_quantizer</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="palettize_weights">
+<a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.palettize_weights">[docs]</a>
+<span class="nd">@_multifunction_unsupported</span>
+<span class="k">def</span> <span class="nf">palettize_weights</span><span class="p">(</span>
+    <span class="n">mlmodel</span><span class="p">:</span> <span class="n">_model</span><span class="o">.</span><span class="n">MLModel</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">_OptimizationConfig</span><span class="p">,</span> <span class="n">joint_compression</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Utility function to convert a float precision MLModel of type ``mlprogram`` to a</span>
+<span class="sd">    compressed MLModel by reducing the overall number of weights using one or more lookup tables</span>
+<span class="sd">    (LUT). A LUT contains a list of float values. An ``n-bit`` LUT has :math:`2^{n-bits}` entries.</span>
+
+<span class="sd">    For example, a float weight vector such as ``{0.3, 0.3, 0.5, 0.5}`` can be compressed</span>
+<span class="sd">    using a 1-bit LUT: ``{0.3, 0.5}``. In this case the float vector can be replaced</span>
+<span class="sd">    with a 1-bit vector ``{0, 0, 1, 1}``.</span>
+
+<span class="sd">    This function iterates over all the weights in the ``mlprogram``, discretizes its values,</span>
+<span class="sd">    and constructs the LUT according to the algorithm specified in ``mode``. The float</span>
+<span class="sd">    values are then converted to the ``n-bit`` values, and the LUT is saved alongside each</span>
+<span class="sd">    weight. The ``const`` ops storing weight values are replaced by</span>
+<span class="sd">    ``constexpr_lut_to_dense`` ops.</span>
+
+<span class="sd">    At runtime, the LUT and the ``n-bit`` values are used to reconstruct the float weight</span>
+<span class="sd">    values, which are then used to perform the float operation the weight is feeding into.</span>
+
+<span class="sd">    Consider the following example of ``&quot;uniform&quot;`` mode (a linear histogram):</span>
+
+<span class="sd">        * ``nbits = 4``</span>
+<span class="sd">        * ``mode = &quot;uniform&quot;``</span>
+<span class="sd">        * ``weight = [0.11, 0.19, 0.3, 0.08, 0.0, 0.02]``</span>
+
+<span class="sd">    The weight can be converted to a palette with indices ``[0, 1, 2, 3]`` (2 bits). The</span>
+<span class="sd">    indices are a byte array.</span>
+
+<span class="sd">    The data range ``[0.0, 0.3]`` is divided into four partitions linearly, which is</span>
+<span class="sd">    ``[0.0, 0.1, 0.2, 0.3]``.</span>
+
+<span class="sd">        * The LUT would be ``[0.0, 0.1, 0.2, 0.3]``.</span>
+
+<span class="sd">        * The weight is rounded to ``[0.1, 0.2, 0.3, 0.1, 0.0, 0.0]`` and represented in</span>
+<span class="sd">          the palette as indices ``[01b, 10b, 11b, 01b, 00b, 00b]``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mlmodel: MLModel</span>
+<span class="sd">        Model to be converted by a LUT. This MLModel should be of type ``mlprogram``.</span>
+
+<span class="sd">    config: OptimizationConfig</span>
+<span class="sd">        An :py:class:`OptimizationConfig` object that specifies the parameters for weight palettization.</span>
+
+<span class="sd">    joint_compression: bool</span>
+<span class="sd">        Specification of whether or not to further compress the already-compressed input MLModel to a</span>
+<span class="sd">        jointly compressed MLModel. See the `channelwise_palettize_weights` graph pass for information </span>
+<span class="sd">        about which compression schemas could be further jointly palettized.</span>
+
+<span class="sd">        Take &quot;prune + palettize&quot; as an example of joint compression, where the input MLModel is already </span>
+<span class="sd">        pruned, and the non-zero entries will be further palettized. In such an example, the weight values are</span>
+<span class="sd">        represented by ``constexpr_lut_to_sparse`` + ``constexpr_sparse_to_dense`` ops:</span>
+<span class="sd">        ``lut(sparse)`` -&gt; ``constexpr_lut_to_sparse`` -&gt; ``weight(sparse)`` -&gt; ``constexpr_sparse_to_dense`` -&gt; ``weight(dense)``</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    model: MLModel</span>
+<span class="sd">        The palettized MLModel instance.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        import coremltools as ct</span>
+<span class="sd">        import coremltools.optimize as cto</span>
+
+<span class="sd">        model = ct.models.MLModel(&quot;my_model.mlpackage&quot;)</span>
+<span class="sd">        config = cto.coreml.OptimizationConfig(</span>
+<span class="sd">            global_config=cto.coreml.OpPalettizerConfig(mode=&quot;kmeans&quot;, nbits=4)</span>
+<span class="sd">        )</span>
+<span class="sd">        compressed_model = cto.coreml.palettize_weights(model, config)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">weight_palettizer</span> <span class="o">=</span> <span class="n">PASS_REGISTRY</span><span class="p">[</span><span class="s2">&quot;compression::palettize_weights&quot;</span><span class="p">]</span>
+    <span class="n">weight_palettizer</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">PassOption</span><span class="p">(</span><span class="s2">&quot;config&quot;</span><span class="p">,</span> <span class="n">config</span><span class="p">),</span> <span class="n">PassOption</span><span class="p">(</span><span class="s2">&quot;joint_compression&quot;</span><span class="p">,</span> <span class="n">joint_compression</span><span class="p">)]</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">_model_utils</span><span class="o">.</span><span class="n">_apply_graph_pass</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">weight_palettizer</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="prune_weights">
+<a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.pruning.html#coremltools.optimize.coreml.prune_weights">[docs]</a>
+<span class="nd">@_multifunction_unsupported</span>
+<span class="k">def</span> <span class="nf">prune_weights</span><span class="p">(</span>
+    <span class="n">mlmodel</span><span class="p">:</span> <span class="n">_model</span><span class="o">.</span><span class="n">MLModel</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">_OptimizationConfig</span><span class="p">,</span> <span class="n">joint_compression</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Utility function to convert a float precision MLModel of type ``mlprogram`` to a</span>
+<span class="sd">    compressed MLModel using sparse representation. The ``const`` ops storing weight</span>
+<span class="sd">    values are replaced by ``constexpr_sparse_to_dense`` ops.</span>
+
+<span class="sd">    This function is useful if the model is trained with pruning techniques so that</span>
+<span class="sd">    a lot of weights have zero values. If a large percentage of weight values are zero,</span>
+<span class="sd">    a sparse representation is more efficient than a dense one (the default).</span>
+
+<span class="sd">    The sparsified weights are stored in a bit mask. If the weight values are</span>
+<span class="sd">    ``{0, 0, 0, 0, 0, 0, 0, 56.3}``, its sparse representation contains a bit mask with</span>
+<span class="sd">    ones on locations where the value is non-zero: ``00000001b``. This is accompanied by</span>
+<span class="sd">    non-zero data, which is a size-1 vector of value ``{56.3}``.</span>
+
+<span class="sd">    For example, given the following:</span>
+
+<span class="sd">        * ``weight = [0.3, 0, 0, 0.5, 0, 0]``</span>
+<span class="sd">        * ``non_zero_data, bit_mask = sparsify(weight)``</span>
+
+<span class="sd">    The indices of the non-zero elements are:</span>
+
+<span class="sd">        * ``non_zero_data = [0.3, 0.5]``</span>
+<span class="sd">        * ``bit_mask = &quot;100100&quot;``</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mlmodel: MLModel</span>
+<span class="sd">        Model to be sparsified. This MLModel should be of type ``mlprogram``.</span>
+
+<span class="sd">    config: OptimizationConfig</span>
+<span class="sd">        An :py:class:`OptimizationConfig` object that specifies the parameters for weight pruning.</span>
+
+<span class="sd">    joint_compression: bool</span>
+<span class="sd">        Specification of whether or not to further prune the already-compressed input MLModel to a</span>
+<span class="sd">        jointly compressed MLModel. See the `prune_weights` graph pass for information </span>
+<span class="sd">        about which compression schemas could be further pruned.</span>
+
+<span class="sd">        Take &quot;quantize + prune&quot; as an example of joint compression, where the input MLModel is already </span>
+<span class="sd">        quantized, and it will be further pruned. In such an example, the weight values are</span>
+<span class="sd">        represented by ``constexpr_sparse_blockwise_shift_scale`` + ``constexpr_sparse_to_dense`` ops:</span>
+<span class="sd">        quantized(sparse) -&gt; constexpr_sparse_blockwise_shift_scale -&gt; weight(sparse) -&gt; constexpr_sparse_to_dense -&gt; weight(dense)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    model: MLModel</span>
+<span class="sd">        The sparse MLModel instance.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        import coremltools as ct</span>
+<span class="sd">        import coremltools.optimize as cto</span>
+
+<span class="sd">        model = ct.models.MLModel(&quot;my_model.mlpackage&quot;)</span>
+<span class="sd">        config = cto.coreml.OptimizationConfig(</span>
+<span class="sd">            global_config=cto.coreml.OpThresholdPrunerConfig(threshold=1e-12)</span>
+<span class="sd">        )</span>
+<span class="sd">        compressed_model = cto.coreml.prune_weights(model, config)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">weight_pruner</span> <span class="o">=</span> <span class="n">PASS_REGISTRY</span><span class="p">[</span><span class="s2">&quot;compression::prune_weights&quot;</span><span class="p">]</span>
+    <span class="n">weight_pruner</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">PassOption</span><span class="p">(</span><span class="s2">&quot;config&quot;</span><span class="p">,</span> <span class="n">config</span><span class="p">),</span> <span class="n">PassOption</span><span class="p">(</span><span class="s2">&quot;joint_compression&quot;</span><span class="p">,</span> <span class="n">joint_compression</span><span class="p">)]</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">_model_utils</span><span class="o">.</span><span class="n">_apply_graph_pass</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">weight_pruner</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="decompress_weights">
+<a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.decompress_weights">[docs]</a>
+<span class="nd">@_multifunction_unsupported</span>
+<span class="k">def</span> <span class="nf">decompress_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">:</span> <span class="n">_model</span><span class="o">.</span><span class="n">MLModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Utility function to convert weights that are sparse or palettized or affine quantized, back to the float format.</span>
+<span class="sd">    That is, convert any of the following three ops to ``mb.const``:</span>
+
+<span class="sd">    (1) ``constexpr_affine_dequantize``</span>
+<span class="sd">    (2) ``constexpr_lut_to_dense``</span>
+<span class="sd">    (3) ``constexpr_sparse_to_dense``</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mlmodel: MLModel</span>
+<span class="sd">        Model which will be decompressed.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    model: MLModel</span>
+<span class="sd">        The MLModel with no ``constexpr`` ops included.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        import coremltools as ct</span>
+
+<span class="sd">        model = ct.models.MLModel(&quot;my_compressed_model.mlpackage&quot;)</span>
+<span class="sd">        decompressed_model = ct.optimize.coreml.decompress_weights(model)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">weight_decompressor</span> <span class="o">=</span> <span class="n">_WeightDecompressor</span><span class="p">(</span><span class="n">op_selector</span><span class="o">=</span><span class="k">lambda</span> <span class="n">op</span><span class="p">:</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_model_utils</span><span class="o">.</span><span class="n">_apply_graph_pass</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">weight_decompressor</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_weights_metadata">
+<a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.get_weights_metadata">[docs]</a>
+<span class="nd">@_multifunction_unsupported</span>
+<span class="k">def</span> <span class="nf">get_weights_metadata</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">:</span> <span class="n">_model</span><span class="o">.</span><span class="n">MLModel</span><span class="p">,</span> <span class="n">weight_threshold</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2048</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Utility function to get the weights metadata as a dictionary, which maps the weight&#39;s name to its corresponding CoreMLWeightMetaData.</span>
+
+<span class="sd">    CoreMLWeightMetaData contains the following attributes:</span>
+
+<span class="sd">    1. ``val``: The weight data.</span>
+<span class="sd">    2. ``sparsity``: the percentile of the element whose absolute value ``&lt;= 1e-12``.</span>
+<span class="sd">    3. ``unique_values``: number of unique values in the weight.</span>
+<span class="sd">    4. ``child_ops``: meta information of the child ops in which the weight is feeding into.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mlmodel: MLModel</span>
+<span class="sd">        Model in which the weight metadata is retrieved from.</span>
+
+<span class="sd">    weight_threshold: int</span>
+<span class="sd">        * The size threshold, above which weights are returned. That is, a weight tensor is included in the resulting dictionary only if its total number of elements are greater than ``weight_threshold``.</span>
+<span class="sd">          For example, if ``weight_threshold = 1024`` and a weight tensor is of shape ``[10, 20, 1, 1]``, hence ``200``</span>
+<span class="sd">          elements, it will not be returned by the ``get_weights_metadata`` API.</span>
+
+<span class="sd">        * If not provided, it will be set to ``2048``, in which weights bigger than ``2048`` elements are returned.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict[str, CoreMLWeightMetaData]</span>
+<span class="sd">        A dict that maps weight&#39;s name to its metadata.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    In this example, there are two weights whose sizes are greater than ``2048``.</span>
+<span class="sd">    A weight named ``conv_1_weight`` is feeding into a ``conv`` op named ``conv_1``,</span>
+<span class="sd">    while another weight named ``linear_1_weight`` is feeding into a ``linear`` op named ``linear_1``.</span>
+<span class="sd">    You can access the metadata by ``weight_metadata_dict[&quot;conv_1_weight&quot;]``, and so on.</span>
+
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        import coremltools as ct</span>
+
+<span class="sd">        mlmodel = ct.models.MLModel(&quot;my_model.mlpackage&quot;)</span>
+<span class="sd">        weight_metadata_dict = ct.optimize.coreml.get_weights_metadata(</span>
+<span class="sd">            mlmodel, weight_threshold=2048</span>
+<span class="sd">        )</span>
+
+<span class="sd">        # get the weight names with size &gt; 25600</span>
+<span class="sd">        large_weights = []</span>
+<span class="sd">        for k, v in weight_metadata_dict.items():</span>
+<span class="sd">            if v.val.size &gt;= 25600:</span>
+<span class="sd">                large_weights.append(k)</span>
+
+<span class="sd">        # get the weight names with sparsity &gt;= 50%</span>
+<span class="sd">        sparse_weights = []</span>
+<span class="sd">        for k, v in weight_metadata_dict.items():</span>
+<span class="sd">            if v.sparsity &gt;= 0.5:</span>
+<span class="sd">                sparse_weights.append(k)</span>
+
+<span class="sd">        # get the weight names with unique elements &lt;= 16</span>
+<span class="sd">        palettized_weights = []</span>
+<span class="sd">        for k, v in weight_metadata_dict.items():</span>
+<span class="sd">            if v.unique_values &lt;= 16:</span>
+<span class="sd">                palettized_weights.append(k)</span>
+
+<span class="sd">        # print out the dictionary</span>
+<span class="sd">        print(weight_metadata_dict)</span>
+
+<span class="sd">    The output from the above example would be:</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        conv_1_weight</span>
+<span class="sd">        [</span>
+<span class="sd">            val: np.ndarray(shape=(32, 64, 2, 2), dtype=float32)</span>
+<span class="sd">            sparsity: 0.5</span>
+<span class="sd">            unique_values: 4097</span>
+<span class="sd">            child_ops: [</span>
+<span class="sd">                conv(name=conv_1, weight=conv_1_weight, ...)</span>
+<span class="sd">            ]</span>
+<span class="sd">        ]</span>
+<span class="sd">        linear_1_weight</span>
+<span class="sd">        [</span>
+<span class="sd">            val: np.ndarray(shape=(128, 64), dtype=float32)</span>
+<span class="sd">            sparsity: 0.2501220703125</span>
+<span class="sd">            unique_values: 4</span>
+<span class="sd">            child_ops: [</span>
+<span class="sd">                linear(name=linear_1, weight=linear_1_weight, ...)</span>
+<span class="sd">            ]</span>
+<span class="sd">        ]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_get_weight_metadata</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a CoreMLWeightMetaData object given a const operation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;const&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Expect op be type of &#39;const&#39;, got &#39;</span><span class="si">{</span><span class="n">op</span><span class="o">.</span><span class="n">op_type</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+        <span class="n">child_ops</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">visited</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">child_op</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">child_op</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">visited</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">child_op</span><span class="p">)</span>
+            <span class="n">params_name_mapping</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">child_op</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">_is_valid_const</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">weight_threshold</span><span class="p">):</span>
+                    <span class="n">params_name_mapping</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">child_ops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">CoreMLOpMetaData</span><span class="p">(</span>
+                    <span class="n">op_type</span><span class="o">=</span><span class="n">child_op</span><span class="o">.</span><span class="n">op_type</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="n">child_op</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                    <span class="n">params_name_mapping</span><span class="o">=</span><span class="n">params_name_mapping</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">CoreMLWeightMetaData</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">child_ops</span><span class="o">=</span><span class="n">child_ops</span><span class="p">)</span>
+
+    <span class="n">prog</span> <span class="o">=</span> <span class="n">_model_utils</span><span class="o">.</span><span class="n">_convert_model_spec_to_pymil_prog</span><span class="p">(</span>
+        <span class="n">mlmodel</span><span class="p">,</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span><span class="o">.</span><span class="n">specificationVersion</span><span class="p">,</span> <span class="n">_milproto_to_pymil</span><span class="o">.</span><span class="n">load</span>
+    <span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">_MetaDataDict</span><span class="p">({})</span>
+
+    <span class="k">def</span> <span class="nf">get_weights_meta_block</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
+        <span class="c1"># get the candidates ops with the given op_type</span>
+        <span class="n">candidate_ops</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+                <span class="n">get_weights_meta_block</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;const&quot;</span> <span class="ow">and</span> <span class="n">_is_valid_const</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">weight_threshold</span><span class="p">):</span>
+                <span class="n">candidate_ops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span>
+            <span class="n">candidate_ops</span><span class="p">,</span>
+            <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Getting Core ML weights meta data&quot;</span><span class="p">,</span>
+            <span class="n">unit</span><span class="o">=</span><span class="s2">&quot; ops&quot;</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="n">res</span><span class="p">[</span><span class="n">op</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">_get_weight_metadata</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">get_weights_meta_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+
+<div class="viewcode-block" id="CoreMLOpMetaData">
+<a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.CoreMLOpMetaData">[docs]</a>
+<span class="nd">@define</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">CoreMLOpMetaData</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A container class that stores op meta data.</span>
+
+<span class="sd">    The class has the following attributes:</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    op_type: str</span>
+<span class="sd">        The type of the op. For instance: ``conv``, ``linear``, and so on.</span>
+
+<span class="sd">    name: str</span>
+<span class="sd">        The name of the op.</span>
+
+<span class="sd">    params_name_mapping: dict[str, str]</span>
+<span class="sd">        A dict that maps the op&#39;s constant parameters to its corresponding weight name.</span>
+<span class="sd">        For instance, given a ``conv`` op with ``params_name_mapping``,</span>
+
+<span class="sd">        .. sourcecode:: python</span>
+
+<span class="sd">            {</span>
+<span class="sd">                &quot;weight&quot;: &quot;conv_1_weight&quot;,</span>
+<span class="sd">                &quot;bias&quot;: &quot;conv_1_bias&quot;,</span>
+<span class="sd">            }</span>
+
+<span class="sd">        means that the weight and bias of this op are named ``conv_1_weight``,  ``conv_1_bias``, respectively.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">op_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">validator</span><span class="o">=</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">str</span><span class="p">))</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">validator</span><span class="o">=</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">str</span><span class="p">))</span>
+    <span class="n">params_name_mapping</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">validator</span><span class="o">=</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">dict</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">op_type</span><span class="si">}</span><span class="s2">(name=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params_name_mapping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">res</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;, </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">res</span> <span class="o">+=</span> <span class="s2">&quot;, ...)&quot;</span>
+        <span class="k">return</span> <span class="n">res</span></div>
+
+
+
+<div class="viewcode-block" id="CoreMLWeightMetaData">
+<a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.CoreMLWeightMetaData">[docs]</a>
+<span class="nd">@define</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">CoreMLWeightMetaData</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A container class that stores weight meta data.</span>
+
+<span class="sd">    The class has the following attributes:</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    val: numpy.ndarray</span>
+<span class="sd">        The weight data.</span>
+
+<span class="sd">    sparsity: float</span>
+<span class="sd">        The percentile of the element whose absolute value ``&lt;= 1e-12``.</span>
+
+<span class="sd">    unique_values: int</span>
+<span class="sd">        Number of unique values in the weight.</span>
+
+<span class="sd">    child_ops: list[CoreMLOpMetaData]</span>
+<span class="sd">        A list of ``CoreMLOpMetaData`` which contains information of child ops in which the weight is feeding into.</span>
+
+<span class="sd">        The attributes can be accessed by:</span>
+<span class="sd">        ``child_ops[idx].op_type``: The operation type of the ``idx`` &#39;th child op.</span>
+<span class="sd">        ``child_ops[idx].name``: The name of the ``idx`` &#39;th child op.</span>
+
+<span class="sd">        Other op-dependant attributes also can be accessed. For instance, if ``idx`` &#39;th child op is a ``conv`` layer,</span>
+<span class="sd">        ``child_ops[idx].weight`` will return its weight name.</span>
+
+<span class="sd">        For more details, please refer to the ``CoreMLOpMetaData`` doc string.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        import numpy as np</span>
+<span class="sd">        from coremltools.optimize.coreml import CoreMLWeightMetaData</span>
+
+<span class="sd">        data = np.array([[1.0, 0.0], [0.0, 6.0]], dtype=np.float32)</span>
+<span class="sd">        meta_data = CoreMLWeightMetaData(data)</span>
+<span class="sd">        print(meta_data)</span>
+
+<span class="sd">    Outputs::</span>
+
+<span class="sd">        [</span>
+<span class="sd">            val: np.ndarray(shape=(2, 2), dtype=float32)</span>
+<span class="sd">            sparsity: 0.5</span>
+<span class="sd">            unique_values: 3</span>
+<span class="sd">        ]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">val</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">validator</span><span class="o">=</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">))</span>
+    <span class="n">sparsity</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">validator</span><span class="o">=</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">float</span><span class="p">))</span>
+    <span class="n">unique_values</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">validator</span><span class="o">=</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
+    <span class="n">child_ops</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">CoreMLOpMetaData</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">list</span><span class="p">))</span>
+    <span class="p">)</span>
+
+    <span class="nd">@sparsity</span><span class="o">.</span><span class="n">default</span>
+    <span class="k">def</span> <span class="nf">_get_sparsity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">num_of_zeros</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">val</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">1e-12</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">num_of_zeros</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">size</span>
+
+    <span class="nd">@unique_values</span><span class="o">.</span><span class="n">default</span>
+    <span class="k">def</span> <span class="nf">_get_unique_values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">val</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="s2">&quot;[  </span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">res</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;  val: np.ndarray(shape=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, dtype=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">res</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;  sparsity: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sparsity</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">res</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;  unique_values: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">unique_values</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">child_ops</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">+=</span> <span class="s2">&quot;  child_ops: [</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="k">for</span> <span class="n">child_op</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">child_ops</span><span class="p">:</span>
+                <span class="n">res</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">child_op</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">res</span> <span class="o">+=</span> <span class="s2">&quot;  ]</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">res</span> <span class="o">+=</span> <span class="s2">&quot;]&quot;</span>
+        <span class="k">return</span> <span class="n">res</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

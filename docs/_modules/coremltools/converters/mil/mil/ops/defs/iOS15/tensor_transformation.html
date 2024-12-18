@@ -1,0 +1,1263 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+      <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright (c) 2020, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">sympy</span> <span class="k">as</span> <span class="nn">sm</span>
+
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_logger</span> <span class="k">as</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Operation</span><span class="p">,</span>
+    <span class="n">get_new_symbol</span><span class="p">,</span>
+    <span class="n">get_new_variadic_symbol</span><span class="p">,</span>
+    <span class="n">precondition</span><span class="p">,</span>
+    <span class="n">types</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="n">DefaultInputs</span><span class="p">,</span> <span class="n">InputSpec</span><span class="p">,</span> <span class="n">TensorInputType</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="n">SYMBOL</span><span class="p">,</span> <span class="n">VALUE</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">get_param_val</span><span class="p">,</span>
+    <span class="n">get_squeeze_axes</span><span class="p">,</span>
+    <span class="n">solve_slice_by_index_shape</span><span class="p">,</span>
+    <span class="n">solve_slice_by_index_slice</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.symbolic</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">any_symbolic</span><span class="p">,</span>
+    <span class="n">any_variadic</span><span class="p">,</span>
+    <span class="n">is_symbolic</span><span class="p">,</span>
+    <span class="n">isscalar</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="depth_to_space">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.depth_to_space">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span> <span class="nc">depth_to_space</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rearrange elements in a tensor from depth (channel) into spatial dimensions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;[n, C, H, W], T&gt; (Required)</span>
+<span class="sd">        * Input tensor of rank ``4``.</span>
+<span class="sd">    block_size: const i32 (Required)</span>
+<span class="sd">        * The size of the spatial block. Must be greater than ``1`` and divisible by</span>
+<span class="sd">          channel dimension ``C``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;[n, C / block_size^2, H x block_size, W x block_size], T&gt;</span>
+<span class="sd">        * Where ``b`` is the block size.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">block_size</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">x_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">bs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_size</span><span class="o">.</span><span class="n">val</span>
+        <span class="n">ret_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">c</span> <span class="o">//</span> <span class="p">(</span><span class="n">bs</span> <span class="o">*</span> <span class="n">bs</span><span class="p">),</span> <span class="n">h</span> <span class="o">*</span> <span class="n">bs</span><span class="p">,</span> <span class="n">w</span> <span class="o">*</span> <span class="n">bs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">x_type</span><span class="p">,</span> <span class="n">ret_shape</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="expand_dims">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.expand_dims">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span> <span class="nc">expand_dims</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Insert a single-dimension in a 1-D or higher tensor at each axis in axes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;\\*?, T&gt; (Required)</span>
+<span class="sd">        * Scalar or tensor.</span>
+<span class="sd">    axes: const tensor&lt;[K], i32&gt; Required</span>
+<span class="sd">        * ``K`` is the number of dimensions expanded.</span>
+<span class="sd">        * Insert single dimension at dimension index at each axes.</span>
+<span class="sd">        * Negative value to index from the end. ``-d-1 &lt;= axis &lt;= d``</span>
+<span class="sd">          where ``d`` is the rank of ``x``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;\\*(rank(x)+K), T&gt;</span>
+<span class="sd">        * Same type as the input ``x`` with rank ``rank(x)+K``.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, i32, bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">axes</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">x_rank</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span>
+        <span class="n">x_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="n">x_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">val</span>
+        <span class="n">out_rank</span> <span class="o">=</span> <span class="n">x_rank</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="n">axes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">axis</span> <span class="o">&lt;=</span> <span class="o">-</span><span class="n">out_rank</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">axis</span> <span class="o">&gt;=</span> <span class="n">out_rank</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Axis value </span><span class="si">{}</span><span class="s1"> is out of bounds for </span><span class="si">{}</span><span class="s1"> node &quot;</span><span class="si">{}</span><span class="s1">&quot; of shape </span><span class="si">{}</span><span class="s1">&#39;</span>
+                <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span>
+                    <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">op_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="n">ret_shape</span> <span class="o">=</span> <span class="n">x_shape</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="n">out_rank</span> <span class="o">+</span> <span class="n">axis</span> <span class="k">if</span> <span class="n">axis</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">axis</span> <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="n">axes</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="n">axes</span><span class="p">:</span>
+            <span class="n">ret_shape</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">x_type</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">ret_shape</span><span class="p">))</span>
+
+    <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">val</span>
+        <span class="n">out_rank</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="n">axes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">axis</span> <span class="o">&lt;=</span> <span class="o">-</span><span class="n">out_rank</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">axis</span> <span class="o">&gt;=</span> <span class="n">out_rank</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Axis value </span><span class="si">{}</span><span class="s1"> is out of bounds for </span><span class="si">{}</span><span class="s1"> node &quot;</span><span class="si">{}</span><span class="s1">&quot; of shape </span><span class="si">{}</span><span class="s1">&#39;</span>
+                <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span>
+                    <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">op_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="n">axes</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="n">out_rank</span> <span class="o">+</span> <span class="n">axis</span> <span class="k">if</span> <span class="n">axis</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">axis</span> <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="n">axes</span><span class="p">])</span>
+        <span class="n">ret_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="n">axes</span><span class="p">:</span>
+            <span class="n">ret_shape</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">ret_shape</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">reshape_with_symbol</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Perform basic reshape if v is symbolic (not array of symbols).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">shape</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">v</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="reshape">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.reshape">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span> <span class="nc">reshape</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a tensor that has the same values as ``x`` with shape ``shape``.</span>
+<span class="sd">    ``shape`` must have the same volume (number of elements) as ``x``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;\\*?, T&gt; (Required)</span>
+
+<span class="sd">        * An n-D tensor or a scalar.</span>
+<span class="sd">        * If ``x`` is fixed rank (and possibly contains symbolic dimension),</span>
+<span class="sd">          shape may contain elements that are not positive integers (see below).</span>
+<span class="sd">        * If ``x`` is variadic rank, shape can only contain positive integers.</span>
+
+<span class="sd">    shape: tensor&lt;[K], i32&gt; (Required)</span>
+
+<span class="sd">        A 1-D tensor, with elements from the following:</span>
+
+<span class="sd">            * Positive integers.</span>
+<span class="sd">            * Symbols: All but one symbol in shape must be present in ``x.shape``.</span>
+<span class="sd">              The new symbol that is not present in ``x.shape`` represent a dimension</span>
+<span class="sd">              such that the total size remains constant. Symbol is illegal</span>
+<span class="sd">              if ``x`` is variadic rank.</span>
+<span class="sd">            * ``-1``: ``-1`` introduces a new symbol (see Symbols above). Therefore, ``-1`` is</span>
+<span class="sd">              allowed if all symbols in the shape appear in ``x.shape``. ``-1`` is illegal</span>
+<span class="sd">              if ``x`` is variadic rank.</span>
+<span class="sd">            * ``0``: If ``K == rank(x)`` then ``0`` means inheriting from the corresponding</span>
+<span class="sd">              dimension in ``x.shape``. ``0`` is illegal if ``x`` is variadic rank.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;</span>
+<span class="sd">        * Tensor with shape determined by the input shape.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, i32, bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">shape</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">any_symbolic</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+            <span class="c1"># We can&#39;t infer any shape if shape has variable length.</span>
+            <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="p">(</span><span class="n">get_new_variadic_symbol</span><span class="p">(),))</span>
+
+        <span class="c1"># shape has fixed length here.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sym_val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">get_new_symbol</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])])</span>
+            <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+        <span class="n">t</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_type_val</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">t</span>
+
+    <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span> <span class="o">|</span> <span class="n">SYMBOL</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_type_val</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">val</span>
+
+    <span class="k">def</span> <span class="nf">_get_type_val</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">count_neg_one</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sym_val</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">count_neg_one</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Reshape op supports only one dimension to be -1, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;but got </span><span class="si">{</span><span class="n">count_neg_one</span><span class="si">}</span><span class="s2"> dimensions be -1.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">any_symbolic</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ret_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_infer_shape_static</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ret_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_infer_shape_dynamic</span><span class="p">()</span>
+
+        <span class="n">ret_val</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="n">isscalar</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">ret_shape</span>
+        <span class="p">):</span>
+            <span class="n">ret_val</span> <span class="o">=</span> <span class="n">reshape_with_symbol</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_val</span><span class="p">,</span> <span class="n">ret_shape</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">ret_shape</span><span class="p">)),</span> <span class="n">ret_val</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">replace_zeros_in_shape</span><span class="p">(</span><span class="n">from_shape</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">to_shape</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Replaces 0s in `to_shape` by the corresponding dims in `from_shape`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">to_shape</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="mi">0</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">from_shape</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_shape</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;When there is 0 in shape, the rank of x (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">from_shape</span><span class="p">)</span><span class="si">}</span><span class="s2">) &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;must equal to the target shape len (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">to_shape</span><span class="p">)</span><span class="si">}</span><span class="s2">).&quot;</span>
+                <span class="p">)</span>
+            <span class="n">to_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">if</span> <span class="n">s</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">from_shape</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="k">for</span> <span class="n">dim</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">to_shape</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">to_shape</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">replace_neg_one_in_shape</span><span class="p">(</span><span class="n">from_shape</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">to_shape</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Replaces -1 in `to_shape` by the corresponding dims in `from_shape`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">to_shape</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">neg_one_idx</span> <span class="o">=</span> <span class="n">to_shape</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">total_element_num</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">from_shape</span><span class="p">)</span>
+            <span class="n">remain_element_num</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">dim</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">dim</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">to_shape</span><span class="p">)</span> <span class="k">if</span> <span class="n">idx</span> <span class="o">!=</span> <span class="n">neg_one_idx</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">infer_dim</span> <span class="o">=</span> <span class="n">total_element_num</span> <span class="o">//</span> <span class="n">remain_element_num</span>
+            <span class="n">to_shape</span><span class="p">[</span><span class="n">neg_one_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">infer_dim</span>
+        <span class="k">return</span> <span class="n">to_shape</span>
+
+    <span class="k">def</span> <span class="nf">_infer_shape_static</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">from_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">to_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+        <span class="n">to_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace_zeros_in_shape</span><span class="p">(</span><span class="n">from_shape</span><span class="p">,</span> <span class="n">to_shape</span><span class="p">)</span>
+        <span class="n">to_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace_neg_one_in_shape</span><span class="p">(</span><span class="n">from_shape</span><span class="p">,</span> <span class="n">to_shape</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">from_shape</span><span class="p">)</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">to_shape</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid target shape in `reshape` op (</span><span class="si">{</span><span class="n">from_shape</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">val</span><span class="p">)</span><span class="si">}</span><span class="s2">).&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">to_shape</span>
+
+    <span class="k">def</span> <span class="nf">_infer_shape_dynamic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">x_vol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="c1"># shape is const, and thus sym_val is not None</span>
+        <span class="n">sym_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sym_val</span>
+        <span class="n">sym_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">get_new_symbol</span><span class="p">()</span> <span class="k">if</span> <span class="n">d</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="k">else</span> <span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">sym_shape</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ret_shape</span> <span class="o">=</span> <span class="n">reshape</span><span class="o">.</span><span class="n">enforce_volumetric_constraint</span><span class="p">(</span><span class="n">x_vol</span><span class="p">,</span> <span class="n">sym_shape</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">ret_shape</span> <span class="o">=</span> <span class="n">sym_shape</span>
+        <span class="k">return</span> <span class="n">ret_shape</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">enforce_volumetric_constraint</span><span class="p">(</span><span class="n">left_volume</span><span class="p">,</span> <span class="n">inshape</span><span class="p">):</span>
+        <span class="n">left_symbols</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">left_volume</span><span class="p">):</span>
+            <span class="n">left_symbols</span> <span class="o">=</span> <span class="n">left_volume</span><span class="o">.</span><span class="n">free_symbols</span>
+        <span class="c1"># Generally, we want to solve for right in terms of left. But this</span>
+        <span class="c1"># is kinda annoying actually.</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">inshape</span><span class="p">)</span>
+
+        <span class="c1"># Handling when reshape is given 0 instead of actual input</span>
+        <span class="c1"># input tensor shape: [4, 3, 2], reshape:[0, -1], output tensor shape: [4, 6]</span>
+        <span class="n">infer_dim_index</span> <span class="o">=</span> <span class="n">shape</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">in</span> <span class="n">shape</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">right_volume</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">shape</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">right_volume</span> <span class="o">=</span> <span class="n">right_volume</span> <span class="o">*</span> <span class="n">i</span>
+
+        <span class="k">if</span> <span class="n">infer_dim_index</span><span class="p">:</span>
+            <span class="n">shape</span><span class="p">[</span><span class="n">infer_dim_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">left_volume</span> <span class="o">//</span> <span class="n">right_volume</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">right_volume</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">shape</span>
+
+        <span class="n">constraints</span> <span class="o">=</span> <span class="p">[</span><span class="n">left_volume</span> <span class="o">-</span> <span class="n">right_volume</span><span class="p">]</span>
+        <span class="n">solve_for</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">shape</span> <span class="k">if</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">s</span><span class="p">)]</span>
+
+        <span class="k">for</span> <span class="n">rightsym</span> <span class="ow">in</span> <span class="n">solve_for</span><span class="p">:</span>
+            <span class="n">sol</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">constraints</span><span class="p">,</span> <span class="p">[</span><span class="n">rightsym</span><span class="p">],</span> <span class="nb">dict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sol</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">sol</span> <span class="o">=</span> <span class="p">[</span><span class="n">sol</span><span class="p">]</span>
+            <span class="c1"># look for an acceptable solution</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sol</span><span class="p">:</span>
+                <span class="k">if</span> <span class="mi">0</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                    <span class="k">continue</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)):</span>
+                    <span class="k">if</span> <span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+                        <span class="n">v</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">free_symbols</span> <span class="o">-</span> <span class="n">left_symbols</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="k">continue</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                        <span class="k">except</span><span class="p">:</span>
+                            <span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+        <span class="k">return</span> <span class="n">shape</span></div>
+
+
+
+<div class="viewcode-block" id="reverse">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.reverse">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span> <span class="nc">reverse</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reverse the order of the input tensor ``x`` along specified ``axes`` (dimensions).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;\\*?, T&gt; (Required)</span>
+<span class="sd">        * Input tensor.</span>
+
+<span class="sd">    axes: const&lt;D, i32&gt; (Optional)</span>
+<span class="sd">        * Dimension(s) to reverse. Each axis must be in the range ``[-rank(x), rank(x))``.</span>
+<span class="sd">        * Defaults to None (reverse on all dimensions).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;</span>
+<span class="sd">        * Same type and shape as the input tensor.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, i32, bool</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    See `tf.reverse &lt;https://www.tensorflow.org/api_docs/python/tf/reverse&gt;`_</span>
+<span class="sd">    and `TORCH &lt;https://pytorch.org/docs/stable/torch.html#torch.flip&gt;`_.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">axes</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DefaultInputs</span><span class="p">(</span>
+            <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_type</span>
+
+    <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">val</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="n">axes</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">res</span></div>
+
+
+
+<div class="viewcode-block" id="reverse_sequence">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.reverse_sequence">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span> <span class="nc">reverse_sequence</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reverse variable length slices for specified axes / dimensions of the input</span>
+<span class="sd">    tensor. This op first slices input tensor along the ``batch_axis`` dimension, then</span>
+<span class="sd">    partially reverses the elements along the ``seq_axis`` for the first ``lengths[i]``</span>
+<span class="sd">    elements.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;\\*?, T&gt; (Required)</span>
+<span class="sd">        * Input tensor.</span>
+<span class="sd">    lengths: tensor&lt;L, i32&gt; (Required)</span>
+<span class="sd">        * 1-dimensional tensor of length ``x.shape[batch_axis]`` specifying the length</span>
+<span class="sd">          of the sequence to reverse.</span>
+<span class="sd">        * Values must be in range ``[0, x.shape[seq_axis]]``.</span>
+<span class="sd">    seq_axis: const&lt;i32&gt; (Optional)</span>
+<span class="sd">        * The dimension to reverse.</span>
+<span class="sd">        * Defaults to ``0``.</span>
+<span class="sd">    batch_axis: const&lt;i32&gt; (Optional)</span>
+<span class="sd">        * Dimension for slicing.</span>
+<span class="sd">        * Defaults to ``0``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;</span>
+<span class="sd">        * Same type and shape as the input tensor.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, i32, bool</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    `tf.reverse_sequence &lt;https://www.tensorflow.org/api_docs/python/tf/reverse_sequence&gt;`_</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">lengths</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+        <span class="n">seq_axis</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+        <span class="n">batch_axis</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DefaultInputs</span><span class="p">(</span>
+            <span class="n">seq_axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">batch_axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_type</span>
+
+    <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;TODO&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="slice_by_index">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.slice_by_index">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span> <span class="nc">slice_by_index</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Method for numpy style indexing and slicing.</span>
+<span class="sd">    With a tensor ``x``, this method achieves the following:</span>
+
+<span class="sd">    ``result = x[begin[0]: end[0]: stride[0], begin[1]: end[1]: stride[1], ...]``</span>
+
+<span class="sd">    Note: This method does not support pure indexing. You would need to do a</span>
+<span class="sd">    squeeze if indexing is intended.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;*?, T&gt; (Required)</span>
+<span class="sd">        * Input tensor</span>
+<span class="sd">    begin: tensor&lt;[rank(x)], i32&gt; (Required)</span>
+<span class="sd">        * Starting index for the dimension of slicing.</span>
+<span class="sd">    end: tensor&lt;[rank(x)], i32&gt; (Required)</span>
+<span class="sd">        * Ending index for the dimension of slicing.</span>
+<span class="sd">    stride: tensor&lt;[rank(x)], i32&gt; (Optional)</span>
+<span class="sd">        * Default is all ``1``.</span>
+<span class="sd">        * Stride for the dimension of slicing.</span>
+<span class="sd">    begin_mask: tensor&lt;[rank(x)], bool&gt; (Optional)</span>
+<span class="sd">        * Default to all ``False``.</span>
+<span class="sd">        * If ``begin_mask[i]==True``, ignores ``begin[i]``, and set ``begin[i]`` to ``0``.</span>
+<span class="sd">    end_mask: tensor&lt;[rank(x)], bool&gt; (Optional)</span>
+<span class="sd">        * Default to all ``False``.</span>
+<span class="sd">        * If ``end_mask[i]==True``, ignores ``end[i]``, and set ``end[i]`` to ``x.shape[i]``.</span>
+<span class="sd">    squeeze_mask: tensor&lt;[rank(x)], bool&gt; (Optional)</span>
+<span class="sd">        * Default to all ``False``.</span>
+<span class="sd">        * If ``squeeze_mask[i]==true``, ignores ``end[i]``, and do the pure index at ``begin[i]``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;</span>
+<span class="sd">        - Scalar or tensor.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, i32, bool</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">begin</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+        <span class="n">end</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+        <span class="n">stride</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+        <span class="n">begin_mask</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
+        <span class="n">end_mask</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
+        <span class="n">squeeze_mask</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DefaultInputs</span><span class="p">(</span>
+            <span class="n">stride</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">begin_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">end_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">squeeze_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># solve shape</span>
+        <span class="n">ret_shape</span> <span class="o">=</span> <span class="n">solve_slice_by_index_shape</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">begin</span><span class="o">.</span><span class="n">val</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">val</span><span class="p">,</span>
+            <span class="n">get_param_val</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">),</span>
+            <span class="n">get_param_val</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">begin_mask</span><span class="p">),</span>
+            <span class="n">get_param_val</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">end_mask</span><span class="p">),</span>
+            <span class="n">get_param_val</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">squeeze_mask</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ret_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Scalar case.</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">ret_shape</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_val</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">begin</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="c1"># solve the data slices and slice tensor</span>
+        <span class="n">slices</span> <span class="o">=</span> <span class="n">solve_slice_by_index_slice</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">begin</span><span class="o">.</span><span class="n">val</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">val</span><span class="p">,</span>
+            <span class="n">get_param_val</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">),</span>
+            <span class="n">get_param_val</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">begin_mask</span><span class="p">),</span>
+            <span class="n">get_param_val</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">end_mask</span><span class="p">),</span>
+            <span class="n">get_param_val</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">squeeze_mask</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_val</span><span class="p">[</span><span class="n">slices</span><span class="p">]</span>
+
+        <span class="c1"># remove squeeze_axes</span>
+        <span class="n">squeeze_axes</span> <span class="o">=</span> <span class="n">get_squeeze_axes</span><span class="p">(</span><span class="n">get_param_val</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">squeeze_mask</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">squeeze_axes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">squeeze_axes</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">res</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> seems to be a 0 sized tensor&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">res</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">res</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">res</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">types</span><span class="o">.</span><span class="n">int64</span><span class="p">:</span>
+                    <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">types</span><span class="o">.</span><span class="n">float</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">types</span><span class="o">.</span><span class="n">double</span><span class="p">:</span>
+                    <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s2">&quot;Unable to convert type </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_val</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+                    <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">squeeze_axes</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">res</span></div>
+
+
+
+<div class="viewcode-block" id="slice_by_size">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.slice_by_size">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span> <span class="nc">slice_by_size</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Slice input tensor starting from the given ``begin`` index and by</span>
+<span class="sd">    the amount specified by the ``size`` input, for each dimension.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;*?, T&gt; (Required)</span>
+<span class="sd">        * Input tensor.</span>
+<span class="sd">    begin: tensor&lt;[rank(x)], i32&gt; (Required)</span>
+<span class="sd">        * The begin index for slice.</span>
+<span class="sd">    size: tensor&lt;[rank(x)], i32&gt; (Required)</span>
+<span class="sd">        * The size that is to be sliced. If ``size`` is ``-1``,</span>
+<span class="sd">          all the remaining elements starting with &quot;begin&quot; are sliced.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;</span>
+<span class="sd">        * Scalar or tensor.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, i32, bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">begin</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+        <span class="n">size</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">begin</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;begin should be 1-D tensor, got </span><span class="si">{}</span><span class="s2">-D tensor instead&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">begin</span><span class="o">.</span><span class="n">rank</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;size should be 1-D tensor, got </span><span class="si">{}</span><span class="s2">-D tensor instead&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="o">.</span><span class="n">rank</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">begin</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Length of begin </span><span class="si">{}</span><span class="s2"> doesn&#39;t equal to input rank </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">begin</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Length of size </span><span class="si">{}</span><span class="s2"> doesn&#39;t equal to input rank </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">x_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">ret_shape</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="o">.</span><span class="n">sym_val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ret_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">get_new_symbol</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span><span class="p">)]</span>
+            <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">ret_shape</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="o">.</span><span class="n">sym_val</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+                <span class="n">ret_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">s</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">ret_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">begin</span><span class="o">.</span><span class="n">sym_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">ret_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x_shape</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">begin</span><span class="o">.</span><span class="n">sym_val</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ret_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_new_symbol</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">ret_shape</span><span class="p">))</span>
+
+    <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span> <span class="o">|</span> <span class="n">SYMBOL</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">any_symbolic</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">begin</span><span class="o">.</span><span class="n">sym_val</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">any_symbolic</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="o">.</span><span class="n">sym_val</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">slices</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span><span class="p">):</span>
+            <span class="n">begin_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">begin</span><span class="o">.</span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">begin_val</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+                    <span class="k">return</span> <span class="kc">None</span>
+                <span class="n">begin_val</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="o">.</span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">slices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="n">begin_val</span><span class="p">,</span> <span class="n">begin_val</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="o">.</span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">slices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="n">begin_val</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">slices</span><span class="p">)]</span></div>
+
+
+
+<div class="viewcode-block" id="space_to_depth">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.space_to_depth">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span> <span class="nc">space_to_depth</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rearrange elements in a tensor from spatial into depth (channel) dimension.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;[n, C, H, W], T&gt; (Required)</span>
+<span class="sd">        * Input tensor of rank ``4``.</span>
+<span class="sd">    block_size: const&lt;i32&gt; (Required)</span>
+<span class="sd">        * The size of the spatial block. Must be greater than ``1`` and divisible</span>
+<span class="sd">          by spatial dimensions ``H, W``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;[n, C x block_size^2, H / block_size, W / block_size], T&gt;</span>
+<span class="sd">        * Where ``b`` is the block size.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">block_size</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">x_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">bs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_size</span><span class="o">.</span><span class="n">val</span>
+        <span class="n">ret_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">c</span> <span class="o">*</span> <span class="p">(</span><span class="n">bs</span> <span class="o">*</span> <span class="n">bs</span><span class="p">),</span> <span class="n">h</span> <span class="o">//</span> <span class="n">bs</span><span class="p">,</span> <span class="n">w</span> <span class="o">//</span> <span class="n">bs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">x_type</span><span class="p">,</span> <span class="n">ret_shape</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="space_to_batch">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.space_to_batch">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span> <span class="nc">space_to_batch</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rearrange elements in a tensor from spatial into batch dimensions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;[n, C, H, W], T&gt; (Required)</span>
+<span class="sd">        * Input tensor must have rank ``4``.</span>
+<span class="sd">        * The first and the second dimension are batch, channel; respectively.</span>
+<span class="sd">        * The remaining dimensions ``(H, W)`` are treated as &quot;spatial dimensions&quot;.</span>
+<span class="sd">    block_shape: const tensor&lt;[2], i32&gt; (Required)</span>
+<span class="sd">        * The length of the ``block_shape`` must be ``2``.</span>
+<span class="sd">        * It defines the shapes of the block in which the spatial dimensions are divided.</span>
+<span class="sd">    paddings: const tensor&lt;[2, 2], i32&gt; (Required)</span>
+<span class="sd">        * It must have shape ``(2, 2)``.</span>
+<span class="sd">        * It defines the padding for each spatial dimension.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;[new_n, C, new_H, new_W], T&gt;</span>
+<span class="sd">        * ``new_n = n * block_shape[0] * block_shape[1]``</span>
+<span class="sd">        * ``new_H = (H + paddings[0][0] + padding[0][1])/block_shape[0]``</span>
+<span class="sd">        * ``new_W = (W + paddings[1][0] + padding[1][1])/block_shape[1]``</span>
+<span class="sd">        * The output has the same rank as the input.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">block_shape</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+        <span class="n">paddings</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">x_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">block_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_shape</span><span class="o">.</span><span class="n">val</span>
+        <span class="n">paddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">paddings</span><span class="o">.</span><span class="n">val</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Input to space_to_batch op must be rank 4. Instead got an input with rank </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">paddings</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">block_shape</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;block_shape and paddings must have shape [2], [2, 2] accordingly in the space_to_batch op. &quot;</span>\
+            <span class="s2">&quot;Got </span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">block_shape</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">paddings</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">m</span> <span class="o">=</span> <span class="n">block_shape</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">m</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;space_to_batch op only supports spatial dimensions = 2. Got </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">b</span> <span class="o">=</span> <span class="n">x_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">x_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">spatial_shape</span> <span class="o">=</span> <span class="n">x_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">2</span><span class="o">+</span><span class="n">m</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="n">m</span> <span class="o">+</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The input rank of space_to_batch op must exactly be &quot;</span> \
+                             <span class="s2">&quot;len(block_shape)</span><span class="si">{}</span><span class="s2"> + 2! Got </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">block_shape</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span><span class="p">))</span>
+
+        <span class="n">padded_spatial_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="o">+</span> <span class="n">paddings</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">paddings</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">spatial_shape</span><span class="p">)]</span>
+        <span class="n">new_b</span> <span class="o">=</span> <span class="n">b</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">block_shape</span><span class="p">)</span>
+        <span class="n">new_spatial_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">padded_spatial_shape</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">/</span><span class="n">block_shape</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">)]</span>
+        <span class="n">ret_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_b</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span> <span class="o">+</span> <span class="n">new_spatial_shape</span>
+        <span class="n">x_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span>
+
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">x_type</span><span class="p">,</span> <span class="n">ret_shape</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="batch_to_space">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.batch_to_space">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span> <span class="nc">batch_to_space</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rearrange elements in a tensor from batch into spatial dimensions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;[n, C, H, W], T&gt; (Required)</span>
+<span class="sd">        * Input tensor must have rank ``4``.</span>
+<span class="sd">        * The first and the second dimension are batch, channel; respectively.</span>
+<span class="sd">        * The remaining dimensions ``(H, W)`` are treated as &quot;spatial dimensions&quot;.</span>
+<span class="sd">    block_shape: const tensor&lt;[2], i32&gt; (Required)</span>
+<span class="sd">        * The length of the ``block_shape`` must be ``2``.</span>
+<span class="sd">        * It defines the shapes of the block in which the spatial dimensions are multiplied.</span>
+<span class="sd">    crops: const tensor&lt;[2, 2], i32&gt; (Required)</span>
+<span class="sd">        * It must have shape ``(2, 2)``.</span>
+<span class="sd">        * It defines the amount to crop from each spatial dimension.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;[new_n, C, new_H, new_W], T&gt;</span>
+<span class="sd">        * ``new_n = n / (block_shape[0] * block_shape[1])``</span>
+<span class="sd">        * ``new_H = (H * block_shape[0]) - paddings[0][0] - padding[0][1]``</span>
+<span class="sd">        * ``new_W = (W * block_shape[1]) - paddings[1][0] - padding[1][1]``</span>
+<span class="sd">        * The output has the same rank as the input.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">block_shape</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+        <span class="n">crops</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">x_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">block_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_shape</span><span class="o">.</span><span class="n">val</span>
+        <span class="n">crops</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">crops</span><span class="o">.</span><span class="n">val</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Input to batch_to_space op must be rank 4. Instead got an input with rank </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">crops</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">block_shape</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;block_shape and crops must have shape [2], [2, 2] accordingly in the batch_to_space op. &quot;</span>\
+            <span class="s2">&quot;Got </span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">block_shape</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">crops</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">m</span> <span class="o">=</span> <span class="n">block_shape</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">m</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;batch_to_space op only supports spatial dimensions = 2. Got </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">b</span> <span class="o">=</span> <span class="n">x_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">x_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">spatial_shape</span> <span class="o">=</span> <span class="n">x_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">2</span><span class="o">+</span><span class="n">m</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="n">m</span> <span class="o">+</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The input rank of batch_to_space op must exactly be &quot;</span> \
+                             <span class="s2">&quot;len(block_shape)</span><span class="si">{}</span><span class="s2"> + 2! Got </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">block_shape</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="ow">and</span>  <span class="n">b</span> <span class="o">%</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">block_shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Batch size must be perfectly divided by the product of block_shape. Got batch size </span><span class="si">{}</span><span class="s2">, and block_shape </span><span class="si">{}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">block_shape</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">new_b</span> <span class="o">=</span> <span class="n">b</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">block_shape</span><span class="p">)</span>
+        <span class="n">new_spatial_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">spatial_shape</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">block_shape</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">)]</span>
+        <span class="n">cropped_spatial_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="o">-</span> <span class="n">crops</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">crops</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">new_spatial_shape</span><span class="p">)]</span>
+        <span class="n">ret_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_b</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span> <span class="o">+</span> <span class="n">cropped_spatial_shape</span>
+        <span class="n">x_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span>
+
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">x_type</span><span class="p">,</span> <span class="n">ret_shape</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="squeeze">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.squeeze">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span> <span class="nc">squeeze</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Remove single-dimension dimensions in a 1-D or higher tensor.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;\\*?, T&gt; (Required)</span>
+<span class="sd">        * Must be at least 1-D.</span>
+<span class="sd">    axes: const&lt;K,i32&gt; (Optional)</span>
+<span class="sd">        * Axes to squeeze out.</span>
+<span class="sd">        * The behaviour of squeezing non-single dimensions follow PyTorch instead of NumPy, where</span>
+<span class="sd">          it ignores non-single dimensions instead of erroring out. More specifically, if x has</span>
+<span class="sd">          shape (2, 3, 4) and axes is [0, 1], the output will be a tensor with shape (2, 3, 4).</span>
+<span class="sd">        * Default to remove all single-dimensions.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;\\*(rank(x)-K), T&gt;</span>
+<span class="sd">        * Tensor with same type as input ``x`` and rank ``rank(x)-K``.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, i32, bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">axes</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DefaultInputs</span><span class="p">(</span>
+            <span class="n">axes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">x_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="n">x_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">squeezed_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">x_shape</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Squeeze all single-dim, assuming symbolic dims != 1</span>
+            <span class="n">squeezed_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">squeezed_shape</span> <span class="k">if</span> <span class="n">s</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">val</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="p">[</span><span class="n">axis</span> <span class="k">if</span> <span class="n">axis</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">axis</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="n">axes</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">axes</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>  <span class="c1"># descending order</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">squeezed_shape</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">i</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Invalid axis </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> in squeeze. The axis should be smaller than </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">squeezed_shape</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+                <span class="k">if</span> <span class="n">squeezed_shape</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="c1"># Only remove the dim_size=1 dimension.</span>
+                    <span class="n">squeezed_shape</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">x_type</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">squeezed_shape</span><span class="p">))</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">squeezed_shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">x_type</span>
+
+    <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">val</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">val</span> <span class="k">if</span> <span class="n">val</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">()</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="transpose">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.transpose">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span> <span class="nc">transpose</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Permute tensor ``x`` dimensions according to ``perm``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;\\*?, T&gt; (Required)</span>
+<span class="sd">        * Must be at least 1-D. ``x`` may have a symbolic shape.</span>
+<span class="sd">    perm: const&lt;[rank(x)], i32&gt; (Required)</span>
+<span class="sd">        * Permutation order. -rank(x) &lt;= perm[I] &lt; rank(x) for all perm entries.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;</span>
+<span class="sd">        * Tensor with same rank and type as ``x``.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, i32, bool</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    `torch.Tensor.permute &lt;https://pytorch.org/docs/stable/tensors.html#torch.Tensor.permute&gt;`_</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">perm</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">x_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="n">perm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">perm</span><span class="o">.</span><span class="n">val</span>
+        <span class="n">x_shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">perm</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;perm should have the same length as rank(x): </span><span class="si">{}</span><span class="s2"> != </span><span class="si">{}</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">perm</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_type</span>  <span class="c1"># scalar cannot be transposed</span>
+        <span class="k">if</span> <span class="n">any_variadic</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+            <span class="n">ret_shape</span> <span class="o">=</span> <span class="n">get_new_variadic_symbol</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ret_shape</span> <span class="o">=</span> <span class="n">x_shape</span><span class="p">[</span><span class="n">perm</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">x_type</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">ret_shape</span><span class="p">))</span>
+
+    <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">perm</span><span class="o">.</span><span class="n">val</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="pixel_shuffle">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.pixel_shuffle">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span> <span class="nc">pixel_shuffle</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rearrange elements in a tensor from depth (channel) into spatial dimensions.</span>
+<span class="sd">    Equivalent to PyTorch&#39;s ``PixelShuffle``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;[n, C x f^2, H, W], T&gt; (Required)</span>
+<span class="sd">        * Input tensor of rank ``4``.</span>
+<span class="sd">    upscale_factor: const&lt;i32&gt;</span>
+<span class="sd">        * Factor to increase spatial resolution by.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;[n, C, H x f, W x f], T&gt;</span>
+<span class="sd">        * Where ``f`` is the upscale factor.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    `torch.nn.PixelShuffle &lt;https://pytorch.org/docs/stable/generated/torch.nn.PixelShuffle.html?highlight=pixel%20shuffle#torch.nn.PixelShuffle&gt;`_</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">upscale_factor</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">x_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upscale_factor</span><span class="o">.</span><span class="n">val</span>
+        <span class="n">ret_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">c</span> <span class="o">//</span> <span class="p">(</span><span class="n">f</span> <span class="o">*</span> <span class="n">f</span><span class="p">),</span> <span class="n">h</span> <span class="o">*</span> <span class="n">f</span><span class="p">,</span> <span class="n">w</span> <span class="o">*</span> <span class="n">f</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">x_type</span><span class="p">,</span> <span class="n">ret_shape</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="sliding_windows">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.sliding_windows">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span> <span class="nc">sliding_windows</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a tensor containing all windows of ``size``, separated by stride along the</span>
+<span class="sd">    given ``axis``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;[\\*d0, d_axis, *dn], T&gt;</span>
+<span class="sd">        * Input tensor.</span>
+
+<span class="sd">    axis: const&lt;i32&gt;</span>
+<span class="sd">        * Axis to perform the operation.</span>
+
+<span class="sd">    size: const&lt;i32&gt;</span>
+<span class="sd">        * Number of elements in the sliding window.</span>
+
+<span class="sd">    stride: const&lt;i32&gt; Optional</span>
+<span class="sd">        * Default to ``1``.</span>
+<span class="sd">        * The stride of the input elements in the sliding window.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;[\\*d0, d_axis - size // stride + 1, size, \\*dn], T&gt;</span>
+<span class="sd">        * The output will be a tensor of rank ``N+1`` where ``N`` is the input tensor</span>
+<span class="sd">          rank.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, int32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">axis</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+        <span class="n">size</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+        <span class="n">stride</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DefaultInputs</span><span class="p">(</span><span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">x_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">axis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="o">.</span><span class="n">val</span>
+        <span class="n">stride</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="o">.</span><span class="n">val</span>
+        <span class="n">ret_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">x_shape</span><span class="p">)</span>
+        <span class="n">ret_shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">-</span> <span class="n">size</span><span class="p">)</span> <span class="o">//</span> <span class="n">stride</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">pos_axis</span> <span class="o">=</span> <span class="n">axis</span> <span class="k">if</span> <span class="n">axis</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">axis</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span>
+        <span class="n">ret_shape</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">pos_axis</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">ret_shape</span><span class="p">))</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
