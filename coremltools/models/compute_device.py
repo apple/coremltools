@@ -50,14 +50,17 @@ class MLComputeDevice(_ABC):
 
         Returns
         -------
-        The accessible compute devices.
+        List[MLComputeDevice]
+            The accessible compute devices.
 
         Examples
         --------
         .. sourcecode:: python
+
             compute_devices = (
                 coremltools.models.compute_device.MLComputeDevice.get_all_compute_devices()
             )
+        
         """
         return _MLModelProxy.get_all_compute_devices()
 
@@ -105,7 +108,7 @@ class MLNeuralEngineComputeDevice(MLComputeDevice):
 
         Returns
         -------
-        int:
+        int
             The total number of cores in the Neural Engine.
 
         Examples

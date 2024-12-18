@@ -21,8 +21,8 @@ import pathlib
 project = 'coremltools API Reference'
 copyright = '2021, Apple Inc'
 author = 'Apple Inc'
-release = '8.0b1'
-version = '8.0b1'
+release = '8.1'
+version = '8.1'
 
 # -- General configuration ---------------------------------------------------
 
