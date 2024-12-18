@@ -7471,8 +7471,8 @@ class TestScaledDotProductAttentionSlicedQ:
 
         assert ops_counts[0] == 1 or ops_counts[0] == 3  # (attn_mask might be cast to bool from input fp16 dtype)
         assert ops_counts[1] == 1 or ops_counts[1] == 3  # the Q seq length is less than the default min seq length
-        assert ops_counts[2] >= 26 * 16
-        assert ops_counts[3] >= 26 * 32
+        assert ops_counts[2] >= 11 * 16  # 11 ops (without consts) per slice
+        assert ops_counts[3] >= 11 * 32
 
         predict_inputs = copy.deepcopy(example_inputs)
         if "attn_mask" in predict_inputs:
