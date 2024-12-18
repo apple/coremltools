@@ -1,0 +1,298 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.converters.mil.debugging_utils &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters.mil.debugging_utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.converters.mil.debugging_utils</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright (c) 2023, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend.milproto.load</span> <span class="kn">import</span> <span class="n">load</span> <span class="k">as</span> <span class="n">milproto_to_pymil</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">mb</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.helper</span> <span class="kn">import</span> <span class="n">block_context_manager</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.pass_registry</span> <span class="kn">import</span> <span class="n">PASS_REGISTRY</span>
+<span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">MLModel</span>
+
+
+<div class="viewcode-block" id="extract_submodel">
+<a class="viewcode-back" href="../../../../source/coremltools.models.html#coremltools.converters.mil.debugging_utils.extract_submodel">[docs]</a>
+<span class="k">def</span> <span class="nf">extract_submodel</span><span class="p">(</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">MLModel</span><span class="p">,</span>
+        <span class="n">outputs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">function_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;main&quot;</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MLModel</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This utility function lets you extract a submodel from a Core ML model.</span>
+
+<span class="sd">    For a neural network model, the function extracts only in-memory Core ML models.</span>
+<span class="sd">    You should always call this function for a model directly from :py:class:`~coremltools.converters._converters_entry.convert`. It is not</span>
+<span class="sd">    allowed to load the model from disk and then call this API.</span>
+
+<span class="sd">    For an ML program model, both cases (in-memory and from disk) are supported.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    model: MLModel</span>
+<span class="sd">        The Core ML model from which the submodel is extracted.</span>
+
+<span class="sd">    outputs: list[str]</span>
+<span class="sd">        A list of names of Vars, which are the outputs of the extracted submodel.</span>
+
+<span class="sd">    inputs: list[str] (Optional)</span>
+<span class="sd">        A list of names of Vars, which are the inputs of the extracted submodel.</span>
+<span class="sd">        If not provided, the inputs from the original model are used.</span>
+
+<span class="sd">    function_name: str (Optional)</span>
+<span class="sd">        Name of the function where the subgraph is extracted. Default is ``main``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    Neural network:</span>
+
+<span class="sd">        &gt;&gt;&gt; from coremltools.converters.mil.debugging_utils import extract_submodel</span>
+<span class="sd">        &gt;&gt;&gt; mlmodel = ct.convert(model, convert_to=&quot;neuralnetwork&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; outputs = [&quot;output_0&quot;, &quot;output_1&quot;]</span>
+<span class="sd">        &gt;&gt;&gt; submodel = extract_submodel(mlmodel, outputs)</span>
+
+<span class="sd">    ML program:</span>
+
+<span class="sd">        &gt;&gt;&gt; from coremltools.converters.mil.debugging_utils import extract_submodel</span>
+<span class="sd">        &gt;&gt;&gt; mlmodel = ct.convert(model, convert_to=&quot;mlprogram&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; outputs = [&quot;output_0&quot;, &quot;output_1&quot;]</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # Directly extract model in memory</span>
+<span class="sd">        &gt;&gt;&gt; submodel = extract_submodel(mlmodel, outputs)</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # Extract model loaded from disk</span>
+<span class="sd">        &gt;&gt;&gt; mlmodel.save(&quot;model.mlpackage&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; mlmodel = coremltools.model.models.MLModel(&quot;model.mlpackage&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; submodel = extract_submodel(mlmodel, outputs)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">validate_inputs</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">input_vars</span><span class="p">):</span>
+        <span class="n">reachable_vars</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">input_vars</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">func</span><span class="o">.</span><span class="n">operations</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;const&quot;</span><span class="p">:</span>
+                <span class="n">reachable_vars</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">func</span><span class="o">.</span><span class="n">operations</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">all</span><span class="p">([</span><span class="n">x</span> <span class="ow">in</span> <span class="n">reachable_vars</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">values</span><span class="p">()]):</span>
+                <span class="n">reachable_vars</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">func</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">out</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">reachable_vars</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;output </span><span class="si">{</span><span class="n">output</span><span class="si">}</span><span class="s2"> not reachable from inputs&quot;</span><span class="p">)</span>
+
+    <span class="nd">@block_context_manager</span>
+    <span class="k">def</span> <span class="nf">replace_inputs</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">input_vars</span><span class="p">):</span>
+        <span class="n">func_inputs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">input_vars</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">func_inputs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">input</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="n">func</span><span class="o">.</span><span class="n">replace_uses_of_var_after_op</span><span class="p">(</span>
+                <span class="n">anchor_op</span><span class="o">=</span><span class="nb">input</span><span class="o">.</span><span class="n">op</span><span class="p">,</span>
+                <span class="n">old_var</span><span class="o">=</span><span class="nb">input</span><span class="p">,</span>
+                <span class="n">new_var</span><span class="o">=</span><span class="n">func_inputs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="p">)</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">_input_dict</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">func_inputs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">v</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+            <span class="n">func</span><span class="o">.</span><span class="n">_input_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;outputs must be of type list/tuple. Got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;outputs must be a list of str. Got element </span><span class="si">{</span><span class="n">output</span><span class="si">}</span><span class="s2"> with type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">output</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">outputs</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">output</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;outputs must be a list of unique elements. &#39;</span><span class="si">{</span><span class="n">output</span><span class="si">}</span><span class="s2">&#39; occurs </span><span class="si">{</span><span class="n">outputs</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">output</span><span class="p">)</span><span class="si">}</span><span class="s2"> times.&quot;</span><span class="p">)</span>
+
+    <span class="n">model_spec</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
+    <span class="n">backend</span> <span class="o">=</span> <span class="s2">&quot;mlprogram&quot;</span> <span class="k">if</span> <span class="n">model_spec</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;mlProgram&quot;</span> <span class="k">else</span> <span class="s2">&quot;neuralnetwork&quot;</span>
+    <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;neuralnetwork&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">_mil_program</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;NeuralNetwork model loaded from the disk is not supported by the extract_submodel util.&quot;</span><span class="p">)</span>
+        <span class="n">program</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">_mil_program</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;mlprogram&quot;</span>
+        <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">_mil_program</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">program</span> <span class="o">=</span> <span class="n">milproto_to_pymil</span><span class="p">(</span>
+                <span class="n">model_spec</span><span class="o">=</span><span class="n">model_spec</span><span class="p">,</span>
+                <span class="n">specification_version</span><span class="o">=</span><span class="n">model_spec</span><span class="o">.</span><span class="n">specificationVersion</span><span class="p">,</span>
+                <span class="n">file_weights_dir</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">weights_dir</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">program</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">_mil_program</span>
+
+    <span class="c1"># extract subgraph</span>
+    <span class="n">prog</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">program</span><span class="p">)</span>
+    <span class="n">func</span> <span class="o">=</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="n">function_name</span><span class="p">]</span>
+    <span class="nb">vars</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">new_outputs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">func</span><span class="o">.</span><span class="n">operations</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">o</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">:</span>
+                <span class="n">new_outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+            <span class="nb">vars</span><span class="p">[</span><span class="n">o</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">o</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_outputs</span><span class="p">):</span>
+        <span class="n">new_outputs_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">o</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">new_outputs</span><span class="p">]</span>
+        <span class="n">outputs_not_found</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">outputs</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">new_outputs_names</span><span class="p">]</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;outputs </span><span class="si">{</span><span class="n">outputs_not_found</span><span class="si">}</span><span class="s2"> not found in the function.&quot;</span><span class="p">)</span>
+
+    <span class="n">func</span><span class="o">.</span><span class="n">set_outputs</span><span class="p">(</span><span class="n">new_outputs</span><span class="p">)</span>
+
+    <span class="c1"># Clean up the graph</span>
+    <span class="n">PASS_REGISTRY</span><span class="p">[</span><span class="s2">&quot;common::dead_code_elimination&quot;</span><span class="p">](</span><span class="n">prog</span><span class="p">)</span>
+
+    <span class="c1"># If the inputs are provided, we subtract the subgraph starting from them</span>
+    <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;inputs must be of type list/tuple. Got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+        <span class="n">input_vars</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;inputs must be a list of str. Got element </span><span class="si">{</span><span class="nb">input</span><span class="si">}</span><span class="s2"> with type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">inputs</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;inputs must be a list of unique elements. &#39;</span><span class="si">{</span><span class="nb">input</span><span class="si">}</span><span class="s2">&#39; occurs </span><span class="si">{</span><span class="n">inputs</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span><span class="si">}</span><span class="s2"> times.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">input</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">vars</span> <span class="ow">and</span> <span class="nb">input</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">func</span><span class="o">.</span><span class="n">inputs</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;input </span><span class="si">{</span><span class="nb">input</span><span class="si">}</span><span class="s2"> not found in the function.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">input</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">:</span>
+                <span class="n">input_vars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">vars</span><span class="p">[</span><span class="nb">input</span><span class="p">])</span>
+            <span class="k">if</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">func</span><span class="o">.</span><span class="n">inputs</span><span class="p">:</span>
+                <span class="n">input_vars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="nb">input</span><span class="p">])</span>
+
+        <span class="n">validate_inputs</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">input_vars</span><span class="p">)</span>
+        <span class="n">replace_inputs</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">input_vars</span><span class="p">)</span>
+        <span class="n">PASS_REGISTRY</span><span class="p">[</span><span class="s2">&quot;common::dead_code_elimination&quot;</span><span class="p">](</span><span class="n">prog</span><span class="p">)</span>
+
+    <span class="n">prog</span><span class="o">.</span><span class="n">skip_all_passes</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">submodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">prog</span><span class="p">,</span> <span class="n">convert_to</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span> <span class="n">compute_units</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">compute_unit</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">submodel</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

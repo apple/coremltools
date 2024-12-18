@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
 
-    <script src="../_static/documentation_options.js?v=c1ce5b23"></script>
+    <script src="../_static/documentation_options.js?v=6ab2ec1d"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -420,6 +420,8 @@
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bisect-model">Bisect Model</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#change-model-tensor-input-output-types">Change Model Tensor Input/Output Types</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compute-plan">Compute Plan</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#in-memory-model">In-memory Model</a></li>
 </ul>
             </nav>
         </div>
@@ -615,7 +617,7 @@ optimization of the model via the <code class="docutils literal notranslate"><sp
 requires fp16 multiarrays instead. We can now easily change the model output types from fp32 to fp16 (and vice versa).</p>
 <p>An example how to update the output data types:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.models.model</span> <span class="kn">import</span> <span class="n">MLModel</span>
-<span class="kn">from</span> <span class="nn">coremltools.utils</span> <span class="kn">import</span> <span class="n">change_array_output_type</span>
+<span class="kn">from</span> <span class="nn">coremltools.utils</span> <span class="kn">import</span> <span class="n">change_input_output_tensor_type</span>
 <span class="kn">from</span> <span class="nn">coremltools.proto.FeatureTypes_pb2</span> <span class="kn">import</span> <span class="n">ArrayFeatureType</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">)</span>
@@ -629,7 +631,7 @@ requires fp16 multiarrays instead. We can now easily change the model output typ
 </div>
 <p>Another example is showing how to update data types of all the function inputs:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.models.model</span> <span class="kn">import</span> <span class="n">MLModel</span>
-<span class="kn">from</span> <span class="nn">coremltools.utils</span> <span class="kn">import</span> <span class="n">change_array_output_type</span>
+<span class="kn">from</span> <span class="nn">coremltools.utils</span> <span class="kn">import</span> <span class="n">change_input_output_tensor_type</span>
 <span class="kn">from</span> <span class="nn">coremltools.proto.FeatureTypes_pb2</span> <span class="kn">import</span> <span class="n">ArrayFeatureType</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">)</span>
@@ -655,6 +657,83 @@ requires fp16 multiarrays instead. We can now easily change the model output typ
 <li><p>an empty list means nothing will be modified (default for <code class="docutils literal notranslate"><span class="pre">input_names</span></code>)</p></li>
 <li><p>a list containing <code class="docutils literal notranslate"><span class="pre">&quot;*&quot;</span></code> string means all relevant inputs/outputs will be modified (those that will match the <code class="docutils literal notranslate"><span class="pre">from_type</span></code> type)</p></li>
 </ul>
+</section>
+<section id="compute-plan">
+<h2>Compute Plan<a class="headerlink" href="#compute-plan" title="Link to this heading">#</a></h2>
+<p>In certain situations, you may want to evaluate the computational needs of a Core ML model before deploying it.
+The <code class="docutils literal notranslate"><span class="pre">MLComputePlan</span></code> class is designed for this purpose, allowing you to get insights into the resources and costs
+associated with using the model.</p>
+<p>Here’s what you can do with <code class="docutils literal notranslate"><span class="pre">MLComputePlan</span></code>:</p>
+<ul class="simple">
+<li><p>Model Structure: Examine the model structure.</p></li>
+<li><p>Compute Device Usage: Get insights into the compute devices that would be used for executing an ML Program operation/ NeuralNetwork layer.</p></li>
+<li><p>Estimated Cost: Get the estimated cost of executing an ML Program operation.</p></li>
+</ul>
+<p>An example on how to use <code class="docutils literal notranslate"><span class="pre">MLComputePlan</span></code> to get the estimated cost and compute device usages for the operations in an ML Program:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="c1"># Path to the compiled ML Program model.</span>
+<span class="n">compiled_model_path</span> <span class="o">=</span> <span class="s2">&quot;my_model.mlmodelc&quot;</span>
+<span class="c1"># Load the compute plan of a model.</span>
+<span class="n">compute_plan</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLComputePlan</span><span class="o">.</span><span class="n">compute_plan</span><span class="o">.</span><span class="n">load_from_path</span><span class="p">(</span>
+    <span class="n">path</span><span class="o">=</span><span class="n">compiled_model_path</span><span class="p">,</span>
+    <span class="n">compute_units</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">ComputeUnits</span><span class="o">.</span><span class="n">ALL</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="c1"># Get the model structure.</span>
+<span class="n">program</span> <span class="o">=</span> <span class="n">compute_plan</span><span class="o">.</span><span class="n">model_structure</span><span class="o">.</span><span class="n">program</span>
+<span class="n">mainFunction</span> <span class="o">=</span> <span class="n">program</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">operation</span> <span class="ow">in</span> <span class="n">mainFunction</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">:</span>
+    <span class="c1"># Get the compute device usage for the operation.</span>
+    <span class="n">compute_device_usage</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">compute_plan</span><span class="o">.</span><span class="n">get_compute_device_usage_for_mlprogram_operation</span><span class="p">(</span><span class="n">operation</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="c1"># Get the estimated cost of executing the operation.</span>
+    <span class="n">estimated_cost</span> <span class="o">=</span> <span class="n">compute_plan</span><span class="o">.</span><span class="n">get_estimated_cost_for_mlprogram_operation</span><span class="p">(</span><span class="n">operation</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="in-memory-model">
+<h2>In-memory Model<a class="headerlink" href="#in-memory-model" title="Link to this heading">#</a></h2>
+<p>If you are using an in-memory model in your application, you can easily test the workflow with <code class="docutils literal notranslate"><span class="pre">MLModelAsset</span></code>. The <code class="docutils literal notranslate"><span class="pre">MLModelAsset</span></code> class includes
+the <code class="docutils literal notranslate"><span class="pre">MLModelAsset.from_memory</span></code> API, which enables you to load a model directly from the model’s in-memory specification data. Once loaded, you
+can use the model to make predictions.</p>
+<p>An example on how to use <code class="docutils literal notranslate"><span class="pre">MLModelAsset</span></code> to load an <code class="docutils literal notranslate"><span class="pre">MLCompiledModel</span></code> from in-memory specification data:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="c1"># Path to the model.</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model.model&quot;</span><span class="p">)</span>
+<span class="n">model_spec</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
+<span class="n">spec_data</span> <span class="o">=</span> <span class="n">model_spec</span><span class="o">.</span><span class="n">SerializeToString</span><span class="p">()</span>
+<span class="n">asset</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">MLModelAsset</span><span class="o">.</span><span class="n">from_memory</span><span class="p">(</span><span class="n">spec_data</span><span class="o">=</span><span class="n">spec_data</span><span class="p">)</span>
+<span class="n">compiled_model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">CompiledMLModel</span><span class="o">.</span><span class="n">from_asset</span><span class="p">(</span><span class="n">asset</span><span class="o">=</span><span class="n">asset</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">compiled_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">]),</span>
+        <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">2.0</span><span class="p">]),</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Another example on how to use <code class="docutils literal notranslate"><span class="pre">MLModelAsset</span></code> to load a MLCompiledModel from in-memory specification data where the specification has external blob file references :</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="c1"># Path to the model.</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">)</span>
+<span class="n">weight_file_path</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">weights_dir</span> <span class="o">+</span> <span class="s2">&quot;/weight.bin&quot;</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">weight_file_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+    <span class="n">weights_data</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="n">model_spec</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
+    <span class="n">spec_data</span> <span class="o">=</span> <span class="n">model_spec</span><span class="o">.</span><span class="n">SerializeToString</span><span class="p">()</span>
+    <span class="c1"># Provide the weights data as `blob_mapping`.</span>
+    <span class="n">asset</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">MLModelAsset</span><span class="o">.</span><span class="n">from_memory</span><span class="p">(</span>
+        <span class="n">spec_data</span><span class="o">=</span><span class="n">spec_data</span><span class="p">,</span> <span class="n">blob_mapping</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;weights/weight.bin&quot;</span><span class="p">:</span> <span class="n">weights_data</span><span class="p">}</span>
+    <span class="p">)</span>
+    <span class="n">compiled_model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">CompiledMLModel</span><span class="o">.</span><span class="n">from_asset</span><span class="p">(</span><span class="n">asset</span><span class="o">=</span><span class="n">asset</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">compiled_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+      <span class="p">{</span>
+          <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">]),</span>
+          <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">2.0</span><span class="p">]),</span>
+      <span class="p">}</span>
+    <span class="p">)</span>    
+</pre></div>
+</div>
 </section>
 </section>
 
@@ -714,6 +793,8 @@ requires fp16 multiarrays instead. We can now easily change the model output typ
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bisect-model">Bisect Model</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#change-model-tensor-input-output-types">Change Model Tensor Input/Output Types</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compute-plan">Compute Plan</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#in-memory-model">In-memory Model</a></li>
 </ul>
   </nav></div>
 
@@ -738,7 +819,7 @@ By Apple
 
   <p class="copyright">
     
-      © Copyright 2023, Apple Inc.
+      © Copyright 2024, Apple Inc.
       <br/>
     
   </p>

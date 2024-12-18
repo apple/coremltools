@@ -1,0 +1,1372 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.converters.mil.mil.passes.defs.optimize_quantization &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+      <script src="../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters.mil.mil.passes.defs.optimize_quantization</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.converters.mil.mil.passes.defs.optimize_quantization</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright (c) 2023, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil._deployment_compatibility</span> <span class="kn">import</span> <span class="n">AvailableTarget</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend</span> <span class="kn">import</span> <span class="n">_utils</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Block</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">mb</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">Var</span><span class="p">,</span> <span class="n">types</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span> <span class="kn">import</span> <span class="n">AbstractGraphPass</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.helper</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_check_child_op_type</span><span class="p">,</span>
+    <span class="n">_check_no_output_connection</span><span class="p">,</span>
+    <span class="n">block_context_manager</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.pass_registry</span> <span class="kn">import</span> <span class="n">register_pass</span>
+
+
+<div class="viewcode-block" id="merge_affine_dequantize_with_consecutive_ops">
+<a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_quantization.merge_affine_dequantize_with_consecutive_ops">[docs]</a>
+<span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">merge_affine_dequantize_with_consecutive_ops</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This graph pass does const folding to a chain of supported ops starts with a</span>
+<span class="sd">    ``constexpr_affine_dequantize`` op. More types of op are supported when quantization</span>
+<span class="sd">    is tensor-wise, and only a subset is supported for channel-wise. For example</span>
+
+<span class="sd">    .. code-block::</span>
+
+<span class="sd">        Input graph:</span>
+<span class="sd">            data -&gt; constexpr_affine_dequantize -&gt; transpose -&gt; expand_dims -&gt; out</span>
+
+<span class="sd">        Output graph:</span>
+<span class="sd">            new_data -&gt; constexpr_affine_dequantize -&gt; out</span>
+
+<span class="sd">    where ``new_data`` is computed by ``data -&gt; transpose -&gt; expand_dims``.</span>
+
+<span class="sd">    Note that, the graph pass only supports const folding of a single linked list pattern.</span>
+<span class="sd">    For example, the following pattern will not be changed</span>
+
+<span class="sd">    .. code-block::</span>
+
+<span class="sd">              |-&gt; constexpr_affine_dequantize -&gt; transpose -&gt; out</span>
+<span class="sd">        data -|</span>
+<span class="sd">              |-&gt; constexpr_affine_dequantize -&gt; reshape -&gt; out_2</span>
+
+<span class="sd">    since the quantized data is used by multiple ``constexpr``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">SUPPORTED_OP_TYPES_PER_TENSOR</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;transpose&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;reshape&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;expand_dims&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;squeeze&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">SUPPORTED_OP_TYPES_PER_CHANNEL</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;transpose&quot;</span><span class="p">}</span>
+    <span class="k">assert</span> <span class="n">SUPPORTED_OP_TYPES_PER_CHANNEL</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span>
+        <span class="n">SUPPORTED_OP_TYPES_PER_TENSOR</span>
+    <span class="p">),</span> <span class="s2">&quot;If an op can merge with channel-wise quantization, then it must also be able to merge with tensor-wise quantization&quot;</span>
+
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">block_changed</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">while</span> <span class="n">block_changed</span><span class="p">:</span>
+                <span class="n">block_changed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">merge_affine_dequantize_with_consecutive_ops_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="nd">@block_context_manager</span>
+    <span class="k">def</span> <span class="nf">merge_affine_dequantize_with_consecutive_ops_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">):</span>
+        <span class="n">fusion_occurred</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+                <span class="n">block_changed</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">while</span> <span class="n">block_changed</span><span class="p">:</span>
+                    <span class="n">block_changed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">merge_affine_dequantize_with_consecutive_ops_block</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">!=</span> <span class="s2">&quot;constexpr_affine_dequantize&quot;</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_try_to_transform</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
+                <span class="n">fusion_occurred</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="n">fusion_occurred</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_apply_equivalent_transform</span><span class="p">(</span><span class="n">val</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">op</span><span class="o">.</span><span class="n">op_type</span>
+            <span class="ow">not</span> <span class="ow">in</span> <span class="n">merge_affine_dequantize_with_consecutive_ops</span><span class="o">.</span><span class="n">SUPPORTED_OP_TYPES_PER_TENSOR</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;unsupported op_type </span><span class="si">{</span><span class="n">op</span><span class="o">.</span><span class="n">op_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;transpose&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">perm</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;reshape&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;expand_dims&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;squeeze&quot;</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">axes</span>
+            <span class="k">if</span> <span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">axes</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">search_for_ops_to_fold</span><span class="p">(</span>
+        <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">,</span> <span class="n">supported_op_types</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Operation</span><span class="p">]:</span>
+        <span class="c1"># traverse the graph to get a chain of applicable ops to fold</span>
+        <span class="n">ops_to_fold</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="n">op</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">prev_cursor</span> <span class="o">=</span> <span class="n">cursor</span>
+            <span class="k">if</span> <span class="n">cursor</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">for</span> <span class="n">supported_op_type</span> <span class="ow">in</span> <span class="n">supported_op_types</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">_check_child_op_type</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="n">supported_op_type</span><span class="p">):</span>
+                    <span class="n">ops_to_fold</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cursor</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="n">cursor</span> <span class="o">=</span> <span class="n">ops_to_fold</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="k">break</span>
+            <span class="k">if</span> <span class="n">prev_cursor</span> <span class="o">==</span> <span class="n">cursor</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="k">return</span> <span class="n">ops_to_fold</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_try_to_transform_per_tensor</span><span class="p">(</span><span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">op</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">op</span><span class="o">.</span><span class="n">zero_point</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="p">),</span> <span class="s2">&quot;The _try_to_transform_per_tensor method should only be used for per-tensor dequantization case&quot;</span>
+
+        <span class="n">ops_to_fold</span> <span class="o">=</span> <span class="n">merge_affine_dequantize_with_consecutive_ops</span><span class="o">.</span><span class="n">search_for_ops_to_fold</span><span class="p">(</span>
+            <span class="n">op</span><span class="p">,</span> <span class="n">block</span><span class="p">,</span> <span class="n">merge_affine_dequantize_with_consecutive_ops</span><span class="o">.</span><span class="n">SUPPORTED_OP_TYPES_PER_TENSOR</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ops_to_fold</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># do the same transformation on the source quantized data</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">val</span>
+        <span class="k">for</span> <span class="n">op_to_fold</span> <span class="ow">in</span> <span class="n">ops_to_fold</span><span class="p">:</span>
+            <span class="n">cursor</span> <span class="o">=</span> <span class="n">merge_affine_dequantize_with_consecutive_ops</span><span class="o">.</span><span class="n">_apply_equivalent_transform</span><span class="p">(</span>
+                <span class="n">cursor</span><span class="p">,</span> <span class="n">op_to_fold</span>
+            <span class="p">)</span>
+
+        <span class="c1"># after transformation, we create a new constexpr_affine_dequantize op and do the replacement</span>
+        <span class="n">new_var</span> <span class="o">=</span> <span class="n">_utils</span><span class="o">.</span><span class="n">_construct_constexpr_dequant_op</span><span class="p">(</span>
+            <span class="n">cursor</span><span class="p">,</span>
+            <span class="n">op</span><span class="o">.</span><span class="n">zero_point</span><span class="p">,</span>
+            <span class="n">op</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span>
+            <span class="n">op</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">ops_to_fold</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">before_op</span><span class="o">=</span><span class="n">ops_to_fold</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">block</span><span class="o">.</span><span class="n">replace_uses_of_var_after_op</span><span class="p">(</span>
+            <span class="n">anchor_op</span><span class="o">=</span><span class="n">ops_to_fold</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">old_var</span><span class="o">=</span><span class="n">ops_to_fold</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">new_var</span><span class="o">=</span><span class="n">new_var</span><span class="p">,</span>
+            <span class="n">force_replace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">([</span><span class="n">op</span><span class="p">]</span> <span class="o">+</span> <span class="n">ops_to_fold</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_try_to_transform_per_channel</span><span class="p">(</span><span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">scale</span>
+        <span class="n">zero_point</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">zero_point</span>
+        <span class="c1"># positively canonicalize axis for easier manipulation later on</span>
+        <span class="n">axis</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span> <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">op</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span> <span class="o">+</span> <span class="n">op</span><span class="o">.</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">rank</span>
+
+        <span class="n">ops_to_fold</span> <span class="o">=</span> <span class="n">merge_affine_dequantize_with_consecutive_ops</span><span class="o">.</span><span class="n">search_for_ops_to_fold</span><span class="p">(</span>
+            <span class="n">op</span><span class="p">,</span>
+            <span class="n">block</span><span class="p">,</span>
+            <span class="n">merge_affine_dequantize_with_consecutive_ops</span><span class="o">.</span><span class="n">SUPPORTED_OP_TYPES_PER_CHANNEL</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ops_to_fold</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># do the same transformation on the source quantized data</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">val</span>
+        <span class="k">for</span> <span class="n">op_to_fold</span> <span class="ow">in</span> <span class="n">ops_to_fold</span><span class="p">:</span>
+            <span class="n">cursor</span> <span class="o">=</span> <span class="n">merge_affine_dequantize_with_consecutive_ops</span><span class="o">.</span><span class="n">_apply_equivalent_transform</span><span class="p">(</span>
+                <span class="n">cursor</span><span class="p">,</span> <span class="n">op_to_fold</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">op_to_fold</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;transpose&quot;</span><span class="p">:</span>
+                <span class="n">axis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">op_to_fold</span><span class="o">.</span><span class="n">perm</span><span class="o">.</span><span class="n">val</span> <span class="o">==</span> <span class="n">axis</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># after transformation, we create a new constexpr_affine_dequantize op and do the replacement</span>
+        <span class="n">new_var</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">constexpr_affine_dequantize</span><span class="p">(</span>
+            <span class="n">quantized_data</span><span class="o">=</span><span class="n">cursor</span><span class="p">,</span>
+            <span class="n">zero_point</span><span class="o">=</span><span class="n">zero_point</span><span class="p">,</span>
+            <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span>
+            <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">ops_to_fold</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">before_op</span><span class="o">=</span><span class="n">ops_to_fold</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">block</span><span class="o">.</span><span class="n">replace_uses_of_var_after_op</span><span class="p">(</span>
+            <span class="n">anchor_op</span><span class="o">=</span><span class="n">ops_to_fold</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">old_var</span><span class="o">=</span><span class="n">ops_to_fold</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">new_var</span><span class="o">=</span><span class="n">new_var</span><span class="p">,</span>
+            <span class="n">force_replace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">([</span><span class="n">op</span><span class="p">]</span> <span class="o">+</span> <span class="n">ops_to_fold</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">_try_to_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="c1"># make sure quantized_data only feeds into a single op</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">child_ops</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">op</span><span class="o">.</span><span class="n">zero_point</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_try_to_transform_per_tensor</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_try_to_transform_per_channel</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="int_op_canonicalization">
+<a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_quantization.int_op_canonicalization">[docs]</a>
+<span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">int_op_canonicalization</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    For general quantized operators, in Core ML, we represent them as</span>
+<span class="sd">    ``dequantize -&gt; the floating-point version of this operator -&gt; quantize``,</span>
+<span class="sd">    because mathematically it is the floating-point tensor rather than</span>
+<span class="sd">    its quantized integer representation that gets operated upon.</span>
+
+<span class="sd">    For some quantized operators that do not involve floating-point arithmetic,</span>
+<span class="sd">    however, it is unnecessary to prepend ``dequantize`` and append ``quantize``.</span>
+<span class="sd">    Examples are:</span>
+
+<span class="sd">    * reshape</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">INT_OP_TYPES_AND_OPSET_VERSIONS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;reshape&quot;</span><span class="p">:</span> <span class="p">{</span><span class="n">AvailableTarget</span><span class="o">.</span><span class="n">iOS17</span><span class="p">}}</span>
+
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_canonicalize_int_ops_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="nd">@block_context_manager</span>
+    <span class="k">def</span> <span class="nf">_canonicalize_int_ops_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">apply_block</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_canonicalize_int_ops_block</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+                <span class="n">matched_ops</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">match_pattern</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">matched_ops</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">dequantize</span><span class="p">,</span> <span class="n">quantize</span> <span class="o">=</span> <span class="n">matched_ops</span>
+                    <span class="c1"># has to break as the downstream iterator is affected</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">try_to_transform</span><span class="p">(</span><span class="n">dequantize</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">quantize</span><span class="p">):</span>
+                        <span class="k">return</span> <span class="kc">True</span>
+
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">need_transformation</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">while</span> <span class="n">need_transformation</span><span class="p">:</span>
+            <span class="n">need_transformation</span> <span class="o">=</span> <span class="n">apply_block</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">match_pattern</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Operation</span><span class="p">,</span> <span class="n">Operation</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">INT_OP_TYPES_AND_OPSET_VERSIONS</span>
+            <span class="ow">or</span> <span class="n">op</span><span class="o">.</span><span class="n">opset_version</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">INT_OP_TYPES_AND_OPSET_VERSIONS</span><span class="p">[</span><span class="n">op</span><span class="o">.</span><span class="n">op_type</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="c1"># make sure the input is quantized</span>
+        <span class="n">dequantize</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">op</span>
+        <span class="k">if</span> <span class="n">dequantize</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">dequantize</span><span class="o">.</span><span class="n">op_type</span> <span class="o">!=</span> <span class="s2">&quot;dequantize&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="c1"># make sure the output is quantized</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_check_child_op_type</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="s2">&quot;quantize&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">quantize</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># we do not have to check block output, because:</span>
+        <span class="c1"># * for dequantize, it is ok to connect to block output, since our</span>
+        <span class="c1">#   transformation method `try_to_transform` is able to deal with that</span>
+        <span class="c1"># * for op, checking child op has made sure it has only 1 child</span>
+        <span class="c1">#   and connects to quantize, i.e. it cannot connect to block output</span>
+
+        <span class="k">return</span> <span class="n">dequantize</span><span class="p">,</span> <span class="n">quantize</span>
+
+    <span class="k">def</span> <span class="nf">try_to_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dequantize</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">quantize</span><span class="p">:</span> <span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">block</span><span class="p">:</span> <span class="n">Block</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">block</span><span class="o">.</span><span class="n">try_replace_uses_of_var_after_op</span><span class="p">(</span>
+            <span class="n">anchor_op</span><span class="o">=</span><span class="n">quantize</span><span class="p">,</span>
+            <span class="n">old_var</span><span class="o">=</span><span class="n">quantize</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">new_var</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">build_int_op</span><span class="p">(</span><span class="n">dequantize</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">quantize</span><span class="p">),</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># remove op and quantize here, but not dequantize, since:</span>
+        <span class="c1"># * all uses of op and quantize has been replaced with the canonicalized one</span>
+        <span class="c1"># * dequantize may feed to multiple ops, which are not replaced</span>
+        <span class="c1">#   (if not, then pass dead_code_elimination will eliminate it)</span>
+        <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">([</span><span class="n">op</span><span class="p">,</span> <span class="n">quantize</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">build_int_op</span><span class="p">(</span><span class="n">dequantize</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">quantize</span><span class="p">:</span> <span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Var</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;reshape&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mb</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                <span class="n">x</span><span class="o">=</span><span class="n">dequantize</span><span class="o">.</span><span class="n">input</span><span class="p">,</span>
+                <span class="n">shape</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">quantize</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">before_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;no build method implemented for int op </span><span class="si">{</span><span class="n">op</span><span class="o">.</span><span class="n">op_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># TODO (rdar://107718371): remove this pass after implementing QuantizedVar</span>
+<div class="viewcode-block" id="nullify_redundant_quantization_zero_point">
+<a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_quantization.nullify_redundant_quantization_zero_point">[docs]</a>
+<span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">nullify_redundant_quantization_zero_point</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    In Core ML quantization, the performance is better when ``zero point = 0``,</span>
+<span class="sd">    so we try to make ``zero point = 0`` if possible:</span>
+
+<span class="sd">    * ``zero point = -128``</span>
+<span class="sd">        * this must be an int8 quantization</span>
+<span class="sd">        * equivalent to uint8 quantization with 0 zero point</span>
+<span class="sd">    * ``zero point = 128``</span>
+<span class="sd">        * this must be an uint8 quantization</span>
+<span class="sd">        * equivalent to int8 quantization with 0 zero point</span>
+
+<span class="sd">    Since ``zero point = 0`` is equivalent to ``zero point = None`` in Core ML semantics,</span>
+<span class="sd">    we further canonicalize to ``zero point = None`` to:</span>
+
+<span class="sd">    * make further graph passes easier</span>
+<span class="sd">    * avoid serializing trivial 0</span>
+
+<span class="sd">    The ``zero point = 0`` case can be canonicalized trivially</span>
+
+<span class="sd">    .. code-block::</span>
+
+<span class="sd">        Input op:</span>
+
+<span class="sd">            quantize/dequantize(zero_point=0)</span>
+
+<span class="sd">        Output op:</span>
+
+<span class="sd">            quantize/dequantize(zero_point=None)</span>
+
+<span class="sd">    To guarantee the conservation of output regardless the zero-point shift</span>
+<span class="sd">    in ``zero point = ±128`` cases, we would only transform:</span>
+
+<span class="sd">    * const dequantize, where we fuse the zero-point shift into the const</span>
+
+<span class="sd">    .. code-block::</span>
+
+<span class="sd">        Input op:</span>
+
+<span class="sd">            dequantize(input=const, zero_point=±128)</span>
+
+<span class="sd">        Output op:</span>
+
+<span class="sd">            dequantize(input=const∓128, zero_point=None)</span>
+
+<span class="sd">    * ``quantize -&gt; dequantize``, where we nullify both simultaneously</span>
+
+<span class="sd">    .. code-block::</span>
+
+<span class="sd">        Input graph:</span>
+
+<span class="sd">            input -&gt; quantize(zero_point=±128) -&gt; dequantize(zero_point=±128) -&gt; output</span>
+
+<span class="sd">        Output graph:</span>
+
+<span class="sd">            input -&gt; quantize(zero_point=None) -&gt; dequantize(zero_point=None) -&gt; output</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nullify_redundant_quantization_zero_point_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="nd">@block_context_manager</span>
+    <span class="k">def</span> <span class="nf">_nullify_redundant_quantization_zero_point_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">apply_block</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="n">fusion_occurred</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_nullify_redundant_quantization_zero_point_block</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+                <span class="c1"># no need to break, since only the current op gets changed</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">try_transform_zp0</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">try_transform_zp128_const_dequantize</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+
+                <span class="c1"># has to break as the downstream iterator is affected</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">try_transform_zp128_quantize_dequantize</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
+                    <span class="n">fusion_occurred</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="k">return</span> <span class="n">fusion_occurred</span>
+
+        <span class="n">need_transformation</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">while</span> <span class="n">need_transformation</span><span class="p">:</span>
+            <span class="n">need_transformation</span> <span class="o">=</span> <span class="n">apply_block</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">try_transform_zp0</span><span class="p">(</span><span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;quantize&quot;</span><span class="p">,</span> <span class="s2">&quot;dequantize&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">zero_point</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">zero_point</span>
+        <span class="c1"># if already no zero point, no need for further nullification</span>
+        <span class="k">if</span> <span class="n">zero_point</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">zero_point</span> <span class="o">=</span> <span class="n">zero_point</span><span class="o">.</span><span class="n">val</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">zero_point</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">new_var</span><span class="p">:</span> <span class="n">Var</span>
+        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;quantize&quot;</span><span class="p">:</span>
+            <span class="n">new_var</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span>
+                <span class="nb">input</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">input</span><span class="p">,</span>
+                <span class="n">scale</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span>
+                <span class="n">axis</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span>
+                <span class="n">output_dtype</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">output_dtype</span><span class="p">,</span>
+                <span class="n">before_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">new_var</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">dequantize</span><span class="p">(</span>
+                <span class="nb">input</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">input</span><span class="p">,</span>
+                <span class="n">scale</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span>
+                <span class="n">axis</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span>
+                <span class="n">before_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">block</span><span class="p">:</span> <span class="n">Block</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">block</span><span class="o">.</span><span class="n">try_replace_uses_of_var_after_op</span><span class="p">(</span>
+            <span class="n">anchor_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span> <span class="n">old_var</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">new_var</span><span class="o">=</span><span class="n">new_var</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">([</span><span class="n">op</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">try_transform_zp128_const_dequantize</span><span class="p">(</span><span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">!=</span> <span class="s2">&quot;dequantize&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">zero_point</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">zero_point</span>
+        <span class="c1"># if already no zero point, no need for further nullification</span>
+        <span class="k">if</span> <span class="n">zero_point</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">zero_point</span> <span class="o">=</span> <span class="n">zero_point</span><span class="o">.</span><span class="n">val</span>
+
+        <span class="n">is_negative_128</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">zero_point</span> <span class="o">==</span> <span class="o">-</span><span class="mi">128</span><span class="p">)</span>
+        <span class="n">is_positive_128</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">zero_point</span> <span class="o">==</span> <span class="mi">128</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">is_negative_128</span> <span class="ow">or</span> <span class="n">is_positive_128</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="nb">input</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">val</span>
+        <span class="k">if</span> <span class="nb">input</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">is_negative_128</span><span class="p">:</span>
+            <span class="nb">input</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span> <span class="o">+</span> <span class="mi">128</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">input</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span> <span class="o">-</span> <span class="mi">128</span><span class="p">)</span>
+
+        <span class="n">new_var</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">dequantize</span><span class="p">(</span>
+            <span class="nb">input</span><span class="o">=</span><span class="nb">input</span><span class="p">,</span>
+            <span class="n">scale</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span>
+            <span class="n">axis</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span>
+            <span class="n">before_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">block</span><span class="p">:</span> <span class="n">Block</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">block</span><span class="o">.</span><span class="n">try_replace_uses_of_var_after_op</span><span class="p">(</span>
+            <span class="n">anchor_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span> <span class="n">old_var</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">new_var</span><span class="o">=</span><span class="n">new_var</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">([</span><span class="n">op</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">try_transform_zp128_quantize_dequantize</span><span class="p">(</span><span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">!=</span> <span class="s2">&quot;quantize&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">zero_point</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">zero_point</span>
+        <span class="c1"># if already no zero point, no need for further nullification</span>
+        <span class="k">if</span> <span class="n">zero_point</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">zero_point</span> <span class="o">=</span> <span class="n">zero_point</span><span class="o">.</span><span class="n">val</span>
+
+        <span class="n">is_negative_128</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">zero_point</span> <span class="o">==</span> <span class="o">-</span><span class="mi">128</span><span class="p">)</span>
+        <span class="n">is_positive_128</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">zero_point</span> <span class="o">==</span> <span class="mi">128</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">is_negative_128</span> <span class="ow">or</span> <span class="n">is_positive_128</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_check_child_op_type</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="s2">&quot;dequantize&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">dequantize_op</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">dequantize_zero_point</span> <span class="o">=</span> <span class="n">dequantize_op</span><span class="o">.</span><span class="n">zero_point</span>
+        <span class="k">if</span> <span class="n">dequantize_zero_point</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">dequantize_zero_point</span> <span class="o">=</span> <span class="n">dequantize_zero_point</span><span class="o">.</span><span class="n">val</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">dequantize_zero_point</span> <span class="o">==</span> <span class="p">(</span><span class="o">-</span><span class="mi">128</span> <span class="k">if</span> <span class="n">is_negative_128</span> <span class="k">else</span> <span class="mi">128</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">new_quantize</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span>
+            <span class="nb">input</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">input</span><span class="p">,</span>
+            <span class="n">scale</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span>
+            <span class="n">axis</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span>
+            <span class="n">output_dtype</span><span class="o">=</span><span class="s2">&quot;uint8&quot;</span> <span class="k">if</span> <span class="n">is_negative_128</span> <span class="k">else</span> <span class="s2">&quot;int8&quot;</span><span class="p">,</span>
+            <span class="n">before_op</span><span class="o">=</span><span class="n">dequantize_op</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">new_dequantize</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">dequantize</span><span class="p">(</span>
+            <span class="nb">input</span><span class="o">=</span><span class="n">new_quantize</span><span class="p">,</span>
+            <span class="n">scale</span><span class="o">=</span><span class="n">dequantize_op</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span>
+            <span class="n">axis</span><span class="o">=</span><span class="n">dequantize_op</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span>
+            <span class="n">before_op</span><span class="o">=</span><span class="n">dequantize_op</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">block</span><span class="p">:</span> <span class="n">Block</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">block</span><span class="o">.</span><span class="n">try_replace_uses_of_var_after_op</span><span class="p">(</span>
+            <span class="n">anchor_op</span><span class="o">=</span><span class="n">dequantize_op</span><span class="p">,</span>
+            <span class="n">old_var</span><span class="o">=</span><span class="n">dequantize_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">new_var</span><span class="o">=</span><span class="n">new_dequantize</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">([</span><span class="n">op</span><span class="p">,</span> <span class="n">dequantize_op</span><span class="p">])</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+
+<div class="viewcode-block" id="dequantize_quantize_pair_elimination">
+<a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_quantization.dequantize_quantize_pair_elimination">[docs]</a>
+<span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">dequantize_quantize_pair_elimination</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    When a ``dequantize`` is followed by an identical ``quantize`` (same scale,</span>
+<span class="sd">    zero point, axis), they cancel out and can be eliminated</span>
+
+<span class="sd">    .. code-block::</span>
+
+<span class="sd">        Input graph:</span>
+<span class="sd">            input -&gt; dequantize -&gt; quantize -&gt; output</span>
+
+<span class="sd">        Output graph:</span>
+<span class="sd">            input -&gt; output</span>
+
+<span class="sd">    When the pattern has branches (dequantize has multiple children), we cannot</span>
+<span class="sd">    eliminate the whole pair, but can still shorten the path. More specifically:</span>
+
+<span class="sd">    .. code-block::</span>
+
+<span class="sd">        Input graph:</span>
+<span class="sd">            op1 -&gt; dequantize -&gt; quantize -&gt; op2</span>
+<span class="sd">                         |</span>
+<span class="sd">                         |-&gt; some_other_op</span>
+
+<span class="sd">        Output graph:</span>
+<span class="sd">            op1 -&gt; dequantize -&gt; some_other_op</span>
+<span class="sd">             |</span>
+<span class="sd">             |-&gt; op2</span>
+
+<span class="sd">    PS: On the other hand, the reversed pattern, i.e., ``quantize -&gt; dequantize``,</span>
+<span class="sd">    is not redundant, since that is the pattern which naturally occurs when a</span>
+<span class="sd">    quantized op is converted.</span>
+<span class="sd">    In current activation quantization conversion, a quantized op becomes</span>
+
+<span class="sd">    .. code-block::</span>
+
+<span class="sd">        dequantize -&gt; regular op -&gt; quantize</span>
+
+<span class="sd">    so if we have a sequence of quantized ops, we will get</span>
+
+<span class="sd">    .. code-block::</span>
+
+<span class="sd">        dequantize -&gt; regular op1 -&gt; quantize -&gt; dequantize -&gt; regular op2 -&gt; quantize</span>
+
+<span class="sd">    The ``quantize -&gt; dequantize`` pair in the middle is not redundant, even if</span>
+<span class="sd">    they have identical scales and zero points and axes, since removing them will lead to</span>
+<span class="sd">    loss of information about the quantization parameters of the output var of op1</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dequantize_quantize_pair_elimination_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="nd">@block_context_manager</span>
+    <span class="k">def</span> <span class="nf">_dequantize_quantize_pair_elimination_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">apply_block</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="n">fusion_occurred</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_dequantize_quantize_pair_elimination_block</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+                <span class="c1"># has to break as the downstream iterator is affected</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">try_dequantize_quantize_pair_elimination</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
+                    <span class="n">fusion_occurred</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">return</span> <span class="n">fusion_occurred</span>
+
+        <span class="n">need_transformation</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">while</span> <span class="n">need_transformation</span><span class="p">:</span>
+            <span class="n">need_transformation</span> <span class="o">=</span> <span class="n">apply_block</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">try_dequantize_quantize_pair_elimination</span><span class="p">(</span><span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">_check_quantize_removable</span><span class="p">(</span><span class="n">quantize_op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span> <span class="o">!=</span> <span class="n">quantize_op</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="n">is_dequantize_zp_present</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">zero_point</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="n">is_quantize_zp_present</span> <span class="o">=</span> <span class="n">quantize_op</span><span class="o">.</span><span class="n">zero_point</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">is_dequantize_zp_present</span> <span class="o">!=</span> <span class="n">is_quantize_zp_present</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="n">is_dequantize_zp_present</span> <span class="ow">and</span> <span class="n">is_quantize_zp_present</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">zero_point</span><span class="o">.</span><span class="n">val</span> <span class="o">!=</span> <span class="n">quantize_op</span><span class="o">.</span><span class="n">zero_point</span><span class="o">.</span><span class="n">val</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="n">is_dequantize_axis_present</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="n">is_quantize_axis_present</span> <span class="o">=</span> <span class="n">quantize_op</span><span class="o">.</span><span class="n">axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">is_dequantize_axis_present</span> <span class="o">!=</span> <span class="n">is_quantize_axis_present</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="n">is_dequantize_axis_present</span> <span class="ow">and</span> <span class="n">is_quantize_axis_present</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span> <span class="o">!=</span> <span class="n">quantize_op</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">!=</span> <span class="s2">&quot;dequantize&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">any_quantize_removed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">child_op</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">child_op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;quantize&quot;</span> <span class="ow">and</span> <span class="n">_check_quantize_removable</span><span class="p">(</span><span class="n">child_op</span><span class="p">):</span>
+                <span class="n">block</span><span class="p">:</span> <span class="n">Block</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span>
+                <span class="k">if</span> <span class="n">block</span><span class="o">.</span><span class="n">try_replace_uses_of_var_after_op</span><span class="p">(</span>
+                    <span class="n">anchor_op</span><span class="o">=</span><span class="n">child_op</span><span class="p">,</span>
+                    <span class="n">old_var</span><span class="o">=</span><span class="n">child_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="n">new_var</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">input</span><span class="p">,</span>
+                <span class="p">):</span>
+                    <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">([</span><span class="n">child_op</span><span class="p">])</span>
+                    <span class="n">any_quantize_removed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">any_quantize_removed</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Remove the dequant op if all its children quantize ops got removed.</span>
+            <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">([</span><span class="n">op</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">any_quantize_removed</span></div>
+
+
+
+<div class="viewcode-block" id="distributive_quantized_binary_op_scale_normalization">
+<a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_quantization.distributive_quantized_binary_op_scale_normalization">[docs]</a>
+<span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">distributive_quantized_binary_op_scale_normalization</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    In the backend, for better performance, quantized op can have 1 input scale</span>
+<span class="sd">    fused within the quantized op kernel. For binary ops, there are 2 inputs,</span>
+<span class="sd">    but only 1 can get fused. For example, for quantized ``add``</span>
+
+<span class="sd">    .. code-block::</span>
+
+<span class="sd">        MIL graph (consists of MIL ops):</span>
+
+<span class="sd">            dequantize(x, s_x, zp_x) -|</span>
+<span class="sd">            x_fp = (x - zp_x) * s_x   |</span>
+<span class="sd">                                      |-&gt;  add(x_fp, y_fp)   -&gt; quantize(z_fp, s_z, zp_z)</span>
+<span class="sd">            dequantize(y, s_y, zp_y) -|   z_fp = x_fp + y_fp      z = z_fp / s_z + zp_z</span>
+<span class="sd">            y_fp = (y - zp_y) * s_y</span>
+
+<span class="sd">        Backend graph (consists of backend instructions, usually including + - * / and fused *+):</span>
+
+<span class="sd">            x_shift = x - zp_x -------------------------|</span>
+<span class="sd">                                                        |-&gt; z_fp = s_x * x_shift + y_fp -&gt; z = z_fp / s_z + zp_z</span>
+<span class="sd">            y_shift = y - zp_y -&gt; y_fp = s_y * y_shift -|</span>
+
+<span class="sd">    Where ``x`` and ``y`` are the inputs, ``z`` is the output,</span>
+<span class="sd">    ``s`` and ``zp`` are the corresponding scale and zero point.</span>
+
+<span class="sd">    The reason why fusing one scale leads to better performance is,</span>
+<span class="sd">    instead of 2 instructions ``x_fp = s_x * x_shift`` and ``z_fp = x_fp + y_fp``,</span>
+<span class="sd">    a single ``z_fp = x_shift * s_x + y_fp`` instruction achieves the same result.</span>
+
+<span class="sd">    In this pass, we normalize ``s_y`` to 1, so the ``y_fp = s_y * y_shift``</span>
+<span class="sd">    instruction can get skipped as well, leading to even better performance.</span>
+<span class="sd">    This pass only applies to distributive binary ops such as ``add`` and ``sub``</span>
+
+<span class="sd">    Appendix: Mathematical and Computer-Scientific Details</span>
+
+<span class="sd">    Mathematically, for a binary operator ``.op.``</span>
+
+<span class="sd">    .. code-block::</span>
+
+<span class="sd">        z_fp = (x - zp_x) * s_x .op. (y - zp_y) * s_y</span>
+<span class="sd">             = s_y * [(x - zp_x) * s_x/s_y .op. (y - zp_y) * 1]</span>
+
+<span class="sd">    The corresponding pseudo code is</span>
+
+<span class="sd">    .. code-block::</span>
+
+<span class="sd">        # before</span>
+<span class="sd">        z_fp = (x - zp_x) * s_x .op. (y - zp_y) * s_y</span>
+<span class="sd">        z = z_fp / s - zp_z</span>
+
+<span class="sd">        # after</span>
+<span class="sd">        z_fp_modified = (x - zp_x) * s_x/s_y .op. (y - zp_y) * 1.0</span>
+<span class="sd">        z = z_fp_modified / (s_z/s_y) - zp_z</span>
+
+<span class="sd">    Concretely, as a MIL graph pass</span>
+
+<span class="sd">    .. code-block::</span>
+
+<span class="sd">        Input graph:</span>
+<span class="sd">            dequantize(scale=s_x) -|</span>
+<span class="sd">                                   |-&gt; op -&gt; quantize(scale=s_z)</span>
+<span class="sd">            dequantize(scale=s_y) -|</span>
+
+<span class="sd">        Output graph:</span>
+<span class="sd">            dequantize(scale=s_x/s_y) -|</span>
+<span class="sd">                                       |-&gt; op -&gt; quantize(scale=s_z/s_y)</span>
+<span class="sd">            dequantize(scale=1.0)     -|</span>
+
+<span class="sd">    PS: we only support scalar ``s_y`` for now. If ``s_y`` is not scalar but</span>
+<span class="sd">    ``s_x`` is, we would swap ``x`` and ``y``. Support for both-vector case is</span>
+<span class="sd">    to be explored, due to the broadcasting complication.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">DISTRIBUTIVE_BINARY_OPS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;add&quot;</span><span class="p">,</span> <span class="s2">&quot;sub&quot;</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+        <span class="nd">@block_context_manager</span>
+        <span class="k">def</span> <span class="nf">apply_block</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+                    <span class="n">apply_block</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+                <span class="n">matched_ops</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">match_pattern</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">matched_ops</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">dequantize_x</span><span class="p">,</span> <span class="n">dequantize_y</span><span class="p">,</span> <span class="n">quantize_z</span> <span class="o">=</span> <span class="n">matched_ops</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">try_to_transform</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">dequantize_x</span><span class="p">,</span> <span class="n">dequantize_y</span><span class="p">,</span> <span class="n">quantize_z</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">apply_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">match_pattern</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Operation</span><span class="p">,</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">Operation</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        try to match distributive quantized binary op:</span>
+<span class="sd">                ...</span>
+<span class="sd">                 ^</span>
+<span class="sd">                 |</span>
+<span class="sd">            dequantize(x) -|</span>
+<span class="sd">                           |-&gt; op(x, y) (-&gt; relu) -&gt; quantize(z)</span>
+<span class="sd">            dequantize(y) -|</span>
+<span class="sd">                 |</span>
+<span class="sd">                 v</span>
+<span class="sd">                ...</span>
+
+<span class="sd">        return dequantize_x, dequantize_y, quantize_z for further transformation</span>
+
+<span class="sd">        return None if no match</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># make sure the op is distributive</span>
+        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">DISTRIBUTIVE_BINARY_OPS</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="c1"># quantized op may be fused with relu</span>
+        <span class="c1"># relu would not affect distributivity</span>
+        <span class="n">tail_op</span> <span class="o">=</span> <span class="n">op</span>
+        <span class="k">if</span> <span class="n">_check_child_op_type</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="s2">&quot;relu&quot;</span><span class="p">):</span>
+            <span class="n">tail_op</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># make sure the inputs are quantized</span>
+        <span class="n">dequantize_x</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">op</span>
+        <span class="n">dequantize_y</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">op</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">dequantize_x</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="ow">or</span> <span class="n">dequantize_y</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="ow">or</span> <span class="n">dequantize_x</span><span class="o">.</span><span class="n">op_type</span> <span class="o">!=</span> <span class="s2">&quot;dequantize&quot;</span>
+            <span class="ow">or</span> <span class="n">dequantize_y</span><span class="o">.</span><span class="n">op_type</span> <span class="o">!=</span> <span class="s2">&quot;dequantize&quot;</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="c1"># make sure the output is quantized</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_check_child_op_type</span><span class="p">(</span><span class="n">tail_op</span><span class="p">,</span> <span class="s2">&quot;quantize&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">quantize_z</span> <span class="o">=</span> <span class="n">tail_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># make sure the intermediate results are not block outputs</span>
+        <span class="c1"># since we only guarantee conservation of z</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_check_no_output_connection</span><span class="p">(</span>
+            <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span><span class="p">,</span> <span class="p">[</span><span class="n">dequantize_x</span><span class="p">,</span> <span class="n">dequantize_y</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">tail_op</span><span class="p">,</span> <span class="n">quantize_z</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">dequantize_x</span><span class="p">,</span> <span class="n">dequantize_y</span><span class="p">,</span> <span class="n">quantize_z</span>
+
+    <span class="k">def</span> <span class="nf">try_to_transform</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">dequantize_x</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">dequantize_y</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">quantize_z</span><span class="p">:</span> <span class="n">Operation</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        given dequantize_x, dequantize_y, quantize_z, transform by</span>
+<span class="sd">            z_fp = (x - zp_x) * s_x/s_y .op. (y - zp_y) * 1.0</span>
+<span class="sd">            z = z_fp / (s_z/s_y) - zp_z</span>
+
+<span class="sd">        See the class doc for details</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">block</span> <span class="o">=</span> <span class="n">quantize_z</span><span class="o">.</span><span class="n">enclosing_block</span>
+
+        <span class="n">new_s_x</span><span class="p">,</span> <span class="n">new_s_z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">try_to_divide</span><span class="p">(</span><span class="n">dequantize_x</span><span class="p">,</span> <span class="n">dequantize_y</span><span class="p">,</span> <span class="n">quantize_z</span><span class="p">)</span>
+        <span class="c1"># if s_y cannot be used to divide, then swap x and y and try again</span>
+        <span class="k">if</span> <span class="n">new_s_x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">new_s_z</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">dequantize_x</span><span class="p">,</span> <span class="n">dequantize_y</span> <span class="o">=</span> <span class="n">dequantize_y</span><span class="p">,</span> <span class="n">dequantize_x</span>
+            <span class="n">new_s_x</span><span class="p">,</span> <span class="n">new_s_z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">try_to_divide</span><span class="p">(</span><span class="n">dequantize_x</span><span class="p">,</span> <span class="n">dequantize_y</span><span class="p">,</span> <span class="n">quantize_z</span><span class="p">)</span>
+            <span class="c1"># after swap, if still cannot divide, then give up</span>
+            <span class="k">if</span> <span class="n">new_s_x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">new_s_z</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">def</span> <span class="nf">convert_mil_float_dtype_to_np</span><span class="p">(</span><span class="n">mil_dtype</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">mil_dtype</span> <span class="o">==</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span> <span class="ow">or</span> <span class="n">mil_dtype</span> <span class="o">==</span> <span class="s2">&quot;float16&quot;</span><span class="p">:</span>
+                <span class="n">np_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float16</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">np_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span>
+            <span class="k">return</span> <span class="n">np_dtype</span>
+
+        <span class="n">new_s_x_dtype</span> <span class="o">=</span> <span class="n">convert_mil_float_dtype_to_np</span><span class="p">(</span><span class="n">dequantize_x</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">new_s_y_dtype</span> <span class="o">=</span> <span class="n">convert_mil_float_dtype_to_np</span><span class="p">(</span><span class="n">dequantize_y</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">new_s_z_dtype</span> <span class="o">=</span> <span class="n">convert_mil_float_dtype_to_np</span><span class="p">(</span><span class="n">quantize_z</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+        <span class="c1"># insert normalized new_dequantize_x and new_dequantize_y before op</span>
+        <span class="n">new_dequantize_x</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">dequantize</span><span class="p">(</span>
+            <span class="nb">input</span><span class="o">=</span><span class="n">dequantize_x</span><span class="o">.</span><span class="n">input</span><span class="p">,</span>
+            <span class="n">scale</span><span class="o">=</span><span class="n">new_s_x_dtype</span><span class="p">(</span><span class="n">new_s_x</span><span class="p">),</span>
+            <span class="n">zero_point</span><span class="o">=</span><span class="n">dequantize_x</span><span class="o">.</span><span class="n">zero_point</span><span class="p">,</span>
+            <span class="n">axis</span><span class="o">=</span><span class="n">dequantize_x</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span>
+            <span class="n">before_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">new_dequantize_y</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">dequantize</span><span class="p">(</span>
+            <span class="nb">input</span><span class="o">=</span><span class="n">dequantize_y</span><span class="o">.</span><span class="n">input</span><span class="p">,</span>
+            <span class="n">scale</span><span class="o">=</span><span class="n">new_s_y_dtype</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">dequantize_y</span><span class="o">.</span><span class="n">axis</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">dequantize_y</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+            <span class="n">zero_point</span><span class="o">=</span><span class="n">dequantize_y</span><span class="o">.</span><span class="n">zero_point</span><span class="p">,</span>
+            <span class="n">axis</span><span class="o">=</span><span class="n">dequantize_y</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span>
+            <span class="n">before_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># insert normalized new_quantize_z before quantize_z</span>
+        <span class="n">new_quantize_z</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span>
+            <span class="nb">input</span><span class="o">=</span><span class="n">quantize_z</span><span class="o">.</span><span class="n">input</span><span class="p">,</span>
+            <span class="n">scale</span><span class="o">=</span><span class="n">new_s_z_dtype</span><span class="p">(</span><span class="n">new_s_z</span><span class="p">),</span>
+            <span class="n">zero_point</span><span class="o">=</span><span class="n">quantize_z</span><span class="o">.</span><span class="n">zero_point</span><span class="p">,</span>
+            <span class="n">axis</span><span class="o">=</span><span class="n">quantize_z</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span>
+            <span class="n">output_dtype</span><span class="o">=</span><span class="n">quantize_z</span><span class="o">.</span><span class="n">output_dtype</span><span class="p">,</span>
+            <span class="n">before_op</span><span class="o">=</span><span class="n">quantize_z</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
+            <span class="c1"># replace dequantize_x and dequantize_y with the normalized ones</span>
+            <span class="c1"># in the range of (new_dequantize_x, op] and (new_dequantize_y, op]</span>
+            <span class="c1"># in case dequantize_x and dequantize_y also feed to other ops</span>
+            <span class="c1"># which should not get altered by this transformation</span>
+            <span class="n">block</span><span class="o">.</span><span class="n">try_replace_uses_of_var_after_op</span><span class="p">(</span>
+                <span class="n">anchor_op</span><span class="o">=</span><span class="n">new_dequantize_x</span><span class="o">.</span><span class="n">op</span><span class="p">,</span>
+                <span class="n">end_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
+                <span class="n">old_var</span><span class="o">=</span><span class="n">dequantize_x</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">new_var</span><span class="o">=</span><span class="n">new_dequantize_x</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="ow">and</span> <span class="n">block</span><span class="o">.</span><span class="n">try_replace_uses_of_var_after_op</span><span class="p">(</span>
+                <span class="n">anchor_op</span><span class="o">=</span><span class="n">new_dequantize_y</span><span class="o">.</span><span class="n">op</span><span class="p">,</span>
+                <span class="n">end_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
+                <span class="n">old_var</span><span class="o">=</span><span class="n">dequantize_y</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">new_var</span><span class="o">=</span><span class="n">new_dequantize_y</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="c1"># replace quantize_z with the normalized one</span>
+            <span class="ow">and</span> <span class="n">block</span><span class="o">.</span><span class="n">try_replace_uses_of_var_after_op</span><span class="p">(</span>
+                <span class="n">anchor_op</span><span class="o">=</span><span class="n">quantize_z</span><span class="p">,</span> <span class="n">old_var</span><span class="o">=</span><span class="n">quantize_z</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">new_var</span><span class="o">=</span><span class="n">new_quantize_z</span>
+            <span class="p">)</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># remove quantize_z here, but not dequantize_x and dequantize_y, since:</span>
+        <span class="c1"># * all uses of quantize_z has been replaced with the normalized one</span>
+        <span class="c1"># * dequantize_x and dequantize_y may feed to multiple ops, which are not replaced</span>
+        <span class="c1">#   (if not, then pass dead_code_elimination will eliminate them)</span>
+        <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">([</span><span class="n">quantize_z</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">try_to_divide</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dequantize_x</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span>
+        <span class="n">dequantize_y</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span>
+        <span class="n">quantize_z</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        compute s_x/s_y and s_z/s_y, return the results if succeeds, else None</span>
+
+<span class="sd">        The broadcast rule is very complicated:</span>
+<span class="sd">        1. Broadcast s_x to x, s_y to y, s_z to z, according to axes</span>
+<span class="sd">        2. Broadcast s_x and s_y</span>
+<span class="sd">        3. Perform s_x/s_y and s_z/s_y</span>
+<span class="sd">        4. De-broadcast s_x/s_y and s_z/s_y down to vectors according to axes,</span>
+<span class="sd">           raise exception if impossible to de-broadcast</span>
+
+<span class="sd">        As a result, for now we only handle the scalar s_y case</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># TODO (rdar://109170887): explore vector s_y</span>
+        <span class="k">if</span> <span class="n">dequantize_y</span><span class="o">.</span><span class="n">axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+        <span class="n">s_x_fp32</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">dequantize_x</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+        <span class="n">s_y_fp32</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">dequantize_y</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+        <span class="n">s_z_fp32</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">quantize_z</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+
+        <span class="n">s_x_d_s_y</span> <span class="o">=</span> <span class="n">s_x_fp32</span> <span class="o">/</span> <span class="n">s_y_fp32</span>
+        <span class="n">s_z_d_s_y</span> <span class="o">=</span> <span class="n">s_z_fp32</span> <span class="o">/</span> <span class="n">s_y_fp32</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">overflow_fp16</span><span class="p">(</span><span class="n">s_x_d_s_y</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">underflow_fp16</span><span class="p">(</span><span class="n">s_x_d_s_y</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">overflow_fp16</span><span class="p">(</span><span class="n">s_z_d_s_y</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">underflow_fp16</span><span class="p">(</span><span class="n">s_z_d_s_y</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">s_x_d_s_y</span><span class="p">,</span> <span class="n">s_z_d_s_y</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">overflow_fp16</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">65504</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">underflow_fp16</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">nextafter</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="dequantize_to_constexpr">
+<a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_quantization.dequantize_to_constexpr">[docs]</a>
+<span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">dequantize_to_constexpr</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    ``dequantize`` op with constant input is equivalent to ``constexpr_affine_dequantize``.</span>
+<span class="sd">    This is one of the canonicalization pass that transforms all such</span>
+<span class="sd">    ``dequantize`` ops to respective ``constexpr_affine_dequantize`` ops.</span>
+
+<span class="sd">    .. code-block::</span>
+
+<span class="sd">        Input graph:</span>
+
+<span class="sd">            dequantize(input=const) -&gt; downstream op</span>
+
+<span class="sd">        Output graph:</span>
+
+<span class="sd">            constexpr_affine_dequantize -&gt; downstream op</span>
+
+<span class="sd">    This pass is being performed because constant tensors being propagated</span>
+<span class="sd">    through ``dequantize`` op would be serialized in bloated/decompressed fashion,</span>
+<span class="sd">    whereas with ``constexpr_affine_dequantize``,</span>
+<span class="sd">    constant weights/tensors remain compressed at serialization.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+        <span class="nd">@block_context_manager</span>
+        <span class="k">def</span> <span class="nf">apply_block</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+                    <span class="n">apply_block</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_valid_op</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">transform_op</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">apply_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">is_valid_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;dequantize&quot;</span> <span class="ow">and</span> <span class="n">op</span><span class="o">.</span><span class="n">can_materialize_val</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">transform_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
+        <span class="n">quantized_data</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">val</span>
+
+        <span class="n">scale</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span>
+
+        <span class="n">zero_point</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">zero_point</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">zero_point</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">zero_point</span><span class="o">.</span><span class="n">val</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">zero_point</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">types</span><span class="o">.</span><span class="n">int8</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">axis</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">axis</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">op</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span>
+
+        <span class="n">new_var</span> <span class="o">=</span> <span class="n">_utils</span><span class="o">.</span><span class="n">_construct_constexpr_dequant_op</span><span class="p">(</span>
+            <span class="n">quantized_data</span><span class="p">,</span>
+            <span class="n">zero_point</span><span class="p">,</span>
+            <span class="n">scale</span><span class="p">,</span>
+            <span class="n">axis</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_affine_dequantized&quot;</span><span class="p">,</span>
+            <span class="n">before_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">block</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span>
+        <span class="n">block</span><span class="o">.</span><span class="n">replace_uses_of_var_after_op</span><span class="p">(</span><span class="n">anchor_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span> <span class="n">old_var</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">new_var</span><span class="o">=</span><span class="n">new_var</span><span class="p">)</span>
+        <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">([</span><span class="n">op</span><span class="p">])</span></div>
+
+
+
+<span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">reorder_lut_per_channel_scale</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The lut with per-channel-scale was represented as the following op combinations:</span>
+<span class="sd">        weight = constexpr_lut_to_dense()</span>
+<span class="sd">        weight = constexpr_blockwise_shift_scale(weight)</span>
+<span class="sd">        output = linear/matmul/conv(x, weight)</span>
+<span class="sd">    However, for ANE, it requires the scale to be after the linear/matmul/conv, which is:</span>
+<span class="sd">        weight = constexpr_lut_to_dense()</span>
+<span class="sd">        unscaled_output = linear/matmul(x, weight)</span>
+<span class="sd">        output = mul(unscaled_output, scale)</span>
+<span class="sd">    This graph pass finds the lut with per-channel-scale and move the scale to be ANE-friendly.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_OPS_SUPPORT_MOVE_SCALE</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="s2">&quot;matmul&quot;</span><span class="p">,</span> <span class="s2">&quot;conv&quot;</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+        <span class="nd">@block_context_manager</span>
+        <span class="k">def</span> <span class="nf">apply_block</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+                    <span class="n">apply_block</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;constexpr_lut_to_dense&quot;</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">child_op</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">child_op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;constexpr_blockwise_shift_scale&quot;</span><span class="p">:</span>
+                        <span class="c1"># Can move the scale when the constexpr op is only used to scale the weight.</span>
+                        <span class="n">has_offset</span> <span class="o">=</span> <span class="n">child_op</span><span class="o">.</span><span class="n">offset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">child_op</span><span class="o">.</span><span class="n">offset</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">any</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="n">types</span><span class="o">.</span><span class="n">is_float</span><span class="p">(</span><span class="n">child_op</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">has_offset</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_reorder_lut_per_channel_scale</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">apply_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_reorder_lut_per_channel_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">,</span> <span class="n">lut_op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">):</span>
+        <span class="c1"># Lazy import to avoid circular import error.</span>
+        <span class="kn">from</span> <span class="nn">coremltools.optimize.coreml</span> <span class="kn">import</span> <span class="n">_utils</span> <span class="k">as</span> <span class="n">optimize_utils</span>
+
+        <span class="c1"># The original order is lut_op -&gt; scale_op -&gt; output_op.</span>
+        <span class="n">scale_op</span> <span class="o">=</span> <span class="n">lut_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># Only move the scale when all ops that consume this scale op support moving.</span>
+        <span class="k">for</span> <span class="n">output_op</span> <span class="ow">in</span> <span class="n">scale_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">output_op</span><span class="o">.</span><span class="n">op_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_OPS_SUPPORT_MOVE_SCALE</span><span class="p">:</span>
+                <span class="k">return</span>
+
+            <span class="c1"># Only the scale on output axis could be moved to get mathematically equivalent results.</span>
+            <span class="n">scale_val</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">scale_op</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span>
+            <span class="n">output_axis</span> <span class="o">=</span> <span class="n">optimize_utils</span><span class="o">.</span><span class="n">select_input_output_channel_axis</span><span class="p">(</span><span class="n">scale_op</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">output_axis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="k">if</span> <span class="n">output_axis</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">output_axis</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">scale_val</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">dim_size</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">scale_val</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">axis</span> <span class="o">!=</span> <span class="n">output_axis</span> <span class="ow">and</span> <span class="n">dim_size</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">return</span>
+
+        <span class="k">for</span> <span class="n">output_op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">scale_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_help_move_scale</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">lut_op</span><span class="p">,</span> <span class="n">scale_op</span><span class="p">,</span> <span class="n">output_op</span><span class="p">)</span>
+            <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">([</span><span class="n">output_op</span><span class="p">])</span>
+        <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">([</span><span class="n">scale_op</span><span class="p">])</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_help_move_scale</span><span class="p">(</span>
+        <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">,</span> <span class="n">lut_op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">scale_op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">output_op</span><span class="p">:</span> <span class="n">Operation</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Move the scale from `lut_op -&gt; scale_op -&gt; output_op` to `lut_op -&gt; output_op -&gt; mul`.&quot;&quot;&quot;</span>
+        <span class="n">scale_val</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">scale_op</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">output_op</span><span class="o">.</span><span class="n">inputs</span>
+        <span class="k">if</span> <span class="n">output_op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;linear&quot;</span><span class="p">:</span>
+            <span class="n">scale_val</span> <span class="o">=</span> <span class="n">scale_val</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;weight&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lut_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">output_op</span><span class="p">,</span> <span class="s2">&quot;bias&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="n">output_op</span><span class="o">.</span><span class="n">bias</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">original_bias</span> <span class="o">=</span> <span class="n">output_op</span><span class="o">.</span><span class="n">bias</span><span class="o">.</span><span class="n">val</span>
+                <span class="n">new_bias</span> <span class="o">=</span> <span class="p">(</span><span class="n">original_bias</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">scale_val</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">original_bias</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+                <span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;bias&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_bias</span>
+        <span class="k">elif</span> <span class="n">output_op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;matmul&quot;</span><span class="p">:</span>
+            <span class="c1"># Determine if the scaled weight is used by `x` or `y` in matmul.</span>
+            <span class="k">if</span> <span class="n">output_op</span><span class="o">.</span><span class="n">y</span> <span class="o">==</span> <span class="n">scale_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">output_op</span><span class="o">.</span><span class="n">transpose_y</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="n">scale_val</span> <span class="o">=</span> <span class="n">scale_val</span><span class="o">.</span><span class="n">T</span>
+                <span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lut_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">output_op</span><span class="o">.</span><span class="n">transpose_x</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="n">scale_val</span> <span class="o">=</span> <span class="n">scale_val</span><span class="o">.</span><span class="n">T</span>
+                <span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lut_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">output_op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">!=</span> <span class="s2">&quot;conv&quot;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+                    <span class="s2">&quot;The scale could only be moved for linear/matmul/conv, &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;but got </span><span class="si">{</span><span class="n">output_op</span><span class="o">.</span><span class="n">op_type</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="c1"># The weight of conv has C_out at axis=0, but in output the C_out is at axis=1</span>
+            <span class="n">scale_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">scale_val</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">scale_val</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="c1"># The per-channel-scale should only have one axis with larger than 1 dim size.</span>
+                <span class="k">return</span>
+            <span class="n">channel_size</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">scale_val</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">scale_val</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">scale_val</span> <span class="o">=</span> <span class="n">scale_val</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">channel_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;weight&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lut_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">output_op</span><span class="p">,</span> <span class="s2">&quot;bias&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="n">output_op</span><span class="o">.</span><span class="n">bias</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">original_bias</span> <span class="o">=</span> <span class="n">output_op</span><span class="o">.</span><span class="n">bias</span><span class="o">.</span><span class="n">val</span>
+                <span class="n">new_bias</span> <span class="o">=</span> <span class="p">(</span><span class="n">original_bias</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">scale_val</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">original_bias</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+                <span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;bias&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_bias</span>
+
+        <span class="c1"># Reconstruct the unscaled output which uses lut output as weight (skip the original scale).</span>
+        <span class="n">unscaled_output</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mb</span><span class="p">,</span> <span class="n">output_op</span><span class="o">.</span><span class="n">op_type</span><span class="p">)(</span><span class="o">**</span><span class="n">inputs</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">output_op</span><span class="p">)</span>
+        <span class="n">scaled_output</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">unscaled_output</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">scale_val</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">output_op</span><span class="p">)</span>
+
+        <span class="c1"># Now the order is lut_op -&gt; unscaled_output -&gt; scaled_output.</span>
+        <span class="n">block</span><span class="o">.</span><span class="n">replace_uses_of_var_after_op</span><span class="p">(</span>
+            <span class="n">anchor_op</span><span class="o">=</span><span class="n">output_op</span><span class="p">,</span>
+            <span class="n">old_var</span><span class="o">=</span><span class="n">output_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">new_var</span><span class="o">=</span><span class="n">scaled_output</span><span class="p">,</span>
+            <span class="n">force_replace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># Need to force replace because it involves replacing constexpr op.</span>
+        <span class="p">)</span>
+
+
+<span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">canonicalize_quantized_lut_pattern</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The quantized lut (e.g. each entry in the LUT is int8) could be represented by two patterns:</span>
+<span class="sd">        Pattern 1:</span>
+<span class="sd">            lut(int8) -&gt; constexpr_blockwise_shift_scale -&gt; lut(fp16) -&gt; constexpr_lut_to_dense -&gt; dense(fp16)</span>
+<span class="sd">        Pattern 2:</span>
+<span class="sd">            lut(int8) -&gt; constexpr_lut_to_dense -&gt; dense(int8) -&gt; constexpr_blockwise_shift_scale -&gt; dense(fp16)</span>
+<span class="sd">    Those two patterns are mathematically equivalent when the quantization is per-tensor or per-channel.</span>
+
+<span class="sd">    This graph pass makes sure we always use one specific pattern by re-ordering the ops.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_DEQUANT_FIRST</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># First dequantize and then depalettize (use pattern 1).</span>
+
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+        <span class="n">wrong_order_op1</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;constexpr_lut_to_dense&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DEQUANT_FIRST</span> <span class="k">else</span> <span class="s2">&quot;constexpr_blockwise_shift_scale&quot;</span>
+        <span class="p">)</span>
+        <span class="n">wrong_order_op2</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;constexpr_blockwise_shift_scale&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DEQUANT_FIRST</span> <span class="k">else</span> <span class="s2">&quot;constexpr_lut_to_dense&quot;</span>
+        <span class="p">)</span>
+
+        <span class="nd">@block_context_manager</span>
+        <span class="k">def</span> <span class="nf">apply_block</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+                    <span class="n">apply_block</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="n">wrong_order_op1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="n">wrong_order_op2</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_reorder_quant_lut</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">apply_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_reorder_quant_lut</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">,</span> <span class="n">old_op1</span><span class="p">:</span> <span class="n">Operation</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Original order is op1 -&gt; op2 -&gt; output_op, and after reorder it becomes op2 -&gt; op1 -&gt; output_op.</span>
+<span class="sd">        Here op1 and op2 corresponds to either lut op or quant op, depending on `_DEQUANT_FIRST`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">old_op2</span> <span class="o">=</span> <span class="n">old_op1</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># If the old op has some meaningful info in the name (such as &quot;conv1.weight&quot;), we need to keep it.</span>
+        <span class="n">new_op1_name</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">old_op1</span><span class="o">.</span><span class="n">op_type</span> <span class="ow">in</span> <span class="n">old_op1</span><span class="o">.</span><span class="n">name</span> <span class="k">else</span> <span class="n">old_op1</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">new_op2_name</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">old_op2</span><span class="o">.</span><span class="n">op_type</span> <span class="ow">in</span> <span class="n">old_op2</span><span class="o">.</span><span class="n">name</span> <span class="k">else</span> <span class="n">old_op2</span><span class="o">.</span><span class="n">name</span>
+
+        <span class="k">if</span> <span class="n">old_op1</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;constexpr_blockwise_shift_scale&quot;</span><span class="p">:</span>
+            <span class="c1"># The old_op1 is dequant op and old_op2 is a lut op.</span>
+            <span class="c1"># The scale and offset from old_op1 is for lut, so the rank need to be adjusted.</span>
+            <span class="k">if</span> <span class="n">old_op1</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+                    <span class="s2">&quot;The quantization on lut must be per-tensor, so last two dims in `scale` should &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;both be 1, but got scale with shape </span><span class="si">{</span><span class="n">old_op1</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">new_scale_shape</span> <span class="o">=</span> <span class="n">old_op1</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="n">old_op1</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">new_scale_shape</span><span class="p">)</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="n">old_op1</span><span class="o">.</span><span class="n">offset</span>
+            <span class="k">if</span> <span class="n">offset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">offset</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">offset</span> <span class="o">=</span> <span class="n">old_op1</span><span class="o">.</span><span class="n">offset</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">new_scale_shape</span><span class="p">)</span>
+
+            <span class="n">new_op1_args</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;indices&quot;</span><span class="p">:</span> <span class="n">old_op2</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span> <span class="s2">&quot;lut&quot;</span><span class="p">:</span> <span class="n">old_op1</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;before_op&quot;</span><span class="p">:</span> <span class="n">old_op2</span><span class="p">}</span>
+            <span class="k">if</span> <span class="n">new_op1_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">new_op1_args</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_op1_name</span>
+            <span class="n">new_op1</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">constexpr_lut_to_dense</span><span class="p">(</span><span class="o">**</span><span class="n">new_op1_args</span><span class="p">)</span>
+
+            <span class="n">new_op2_args</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">new_op1</span><span class="p">,</span> <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="n">scale</span><span class="p">,</span> <span class="s2">&quot;offset&quot;</span><span class="p">:</span> <span class="n">offset</span><span class="p">,</span> <span class="s2">&quot;before_op&quot;</span><span class="p">:</span> <span class="n">old_op2</span><span class="p">}</span>
+            <span class="k">if</span> <span class="n">new_op2_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">new_op2_args</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_op2_name</span>
+            <span class="n">new_op2</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">constexpr_blockwise_shift_scale</span><span class="p">(</span><span class="o">**</span><span class="n">new_op2_args</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># The old_op1 is lut op and old_op2 is a dequant op.</span>
+            <span class="c1"># The scale and offset from old_op2 is for depalettized weight, so the rank need to be adjusted to match</span>
+            <span class="c1"># the lut&#39;s rank.</span>
+            <span class="n">new_scale_shape</span> <span class="o">=</span> <span class="n">old_op2</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="n">old_op2</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">new_scale_shape</span><span class="p">)</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="n">old_op2</span><span class="o">.</span><span class="n">offset</span>
+            <span class="k">if</span> <span class="n">offset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">offset</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">offset</span> <span class="o">=</span> <span class="n">old_op2</span><span class="o">.</span><span class="n">offset</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">new_scale_shape</span><span class="p">)</span>
+
+            <span class="n">lut</span> <span class="o">=</span> <span class="n">old_op1</span><span class="o">.</span><span class="n">lut</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">shape</span> <span class="o">!=</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">new_scale_shape</span><span class="p">):</span>
+                <span class="c1"># The lut need to be repeated when necessary. For example, in per-channel-scale, the lut has shape</span>
+                <span class="c1"># [16, 1, 16, 1], indices has shape [32, 1], and scale has shape [32, 1]. It means every two rows in</span>
+                <span class="c1"># the weight share a lut, and it&#39;s impossible to apply 32 scales to 16 lut tables. So we need to repeat</span>
+                <span class="c1"># the lut to become [32, 1, 16, 1], and then apply those 32 scales to each row.</span>
+                <span class="n">lut</span> <span class="o">=</span> <span class="n">old_op1</span><span class="o">.</span><span class="n">lut</span><span class="o">.</span><span class="n">val</span>
+                <span class="k">if</span> <span class="n">lut</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">return</span>  <span class="c1"># Cannot handle the reording when the lut is not const.</span>
+                <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="p">(</span><span class="n">scale_shape</span><span class="p">,</span> <span class="n">lut_shape</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">new_scale_shape</span><span class="p">,</span> <span class="n">lut</span><span class="o">.</span><span class="n">shape</span><span class="p">)):</span>
+                    <span class="k">if</span> <span class="n">scale_shape</span> <span class="o">&gt;</span> <span class="n">lut_shape</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">scale_shape</span> <span class="o">%</span> <span class="n">lut_shape</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="k">return</span>  <span class="c1"># Skip when lut&#39;s shape cannot be repeated to match scale&#39;s shape.</span>
+                        <span class="n">lut</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">lut</span><span class="p">,</span> <span class="n">scale_shape</span> <span class="o">//</span> <span class="n">lut_shape</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+
+            <span class="n">new_op1_args</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">lut</span><span class="p">,</span> <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="n">scale</span><span class="p">,</span> <span class="s2">&quot;offset&quot;</span><span class="p">:</span> <span class="n">offset</span><span class="p">,</span> <span class="s2">&quot;before_op&quot;</span><span class="p">:</span> <span class="n">old_op1</span><span class="p">}</span>
+            <span class="k">if</span> <span class="n">new_op1_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">new_op1_args</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_op1_name</span>
+            <span class="n">new_op1</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">constexpr_blockwise_shift_scale</span><span class="p">(</span><span class="o">**</span><span class="n">new_op1_args</span><span class="p">)</span>
+
+            <span class="n">new_op2_args</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;indices&quot;</span><span class="p">:</span> <span class="n">old_op1</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span> <span class="s2">&quot;lut&quot;</span><span class="p">:</span> <span class="n">new_op1</span><span class="p">,</span> <span class="s2">&quot;before_op&quot;</span><span class="p">:</span> <span class="n">old_op1</span><span class="p">}</span>
+            <span class="k">if</span> <span class="n">new_op2_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">new_op2_args</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_op2_name</span>
+            <span class="n">new_op2</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">constexpr_lut_to_dense</span><span class="p">(</span><span class="o">**</span><span class="n">new_op2_args</span><span class="p">)</span>
+
+        <span class="n">block</span><span class="o">.</span><span class="n">replace_uses_of_var_after_op</span><span class="p">(</span>
+            <span class="n">anchor_op</span><span class="o">=</span><span class="n">old_op2</span><span class="p">,</span>
+            <span class="n">old_var</span><span class="o">=</span><span class="n">old_op2</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">new_var</span><span class="o">=</span><span class="n">new_op2</span><span class="p">,</span>
+            <span class="n">force_replace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># Need to force replace because it involves replacing constexpr op.</span>
+        <span class="p">)</span>
+        <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">([</span><span class="n">old_op1</span><span class="p">,</span> <span class="n">old_op2</span><span class="p">])</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
