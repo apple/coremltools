@@ -7418,7 +7418,7 @@ class TestScaledDotProductAttentionSlicedQ:
         for key in ["q", "k", "v", "attn_mask"]:
             if key in example_inputs:
                 dtype = example_inputs[key].numpy().dtype
-                if dtype == np.bool:
+                if dtype == bool:
                     dtype = np.float32
                 coreml_model_inputs.append(ct.TensorType(key, shape=example_inputs[key].shape, dtype=dtype))
 
