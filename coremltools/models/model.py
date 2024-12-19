@@ -216,7 +216,7 @@ class MLModelAsset:
             The file path to the compiled model.
 
         Returns
-        ----------
+        -------
         MLModelAsset
             An instance of MLModelAsset created from the specified path.
         """
@@ -240,7 +240,7 @@ class MLModelAsset:
             A dictionary with blob path as the key and blob data as the value.
 
         Returns
-        ----------
+        -------
         MLModelAsset
             An instance of MLModelAsset created from the provided memory data.
         """
