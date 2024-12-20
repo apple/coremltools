@@ -6845,11 +6845,19 @@ def triu(context, node):
     else:
         diagonal = 0
     if diagonal <= 0:
-        res = mb.band_part(x=x, lower=-diagonal, upper=-1, name=node.name)
+        res = mb.band_part(x=x, lower=-diagonal, upper=-1)
     else:
         y = mb.band_part(x=x, lower=-1, upper=diagonal - 1)
-        res = mb.sub(x=x, y=y, name=node.name)
-    context.add(res)
+        use_bool = False
+        if types.is_bool(x.dtype):
+            # The `mb.sub` op doesn't support bool.
+            use_bool = True
+            x = mb.cast(x=x, dtype="int32")
+            y = mb.cast(x=y, dtype="int32")
+        res = mb.sub(x=x, y=y)
+        if use_bool:
+            res = mb.cast(x=res, dtype="bool")
+    context.add(res, node.name)
 
 
 @register_torch_op
