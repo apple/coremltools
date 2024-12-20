@@ -5167,6 +5167,8 @@ class TestLinspace(TorchBaseTest):
 
     @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_linspace_static_large(self, compute_unit, backend):
+        if "fp16" in backend:
+            pytest.xfail(reason: "2 million can't be expressed as float16")
         input_shape = tuple([1])
 
         class Model(nn.Module):
