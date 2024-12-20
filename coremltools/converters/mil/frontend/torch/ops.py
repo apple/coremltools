@@ -1566,15 +1566,13 @@ def linspace(context, node):
             # step = (end - start) / (nums - 1)
             x = mb.sub(x=end, y=start)
             y = mb.sub(x=nums, y=1)
-            x = mb.cast(x=x, dtype="fp32")
             y = mb.cast(x=y, dtype="fp32")
             step = mb.real_div(x=x, y=y)
 
-            # Note that the range_1d op excluded the end point,
-            # so we have to add the end back to the resulting array.
-            arange = mb.range_1d(end=end, start=start, step=step)
-            new_end = mb.expand_dims(x=end, axes=[0])
-            res = mb.concat(values=[arange, new_end], axis=0, name=node.name)
+            arange = mb.range_1d(start=0.0, end=mb.cast(x=nums, dtype="fp32"), step=1.0)
+            scaled_arange = mb.mul(x=arange, y=step)
+            res = mb.add(x=scaled_arange, y=start, name=node.name)
+
     context.add(res)
 
 
