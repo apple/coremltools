@@ -7471,8 +7471,8 @@ class TestScaledDotProductAttentionSlicedQ:
 
         assert ops_counts[0] == 1 or ops_counts[0] == 3  # (attn_mask might be cast to bool from input fp16 dtype)
         assert ops_counts[1] == 1 or ops_counts[1] == 3  # the Q seq length is less than the default min seq length
-        assert ops_counts[2] >= 11 * 16  # 11 ops (without consts) per slice
-        assert ops_counts[3] >= 11 * 32
+        assert ops_counts[2] >= 6 * 16  # 6 ops (without consts) per slice
+        assert ops_counts[3] >= 6 * 32
 
         predict_inputs = copy.deepcopy(example_inputs)
         if "attn_mask" in predict_inputs:
@@ -7481,7 +7481,8 @@ class TestScaledDotProductAttentionSlicedQ:
         outputs = [list(coreml_model.predict(predict_inputs).values())[0] for coreml_model in coreml_models]
 
         for i in range(1, len(outputs)):
-            np.testing.assert_allclose(outputs[0], outputs[i], rtol=0.01, strict=True)
+            assert outputs[0].shape == outputs[i].shape
+            np.testing.assert_allclose(outputs[0], outputs[i], rtol=0.01)
 
     def test_scaled_dot_product_attention_sliced(self):
         # Confirm the basic scenario.

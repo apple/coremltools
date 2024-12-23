@@ -160,32 +160,21 @@ class scaled_dot_product_attention_sliced_q(AbstractGraphPass):
                         )
                         mul_out = mb.add(x=mul_out, y=mask_out, before_op=op)
 
-                # Numerical stability of softmax operation.
-                max_out = mb.reduce_max(x=mul_out, axes=[-1], keep_dims=True, before_op=op)
-                sub_out = mb.sub(x=mul_out, y=max_out, before_op=op)
+                # Calculate softmax of the product.
+                softmax_out = mb.softmax(x=mul_out, axis=-1, before_op=op)
 
-                exp_out = mb.exp(x=sub_out, before_op=op)  # (x, bs, chunk_size, k_seq_length)
-
-                # Calculate s_star.
-                sum_out = mb.reduce_sum(x=exp_out, axes=[-1], keep_dims=True, before_op=op)
-                tile_reps = [1] * (q_size - 1) + [dims]
-                tile_out = mb.tile(x=sum_out, reps=tile_reps, before_op=op)  # (x, bs, chunk_size, dims)
-
-                # Calculate v_star.
+                # Calculate the chunk of attention.
                 matmul_v_out = mb.matmul(
-                    x=exp_out,
+                    x=softmax_out,
                     y=v,
                     transpose_x=False,
                     transpose_y=False,
                     before_op=op,
                 )
 
-                # v_star / s_star
-                div_out = mb.real_div(x=matmul_v_out, y=tile_out, before_op=op)  # (x, bs, chunk_size, dims)
-
                 # Add the chunk of attention to the result value.
                 concat_values = [concat_out] if concat_out is not None else []
-                concat_out = mb.concat(values=concat_values + [div_out], axis=-2, interleave=False, before_op=op)
+                concat_out = mb.concat(values=concat_values + [matmul_v_out], axis=-2, interleave=False, before_op=op)
 
             # Remove the original SDPA operation.
             op.enclosing_block.replace_uses_of_var_after_op(
