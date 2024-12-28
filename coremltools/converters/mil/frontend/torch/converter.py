@@ -336,11 +336,10 @@ class TranscriptionContext:
 
             %x(state, fp16), %y(tensor, fp32) -> {
                 %read_x = read_state(%x)
-                %read_x_cast = cast(%read_x, "fp32")
-                %1 = add(%read_x_cast, %y)
+                %1 = add(%read_x, %y)
             }
 
-        ``%read_x_cast`` is cached in ``name_to_source_state``, to make sure one
+        ``%read_x`` is cached in ``name_to_source_state``, to make sure one
         state feeds into only one ``read_state`` op.
         """
 
@@ -358,8 +357,7 @@ class TranscriptionContext:
                     in_node.op is None
                 ), f"A state type var must come from a placeholder. Got parent op {in_node.op.op_type} instead."
                 read_state = mb.read_state(input=in_node)
-                read_state_fp32 = mb.cast(x=read_state, dtype="fp32")
-                self.add(read_state_fp32, torch_name=val, override=True)
+                self.add(read_state, torch_name=val, override=True)
         return
 
     def process_inplace_op(self, node: InternalTorchIRNode) -> None:
