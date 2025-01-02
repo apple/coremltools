@@ -5167,13 +5167,12 @@ class TestLinspace(TorchBaseTest):
 
     @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_linspace_static_large(self, compute_unit, backend):
-        if "fp16" in backend:
-            pytest.xfail(reason: "2 million can't be expressed as float16")
         input_shape = tuple([1])
 
         class Model(nn.Module):
             def forward(self, x):
-                return torch.linspace(1, 2_000_000, 2_000_000)
+                largest_int_in_float16 = int(np.finfo(np.float16).max)
+                return torch.linspace(1, largest_int_in_float16, largest_int_in_float16)
 
         model = Model()
         self.run_compare_torch(input_shape, model, backend=backend, compute_unit=compute_unit)
