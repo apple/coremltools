@@ -2683,6 +2683,43 @@ def instance_norm(context, node):
     context.add(x)
 
 
+def _group_norm_impl(x: Var, num_groups: int, weight: Var, bias: Var, eps: float) -> Var:
+    n, c = x.shape[0], x.shape[1]  # at minimum (N, C) required
+    num_groups = builtins.min(num_groups, c)
+    new_shape = [n, num_groups, c // num_groups]
+    # optimization for non symbolic shapes. This get rids of 3 mil ops that required on dynamic shapes
+    if not any_symbolic(x.shape[2:]):
+        new_shape += [*x.shape[2:]]  # adds remaining dims
+        input_shape = [*x.shape]  # n, c, *
+    else:
+        input_shape = mb.shape(x=x)
+        input_shape_sliced = mb.slice_by_size(x=input_shape, begin=[2], size=[-1])  # x_shape[2:]
+        new_shape = mb.concat(values=[new_shape, input_shape_sliced], axis=0)
+
+    num_extra_axes = len(x.shape[2:])
+    axes_ = [int(i) for i in range(2, 2 + num_extra_axes + 1)]
+    weight_shape, bias_shape = [1, c], [1, c]
+    weight_shape += [1 for _ in range(num_extra_axes)]
+    bias_shape += [1 for _ in range(num_extra_axes)]
+
+    x = mb.reshape(x=x, shape=new_shape)
+    mean = mb.reduce_mean(x=x, axes=axes_, keep_dims=True)
+    var = _var(x, axes=axes_, keep_dims=True, unbiased=False)
+    var_plus_eps = mb.add(x=var, y=eps)
+    std = mb.sqrt(x=var_plus_eps)
+    x = mb.sub(x=x, y=mean)
+    x = mb.real_div(x=x, y=std)
+    x = mb.reshape(x=x, shape=input_shape)
+    if weight is not None:
+        weight = mb.reshape(x=weight, shape=weight_shape)
+        x = mb.mul(x=x, y=weight)
+    if bias is not None:
+        bias = mb.reshape(x=bias, shape=bias_shape)
+        x = mb.add(x=x, y=bias)
+
+    return x
+
+
 @register_torch_op
 def group_norm(context, node):
     def _parse_positional_args(context, node) -> Tuple[Var]:
@@ -2715,39 +2752,32 @@ def group_norm(context, node):
     x, num_groups, weight, bias, eps = _parse_positional_args(context, node)
     weight, bias = _parse_keyword_args(context, node, weight, bias)
 
-    n,c = x.shape[0],x.shape[1] # at minimum (N, C) required
-    num_groups = builtins.min(num_groups,c)
-    new_shape = [n, num_groups, c//num_groups]
-    # optimization for non symbolic shapes. This get rids of 3 mil ops that required on dynamic shapes
-    if not any_symbolic(x.shape[2:]):
-        new_shape += [*x.shape[2:]] # adds remaining dims
-        input_shape = [*x.shape] # n, c, *
-    else:
-        input_shape = mb.shape(x=x)
-        input_shape_sliced = mb.slice_by_size(x=input_shape, begin=[2], size=[-1]) # x_shape[2:]
-        new_shape = mb.concat(values=[new_shape, input_shape_sliced], axis=0)
+    result = _group_norm_impl(x, num_groups, weight, bias, eps)
+    context.add(result, node.name)
 
-    num_extra_axes = len(x.shape[2:])
-    axes_ = [int(i) for i in range(2, 2 + num_extra_axes + 1)]
-    weight_shape, bias_shape = [1,c], [1,c]
-    weight_shape += [1 for _ in range(num_extra_axes)]
-    bias_shape += [1 for _ in range(num_extra_axes)]
 
-    x = mb.reshape(x=x, shape=new_shape)
-    mean = mb.reduce_mean(x=x, axes=axes_, keep_dims=True)
-    var = _var(x, axes=axes_, keep_dims=True, unbiased=False)
-    var_plus_eps = mb.add(x=var, y=eps)
-    std = mb.sqrt(x=var_plus_eps)
-    x = mb.sub(x=x, y=mean)
-    x = mb.real_div(x=x, y=std)
-    x = mb.reshape(x=x, shape=input_shape)
-    if weight is not None:
-        weight = mb.reshape(x=weight, shape=weight_shape)
-        x = mb.mul(x=x,y=weight)
-    if bias is not None:
-        bias = mb.reshape(x=bias, shape=bias_shape)
-        x = mb.add(x=x, y=bias)
-    context.add(x,node.name)
+@register_torch_op
+def native_group_norm(context, node):
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, expected=8)
+
+        x = inputs[0]
+        weight = inputs[1]
+        bias = inputs[2]
+        N = inputs[3].val
+        C = inputs[4].val
+        HxW = inputs[5].val
+        group = inputs[6].val
+        eps = inputs[7].val
+
+        return x, weight, bias, N, C, HxW, group, eps
+
+    x, weight, bias, N, C, HxW, group, eps = _parse_positional_args(context, node)
+    assert x.shape[0] == N
+    assert x.shape[1] == C
+
+    result = _group_norm_impl(x, group, weight, bias, eps)
+    context.add((result, None, None), node.name)
 
 
 @register_torch_op
