@@ -44,6 +44,6 @@ from coremltools.converters.mil.mil.passes.defs import (
     optimize_state,
     optimize_tensor_operation,
     preprocess,
-    scaled_dot_product_attention_sliced_q,
+    transformer,
     symbol_transform,
 )
