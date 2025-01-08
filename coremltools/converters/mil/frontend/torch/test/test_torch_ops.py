@@ -6729,11 +6729,12 @@ class TestTriu(TorchBaseTest):
         if diagonal is not None:
             params_dict["diagonal"] = diagonal
         model = ModuleWrapper(torch.triu, params_dict)
-        input_data = torch.randn(shape)
         if dtype == torch.int32:
             input_data = torch.randint(low=-10, high=10, size=shape)
         elif dtype == torch.bool:
             input_data = torch.randint(low=0, high=2, size=shape).to(torch.bool)
+        else:
+            input_data = torch.randn(shape)
         self.run_compare_torch(
             input_data,
             model,
