@@ -1275,9 +1275,6 @@ class TestGroupNorm(TorchBaseTest):
         ),
     )
     def test_groupnorm(self, compute_unit, backend, frontend, group_features, eps, affine):
-        if frontend == TorchFrontend.EXECUTORCH:
-            pytest.skip("ExecuTorch uses native_group_norm")
-
         model = nn.GroupNorm(group_features[0], group_features[1], eps=eps, affine=affine)
         self.run_compare_torch(
             (6, group_features[1], 5, 5),
@@ -1296,9 +1293,6 @@ class TestGroupNorm(TorchBaseTest):
     def test_groupnorm_rank3_input(
         self, compute_unit, backend, frontend, group_features, eps, affine
     ):
-        if frontend == TorchFrontend.EXECUTORCH:
-            pytest.skip("ExecuTorch uses native_group_norm")
-
         model = nn.GroupNorm(group_features[0], group_features[1], eps=eps, affine=affine)
         self.run_compare_torch(
             (6, group_features[1], 5),
@@ -1317,9 +1311,6 @@ class TestGroupNorm(TorchBaseTest):
     def test_groupnorm_rank2_input(
         self, compute_unit, backend, frontend, group_features, eps, affine
     ):
-        if frontend == TorchFrontend.EXECUTORCH:
-            pytest.skip("ExecuTorch uses native_group_norm")
-
         model = nn.GroupNorm(group_features[0], group_features[1], eps=eps, affine=affine)
         self.run_compare_torch(
             (4, group_features[1]),
@@ -1336,9 +1327,6 @@ class TestGroupNorm(TorchBaseTest):
         ),
     )
     def test_groupnorm_dynamic(self, compute_unit, backend, frontend, group_features, eps, affine):
-        if frontend == TorchFrontend.EXECUTORCH:
-            pytest.skip("ExecuTorch uses native_group_norm")
-
         model = nn.GroupNorm(group_features[0], group_features[1], eps=eps, affine=affine)
 
         lower_bound = 5
