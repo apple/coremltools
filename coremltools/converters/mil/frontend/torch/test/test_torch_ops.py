@@ -6702,22 +6702,34 @@ class TestAtan2(TorchBaseTest):
 
 class TestTriu(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, frontend, shape, diagonal",
+        "compute_unit, backend, frontend, shape, diagonal, dtype",
         itertools.product(
             compute_units,
             backends,
             frontends,
             [(5, 5), (3, 4), (5, 1)],
             [None, -1, 0, 2],
+            [torch.float16, torch.int32, torch.bool],
         ),
     )
-    def test_triu(self, compute_unit, backend, frontend, shape, diagonal):
+    def test_triu(self, compute_unit, backend, frontend, shape, diagonal, dtype):
         params_dict = {}
         if diagonal is not None:
             params_dict["diagonal"] = diagonal
         model = ModuleWrapper(torch.triu, params_dict)
+        if dtype == torch.int32:
+            input_data = torch.randint(low=-10, high=10, size=shape)
+        elif dtype == torch.bool:
+            input_data = torch.randint(low=0, high=2, size=shape).to(torch.bool)
+        else:
+            input_data = torch.randn(shape)
         self.run_compare_torch(
-            shape, model, compute_unit=compute_unit, backend=backend, frontend=frontend
+            input_data,
+            model,
+            input_as_shape=False,
+            compute_unit=compute_unit,
+            backend=backend,
+            frontend=frontend,
         )
 
 
