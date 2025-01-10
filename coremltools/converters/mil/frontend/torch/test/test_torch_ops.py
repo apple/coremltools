@@ -5171,7 +5171,8 @@ class TestLinspace(TorchBaseTest):
 
         class Model(nn.Module):
             def forward(self, x):
-                return torch.linspace(1, 2_000_000, 2_000_000)
+                largest_int_in_float16 = int(np.finfo(np.float16).max)
+                return torch.linspace(1, largest_int_in_float16, largest_int_in_float16)
 
         model = Model()
         self.run_compare_torch(input_shape, model, backend=backend, compute_unit=compute_unit)
@@ -5182,7 +5183,7 @@ class TestLinspace(TorchBaseTest):
             compute_units,
             backends,
             [(-0.1, -0.7), (1, 10)],
-            [1, 2, 100],
+            [1, 2, 10, 100],
         ),
     )
     def test_linspace_dynamic(self, compute_unit, backend, start_end, steps):
