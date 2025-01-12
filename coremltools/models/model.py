@@ -483,7 +483,7 @@ class MLModel:
                 self.package_path = filename
                 self._weights_dir = _try_get_weights_dir_path(filename)
             else:
-                filename = _tempfile.mktemp(suffix=_MLMODEL_EXTENSION)
+                filename = _tempfile.NamedTemporaryFile(suffix=_MLMODEL_EXTENSION)
                 _save_spec(model, filename)
 
             self.__proxy__, self._spec, self._framework_error = self._get_proxy_and_spec(
