@@ -7,6 +7,8 @@ import copy
 import itertools
 import unittest
 
+from typing import ClassVar, Dict, List, Optional
+
 import numpy as np
 import pytest
 import torch
@@ -38,6 +40,7 @@ from coremltools.converters.mil.testing_utils import (
     get_op_types_in_program,
 )
 from coremltools.models.utils import _macos_version
+from coremltools.converters.mil.frontend.milproto.load import load as _milproto_to_pymil
 
 np.random.seed(1984)
 _VALIDATE_MODEL = True
@@ -7371,3 +7374,133 @@ class TestStackSplitFusion:
 
         apply_pass_and_basic_check(prog, "common::fuse_stack_split")
         assert get_op_types_in_program(prog) == ["stack", "split"] + ["squeeze"] * 3
+
+
+class TestScaledDotProductAttentionSlicedQ:
+
+    class AttentionPyTorch(torch.nn.Module):
+        @staticmethod
+        def forward(q, k, v, attn_mask=None):
+            return torch.nn.functional.scaled_dot_product_attention(q, k, v, attn_mask)
+
+    @staticmethod
+    def _get_example_inputs(
+        shape_size: int = 3,
+        qkv_same_shape: bool = True,
+        dtype: torch.dtype = torch.float16,
+        attn_mask_dtype: Optional[torch.dtype] = None,
+    ):
+        batches, seq_length, dimensions = 4, 256, 768
+        q_shape = (batches, seq_length, dimensions)
+        kv_shape = q_shape if qkv_same_shape else (batches, seq_length - 16, dimensions)
+        if shape_size > 3:
+            q_shape = tuple([1] * (shape_size - len(q_shape)) + list(q_shape))
+            kv_shape = tuple([1] * (shape_size - len(kv_shape)) + list(kv_shape))
+        inputs = {
+            "q": torch.rand(q_shape, dtype=dtype),
+            "k": torch.rand(kv_shape, dtype=dtype),
+            "v": torch.rand(kv_shape, dtype=dtype),
+        }
+        if attn_mask_dtype is not None:
+            if attn_mask_dtype == torch.bool:
+                inputs["attn_mask"] = torch.randint(0, 2, (seq_length, seq_length), dtype=torch.bool)
+            else:
+                inputs["attn_mask"] = torch.randn((seq_length, seq_length), dtype=dtype)
+        return inputs
+
+    @staticmethod
+    def _get_trace_coreml_inputs(example_inputs: Dict[str, torch.Tensor]):
+        model_inputs = [example_inputs[key] for key in ["q", "k", "v"]]
+        if "attn_mask" in example_inputs:
+            model_inputs.append(example_inputs["attn_mask"])
+
+        coreml_model_inputs = []
+        for key in ["q", "k", "v", "attn_mask"]:
+            if key in example_inputs:
+                dtype = example_inputs[key].numpy().dtype
+                if dtype == bool:
+                    dtype = np.float32
+                coreml_model_inputs.append(ct.TensorType(key, shape=example_inputs[key].shape, dtype=dtype))
+
+        return model_inputs, coreml_model_inputs
+
+    def verify_sdpa_outputs(self, example_inputs: Dict[str, torch.Tensor]):
+        pipeline_1 = ct.PassPipeline.DEFAULT
+
+        pipeline_2 = ct.PassPipeline.DEFAULT
+        pipeline_2.append_pass("common::scaled_dot_product_attention_sliced_q")
+
+        pipeline_3 = ct.PassPipeline.DEFAULT
+        pipeline_3.append_pass("common::scaled_dot_product_attention_sliced_q")
+        pipeline_3.set_options("common::scaled_dot_product_attention_sliced_q", {"min_seq_length": 256})
+
+        pipeline_4 = ct.PassPipeline.DEFAULT
+        pipeline_4.append_pass("common::scaled_dot_product_attention_sliced_q")
+        pipeline_4.set_options(
+            "common::scaled_dot_product_attention_sliced_q", {"min_seq_length": 256, "seq_length_divider": 32}
+        )
+
+        model = self.AttentionPyTorch()
+        model_inputs, coreml_model_inputs = self._get_trace_coreml_inputs(example_inputs)
+
+        coreml_models = [
+            ct.convert(
+                torch.jit.trace(model, model_inputs).eval(),
+                inputs=coreml_model_inputs,
+                minimum_deployment_target=ct.target.iOS18,
+                convert_to="mlprogram",
+                compute_units=ct.ComputeUnit.ALL,
+                skip_model_load=False,
+                pass_pipeline=pipeline,
+            )
+            for pipeline in [pipeline_1, pipeline_2, pipeline_3, pipeline_4]
+        ]
+
+        model_specs = [coreml_model.get_spec() for coreml_model in coreml_models]
+        progs = []
+        for i in range(len(coreml_models)):
+            progs.append(
+                _milproto_to_pymil(
+                    model_spec=model_specs[i],
+                    specification_version=model_specs[i].specificationVersion,
+                    file_weights_dir=coreml_models[i].weights_dir,
+                )
+            )
+
+        ops_counts = [len(prog.functions["main"].operations) for prog in progs]
+
+        assert ops_counts[0] == 1 or ops_counts[0] == 3  # (attn_mask might be cast to bool from input fp16 dtype)
+        assert ops_counts[1] == 1 or ops_counts[1] == 3  # the Q seq length is less than the default min seq length
+        assert ops_counts[2] >= 6 * 16  # 6 ops (without consts) per slice
+        assert ops_counts[3] >= 6 * 32
+
+        predict_inputs = copy.deepcopy(example_inputs)
+        if "attn_mask" in predict_inputs:
+            predict_inputs["attn_mask"] = predict_inputs["attn_mask"].to(dtype=torch.float32)
+
+        outputs = [list(coreml_model.predict(predict_inputs).values())[0] for coreml_model in coreml_models]
+
+        for i in range(1, len(outputs)):
+            assert outputs[0].shape == outputs[i].shape
+            np.testing.assert_allclose(outputs[0], outputs[i], rtol=0.01)
+
+    def test_scaled_dot_product_attention_sliced(self):
+        # Confirm the basic scenario.
+        example_inputs = self._get_example_inputs()
+        self.verify_sdpa_outputs(example_inputs)
+
+        # Confirm sdpa with Q, K and V as 4D tensors.
+        example_inputs = self._get_example_inputs(shape_size=4)
+        self.verify_sdpa_outputs(example_inputs)
+
+        # Confirm sdpa with attn_mask as a bias.
+        example_inputs = self._get_example_inputs(attn_mask_dtype=torch.float16)
+        self.verify_sdpa_outputs(example_inputs)
+
+        # Confirm sdpa with attn_mask as boolean flags.
+        example_inputs = self._get_example_inputs(attn_mask_dtype=torch.bool)
+        self.verify_sdpa_outputs(example_inputs)
+
+        # Confirm sdpa works well with different shapes for Q and K & V.
+        example_inputs = self._get_example_inputs(qkv_same_shape=False)
+        self.verify_sdpa_outputs(example_inputs)
