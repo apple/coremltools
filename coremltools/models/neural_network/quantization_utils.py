@@ -1701,7 +1701,7 @@ def quantize_weights(
         raise Exception("updatable models cannot get quantized to FP16.")
 
     qspec = _quantize_spec_weights(spec, nbits, qmode, **kwargs)
-    quantized_model = _get_model(qspec, compute_units=full_precision_model.compute_unit)
+    quantized_model = _get_model(qspec, compute_units=full_precision_model.compute_unit, **kwargs)
 
     if _macos_version() >= (10, 14) and sample_data:
         compare_models(full_precision_model, quantized_model, sample_data)

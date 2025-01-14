@@ -370,7 +370,7 @@ def _convert_neural_network_weights_to_fp16(full_precision_model):
     return _get_model(_convert_neural_network_spec_weights_to_fp16(spec))
 
 
-def _get_model(spec, compute_units=_ComputeUnit.ALL):
+def _get_model(spec, compute_units=_ComputeUnit.ALL, **kwargs):
     """
     Utility to get the model and the data.
     """
@@ -379,7 +379,7 @@ def _get_model(spec, compute_units=_ComputeUnit.ALL):
     if isinstance(spec, MLModel):
         return spec
     else:
-        return MLModel(spec, compute_units=compute_units)
+        return MLModel(spec, compute_units=compute_units, **kwargs)
 
 def evaluate_regressor(model, data, target="target", verbose=False):
     """
