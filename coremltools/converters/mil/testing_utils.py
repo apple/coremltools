@@ -115,20 +115,15 @@ def macos_compatible_with_deployment_target(minimum_deployment_target):
             return False
     return True
 
-def _serialize_current_pytest(mlmodel):
-    """
-    Usually pytest test name is of format file::class::test_function[param0-param1] (call)...
-    Assume each test produces only one Core ML model,
-    then file::class::test_function[param0-param1] is enough to determine unique name
-        {_COREMLTOOLS_DEBUG_SAVE_MLMODEL_DIRECTORY}/file/class/test_function/param0/param1/model.mlpackage
-    """
-    mlpackage_path = _COREMLTOOLS_DEBUG_SAVE_MLMODEL_DIRECTORY + "/"
+
+def _create_current_pytest_serialization_path() -> str:
+    serialization_path = _COREMLTOOLS_DEBUG_SAVE_MLMODEL_DIRECTORY + "/"
 
     PYTEST_CURRENT_TEST = os.environ.get("PYTEST_CURRENT_TEST").split("(call)")[0].strip()
     test_name_fragments = PYTEST_CURRENT_TEST.split("::")
 
     for test_name_fragment in test_name_fragments[:-1]:
-        mlpackage_path += f"{test_name_fragment.strip()}/"
+        serialization_path += f"{test_name_fragment.strip()}/"
 
     test_name = test_name_fragments[-1]
     # For a parameterized test, further decompose parameters into directories
@@ -138,16 +133,26 @@ def _serialize_current_pytest(mlmodel):
         test_function_name = test_name[:bra_index]
         parameters = test_name[bra_index + 1 : -1].split("-")
         # Append test function name and parameter to mlpackage path
-        mlpackage_path += f"{test_function_name}/"
+        serialization_path += f"{test_function_name}/"
         for parameter in parameters:
-            mlpackage_path += f"{parameter}/"
+            serialization_path += f"{parameter}/"
     else:
-        mlpackage_path += f"{test_name}/"
+        serialization_path += f"{test_name}/"
 
-    mlpackage_path += "model.mlpackage"
+    return serialization_path
 
+
+def _serialize_current_pytest_mlmodel(mlmodel) -> None:
+    """
+    Usually pytest test name is of format file::class::test_function[param0-param1] (call)...
+    Assume each test produces only one Core ML model,
+    then file::class::test_function[param0-param1] is enough to determine unique name
+        {_COREMLTOOLS_DEBUG_SAVE_MLMODEL_DIRECTORY}/file/class/test_function/param0/param1/model.mlpackage
+    """
+    mlpackage_path = _create_current_pytest_serialization_path() + "model.mlpackage"
     Path(mlpackage_path).mkdir(parents=True, exist_ok=True)
     mlmodel.save(mlpackage_path)
+
 
 def assert_op_count_match(program, expect, op=None, verbose=False):
     """
@@ -257,6 +262,17 @@ def assert_same_output_shapes(prog1, prog2, func_name="main"):
     prog2_output_shapes = [o.shape for o in prog2[func_name].outputs]
     assert prog1_output_shapes == prog2_output_shapes
 
+
+def gen_activation_stats_for_program(prog):
+    """
+    Return a dictionary of activation_stats for all intermediate tensors.
+    """
+    tensor_list = get_op_names_in_program(prog)
+    activation_stats = {}
+    for tensor_name in tensor_list:
+        activation_stats[tensor_name] = {"rmin": 0, "rmax": 1}
+    return activation_stats
+
 def get_op_names_in_program(prog, func_name="main", skip_const_ops=True):
     """
     Return the operations names in prog[func_name],
@@ -271,7 +287,7 @@ def get_op_names_in_program(prog, func_name="main", skip_const_ops=True):
     return op_names_in_program
 
 
-def get_op_types_in_block(block: Block, skip_const_ops: bool = True):
+def get_op_types_in_block(block: Block, skip_const_ops: bool = True, recurse: bool = False):
     """
     Return the operation types in block,
     in the same order as they are stored (topological)
@@ -282,16 +298,23 @@ def get_op_types_in_block(block: Block, skip_const_ops: bool = True):
             if op.op_type == "const":
                 continue
         op_types_in_block.append(op.op_type)
+
+        if recurse:
+            for child_block in op.blocks:
+                child_ops = get_op_types_in_block(child_block, skip_const_ops, recurse)
+                op_types_in_block += child_ops
+
     return op_types_in_block
 
 
-def get_op_types_in_program(prog: Program, func_name: str = "main", skip_const_ops: bool = True):
+def get_op_types_in_program(prog: Program, func_name: str = "main", skip_const_ops: bool = True, recurse: bool = False):
     """
     Return the operation types in prog[func_name],
     in the same order as they are stored (topological)
     If ``skip_const_ops = True``, const ops are not returned.
+    If ``recurse = True``, the ops of all nested blocks are returned.
     """
-    return get_op_types_in_block(prog[func_name], skip_const_ops)
+    return get_op_types_in_block(prog[func_name], skip_const_ops, recurse)
 
 def random_gen(
     shape,
@@ -381,6 +404,7 @@ def compare_backend(
     rtol=1e-05,
     also_compare_shapes=True,
     state=None,
+    allow_mismatch_ratio=0.0,
 ):
     """
     Inputs:
@@ -391,6 +415,9 @@ def compare_backend(
 
         - expected_outputs: dict[str, np.array]. Required iff
           frontend_only is False
+
+        - allow_mismatch_ratio: Allow a ratio of elements to be out of tolenrance of atol and rtol. Mainly used
+          for comparing compressed models outputs.
     """
     if _IS_MACOS and (not mlmodel.is_package or coremltoolsutils._macos_version() >= (12, 0)):
 
@@ -412,7 +439,13 @@ def compare_backend(
             coreml_out = _get_coreml_out_from_dict(pred, o)
 
             if isinstance(coreml_out, np.ndarray):
-                np.testing.assert_allclose(coreml_out, expected, atol=atol, rtol=rtol)
+                try:
+                    np.testing.assert_allclose(coreml_out, expected, atol=atol, rtol=rtol)
+                except AssertionError as e:
+                    mismatch_num = np.sum(~np.isclose(coreml_out, expected, atol=atol, rtol=rtol))
+                    total_num = np.prod(expected.shape)
+                    if mismatch_num / total_num > allow_mismatch_ratio:
+                        raise e
             elif isinstance(coreml_out, dict):
                 for k, v in coreml_out.items():
                     assert k in expected
@@ -524,20 +557,20 @@ def ct_convert(
         skip_model_load = True
 
     mlmodel = converter(
-                program,
-                source=source,
-                inputs=inputs,
-                outputs=outputs,
-                classifier_config=classifier_config,
-                minimum_deployment_target=minimum_deployment_target,
-                convert_to=target,
-                compute_precision=compute_precision,
-                skip_model_load=skip_model_load,
-                **kwargs
+        program,
+        source=source,
+        inputs=inputs,
+        outputs=outputs,
+        classifier_config=classifier_config,
+        minimum_deployment_target=minimum_deployment_target,
+        convert_to=target,
+        compute_precision=compute_precision,
+        skip_model_load=skip_model_load,
+        **kwargs,
     )
 
     if is_current_test_to_be_debugged:
-        _serialize_current_pytest(mlmodel)
+        _serialize_current_pytest_mlmodel(mlmodel)
         pytest.xfail("This test is to be debugged")
 
     return mlmodel
@@ -617,6 +650,7 @@ def apply_pass_and_basic_check(
     pass_name: Union[str, AbstractGraphPass],
     skip_output_name_check: Optional[bool] = False,
     skip_output_type_check: Optional[bool] = False,
+    skip_output_shape_check: Optional[bool] = False,
     skip_input_name_check: Optional[bool] = False,
     skip_input_type_check: Optional[bool] = False,
     skip_function_name_check: Optional[bool] = False,
@@ -643,7 +677,8 @@ def apply_pass_and_basic_check(
             assert_same_output_names(prev_prog, prog, name)
         if not skip_output_type_check:
             assert_same_output_types(prev_prog, prog, name)
-        assert_same_output_shapes(prev_prog, prog, name)
+        if not skip_output_shape_check:
+            assert_same_output_shapes(prev_prog, prog, name)
 
         if not skip_input_name_check:
             assert_same_input_names(prev_prog, prog, name)

@@ -423,11 +423,13 @@ def BatchToSpaceND(context, node):
         # [B, H, W, C] -> transpose -> [B, C, H, W] -> batch_to_space -> [B_new, C, H_new, W_new] ->
         # transpose -> [B_new, H_new, W_new, C]
         x = mb.transpose(x=x, perm=[0, 3, 1, 2])
-        x = mb.batch_to_space(
-            x=x, block_shape=block_shape, crops=_np.zeros((2, 2), _np.int32), name=node.name
-        )
-        need_crop = not is_static_crops or (tuple(crops[0]) != (0, 0) or tuple(crops[1]) != (0, 0))
-        if need_crop:
+
+        if is_static_crops:
+            x = mb.batch_to_space(x=x, block_shape=block_shape, crops=crops, name=node.name)
+        else:
+            x = mb.batch_to_space(
+                x=x, block_shape=block_shape, crops=_np.zeros((2, 2), _np.int32), name=node.name
+            )
             # crop_height, crop_width = crops[0, :], crops[1, :]
             crop_height = mb.slice_by_index(
                 x=crops,
@@ -446,24 +448,21 @@ def BatchToSpaceND(context, node):
                 squeeze_mask=[True, False],
             )
 
-            if is_static_crops:
-                # If crops is known at compile time, we can directly use mb.crop
-                x = mb.crop(x=x, crop_height=crop_height, crop_width=crop_width)
-            else:
-                # Otherwise, we need to use slice_by_index to implement the crop
-                a, b = _value_at(crop_height, 0), _value_at(crop_height, 1)
-                c, d = _value_at(crop_width, 0), _value_at(crop_width, 1)
 
-                shape = mb.shape(x=x)
-                height, width = _value_at(shape, 2), _value_at(shape, 3)
-                begin_idx_height, end_idx_height = a, mb.sub(x=height, y=b)
-                begin_idx_width, end_idx_width = c, mb.sub(x=width, y=d)
+            # Otherwise, we need to use slice_by_index to implement the crop
+            a, b = _value_at(crop_height, 0), _value_at(crop_height, 1)
+            c, d = _value_at(crop_width, 0), _value_at(crop_width, 1)
 
-                begin = mb.concat(values=[0, 0, begin_idx_height, begin_idx_width], axis=0)
-                end = mb.concat(values=[0, 0, end_idx_height, end_idx_width], axis=0)
-                begin_mask = [True, True, False, False]
-                end_mask = [True, True, False, False]
-                x = mb.slice_by_index(
+            shape = mb.shape(x=x)
+            height, width = _value_at(shape, 2), _value_at(shape, 3)
+            begin_idx_height, end_idx_height = a, mb.sub(x=height, y=b)
+            begin_idx_width, end_idx_width = c, mb.sub(x=width, y=d)
+
+            begin = mb.concat(values=[0, 0, begin_idx_height, begin_idx_width], axis=0)
+            end = mb.concat(values=[0, 0, end_idx_height, end_idx_width], axis=0)
+            begin_mask = [True, True, False, False]
+            end_mask = [True, True, False, False]
+            x = mb.slice_by_index(
                     x=x, begin=begin, end=end, begin_mask=begin_mask, end_mask=end_mask
                 )
 
@@ -2208,10 +2207,10 @@ def SpaceToBatchND(context, node):
         # [B, H, W, C] -> transpose -> [B, C, H, W] -> space_to_batch -> [B_new, C, H_new, W_new] ->
         # transpose -> [B_new, H_new, W_new, C]
         x = mb.transpose(x=x, perm=[0, 3, 1, 2])
-        needs_paddings = not is_static_paddings or (
-            tuple(paddings[0]) != (0, 0) or tuple(paddings[1]) != (0, 0)
-        )
-        if needs_paddings:
+
+        if is_static_paddings:
+            x = mb.space_to_batch(x=x, block_shape=block_shape, paddings=paddings)
+        else:
             flatten_paddings = mb.reshape(
                 x=paddings,
                 shape=[
@@ -2221,8 +2220,8 @@ def SpaceToBatchND(context, node):
             flatten_paddings = mb.cast(x=flatten_paddings, dtype="int32")
             flatten_paddings = mb.concat(values=[[0, 0, 0, 0], flatten_paddings], axis=0)
             x = mb.pad(x=x, pad=flatten_paddings, mode="constant")
+            x = mb.space_to_batch(x=x, block_shape=block_shape, paddings=_np.zeros((2, 2), _np.int32))
 
-        x = mb.space_to_batch(x=x, block_shape=block_shape, paddings=_np.zeros((2, 2), _np.int32))
         x = mb.transpose(x=x, perm=[0, 2, 3, 1])
 
     if spatial_rank == 1:

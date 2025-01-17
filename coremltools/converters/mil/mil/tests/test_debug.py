@@ -7,8 +7,8 @@ import itertools
 import os
 import tempfile
 
-import pytest
 import numpy as np
+import pytest
 
 import coremltools as ct
 from coremltools.converters.mil import Builder as mb
@@ -17,8 +17,9 @@ from coremltools.converters.mil.mil import get_new_symbol, types
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.testing_utils import get_op_types_in_program
 
-def get_simple_program(opset_vesrion=None):
-    @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 3, 4)),], opset_version=opset_vesrion)
+
+def get_simple_program(opset_version=None):
+    @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 3, 4)),], opset_version=opset_version)
     def prog(x):
         x = mb.add(x=x, y=1.2, name="add")
         x = mb.transpose(x=x, perm=[0, 2, 3, 1])

@@ -8,12 +8,12 @@ import unittest
 import numpy as np
 import PIL.Image
 
+from ..utils import load_boston
 import coremltools
 from coremltools._deps import _HAS_SKLEARN, MSG_SKLEARN_NOT_FOUND
 from coremltools.models.utils import _is_macos, _macos_version
 
 if _HAS_SKLEARN:
-    from sklearn.datasets import load_boston
     from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
     from sklearn.linear_model import LinearRegression
     from sklearn.svm import SVC, SVR
@@ -145,6 +145,7 @@ class TestIODataTypes(unittest.TestCase):
             except RuntimeError:
                 print("{} not supported. ".format(dtype))
 
+
     def test_random_forest_regressor(self):
         for dtype in self.number_data_type.keys():
             # n_estimators default changed >= 0.22. Specify explicitly to match <0.22 behavior.
@@ -222,7 +223,7 @@ class TestIODataTypes(unittest.TestCase):
 
     def test_linear_regressor(self):
         for dtype in self.number_data_type.keys():
-            scikit_model = LinearRegression(normalize=True)
+            scikit_model = LinearRegression()
             data = self.scikit_data["data"].astype(dtype)
             target = self.scikit_data["target"].astype(dtype)
             scikit_model, spec = self._sklearn_setup(scikit_model, dtype, data, target)

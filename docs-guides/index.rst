@@ -60,6 +60,7 @@ This guide includes instructions and examples. For details about using the API c
    source/opt-palettization.rst
    source/opt-quantization.rst
    source/opt-pruning.rst
+   source/opt-joint-compression.md
    source/opt-conversion.md
    source/quantization-neural-network.md
 

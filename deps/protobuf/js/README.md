@@ -1,8 +1,6 @@
 Protocol Buffers - Google's data interchange format
 ===================================================
 
-[![Build Status](https://travis-ci.org/google/protobuf.svg?branch=master)](https://travis-ci.org/google/protobuf)
-
 Copyright 2008 Google Inc.
 
 This directory contains the JavaScript Protocol Buffers runtime library.
@@ -20,10 +18,12 @@ To use Protocol Buffers with JavaScript, you need two main components:
 
 1. The protobuf runtime library.  You can install this with
    `npm install google-protobuf`, or use the files in this directory.
+    If npm is not being used, as of 3.3.0, the files needed are located in binary subdirectory;
+    arith.js, constants.js, decoder.js, encoder.js, map.js, message.js, reader.js, utils.js, writer.js
 2. The Protocol Compiler `protoc`.  This translates `.proto` files
    into `.js` files.  The compiler is not currently available via
    npm, but you can download a pre-built binary
-   [on GitHub](https://github.com/google/protobuf/releases)
+   [on GitHub](https://github.com/protocolbuffers/protobuf/releases)
    (look for the `protoc-*.zip` files under **Downloads**).
 
 
@@ -31,15 +31,14 @@ Setup
 =====
 
 First, obtain the Protocol Compiler.  The easiest way is to download
-a pre-built binary from [https://github.com/google/protobuf/releases](https://github.com/google/protobuf/releases).
+a pre-built binary from [https://github.com/protocolbuffers/protobuf/releases](https://github.com/protocolbuffers/protobuf/releases).
 
 If you want, you can compile `protoc` from source instead.  To do this
 follow the instructions in [the top-level
-README](https://github.com/google/protobuf/blob/master/src/README.md).
+README](https://github.com/protocolbuffers/protobuf/blob/master/src/README.md).
 
-Once you have `protoc` compiled, you can run the tests by typing:
+Once you have `protoc` compiled, you can run the tests provided along with our project to examine whether it can run successfully. In order to do this, you should download the Protocol Buffer source code from the release page with the link above. Then extract the source code and navigate to the folder named `js` containing a `package.json` file and a series of test files. In this folder, you can run the commands below to run the tests automatically.
 
-    $ cd js
     $ npm install
     $ npm test
 
@@ -93,6 +92,9 @@ statements like:
 
     var message = proto.my.package.MyMessage();
 
+If unfamiliar with Closure or its compiler, consider reviewing
+[Closure documentation](https://developers.google.com/closure/library).
+
 CommonJS imports
 ----------------
 
@@ -127,7 +129,7 @@ The syntax of the `--js_out` flag is:
 Where `OPTIONS` are separated by commas.  Options are either `opt=val` or
 just `opt` (for options that don't take a value).  The available options
 are specified and documented in the `GeneratorOptions` struct in
-[src/google/protobuf/compiler/js/js_generator.h](https://github.com/google/protobuf/blob/master/src/google/protobuf/compiler/js/js_generator.h#L53).
+[src/google/protobuf/compiler/js/js_generator.h](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/compiler/js/js_generator.h#L53).
 
 Some examples:
 
@@ -136,6 +138,7 @@ Some examples:
   The `import_style` option is left to the default, which is `closure`.
 - `--js_out=import_style=commonjs,binary:protos`: this contains the options
   `import_style=commonjs` and `binary` and outputs to the directory `protos`.
+  `import_style=commonjs_strict` doesn't expose the output on the global scope.
 
 API
 ===
@@ -150,7 +153,7 @@ idea of how the library generally works:
     message.setPhoneNumbers(["800-555-1212", "800-555-0000"]);
 
     // Serializes to a UInt8Array.
-    bytes = message.serializeBinary();
+    var bytes = message.serializeBinary();
 
     var message2 = MyMessage.deserializeBinary(bytes);
 

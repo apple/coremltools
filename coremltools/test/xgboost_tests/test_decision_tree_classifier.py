@@ -5,6 +5,9 @@
 
 import unittest
 
+import numpy as np
+
+from ..utils import load_boston
 from coremltools._deps import _HAS_SKLEARN, _HAS_XGBOOST
 
 if _HAS_SKLEARN:
@@ -27,9 +30,6 @@ class DecisionTreeBinaryClassifierScikitTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        from sklearn.datasets import load_boston
-        from sklearn.tree import DecisionTreeClassifier
-
         scikit_data = load_boston()
         scikit_model = DecisionTreeClassifier(random_state=1)
         target = scikit_data["target"] > scikit_data["target"].mean()
@@ -94,15 +94,11 @@ class DecisionTreeMultiClassClassifierScikitTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        import numpy as np
-        from sklearn.datasets import load_boston
-        from sklearn.tree import DecisionTreeClassifier
-
         scikit_data = load_boston()
         scikit_model = DecisionTreeClassifier(random_state=1)
-        t = scikit_data.target
+        t = scikit_data["target"]
         target = np.digitize(t, np.histogram(t)[1]) - 1
-        scikit_model.fit(scikit_data.data, target)
+        scikit_model.fit(scikit_data["data"], target)
 
         # Save the data and the model
         self.scikit_data = scikit_data

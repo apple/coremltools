@@ -7,9 +7,9 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'Core ML Tools Guide'
-copyright = '2023, Apple Inc'
+copyright = '2024, Apple Inc'
 author = 'Apple'
-release = '7.0'
+release = '8.1'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

@@ -31,6 +31,7 @@
 #endregion
 
 using System;
+using System.IO;
 using System.Collections.Generic;
 using Google.Protobuf.TestProtos;
 using NUnit.Framework;
@@ -86,7 +87,7 @@ namespace Google.Protobuf.Collections
             var map = new MapField<string, ForeignMessage>();
             Assert.Throws<ArgumentNullException>(() => map[null] = new ForeignMessage());
         }
-        
+
         [Test]
         public void AddPreservesInsertionOrder()
         {
@@ -471,7 +472,7 @@ namespace Google.Protobuf.Collections
             keys.CopyTo(array, 1);
             CollectionAssert.AreEqual(new[] { null, "foo", "x", null }, array);
         }
-        
+
         // Just test keys - we know the implementation is the same for values
         [Test]
         public void NonGenericViewCopyTo()
@@ -539,6 +540,118 @@ namespace Google.Protobuf.Collections
             var map = new MapField<byte, string> { { 10, "foo" } };
             Assert.Throws<ArgumentException>(() => map.ToString());
         }
+
+        [Test]
+        public void NaNValuesComparedBitwise()
+        {
+            var map1 = new MapField<string, double>
+            {
+                { "x", SampleNaNs.Regular },
+                { "y", SampleNaNs.SignallingFlipped }
+            };
+
+            var map2 = new MapField<string, double>
+            {
+                { "x", SampleNaNs.Regular },
+                { "y", SampleNaNs.PayloadFlipped }
+            };
+
+            var map3 = new MapField<string, double>
+            {
+                { "x", SampleNaNs.Regular },
+                { "y", SampleNaNs.SignallingFlipped }
+            };
+
+            EqualityTester.AssertInequality(map1, map2);
+            EqualityTester.AssertEquality(map1, map3);
+            Assert.True(map1.Values.Contains(SampleNaNs.SignallingFlipped));
+            Assert.False(map2.Values.Contains(SampleNaNs.SignallingFlipped));
+        }
+
+        // This wouldn't usually happen, as protos can't use doubles as map keys,
+        // but let's be consistent.
+        [Test]
+        public void NaNKeysComparedBitwise()
+        {
+            var map = new MapField<double, string>
+            {
+                { SampleNaNs.Regular, "x" },
+                { SampleNaNs.SignallingFlipped, "y" }
+            };
+            Assert.AreEqual("x", map[SampleNaNs.Regular]);
+            Assert.AreEqual("y", map[SampleNaNs.SignallingFlipped]);
+            string ignored;
+            Assert.False(map.TryGetValue(SampleNaNs.PayloadFlipped, out ignored));
+        }
+
+        [Test]
+        public void AddEntriesFrom_CodedInputStream()
+        {
+            // map will have string key and string value
+            var keyTag = WireFormat.MakeTag(1, WireFormat.WireType.LengthDelimited);
+            var valueTag = WireFormat.MakeTag(2, WireFormat.WireType.LengthDelimited);
+
+            var memoryStream = new MemoryStream();
+            var output = new CodedOutputStream(memoryStream);
+            output.WriteLength(20);  // total of keyTag + key + valueTag + value
+            output.WriteTag(keyTag);
+            output.WriteString("the_key");
+            output.WriteTag(valueTag);
+            output.WriteString("the_value");
+            output.Flush();
+
+            var field = new MapField<string,string>();
+            var mapCodec = new MapField<string,string>.Codec(FieldCodec.ForString(keyTag, ""), FieldCodec.ForString(valueTag, ""), 10);
+            var input = new CodedInputStream(memoryStream.ToArray());
+
+            // test the legacy overload of AddEntriesFrom that takes a CodedInputStream
+            field.AddEntriesFrom(input, mapCodec);
+            CollectionAssert.AreEquivalent(new[] { "the_key" }, field.Keys);
+            CollectionAssert.AreEquivalent(new[] { "the_value" }, field.Values);
+            Assert.IsTrue(input.IsAtEnd);
+        }
+
+        [Test]
+        public void AddEntriesFrom_CodedInputStream_MissingKey()
+        {
+            // map will have string key and string value
+            var keyTag = WireFormat.MakeTag(1, WireFormat.WireType.LengthDelimited);
+            var valueTag = WireFormat.MakeTag(2, WireFormat.WireType.LengthDelimited);
+
+            var memoryStream = new MemoryStream();
+            var output = new CodedOutputStream(memoryStream);
+            output.WriteLength(11);  // total of valueTag + value
+            output.WriteTag(valueTag);
+            output.WriteString("the_value");
+            output.Flush();
+
+            Console.WriteLine(BitConverter.ToString(memoryStream.ToArray()));
+
+            var field = new MapField<string, string>();
+            var mapCodec = new MapField<string, string>.Codec(FieldCodec.ForString(keyTag, ""), FieldCodec.ForString(valueTag, ""), 10);
+            var input = new CodedInputStream(memoryStream.ToArray());
+
+            field.AddEntriesFrom(input, mapCodec);
+            CollectionAssert.AreEquivalent(new[] { "" }, field.Keys);
+            CollectionAssert.AreEquivalent(new[] { "the_value" }, field.Values);
+            Assert.IsTrue(input.IsAtEnd);
+        }
+
+#if !NET35
+        [Test]
+        public void IDictionaryKeys_Equals_IReadOnlyDictionaryKeys()
+        {
+            var map = new MapField<string, string> { { "foo", "bar" }, { "x", "y" } };
+            CollectionAssert.AreEquivalent(((IDictionary<string, string>)map).Keys, ((IReadOnlyDictionary<string, string>)map).Keys);
+        }
+
+        [Test]
+        public void IDictionaryValues_Equals_IReadOnlyDictionaryValues()
+        {
+            var map = new MapField<string, string> { { "foo", "bar" }, { "x", "y" } };
+            CollectionAssert.AreEquivalent(((IDictionary<string, string>)map).Values, ((IReadOnlyDictionary<string, string>)map).Values);
+        }
+#endif
 
         private static KeyValuePair<TKey, TValue> NewKeyValuePair<TKey, TValue>(TKey key, TValue value)
         {

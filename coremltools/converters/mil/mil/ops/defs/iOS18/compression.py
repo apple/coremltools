@@ -3,6 +3,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import math
 from typing import List, Optional
 
 import numpy as np
@@ -97,8 +98,8 @@ class constexpr_blockwise_shift_scale(Operation):
             scale_dim = scale.shape[rank_idx]
             if data_dim % scale_dim != 0:
                 raise ValueError(
-                    f"Number of scales along each dimension should be a factor of "
-                    f"corresponding dimension size of 'data'. However, at dim "
+                    "Number of scales along each dimension should be a factor of "
+                    "corresponding dimension size of 'data'. However, at dim "
                     f"{rank_idx}, the 'data' has {data_dim} while 'scale' has {scale_dim}."
                 )
 
@@ -123,9 +124,16 @@ class constexpr_blockwise_shift_scale(Operation):
         return types.tensor(self.scale.dtype, self.data.shape)
 
     def materialized_val_inference(self):
+        data = self.data.val
+        scale = self.scale.val
+        if data is None and self.data.op.op_type.startswith("constexpr_"):
+            data = self.data.op.materialized_val_inference()
+        if scale is None and self.scale.op.op_type.startswith("constexpr_"):
+            scale = self.scale.op.materialized_val_inference()
+
         return self.decompress(
-            self.data.val,
-            self.scale.val,
+            data,
+            scale,
             None if self.offset is None else self.offset.val,
         )
 
@@ -315,11 +323,17 @@ class constexpr_lut_to_dense(Operation):
                     f"{indices_dim} while 'lut' has {lut_dim}."
                 )
 
-        nbits = indices_dtype.get_bitwidth()
-        if lut_shape[-2] != 2**nbits:
+        num_palettes = lut_shape[-2]
+        nbits = int(math.log2(num_palettes))
+        if num_palettes != 2**nbits:
             raise ValueError(
-                "Invalid parameter 'lut'; the second last dim should have size "
-                f"2^nbits, where nbits is {nbits}, but got {lut_shape[-2]}."
+                f"Invalid parameter 'lut'; the second last dim should have size 2^nbits, but got {lut_shape[-2]}."
+            )
+        if nbits != indices_dtype.get_bitwidth():
+            raise ValueError(
+                f"Invalid parameter 'indices'; the second last dim indicate number of palettes ({num_palettes}), "
+                f"which means nbits is {nbits}, so the dtype of indices should be uint{nbits}, but got "
+                f"{types.builtin_to_string(indices_dtype)}."
             )
 
         if vector_axis is not None:

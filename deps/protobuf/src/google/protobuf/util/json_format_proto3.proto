@@ -32,16 +32,16 @@ syntax = "proto3";
 
 package proto3;
 
-option java_package = "com.google.protobuf.util";
-option java_outer_classname = "JsonFormatProto3";
-
+import "google/protobuf/any.proto";
 import "google/protobuf/duration.proto";
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
-import "google/protobuf/struct.proto";
-import "google/protobuf/any.proto";
-import "google/protobuf/field_mask.proto";
 import "google/protobuf/unittest.proto";
+
+option java_package = "com.google.protobuf.util";
+option java_outer_classname = "JsonFormatProto3";
 
 enum EnumType {
   FOO = 0;
@@ -91,6 +91,7 @@ message TestOneof {
     bytes oneof_bytes_value = 3;
     EnumType oneof_enum_value = 4;
     MessageType oneof_message_value = 5;
+    google.protobuf.NullValue oneof_null_value = 6;
   }
 }
 
@@ -111,6 +112,10 @@ message TestNestedMap {
   map<uint64, int32> uint64_map = 5;
   map<string, int32> string_map = 6;
   map<string, TestNestedMap> map_map = 7;
+}
+
+message TestStringMap {
+  map<string, string> string_map = 1;
 }
 
 message TestWrapper {
@@ -180,4 +185,10 @@ message TestCustomJsonName {
 
 message TestExtensions {
   .protobuf_unittest.TestAllExtensions extensions = 1;
+}
+
+message TestEnumValue {
+  EnumType enum_value1 = 1;
+  EnumType enum_value2 = 2;
+  EnumType enum_value3 = 3;
 }

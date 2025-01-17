@@ -21,7 +21,7 @@ class upsample_nearest_neighbor(Operation):
 
     Parameters
     ----------
-    x: tensor<[\*D, H1, W1],T>  (Required)
+    x: tensor<[\\*D, H1, W1],T>  (Required)
         * Must be at least rank ``3``.
     scale_factor_height: const<i32> or const<fp32> (Optional, default=1)
         * Scale factor for the height dimension (``axis=-2``).
@@ -32,7 +32,7 @@ class upsample_nearest_neighbor(Operation):
 
     Returns
     -------
-    tensor<[\*D, H2, W2],T>
+    tensor<[\\*D, H2, W2],T>
         * Tensor with same type as the input.
         * ``H2`` = floor(``H1`` * ``scale_factor_height``).
         * ``W2`` = floor(``W1`` * ``scale_factor_width``).
@@ -90,7 +90,7 @@ class resize_nearest_neighbor(Operation):
 
     Parameters
     ----------
-    x: tensor<[\*D, H1, W1], T> (Required)
+    x: tensor<[\\*D, H1, W1], T> (Required)
         * Must be at least rank ``3``.
     target_size_height: const<int32> (Required)
         * Target spatial size for the height dimension (``axis=-2``).
@@ -107,7 +107,7 @@ class resize_nearest_neighbor(Operation):
 
     Returns
     -------
-    tensor<[\*D, H2, W2], T>
+    tensor<[\\*D, H2, W2], T>
         * Tensor with same type as the input.
         * ``H2`` = ``target_size_height``.
         * ``W2`` = ``target_size_width``.
@@ -152,7 +152,7 @@ class upsample_bilinear(Operation):
 
     Parameters
     ----------
-    x: tensor<[\*D, H1, W1], T>  (Required)
+    x: tensor<[\\*D, H1, W1], T>  (Required)
         * Must be at least rank ``3``.
     scale_factor_height: const<U> (Optional, default=1)
         * Scale factor for the height dimension (``axis=-2``).
@@ -208,7 +208,7 @@ class upsample_bilinear(Operation):
 
     Returns
     -------
-    tensor<[\*D, H2, W2], T>
+    tensor<[\\*D, H2, W2], T>
         * Tensor with same type as the input.
         * ``H2`` = floor(``H1`` * ``scale_factor_height``).
         * ``W2`` = floor(``W1`` * ``scale_factor_width``).
@@ -271,7 +271,7 @@ class resize_bilinear(Operation):
 
     Parameters
     ----------
-    x: tensor<[\*D, H1, W1],T> (Required)
+    x: tensor<[\\*D, H1, W1],T> (Required)
         * Must be at least rank ``3``.
     target_size_height: const<int32> (Optional, default=1)
         * Target spatial size for the height dimension (``axis=-2``).
@@ -347,7 +347,7 @@ class resize_bilinear(Operation):
 
     Returns
     -------
-    tensor<[\*D, H2, W2],T>
+    tensor<[\\*D, H2, W2],T>
         * Tensor with same type as the input.
         * ``H2`` = ``target_size_height``.
         * ``W2`` = ``target_size_width``.
@@ -573,7 +573,7 @@ class crop(Operation):
 
     Parameters
     ----------
-    x: tensor<[\*D, H1, W1],T> (Required)
+    x: tensor<[\\*D, H1, W1],T> (Required)
         * Must be at least rank ``3``.
     crop_height: const<2, i32> (Required)
         * Amount to be cropped from the top and bottom of the height dimension
@@ -583,7 +583,7 @@ class crop(Operation):
 
     Returns
     -------
-    tensor<[\*D, H2, W2],T>
+    tensor<[\\*D, H2, W2],T>
         * Tensor with same type as the input.
         * ``H2`` = ``H1 - crop_height[0] - crop_height[1]``.
         * ``W2`` = ``W1 - crop_width[0] - crop_width[1]``.

@@ -50,10 +50,10 @@ class scatter(_scatter_iOS15):
 
     Parameters
     ----------
-    data: tensor<\*D, T> (Required)
+    data: tensor<\\*D, T> (Required)
     indices: tensor<[C], i32> (Required)
         * 1-D tensor.
-    updates: tensor<\*K, T> (Required)
+    updates: tensor<\\*K, T> (Required)
         * ``K = data.shape[:axis] + [len(indices)] + data.shape[axis+1:]``.
     axis: const i32 (Optional)
         * Default to ``0``.
@@ -70,7 +70,7 @@ class scatter(_scatter_iOS15):
 
     Returns
     -------
-    tensor<\*D, T>
+    tensor<\\*D, T>
         * With the same type and shape as input ``x``.
 
     Attributes
@@ -120,10 +120,10 @@ class scatter_along_axis(_scatter_along_axis_iOS15):
 
     Parameters
     ----------
-    data: tensor<\*D, T> (Required)
-    indices: tensor<\*K, i32> (Required)
+    data: tensor<\\*D, T> (Required)
+    indices: tensor<\\*K, i32> (Required)
         * ``rank(indices) == rank(data)``.
-    updates: tensor<\*K, T> (Required)
+    updates: tensor<\\*K, T> (Required)
         * Must be the same shape as ``indices``.
     axis: const i32 (Optional)
         * Default to ``0``.
@@ -140,7 +140,7 @@ class scatter_along_axis(_scatter_along_axis_iOS15):
 
     Returns
     -------
-    tensor<\*D, T>
+    tensor<\\*D, T>
         * With the same type and shape as input ``x``.
 
     Attributes
@@ -189,9 +189,9 @@ class scatter_nd(_scatter_nd_iOS15):
 
     Parameters
     ----------
-    data: tensor<\*D, T> (Required)
-    indices: tensor<\*K, i32> (Required)
-    updates: tensor<\*K, T> (Required)
+    data: tensor<\\*D, T> (Required)
+    indices: tensor<\\*K, i32> (Required)
+    updates: tensor<\\*K, T> (Required)
         * Must be the shape as ``K[:-1]+data.shape[K[-1]:]``.
     mode: const string (Optional)
         * Default to ``add``.
@@ -205,7 +205,7 @@ class scatter_nd(_scatter_nd_iOS15):
 
     Returns
     -------
-    tensor<\*D, T>
+    tensor<\\*D, T>
         * A tensor with the same shape and type as ``data``.
 
     Attributes
@@ -266,8 +266,8 @@ class gather(_gather_iOS16):
 
     Parameters
     ----------
-    x: tensor<\*D, T> (Required)
-    indices: tensor<\*N, I> (Required)
+    x: tensor<\\*D, T> (Required)
+    indices: tensor<\\*N, I> (Required)
         * Indices values may be negative. More precisely, ``-D[axis]<= v < D[axis]`` for ``v`` in ``indices``.
     axis: const i32 (Optional. Default=``0``)
         * Negative axis is supported.
@@ -283,7 +283,7 @@ class gather(_gather_iOS16):
 
     Returns
     -------
-    tensor<\*K, T>
+    tensor<\\*K, T>
         * Where ``K = D[:axis] + N[batch_dims:] + D[axis+1:]``.
 
     Attributes
@@ -341,8 +341,8 @@ class gather_along_axis(_gather_along_axis_iOS16):
 
     Parameters
     ----------
-    x: tensor<\*D, T> (Required)
-    indices: tensor<\*K, I> (Required)
+    x: tensor<\\*D, T> (Required)
+    indices: tensor<\\*K, I> (Required)
         * ``rank(indices) == rank(x)``.
     axis: const i32 (Optional):
         * Default to ``0``.
@@ -355,7 +355,7 @@ class gather_along_axis(_gather_along_axis_iOS16):
 
     Returns
     -------
-    tensor<\*D, T>:
+    tensor<\\*D, T>:
         * Output tensor has the same shape as ``indices``.
 
     Attributes
@@ -414,8 +414,8 @@ class gather_nd(_gather_nd_iOS16):
 
     Parameters
     ----------
-    x: tensor<\*D, T> (Required)
-    indices: tensor<\*K, I> (Required)
+    x: tensor<\\*D, T> (Required)
+    indices: tensor<\\*K, I> (Required)
     batch_dims: const i32 (Optional. Default=``0``)
         * The number of batch dimensions.
     validate_indices: const bool (Optional)
@@ -427,7 +427,7 @@ class gather_nd(_gather_nd_iOS16):
 
     Returns
     -------
-    tensor<\*V, T>
+    tensor<\\*V, T>
         * ``V = K[:-1] + D[batch_dims + K[-1]:]``, where ``D = x.shape`` and ``K = indices.shape``.
 
     Attributes

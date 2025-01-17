@@ -12,19 +12,19 @@ set(libprotobuf_files
   ${protobuf_source_dir}/src/google/protobuf/empty.pb.cc
   ${protobuf_source_dir}/src/google/protobuf/extension_set_heavy.cc
   ${protobuf_source_dir}/src/google/protobuf/field_mask.pb.cc
+  ${protobuf_source_dir}/src/google/protobuf/generated_message_bases.cc
   ${protobuf_source_dir}/src/google/protobuf/generated_message_reflection.cc
+  ${protobuf_source_dir}/src/google/protobuf/generated_message_table_driven.cc
+  ${protobuf_source_dir}/src/google/protobuf/generated_message_tctable_full.cc
   ${protobuf_source_dir}/src/google/protobuf/io/gzip_stream.cc
   ${protobuf_source_dir}/src/google/protobuf/io/printer.cc
-  ${protobuf_source_dir}/src/google/protobuf/io/strtod.cc
   ${protobuf_source_dir}/src/google/protobuf/io/tokenizer.cc
-  ${protobuf_source_dir}/src/google/protobuf/io/zero_copy_stream_impl.cc
   ${protobuf_source_dir}/src/google/protobuf/map_field.cc
   ${protobuf_source_dir}/src/google/protobuf/message.cc
   ${protobuf_source_dir}/src/google/protobuf/reflection_ops.cc
   ${protobuf_source_dir}/src/google/protobuf/service.cc
   ${protobuf_source_dir}/src/google/protobuf/source_context.pb.cc
   ${protobuf_source_dir}/src/google/protobuf/struct.pb.cc
-  ${protobuf_source_dir}/src/google/protobuf/stubs/mathlimits.cc
   ${protobuf_source_dir}/src/google/protobuf/stubs/substitute.cc
   ${protobuf_source_dir}/src/google/protobuf/text_format.cc
   ${protobuf_source_dir}/src/google/protobuf/timestamp.pb.cc
@@ -45,7 +45,6 @@ set(libprotobuf_files
   ${protobuf_source_dir}/src/google/protobuf/util/internal/protostream_objectsource.cc
   ${protobuf_source_dir}/src/google/protobuf/util/internal/protostream_objectwriter.cc
   ${protobuf_source_dir}/src/google/protobuf/util/internal/type_info.cc
-  ${protobuf_source_dir}/src/google/protobuf/util/internal/type_info_test_helper.cc
   ${protobuf_source_dir}/src/google/protobuf/util/internal/utility.cc
   ${protobuf_source_dir}/src/google/protobuf/util/json_util.cc
   ${protobuf_source_dir}/src/google/protobuf/util/message_differencer.cc
@@ -55,12 +54,68 @@ set(libprotobuf_files
   ${protobuf_source_dir}/src/google/protobuf/wrappers.pb.cc
 )
 
+set(libprotobuf_includes
+  ${protobuf_source_dir}/src/google/protobuf/any.pb.h
+  ${protobuf_source_dir}/src/google/protobuf/api.pb.h
+  ${protobuf_source_dir}/src/google/protobuf/compiler/importer.h
+  ${protobuf_source_dir}/src/google/protobuf/compiler/parser.h
+  ${protobuf_source_dir}/src/google/protobuf/descriptor.h
+  ${protobuf_source_dir}/src/google/protobuf/descriptor.pb.h
+  ${protobuf_source_dir}/src/google/protobuf/descriptor_database.h
+  ${protobuf_source_dir}/src/google/protobuf/duration.pb.h
+  ${protobuf_source_dir}/src/google/protobuf/dynamic_message.h
+  ${protobuf_source_dir}/src/google/protobuf/empty.pb.h
+  ${protobuf_source_dir}/src/google/protobuf/field_access_listener.h
+  ${protobuf_source_dir}/src/google/protobuf/field_mask.pb.h
+  ${protobuf_source_dir}/src/google/protobuf/generated_enum_reflection.h
+  ${protobuf_source_dir}/src/google/protobuf/generated_message_bases.h
+  ${protobuf_source_dir}/src/google/protobuf/generated_message_reflection.h
+  ${protobuf_source_dir}/src/google/protobuf/io/gzip_stream.h
+  ${protobuf_source_dir}/src/google/protobuf/io/printer.h
+  ${protobuf_source_dir}/src/google/protobuf/io/tokenizer.h
+  ${protobuf_source_dir}/src/google/protobuf/map_entry.h
+  ${protobuf_source_dir}/src/google/protobuf/map_field.h
+  ${protobuf_source_dir}/src/google/protobuf/map_field_inl.h
+  ${protobuf_source_dir}/src/google/protobuf/message.h
+  ${protobuf_source_dir}/src/google/protobuf/metadata.h
+  ${protobuf_source_dir}/src/google/protobuf/reflection.h
+  ${protobuf_source_dir}/src/google/protobuf/reflection_ops.h
+  ${protobuf_source_dir}/src/google/protobuf/service.h
+  ${protobuf_source_dir}/src/google/protobuf/source_context.pb.h
+  ${protobuf_source_dir}/src/google/protobuf/struct.pb.h
+  ${protobuf_source_dir}/src/google/protobuf/text_format.h
+  ${protobuf_source_dir}/src/google/protobuf/timestamp.pb.h
+  ${protobuf_source_dir}/src/google/protobuf/type.pb.h
+  ${protobuf_source_dir}/src/google/protobuf/unknown_field_set.h
+  ${protobuf_source_dir}/src/google/protobuf/util/delimited_message_util.h
+  ${protobuf_source_dir}/src/google/protobuf/util/field_comparator.h
+  ${protobuf_source_dir}/src/google/protobuf/util/field_mask_util.h
+  ${protobuf_source_dir}/src/google/protobuf/util/json_util.h
+  ${protobuf_source_dir}/src/google/protobuf/util/message_differencer.h
+  ${protobuf_source_dir}/src/google/protobuf/util/time_util.h
+  ${protobuf_source_dir}/src/google/protobuf/util/type_resolver.h
+  ${protobuf_source_dir}/src/google/protobuf/util/type_resolver_util.h
+  ${protobuf_source_dir}/src/google/protobuf/wire_format.h
+  ${protobuf_source_dir}/src/google/protobuf/wrappers.pb.h
+)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+set(libprotobuf_rc_files
+  ${CMAKE_CURRENT_BINARY_DIR}/version.rc
+)
+endif()
+
 add_library(libprotobuf ${protobuf_SHARED_OR_STATIC}
-  ${libprotobuf_lite_files} ${libprotobuf_files})
-target_compile_options(libprotobuf PUBLIC "-Wno-enum-compare-switch")
+  ${libprotobuf_lite_files} ${libprotobuf_files} ${libprotobuf_includes} ${libprotobuf_rc_files})
 target_link_libraries(libprotobuf ${CMAKE_THREAD_LIBS_INIT})
 if(protobuf_WITH_ZLIB)
-    target_link_libraries(libprotobuf ${ZLIB_LIBRARIES})
+  target_link_libraries(libprotobuf ${ZLIB_LIBRARIES})
+endif()
+if(protobuf_LINK_LIBATOMIC)
+  target_link_libraries(libprotobuf atomic)
+endif()
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Android")
+	target_link_libraries(libprotobuf log)
 endif()
 target_include_directories(libprotobuf PUBLIC ${protobuf_source_dir}/src)
 if(MSVC AND protobuf_BUILD_SHARED_LIBS)
@@ -69,5 +124,7 @@ if(MSVC AND protobuf_BUILD_SHARED_LIBS)
     PRIVATE LIBPROTOBUF_EXPORTS)
 endif()
 set_target_properties(libprotobuf PROPERTIES
+    VERSION ${protobuf_VERSION}
     OUTPUT_NAME ${LIB_PREFIX}protobuf
     DEBUG_POSTFIX "${protobuf_DEBUG_POSTFIX}")
+add_library(protobuf::libprotobuf ALIAS libprotobuf)

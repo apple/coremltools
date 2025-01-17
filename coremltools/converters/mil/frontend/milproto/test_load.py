@@ -15,8 +15,11 @@ from coremltools.converters._converters_entry import _get_metadata_from_mlmodel
 from coremltools.converters.mil import Builder as mb
 from coremltools.converters.mil.converter import mil_convert
 from coremltools.converters.mil.frontend.milproto.load import load as milproto_to_pymil
-from coremltools.converters.mil.frontend.tensorflow.test.test_ops import TestTensorArray
-from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import run_compare_tf
+
+if _HAS_TF_2:
+    from coremltools.converters.mil.frontend.tensorflow.test.test_ops import TestTensorArray
+    from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import run_compare_tf
+
 from coremltools.converters.mil.mil import Program, types
 from coremltools.converters.mil.mil.ops.tests.testing_utils import compare_backend
 from coremltools.converters.mil.testing_utils import (
@@ -294,8 +297,10 @@ class TestE2ENumericalCorrectness:
         roundtrip_and_compare_mlmodel(mlmodel, {"data": np.array([1.])})
         roundtrip_and_compare_mlmodel(mlmodel, {"data": np.array([11.])})
 
-    @pytest.mark.skipif(_HAS_TF_2, reason="Fix and re-enable this test: rdar://76293949 (TF2 unit test InvalidArgumentError)")
     def test_list(self):
+        pytest.xfail(
+            "Fix and re-enable this test: rdar://76293949 (TF2 unit test InvalidArgumentError)"
+        )
         model, inputs, outputs = TestTensorArray.get_dynamic_elem_shape_model()
         input_values = [np.random.rand(2, 3)]
         input_dict = dict(zip(inputs, input_values))

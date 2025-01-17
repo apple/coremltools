@@ -95,6 +95,11 @@ Core ML preallocates the memory for the default shape, so the first prediction w
 For a multi-input model, only one of the inputs can be marked with `EnumeratedShapes`; the rest must have fixed single shapes. If you require multiple inputs to be flexible, set the range for each dimension.
 ```
 
+```{admonition} Torch.Export Dynamism
+
+If the source PyTorch model is exported by [`torch.export.export`](https://pytorch.org/docs/stable/export.html#torch.export.export), then user will need to [express dynamism in torch.export](https://pytorch.org/docs/stable/export.html#expressing-dynamism), and only the torch.export dynamic dimensions are allowed to have more-than-1 possible sizes, see [Model Exporting](model-exporting).
+```
+
 ```{eval-rst}
 .. index::
     single: RangeDim
@@ -161,6 +166,22 @@ You can open the saved ML package in Xcode and click the **Predictions** tab to 
 
 ![Range shape](images/range_shape.png)
 
+```{admonition} Torch.Export Dynamism
+
+If the source PyTorch model is exported by [`torch.export.export`](https://pytorch.org/docs/stable/export.html#torch.export.export), then user will need to [express dynamism in torch.export](https://pytorch.org/docs/stable/export.html#expressing-dynamism), which will then be automatically converted to Core ML [`RangeDim`](https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#rangedim). In this case, user no longer has to specify [`RangeDim`](https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#rangedim) in `ct.convert`, see [Model Exporting](model-exporting).
+```
+
+## Reshape Frequency Optimization Hint
+
+Setting the Reshape Frequency Optimization Hint to `Infrequent` can allow flexible shaped models to run on the Neural Engine, with iOS 17.4 or later.
+This option can be set when loading your model:
+
+```python
+model = ct.model.MLModel(
+    'path/to/the/saved/model.mlpackage',
+    optimization_hints={ 'reshapeFrequency': ct.ReshapeFrequency.Infrequent }
+)
+```
 
 ## Enable Unbounded Ranges
 

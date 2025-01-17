@@ -71,7 +71,7 @@ def get_n_bits_from_dtype(dtype: _Union[str, _torch.dtype]) -> int:
         )
 
 
-def get_sign_from_dtype(dtype: _Union[str, _torch.dtype]) -> int:
+def is_signed_dtype(dtype: _Union[str, _torch.dtype]) -> bool:
     if type(dtype) is _torch.dtype:
         dtype_info = _get_dtype_info(dtype)
         return dtype_info.min < 0
@@ -98,6 +98,9 @@ def maybe_convert_str_to_dtype(dtype: _Union[str, _torch.dtype]) -> _torch.dtype
         "quint4": _torch.quint8,
         "uint3": _torch.uint8,
         "int3": _torch.int8,
+        "fp8_e4m3": _torch.float8_e4m3fn,
+        "fp8_e5m2": _torch.float8_e5m2,
+        "float16": _torch.float16,
     }
     if isinstance(dtype, str):
         dtype = dtype.lower()
@@ -160,7 +163,9 @@ def get_fully_qualified_name(model: _torch.nn.Module, module: _torch.nn.Module) 
 
 
 def get_atomic_layers(
-    module: _nn.Module, layer_types: _List[_Type], name_prefix: str = ""
+    module: _nn.Module,
+    layer_types: _Union[_List[str], _List[_Type]],
+    name_prefix: str = "",
 ) -> _Dict[str, _nn.Module]:
     """
     Returns a dictionary of layer_name: layer for every layer in the module which
@@ -206,3 +211,11 @@ def get_torch_version(version):
     version_regex = r"\d+\.\d+\.\d+"
     version = _re.search(version_regex, str(version)).group(0)
     return _StrictVersion(version)
+
+
+def normalize_fsdp_module_name(module_name: str) -> str:
+    """
+    FSDP flattens model parameters leading to change in module names.
+    helper method to return original module name
+    """
+    return _re.sub(r"_fsdp_\w+.", "", module_name)

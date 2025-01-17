@@ -15,10 +15,6 @@ from coremltools.optimize.torch.pruning import MagnitudePruner, MagnitudePrunerC
 from coremltools.optimize.torch.quantization import LinearQuantizer, LinearQuantizerConfig
 
 
-@pytest.mark.xfail(
-    reason="rdar://129302570 (Fix conversion support for jointly compressed models using training time algorithms)",
-    strict=True,
-)
 @pytest.mark.skipif(ct.utils._macos_version() < (15, 0), reason="Only supported on macOS 15+")
 def test_joint_pruning_quantization(mnist_model, mnist_example_input):
     example_input = mnist_example_input
@@ -44,15 +40,17 @@ def test_joint_pruning_quantization(mnist_model, mnist_example_input):
     # Alternatively can set initial sparsity to target sparsity
     pruned_quant_model(example_input)
 
-    quantizer.finalize(inplace=True)
-    finalized_model = pruner.finalize(inplace=True)
+    quant_finalized_model = quantizer.finalize(inplace=True)
+    finalized_model = pruner.finalize(quant_finalized_model)
 
     util.convert_and_verify(
         finalized_model,
         example_input,
-        pass_pipeline=ct.PassPipeline.DEFAULT_PRUNING,
         minimum_deployment_target=ct.target.iOS18,
-        expected_ops=["constexpr_sparse_to_dense"],
+        expected_ops=[
+            "constexpr_sparse_to_dense",
+            "constexpr_sparse_blockwise_shift_scale",
+        ],
     )
 
 

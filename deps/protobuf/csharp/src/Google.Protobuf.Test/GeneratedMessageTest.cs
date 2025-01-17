@@ -33,6 +33,7 @@
 using System;
 using System.IO;
 using Google.Protobuf.TestProtos;
+using Proto2 = Google.Protobuf.TestProtos.Proto2;
 using NUnit.Framework;
 using System.Collections;
 using System.Collections.Generic;
@@ -44,7 +45,7 @@ namespace Google.Protobuf
     /// <summary>
     /// Tests around the generated TestAllTypes message.
     /// </summary>
-    public class GeneratedMessageTest
+    public partial class GeneratedMessageTest
     {
         [Test]
         public void EmptyMessageFieldDistinctFromMissingMessageField()
@@ -130,8 +131,10 @@ namespace Google.Protobuf
             // Without setting any values, there's nothing to write.
             byte[] bytes = message.ToByteArray();
             Assert.AreEqual(0, bytes.Length);
-            TestAllTypes parsed = TestAllTypes.Parser.ParseFrom(bytes);
-            Assert.AreEqual(message, parsed);
+
+            MessageParsingHelpers.AssertWritingMessage(message);
+
+            MessageParsingHelpers.AssertRoundtrip(TestAllTypes.Parser, message);
         }
 
         [Test]
@@ -163,9 +166,9 @@ namespace Google.Protobuf
                 SingleUint64 = ulong.MaxValue
             };
 
-            byte[] bytes = message.ToByteArray();
-            TestAllTypes parsed = TestAllTypes.Parser.ParseFrom(bytes);
-            Assert.AreEqual(message, parsed);
+            MessageParsingHelpers.AssertWritingMessage(message);
+
+            MessageParsingHelpers.AssertRoundtrip(TestAllTypes.Parser, message);
         }
 
         [Test]
@@ -197,9 +200,9 @@ namespace Google.Protobuf
                 RepeatedUint64 = { ulong.MaxValue, uint.MinValue }
             };
 
-            byte[] bytes = message.ToByteArray();
-            TestAllTypes parsed = TestAllTypes.Parser.ParseFrom(bytes);
-            Assert.AreEqual(message, parsed);
+            MessageParsingHelpers.AssertWritingMessage(message);
+
+            MessageParsingHelpers.AssertRoundtrip(TestAllTypes.Parser, message);
         }
 
         // Note that not every map within map_unittest_proto3 is used. They all go through very
@@ -229,9 +232,9 @@ namespace Google.Protobuf
                 }
             };
 
-            byte[] bytes = message.ToByteArray();
-            TestMap parsed = TestMap.Parser.ParseFrom(bytes);
-            Assert.AreEqual(message, parsed);
+            MessageParsingHelpers.AssertWritingMessage(message);
+
+            MessageParsingHelpers.AssertRoundtrip(TestMap.Parser, message);
         }
 
         [Test]
@@ -245,9 +248,16 @@ namespace Google.Protobuf
             byte[] bytes = message.ToByteArray();
             Assert.AreEqual(2, bytes.Length); // Tag for field entry (1 byte), length of entry (0; 1 byte)
 
-            var parsed = TestMap.Parser.ParseFrom(bytes);
-            Assert.AreEqual(1, parsed.MapInt32Bytes.Count);
-            Assert.AreEqual(ByteString.Empty, parsed.MapInt32Bytes[0]);
+            MessageParsingHelpers.AssertWritingMessage(message);
+
+            MessageParsingHelpers.AssertReadingMessage(
+                TestMap.Parser,
+                bytes,
+                parsed=>
+                {
+                    Assert.AreEqual(1, parsed.MapInt32Bytes.Count);
+                    Assert.AreEqual(ByteString.Empty, parsed.MapInt32Bytes[0]);
+                });
         }
 
         [Test]
@@ -264,8 +274,13 @@ namespace Google.Protobuf
             output.WriteMessage(nestedMessage);
             output.Flush();
 
-            var parsed = TestMap.Parser.ParseFrom(memoryStream.ToArray());
-            Assert.AreEqual(nestedMessage, parsed.MapInt32ForeignMessage[0]);
+            MessageParsingHelpers.AssertReadingMessage(
+                TestMap.Parser,
+                memoryStream.ToArray(),
+                parsed =>
+                {
+                    Assert.AreEqual(nestedMessage, parsed.MapInt32ForeignMessage[0]);
+                });
         }
 
         [Test]
@@ -281,8 +296,13 @@ namespace Google.Protobuf
             output.WriteInt32(key);
             output.Flush();
 
-            var parsed = TestMap.Parser.ParseFrom(memoryStream.ToArray());
-            Assert.AreEqual(0.0, parsed.MapInt32Double[key]);
+            MessageParsingHelpers.AssertReadingMessage(
+                TestMap.Parser,
+                memoryStream.ToArray(),
+                parsed =>
+                {
+                    Assert.AreEqual(0.0, parsed.MapInt32Double[key]);
+                });
         }
 
         [Test]
@@ -298,8 +318,13 @@ namespace Google.Protobuf
             output.WriteInt32(key);
             output.Flush();
 
-            var parsed = TestMap.Parser.ParseFrom(memoryStream.ToArray());
-            Assert.AreEqual(new ForeignMessage(), parsed.MapInt32ForeignMessage[key]);
+            MessageParsingHelpers.AssertReadingMessage(
+                TestMap.Parser,
+                memoryStream.ToArray(),
+                parsed =>
+                {
+                    Assert.AreEqual(new ForeignMessage(), parsed.MapInt32ForeignMessage[key]);
+                });
         }
 
         [Test]
@@ -326,8 +351,13 @@ namespace Google.Protobuf
             output.WriteInt32(extra);
             output.Flush();
 
-            var parsed = TestMap.Parser.ParseFrom(memoryStream.ToArray());
-            Assert.AreEqual(value, parsed.MapInt32Int32[key]);
+            MessageParsingHelpers.AssertReadingMessage(
+                TestMap.Parser,
+                memoryStream.ToArray(),
+                parsed =>
+                {
+                    Assert.AreEqual(value, parsed.MapInt32Int32[key]);
+                });
         }
 
         [Test]
@@ -350,8 +380,13 @@ namespace Google.Protobuf
             output.WriteInt32(key);
             output.Flush();
 
-            var parsed = TestMap.Parser.ParseFrom(memoryStream.ToArray());
-            Assert.AreEqual(value, parsed.MapInt32Int32[key]);
+            MessageParsingHelpers.AssertReadingMessage(
+                TestMap.Parser,
+                memoryStream.ToArray(),
+                parsed =>
+                {
+                    Assert.AreEqual(value, parsed.MapInt32Int32[key]);
+                });
         }
 
         [Test]
@@ -396,13 +431,19 @@ namespace Google.Protobuf
             output.WriteInt32(value3);
 
             output.Flush();
-            var parsed = TestMap.Parser.ParseFrom(memoryStream.ToArray());
-            var expected = new TestMap
-            {
-                MapInt32Int32 = { { key1, value1 }, { key3, value3 } },
-                MapStringString = { { key2, value2 } }
-            };
-            Assert.AreEqual(expected, parsed);
+
+            MessageParsingHelpers.AssertReadingMessage(
+                TestMap.Parser,
+                memoryStream.ToArray(),
+                parsed =>
+                {
+                    var expected = new TestMap
+                    {
+                        MapInt32Int32 = { { key1, value1 }, { key3, value3 } },
+                        MapStringString = { { key2, value2 } }
+                    };
+                    Assert.AreEqual(expected, parsed);
+                });
         }
 
         [Test]
@@ -432,8 +473,13 @@ namespace Google.Protobuf
             output.WriteInt32(value2);
             output.Flush();
 
-            var parsed = TestMap.Parser.ParseFrom(memoryStream.ToArray());
-            Assert.AreEqual(value2, parsed.MapInt32Int32[key]);
+            MessageParsingHelpers.AssertReadingMessage(
+                TestMap.Parser,
+                memoryStream.ToArray(),
+                parsed =>
+                {
+                    Assert.AreEqual(value2, parsed.MapInt32Int32[key]);
+                });
         }
 
         [Test]
@@ -618,9 +664,12 @@ namespace Google.Protobuf
             var bytes = message.ToByteArray();
             Assert.AreEqual(3, bytes.Length); // 2 bytes for the tag + 1 for the value - no string!
 
-            var message2 = TestAllTypes.Parser.ParseFrom(bytes);
-            Assert.AreEqual(message, message2);
-            Assert.AreEqual(TestAllTypes.OneofFieldOneofCase.OneofUint32, message2.OneofFieldCase);
+            MessageParsingHelpers.AssertWritingMessage(message);
+
+            MessageParsingHelpers.AssertRoundtrip(TestAllTypes.Parser, message, parsedMessage =>
+            {
+                Assert.AreEqual(TestAllTypes.OneofFieldOneofCase.OneofUint32, parsedMessage.OneofFieldCase);
+            });
         }
 
         [Test]
@@ -632,13 +681,16 @@ namespace Google.Protobuf
             var bytes = message.ToByteArray();
             Assert.AreEqual(3, bytes.Length); // 2 bytes for the tag + 1 for the value - it's still serialized
 
-            var message2 = TestAllTypes.Parser.ParseFrom(bytes);
-            Assert.AreEqual(message, message2);
-            Assert.AreEqual(TestAllTypes.OneofFieldOneofCase.OneofUint32, message2.OneofFieldCase);
+            MessageParsingHelpers.AssertWritingMessage(message);
+
+            MessageParsingHelpers.AssertRoundtrip(TestAllTypes.Parser, message, parsedMessage =>
+            {
+                Assert.AreEqual(TestAllTypes.OneofFieldOneofCase.OneofUint32, parsedMessage.OneofFieldCase);
+            });
         }
 
         [Test]
-        public void IgnoreUnknownFields_RealDataStillRead()
+        public void DiscardUnknownFields_RealDataStillRead()
         {
             var message = SampleMessages.CreateFullTestAllTypes();
             var stream = new MemoryStream();
@@ -650,18 +702,31 @@ namespace Google.Protobuf
             message.WriteTo(output);
             output.Flush();
 
-            stream.Position = 0;
-            var parsed = TestAllTypes.Parser.ParseFrom(stream);
-            Assert.AreEqual(message, parsed);
+            MessageParsingHelpers.AssertReadingMessage(
+                TestAllTypes.Parser,
+                stream.ToArray(),
+                parsed =>
+                {
+                    // TODO(jieluo): Add test back when DiscardUnknownFields API is supported.
+                    // Assert.AreEqual(message, parsed);
+                });
         }
 
         [Test]
-        public void IgnoreUnknownFields_AllTypes()
+        public void DiscardUnknownFields_AllTypes()
         {
             // Simple way of ensuring we can skip all kinds of fields.
             var data = SampleMessages.CreateFullTestAllTypes().ToByteArray();
             var empty = Empty.Parser.ParseFrom(data);
-            Assert.AreEqual(new Empty(), empty);
+
+            MessageParsingHelpers.AssertReadingMessage(
+                Empty.Parser,
+                data,
+                parsed =>
+                {
+                    // TODO(jieluo): Add test back when DiscardUnknownFields API is supported.
+                    // Assert.AreNotEqual(new Empty(), empty);
+                });
         }
 
         // This was originally seen as a conformance test failure.
@@ -671,7 +736,7 @@ namespace Google.Protobuf
             // 130, 3 is the message tag
             // 1 is the data length - but there's no data.
             var data = new byte[] { 130, 3, 1 };
-            Assert.Throws<InvalidProtocolBufferException>(() => TestAllTypes.Parser.ParseFrom(data));
+            MessageParsingHelpers.AssertReadingMessageThrows<TestAllTypes, InvalidProtocolBufferException>(TestAllTypes.Parser, data);
         }
 
         /// <summary>
@@ -692,7 +757,7 @@ namespace Google.Protobuf
             output.Flush();
 
             stream.Position = 0;
-            Assert.Throws<InvalidProtocolBufferException>(() => TestAllTypes.Parser.ParseFrom(stream));
+            MessageParsingHelpers.AssertReadingMessageThrows<TestAllTypes, InvalidProtocolBufferException>(TestAllTypes.Parser, stream.ToArray());
         }
 
         [Test]
@@ -718,6 +783,17 @@ namespace Google.Protobuf
             var writer = new StringWriter();
             JsonFormatter.Default.Format(message, writer);
             Assert.AreEqual("{ \"c\": 31 }", writer.ToString());
+        }
+
+        [Test]
+        public void NaNComparisons()
+        {
+            var message1 = new TestAllTypes { SingleDouble = SampleNaNs.Regular };
+            var message2 = new TestAllTypes { SingleDouble = SampleNaNs.PayloadFlipped };
+            var message3 = new TestAllTypes { SingleDouble = SampleNaNs.Regular };
+
+            EqualityTester.AssertInequality(message1, message2);
+            EqualityTester.AssertEquality(message1, message3);
         }
     }
 }

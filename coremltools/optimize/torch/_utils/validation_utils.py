@@ -5,10 +5,12 @@
 
 import copy as _copy
 import logging as _logging
+from typing import Dict as _Dict
 from typing import List as _List
 from typing import Optional as _Optional
 
 import torch as _torch
+import torch.nn as _nn
 
 from coremltools.optimize.torch.optimization_config import (
     ModuleOptimizationConfig as _ModuleOptimizationConfig,
@@ -28,11 +30,15 @@ class ConfigValidator:
         self,
         param_name: str,
         param: _torch.Tensor,
+        module: _nn.Module,
         config: _Optional[_ModuleOptimizationConfig],
+        module_level_advanced_options: _Optional[_Dict] = None,
     ):
         self.param_name = param_name
         self.param = param
+        self.module = module
         self.config = _copy.deepcopy(config)
+        self.module_level_advanced_options = module_level_advanced_options
 
     def validate(self, checks_to_run: _List[str]) -> bool:
         for check_name in checks_to_run:
@@ -123,10 +129,18 @@ class ConfigValidator:
             return True
 
         # If block size is not divisible by axis length skip palettizing this param
-        axis_length = self.param.shape[self.config.channel_axis]
+        if (
+            self.module_level_advanced_options
+            and self.module_level_advanced_options["cluster_permute"]
+        ):
+            axis_length = self.param.permute(
+                self.module_level_advanced_options["cluster_permute"]
+            ).shape[self.config.channel_axis]
+        else:
+            axis_length = self.param.shape[self.config.channel_axis]
         if axis_length % self.config.group_size != 0:
             _logger.warning(
-                f"{self.param_name}: group_size={self.config.group_size} is not divisible by axis length={axis_length}"
+                f"{self.param_name}: axis_length={axis_length} is not divisible by group_size={self.config.group_size}"
             )
             return False
 
@@ -143,13 +157,14 @@ class ConfigValidator:
             return True
 
         if self.config.cluster_dim > 1:
-            # By default, vectors are formed along the output channel axis.
-            # Hence, the size of remaining channels should be divisible by ``cluster_dim``
-            dim_size = self.param.flatten(1).shape[1]
+            if self.config.channel_axis == 0:
+                dim_size = self.param.shape[0]
+            else:
+                dim_size = self.param.shape[1]
             if dim_size % self.config.cluster_dim != 0:
                 _logger.warning(
-                    f"{self.param_name}: The number of elements in non-output channels {dim_size} "
-                    f"is not divisible by cluster_dim={self.config.cluster_dim}"
+                    f"{self.param_name}: The number of channels in channel axis dimension: {self.config.channel_axis},"
+                    f" {dim_size} is not divisible by cluster_dim={self.config.cluster_dim}"
                 )
                 return False
 
@@ -159,10 +174,12 @@ class ConfigValidator:
 def validate_param_config(
     param_name: str,
     param: _torch.Tensor,
+    module: _nn.Module,
     config: _Optional[_ModuleOptimizationConfig],
     checks_to_run: _List[str],
+    module_level_advanced_options: _Optional[_Dict] = None,
 ):
-    validator = ConfigValidator(param_name, param, config)
+    validator = ConfigValidator(param_name, param, module, config, module_level_advanced_options)
     is_valid_config = validator.validate(checks_to_run)
     if not is_valid_config:
         # Skip compression for this param if config is invalid

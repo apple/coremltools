@@ -1,7 +1,7 @@
 Babel
 MarkupSafe
 Pygments
-Sphinx==7.3.1
+Sphinx==7.4.7
 alabaster
 certifi
 chardet

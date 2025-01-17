@@ -5,18 +5,23 @@
 
 import itertools
 import os
+import platform
+import shutil
+import tempfile
 from unittest.mock import patch
 
 import numpy as np
 import pytest
+from packaging.version import Version
 from PIL import Image
 
 import coremltools as ct
 from coremltools._deps import (
-    _HAS_EXECUTORCH,
+    _HAS_HF,
     _HAS_TORCH,
-    MSG_EXECUTORCH_NOT_FOUND,
+    _HAS_TORCHAO,
     MSG_TORCH_NOT_FOUND,
+    MSG_TORCHAO_NOT_FOUND,
 )
 from coremltools.converters.mil.frontend.torch.test.testing_utils import _copy_input_data
 from coremltools.converters.mil.frontend.torch.torch_op_registry import (
@@ -44,13 +49,17 @@ from coremltools.test.api.test_api_examples import TestInputs as _TestInputs
 
 if _HAS_TORCH:
     import torch
+    import torch.nn as nn
     import torchvision
 
     torch.manual_seed(1818)
 
-if _HAS_EXECUTORCH:
-    import executorch.exir
+if _HAS_HF:
+    from peft import LoraConfig, get_peft_model
 
+if _HAS_TORCHAO:
+    from torchao.quantization import quant_api
+    from torchao.utils import unwrap_tensor_subclass
 
 @pytest.fixture
 def torch_model():
@@ -130,96 +139,6 @@ class TestTorchScriptValidation:
         assert _METADATA_SOURCE_DIALECT in mlmodel.user_defined_metadata
 
         assert mlmodel.user_defined_metadata[_METADATA_SOURCE_DIALECT] == "TorchScript"
-
-
-@pytest.mark.skipif(not _HAS_EXECUTORCH, reason=MSG_EXECUTORCH_NOT_FOUND)
-class TestEXIRValidation:
-    @staticmethod
-    @pytest.mark.parametrize("backend", backends)
-    def test_fp16_io(torch_model, backend):  # TODO (rdar://115845792): Handle fp16 IO dtypes
-        class TestModule(torch.nn.Module):
-            def __init__(self):
-                super(TestModule, self).__init__()
-                self.linear = torch.nn.Linear(10, 20, dtype=torch.float16)
-
-            def forward(self, x):
-                return self.linear(x)
-
-        model = TestModule()
-        model.eval()
-
-        shape = (1, 10)
-        example_inputs = (torch.rand(*shape, dtype=torch.float16),)
-        exir_program_aten = torch.export.export(model, example_inputs)
-        exir_program_edge = executorch.exir.to_edge(exir_program_aten).exported_program()
-
-        # Default deployment target is iOS14 for neuralnetwork and iOS15 for mlprogram,
-        # both are too old to support fp16 io
-        with pytest.raises(
-            ValueError, match=r"To use fp16 input, please set minimum deployment target to iOS16\+"
-        ):
-            ct.convert(exir_program_edge, convert_to=backend[0])
-
-        # fp16 io should work fine for iOS16+
-        if backend[0] == "mlprogram":
-            ct.convert(
-                exir_program_edge,
-                convert_to="mlprogram",
-                minimum_deployment_target=ct.target.iOS16,
-            )
-
-    @staticmethod
-    @pytest.mark.parametrize("backend", backends)
-    def test_inputs(
-        torch_model, backend
-    ):  # TODO: rdar://115845792 ([Executorch] Handle user provided inputs/outputs in the convert API)
-        shape = (2, 10)
-        exir_program_aten = torch.export.export(torch_model, (torch.rand(*shape),))
-        exir_program_edge = executorch.exir.to_edge(exir_program_aten).exported_program()
-
-        with pytest.raises(
-            AssertionError, match=r"'inputs' argument should be None for ExportedProgram"
-        ):
-            ct.convert(
-                exir_program_edge,
-                convert_to=backend[0],
-                inputs=[ct.TensorType(shape=shape)],
-            )
-
-    @staticmethod
-    @pytest.mark.parametrize("backend", backends)
-    def test_outputs(
-        torch_model, backend
-    ):  # TODO: rdar://115845792 ([Executorch] Handle user provided inputs/outputs in the convert API)
-        shape = (3, 10)
-        exir_program_aten = torch.export.export(torch_model, (torch.rand(*shape),))
-        exir_program_edge = executorch.exir.to_edge(exir_program_aten).exported_program()
-
-        with pytest.raises(
-            AssertionError, match=r"'outputs' argument should be None for ExportedProgram"
-        ):
-            ct.convert(
-                exir_program_edge,
-                convert_to=backend[0],
-                outputs=[ct.TensorType(name="result")],
-            )
-
-    @staticmethod
-    @pytest.mark.parametrize("backend", backends)
-    def test_source_dialect_metadata(torch_model, backend):
-        shape = (4, 10)
-        exir_program_aten = torch.export.export(torch_model, (torch.rand(*shape),))
-        exir_program_edge = executorch.exir.to_edge(exir_program_aten).exported_program()
-
-        mlmodel = ct.convert(
-            exir_program_edge,
-            source="pytorch",
-            convert_to=backend[0],
-        )
-
-        assert _METADATA_SOURCE_DIALECT in mlmodel.user_defined_metadata
-
-        assert mlmodel.user_defined_metadata[_METADATA_SOURCE_DIALECT] == "TorchExport::EDGE"
 
 
 @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
@@ -669,6 +588,323 @@ class TestPyTorchConverterExamples:
             output_dict_feature_name = class_label_name + "_probs"
             assert output_dict_feature_name in out_dict
             assert isinstance(out_dict[output_dict_feature_name], dict)
+
+    @staticmethod
+    @pytest.mark.skipif(
+        ct.utils._macos_version() < (15, 0), reason="Tests are for deployment target iOS18/macos15"
+    )
+    @pytest.mark.xfail(
+        reason="rdar://131396853 Lora Adapted Model Dies as ct.models.MLModel but Passes coremltest",
+        run=False,
+    )
+    def test_multifunction_example():
+        # util to add adapters
+        def adapt_model_with_lora(model):
+            lora_config = LoraConfig(
+                target_modules=["linear1", "linear2"], r=32, lora_alpha=1
+            )  # rank 32
+            adapted_model = get_peft_model(model, lora_config)
+            return adapted_model
+
+        # define the base model
+        class Base(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.linear1 = nn.Linear(6000, 6000)
+                self.relu = nn.ReLU()
+                self.linear2 = nn.Linear(6000, 6000)
+
+            def forward(self, x):
+                x = self.linear1(x)
+                x = self.relu(x)
+                x = self.linear2(x)
+                return x
+
+        base_model = Base()
+
+        # create tmp paths for models
+        mlmodel_1_path = tempfile.mkdtemp(suffix=".mlpackage")
+        mlmodel_2_path = tempfile.mkdtemp(suffix=".mlpackage")
+        multifunction_model_path = tempfile.mkdtemp(suffix=".mlpackage")
+
+        try:
+            # first model with adapter
+            adapted_model_1 = adapt_model_with_lora(base_model)
+            mlmodel_1 = ct.convert(
+                torch.jit.trace(adapted_model_1.eval(), torch.rand(1, 6000)),
+                inputs=[ct.TensorType(name="input_adpated_model_1", shape=(1, 6000))],
+                outputs=[ct.TensorType(name="out_adpated_model_1")],
+                minimum_deployment_target=ct.target.iOS18,
+                skip_model_load=True,
+            )
+            mlmodel_1.save(mlmodel_1_path)
+
+            # second model
+            adapted_model_2 = adapt_model_with_lora(base_model)
+            mlmodel_2 = ct.convert(
+                torch.jit.trace(adapted_model_2.eval(), torch.rand(1, 6000)),
+                inputs=[ct.TensorType(name="input_adpated_model_2", shape=(1, 6000))],
+                outputs=[ct.TensorType(name="out_adpated_model_2")],
+                minimum_deployment_target=ct.target.iOS18,
+                skip_model_load=True,
+            )
+            mlmodel_2.save(mlmodel_2_path)
+
+            # combine two models into a multifunction model
+            desc = ct.utils.MultiFunctionDescriptor()
+            desc.add_function(
+                mlmodel_1_path, src_function_name="main", target_function_name="adapter_1"
+            )
+            desc.add_function(
+                mlmodel_2_path, src_function_name="main", target_function_name="adapter_2"
+            )
+            desc.default_function_name = "adapter_1"
+            ct.utils.save_multifunction(desc, multifunction_model_path)
+
+            if platform.machine() == "arm64":
+                # The following model fails to run on Intel machines,
+                # tracked by rdar://132919101 ([Bug] Intel machines fails on running several multifunction unittest)
+
+                # run the prediction
+                mlmodel_1 = ct.models.MLModel(multifunction_model_path)  # Uses default function
+                y_1 = mlmodel_1.predict({"input_adpated_model_1": np.random.rand(1, 6000)})
+
+                mlmodel_2 = ct.models.MLModel(multifunction_model_path, function_name="adapter_2")
+                y_2 = mlmodel_2.predict({"input_adpated_model_2": np.random.rand(1, 6000)})
+
+                # run the model using CompiledMLModel
+                compile_model = ct.models.CompiledMLModel(multifunction_model_path)
+                y_1 = mlmodel_1.predict({"input_adpated_model_1": np.random.rand(1, 6000)})
+
+        except:
+            raise ValueError("Test failing for test_multifunction_example.")
+
+        finally:
+            # cleanup
+            shutil.rmtree(mlmodel_1_path)
+            shutil.rmtree(mlmodel_2_path)
+            shutil.rmtree(multifunction_model_path)
+
+    @staticmethod
+    @pytest.mark.skipif(
+        ct.utils._macos_version() < (15, 0), reason="Tests are for deployment target iOS18/macos15"
+    )
+    def test_stateful_accumulator():
+        # stateful model definition in torch
+        class Model(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.register_buffer("accumulator", torch.tensor(np.array([0], dtype=np.float16)))
+
+            def forward(self, x):
+                self.accumulator += x
+                return self.accumulator * self.accumulator
+
+        # convert the trace model into stateful mlmodel
+        traced_model = torch.jit.trace(Model().eval(), torch.tensor([1]))
+        mlmodel = ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(shape=(1,))],
+            outputs=[ct.TensorType(name="y")],
+            states=[
+                ct.StateType(
+                    wrapped_type=ct.TensorType(
+                        shape=(1,),
+                    ),
+                    name="accumulator",
+                ),
+            ],
+            minimum_deployment_target=ct.target.iOS18,
+        )
+
+        # check the numerical outputs
+        state1 = mlmodel.make_state()
+        assert mlmodel.predict({"x": np.array([2.0])}, state=state1)["y"] == 4  # (2)^2
+        assert mlmodel.predict({"x": np.array([5.0])}, state=state1)["y"] == 49  # (5+2)^2
+        assert mlmodel.predict({"x": np.array([-1.0])}, state=state1)["y"] == 36  # (-1+5+2)^2
+
+        state2 = mlmodel.make_state()
+        assert mlmodel.predict({"x": np.array([9.0])}, state=state2)["y"] == 81  # (9)^2
+        assert mlmodel.predict({"x": np.array([2.0])}, state=state2)["y"] == 121  # (2+9)^2
+
+        assert mlmodel.predict({"x": np.array([3.0])}, state=state1)["y"] == 81  # (3-1+5+2)^2
+        assert mlmodel.predict({"x": np.array([7.0])}, state=state1)["y"] == 256  # (7+3-1+5+2)^2
+
+    @staticmethod
+    @pytest.mark.skipif(
+        ct.utils._macos_version() < (15, 0), reason="States are supported since iOS18/macos15."
+    )
+    def test_attention_stateful_key_value_cache():
+        """
+        Use a toy attention model to showcase kv cache with states.
+
+        This toy example is only for showing how to convert in-place update kv-cache. It omits some
+        other details such as multi-head, multi-layer, positional encoding, final logits, etc.
+        """
+
+        class SimpleAttention(nn.Module):
+            def __init__(self, embed_size):
+                super().__init__()
+                self.query = nn.Linear(embed_size, embed_size)
+                self.key = nn.Linear(embed_size, embed_size)
+                self.value = nn.Linear(embed_size, embed_size)
+
+            def forward(self, x):
+                Q = self.query(x)  # (batch_size, seq_len, embed_size)
+                K = self.key(x)  # (batch_size, seq_len, embed_size)
+                V = self.value(x)  # (batch_size, seq_len, embed_size)
+                return torch.nn.functional.scaled_dot_product_attention(Q, K, V)
+
+        class ToyModel(nn.Module):
+            def __init__(self, vocab_size, embed_size):
+                super().__init__()
+                self.embedding = nn.Embedding(vocab_size, embed_size)
+                self.attention = SimpleAttention(embed_size)
+                self.fc = nn.Linear(embed_size, embed_size)
+
+            def forward(self, x):
+                embedded = self.embedding(x)
+                attention_output = self.attention(embedded)
+                return self.fc(attention_output)
+
+        class SimpleAttentionWithKeyValueCache(SimpleAttention):
+            """Add kv-cache into SimpleAttention."""
+
+            def forward(self, x, attention_mask, k_cache, v_cache):
+                Q = self.query(x)
+                newly_computed_k = self.key(x)
+                newly_computed_v = self.value(x)
+
+                # Update kv-cache in-place.
+                q_len = Q.shape[-2]
+                end_step = attention_mask.shape[-1]
+                past_kv_len = end_step - q_len
+                k_cache[:, past_kv_len:end_step, :] = newly_computed_k
+                v_cache[:, past_kv_len:end_step, :] = newly_computed_v
+
+                # The K and V we need is (batch_size, q_len + past_kv_len, embed_size).
+                K = k_cache[:, :end_step, :]
+                V = v_cache[:, :end_step, :]
+
+                return torch.nn.functional.scaled_dot_product_attention(
+                    Q, K, V, attn_mask=attention_mask
+                )
+
+        class ToyModelWithKeyValueCache(nn.Module):
+            def __init__(self, vocab_size, embed_size, batch_size, max_seq_len):
+                super().__init__()
+                self.embedding = nn.Embedding(vocab_size, embed_size)
+                self.attention = SimpleAttentionWithKeyValueCache(embed_size)
+                self.fc = nn.Linear(embed_size, embed_size)
+
+                self.kvcache_shape = (batch_size, max_seq_len, embed_size)
+                self.register_buffer("k_cache", torch.zeros(self.kvcache_shape))
+                self.register_buffer("v_cache", torch.zeros(self.kvcache_shape))
+
+            def forward(
+                self,
+                input_ids,  # [batch_size, seq_len]
+                causal_mask,  # [batch_size, seq_len, seq_len + past_kv_len]
+            ):
+                embedded = self.embedding(input_ids)
+                attention_output = self.attention(embedded, causal_mask, self.k_cache, self.v_cache)
+                return self.fc(attention_output)
+
+        # If you want to compare prediction speed, the benefits of stateful kv-cache will only be
+        # revealed with large models, such as `vocab_size=32000` and `embed_size = 1024`.
+        vocab_size = 100
+        embed_size = 32
+        batch_size = 1
+        seq_len = 5
+        max_seq_len = 1024
+        num_iterations = 100
+
+        # Stateless model without kv-cache.
+        torch_model = ToyModel(vocab_size, embed_size)
+        torch_model.eval()
+        input_ids = torch.randint(0, vocab_size, (batch_size, seq_len))
+        torch_output = torch_model(input_ids).detach().numpy()
+        traced_model = torch.jit.trace(torch_model, [input_ids])
+        query_length = ct.RangeDim(lower_bound=1, upper_bound=max_seq_len, default=1)
+        inputs = [ct.TensorType(shape=(batch_size, query_length), dtype=np.int32, name="input_ids")]
+        outputs = [ct.TensorType(dtype=np.float16, name="output")]
+
+        # The minimum_deployment_target and compute_units is not necessary, as non-stateful models
+        # are supported before iOS18. Here we set it just for fair comparison with the stateful
+        # kvcache model below.
+        converted_model = ct.convert(
+            traced_model,
+            inputs=inputs,
+            outputs=outputs,
+            minimum_deployment_target=ct.target.iOS18,
+            compute_units=ct.ComputeUnit.CPU_AND_GPU,
+        )
+
+        # Makes sure prediction works well.
+        for token_id in range(0, num_iterations):
+            inputs = {"input_ids": np.array([list(range(token_id + 1))], dtype=np.int32)}
+            converted_model.predict(inputs)
+
+        # Stateful model with kv-cache.
+        past_kv_len = 0
+        torch_model_kvcache = ToyModelWithKeyValueCache(
+            vocab_size, embed_size, batch_size, max_seq_len
+        )
+        torch_model_kvcache.load_state_dict(torch_model.state_dict(), strict=False)
+        torch_model_kvcache.eval()
+        causal_mask = torch.zeros((batch_size, seq_len, seq_len + past_kv_len), dtype=torch.float32)
+
+        # Make sure the output matches the non-kv-cache version.
+        torch_kvcache_output = torch_model_kvcache(input_ids, causal_mask).detach().numpy()
+        np.testing.assert_allclose(torch_output, torch_kvcache_output)
+
+        traced_model_kvcache = torch.jit.trace(torch_model_kvcache, [input_ids, causal_mask])
+        query_length = ct.RangeDim(lower_bound=1, upper_bound=max_seq_len, default=1)
+        end_step_dim = ct.RangeDim(lower_bound=1, upper_bound=max_seq_len, default=1)
+        inputs = [
+            ct.TensorType(shape=(batch_size, query_length), dtype=np.int32, name="input_ids"),
+            ct.TensorType(
+                shape=(batch_size, query_length, end_step_dim), dtype=np.float16, name="causal_mask"
+            ),
+        ]
+        outputs = [ct.TensorType(dtype=np.float16, name="output")]
+
+        # In addition to `inputs` and `outputs`, we need `states` which uses the same name as the
+        # registered buffers in `ToyModelWithKeyValueCache`.
+        states = [
+            ct.StateType(
+                wrapped_type=ct.TensorType(
+                    shape=torch_model_kvcache.kvcache_shape, dtype=np.float16
+                ),
+                name="k_cache",
+            ),
+            ct.StateType(
+                wrapped_type=ct.TensorType(
+                    shape=torch_model_kvcache.kvcache_shape, dtype=np.float16
+                ),
+                name="v_cache",
+            ),
+        ]
+        converted_model_kvcache = ct.convert(
+            traced_model_kvcache,
+            inputs=inputs,
+            outputs=outputs,
+            states=states,
+            minimum_deployment_target=ct.target.iOS18,
+            compute_units=ct.ComputeUnit.CPU_AND_GPU,
+        )
+
+        # Makes sure prediction works well.
+        past_kv_len = 0
+        kv_cache_state = converted_model_kvcache.make_state()
+        for token_id in range(0, num_iterations):
+            inputs = {
+                "input_ids": np.array([[token_id]], dtype=np.int32),
+                "causal_mask": np.zeros((1, 1, past_kv_len + 1), dtype=np.float16),
+            }
+            converted_model_kvcache.predict(inputs, kv_cache_state)
+            past_kv_len += 1
+
 
 ###############################################################################
 # Note: Stress tests for PyTorch input / output types
@@ -2517,3 +2753,123 @@ class TestiOS16DefaultIODtype:
             output_dtype="fp32",
             expected_op_list=["add"],
         )
+
+
+@pytest.mark.skipif(
+    Version(torch.__version__) < Version("2.4.0"),
+    reason="Most torchao functionalities only work with PyTorch 2.4.0+",
+)
+@pytest.mark.skipif(
+    ct.utils._macos_version() < (15, 0),
+    reason="Torchao block-wise quantization requires MacOS 15+.",
+)
+@pytest.mark.skipif(not _HAS_TORCHAO, reason=MSG_TORCHAO_NOT_FOUND)
+class TestTorchao:
+    """
+    This class tests the torchao quantized model conversion.
+    """
+
+    @staticmethod
+    def _construct_test_model():
+        # The old Quantizer method in torchao doesn't work with a single-layer model such as model=nn.Linear(...),
+        # so we have to create a Module which contains linear layers.
+        class TestModel(nn.Module):
+            def __init__(self):
+                super(TestModel, self).__init__()
+                # Currently torchao only supports Linear module without bias.
+                self.linear1 = nn.Linear(32, 64, bias=False)
+                self.linear2 = nn.Linear(64, 32, bias=False)
+                self.relu = nn.ReLU()
+
+            def forward(self, x):
+                x = self.relu(self.linear1(x))
+                return self.relu(self.linear2(x))
+
+        return TestModel().to(torch.device("cpu")).eval()
+
+    @pytest.mark.parametrize("use_export", (False, True))
+    def test_weight_only_quantization(self, use_export):
+        model = self._construct_test_model()
+        quantizer = quant_api.Int4WeightOnlyQuantizer(
+            precision=torch.float32, groupsize=32, inner_k_tiles=2, device=torch.device("cpu")
+        )
+        model = quantizer.quantize(model)
+        input_data = torch.randn((2, 32), dtype=torch.float16)
+
+        if use_export:
+            exported_model = torch.export.export(model, (input_data,))
+            inputs = None
+        else:
+            exported_model = torch.jit.trace(model, example_inputs=(input_data,))
+            inputs = [ct.TensorType(shape=input_data.shape, name="input")]
+
+        converted_model = ct.convert(
+            exported_model, inputs=inputs, minimum_deployment_target=ct.target.iOS18
+        )
+        main_func = converted_model._mil_program.functions["main"]
+        quantize_ops = main_func.find_ops(op_type="constexpr_blockwise_shift_scale")
+        assert len(quantize_ops) > 0
+
+        if ct.utils._is_macos():
+            result = converted_model.predict(
+                {
+                    list(converted_model.input_description)[0]: input_data.detach()
+                    .numpy()
+                    .astype(np.float32)
+                }
+            )
+            expected = model(input_data)
+            output_name = list(result.keys())[0]
+            np.testing.assert_allclose(result[output_name], expected.detach().numpy(), atol=1e-3)
+
+    def test_weight_only_quantization_bfloat16_not_support(self):
+        """
+        Torchao quant_api.int4_weight_only only supports bfloat16.
+        """
+        model = self._construct_test_model().bfloat16()
+        quant_api.quantize_(model, quant_api.int4_weight_only(group_size=32, inner_k_tiles=2))
+        model = unwrap_tensor_subclass(model)
+        input_data = torch.randn((2, 32), dtype=torch.float16)
+        exported_model = torch.export.export(model, (input_data,))
+        # The conversion of bfloat16 hasn't been supported yet.
+        with pytest.raises(KeyError, match="torch.bfloat16"):
+            ct.convert(exported_model, minimum_deployment_target=ct.target.iOS17)
+
+    @pytest.mark.parametrize("use_export", (True, False))
+    def test_dynamic_activation_quantization_not_support(self, use_export):
+        """
+        Although Int8DynActInt4WeightQuantizer will be deprecated, we still want
+        to test it because it's used in ExecuTorch to quantize llama models.
+        """
+        model = self._construct_test_model()
+        quantizer = quant_api.Int8DynActInt4WeightQuantizer(
+            precision=torch.float16, groupsize=32, device=torch.device("cpu")
+        )
+        model = quantizer.quantize(model)
+        input_data = torch.randn((2, 32), dtype=torch.float16)
+
+        if use_export:
+            exported_model = torch.export.export(model, (input_data,))
+            inputs = None
+            err_msg = "Unsupported fx node quantize_per_token"
+            err_type = ValueError
+        else:
+            exported_model = torch.jit.trace(model, example_inputs=(input_data,))
+            inputs = [ct.TensorType(shape=input_data.shape)]
+            err_msg = "Dynamic activation quantization is not supported in Core ML"
+            err_type = NotImplementedError
+
+        with pytest.raises(err_type, match=err_msg):
+            ct.convert(exported_model, inputs=inputs, minimum_deployment_target=ct.target.iOS17)
+
+
+class TestUtilsImport:
+    @staticmethod
+    def test_import_construct_matmul():
+        """
+        _construct_matmul is an utility function that used by some 3rd party codes,
+        so here we make sure that this method is exposed.
+        """
+        from coremltools.converters.mil.frontend.torch.ops import _construct_matmul
+
+        assert _construct_matmul is not None

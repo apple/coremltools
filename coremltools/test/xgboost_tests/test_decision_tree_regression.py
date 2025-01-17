@@ -5,11 +5,8 @@
 
 import unittest
 
+from ..utils import load_boston
 from coremltools._deps import _HAS_SKLEARN, _HAS_XGBOOST
-
-if _HAS_XGBOOST:
-
-    pass
 
 if _HAS_SKLEARN:
     from sklearn.tree import DecisionTreeRegressor
@@ -28,9 +25,6 @@ class DecisionTreeRegressorScikitTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        from sklearn.datasets import load_boston
-        from sklearn.tree import DecisionTreeRegressor
-
         scikit_data = load_boston()
         scikit_model = DecisionTreeRegressor(random_state=1)
         scikit_model.fit(scikit_data["data"], scikit_data["target"])
@@ -39,8 +33,9 @@ class DecisionTreeRegressorScikitTest(unittest.TestCase):
         self.scikit_data = scikit_data
         self.scikit_model = scikit_model
 
+
     def test_conversion(self):
-        feature_names = self.scikit_data.feature_names
+        feature_names = self.scikit_data["feature_names"]
         output_name = "target"
         spec = skl_converter.convert(
             self.scikit_model, feature_names, "target"

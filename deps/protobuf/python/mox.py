@@ -705,7 +705,7 @@ class MockMethod(object):
     """Move this method into group of calls which may be called multiple times.
 
     A group of repeating calls must be defined together, and must be executed in
-    full before the next expected mehtod can be called.
+    full before the next expected method can be called.
 
     Args:
       group_name: the name of the unordered group.
@@ -778,7 +778,7 @@ class Comparator:
       rhs: any python object
     """
 
-    raise NotImplementedError, 'method must be implemented by a subclass.'
+    raise NotImplementedError('method must be implemented by a subclass.')
 
   def __eq__(self, rhs):
     return self.equals(rhs)

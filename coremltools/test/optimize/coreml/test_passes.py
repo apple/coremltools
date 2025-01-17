@@ -11,6 +11,7 @@ import tempfile
 import cattrs
 import numpy as np
 import pytest
+import torch
 import yaml
 
 import coremltools as ct
@@ -18,8 +19,21 @@ import coremltools.optimize as cto
 import coremltools.optimize.coreml._quantization_passes as quantization
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil.passes.graph_pass import PassOption
+from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 from coremltools.converters.mil.mil.passes.tests.test_passes import CONSTEXPR_FUNCS, CONSTEXPR_OPS
-from coremltools.converters.mil.testing_utils import compute_snr_and_psnr, get_op_types_in_program
+from coremltools.converters.mil.testing_utils import (
+    apply_pass_and_basic_check,
+    compute_snr_and_psnr,
+    gen_activation_stats_for_program,
+    get_op_types_in_program,
+)
+from coremltools.optimize.coreml.experimental._post_training_quantization import (
+    _get_activation_calibration_stats,
+)
+from coremltools.optimize.coreml.experimental._quantization_passes import (
+    insert_prefix_quantize_dequantize_pair as _insert_prefix_quantize_dequantize_pair,
+)
 
 
 class TestCompressionNumerical:
@@ -812,6 +826,173 @@ class TestCompressionPasses:
 
         return prog
 
+    @staticmethod
+    def _get_test_program_conv():
+        """An iOS17 program with conv."""
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=(1, 30, 10, 10))], opset_version=ct.target.iOS17
+        )
+        def prog(x):
+            conv_weight = np.random.rand(90, 30, 2, 2).astype(np.float32)
+            x = mb.cast(x=x, dtype="fp16")
+            x = mb.conv(x=x, weight=conv_weight)
+            x = mb.cast(x=x, dtype="fp32")
+            return x
+
+        return prog
+
+    @staticmethod
+    def _get_test_program_conv_relu():
+        """An iOS17 program with conv and relu."""
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=(1, 30, 10, 10))], opset_version=ct.target.iOS17
+        )
+        def prog(x):
+            conv_weight = np.random.rand(90, 30, 2, 2).astype(np.float32)
+            x = mb.cast(x=x, dtype="fp16")
+            x = mb.conv(x=x, weight=conv_weight)
+            x = mb.relu(x=x)
+            x = mb.cast(x=x, dtype="fp32")
+            return x
+
+        return prog
+
+    @staticmethod
+    def _get_test_program_add():
+        """An iOS17 program with add."""
+
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=(1, 2, 4, 4)), mb.TensorSpec(shape=(1, 2, 4, 4))],
+            opset_version=ct.target.iOS17,
+        )
+        def prog(x1, x2):
+            y1 = mb.cast(x=x1, dtype="fp16")
+            y2 = mb.cast(x=x2, dtype="fp16")
+            y = mb.add(x=y1, y=y2)
+            z = mb.cast(x=y, dtype="fp32")
+            return z
+
+        return prog
+
+    @staticmethod
+    def _get_test_program_avgpool():
+        """An iOS17 program with avg_pool"""
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 4, 4))], opset_version=ct.target.iOS17)
+        def prog(x):
+            # graph
+            x = mb.cast(x=x, dtype="fp16")
+            x = mb.avg_pool(x=x, kernel_sizes=[1, 1], strides=[1, 1], pad_type="valid")
+            x = mb.cast(x=x, dtype="fp32")
+            return x
+
+        return prog
+
+    @staticmethod
+    def _get_test_program_maxpool():
+        """An iOS17 program with max_pool"""
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 4, 4))], opset_version=ct.target.iOS17)
+        def prog(x):
+            # graph
+            x = mb.cast(x=x, dtype="fp16")
+            x = mb.max_pool(x=x, kernel_sizes=[1, 1], strides=[1, 1], pad_type="valid")
+            x = mb.cast(x=x, dtype="fp32")
+            return x
+
+        return prog
+
+    @staticmethod
+    def _get_test_mlmodel_conv_relu():
+        """A mlmodel with conv, relu"""
+
+        # Prepare torch model.
+        inputs = [ct.TensorType(name="data", shape=(5, 10, 4, 4))]
+        input_data = [torch.rand(*i.shape.to_list()) for i in inputs]
+        m = torch.nn.Sequential(
+            torch.nn.Conv2d(in_channels=10, out_channels=20, kernel_size=4),
+            torch.nn.ReLU(),
+        )
+        torchmodel = torch.jit.trace(m, input_data)
+
+        # Convert to mlmodel.
+        mlmodel = ct.convert(
+            torchmodel,
+            inputs=inputs,
+            convert_to="mlprogram",
+            compute_units=ct.ComputeUnit.CPU_ONLY,
+            compute_precision=ct.precision.FLOAT16,
+        )
+
+        return mlmodel
+
+    @staticmethod
+    def _get_test_mlmodel_boolean_type():
+        """A mlmodel with boolean type intermediate tensor"""
+
+        # Prepare torch model.
+        class Net(torch.nn.Module):
+            def __init__(self):
+                super(Net, self).__init__()
+                self.linear1 = torch.nn.Linear(28 * 28, 100)
+                self.linear2 = torch.nn.Linear(28 * 28, 100)
+
+            def forward(self, img):  # convert + flatten
+                y1 = self.linear1(img)
+                y2 = self.linear2(img)
+                y = torch.logical_and(y1, y2)
+                return y
+
+        model = Net()
+        inputs = [ct.TensorType(name="data", shape=(1, 28 * 28))]
+        input_data = [torch.rand(*i.shape.to_list()) for i in inputs]
+        torchmodel = torch.jit.trace(model, input_data)
+
+        # Convert to mlmodel.
+        mlmodel = ct.convert(
+            torchmodel,
+            inputs=inputs,
+            convert_to="mlprogram",
+            compute_units=ct.ComputeUnit.CPU_ONLY,
+            compute_precision=ct.precision.FLOAT16,
+        )
+
+        return mlmodel
+
+    @staticmethod
+    def _get_test_mlmodel_conv_concat():
+        """A mlmodel has a concat with 2 inputs and 1 output all surrounded by conv."""
+
+        # Prepare torch model.
+        class Net(torch.nn.Module):
+            def __init__(self):
+                super(Net, self).__init__()
+                self.conv1 = torch.nn.Conv2d(in_channels=10, out_channels=20, kernel_size=4)
+                self.conv2 = torch.nn.Conv2d(in_channels=10, out_channels=20, kernel_size=4)
+                self.conv3 = torch.nn.Conv2d(in_channels=20, out_channels=20, kernel_size=1)
+
+            def forward(self, img):  # convert + flatten
+                y1 = self.conv1(img)
+                y2 = self.conv2(img)
+                y = torch.concat((y1, y2), 0)
+                y3 = self.conv3(y)
+                return y3
+
+        model = Net()
+        inputs = [ct.TensorType(name="data_0", shape=(5, 10, 4, 4))]
+        input_data = [torch.rand(*i.shape.to_list()) for i in inputs]
+        torchmodel = torch.jit.trace(model, input_data)
+
+        # Convert to mlmodel.
+        mlmodel = ct.convert(
+            torchmodel,
+            inputs=inputs,
+            convert_to="mlprogram",
+            compute_units=ct.ComputeUnit.CPU_ONLY,
+            compute_precision=ct.precision.FLOAT16,
+        )
+
+        return mlmodel
 
 class TestOptimizationConfig(TestCompressionPasses):
     """
@@ -2430,8 +2611,8 @@ class TestPalettizer(TestCompressionPasses):
         with pytest.raises(
             AssertionError,
             match=re.escape(
-                "The iOS16 only supports per-tensor lut, but got more than one lut "
-                "on 0th axis. LUT shape: (30, 1, 1, 1, 16, 1)"
+                "The pre-iOS18 palettization only supports per-tensor lut, but got more than one lut "
+                "on 0th axis. LUT shape: (30, 1, 1, 1, 16, 1)\nPlease set the minimum_deployment_target to iOS18"
             ),
         ):
             compressor.apply(prog)
@@ -3379,3 +3560,273 @@ class TestConfigurationFromDictFromYaml:
             mode="unique",
         )
         assert config.op_name_configs["op_1"] == expected_config
+
+
+class TestLinearActivationQuantizer(TestCompressionPasses):
+    @pytest.mark.parametrize(
+        "mode, dtype, weight_threshold",
+        itertools.product(
+            ["LINEAR_SYMMETRIC"],
+            [np.int8, types.int8],
+            [1000],
+        ),
+    )
+    def test_global_config_activation_quantizer_on_pattern_1(self, mode, dtype, weight_threshold):
+        """
+        Global config would compress all operations with the same config
+        Valid patterns:
+        - conv
+        - conv + relu
+        """
+
+        # Insert prefix quantize/dequantize pairs
+        op_config = cto.coreml.experimental.OpActivationLinearQuantizerConfig(
+            mode=mode, dtype=dtype, weight_threshold=weight_threshold
+        )
+        config = cto.coreml.OptimizationConfig(global_config=op_config)
+
+        # Test case: conv
+        prog = self._get_test_program_conv()
+
+        # Create activation_stats to all intermediate tensors
+        activation_stats = gen_activation_stats_for_program(prog)
+
+        # Insert prefix quantize/dequantize pairs
+        graph_pass_1 = _insert_prefix_quantize_dequantize_pair(config)
+        graph_pass_1.set_options([PassOption("activation_stats", activation_stats)])
+
+        # Insert suffix quantize/dequantize pairs
+        graph_pass_2 = PASS_REGISTRY["compression::insert_suffix_quantize_dequantize_pair"]
+        graph_pass_2.set_options(
+            [PassOption("config", config), PassOption("activation_stats", activation_stats)]
+        )
+
+        apply_pass_and_basic_check(prog, graph_pass_1)
+        apply_pass_and_basic_check(prog, graph_pass_2)
+
+        assert get_op_types_in_program(prog) == [
+            "cast",
+            "quantize",
+            "dequantize",
+            "conv",
+            "quantize",
+            "dequantize",
+            "cast",
+        ]
+
+        # Test case: conv + relu
+        prog = self._get_test_program_conv_relu()
+
+        # Create activation_stats to all intermediate tensors
+        activation_stats = gen_activation_stats_for_program(prog)
+
+        # Insert prefix quantize/dequantize pairs
+        graph_pass_1 = _insert_prefix_quantize_dequantize_pair(config)
+        graph_pass_1.set_options([PassOption("activation_stats", activation_stats)])
+
+        # Insert suffix quantize/dequantize pairs
+        graph_pass_2 = PASS_REGISTRY["compression::insert_suffix_quantize_dequantize_pair"]
+        graph_pass_2.set_options(
+            [PassOption("config", config), PassOption("activation_stats", activation_stats)]
+        )
+
+        apply_pass_and_basic_check(prog, graph_pass_1)
+        apply_pass_and_basic_check(prog, graph_pass_2)
+
+        assert get_op_types_in_program(prog) == [
+            "cast",
+            "quantize",
+            "dequantize",
+            "conv",
+            "relu",
+            "quantize",
+            "dequantize",
+            "cast",
+        ]
+
+    @pytest.mark.parametrize(
+        "mode, dtype, weight_threshold",
+        itertools.product(
+            ["LINEAR_SYMMETRIC"],
+            [np.int8, types.int8],
+            [1000],
+        ),
+    )
+    def test_global_config_activation_quantizer_on_pattern_2(self, mode, dtype, weight_threshold):
+        """
+        Global config would compress all operations with the same config
+        Valid patterns: add
+        """
+
+        op_config = cto.coreml.experimental.OpActivationLinearQuantizerConfig(
+            mode=mode, dtype=dtype, weight_threshold=weight_threshold
+        )
+        config = cto.coreml.OptimizationConfig(global_config=op_config)
+
+        # Create activation_stats to all intermediate tensors
+        prog = self._get_test_program_add()
+        activation_stats = gen_activation_stats_for_program(prog)
+
+        # Insert prefix quantize/dequantize pairs
+        graph_pass_1 = _insert_prefix_quantize_dequantize_pair(config)
+        graph_pass_1.set_options([PassOption("activation_stats", activation_stats)])
+
+        # Insert suffix quantize/dequantize pairs
+        graph_pass_2 = PASS_REGISTRY["compression::insert_suffix_quantize_dequantize_pair"]
+        graph_pass_2.set_options(
+            [PassOption("config", config), PassOption("activation_stats", activation_stats)]
+        )
+
+        # Test case: add
+        apply_pass_and_basic_check(prog, graph_pass_1)
+        apply_pass_and_basic_check(prog, graph_pass_2)
+
+        assert get_op_types_in_program(prog) == [
+            "cast",
+            "cast",
+            "quantize",
+            "dequantize",
+            "quantize",
+            "dequantize",
+            "add",
+            "quantize",
+            "dequantize",
+            "cast",
+        ]
+
+    @pytest.mark.parametrize(
+        "mode, dtype, weight_threshold",
+        itertools.product(
+            ["LINEAR_SYMMETRIC"],
+            [np.int8, types.int8],
+            [1000],
+        ),
+    )
+    def test_global_config_activation_quantizer_on_pattern_3(self, mode, dtype, weight_threshold):
+        """
+        Global config would compress all operations with the same config
+        Valid pattern: pooling (avg_pool, max_pool)
+        """
+
+        op_config = cto.coreml.experimental.OpActivationLinearQuantizerConfig(
+            mode=mode, dtype=dtype, weight_threshold=weight_threshold
+        )
+        config = cto.coreml.OptimizationConfig(global_config=op_config)
+
+        # Test case: avg_pool
+        # Create activation_stats to all intermediate tensors
+        prog = self._get_test_program_avgpool()
+        activation_stats = gen_activation_stats_for_program(prog)
+
+        # Insert prefix quantize/dequantize pairs
+        graph_pass_1 = _insert_prefix_quantize_dequantize_pair(config)
+        graph_pass_1.set_options([PassOption("activation_stats", activation_stats)])
+
+        # Insert suffix quantize/dequantize pairs
+        graph_pass_2 = PASS_REGISTRY["compression::insert_suffix_quantize_dequantize_pair"]
+        graph_pass_2.set_options(
+            [PassOption("config", config), PassOption("activation_stats", activation_stats)]
+        )
+
+        apply_pass_and_basic_check(prog, graph_pass_1)
+        apply_pass_and_basic_check(prog, graph_pass_2)
+
+        assert get_op_types_in_program(prog) == [
+            "cast",
+            "quantize",
+            "dequantize",
+            "avg_pool",
+            "quantize",
+            "dequantize",
+            "cast",
+        ]
+
+        # Test case: max_pool
+        prog = self._get_test_program_maxpool()
+
+        # Create activation_stats to all intermediate tensors.
+        activation_stats = gen_activation_stats_for_program(prog)
+
+        # Insert prefix quantize/dequantize pairs
+        graph_pass_1 = _insert_prefix_quantize_dequantize_pair(config)
+        graph_pass_1.set_options([PassOption("activation_stats", activation_stats)])
+
+        # Insert suffix quantize/dequantize pairs
+        graph_pass_2 = PASS_REGISTRY["compression::insert_suffix_quantize_dequantize_pair"]
+        graph_pass_2.set_options(
+            [PassOption("config", config), PassOption("activation_stats", activation_stats)]
+        )
+
+        apply_pass_and_basic_check(prog, graph_pass_1)
+        apply_pass_and_basic_check(prog, graph_pass_2)
+
+        assert get_op_types_in_program(prog) == [
+            "cast",
+            "quantize",
+            "dequantize",
+            "max_pool",
+            "quantize",
+            "dequantize",
+            "cast",
+        ]
+
+
+class TestGetActivationStats(TestCompressionPasses):
+    def test_get_activation_calibration_stats_basic(self):
+        """
+        Calibration a floating point model with sample data.
+        """
+
+        # Prepare sample data
+        sample_data = []
+        for _ in range(3):
+            input_data = np.random.rand(5, 10, 4, 4)
+            sample_data.append({"data": input_data})
+
+        # Loading a floating point mlmodel
+        mlmodel = self._get_test_mlmodel_conv_relu()
+
+        activation_stats = _get_activation_calibration_stats(mlmodel, sample_data)
+
+    def test_get_activation_calibration_stats_skip_invalid_ops(self):
+        """
+        Calibration a floating point model with sample data.
+        rdar://130623705 A unit test for model with boolean type intermediate tensor.
+        """
+
+        # Prepare sample data
+        sample_data = []
+        for _ in range(3):
+            input_data = np.random.rand(1, 28 * 28)
+            sample_data.append({"data": input_data})
+
+        # Loading a floating point mlmodel
+        mlmodel = self._get_test_mlmodel_boolean_type()
+
+        activation_stats = _get_activation_calibration_stats(mlmodel, sample_data)
+
+    def test_get_activation_calibration_stats_concat_surrounding_ops(self):
+        """
+        Calibration a floating point model with sample data.
+        rdar://132017374 A unit test for model with concat would be surrounded by quantize/dequantize pairs after activation quantization.
+        The activation_stats of concat surrounding nodes should be the same, so quantize/dequantize pairs could share same scale/zp.
+        """
+
+        # Prepare sample data
+        sample_data = []
+        for _ in range(3):
+            input_data = np.random.rand(5, 10, 4, 4)
+            sample_data.append({"data_0": input_data})
+
+        # Loading a floating point mlmodel
+        mlmodel = self._get_test_mlmodel_conv_concat()
+
+        activation_stats = _get_activation_calibration_stats(mlmodel, sample_data)
+
+        activation_stats_unique = set()
+        for value in activation_stats.values():
+            activation_stats_unique.add((value["rmin"], value["rmax"]))
+
+        # Since mlmodel has a concat with 2 inputs and 1 output, we should see at least 3 rmin/rmax pairs are identical in activation_stats.
+        # If we dedup rmin/rmax pairs with identical values, the length of unique values should at least reduced by 2 compared with original one.
+        assert len(activation_stats) - len(activation_stats_unique) >= 2

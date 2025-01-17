@@ -24,7 +24,7 @@ from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbo
 def value_at(x: Var, idx: int, name=None, before_op=None):
     """
     input x: 1D tensor (vector).
-    return value at index idx. x[idx].
+    return value at index idx: x[idx].
     Could specify the name of the returned MIL scalar tensor as well.
     """
     assert x.rank == 1
@@ -72,6 +72,8 @@ def _construct_gather_op(
         x = mb.cast(x=x, dtype=work_dtype)
 
     if op_type == "gather":
+        if types.is_float(indices.dtype):
+            indices = mb.cast(x=indices, dtype="int32")
         result = mb.gather(x=x, indices=indices, axis=axis, **gather_name_kwarg)
     else:
         result = mb.gather_nd(x=x, indices=indices, **gather_name_kwarg)
@@ -513,7 +515,13 @@ def solve_binary_generic_einsum(parsed_vectors, a_var, b_var, name) -> Var:
 
 
 def _decompose_scaled_dot_product_attention(
-    q: Var, k: Var, v: Var, mask: Var, name: str, before_op: Optional[Operation] = None
+    q: Var,
+    k: Var,
+    v: Var,
+    mask: Var,
+    name: str,
+    scale: Optional[Var] = None,
+    before_op: Optional[Operation] = None,
 ) -> Var:
     # scale the query input
     embed_size = q.shape[-1]
@@ -524,9 +532,12 @@ def _decompose_scaled_dot_product_attention(
         )
 
     q, k, v = promote_input_dtypes([q, k, v])
-    multiplicative_scale_factor = 1 / math.sqrt(embed_size)
-    if types.builtin_to_string(q.dtype) == "fp16":
-        multiplicative_scale_factor = np.float16(multiplicative_scale_factor)
+    if scale is None:
+        multiplicative_scale_factor = 1 / math.sqrt(embed_size)
+        if types.builtin_to_string(q.dtype) == "fp16":
+            multiplicative_scale_factor = np.float16(multiplicative_scale_factor)
+    else:
+        multiplicative_scale_factor = scale
     q = mb.mul(x=q, y=multiplicative_scale_factor, before_op=before_op)
 
     # multiply query and key input tensors
@@ -583,6 +594,11 @@ def _construct_constexpr_dequant_op(
             scale = np.squeeze(scale)
         if isinstance(zero_point, (np.ndarray, np.generic)):
             zero_point = np.squeeze(zero_point)
+        if len(scale.shape) > 1 or len(zero_point.shape) > 1:
+            raise ValueError(
+                "The more fine-grained quantization (such as blockwise) is only supported since iOS18."
+                "Please set minimum_deployment_target to iOS18 for using it."
+            )
 
         kwargs = {
             "quantized_data": quantized_weights,
@@ -631,10 +647,56 @@ def _construct_constexpr_dequant_op(
     }
     if zero_point is not None and np.any(zero_point):
         # Only pass the offset parameter when not all elements in `zero_point` are zeroes.
-        zero_point = zero_point.reshape(scale.shape).astype(quantized_weights.dtype)
+        zero_point = zero_point.reshape(scale.shape)
+        # When zero_point is integer, it's required to have the same dtype as the quantized weight.
+        if np.issubdtype(zero_point.dtype, np.integer):
+            zero_point = zero_point.astype(quantized_weights.dtype)
         kwargs["offset"] = zero_point
     if name is not None:
         kwargs["name"] = name
     if before_op is not None:
         kwargs["before_op"] = before_op
     return mb.constexpr_blockwise_shift_scale(**kwargs)
+
+
+def _construct_constexpr_lut_op(
+    indices: Union[Var, np.ndarray],
+    lut: Union[Var, np.ndarray],
+    vector_axis: Optional[Union[Var, int]] = None,
+    name: Optional[str] = None,
+    before_op: Optional[Operation] = None,
+) -> Var:
+    """
+    Constructs the constexpr op to represent the palettized weight, using different versions of `constexpr_lut_to_dense`
+    op based on the opset version.
+
+    The input `indices`, `lut` and `vector_axis` (if provided) should follow iOS18 `constexpr_lut_to_dense` op's def.
+    """
+    # Avoid circular import
+    from coremltools.optimize.coreml import _utils as optimize_utils
+
+    kwargs = {"indices": indices, "lut": lut}
+    if name is not None:
+        kwargs["name"] = name
+    if before_op is not None:
+        kwargs["before_op"] = before_op
+
+    if is_current_opset_version_compatible_with(target.iOS18):
+        if vector_axis is not None:
+            kwargs["vector_axis"] = vector_axis
+        if not isinstance(lut, Var):
+            # Adjust dtype if necessary.
+            num_palettes = lut.shape[-2]
+            nbits = int(math.log2(num_palettes))
+            target_np_dtype = types.nptype_from_builtin(types.string_to_builtin(f"uint{nbits}"))
+            kwargs["indices"] = indices.astype(target_np_dtype)
+    else:
+        if isinstance(lut, Var):
+            lut: np.ndarray = lut.val
+        lut_params = optimize_utils.LutParams(indices=indices, lut=lut, vector_axis=vector_axis)
+        lut_params: optimize_utils.LutParamsIos16 = optimize_utils.ios18_lut_params_to_ios16(
+            lut_params
+        )
+        kwargs.update(lut_params._asdict())
+
+    return mb.constexpr_lut_to_dense(**kwargs)

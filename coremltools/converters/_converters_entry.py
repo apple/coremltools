@@ -841,7 +841,9 @@ def _validate_conversion_arguments(
         flat_inputs = _flatten_list(inputs)
         for flat_input in flat_inputs:
             if not isinstance(flat_input, InputType):
-                raise ValueError("inputs must be a list of type ct.TensorType or ct.ImageType")
+                raise ValueError(
+                    "inputs must be a list of type ct.TensorType, ct.ImageType, or ct.StateType"
+                )
             if flat_input.dtype == types.fp16:
                 if not (
                     minimum_deployment_target is not None
@@ -921,13 +923,6 @@ def _validate_conversion_arguments(
                 raise NotImplementedError(
                     f"Conversion for models with only ATEN or EDGE dialect is supported/tested. Provided Dialect: {model.dialect}"
                 )
-
-            # TODO: rdar://115845792 ([Executorch] Handle user provided inputs/outputs in the convert API)
-            if inputs is not None:
-                raise AssertionError("'inputs' argument should be None for ExportedProgram")
-
-            if outputs is not None:
-                raise AssertionError("'outputs' argument should be None for ExportedProgram")
 
         else:
             if is_torch_model(model):

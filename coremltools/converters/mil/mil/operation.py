@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional, Tuple
 import numpy as np
 
 from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil.types import builtin_to_string
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbolic
 
 from . import SPACES
@@ -156,6 +157,10 @@ class Operation:
 
     # Map from type domain id to a tuple of accepted types.
     type_domains: Dict[str, Tuple[Any]] = dict()
+
+    @classmethod
+    def supported_dtypes(cls):
+        return [builtin_to_string(v) for v in cls.type_domains["T"]]
 
     def __init__(self, **kwargs):
         self._input_types = self.input_spec.input_types
@@ -347,7 +352,7 @@ class Operation:
 
     def _auto_val(self, output_types):
         """
-        # Evaluation is two stage:
+        # Evaluation has two stages:
         #
         # Stage 1: Check whether the method value_inference() is implemented
         #
@@ -498,8 +503,8 @@ class Operation:
                 and not no_check_var_types
             ):
                 raise ValueError(
-                    f"New var type `{v_new.sym_type}` not a "
-                    f"subtype of existing var type `{v_old.sym_type}`."
+                    f"New var {v_new} doesn't have compatible "
+                    f"subtype of existing var `{v_old}`."
                 )
             v_old.remove_child_op(op, no_check_var_types)
 
@@ -603,9 +608,8 @@ class Operation:
 
         if print_attr:
             attr = "["
-            for k, v in self.scopes.items():
-                attr += f"{k}: {v}, "
-            attr = attr[:-2] + "]"
+            attr += ", ".join([f"{k}: {v}" for k, v in self.scopes.items()])
+            attr += "]"
         else:
             attr = ""
 

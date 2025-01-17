@@ -20,6 +20,7 @@ from coremltools.optimize.torch.layerwise_compression import (
     LayerwiseCompressor,
     LayerwiseCompressorConfig,
 )
+from coremltools.optimize.torch.layerwise_compression._quant import Quantizer
 from coremltools.optimize.torch.layerwise_compression.algorithms import (
     GPTQ,
     LayerwiseCompressionAlgorithmConfig,
@@ -108,6 +109,33 @@ def test_block_size_validation_gptq(input_size, expectation):
         assert gptq is not None
 
 
+@pytest.mark.parametrize("block_size", [32, 1024])
+def test_blockwise_compression_gptq(block_size):
+    model = nn.Sequential(nn.Linear(256, 100))
+    config = ModuleGPTQConfig.from_dict(
+        {
+            "algorithm": "gptq",
+            "weight_dtype": "uint8",
+            "block_size": block_size,
+            "granularity": "per_block",
+        }
+    )
+    compressor_config = LayerwiseCompressorConfig().set_global(global_config=config)
+    compressor = LayerwiseCompressor(model, compressor_config)
+
+    def dataloader():
+        yield torch.rand(10, 256)
+
+    compressed_model = compressor.compress(dataloader=dataloader(), device="cpu")
+
+    if model[0].weight.shape[1] % block_size != 0:
+        # No compression; layer skipped
+        assert torch.equal(compressed_model[0].weight, model[0].weight)
+    else:
+        # Compression should have occurred
+        assert not torch.equal(compressed_model[0].weight, model[0].weight)
+
+
 @pytest.mark.parametrize(
     "config",
     [
@@ -136,17 +164,23 @@ def test_block_size_validation_gptq(input_size, expectation):
         },
     ],
 )
-def test_gptq_metadata(config):
+@pytest.mark.parametrize(
+    "model, input_shape",
+    [
+        (nn.Sequential(nn.Linear(4096, 1024)), (1, 4096)),
+        (nn.Sequential(nn.Conv2d(32, 64, 3)), (1, 32, 224, 224)),
+    ],
+)
+def test_gptq_metadata(config, model, input_shape):
     """
     Test registration of metadata buffers for GPTQ algorithm
     """
     # Setup to get compressed model
-    model = nn.Sequential(nn.Linear(4096, 1024))
     compressor_config = LayerwiseCompressorConfig.from_dict(config)
     compressor = LayerwiseCompressor(model, compressor_config)
 
     def calibration_loader():
-        yield torch.rand(1, 4096)
+        yield torch.rand(input_shape)
 
     compressed_model = compressor.compress(calibration_loader(), device="cpu")
 
@@ -160,9 +194,7 @@ def test_gptq_metadata(config):
     metadata = metadata_dict["weight"]
     if compressor_config.global_config.enable_normal_float:
         assert metadata.compression_type == [CompressionType.palettization.value]
-        assert metadata.lut.shape == (
-            1,
-            1,
+        assert metadata.lut.shape == (1,) * state_dict["weight"].dim() + (
             2**compressor_config.global_config.weight_n_bits,
             1,
         )
@@ -188,6 +220,10 @@ def test_gptq_metadata(config):
     "config",
     [
         pytest.param({"global_config": {"algorithm": "sparse_gpt"}}, id="pruning"),
+        pytest.param(
+            {"global_config": {"algorithm": "sparse_gpt", "weight_dtype": "float16"}},
+            id="pruning_half_precision",
+        ),
         pytest.param(
             {"global_config": {"algorithm": "sparse_gpt", "weight_dtype": "uint8"}},
             id="pruning_quantization",
@@ -283,3 +319,42 @@ def test_gptq_block_size_configs(config):
         yield torch.rand(1, 4096)
 
     compressed_model = compressor.compress(calibration_loader(), device="cpu")
+
+
+def test_gptq_static_blocking():
+    model = nn.Sequential(nn.Linear(6, 8))
+
+    compressor_config = LayerwiseCompressorConfig.from_dict(
+        {
+            "global_config": {
+                "algorithm": "gptq",
+                "weight_dtype": "uint8",
+                "block_size": 2,
+                "granularity": "per_block",
+                "use_activation_order_heuristic": True,
+            }
+        }
+    )
+    compressor = LayerwiseCompressor(model, compressor_config)
+
+    def calibration_loader():
+        yield torch.randn(1, 6)
+
+    compressed_model = compressor.compress(calibration_loader(), device="cpu")
+    block_size = compressor_config.global_config.block_size
+
+    quantizer = Quantizer(
+        n_bits=8,
+        per_channel=True,
+        symmetric=True,
+        enable_normal_float=False,
+    )
+
+    expected_scale = compressed_model[0]._buffers["_COREML_/weight/quantization_scale"]
+
+    with torch.no_grad():
+        for block_idx in range(3):
+            start_idx = block_size * block_idx
+            block = model[0].weight[:, start_idx : start_idx + block_size]
+            quantizer.find_params(block, weight=True)
+            assert torch.all(quantizer.scale.flatten() == expected_scale[:, block_idx])

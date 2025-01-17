@@ -14,13 +14,29 @@ import torch.ao.quantization as _aoquant
 import torch.nn as _nn
 import torch.nn.intrinsic.qat as _nniqat
 
+import coremltools.optimize.torch.quantization.modules.conv_transpose as _qconv_transpose
+import coremltools.optimize.torch.quantization.modules.conv_transpose_fused as _qconv_transpose_fused
 import coremltools.optimize.torch.quantization.modules.fused_modules as _fuse
 
 
 class _ConvAct(_torch.nn.Sequential):
     root_mod: _Type[_nn.Module]
-    qat_mod: _Union[_nnqat.Conv1d, _nnqat.Conv2d, _nnqat.Conv3d]
-    fused_mod: _Union[_fuse.ConvAct1d, _fuse.ConvAct2d, _fuse.ConvAct3d]
+    qat_mod: _Union[
+        _nnqat.Conv1d,
+        _nnqat.Conv2d,
+        _nnqat.Conv3d,
+        _qconv_transpose.ConvTranspose1d,
+        _qconv_transpose.ConvTranspose2d,
+        _qconv_transpose.ConvTranspose3d,
+    ]
+    fused_mod: _Union[
+        _fuse.ConvAct1d,
+        _fuse.ConvAct2d,
+        _fuse.ConvAct3d,
+        _fuse.ConvTransposeAct1d,
+        _fuse.ConvTransposeAct2d,
+        _fuse.ConvTransposeAct3d,
+    ]
 
     def __init__(self, conv: _nn.Module, act: _nn.Module, qconfig: _aoquant.QConfig):
         super().__init__(_OrderedDict([("conv", conv), ("act", act)]))
@@ -62,8 +78,22 @@ class _ConvAct(_torch.nn.Sequential):
 
 class _ConvBnAct(_ConvAct):
     intr_mod: _Type[_nn.Module]
-    qat_mod: _Union[_nniqat.ConvBn1d, _nniqat.ConvBn2d, _nniqat.ConvBn3d]
-    fused_mod: _Union[_fuse.ConvAct1d, _fuse.ConvAct2d, _fuse.ConvAct3d]
+    qat_mod: _Union[
+        _nniqat.ConvBn1d,
+        _nniqat.ConvBn2d,
+        _nniqat.ConvBn3d,
+        _qconv_transpose_fused.ConvTransposeBn1d,
+        _qconv_transpose_fused.ConvTransposeBn2d,
+        _qconv_transpose_fused.ConvTransposeBn3d,
+    ]
+    fused_mod: _Union[
+        _fuse.ConvAct1d,
+        _fuse.ConvAct2d,
+        _fuse.ConvAct3d,
+        _fuse.ConvTransposeAct1d,
+        _fuse.ConvTransposeAct2d,
+        _fuse.ConvTransposeAct3d,
+    ]
 
     @classmethod
     def from_float(cls, mod: _nn.Module):
@@ -101,11 +131,33 @@ class ConvAct3d(_ConvAct):
     pass
 
 
+class ConvTransposeAct1d(_ConvAct):
+    root_mod = _nn.ConvTranspose1d
+    qat_mod = _qconv_transpose.ConvTranspose1d
+    fused_mod = _fuse.ConvTransposeAct1d
+    pass
+
+
+class ConvTransposeAct2d(_ConvAct):
+    root_mod = _nn.ConvTranspose2d
+    qat_mod = _qconv_transpose.ConvTranspose2d
+    fused_mod = _fuse.ConvTransposeAct2d
+    pass
+
+
+class ConvTransposeAct3d(_ConvAct):
+    root_mod = _nn.ConvTranspose3d
+    qat_mod = _qconv_transpose.ConvTranspose3d
+    fused_mod = _fuse.ConvTransposeAct3d
+    pass
+
+
 class ConvBnAct1d(_ConvBnAct):
     intr_mod = _nni.ConvBn1d
     qat_mod = _nniqat.ConvBn1d
     fused_mod = _fuse.ConvAct1d
     pass
+
 
 class ConvBnAct2d(_ConvBnAct):
     intr_mod = _nni.ConvBn2d
@@ -113,11 +165,34 @@ class ConvBnAct2d(_ConvBnAct):
     fused_mod = _fuse.ConvAct2d
     pass
 
+
 class ConvBnAct3d(_ConvBnAct):
     intr_mod = _nni.ConvBn3d
     qat_mod = _nniqat.ConvBn3d
     fused_mod = _fuse.ConvAct3d
     pass
+
+
+class ConvTransposeBnAct1d(_ConvBnAct):
+    intr_mod = _fuse.ConvTransposeBn1d
+    qat_mod = _qconv_transpose_fused.ConvTransposeBn1d
+    fused_mod = _fuse.ConvTransposeAct1d
+    pass
+
+
+class ConvTransposeBnAct2d(_ConvBnAct):
+    intr_mod = _fuse.ConvTransposeBn2d
+    qat_mod = _qconv_transpose_fused.ConvTransposeBn2d
+    fused_mod = _fuse.ConvTransposeAct2d
+    pass
+
+
+class ConvTransposeBnAct3d(_ConvBnAct):
+    intr_mod = _fuse.ConvTransposeBn3d
+    qat_mod = _qconv_transpose_fused.ConvTransposeBn3d
+    fused_mod = _fuse.ConvTransposeAct3d
+    pass
+
 
 class LinearAct(_torch.nn.Sequential):
     def __init__(self, linear: _nnqat.Linear, act: _nn.Module, qconfig: _aoquant.QConfig):
@@ -156,3 +231,25 @@ class LinearAct(_torch.nn.Sequential):
             linear=self.linear.to_float(),
             act=self.act,
         )
+
+
+def update_bn_stats(mod):
+    """
+    update_bn_stats methods updates BatchNorm statistics
+
+    This method was originally defined in torch.nn.intrinsic.qat.modules.conv_fused. However, it limited the type of
+    quantized fused modules for which BatchNorm statistics can be updated
+    """
+    if hasattr(mod, "update_bn_stats"):
+        mod.update_bn_stats()
+
+
+def freeze_bn_stats(mod):
+    """
+    freeze_bn_stats method freezes BatchNorm statistics
+
+    This method was originally defined in torch.nn.intrinsic.qat.modules.conv_fused. However, it limited the type of
+    quantized fused modules for which BatchNorm statistics can be frozen
+    """
+    if hasattr(mod, "freeze_bn_stats"):
+        mod.freeze_bn_stats()

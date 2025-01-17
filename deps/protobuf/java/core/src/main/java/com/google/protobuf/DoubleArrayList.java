@@ -45,7 +45,7 @@ import java.util.RandomAccess;
 final class DoubleArrayList extends AbstractProtobufList<Double>
     implements DoubleList, RandomAccess, PrimitiveNonBoxingCollection {
 
-  private static final DoubleArrayList EMPTY_LIST = new DoubleArrayList();
+  private static final DoubleArrayList EMPTY_LIST = new DoubleArrayList(new double[0], 0);
   static {
     EMPTY_LIST.makeImmutable();
   }
@@ -54,9 +54,7 @@ final class DoubleArrayList extends AbstractProtobufList<Double>
     return EMPTY_LIST;
   }
 
-  /**
-   * The backing store for the list.
-   */
+  /** The backing store for the list. */
   private double[] array;
 
   /**
@@ -65,20 +63,29 @@ final class DoubleArrayList extends AbstractProtobufList<Double>
    */
   private int size;
 
-  /**
-   * Constructs a new mutable {@code DoubleArrayList} with default capacity.
-   */
+  /** Constructs a new mutable {@code DoubleArrayList} with default capacity. */
   DoubleArrayList() {
     this(new double[DEFAULT_CAPACITY], 0);
   }
 
   /**
-   * Constructs a new mutable {@code DoubleArrayList}
-   * containing the same elements as {@code other}.
+   * Constructs a new mutable {@code DoubleArrayList} containing the same elements as {@code other}.
    */
   private DoubleArrayList(double[] other, int size) {
     array = other;
     this.size = size;
+  }
+
+  @Override
+  protected void removeRange(int fromIndex, int toIndex) {
+    ensureIsMutable();
+    if (toIndex < fromIndex) {
+      throw new IndexOutOfBoundsException("toIndex < fromIndex");
+    }
+
+    System.arraycopy(array, toIndex, array, fromIndex, size - toIndex);
+    size -= (toIndex - fromIndex);
+    modCount++;
   }
 
   @Override
@@ -96,7 +103,7 @@ final class DoubleArrayList extends AbstractProtobufList<Double>
 
     final double[] arr = other.array;
     for (int i = 0; i < size; i++) {
-      if (array[i] != arr[i]) {
+      if (Double.doubleToLongBits(array[i]) != Double.doubleToLongBits(arr[i])) {
         return false;
       }
     }
@@ -134,6 +141,26 @@ final class DoubleArrayList extends AbstractProtobufList<Double>
   }
 
   @Override
+  public int indexOf(Object element) {
+    if (!(element instanceof Double)) {
+      return -1;
+    }
+    double unboxedElement = (Double) element;
+    int numElems = size();
+    for (int i = 0; i < numElems; i++) {
+      if (array[i] == unboxedElement) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  @Override
+  public boolean contains(Object element) {
+    return indexOf(element) != -1;
+  }
+
+  @Override
   public int size() {
     return size;
   }
@@ -153,21 +180,33 @@ final class DoubleArrayList extends AbstractProtobufList<Double>
   }
 
   @Override
+  public boolean add(Double element) {
+    addDouble(element);
+    return true;
+  }
+
+  @Override
   public void add(int index, Double element) {
     addDouble(index, element);
   }
 
-  /**
-   * Like {@link #add(Double)} but more efficient in that it doesn't box the element.
-   */
+  /** Like {@link #add(Double)} but more efficient in that it doesn't box the element. */
   @Override
   public void addDouble(double element) {
-    addDouble(size, element);
+    ensureIsMutable();
+    if (size == array.length) {
+      // Resize to 1.5x the size
+      int length = ((size * 3) / 2) + 1;
+      double[] newArray = new double[length];
+
+      System.arraycopy(array, 0, newArray, 0, size);
+      array = newArray;
+    }
+
+    array[size++] = element;
   }
 
-  /**
-   * Like {@link #add(int, Double)} but more efficient in that it doesn't box the element.
-   */
+  /** Like {@link #add(int, Double)} but more efficient in that it doesn't box the element. */
   private void addDouble(int index, double element) {
     ensureIsMutable();
     if (index < 0 || index > size) {
@@ -229,25 +268,13 @@ final class DoubleArrayList extends AbstractProtobufList<Double>
   }
 
   @Override
-  public boolean remove(Object o) {
-    ensureIsMutable();
-    for (int i = 0; i < size; i++) {
-      if (o.equals(array[i])) {
-        System.arraycopy(array, i + 1, array, i, size - i);
-        size--;
-        modCount++;
-        return true;
-      }
-    }
-    return false;
-  }
-
-  @Override
   public Double remove(int index) {
     ensureIsMutable();
     ensureIndexInRange(index);
     double value = array[index];
-    System.arraycopy(array, index + 1, array, index, size - index);
+    if (index < size - 1) {
+      System.arraycopy(array, index + 1, array, index, size - index - 1);
+    }
     size--;
     modCount++;
     return value;

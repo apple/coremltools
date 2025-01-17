@@ -3,6 +3,9 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from typing import Optional as _Optional
+from typing import Union as _Union
+
 import numpy as _np
 import torch as _torch
 import torch.distributed as _dist
@@ -10,19 +13,18 @@ import torch.distributed as _dist
 
 class _EfficientKMeans:
     """
-    _EfficientKMeans is primarily used by palettization to perform a k-means operation. This class also has an in-house
-    implementation of k-means, called ``kmeans_pp`` which runs entirely on GPU and is ~10x faster than sklearn's API.
+    An implementation of k-means which runs entirely on GPU.
     """
 
     def __init__(
         self,
-        n_clusters,
-        init,
-        n_init=0,
+        n_clusters: int,
+        init: _Union[str, _torch.Tensor],
+        n_init: int = 0,
         labels=None,
-        max_iter=100,
-        tol=0.0001,
-        error_bnd=0.0,
+        max_iter: int = 100,
+        tol: float = 0.0001,
+        error_bnd: float = 0.0,
     ):
         self.n_clusters = n_clusters
         self.n_init = n_init
@@ -37,16 +39,29 @@ class _EfficientKMeans:
         assert self.n_clusters > 0
 
     @staticmethod
-    def _get_cluster_avg(n_clusters, indices, vals) -> _torch.Tensor:
+    def _get_cluster_avg(
+        n_clusters: int,
+        indices: _torch.Tensor,
+        vals: _torch.Tensor,
+        sample_weight: _Optional[_torch.Tensor] = None,
+    ) -> _torch.Tensor:
+        agg_vals = (
+            vals.float() * sample_weight.float() if sample_weight is not None else vals.float()
+        )
         v_sum = (
             _torch.zeros([n_clusters] + list(vals[0].size()))
             .to(vals.device)
-            .index_add_(0, indices, vals.float())
+            .index_add_(0, indices, agg_vals)
+        )
+        weight = (
+            _torch.ones(len(vals), dtype=_torch.int).to(vals.device)
+            if sample_weight is None
+            else sample_weight.squeeze(1).to(vals.device)
         )
         v_numel = (
-            _torch.zeros(n_clusters, dtype=_torch.int)
+            _torch.zeros(n_clusters, dtype=weight.dtype)
             .to(vals.device)
-            .index_add_(0, indices, _torch.ones(len(vals), dtype=_torch.int).to(vals.device))
+            .index_add_(0, indices, weight)
         )
         v_numel[v_numel == 0] = 1
 
@@ -55,9 +70,9 @@ class _EfficientKMeans:
         return v_avg.to(vals.dtype)
 
     @staticmethod
-    def x_c_dist(params, clusters) -> _torch.Tensor:
+    def x_c_dist(params: _torch.Tensor, clusters: _torch.Tensor) -> _torch.Tensor:
         """
-        Method to calculate the distance between weights and clusters.
+        Calculate the distance between weights and clusters.
         """
         clusters = clusters.contiguous()
 
@@ -66,58 +81,99 @@ class _EfficientKMeans:
         else:
             return _torch.cdist(params, clusters.to(params.dtype)).square()
 
-    def _kmeans_pp(self, parameters):
+    def _kmeans_pp(
+        self, parameters: _torch.Tensor, sample_weight: _Optional[_torch.Tensor] = None
+    ) -> "_EfficientKMeans":
         assert len(parameters) >= self.n_clusters
 
+        num_update_list = []
+        INIT_EXIT = 10
         self.inertia_ = int(1e9)
 
+        # n_init trials for estimating cluster centers
         for n in range(self.n_init):
-            centroids = _torch.zeros(
-                (self.n_clusters, parameters.size(-1)),
-                device=parameters.device,
-                dtype=parameters.dtype,
-            )
-            for i in range(self.n_clusters):
-                if i == 0:
-                    centroids[i] = parameters[_torch.randint(0, len(parameters), [1])]
-                    d_ij_curr = _torch.cdist(centroids[:i], parameters)
-                else:
-                    d_ij_prev = _torch.cdist(centroids[i - 1 : i], parameters)
-                    d_ij_prev[d_ij_prev == 0] = -int(1e9)
 
-                    d_ij_curr = _torch.cat((d_ij_curr, d_ij_prev), dim=0)
+            if n % 2 and sample_weight is not None:
+                centroids = parameters[
+                    _np.random.choice(
+                        len(parameters),
+                        self.n_clusters,
+                        False,
+                        (sample_weight.squeeze() / sample_weight.sum()).cpu().numpy(),
+                    )
+                ]
+            else:
+                centroids = _torch.zeros(
+                    (self.n_clusters, parameters.size(-1)),
+                    device=parameters.device,
+                    dtype=parameters.dtype,
+                )
+                for i in range(self.n_clusters):
+                    if i == 0:
+                        centroids[i] = parameters[_torch.randint(0, len(parameters), [1])]
+                        d_ij_curr = _torch.cdist(centroids[:i], parameters)
+                    else:
+                        d_ij_prev = _torch.cdist(centroids[i - 1 : i], parameters)
+                        d_ij_prev[d_ij_prev == 0] = -int(1e9)
 
-                    c_to_x = _torch.min(d_ij_curr, dim=0)
-                    centroids[i] = parameters[c_to_x[0].argmax()]
+                        d_ij_curr = _torch.cat((d_ij_curr, d_ij_prev), dim=0)
 
+                        c_to_x = _torch.min(d_ij_curr, dim=0)
+                        centroids[i] = parameters[c_to_x[0].argmax()]
+
+            last_inertia = int(1e9)
+            num_update = 0
             for i in range(self.max_iter):
                 min_error, labels = _torch.cdist(parameters, centroids).min(dim=-1)
 
-                # if W is None:
+                min_error = (
+                    min_error * (sample_weight.T).sqrt() if sample_weight is not None else min_error
+                )
+
                 centroids.zero_()
+                agg_params = parameters * sample_weight if sample_weight is not None else parameters
+                weights = sample_weight.view(labels.size()) if sample_weight is not None else None
                 centroids.scatter_add_(
                     0,
                     labels.view(-1, 1).expand([-1, parameters.size(-1)]),
-                    parameters,
+                    agg_params,
                 )
-                n_centroids = _torch.bincount(labels, minlength=self.n_clusters).view(-1, 1)
+                n_centroids = _torch.bincount(
+                    labels, weights=weights, minlength=self.n_clusters
+                ).view(-1, 1)
 
                 centroids /= n_centroids
                 cur_inertia = min_error.square().sum()
 
+                # update labels and cluster_centers if inertia improves
                 if cur_inertia < self.inertia_:
-                    exit = self.inertia_ <= cur_inertia * (1 + self.tol)
+                    num_update += 1
                     self.inertia_ = cur_inertia
                     self.labels_ = labels
                     self.cluster_centers_ = centroids
-                    if exit:
-                        break
+
+                # exit if there is no improvement in inertia within a tolerance
+                elif last_inertia <= cur_inertia * (1 + self.tol):
+                    break
+
+                last_inertia = cur_inertia
+
+            num_update_list.append(num_update)
+
+            # In every trial, we track number of cluster centre updates.
+            # If number of trials are greater than a specified value INIT_EXIT and
+            # there is no update for the past INIT_EXIT number of trials,
+            # it indicates that the centroids have converged
+            if len(num_update_list) >= INIT_EXIT and sum(num_update_list[-INIT_EXIT:]) == 0:
+                break
 
         return self
 
-    def fit(self, X):
+    def fit(
+        self, X: _torch.Tensor, sample_weight: _Optional[_torch.Tensor] = None
+    ) -> "_EfficientKMeans":
         """
-        Method to run kmeans operation.
+        Compute k-means clustering.
         """
         N = len(X)
 
@@ -131,7 +187,7 @@ class _EfficientKMeans:
                     rank = 0
 
                 if "cpu" in self.cluster_centers_:
-                    import sklearn
+                    import sklearn.cluster
 
                     if "minibatch" in self.cluster_centers_:
                         clustering_method = sklearn.cluster.MiniBatchKMeans
@@ -144,21 +200,23 @@ class _EfficientKMeans:
                         max_iter=self.max_iter,
                         random_state=rank + 1,
                         tol=self.tol,
-                    ).fit(X.float().cpu().numpy())
+                    ).fit(X.float().cpu().numpy(), sample_weight=sample_weight)
                     self.inertia_ = _torch.Tensor([kmeans.inertia_]).to(X.device)
                     self.labels_ = _torch.from_numpy(kmeans.labels_).int().to(X.device)
                     self.cluster_centers_ = None
                 else:
-                    self._kmeans_pp(X.float())
+                    self._kmeans_pp(X.float(), sample_weight=sample_weight)
 
                 self.cluster_centers_ = _EfficientKMeans._get_cluster_avg(
-                    self.n_clusters, self.labels_, X
+                    self.n_clusters, self.labels_, X, sample_weight=sample_weight
                 )
 
             elif self.cluster_centers_ == "opt1d":
                 from coremltools._deps import _kmeans1d
 
-                self.labels_, self.cluster_centers_ = _kmeans1d.cluster(X, self.n_clusters)
+                self.labels_, self.cluster_centers_ = _kmeans1d.cluster(
+                    X, self.n_clusters, weights=sample_weight
+                )
 
                 self.n_clusters = len(self.cluster_centers_)
                 self.cluster_centers_ = (
@@ -175,13 +233,13 @@ class _EfficientKMeans:
 
             for i in range(self.max_iter):
                 self.cluster_centers_ = _EfficientKMeans._get_cluster_avg(
-                    self.n_clusters, self.labels_, X
+                    self.n_clusters, self.labels_, X, sample_weight=sample_weight
                 )
 
                 # remove empty clusters perhaps due to pruning
                 nan_centers = self.cluster_centers_.isnan()
                 if nan_centers.any():
-                    self._kmeans_pp(X)
+                    self._kmeans_pp(X, sample_weight=sample_weight)
                     continue
 
                 x_c_dist = _EfficientKMeans.x_c_dist(X, self.cluster_centers_)

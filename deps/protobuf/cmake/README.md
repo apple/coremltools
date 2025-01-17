@@ -13,13 +13,13 @@ Environment Setup
 
 Open the appropriate *Command Prompt* from the *Start* menu.
 
-For example *VS2013 x64 Native Tools Command Prompt*:
+For example *x86 Native Tools Command Prompt for VS 2019*:
 
-    C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\amd64>
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional>
 
 Change to your working directory:
 
-    C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\amd64>cd C:\Path\to
+    C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional>cd C:\Path\to
     C:\Path\to>
 
 Where *C:\Path\to* is path to your real working directory.
@@ -41,11 +41,18 @@ Good. Now you are ready to continue.
 Getting Sources
 ===============
 
-You can get the latest stable source packages from the
-[releases](https://github.com/google/protobuf/releases) page.
-Or you can type:
+You can get the latest stable source packages from the release page:
 
-     C:\Path\to> git clone -b [release_tag] https://github.com/google/protobuf.git
+    https://github.com/protocolbuffers/protobuf/releases/latest
+
+For example: if you only need C++, download `protobuf-cpp-[VERSION].tar.gz`; if
+you need C++ and Java, download `protobuf-java-[VERSION].tar.gz` (every package
+contains C++ source already); if you need C++ and multiple other languages,
+download `protobuf-all-[VERSION].tar.gz`.
+
+Or you can use git to clone from protobuf git repository.
+
+     C:\Path\to> git clone -b [release_tag] https://github.com/protocolbuffers/protobuf.git
 
 Where *[release_tag]* is a git tag like *v3.0.0-beta-1* or a branch name like *master*
 if you want to get the latest code.
@@ -55,26 +62,16 @@ Go to the project folder:
      C:\Path\to>cd protobuf
      C:\Path\to\protobuf>
 
-Protobuf unit-tests require gmock to build. If you download protobuf source code
-from the *releases* page, the *gmock* directory should already be there. If you checkout
-the code via `git clone`, this *gmock* directory won't exist and you will have to
-download it manually or skip building protobuf unit-tests.
+Remember to update any submodules if you are using git clone (you can skip this
+step if you are using a release .tar.gz or .zip package):
 
-You can download gmock as follows:
-
-     C:\Path\to\protobuf>git clone -b release-1.7.0 https://github.com/google/googlemock.git gmock
-
-Then go to *gmock* folder and download gtest:
-
-     C:\Path\to\protobuf>cd gmock
-     C:\Path\to\protobuf\gmock>git clone -b release-1.7.0 https://github.com/google/googletest.git gtest
-
-If you absolutely don't want to build and run protobuf unit-tests, skip
-this steps and use protobuf at your own risk.
+```console
+C:\Path\to> git submodule update --init --recursive
+```
 
 Now go to *cmake* folder in protobuf sources:
 
-     C:\Path\to\protobuf\gmock>cd ..\cmake
+     C:\Path\to\protobuf>cd cmake
      C:\Path\to\protobuf\cmake>
 
 Good. Now you are ready to *CMake* configuration.
@@ -124,7 +121,7 @@ It will generate *nmake* *Makefile* in current directory.
 To create *Visual Studio* solution file:
 
      C:\Path\to\protobuf\cmake\build>mkdir solution & cd solution
-     C:\Path\to\protobuf\cmake\build\solution>cmake -G "Visual Studio 12 2013 Win64" ^
+     C:\Path\to\protobuf\cmake\build\solution>cmake -G "Visual Studio 16 2019" ^
      -DCMAKE_INSTALL_PREFIX=../../../../install ^
      ../..
 
@@ -132,6 +129,13 @@ It will generate *Visual Studio* solution file *protobuf.sln* in current directo
 
 If the *gmock* directory does not exist, and you do not want to build protobuf unit tests,
 you need to add *cmake* command argument `-Dprotobuf_BUILD_TESTS=OFF` to disable testing.
+
+To make a *Visual Studio* file for Visual Studio 16 2019, create the *Visual Studio*
+solution file above and edit the CMakeCache file.
+
+	C:Path\to\protobuf\cmake\build\solution\CMakeCache
+
+Then create the *Visual Studio* solution file again
 
 Compiling
 =========
@@ -173,9 +177,9 @@ You should see output similar to:
 
      Running main() from gmock_main.cc
      [==========] Running 1546 tests from 165 test cases.
-     
+
      ...
-     
+
      [==========] 1546 tests from 165 test cases ran. (2529 ms total)
      [  PASSED  ] 1546 tests.
 
@@ -194,7 +198,7 @@ To run specific tests:
      [ RUN      ] AnyTest.TestIs
      [       OK ] AnyTest.TestIs (0 ms)
      [----------] 3 tests from AnyTest (1 ms total)
-     
+
      [----------] Global test environment tear-down
      [==========] 3 tests from 1 test case ran. (2 ms total)
      [  PASSED  ] 3 tests.
@@ -301,6 +305,11 @@ further disable the option `-Dprotobuf_MSVC_STATIC_RUNTIME=OFF`.
 
 If it reports NOTFOUND for zlib_include or zlib_lib, you might haven't put
 the headers or the .lib file in the right directory.
+
+If you already have ZLIB library and headers at some other location on your system then alternatively you can define following configuration flags to locate them:
+
+	-DZLIB_INCLUDE_DIR=<path to dir containing zlib headers>
+	-DZLIB_LIB=<path to dir containing zlib>
 
 Build and testing protobuf as usual.
 

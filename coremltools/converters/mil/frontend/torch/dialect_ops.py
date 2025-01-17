@@ -142,7 +142,7 @@ class torch_tensor_assign(Operation):
     ----------
     x: tensor<*?, T> (Required)
         * Input tensor
-    updates: tensor<\*K, T> (Required)
+    updates: tensor<\\*K, T> (Required)
         * Value tensor to be inserted
         * The shape of the updates tensor must match the slicing result of the input data ``x``.
     begin: tensor<[rank<x>], i32> (Required)

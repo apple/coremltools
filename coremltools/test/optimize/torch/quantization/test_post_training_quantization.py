@@ -11,7 +11,6 @@ import torch
 ct = pytest.importorskip("coremltools")
 pytest.importorskip("coremltools.optimize.coreml._utils")
 
-
 from coremltools.optimize.torch.optimization_config import QuantizationGranularity
 from coremltools.optimize.torch.quantization import (
     PostTrainingQuantizer,
@@ -55,10 +54,34 @@ def test_ptq_default_config():
 
 
 @pytest.mark.parametrize(
+    "dtype,n_bits",
+    [
+        ["int4", 4],
+        ["uint4", 4],
+        ["int8", 8],
+        ["uint8", 8],
+        [torch.int8, 8],
+        [torch.uint8, 8],
+    ],
+)
+def test_ptq_config_n_bits(dtype, n_bits):
+    config = PostTrainingQuantizerConfig.from_dict(
+        {
+            "global_config": {
+                "weight_dtype": dtype,
+            }
+        }
+    )
+    assert config.global_config.weight_n_bits == n_bits
+
+
+@pytest.mark.parametrize(
     "module",
     [
         torch.nn.Linear(10, 10),
         torch.nn.Conv2d(10, 10, 3, 3),
+        torch.nn.ConvTranspose2d(10, 20, 3, 3),
+        torch.nn.Conv2d(20, 10, 3, 3),
         torch.nn.MultiheadAttention(
             bias=True,
             embed_dim=6,
@@ -124,7 +147,18 @@ def test_ptq_compress_all_combinations(
     ],
 )
 @pytest.mark.parametrize("weight_dtype", ["int4", "int8"])
-@pytest.mark.parametrize("module", [torch.nn.Conv2d(10, 10, 3, 3), torch.nn.Linear(10, 10)])
+@pytest.mark.parametrize(
+    "module",
+    [
+        torch.nn.Conv1d(10, 10, 3, 3),
+        torch.nn.Conv2d(10, 10, 3, 3),
+        torch.nn.Conv3d(10, 10, 3, 3),
+        torch.nn.Linear(10, 10),
+        torch.nn.ConvTranspose1d(10, 20, 3, 3),
+        torch.nn.ConvTranspose2d(10, 20, 3, 3),
+        torch.nn.ConvTranspose3d(10, 20, 3, 3),
+    ],
+)
 def test_ptq_post_compress_conv_linear(
     quantization_scheme, granularity_block_size, weight_dtype, module
 ):
@@ -142,10 +176,55 @@ def test_ptq_post_compress_conv_linear(
     )
     ptq = PostTrainingQuantizer(module, config)
     module = ptq.compress()
+    if isinstance(
+        module,
+        (
+            torch.nn.ConvTranspose1d,
+            torch.nn.ConvTranspose2d,
+            torch.nn.ConvTranspose3d,
+        ),
+    ):
+        ch_axis = 1
+        block_axis = 0
+    elif isinstance(
+        module,
+        (
+            torch.nn.Linear,
+            torch.nn.Conv1d,
+            torch.nn.Conv2d,
+            torch.nn.Conv3d,
+        ),
+    ):
+        ch_axis = 0
+        block_axis = 1
+    else:
+        raise NotImplementedError
 
     assert hasattr(module, "_COREML_/weight/quantization_scale")
     if quantization_scheme == "affine":
         assert hasattr(module, "_COREML_/weight/zero_point")
+
+    if granularity in ["per_channel", "per_block"]:
+        assert (
+            getattr(module, "_COREML_/weight/quantization_scale").shape[ch_axis]
+            == module.weight.shape[ch_axis]
+        )
+        if quantization_scheme == "affine":
+            assert (
+                getattr(module, "_COREML_/weight/zero_point").shape[ch_axis]
+                == module.weight.shape[ch_axis]
+            )
+        if granularity == "per_block":
+            assert (
+                getattr(module, "_COREML_/weight/quantization_scale").shape[block_axis]
+                == module.weight.shape[block_axis] / block_size
+            )
+            if quantization_scheme == "affine":
+                assert (
+                    getattr(module, "_COREML_/weight/zero_point").shape[block_axis]
+                    == module.weight.shape[block_axis] / block_size
+                )
+
     assert not torch.equal(orig_weight, module.weight)
     atol, rtol = get_atol_rtol(block_size, config.global_config.weight_n_bits)
     np.testing.assert_allclose(
@@ -221,8 +300,25 @@ def test_ptq_post_compress_multihead(
     )
 
 
-def test_ptq_compression_metadata():
-    config = PostTrainingQuantizerConfig()
+@pytest.mark.parametrize(
+    "weight_dtype,n_bits",
+    [
+        ["int4", 4],
+        ["uint4", 4],
+        ["int8", 8],
+        ["uint8", 8],
+    ],
+)
+@pytest.mark.parametrize("qscheme", ["symmetric", "affine"])
+def test_ptq_compression_metadata(weight_dtype, n_bits, qscheme):
+    config = PostTrainingQuantizerConfig.from_dict(
+        {
+            "global_config": {
+                "quantization_scheme": qscheme,
+                "weight_dtype": weight_dtype,
+            }
+        }
+    )
     ptq = PostTrainingQuantizer(torch.nn.Linear(10, 10), config)
     model = ptq.compress()
 
@@ -232,4 +328,9 @@ def test_ptq_compression_metadata():
     assert torch.IntTensor([CompressionType.quantization.value]) == getattr(
         model, "_COREML_/weight/compression_type"
     )
-    assert torch.IntTensor([8]) == getattr(model, "_COREML_/weight/quantization_n_bits")
+    assert torch.IntTensor([n_bits]) == getattr(model, "_COREML_/weight/quantization_n_bits")
+    scale = getattr(model, "_COREML_/weight/quantization_scale")
+    quant_weight = model.weight / scale
+    if hasattr(model, "_COREML_/weight/zero_point"):
+        quant_weight += getattr(model, "_COREML_/weight/zero_point")
+    assert (quant_weight.max() - quant_weight.min()) <= (2**n_bits - 1)

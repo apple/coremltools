@@ -7,12 +7,12 @@ import unittest
 
 import pandas as pd
 
+from ..utils import load_boston
 from coremltools._deps import _HAS_SKLEARN
 from coremltools.models.utils import (_is_macos, _macos_version,
                                       evaluate_regressor)
 
 if _HAS_SKLEARN:
-    from sklearn.datasets import load_boston
     from sklearn.linear_model import Ridge
     from sklearn.preprocessing import OneHotEncoder
 
@@ -39,7 +39,7 @@ class RidgeRegressionScikitTest(unittest.TestCase):
         self.scikit_model = scikit_model
 
     def test_conversion(self):
-        input_names = self.scikit_data.feature_names
+        input_names = self.scikit_data["feature_names"]
         spec = convert(self.scikit_model, input_names, "target").get_spec()
         self.assertIsNotNone(spec)
 
@@ -92,15 +92,15 @@ class RidgeRegressionScikitTest(unittest.TestCase):
         """
         Check that the evaluation results are the same in scikit learn and coremltools
         """
-        input_names = self.scikit_data.feature_names
-        df = pd.DataFrame(self.scikit_data.data, columns=input_names)
+        input_names = self.scikit_data["feature_names"]
+        df = pd.DataFrame(self.scikit_data["data"], columns=input_names)
 
         for normalize_value in (True, False):
             cur_model = Ridge()
             cur_model.fit(self.scikit_data["data"], self.scikit_data["target"])
             spec = convert(cur_model, input_names, "target")
 
-            df["target"] = cur_model.predict(self.scikit_data.data)
+            df["target"] = cur_model.predict(self.scikit_data["data"])
 
             metrics = evaluate_regressor(spec, df)
             self.assertAlmostEqual(metrics["max_error"], 0)

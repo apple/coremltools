@@ -6,18 +6,7 @@
 import torch
 
 from coremltools._deps import version_lt
-from coremltools.converters.mil.mil import types
 
-torch_to_mil_types = {
-    torch.bool: types.bool,
-    torch.float16: types.fp16,
-    torch.float32: types.fp32,
-    torch.float64: types.fp32,
-    torch.int32: types.int32,
-    torch.int64: types.int32,
-}
-
-mil_to_torch_types = {v: k for k, v in torch_to_mil_types.items()}
 
 def _jit_pass_lower_graph(graph, torchscript):
     """

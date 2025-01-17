@@ -20,7 +20,7 @@ class linear(_linear_iOS15):
 
     Parameters
     ----------
-    x: tensor<[\*D, D_in], T> (Required)
+    x: tensor<[\\*D, D_in], T> (Required)
         * ``1 <= rank <= 3``.
         * ``0 <= rank(*D) <= 2``.
     weight: const tensor<[D_out, D_in], U> (Required)
@@ -29,7 +29,7 @@ class linear(_linear_iOS15):
 
     Returns
     -------
-    tensor<[\*D, D_out], T>
+    tensor<[\\*D, D_out], T>
         * Same rank as the input ``x``.
 
     Attributes
@@ -59,9 +59,9 @@ class matmul(_matmul_iOS15):
 
     Parameters
     ----------
-    x: tensor<[\*, K1], T> (Required)
+    x: tensor<[\\*, K1], T> (Required)
         * ``x`` must be 1-D or higher.
-    y: tensor<[\*, K2], U> (Required)
+    y: tensor<[\\*, K2], U> (Required)
         * ``y`` must be 1-D or higher.
     transpose_x: const bool (Optional)
         * Default to ``False``.
@@ -74,7 +74,7 @@ class matmul(_matmul_iOS15):
 
     Returns
     -------
-    tensor<\*, V>
+    tensor<\\*, V>
         * Scalar or tensor output.
         * When ``x`` and ``y`` are both const or both non-const, it should follow ios15 behavior
           that ``x``, ``y``, and ``output`` all have the same dtype.

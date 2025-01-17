@@ -402,6 +402,11 @@ class TestCropResize:
         if backend.backend == "mlprogram" and compute_unit != ct.ComputeUnit.CPU_ONLY:
             pytest.xfail("rdar://97398582 (TestCropResize failing on mlprogram + GPU)")
 
+        if backend.backend == "mlprogram" and is_symbolic:
+            pytest.xfail(
+                "rdar://128585772 Crop_Resize Symbolic Shape Propagation Error if not classic CPU"
+            )
+
         x = np.array(
             [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]],
             dtype=np.float32,

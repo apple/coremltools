@@ -9,6 +9,7 @@ from typing import Dict, Set, Text, Tuple
 
 import numpy as np
 
+from coremltools import _logger as logger
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget
 from coremltools.converters.mil.input_types import TensorType
 from coremltools.converters.mil.mil import Block
@@ -293,6 +294,11 @@ class CastTypeQuantization(AbstractQuantizationPass):
                     len(var._child_ops) > 1
                     and casted_var_name in self.current_cache_vars()
                 ):
+                    if self.current_cache_vars()[casted_var_name].op.x != var:
+                        logger.warning(
+                            "The cached cast Var doesn't match the original Var. It's due to duplicated Var "
+                            f"names in the graph for {casted_var_name}."
+                        )
                     casted_inputs[param][i] = self.current_cache_vars()[casted_var_name]
                 else:
                     x = mb.cast(
@@ -517,7 +523,11 @@ class add_int16_cast(CastTypeQuantization):
     Notice that the cast will not be inserted if the const value is out of int16/uint16 range.
     """
     # Ops that prefer int16 params.
-    _PREFER_INT16_OPS: Set[str] = {"gather", "gather_along_axis", "gather_nd"}
+    # If an op supports 16-bit only in later iOS (e.g. gather started to support 16-bit from iOS16)
+    # then int16 cast will be inserted only if the iOS version is high enough
+    # (e.g. nothing will happen for iOS15 gather)
+    # This is achieved by type domain confirmation in `CastTypeQuantization.should_cast_parameter`
+    _PREFER_INT16_OPS: Set[str] = {"gather", "gather_along_axis", "gather_nd", "squeeze"}
 
     def __init__(self, op_selector=None):
         super().__init__(op_selector=op_selector)

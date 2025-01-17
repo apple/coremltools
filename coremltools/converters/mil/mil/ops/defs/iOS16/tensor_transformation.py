@@ -22,10 +22,10 @@ class reshape_like(Operation):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
         * The input tensor to be reshaped.
 
-    ref_tensors: Tuple[tensor<\*?, R>] (Required)
+    ref_tensors: Tuple[tensor<\\*?, R>] (Required)
         * A tuple of tensors that define the output shape.
 
     begins: Tuple[const<int32>] (Required)
@@ -66,7 +66,7 @@ class reshape_like(Operation):
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * Same type as input tensor ``x``.
         * Output shape is computed by ``ref_tensors``, ``begins``, ``ends``, and ``end_masks``.
 

@@ -69,6 +69,10 @@ class CompressionMetadata(_DictableDataClass):
         default=None,
         validator=_validators.optional(_validators.instance_of(_torch.Tensor)),
     )
+    vector_axis: _Optional[int] = _field(
+        default=None,
+        validator=_validators.optional([_validators.instance_of(int)]),
+    )
     compression_type: _Optional[_List[str]] = _field(
         default=None,
         converter=lambda lst: [CompressionType[item].value for item in lst] if lst else None,
@@ -80,9 +84,11 @@ class CompressionMetadata(_DictableDataClass):
         ),
     )
 
-    def register(self, module: _torch.nn.Module):
+    def register(self, module: _torch.nn.Module, override_compression_type: bool = False):
         """
-        Register compression metadata as buffers in module's state_dict
+        Register compression metadata as buffers in module's state_dict,
+        In case of joint compression, compression_type metadata is appended to module's existing compression type, if any.
+        If ``override_compression_type`` flag is set, module's existing compression type metadata is overridden.
         """
         for metadata, value in self.as_dict().items():
             if metadata == "param_name" or value is None:
@@ -90,7 +96,7 @@ class CompressionMetadata(_DictableDataClass):
             buffer_name = self._get_metadata_buffer_name(metadata)
 
             # Handle chaining of compression types
-            if metadata == "compression_type":
+            if metadata == "compression_type" and not override_compression_type:
                 try:
                     current_value = module.get_buffer(buffer_name)
                     value = current_value.tolist() + value

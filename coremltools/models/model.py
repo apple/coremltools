@@ -10,12 +10,16 @@ import shutil as _shutil
 import tempfile as _tempfile
 import warnings as _warnings
 from copy import deepcopy as _deepcopy
+from typing import Dict as _Dict
+from typing import List as _List
 from typing import Optional as _Optional
 
 import numpy as _np
 import numpy as _numpy
 
 from coremltools import ComputeUnit as _ComputeUnit
+from coremltools import ReshapeFrequency as _ReshapeFrequency
+from coremltools import SpecializationStrategy as _SpecializationStrategy
 from coremltools import _logger as logger
 from coremltools import proto as _proto
 from coremltools._deps import _HAS_TF_1, _HAS_TF_2, _HAS_TORCH
@@ -53,6 +57,13 @@ try:
 except Exception as e:
     logger.warning(f"Failed to load _MLModelProxy: {e}")
     _MLModelProxy = None
+
+
+try:
+    from ..libcoremlpython import _MLModelAssetProxy
+except Exception as e:
+    logger.warning(f"Failed to load _MLModelAssetProxy: {e}")
+    _MLModelAssetProxy = None
 
 _HAS_PIL = True
 try:
@@ -103,6 +114,32 @@ _METADATA_VERSION = "com.github.apple.coremltools.version"
 _METADATA_SOURCE = "com.github.apple.coremltools.source"
 _METADATA_SOURCE_DIALECT = "com.github.apple.coremltools.source_dialect"
 
+from .compute_device import MLComputeDevice as _MLComputeDevice
+
+
+def _verify_optimization_hint_input(optimization_hint_input: _Optional[dict] = None) -> None:
+    """
+    Throws an exception if ``optimization_hint_input`` is not valid.
+    """
+    if optimization_hint_input is None:
+        return
+    if not isinstance(optimization_hint_input, dict):
+        raise TypeError('"optimization_hint_input" must be a dictionary or None')
+
+    if optimization_hint_input != {} and _macos_version() < (15, 0):
+        raise ValueError('Optimization hints are only available on macOS >= 15.0')
+
+    for k in optimization_hint_input.keys():
+        if k not in ('reshapeFrequency', 'specializationStrategy'):
+            raise ValueError(f"Unrecognized key in optimization_hint dictionary: {k}")
+
+    if "specializationStrategy" in optimization_hint_input and not isinstance(optimization_hint_input["specializationStrategy"], _SpecializationStrategy):
+        raise TypeError('"specializationStrategy" value of "optimization_hint_input" dictionary must be of type coremltools.SpecializationStrategy')
+
+    if "reshapeFrequency" in optimization_hint_input and not isinstance(optimization_hint_input["reshapeFrequency"], _ReshapeFrequency):
+        raise TypeError('"reshapeFrequency" value of "optimization_hint_input" dictionary must be of type coremltools.ReshapeFrequency')
+
+
 
 class _FeatureDescription:
     def __init__(self, fd_spec):
@@ -151,6 +188,63 @@ class MLState:
         """
         self.__proxy__ = proxy
 
+
+class MLModelAsset:
+    """
+    A class representing a compiled model asset.
+
+    It supports two initialization methods:
+    - From a compiled model directory: The directory should have a '.mlmodelc' extension.
+    - From memory: Allows direct initialization using in-memory model data.
+    """
+    def __init__(self, proxy):
+        if _MLModelAssetProxy is None or not isinstance(proxy, _MLModelAssetProxy):
+            raise TypeError("The proxy parameter must be of type _MLModelAssetProxy.")
+        self.__proxy__ = proxy
+
+    @classmethod
+    def from_path(
+        cls,
+        compiled_model_path: str,
+    ) -> "MLModelAsset":
+        """
+        Create an MLModelAsset instance from a compiled model path.
+
+        Parameters
+        ----------
+        compiled_model_path : str
+            The file path to the compiled model.
+
+        Returns
+        -------
+        MLModelAsset
+            An instance of MLModelAsset created from the specified path.
+        """
+        return _MLModelProxy.create_model_asset_from_path(compiled_model_path)
+
+    @classmethod
+    def from_memory(
+        cls,
+        spec_data: bytes,
+        blob_mapping: _Dict[str, bytes] = {},
+    ) -> "MLModelAsset":
+        """
+        Create an MLModelAsset instance from in-memory data.
+
+        Parameters
+        ----------
+        spec_data : bytes
+            The specification data of the model.
+
+        blob_mapping : Dict[str, bytes])
+            A dictionary with blob path as the key and blob data as the value.
+
+        Returns
+        -------
+        MLModelAsset
+            An instance of MLModelAsset created from the provided memory data.
+        """
+        return _MLModelProxy.create_model_asset_from_memory(spec_data, blob_mapping)
 
 class MLModel:
     """
@@ -222,6 +316,7 @@ class MLModel:
         compute_units=_ComputeUnit.ALL,
         weights_dir=None,
         function_name=None,
+        optimization_hints: _Optional[dict] = None,
     ):
         """
         Construct an MLModel from an ``.mlmodel``.
@@ -281,6 +376,10 @@ class MLModel:
         function_name : str
             The name of the function from ``model`` to load.
             If not provided, ``function_name`` will be set to the ``defaultFunctionName`` in the proto.
+
+        optimization_hints : dict or None
+            Keys are the names of the optimization hint, either 'reshapeFrequency' or 'specializationStrategy'.
+            Values are enumeration values of type ``coremltools.ReshapeFrequency`` or ``coremltools.SpecializationStrategy``.
 
         Notes
         -----
@@ -342,8 +441,15 @@ class MLModel:
             raise ValueError(
                 'coremltools.ComputeUnit.CPU_AND_NE is only available on macOS >= 13.0'
             )
+
+        _verify_optimization_hint_input(optimization_hints)
+
         self.compute_unit = compute_units
         self.function_name = function_name
+        if optimization_hints is not None:
+            self.optimization_hints = optimization_hints.copy()
+        else:
+            self.optimization_hints = None
 
         self.is_package = False
         self.is_temp_package = False
@@ -361,7 +467,7 @@ class MLModel:
                 self.is_temp_package = is_temp_package
                 self._weights_dir = _try_get_weights_dir_path(model)
             self.__proxy__, self._spec, self._framework_error = self._get_proxy_and_spec(
-                model, compute_units, skip_model_load=skip_model_load,
+                model, compute_units, skip_model_load=skip_model_load, optimization_hints=optimization_hints,
             )
         elif isinstance(model, _proto.Model_pb2.Model):
             if does_model_contain_mlprogram(model):
@@ -381,7 +487,7 @@ class MLModel:
                 _save_spec(model, filename)
 
             self.__proxy__, self._spec, self._framework_error = self._get_proxy_and_spec(
-                filename, compute_units, skip_model_load=skip_model_load,
+                filename, compute_units, skip_model_load=skip_model_load, optimization_hints=optimization_hints
             )
             try:
                 _os.remove(filename)
@@ -415,7 +521,11 @@ class MLModel:
             self._model_input_names_set = set([i.name for i in f.input])
 
     def _get_proxy_and_spec(
-        self, filename: str, compute_units: _ComputeUnit, skip_model_load: _Optional[bool] = False
+        self,
+        filename: str,
+        compute_units: _ComputeUnit,
+        skip_model_load: _Optional[bool] = False,
+        optimization_hints: _Optional[dict] = None,
     ):
         filename = _os.path.expanduser(filename)
         specification = _load_spec(filename)
@@ -430,10 +540,20 @@ class MLModel:
                 return None, specification, None
 
             function_name = "" if self.function_name is None else self.function_name
+            if optimization_hints is not None:
+                optimization_hints_str_vals = {k: v.name for k, v in optimization_hints.items()}
+            else:
+                optimization_hints_str_vals = {}
 
             try:
                 return (
-                    _MLModelProxy(filename, compute_units.name, function_name),
+                    _MLModelProxy(
+                        filename,
+                        compute_units.name,
+                        function_name,
+                        optimization_hints_str_vals,
+                        None,
+                    ),
                     specification,
                     None,
                 )
@@ -578,6 +698,9 @@ class MLModel:
         the compiled model to persist, you need to make a copy.
 
         """
+        if self.__proxy__ is None:
+            raise Exception("This model was not loaded or compiled with the Core ML Framework.")
+
         return self.__proxy__.get_compiled_model_path()
 
 
@@ -689,7 +812,9 @@ class MLModel:
     @staticmethod
     def _check_predict_data(data):
         if type(data) not in (list, dict):
-            raise TypeError("\"data\" parameter must be either a dict or list of dict.")
+            raise TypeError(
+                f'"data" parameter must be either a dict or list of dict, but got {type(data)}.'
+            )
         if type(data) == list and not all(map(lambda x: type(x) == dict, data)):
             raise TypeError("\"data\" list must contain only dictionaries")
 
@@ -736,7 +861,12 @@ class MLModel:
         """
         Returns a new state object, which can be passed to the ``predict`` method.
 
-        State functionality is only supported on macOS 15+
+        Returns
+        _______
+        state: MLState
+            Holds state for an MLModel.
+
+        State functionality is only supported on macOS 15+.
 
         Examples
         --------
@@ -751,6 +881,8 @@ class MLModel:
         """
         if not _is_macos() or _macos_version() < (15, 0):
             raise Exception("State functionality is only supported on macOS 15+")
+        if self.__proxy__ is None:
+            raise Exception("This model was not loaded with the Core ML Framework. Cannot get state.")
 
         return MLState(self.__proxy__.newState())
 
@@ -890,3 +1022,26 @@ class MLModel:
             if given_input_name not in model_input_to_types:
                 continue
             input_dict[given_input_name] = convert(given_input)
+
+    @classmethod
+    def get_available_compute_devices(cls) -> _List[_MLComputeDevice]:
+        """
+        The list of available compute devices for CoreML.
+
+        Use the method to get the list of compute devices that MLModel's predict method can use.
+
+        Some compute devices on the hardware are exclusive to the domain ML frameworks such as Vision and SoundAnalysis and
+        not available to Core ML framework. See also ``MLComputeDevice.get_all_compute_devices()``.
+
+        Returns
+        -------
+        The list of compute devices MLModel's predict method can use.
+
+        Examples
+        --------
+        .. sourcecode:: python
+
+            compute_devices = coremltools.MLModel.get_available_compute_devices()
+
+        """
+        return _MLModelProxy.get_available_compute_devices()

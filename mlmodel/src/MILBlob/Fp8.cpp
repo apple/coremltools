@@ -6,6 +6,7 @@
 #include "MILBlob/Fp8.hpp"
 
 #include <cmath>
+#include <stdexcept>
 
 using namespace MILBlob;
 

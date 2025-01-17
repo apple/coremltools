@@ -127,7 +127,7 @@ For example, with the [OptimizationConfig](https://apple.github.io/coremltools/s
 
 ### Example
 
-The following code loads the `SegmentationModel_with_metadata.mlpackage` saved in [Converting a PyTorch Segmentation Model](pytorch-conversion-examples.md#open-the-model-in-xcode). It uses [`get_weights_metadata()`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.get_weights_metadata), which specifies the size threshold (`2048`) in the `weight_threshold` parameter. A weight tensor is included in the resulting dictionary only if its total number of elements are greater than `weight_threshold`.
+The following code loads the `SegmentationModel_with_metadata.mlpackage` saved in [Converting a PyTorch Segmentation Model](convert-a-pytorch-segmentation-model.md#open-the-model-in-xcode). It uses [`get_weights_metadata()`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.get_weights_metadata), which specifies the size threshold (`2048`) in the `weight_threshold` parameter. A weight tensor is included in the resulting dictionary only if its total number of elements are greater than `weight_threshold`.
 
 The example also shows how to get the name of the last weight in the model. The code palettizes all ops except the last weight, which is a common practical scenario when the last layer is more sensitive and should be skipped from quantization:
 
@@ -171,4 +171,171 @@ config = cto.coreml.OptimizationConfig(
 )
 compressed_mlmodel = cto.coreml.palettize_weights(mlmodel, config)
 
+```
+
+## Bisect Model
+
+In certain scenarios, you may want to break a large Core ML model into two smaller models. For instance, if you are deploying a model to run on neural engine on an iPhone, it cannot be larger than 1 GB. If you are working with, say, [Stable Diffusion](https://github.com/apple/ml-stable-diffusion) 1.5 model which is 1.72 GB large (Float 16 precision), then it needs to be broken up into two chunks, each less than 1 GB. The utility `ct.models.utils.bisect_model` will allow you to do exactly that. When using this API, you can also opt-in to package the two chunks of the model into a pipeline model, so that its still a single mlpackage file, with the two models arranged in a sequential manner.
+
+The example below shows how to bisect a model, test the accuracy, and save them on disk.
+
+```python
+
+import coremltools as ct
+
+model_path = "my_model.mlpackage"
+output_dir = "./output/"
+
+# The following code will produce two smaller models:
+# `./output/my_model_chunk1.mlpackage` and `./output/my_model_chunk2.mlpackage`
+# It also compares the output numerical of the original Core ML model with the chunked models.
+ct.models.utils.bisect_model(
+    model_path,
+    output_dir,
+)
+
+# The following code will produce a single pipeline model `./output/my_model_chunked_pipeline.mlpackage`
+ct.models.utils.bisect_model(
+    model_path,
+    output_dir,
+    merge_chunks_to_pipeline=True,
+)
+
+# You can also pass the MLModel object directly
+mlmodel = ct.models.MLModel(model_path)
+ct.models.utils.bisect_model(
+    mlmodel,
+    output_dir,
+    merge_chunks_to_pipeline=True,
+)
+```
+
+## Change Model Tensor Input/Output Types
+
+Consider a scenario when we have a Core ML model with an fp32 multiarray output, but we need to use a Core ML API that
+requires fp16 multiarrays instead. We can now easily change the model output types from fp32 to fp16 (and vice versa).
+
+An example how to update the output data types:
+
+```python
+from coremltools.models.model import MLModel
+from coremltools.utils import change_input_output_tensor_type
+from coremltools.proto.FeatureTypes_pb2 import ArrayFeatureType
+
+model = MLModel("my_model.mlpackage")
+updated_model = change_input_output_tensor_type(
+    ml_model=model,
+    from_type=ArrayFeatureType.FLOAT32,
+    to_type=ArrayFeatureType.FLOAT16,
+)
+updated_model.save("my_updated_model.mlpackage")
+```
+
+Another example is showing how to update data types of all the function inputs:
+```python
+from coremltools.models.model import MLModel
+from coremltools.utils import change_input_output_tensor_type
+from coremltools.proto.FeatureTypes_pb2 import ArrayFeatureType
+
+model = MLModel("my_model.mlpackage")
+updated_model = change_input_output_tensor_type(
+    ml_model=model,
+    from_type=ArrayFeatureType.FLOAT32,
+    to_type=ArrayFeatureType.FLOAT16,
+    function_names=["main_1", "main_2"],
+    input_names=["*"],
+    output_names=[],  # no output to be modified
+)
+updated_model.save("my_updated_model.mlpackage")
+```
+
+Optional arguments:
+* `function_names`: list of functions to be modified (by default only input / output of the `main` function is modified)
+* `input_names`: list of inputs that should be updated (by default none is modified)
+* `output_names`: list of outputs that should be updated (by default all the outputs matching the `from_type` type are updated)
+
+Special values for `input_names` and `output_names` arguments:
+* an empty list means nothing will be modified (default for `input_names`)
+* a list containing `"*"` string means all relevant inputs/outputs will be modified (those that will match the `from_type` type)
+
+## Compute Plan
+
+In certain situations, you may want to evaluate the computational needs of a Core ML model before deploying it. 
+The `MLComputePlan` class is designed for this purpose, allowing you to get insights into the resources and costs
+associated with using the model.
+
+Here’s what you can do with `MLComputePlan`:
+- Model Structure: Examine the model structure.
+- Compute Device Usage: Get insights into the compute devices that would be used for executing an ML Program operation/ NeuralNetwork layer.
+- Estimated Cost: Get the estimated cost of executing an ML Program operation.
+
+An example on how to use `MLComputePlan` to get the estimated cost and compute device usages for the operations in an ML Program:
+
+```python
+import coremltools as ct
+# Path to the compiled ML Program model.
+compiled_model_path = "my_model.mlmodelc"
+# Load the compute plan of a model.
+compute_plan = ct.models.MLComputePlan.compute_plan.load_from_path(
+    path=compiled_model_path,
+    compute_units=ct.ComputeUnits.ALL,
+)
+# Get the model structure.
+program = compute_plan.model_structure.program
+mainFunction = program.functions["main"]
+for operation in mainFunction.block.operations:
+    # Get the compute device usage for the operation.
+    compute_device_usage = (
+        compute_plan.get_compute_device_usage_for_mlprogram_operation(operation)
+    )
+    # Get the estimated cost of executing the operation.
+    estimated_cost = compute_plan.get_estimated_cost_for_mlprogram_operation(operation)
+```
+
+## In-memory Model
+If you are using an in-memory model in your application, you can easily test the workflow with `MLModelAsset`. The `MLModelAsset` class includes 
+the `MLModelAsset.from_memory` API, which enables you to load a model directly from the model's in-memory specification data. Once loaded, you
+can use the model to make predictions.
+
+An example on how to use `MLModelAsset` to load an `MLCompiledModel` from in-memory specification data:
+
+```python
+import coremltools as ct
+# Path to the model.
+model = MLModel("my_model.model")
+model_spec = model.get_spec()
+spec_data = model_spec.SerializeToString()
+asset = ct.models.model.MLModelAsset.from_memory(spec_data=spec_data)
+compiled_model = ct.models.CompiledMLModel.from_asset(asset=asset)
+result = compiled_model.predict(
+    {
+        "x": np.array([1.0]),
+        "y": np.array([2.0]),
+    }
+)
+```
+
+Another example on how to use `MLModelAsset` to load a MLCompiledModel from in-memory specification data where the specification has external blob file references :
+
+
+```python
+import coremltools as ct
+# Path to the model.
+mlmodel = MLModel("my_model.mlpackage")
+weight_file_path = mlmodel.weights_dir + "/weight.bin"
+with open(weight_file_path, "rb") as file:
+    weights_data = file.read()
+    model_spec = model.get_spec()
+    spec_data = model_spec.SerializeToString()
+    # Provide the weights data as `blob_mapping`.
+    asset = ct.models.model.MLModelAsset.from_memory(
+        spec_data=spec_data, blob_mapping={"weights/weight.bin": weights_data}
+    )
+    compiled_model = ct.models.CompiledMLModel.from_asset(asset=asset)
+    result = compiled_model.predict(
+      {
+          "x": np.array([1.0]),
+          "y": np.array([2.0]),
+      }
+    )    
 ```

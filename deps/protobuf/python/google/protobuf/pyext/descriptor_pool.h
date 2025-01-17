@@ -33,7 +33,7 @@
 
 #include <Python.h>
 
-#include <google/protobuf/stubs/hash.h>
+#include <unordered_map>
 #include <google/protobuf/descriptor.h>
 
 namespace google {
@@ -50,16 +50,26 @@ struct CMessageClass;
 //
 // There is normally one pool per process. We make it a Python object only
 // because it contains many Python references.
-// TODO(amauryfa): See whether such objects can appear in reference cycles, and
-// consider adding support for the cyclic GC.
 //
 // "Methods" that interacts with this DescriptorPool are in the cdescriptor_pool
 // namespace.
 typedef struct PyDescriptorPool {
-  PyObject_HEAD
+  PyObject_HEAD;
 
   // The C++ pool containing Descriptors.
-  DescriptorPool* pool;
+  const DescriptorPool* pool;
+
+  // True if we should free the pointer above.
+  bool is_owned;
+
+  // True if this pool accepts new proto definitions.
+  // In this case it is allowed to const_cast<DescriptorPool*>(pool).
+  bool is_mutable;
+
+
+  // The error collector to store error info. Can be NULL. This pointer is
+  // owned.
+  DescriptorPool::ErrorCollector* error_collector;
 
   // The C++ pool acting as an underlay. Can be NULL.
   // This pointer is not owned and must stay alive.
@@ -77,7 +87,7 @@ typedef struct PyDescriptorPool {
   // Cache the options for any kind of descriptor.
   // Descriptor pointers are owned by the DescriptorPool above.
   // Python objects are owned by the map.
-  hash_map<const void*, PyObject*>* descriptor_options;
+  std::unordered_map<const void*, PyObject*>* descriptor_options;
 } PyDescriptorPool;
 
 
@@ -86,18 +96,7 @@ extern PyTypeObject PyDescriptorPool_Type;
 namespace cdescriptor_pool {
 
 
-// Looks up a message by name.
-// Returns a message Descriptor, or NULL if not found.
-const Descriptor* FindMessageTypeByName(PyDescriptorPool* self,
-                                        const string& name);
-
 // The functions below are also exposed as methods of the DescriptorPool type.
-
-// Looks up a message by name. Returns a PyMessageDescriptor corresponding to
-// the field on success, or NULL on failure.
-//
-// Returns a new reference.
-PyObject* FindMessageByName(PyDescriptorPool* self, PyObject* name);
 
 // Looks up a field by name. Returns a PyFieldDescriptor corresponding to
 // the field on success, or NULL on failure.
@@ -125,21 +124,25 @@ PyObject* FindOneofByName(PyDescriptorPool* self, PyObject* arg);
 
 }  // namespace cdescriptor_pool
 
-// Retrieve the global descriptor pool owned by the _message module.
+// Retrieves the global descriptor pool owned by the _message module.
 // This is the one used by pb2.py generated modules.
 // Returns a *borrowed* reference.
 // "Default" pool used to register messages from _pb2.py modules.
 PyDescriptorPool* GetDefaultDescriptorPool();
 
-// Retrieve the python descriptor pool owning a C++ descriptor pool.
+// Retrieves an existing python descriptor pool owning the C++ descriptor pool.
 // Returns a *borrowed* reference.
 PyDescriptorPool* GetDescriptorPool_FromPool(const DescriptorPool* pool);
+
+// Wraps a C++ descriptor pool in a Python object, creates it if necessary.
+// Returns a new reference.
+PyObject* PyDescriptorPool_FromPool(const DescriptorPool* pool);
 
 // Initialize objects used by this module.
 bool InitDescriptorPool();
 
 }  // namespace python
 }  // namespace protobuf
-
 }  // namespace google
+
 #endif  // GOOGLE_PROTOBUF_PYTHON_CPP_DESCRIPTOR_POOL_H__

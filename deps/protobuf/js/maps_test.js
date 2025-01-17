@@ -35,10 +35,25 @@ goog.require('goog.userAgent');
 goog.require('proto.jspb.test.MapValueEnum');
 goog.require('proto.jspb.test.MapValueMessage');
 goog.require('proto.jspb.test.TestMapFields');
+goog.require('proto.jspb.test.TestMapFieldsOptionalKeys');
+goog.require('proto.jspb.test.TestMapFieldsOptionalValues');
+goog.require('proto.jspb.test.MapEntryOptionalKeysStringKey');
+goog.require('proto.jspb.test.MapEntryOptionalKeysInt32Key');
+goog.require('proto.jspb.test.MapEntryOptionalKeysInt64Key');
+goog.require('proto.jspb.test.MapEntryOptionalKeysBoolKey');
+goog.require('proto.jspb.test.MapEntryOptionalValuesStringValue');
+goog.require('proto.jspb.test.MapEntryOptionalValuesInt32Value');
+goog.require('proto.jspb.test.MapEntryOptionalValuesInt64Value');
+goog.require('proto.jspb.test.MapEntryOptionalValuesBoolValue');
+goog.require('proto.jspb.test.MapEntryOptionalValuesDoubleValue');
+goog.require('proto.jspb.test.MapEntryOptionalValuesEnumValue');
+goog.require('proto.jspb.test.MapEntryOptionalValuesMessageValue');
 
 // CommonJS-LoadFromFile: test_pb proto.jspb.test
 goog.require('proto.jspb.test.MapValueMessageNoBinary');
 goog.require('proto.jspb.test.TestMapFieldsNoBinary');
+
+goog.requireType('jspb.Map');
 
 /**
  * Helper: check that the given map has exactly this set of (sorted) entries.
@@ -49,7 +64,12 @@ function checkMapEquals(map, entries) {
   var arr = map.toArray();
   assertEquals(arr.length, entries.length);
   for (var i = 0; i < arr.length; i++) {
-    assertElementsEquals(arr[i], entries[i]);
+    if (Array.isArray(arr[i])) {
+      assertTrue(Array.isArray(entries[i]));
+      assertArrayEquals(arr[i], entries[i]);
+    } else {
+      assertElementsEquals(arr[i], entries[i]);
+    }
   }
 }
 
@@ -76,7 +96,7 @@ function toArray(iter) {
  * Helper: generate test methods for this TestMapFields class.
  * @param {?} msgInfo
  * @param {?} submessageCtor
- * @param {!string} suffix
+ * @param {string} suffix
  */
 function makeTests(msgInfo, submessageCtor, suffix) {
   /**
@@ -98,7 +118,9 @@ function makeTests(msgInfo, submessageCtor, suffix) {
     msg.getMapStringMsgMap().get('k').setFoo(42);
     msg.getMapStringMsgMap().get('l').setFoo(84);
     msg.getMapInt32StringMap().set(-1, 'a').set(42, 'b');
-    msg.getMapInt64StringMap().set(0x123456789abc, 'c').set(0xcba987654321, 'd');
+    msg.getMapInt64StringMap()
+        .set(0x123456789abc, 'c')
+        .set(0xcba987654321, 'd');
     msg.getMapBoolStringMap().set(false, 'e').set(true, 'f');
   };
 
@@ -107,42 +129,24 @@ function makeTests(msgInfo, submessageCtor, suffix) {
    * @param {?} msg
    */
   var checkMapFields = function(msg) {
-    checkMapEquals(msg.getMapStringStringMap(), [
-          ['asdf', 'jkl;'],
-          ['key 2', 'hello world']
-    ]);
-    checkMapEquals(msg.getMapStringInt32Map(), [
-          ['a', 1],
-          ['b', -2]
-    ]);
-    checkMapEquals(msg.getMapStringInt64Map(), [
-          ['c', 0x100000000],
-          ['d', 0x200000000]
-    ]);
-    checkMapEquals(msg.getMapStringBoolMap(), [
-          ['e', true],
-          ['f', false]
-    ]);
-    checkMapEquals(msg.getMapStringDoubleMap(), [
-          ['g', 3.14159],
-          ['h', 2.71828]
-    ]);
+    checkMapEquals(
+        msg.getMapStringStringMap(),
+        [['asdf', 'jkl;'], ['key 2', 'hello world']]);
+    checkMapEquals(msg.getMapStringInt32Map(), [['a', 1], ['b', -2]]);
+    checkMapEquals(
+        msg.getMapStringInt64Map(), [['c', 0x100000000], ['d', 0x200000000]]);
+    checkMapEquals(msg.getMapStringBoolMap(), [['e', true], ['f', false]]);
+    checkMapEquals(
+        msg.getMapStringDoubleMap(), [['g', 3.14159], ['h', 2.71828]]);
     checkMapEquals(msg.getMapStringEnumMap(), [
-          ['i', proto.jspb.test.MapValueEnum.MAP_VALUE_BAR],
-          ['j', proto.jspb.test.MapValueEnum.MAP_VALUE_BAZ]
+      ['i', proto.jspb.test.MapValueEnum.MAP_VALUE_BAR],
+      ['j', proto.jspb.test.MapValueEnum.MAP_VALUE_BAZ]
     ]);
-    checkMapEquals(msg.getMapInt32StringMap(), [
-          [-1, 'a'],
-          [42, 'b']
-    ]);
-    checkMapEquals(msg.getMapInt64StringMap(), [
-          [0x123456789abc, 'c'],
-          [0xcba987654321, 'd']
-    ]);
-    checkMapEquals(msg.getMapBoolStringMap(), [
-          [false, 'e'],
-          [true, 'f']
-    ]);
+    checkMapEquals(msg.getMapInt32StringMap(), [[-1, 'a'], [42, 'b']]);
+    checkMapEquals(
+        msg.getMapInt64StringMap(),
+        [[0x123456789abc, 'c'], [0xcba987654321, 'd']]);
+    checkMapEquals(msg.getMapBoolStringMap(), [[false, 'e'], [true, 'f']]);
 
     assertEquals(msg.getMapStringMsgMap().getLength(), 2);
     assertEquals(msg.getMapStringMsgMap().get('k').getFoo(), 42);
@@ -187,10 +191,7 @@ function makeTests(msgInfo, submessageCtor, suffix) {
     assertElementsEquals(it.next().value, ['asdf', 'hello world']);
     assertElementsEquals(it.next().value, ['jkl;', 'key 2']);
     assertEquals(it.next().done, true);
-    checkMapEquals(m, [
-        ['asdf', 'hello world'],
-        ['jkl;', 'key 2']
-    ]);
+    checkMapEquals(m, [['asdf', 'hello world'], ['jkl;', 'key 2']]);
     m.del('jkl;');
     assertEquals(m.has('jkl;'), false);
     assertEquals(m.get('jkl;'), undefined);
@@ -242,11 +243,11 @@ function makeTests(msgInfo, submessageCtor, suffix) {
       msg.getMapStringStringMap().set('A', 'a');
       var serialized = msg.serializeBinary();
       var expectedSerialized = [
-          0x0a, 0x6, // field 1 (map_string_string), delimited, length 6
-          0x0a, 0x1, // field 1 in submessage (key), delimited, length 1
-          0x41,      // ASCII 'A'
-          0x12, 0x1, // field 2 in submessage (value), delimited, length 1
-          0x61       // ASCII 'a'
+        0x0a, 0x6,  // field 1 (map_string_string), delimited, length 6
+        0x0a, 0x1,  // field 1 in submessage (key), delimited, length 1
+        0x41,       // ASCII 'A'
+        0x12, 0x1,  // field 2 in submessage (value), delimited, length 1
+        0x61        // ASCII 'a'
       ];
       assertEquals(serialized.length, expectedSerialized.length);
       for (var i = 0; i < serialized.length; i++) {
@@ -260,6 +261,80 @@ function makeTests(msgInfo, submessageCtor, suffix) {
       var decoded = msgInfo.deserializeBinary(serialized);
       checkMapFields(decoded);
     });
+
+    /**
+     * Tests deserialization of undefined map keys go to default values in
+     * binary format.
+     */
+    it('testMapDeserializationForUndefinedKeys', function() {
+      var testMessageOptionalKeys =
+          new proto.jspb.test.TestMapFieldsOptionalKeys();
+      var mapEntryStringKey =
+          new proto.jspb.test.MapEntryOptionalKeysStringKey();
+      mapEntryStringKey.setValue('a');
+      testMessageOptionalKeys.setMapStringString(mapEntryStringKey);
+      var mapEntryInt32Key = new proto.jspb.test.MapEntryOptionalKeysInt32Key();
+      mapEntryInt32Key.setValue('b');
+      testMessageOptionalKeys.setMapInt32String(mapEntryInt32Key);
+      var mapEntryInt64Key = new proto.jspb.test.MapEntryOptionalKeysInt64Key();
+      mapEntryInt64Key.setValue('c');
+      testMessageOptionalKeys.setMapInt64String(mapEntryInt64Key);
+      var mapEntryBoolKey = new proto.jspb.test.MapEntryOptionalKeysBoolKey();
+      mapEntryBoolKey.setValue('d');
+      testMessageOptionalKeys.setMapBoolString(mapEntryBoolKey);
+      var deserializedMessage =
+          msgInfo.deserializeBinary(testMessageOptionalKeys.serializeBinary());
+      checkMapEquals(deserializedMessage.getMapStringStringMap(), [['', 'a']]);
+      checkMapEquals(deserializedMessage.getMapInt32StringMap(), [[0, 'b']]);
+      checkMapEquals(deserializedMessage.getMapInt64StringMap(), [[0, 'c']]);
+      checkMapEquals(deserializedMessage.getMapBoolStringMap(), [[false, 'd']]);
+    });
+
+    /**
+     * Tests deserialization of undefined map values go to default values in
+     * binary format.
+     */
+    it('testMapDeserializationForUndefinedValues', function() {
+      var testMessageOptionalValues =
+          new proto.jspb.test.TestMapFieldsOptionalValues();
+      var mapEntryStringValue =
+          new proto.jspb.test.MapEntryOptionalValuesStringValue();
+      mapEntryStringValue.setKey('a');
+      testMessageOptionalValues.setMapStringString(mapEntryStringValue);
+      var mapEntryInt32Value =
+          new proto.jspb.test.MapEntryOptionalValuesInt32Value();
+      mapEntryInt32Value.setKey('b');
+      testMessageOptionalValues.setMapStringInt32(mapEntryInt32Value);
+      var mapEntryInt64Value =
+          new proto.jspb.test.MapEntryOptionalValuesInt64Value();
+      mapEntryInt64Value.setKey('c');
+      testMessageOptionalValues.setMapStringInt64(mapEntryInt64Value);
+      var mapEntryBoolValue =
+          new proto.jspb.test.MapEntryOptionalValuesBoolValue();
+      mapEntryBoolValue.setKey('d');
+      testMessageOptionalValues.setMapStringBool(mapEntryBoolValue);
+      var mapEntryDoubleValue =
+          new proto.jspb.test.MapEntryOptionalValuesDoubleValue();
+      mapEntryDoubleValue.setKey('e');
+      testMessageOptionalValues.setMapStringDouble(mapEntryDoubleValue);
+      var mapEntryEnumValue =
+          new proto.jspb.test.MapEntryOptionalValuesEnumValue();
+      mapEntryEnumValue.setKey('f');
+      testMessageOptionalValues.setMapStringEnum(mapEntryEnumValue);
+      var mapEntryMessageValue =
+          new proto.jspb.test.MapEntryOptionalValuesMessageValue();
+      mapEntryMessageValue.setKey('g');
+      testMessageOptionalValues.setMapStringMsg(mapEntryMessageValue);
+      var deserializedMessage = msgInfo.deserializeBinary(
+          testMessageOptionalValues.serializeBinary());
+      checkMapEquals(deserializedMessage.getMapStringStringMap(), [['a', '']]);
+      checkMapEquals(deserializedMessage.getMapStringInt32Map(), [['b', 0]]);
+      checkMapEquals(deserializedMessage.getMapStringInt64Map(), [['c', 0]]);
+      checkMapEquals(deserializedMessage.getMapStringBoolMap(), [['d', false]]);
+      checkMapEquals(deserializedMessage.getMapStringDoubleMap(), [['e', 0.0]]);
+      checkMapEquals(deserializedMessage.getMapStringEnumMap(), [['f', 0]]);
+      checkMapEquals(deserializedMessage.getMapStringMsgMap(), [['g', []]]);
+    });
   }
 
 
@@ -268,11 +343,7 @@ function makeTests(msgInfo, submessageCtor, suffix) {
    */
   it('testLazyMapSync' + suffix, function() {
     // Start with a JSPB array containing a few map entries.
-    var entries = [
-        ['a', 'entry 1'],
-        ['c', 'entry 2'],
-        ['b', 'entry 3']
-    ];
+    var entries = [['a', 'entry 1'], ['c', 'entry 2'], ['b', 'entry 3']];
     var msg = new msgInfo.constructor([entries]);
     assertEquals(entries.length, 3);
     assertEquals(entries[0][0], 'a');
@@ -280,9 +351,9 @@ function makeTests(msgInfo, submessageCtor, suffix) {
     assertEquals(entries[2][0], 'b');
     msg.getMapStringStringMap().del('a');
     assertEquals(entries.length, 3);  // not yet sync'd
-    msg.toArray();                // force a sync
+    msg.toArray();                    // force a sync
     assertEquals(entries.length, 2);
-    assertEquals(entries[0][0], 'b'); // now in sorted order
+    assertEquals(entries[0][0], 'b');  // now in sorted order
     assertEquals(entries[1][0], 'c');
 
     var a = msg.toArray();
@@ -302,11 +373,17 @@ function makeTests(msgInfo, submessageCtor, suffix) {
     assertElementsEquals(entryIterator.next().value, ['key2', 'value2']);
     assertEquals(entryIterator.next().done, true);
 
-    if (typeof(Symbol) != 'undefined') {
+    try {
       var entryIterable = m.entries()[Symbol.iterator]();
       assertElementsEquals(entryIterable.next().value, ['key1', 'value1']);
       assertElementsEquals(entryIterable.next().value, ['key2', 'value2']);
       assertEquals(entryIterable.next().done, true);
+    } catch (err) {
+      // jspb.Map.ArrayIteratorIterable_.prototype[Symbol.iterator] may be
+      // undefined in some environment.
+      if (err.name != 'TypeError' && err.name != 'ReferenceError') {
+        throw err;
+      }
     }
 
     var keyIterator = m.keys();
@@ -314,22 +391,34 @@ function makeTests(msgInfo, submessageCtor, suffix) {
     assertEquals(keyIterator.next().value, 'key2');
     assertEquals(keyIterator.next().done, true);
 
-    if (typeof(Symbol) != 'undefined') {
+    try {
       var keyIterable = m.keys()[Symbol.iterator]();
       assertEquals(keyIterable.next().value, 'key1');
       assertEquals(keyIterable.next().value, 'key2');
       assertEquals(keyIterable.next().done, true);
+    } catch (err) {
+      // jspb.Map.ArrayIteratorIterable_.prototype[Symbol.iterator] may be
+      // undefined in some environment.
+      if (err.name != 'TypeError' && err.name != 'ReferenceError') {
+        throw err;
+      }
     }
     var valueIterator = m.values();
     assertEquals(valueIterator.next().value, 'value1');
     assertEquals(valueIterator.next().value, 'value2');
     assertEquals(valueIterator.next().done, true);
 
-    if (typeof(Symbol) != 'undefined') {
+    try {
       var valueIterable = m.values()[Symbol.iterator]();
       assertEquals(valueIterable.next().value, 'value1');
       assertEquals(valueIterable.next().value, 'value2');
       assertEquals(valueIterable.next().done, true);
+    } catch (err) {
+      // jspb.Map.ArrayIteratorIterable_.prototype[Symbol.iterator] may be
+      // undefined in some environment.
+      if (err.name != 'TypeError' && err.name != 'ReferenceError') {
+        throw err;
+      }
     }
   });
 }

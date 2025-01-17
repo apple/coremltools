@@ -7,6 +7,8 @@ import copy
 import itertools
 import unittest
 
+from typing import ClassVar, Dict, List, Optional
+
 import numpy as np
 import pytest
 import torch
@@ -38,9 +40,7 @@ from coremltools.converters.mil.testing_utils import (
     get_op_types_in_program,
 )
 from coremltools.models.utils import _macos_version
-from coremltools.test.optimize.coreml.test_post_training_quantization import (
-    get_test_model_and_data_complex,
-)
+from coremltools.converters.mil.frontend.milproto.load import load as _milproto_to_pymil
 
 np.random.seed(1984)
 _VALIDATE_MODEL = True
@@ -1331,6 +1331,10 @@ class TestExpandHighRankReshapeAndTranspose:
         assert get_op_types_in_program(prog) == ["reshape", "transpose", "reshape"]
         TestExpandHighRankReshapeAndTranspose._test_numerical(prev_prog, input_shape, reshape_shape, perm, output_shape)
 
+    @pytest.mark.xfail(
+        reason="rdar://131637870 Why It Randomly Segfaults on CI but Cannot Reproduce Locally",
+        run=False,
+    )
     def test_rank20(self):
         input_shape = (4, 6, 8, 20, 40)
         reshape_shape = (1, 2, 2, 1, 2, 3, 2, 2, 2, 2, 2, 1, 1, 1, 5, 2, 2, 2, 1, 5)
@@ -1673,6 +1677,50 @@ class TestMergeConsecutiveReshapes:
             expected_output_shapes={block.outputs[0].name: OUTPUT_SHAPE},
             backend=backend,
         )
+
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_merge_reshape_in_nested_block(self, backend):
+        INPUT_SHAPE = (6, 7)
+        OUTPUT_SHAPE = (7, 6)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=INPUT_SHAPE)])
+        def prog(x):
+            loop_var = np.int32(2)
+            def while_cond(loop_var, _x):
+                return mb.equal(x=loop_var, y=np.int32(0))
+
+            def while_body(loop_var, x):
+                # Do reshapes of the input
+                y1 = mb.reshape(x=x, shape=(3, 2, 7))
+                y2 = mb.reshape(x=y1, shape=(7, 2, 3))
+                y3 = mb.reshape(x=y2, shape=(14, 3))
+                y4 = mb.reshape(x=y3, shape=OUTPUT_SHAPE)
+                return mb.add(x=loop_var, y=np.int32(-1)), y4
+
+            while_results = mb.while_loop(_cond=while_cond, _body=while_body, loop_vars=(loop_var, x))
+            return while_results[1]
+
+        prev_prog, _, block = apply_pass_and_basic_check(prog, "common::merge_consecutive_reshapes")
+        assert get_op_types_in_program(prev_prog, recurse=True) == ["while_loop", "equal", "reshape", "reshape", "reshape", "reshape", "add"]
+        assert get_op_types_in_program(prog, recurse=True) == ["while_loop", "equal", "reshape", "add"]
+
+        assert len(block.outputs) == 1
+        assert block.outputs[0].shape == OUTPUT_SHAPE
+
+        # the runtime is failing and tracked by this radar:
+        # rdar://133783519 ([CI] test_merge_reshape_in_nested_block unittest is crushing)
+        # TODO: After the framework fixes the issue, we should run the below checking again
+        """
+        assert_model_is_valid(
+            prog,
+            {"x": INPUT_SHAPE},
+            expected_output_shapes={block.outputs[0].name: OUTPUT_SHAPE},
+            backend=backend,
+        )
+        """
 
 class TestCastOptimizationReduendantCastRemoval:
     """
@@ -3717,7 +3765,7 @@ class TestConvBiasFusion:
             else:
                 conv_bias = -conv_bias
         expected_conv_bias_val = conv_bias + np.squeeze(bias)
-        np.testing.assert_almost_equal(expected_conv_bias_val, new_bias_val)
+        np.testing.assert_almost_equal(expected_conv_bias_val, new_bias_val, decimal=6)
 
         # run the model
         assert_model_is_valid(
@@ -4107,6 +4155,42 @@ class TestFusePadConv(unittest.TestCase):
             },
         )
 
+class TestFuseDilatedConv(unittest.TestCase):
+    """
+    Input graph:
+    input -----> space_to_batch -----> conv (2D)  -----> batch_to_space ---> out
+
+    Output graph:
+    input -----> conv (2D w dilations) ----> out
+    """
+
+    def test_fusion_with_same_padding(self):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 384, 48, 48))], opset_version=ct.target.iOS16)
+        def prog(x):
+            x = mb.space_to_batch(x=x, block_shape=[2, 2], paddings=[[2,2], [2,2]])
+            x = mb.conv(x=x, weight=np.ones((384,1,3,3)), pad_type="valid", groups=384)
+            x = mb.batch_to_space(x=x, block_shape=[2,2], crops=[[0,0], [0,0]])
+            return x
+
+        extract_conv_op = lambda prog: [op for op in prog['main'].operations if op.op_type=="conv"][0]
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, "common::fuse_dilated_conv")
+        self.assertEqual(
+            get_op_types_in_program(prev_prog), ['space_to_batch', 'conv', 'batch_to_space']
+        )
+        self.assertEqual(get_op_types_in_program(prog), ["conv"])
+
+        self.assertEqual(extract_conv_op(prev_prog).pad_type.val, "valid")
+        self.assertEqual(extract_conv_op(prog).pad_type.val, "same")
+
+        self.assertTrue(np.all(extract_conv_op(prev_prog).dilations.val == 1))
+        self.assertTrue(np.all(extract_conv_op(prog).dilations.val == 2))
+
+        assert_model_is_valid(
+            prog,
+            {"x": (1, 384, 48, 48)},
+            expected_output_shapes={block.outputs[0].name: (1, 384, 48, 48)},
+        )
 
 class TestConcatToPixelShuffle(unittest.TestCase):
     def test_success(self):
@@ -7089,6 +7173,13 @@ class TestRandomizeWeights:
         """
         Test ct.models.utils.randomize_weights method end to end
         """
+
+        # Doing a lazy import because it imports `coremltools.converters.mil.mil.ops.tests.iOS18 import backends`
+        # which brings dependencies on backends which shouldn't be needed for most tests in `test_passes.py`
+        from coremltools.test.optimize.coreml.test_post_training_quantization import (
+            get_test_model_and_data_complex,
+        )
+
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data_complex()
         torchmodel = torch.jit.trace(model, torch_input_values)
         mlmodel = ct.convert(
@@ -7112,3 +7203,304 @@ class TestRandomizeWeights:
 
         # check the weights have changed
         TestRandomizeWeights.assert_weights_changed(prog_before, prog_after)
+
+
+class TestStackSplitFusion:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "axis",
+        [
+            0,
+            1,
+            3,
+            [-1, -1, 3],
+            [-2, 2, -2],
+        ],
+    )
+    def test_spit_with_split_sizes(axis):
+        if isinstance(axis, int):
+            stack_axis = squeeze_axis = split_axis = axis
+        else:
+            stack_axis, squeeze_axis, split_axis = axis
+
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(2, 5, 6)),
+                mb.TensorSpec(shape=(2, 5, 6)),
+                mb.TensorSpec(shape=(2, 5, 6)),
+            ]
+        )
+        def prog(x, y, z):
+            res = mb.stack(values=[x, y, z], axis=stack_axis)
+            return tuple(
+                [
+                    mb.squeeze(x=val, axes=[squeeze_axis])
+                    for val in mb.split(x=res, split_sizes=[1, 1, 1], axis=split_axis)
+                ]
+            )
+
+        apply_pass_and_basic_check(prog, "common::fuse_stack_split")
+        assert get_op_types_in_program(prog) == ["identity"] * 3
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "axis",
+        [
+            0,
+            1,
+            3,
+            [-1, -1, 3],
+            [-2, 2, -2],
+        ],
+    )
+    def test_spit_with_num_splits(axis):
+        if isinstance(axis, int):
+            stack_axis = squeeze_axis = split_axis = axis
+        else:
+            stack_axis, squeeze_axis, split_axis = axis
+
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(2, 5, 6)),
+                mb.TensorSpec(shape=(2, 5, 6)),
+                mb.TensorSpec(shape=(2, 5, 6)),
+            ]
+        )
+        def prog(x, y, z):
+            res = mb.stack(values=[x, y, z], axis=stack_axis)
+            return tuple(
+                [
+                    mb.squeeze(x=val, axes=[squeeze_axis])
+                    for val in mb.split(x=res, num_splits=3, axis=split_axis)
+                ]
+            )
+
+        apply_pass_and_basic_check(prog, "common::fuse_stack_split")
+        assert get_op_types_in_program(prog) == ["identity"] * 3
+
+    def test_negative_stack_as_output(axis):
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(2, 5, 6)),
+                mb.TensorSpec(shape=(2, 5, 6)),
+                mb.TensorSpec(shape=(2, 5, 6)),
+            ]
+        )
+        def prog(x, y, z):
+            res = mb.stack(values=[x, y, z], axis=0)
+            a, b, c = [mb.squeeze(x=val, axes=[0]) for val in mb.split(x=res, num_splits=3, axis=0)]
+            return res, a
+
+        apply_pass_and_basic_check(prog, "common::fuse_stack_split")
+        assert get_op_types_in_program(prog) == ["stack", "split"] + ["squeeze"] * 3
+
+    def test_multiple_branch(axis):
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(2, 1, 3)),
+                mb.TensorSpec(shape=(2, 1, 3)),
+                mb.TensorSpec(shape=(2, 1, 3)),
+            ]
+        )
+        def prog(x, y, z):
+            res = mb.stack(values=[x, y, z], axis=0)
+            [mb.squeeze(x=val, axes=[0]) for val in mb.split(x=res, num_splits=3, axis=0)]
+            relu = mb.relu(x=res)
+            [mb.squeeze(x=val, axes=[0]) for val in mb.split(x=res, num_splits=3, axis=0)]
+            sin = mb.sin(x=res)
+            [mb.squeeze(x=val, axes=[3]) for val in mb.split(x=res, num_splits=3, axis=3)]
+            return mb.const(val=0)
+
+        apply_pass_and_basic_check(prog, "common::fuse_stack_split")
+        assert (
+            get_op_types_in_program(prog)
+            == ["stack"]
+            + ["identity"] * 3
+            + ["relu"]
+            + ["identity"] * 3
+            + ["sin", "split"]
+            + ["squeeze"] * 3
+        )
+
+    def test_negative_split_as_output(axis):
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(2, 5, 6)),
+                mb.TensorSpec(shape=(2, 5, 6)),
+                mb.TensorSpec(shape=(2, 5, 6)),
+            ]
+        )
+        def prog(x, y, z):
+            res = mb.stack(values=[x, y, z], axis=0)
+            a, b, c = mb.split(x=res, num_splits=3, axis=0)
+            return (
+                b,
+                mb.squeeze(x=a, axes=[0]),
+                mb.squeeze(x=b, axes=[0]),
+                mb.squeeze(x=c, axes=[0]),
+            )
+
+        apply_pass_and_basic_check(prog, "common::fuse_stack_split")
+        assert get_op_types_in_program(prog) == ["stack", "split"] + ["squeeze"] * 3
+
+    def test_negative_not_feed_into_squeeze(axis):
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(2, 5, 6)),
+                mb.TensorSpec(shape=(2, 5, 6)),
+                mb.TensorSpec(shape=(2, 5, 6)),
+            ]
+        )
+        def prog(x, y, z):
+            res = mb.stack(values=[x, y, z], axis=0)
+            a, b, c = mb.split(x=res, num_splits=3, axis=0)
+            return b, mb.squeeze(x=a, axes=[0]), mb.squeeze(x=b, axes=[0]), mb.add(x=c, y=8.0)
+
+        apply_pass_and_basic_check(prog, "common::fuse_stack_split")
+        assert get_op_types_in_program(prog) == ["stack", "split"] + ["squeeze"] * 2 + ["add"]
+
+    def test_negative_axis_mismatch(axis):
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(2, 1, 3)),
+                mb.TensorSpec(shape=(2, 1, 3)),
+                mb.TensorSpec(shape=(2, 1, 3)),
+            ]
+        )
+        def prog(x, y, z):
+            res = mb.stack(values=[x, y, z], axis=0)
+            a, b, c = mb.split(x=res, num_splits=3, axis=3)
+            return mb.squeeze(x=a, axes=[3]), mb.squeeze(x=b, axes=[3]), mb.squeeze(x=c, axes=[3])
+
+        apply_pass_and_basic_check(prog, "common::fuse_stack_split")
+        assert get_op_types_in_program(prog) == ["stack", "split"] + ["squeeze"] * 3
+
+
+class TestScaledDotProductAttentionSlicedQ:
+
+    class AttentionPyTorch(torch.nn.Module):
+        @staticmethod
+        def forward(q, k, v, attn_mask=None):
+            return torch.nn.functional.scaled_dot_product_attention(q, k, v, attn_mask)
+
+    @staticmethod
+    def _get_example_inputs(
+        shape_size: int = 3,
+        qkv_same_shape: bool = True,
+        dtype: torch.dtype = torch.float16,
+        attn_mask_dtype: Optional[torch.dtype] = None,
+    ):
+        batches, seq_length, dimensions = 4, 256, 768
+        q_shape = (batches, seq_length, dimensions)
+        kv_shape = q_shape if qkv_same_shape else (batches, seq_length - 16, dimensions)
+        if shape_size > 3:
+            q_shape = tuple([1] * (shape_size - len(q_shape)) + list(q_shape))
+            kv_shape = tuple([1] * (shape_size - len(kv_shape)) + list(kv_shape))
+        inputs = {
+            "q": torch.rand(q_shape, dtype=dtype),
+            "k": torch.rand(kv_shape, dtype=dtype),
+            "v": torch.rand(kv_shape, dtype=dtype),
+        }
+        if attn_mask_dtype is not None:
+            if attn_mask_dtype == torch.bool:
+                inputs["attn_mask"] = torch.randint(0, 2, (seq_length, seq_length), dtype=torch.bool)
+            else:
+                inputs["attn_mask"] = torch.randn((seq_length, seq_length), dtype=dtype)
+        return inputs
+
+    @staticmethod
+    def _get_trace_coreml_inputs(example_inputs: Dict[str, torch.Tensor]):
+        model_inputs = [example_inputs[key] for key in ["q", "k", "v"]]
+        if "attn_mask" in example_inputs:
+            model_inputs.append(example_inputs["attn_mask"])
+
+        coreml_model_inputs = []
+        for key in ["q", "k", "v", "attn_mask"]:
+            if key in example_inputs:
+                dtype = example_inputs[key].numpy().dtype
+                if dtype == bool:
+                    dtype = np.float32
+                coreml_model_inputs.append(ct.TensorType(key, shape=example_inputs[key].shape, dtype=dtype))
+
+        return model_inputs, coreml_model_inputs
+
+    def verify_sdpa_outputs(self, example_inputs: Dict[str, torch.Tensor]):
+        pipeline_1 = ct.PassPipeline.DEFAULT
+
+        pipeline_2 = ct.PassPipeline.DEFAULT
+        pipeline_2.append_pass("common::scaled_dot_product_attention_sliced_q")
+
+        pipeline_3 = ct.PassPipeline.DEFAULT
+        pipeline_3.append_pass("common::scaled_dot_product_attention_sliced_q")
+        pipeline_3.set_options("common::scaled_dot_product_attention_sliced_q", {"min_seq_length": 256})
+
+        pipeline_4 = ct.PassPipeline.DEFAULT
+        pipeline_4.append_pass("common::scaled_dot_product_attention_sliced_q")
+        pipeline_4.set_options(
+            "common::scaled_dot_product_attention_sliced_q", {"min_seq_length": 256, "seq_length_divider": 32}
+        )
+
+        model = self.AttentionPyTorch()
+        model_inputs, coreml_model_inputs = self._get_trace_coreml_inputs(example_inputs)
+
+        coreml_models = [
+            ct.convert(
+                torch.jit.trace(model, model_inputs).eval(),
+                inputs=coreml_model_inputs,
+                minimum_deployment_target=ct.target.iOS18,
+                convert_to="mlprogram",
+                compute_units=ct.ComputeUnit.ALL,
+                skip_model_load=False,
+                pass_pipeline=pipeline,
+            )
+            for pipeline in [pipeline_1, pipeline_2, pipeline_3, pipeline_4]
+        ]
+
+        model_specs = [coreml_model.get_spec() for coreml_model in coreml_models]
+        progs = []
+        for i in range(len(coreml_models)):
+            progs.append(
+                _milproto_to_pymil(
+                    model_spec=model_specs[i],
+                    specification_version=model_specs[i].specificationVersion,
+                    file_weights_dir=coreml_models[i].weights_dir,
+                )
+            )
+
+        ops_counts = [len(prog.functions["main"].operations) for prog in progs]
+
+        assert ops_counts[0] == 1 or ops_counts[0] == 3  # (attn_mask might be cast to bool from input fp16 dtype)
+        assert ops_counts[1] == 1 or ops_counts[1] == 3  # the Q seq length is less than the default min seq length
+        assert ops_counts[2] >= 6 * 16  # 6 ops (without consts) per slice
+        assert ops_counts[3] >= 6 * 32
+
+        predict_inputs = copy.deepcopy(example_inputs)
+        if "attn_mask" in predict_inputs:
+            predict_inputs["attn_mask"] = predict_inputs["attn_mask"].to(dtype=torch.float32)
+
+        outputs = [list(coreml_model.predict(predict_inputs).values())[0] for coreml_model in coreml_models]
+
+        for i in range(1, len(outputs)):
+            assert outputs[0].shape == outputs[i].shape
+            np.testing.assert_allclose(outputs[0], outputs[i], rtol=0.01)
+
+    def test_scaled_dot_product_attention_sliced(self):
+        # Confirm the basic scenario.
+        example_inputs = self._get_example_inputs()
+        self.verify_sdpa_outputs(example_inputs)
+
+        # Confirm sdpa with Q, K and V as 4D tensors.
+        example_inputs = self._get_example_inputs(shape_size=4)
+        self.verify_sdpa_outputs(example_inputs)
+
+        # Confirm sdpa with attn_mask as a bias.
+        example_inputs = self._get_example_inputs(attn_mask_dtype=torch.float16)
+        self.verify_sdpa_outputs(example_inputs)
+
+        # Confirm sdpa with attn_mask as boolean flags.
+        example_inputs = self._get_example_inputs(attn_mask_dtype=torch.bool)
+        self.verify_sdpa_outputs(example_inputs)
+
+        # Confirm sdpa works well with different shapes for Q and K & V.
+        example_inputs = self._get_example_inputs(qkv_same_shape=False)
+        self.verify_sdpa_outputs(example_inputs)

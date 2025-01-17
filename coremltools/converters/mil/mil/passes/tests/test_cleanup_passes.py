@@ -85,8 +85,8 @@ class TestConstDeduplication:
         expected_ops = ["const", "const", "const", "add", "add", "add", "add"]
         assert get_op_types_in_block(main_func, skip_const_ops=False) == expected_ops
         const_ops = main_func.find_ops(op_type="const")
-        assert const_ops[0].weight_id == 0
-        assert const_ops[1].weight_id == 1
+        assert const_ops[0].weight_id == "0"
+        assert const_ops[1].weight_id == "1"
         assert const_ops[2].weight_id is None
 
         func_1 = prog.functions["func_1"]
@@ -98,8 +98,8 @@ class TestConstDeduplication:
         ]
         assert get_op_types_in_block(func_1, skip_const_ops=False) == expected_ops
         const_ops = func_1.find_ops(op_type="const")
-        assert const_ops[0].weight_id == 0
-        assert const_ops[1].weight_id == 1
+        assert const_ops[0].weight_id == "0"
+        assert const_ops[1].weight_id == "1"
 
     def test_const_deduplication_cross_functions_from_same_source(self):
         """
@@ -146,11 +146,150 @@ class TestConstDeduplication:
 
         for func in [prog.functions["func_1"], prog.functions["func_2"]]:
             const_ops = func.find_ops(op_type="const")
-            assert const_ops[0].weight_id == 0
-            assert const_ops[1].weight_id == 1
-            assert const_ops[2].weight_id == 2
+            assert const_ops[0].weight_id == "0"
+            assert const_ops[1].weight_id == "1"
+            assert const_ops[2].weight_id == "2"
 
-    def test_const_deduplication(self):
+    @staticmethod
+    def test_const_deduplication_with_threshold():
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(2,)),
+            ]
+        )
+        def prog(x):
+            # const_1 and const_2 will not be deduplicated
+            const_1 = [0.0]
+            const_2 = [0.0]
+            const_3 = [0.0, 1.0]
+            const_4 = [0.0, 1.0]
+
+            # 4 add ops
+            x = mb.add(x=x, y=const_1)
+            x = mb.add(x=x, y=const_2)
+            x = mb.add(x=x, y=const_3)
+            return mb.add(x=x, y=const_4)
+
+        graph_pass = PASS_REGISTRY["common::const_deduplication"]
+        graph_pass.const_threshold = 2
+        apply_pass_and_basic_check(prog, graph_pass)
+
+        # check the graph pass
+        assert_op_count_match(prog, expect=3, op="const")
+        const_ops = prog.functions["main"].find_ops(op_type="const")
+        assert const_ops[0].outputs[0].val.tolist() == [0.0]
+        assert const_ops[1].outputs[0].val.tolist() == [0.0]
+        assert const_ops[2].outputs[0].val.tolist() == [0.0, 1.0]
+
+    @staticmethod
+    def test_const_deduplication_with_threshold_for_pad():
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(100,)),
+            ]
+        )
+        def prog(x):
+            # both constant_val and pad inputs for two pad ops are deduplicaed
+            c_zero_scalar = np.float32(0.0)
+            x = mb.pad(x=x, pad=[1, 0], mode="constant", constant_val=c_zero_scalar)
+            return mb.pad(x=x, pad=[1, 0], mode="constant", constant_val=c_zero_scalar)
+
+        graph_pass = PASS_REGISTRY["common::const_deduplication"]
+        graph_pass.const_threshold = -1
+        apply_pass_and_basic_check(prog, graph_pass)
+
+        # check the graph pass
+        assert_op_count_match(prog, expect=4, op="const")
+        const_ops = prog.functions["main"].find_ops(op_type="const")
+        assert const_ops[0].outputs[0].val.tolist() == [1, 0]
+        assert const_ops[1].outputs[0].val == "constant"
+        assert const_ops[2].outputs[0].val == 0.0
+        assert const_ops[3].outputs[0].val == "constant"
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "constexpr_op",
+        CONSTEXPR_OPS,
+    )
+    def test_constexpr_deduplication_with_threshold(constexpr_op):
+        BATCH_DIM = 1
+        SEQUENCE_LENGTH = 1
+        ENCODING_DIM = 1
+        EMBEDDING_DIM = 2
+
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(BATCH_DIM, SEQUENCE_LENGTH, ENCODING_DIM)),
+                mb.TensorSpec(shape=(BATCH_DIM, SEQUENCE_LENGTH, ENCODING_DIM)),
+            ]
+        )
+        def prog(q, k):
+            weight_q = CONSTEXPR_FUNCS[constexpr_op]((EMBEDDING_DIM, ENCODING_DIM), seed=19)
+            weight_k = CONSTEXPR_FUNCS[constexpr_op]((EMBEDDING_DIM, ENCODING_DIM), seed=19)
+            q_e = mb.linear(x=q, weight=weight_q)
+            k_e = mb.linear(x=k, weight=weight_k)
+            return mb.matmul(x=q_e, y=k_e, transpose_y=True)
+
+        graph_pass = PASS_REGISTRY["common::const_deduplication"]
+        graph_pass.const_threshold = -1
+        apply_pass_and_basic_check(prog, graph_pass)
+
+        # check the graph pass
+        assert_op_count_match(prog, expect=1, op=constexpr_op)
+
+    @staticmethod
+    def test_str_should_not_be_deduplicated():
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(1,)),
+            ]
+        )
+        def prog(x):
+            x = mb.cast(x=x, dtype="int32")
+            return mb.cast(x=x, dtype="int32")
+
+        graph_pass = PASS_REGISTRY["common::const_deduplication"]
+        graph_pass.const_threshold = -1
+        apply_pass_and_basic_check(prog, graph_pass)
+
+        # check the graph pass
+        assert_op_count_match(prog, expect=2, op="const")
+        const_ops = prog.functions["main"].find_ops(op_type="const")
+        assert const_ops[0].outputs[0].val == "int32"
+        assert const_ops[1].outputs[0].val == "int32"
+
+    @staticmethod
+    def test_bool_should_not_be_deduplicated():
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(2,)),
+                mb.TensorSpec(shape=(2,)),
+            ]
+        )
+        def prog(x, y):
+            return mb.argsort(x=x, axis=-1, ascending=False), mb.argsort(
+                x=y, axis=-1, ascending=False
+            )
+
+        graph_pass = PASS_REGISTRY["common::const_deduplication"]
+        graph_pass.const_threshold = -1
+        apply_pass_and_basic_check(prog, graph_pass)
+
+        # check the graph pass
+        assert_op_count_match(prog, expect=3, op="const")
+        const_ops = prog.functions["main"].find_ops(op_type="const")
+        assert const_ops[0].outputs[0].val == -1
+        assert const_ops[1].outputs[0].val == False
+        assert const_ops[2].outputs[0].val == False
+
+    @pytest.mark.parametrize(
+        "q_weight_key, k_weight_key",
+        itertools.product(
+            (None, "weight", "q_weight"),
+            (None, "weight", "k_weight"),
+        ),
+    )
+    def test_const_deduplication(self, q_weight_key, k_weight_key):
         BATCH_DIM = 5
         SEQUENCE_LENGTH = 4
         ENCODING_DIM = 256
@@ -166,19 +305,27 @@ class TestConstDeduplication:
         )
         def prog(q, k):
             q_e = mb.linear(x=q, weight=weight, bias=bias)
+            q_e.op.weight.op.weight_key = q_weight_key
             k_e = mb.linear(x=k, weight=weight, bias=bias)
+            k_e.op.weight.op.weight_key = k_weight_key
             attention = mb.matmul(x=q_e, y=k_e, transpose_y=True)
             return attention
 
         prev_prog, _, _ = apply_pass_and_basic_check(prog, "common::const_deduplication")
         assert_op_count_match(prev_prog, expect=6, op="const")
-        assert_op_count_match(prog, expect=4, op="const")
+        # bias will always be deduplicated
+        # weight will be deduplicated only when q and k have same weight key
+        assert_op_count_match(prog, expect=4 if q_weight_key == k_weight_key else 5, op="const")
 
     @pytest.mark.parametrize(
-        "constexpr_op",
-        CONSTEXPR_OPS,
+        "constexpr_op, q_bias_key, k_bias_key",
+        itertools.product(
+            CONSTEXPR_OPS,
+            (None, "weight", "q_weight"),
+            (None, "weight", "k_weight"),
+        ),
     )
-    def test_constexpr_deduplication(self, constexpr_op):
+    def test_constexpr_deduplication(self, constexpr_op, q_bias_key, k_bias_key):
         BATCH_DIM = 5
         SEQUENCE_LENGTH = 4
         ENCODING_DIM = 256
@@ -196,13 +343,17 @@ class TestConstDeduplication:
             bias_q = CONSTEXPR_FUNCS[constexpr_op]((EMBEDDING_DIM,), seed=29)
             bias_k = CONSTEXPR_FUNCS[constexpr_op]((EMBEDDING_DIM,), seed=29)
             q_e = mb.linear(x=q, weight=weight_q, bias=bias_q)
+            q_e.op.bias.op.weight_key = q_bias_key
             k_e = mb.linear(x=k, weight=weight_k, bias=bias_k)
+            k_e.op.bias.op.weight_key = k_bias_key
             attention = mb.matmul(x=q_e, y=k_e, transpose_y=True)
             return attention
 
         prev_prog, _, _ = apply_pass_and_basic_check(prog, "common::const_deduplication")
         assert_op_count_match(prev_prog, expect=4, op=constexpr_op)
-        assert_op_count_match(prog, expect=2, op=constexpr_op)
+        # weight will always be deduplicated
+        # bias will be deduplicated only when q and k have same weight key
+        assert_op_count_match(prog, expect=2 if q_bias_key == k_bias_key else 3, op=constexpr_op)
 
     def test_const_deduplication_as_outputs(self):
         """
@@ -283,6 +434,36 @@ class TestConstDeduplication:
         prev_prog, _, _ = apply_pass_and_basic_check(prog, "common::const_deduplication")
         assert_op_count_match(prev_prog, expect=8, op="const")
         assert_op_count_match(prog, expect=6, op="const")
+
+    def test_const_mask_deduplication(self):
+        """The same mask used by constexpr_sparse_blockwise_shift_scale and constexpr_sparse_to_dense is deduped."""
+        mask_val = np.random.randint(low=0, high=2, size=(32, 32)).astype(types.np_uint1_dtype)
+        nonzero_data_val = np.random.randint(low=1, high=100, size=(np.sum(mask_val),)).astype(
+            np.int8
+        )
+
+        @mb.program(input_specs=[], opset_version=ct.target.iOS18)
+        def prog():
+            mask, nonzero_data = mb.constexpr_sparse_blockwise_shift_scale(
+                data_mask=mb.const(val=mask_val),
+                nonzero_data=nonzero_data_val,
+                scale=np.array([[0.1]]),
+                offset=np.array([[1]]).astype(np.int8),
+            )
+            return mb.constexpr_sparse_to_dense(
+                nonzero_data=nonzero_data,
+                mask=mb.const(val=mask_val),
+            )
+
+        prev_prog, _, _ = apply_pass_and_basic_check(prog, "common::const_deduplication")
+        assert_op_count_match(prev_prog, expect=5, op="const")
+        # The `data_mask` and `mask` which have the same val (mask_val) are deduplicated.
+        assert_op_count_match(prog, expect=4, op="const")
+        quantize_op = prog.functions["main"].find_ops(
+            op_type="constexpr_sparse_blockwise_shift_scale"
+        )[0]
+        sparse_to_dense_op = prog.functions["main"].find_ops(op_type="constexpr_sparse_to_dense")[0]
+        assert quantize_op.data_mask == sparse_to_dense_op.mask
 
 
 class TestConstElimination:

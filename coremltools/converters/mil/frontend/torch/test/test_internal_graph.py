@@ -1412,7 +1412,8 @@ class TestTorchOps:
                 ceil_mode,
             ],
             "max_pool2d",
-            ops.max_pool2d,
+            # Using ops.max_pool1d because max_pool2d is its alias
+            ops.max_pool1d,
             expected_result,
         )
 

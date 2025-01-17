@@ -11,9 +11,16 @@ from typing import cast as _cast
 
 import torch as _torch
 
+from coremltools.optimize.torch._utils.joint_compression_utils import (
+    is_palettized_module as _is_palettized_module,
+)
+from coremltools.optimize.torch._utils.joint_compression_utils import (
+    is_quantized_module as _is_quantized_module,
+)
 from coremltools.optimize.torch._utils.metadata_utils import (
     CompressionMetadata as _CompressionMetadata,
 )
+from coremltools.optimize.torch._utils.torch_utils import get_atomic_layers as _get_atomic_layers
 
 logger = _logging.getLogger(__name__)
 
@@ -216,8 +223,19 @@ def validate_allowed_granularity_values(instance, attribute, value):
         )
 
 
-def register_compression_metadata(submodule, config):
+def register_compression_metadata(submodule, pruner_info, supported_modules):
+    config = pruner_info.config
+    compression_type = ["pruning"]
+
+    # Identify joint compression cases
+    if _is_quantized_module(pruner_info.module):
+        compression_type += ["quantization"]
+        pruning_support_layers = _get_atomic_layers(submodule, supported_modules)
+        submodule = list(pruning_support_layers.values())[0]
+    elif _is_palettized_module(pruner_info.module):
+        compression_type += ["palettization"]
+
     param_name = config.param_name
     metadata = _CompressionMetadata(param_name)
-    metadata.compression_type = ["pruning"]
-    metadata.register(submodule)
+    metadata.compression_type = compression_type
+    metadata.register(submodule, override_compression_type=(len(compression_type) > 1))

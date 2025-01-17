@@ -45,7 +45,7 @@ import java.util.RandomAccess;
 final class FloatArrayList extends AbstractProtobufList<Float>
     implements FloatList, RandomAccess, PrimitiveNonBoxingCollection {
 
-  private static final FloatArrayList EMPTY_LIST = new FloatArrayList();
+  private static final FloatArrayList EMPTY_LIST = new FloatArrayList(new float[0], 0);
   static {
     EMPTY_LIST.makeImmutable();
   }
@@ -54,9 +54,7 @@ final class FloatArrayList extends AbstractProtobufList<Float>
     return EMPTY_LIST;
   }
 
-  /**
-   * The backing store for the list.
-   */
+  /** The backing store for the list. */
   private float[] array;
 
   /**
@@ -65,20 +63,29 @@ final class FloatArrayList extends AbstractProtobufList<Float>
    */
   private int size;
 
-  /**
-   * Constructs a new mutable {@code FloatArrayList} with default capacity.
-   */
+  /** Constructs a new mutable {@code FloatArrayList} with default capacity. */
   FloatArrayList() {
     this(new float[DEFAULT_CAPACITY], 0);
   }
 
   /**
-   * Constructs a new mutable {@code FloatArrayList}
-   * containing the same elements as {@code other}.
+   * Constructs a new mutable {@code FloatArrayList} containing the same elements as {@code other}.
    */
   private FloatArrayList(float[] other, int size) {
     array = other;
     this.size = size;
+  }
+
+  @Override
+  protected void removeRange(int fromIndex, int toIndex) {
+    ensureIsMutable();
+    if (toIndex < fromIndex) {
+      throw new IndexOutOfBoundsException("toIndex < fromIndex");
+    }
+
+    System.arraycopy(array, toIndex, array, fromIndex, size - toIndex);
+    size -= (toIndex - fromIndex);
+    modCount++;
   }
 
   @Override
@@ -96,7 +103,7 @@ final class FloatArrayList extends AbstractProtobufList<Float>
 
     final float[] arr = other.array;
     for (int i = 0; i < size; i++) {
-      if (array[i] != arr[i]) {
+      if (Float.floatToIntBits(array[i]) != Float.floatToIntBits(arr[i])) {
         return false;
       }
     }
@@ -133,6 +140,26 @@ final class FloatArrayList extends AbstractProtobufList<Float>
   }
 
   @Override
+  public int indexOf(Object element) {
+    if (!(element instanceof Float)) {
+      return -1;
+    }
+    float unboxedElement = (Float) element;
+    int numElems = size();
+    for (int i = 0; i < numElems; i++) {
+      if (array[i] == unboxedElement) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  @Override
+  public boolean contains(Object element) {
+    return indexOf(element) != -1;
+  }
+
+  @Override
   public int size() {
     return size;
   }
@@ -152,21 +179,33 @@ final class FloatArrayList extends AbstractProtobufList<Float>
   }
 
   @Override
+  public boolean add(Float element) {
+    addFloat(element);
+    return true;
+  }
+
+  @Override
   public void add(int index, Float element) {
     addFloat(index, element);
   }
 
-  /**
-   * Like {@link #add(Float)} but more efficient in that it doesn't box the element.
-   */
+  /** Like {@link #add(Float)} but more efficient in that it doesn't box the element. */
   @Override
   public void addFloat(float element) {
-    addFloat(size, element);
+    ensureIsMutable();
+    if (size == array.length) {
+      // Resize to 1.5x the size
+      int length = ((size * 3) / 2) + 1;
+      float[] newArray = new float[length];
+
+      System.arraycopy(array, 0, newArray, 0, size);
+      array = newArray;
+    }
+
+    array[size++] = element;
   }
 
-  /**
-   * Like {@link #add(int, Float)} but more efficient in that it doesn't box the element.
-   */
+  /** Like {@link #add(int, Float)} but more efficient in that it doesn't box the element. */
   private void addFloat(int index, float element) {
     ensureIsMutable();
     if (index < 0 || index > size) {
@@ -228,25 +267,13 @@ final class FloatArrayList extends AbstractProtobufList<Float>
   }
 
   @Override
-  public boolean remove(Object o) {
-    ensureIsMutable();
-    for (int i = 0; i < size; i++) {
-      if (o.equals(array[i])) {
-        System.arraycopy(array, i + 1, array, i, size - i);
-        size--;
-        modCount++;
-        return true;
-      }
-    }
-    return false;
-  }
-
-  @Override
   public Float remove(int index) {
     ensureIsMutable();
     ensureIndexInRange(index);
     float value = array[index];
-    System.arraycopy(array, index + 1, array, index, size - index);
+    if (index < size - 1) {
+      System.arraycopy(array, index + 1, array, index, size - index - 1);
+    }
     size--;
     modCount++;
     return value;

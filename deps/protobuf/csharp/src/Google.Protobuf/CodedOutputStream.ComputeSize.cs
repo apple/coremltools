@@ -42,13 +42,17 @@ namespace Google.Protobuf
         private const int LittleEndian64Size = 8;
         private const int LittleEndian32Size = 4;        
 
+        internal const int DoubleSize = LittleEndian64Size;
+        internal const int FloatSize = LittleEndian32Size;
+        internal const int BoolSize = 1;
+
         /// <summary>
         /// Computes the number of bytes that would be needed to encode a
         /// double field, including the tag.
         /// </summary>
         public static int ComputeDoubleSize(double value)
         {
-            return LittleEndian64Size;
+            return DoubleSize;
         }
 
         /// <summary>
@@ -57,7 +61,7 @@ namespace Google.Protobuf
         /// </summary>
         public static int ComputeFloatSize(float value)
         {
-            return LittleEndian32Size;
+            return FloatSize;
         }
 
         /// <summary>
@@ -119,7 +123,7 @@ namespace Google.Protobuf
         /// </summary>
         public static int ComputeBoolSize(bool value)
         {
-            return 1;
+            return BoolSize;
         }
 
         /// <summary>
@@ -128,7 +132,7 @@ namespace Google.Protobuf
         /// </summary>
         public static int ComputeStringSize(String value)
         {
-            int byteArraySize = Utf8Encoding.GetByteCount(value);
+            int byteArraySize = WritingPrimitives.Utf8Encoding.GetByteCount(value);
             return ComputeLengthSize(byteArraySize) + byteArraySize;
         }
 
@@ -204,7 +208,7 @@ namespace Google.Protobuf
         /// </summary>
         public static int ComputeSInt32Size(int value)
         {
-            return ComputeRawVarint32Size(EncodeZigZag32(value));
+            return ComputeRawVarint32Size(WritingPrimitives.EncodeZigZag32(value));
         }
 
         /// <summary>
@@ -213,7 +217,7 @@ namespace Google.Protobuf
         /// </summary>
         public static int ComputeSInt64Size(long value)
         {
-            return ComputeRawVarint64Size(EncodeZigZag64(value));
+            return ComputeRawVarint64Size(WritingPrimitives.EncodeZigZag64(value));
         }
 
         /// <summary>

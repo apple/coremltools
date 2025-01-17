@@ -9,6 +9,7 @@ import unittest
 import pandas as pd
 import pytest
 
+from ..utils import load_boston
 from coremltools._deps import _HAS_SKLEARN, _HAS_XGBOOST
 from coremltools.models.utils import (_is_macos, _macos_version,
                                       evaluate_regressor)
@@ -19,7 +20,6 @@ if _HAS_XGBOOST:
     from coremltools.converters import xgboost as xgb_converter
 
 if _HAS_SKLEARN:
-    from sklearn.datasets import load_boston
     from sklearn.ensemble import GradientBoostingRegressor
 
     from coremltools.converters import sklearn as skl_converter
@@ -34,7 +34,7 @@ class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase)
         self.scikit_data = scikit_data
         self.X = scikit_data["data"]
         self.target = scikit_data["target"]
-        self.feature_names = scikit_data.feature_names
+        self.feature_names = scikit_data["feature_names"]
         self.output_name = "target"
 
     def _check_metrics(self, metrics, params={}):
@@ -104,13 +104,13 @@ class XgboostBoosterBostonHousingNumericTest(unittest.TestCase):
 
         # Load data and train model
         scikit_data = load_boston()
-        self.X = scikit_data.data.astype("f").astype("d")
+        self.X = scikit_data["data"].astype("f").astype("d")
         self.dtrain = xgboost.DMatrix(
-            scikit_data.data,
-            label=scikit_data.target,
-            feature_names=scikit_data.feature_names,
+            scikit_data["data"],
+            label=scikit_data["target"],
+            feature_names=scikit_data["feature_names"],
         )
-        self.feature_names = scikit_data.feature_names
+        self.feature_names = scikit_data["feature_names"]
         self.output_name = "target"
 
     def _check_metrics(self, metrics, allowed_error={}, params={}):
@@ -215,10 +215,10 @@ class XGboostRegressorBostonHousingNumericTest(unittest.TestCase):
         # Load data and train model
         scikit_data = load_boston()
 
-        self.X = scikit_data.data
+        self.X = scikit_data["data"]
         self.scikit_data = self.X
-        self.target = scikit_data.target
-        self.feature_names = scikit_data.feature_names
+        self.target = scikit_data["target"]
+        self.feature_names = scikit_data["feature_names"]
         self.output_name = "target"
 
     def _check_metrics(self, metrics, params={}, allowed_error={}):

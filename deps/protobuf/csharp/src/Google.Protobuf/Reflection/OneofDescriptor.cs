@@ -30,8 +30,11 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endregion
 
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
+using Google.Protobuf.Collections;
 using Google.Protobuf.Compatibility;
 
 namespace Google.Protobuf.Reflection
@@ -52,8 +55,13 @@ namespace Google.Protobuf.Reflection
         {
             this.proto = proto;
             containingType = parent;
-
             file.DescriptorPool.AddSymbol(this);
+
+            // It's useful to determine whether or not this is a synthetic oneof before cross-linking. That means
+            // diving into the proto directly rather than using FieldDescriptor, but that's okay.
+            var firstFieldInOneof = parent.Proto.Field.FirstOrDefault(fieldProto => fieldProto.HasOneofIndex && fieldProto.OneofIndex == index);
+            IsSynthetic = firstFieldInOneof?.Proto3Optional ?? false;
+
             accessor = CreateAccessor(clrName);
         }
 
@@ -82,9 +90,25 @@ namespace Google.Protobuf.Reflection
         public IList<FieldDescriptor> Fields { get { return fields; } }
 
         /// <summary>
+        /// Returns <c>true</c> if this oneof is a synthetic oneof containing a proto3 optional field;
+        /// <c>false</c> otherwise.
+        /// </summary>
+        public bool IsSynthetic { get; }
+
+        /// <summary>
         /// Gets an accessor for reflective access to the values associated with the oneof
         /// in a particular message.
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// In descriptors for generated code, the value returned by this property will always be non-null.
+        /// </para>
+        /// <para>
+        /// In dynamically loaded descriptors, the value returned by this property will current be null;
+        /// if and when dynamic messages are supported, it will return a suitable accessor to work with
+        /// them.
+        /// </para>
+        /// </remarks>
         /// <value>
         /// The accessor used for reflective access.
         /// </value>
@@ -93,7 +117,35 @@ namespace Google.Protobuf.Reflection
         /// <summary>
         /// The (possibly empty) set of custom options for this oneof.
         /// </summary>
-        public CustomOptions CustomOptions => proto.Options?.CustomOptions ?? CustomOptions.Empty;
+        [Obsolete("CustomOptions are obsolete. Use the GetOptions method.")]
+        public CustomOptions CustomOptions => new CustomOptions(proto.Options?._extensions?.ValuesByNumber);
+
+        /// <summary>
+        /// The <c>OneofOptions</c>, defined in <c>descriptor.proto</c>.
+        /// If the options message is not present (i.e. there are no options), <c>null</c> is returned.
+        /// Custom options can be retrieved as extensions of the returned message.
+        /// NOTE: A defensive copy is created each time this property is retrieved.
+        /// </summary>
+        public OneofOptions GetOptions() => proto.Options?.Clone();
+
+        /// <summary>
+        /// Gets a single value oneof option for this descriptor
+        /// </summary>
+        [Obsolete("GetOption is obsolete. Use the GetOptions() method.")]
+        public T GetOption<T>(Extension<OneofOptions, T> extension)
+        {
+            var value = proto.Options.GetExtension(extension);
+            return value is IDeepCloneable<T> ? (value as IDeepCloneable<T>).Clone() : value;
+        }
+
+        /// <summary>
+        /// Gets a repeated value oneof option for this descriptor
+        /// </summary>
+        [Obsolete("GetOption is obsolete. Use the GetOptions() method.")]
+        public RepeatedField<T> GetOption<T>(RepeatedExtension<OneofOptions, T> extension)
+        {
+            return proto.Options.GetExtension(extension).Clone();
+        }
 
         internal void CrossLink()
         {
@@ -110,18 +162,34 @@ namespace Google.Protobuf.Reflection
 
         private OneofAccessor CreateAccessor(string clrName)
         {
-            var caseProperty = containingType.ClrType.GetProperty(clrName + "Case");
-            if (caseProperty == null)
+            // We won't have a CLR name if this is from a dynamically-loaded FileDescriptor.
+            // TODO: Support dynamic messages.
+            if (clrName == null)
             {
-                throw new DescriptorValidationException(this, $"Property {clrName}Case not found in {containingType.ClrType}");
+                return null;
             }
-            var clearMethod = containingType.ClrType.GetMethod("Clear" + clrName);
-            if (clearMethod == null)
+            if (IsSynthetic)
             {
-                throw new DescriptorValidationException(this, $"Method Clear{clrName} not found in {containingType.ClrType}");
+                return OneofAccessor.ForSyntheticOneof(this);
             }
-
-            return new OneofAccessor(caseProperty, clearMethod, this);
+            else
+            {
+                var caseProperty = containingType.ClrType.GetProperty(clrName + "Case");
+                if (caseProperty == null)
+                {
+                    throw new DescriptorValidationException(this, $"Property {clrName}Case not found in {containingType.ClrType}");
+                }
+                if (!caseProperty.CanRead)
+                {
+                    throw new ArgumentException($"Cannot read from property {clrName}Case in {containingType.ClrType}");
+                }
+                var clearMethod = containingType.ClrType.GetMethod("Clear" + clrName);
+                if (clearMethod == null)
+                {
+                    throw new DescriptorValidationException(this, $"Method Clear{clrName} not found in {containingType.ClrType}");
+                }
+                return OneofAccessor.ForRegularOneof(this, caseProperty, clearMethod);
+            }
         }
     }
 }

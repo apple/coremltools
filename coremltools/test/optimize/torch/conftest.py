@@ -13,6 +13,7 @@ from coremltools.test.optimize.torch.models.mnist import (
     mnist_example_input,
     mnist_example_output,
     mnist_model,
+    mnist_model_conv_transpose,
     mnist_model_large,
     mnist_model_quantization,
     residual_mnist_model,
@@ -31,6 +32,7 @@ def _dummy(
     mnist_model_large,
     mnist_model_quantization,
     get_model_and_pruner,
+    mnist_model_conv_transpose,
 ):
     return (
         mnist_dataset,
@@ -41,6 +43,7 @@ def _dummy(
         mnist_model_large,
         mnist_model_quantization,
         get_model_and_pruner,
+        mnist_model_conv_transpose,
     )
 
 

@@ -6,7 +6,6 @@
 import os
 import shutil
 import tempfile
-import unittest
 
 import numpy as np
 import pytest
@@ -183,8 +182,8 @@ class TestWeightIDSharing:
 
             # const 1 and 2 share the same weight id, so they should be serialized
             # as the same blob value
-            const_1.op.weight_id = 0
-            const_2.op.weight_id = 0
+            const_1.op.weight_id = "0"
+            const_2.op.weight_id = "0"
 
             x = mb.add(x=x, y=const_1)
             x = mb.add(x=x, y=const_2)
@@ -201,35 +200,24 @@ class TestWeightIDSharing:
             minimum_deployment_target=ct.target.iOS16,
         )
 
+        mil_file = open(os.path.join(mlmodel.get_compiled_model_path(), "model.mil"))
+        mil_txt = mil_file.read()
         # In the above model, const_1 and const_2 are going to share the same blob file value.
-        package_path = tempfile.mkdtemp(suffix=".mlpackage")
-        mlmodel.save(package_path)
+        assert (
+            'tensor<fp32, [500]> const_1 = const()[name = tensor<string, []>("const_1"), val = tensor<fp32, [500]>(BLOBFILE(path = tensor<string, []>("@model_path/weights/weight.bin"), offset = tensor<uint64, []>(64)))];'
+            in mil_txt
+        )
+        assert (
+            'tensor<fp32, [500]> const_2 = const()[name = tensor<string, []>("const_2"), val = tensor<fp32, [500]>(BLOBFILE(path = tensor<string, []>("@model_path/weights/weight.bin"), offset = tensor<uint64, []>(64)))];'
+            in mil_txt
+        )
+        assert (
+            'tensor<fp32, [500]> const_3 = const()[name = tensor<string, []>("const_3"), val = tensor<fp32, [500]>(BLOBFILE(path = tensor<string, []>("@model_path/weights/weight.bin"), offset = tensor<uint64, []>(2176)))];'
+            in mil_txt
+        )
+        assert "add(x = x, y = const_1)" in mil_txt
+        assert "add(x = add_0, y = const_2)" in mil_txt
 
-        with tempfile.TemporaryDirectory() as serialize_dir:
-            os.system(f"coremlcompiler compile {package_path} {serialize_dir}")
-            model_name_with_extension = os.path.basename(package_path)
-            model_name_wo_extension, _ = os.path.splitext(model_name_with_extension)
-            mil_file = open(
-                os.path.join(serialize_dir, f"{model_name_wo_extension}.mlmodelc", "model.mil")
-            )
-            mil_txt = mil_file.read()
-
-            assert (
-                'tensor<fp32, [500]> const_1 = const()[name = string("const_1"), val = tensor<fp32, [500]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(64)))];'
-                in mil_txt
-            )
-            assert (
-                'tensor<fp32, [500]> const_2 = const()[name = string("const_2"), val = tensor<fp32, [500]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(64)))];'
-                in mil_txt
-            )
-            assert (
-                'tensor<fp32, [500]> const_3 = const()[name = string("const_3"), val = tensor<fp32, [500]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(2176)))];'
-                in mil_txt
-            )
-            assert "add(x = x, y = const_1)" in mil_txt
-            assert "add(x = add_0, y = const_2)" in mil_txt
-
-        shutil.rmtree(package_path)
 
     @staticmethod
     def test_multi_functions():
@@ -244,7 +232,7 @@ class TestWeightIDSharing:
         )
         def func(x):
             const_1 = mb.const(val=val, name="const_1")
-            const_1.op.weight_id = 0
+            const_1.op.weight_id = "0"
             return mb.add(x=x, y=const_1)
 
         @mb.function(
@@ -255,7 +243,7 @@ class TestWeightIDSharing:
             const_2 = mb.const(val=val, name="const_2")
             const_3 = mb.const(val=val, name="const_3")
             # const_3 shared the same blob file value with const_1 in another function
-            const_3.op.weight_id = 0
+            const_3.op.weight_id = "0"
 
             x = mb.add(x=x, y=const_2)
             return mb.add(x=x, y=const_3)
@@ -263,6 +251,7 @@ class TestWeightIDSharing:
         prog = mil.Program()
         prog.add_function("main", func)
         prog.add_function("func_1", func_1)
+        prog.export_as_multifunction = True
 
         # skip all passes to avoid running the const_deduplicate pass
         prog.skip_all_passes = True
@@ -273,40 +262,23 @@ class TestWeightIDSharing:
             specification_version=_SPECIFICATION_VERSION_IOS_18,
             compute_units=ct.ComputeUnit.CPU_ONLY,
             export_multi_functions=True,
-            skip_model_load=True,
         )
 
+        mil_file = open(os.path.join(mlmodel.get_compiled_model_path(), "model.mil"))
+        mil_txt = mil_file.read()
         # In the above model, const_1 and const_3 are going to share the same blob file value.
-        package_path = tempfile.mkdtemp(suffix=".mlpackage")
-        mlmodel.save(package_path)
-
-        with tempfile.TemporaryDirectory() as serialize_dir:
-            os.system(f"coremlcompiler compile {package_path} {serialize_dir}")
-            model_name_with_extension = os.path.basename(package_path)
-            model_name_wo_extension, _ = os.path.splitext(model_name_with_extension)
-            mil_file = open(
-                os.path.join(serialize_dir, f"{model_name_wo_extension}.mlmodelc", "model.mil")
-            )
-            mil_txt = mil_file.read()
-
-            assert (
-                'tensor<fp32, [500]> const_3 = const()[name = string("const_3"), val = tensor<fp32, [500]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(64)))];'
-                in mil_txt
-            )
-            assert (
-                'tensor<fp32, [500]> const_2 = const()[name = string("const_2"), val = tensor<fp32, [500]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(2176)))];'
-                in mil_txt
-            )
-            assert (
-                'tensor<fp32, [500]> const_1 = const()[name = string("const_1"), val = tensor<fp32, [500]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(64)))];'
-                in mil_txt
-            )
-            assert "add(x = x, y = const_2)" in mil_txt
-            assert "add(x = add_1, y = const_3)" in mil_txt
-            assert "add(x = x, y = const_1)" in mil_txt
-
-        shutil.rmtree(package_path)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert (
+            'tensor<fp32, [500]> const_3 = const()[name = string("const_3"), val = tensor<fp32, [500]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(64)))];'
+            in mil_txt
+        )
+        assert (
+            'tensor<fp32, [500]> const_2 = const()[name = string("const_2"), val = tensor<fp32, [500]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(2176)))];'
+            in mil_txt
+        )
+        assert (
+            'tensor<fp32, [500]> const_1 = const()[name = string("const_1"), val = tensor<fp32, [500]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(64)))];'
+            in mil_txt
+        )
+        assert "add(x = x, y = const_2)" in mil_txt
+        assert "add(x = add_1, y = const_3)" in mil_txt
+        assert "add(x = x, y = const_1)" in mil_txt

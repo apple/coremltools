@@ -42,7 +42,10 @@ import static com.google.protobuf.util.Timestamps.NANOS_PER_MICROSECOND;
 import static com.google.protobuf.util.Timestamps.NANOS_PER_MILLISECOND;
 import static com.google.protobuf.util.Timestamps.NANOS_PER_SECOND;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import com.google.errorprone.annotations.CompileTimeConstant;
 import com.google.protobuf.Duration;
+import java.io.Serializable;
 import java.text.ParseException;
 import java.util.Comparator;
 
@@ -54,6 +57,10 @@ public final class Durations {
   static final long DURATION_SECONDS_MIN = -315576000000L;
   static final long DURATION_SECONDS_MAX = 315576000000L;
 
+  private static final long SECONDS_PER_MINUTE = 60L;
+  private static final long SECONDS_PER_HOUR = SECONDS_PER_MINUTE * 60;
+  private static final long SECONDS_PER_DAY = SECONDS_PER_HOUR * 24;
+
   /** A constant holding the minimum valid {@link Duration}, approximately {@code -10,000} years. */
   public static final Duration MIN_VALUE =
       Duration.newBuilder().setSeconds(DURATION_SECONDS_MIN).setNanos(-999999999).build();
@@ -62,25 +69,41 @@ public final class Durations {
   public static final Duration MAX_VALUE =
       Duration.newBuilder().setSeconds(DURATION_SECONDS_MAX).setNanos(999999999).build();
 
+  /** A constant holding the duration of zero. */
+  public static final Duration ZERO = Duration.newBuilder().setSeconds(0L).setNanos(0).build();
+
   private Durations() {}
 
-  private static final Comparator<Duration> COMPARATOR =
-      new Comparator<Duration>() {
-        @Override
-        public int compare(Duration d1, Duration d2) {
-          checkValid(d1);
-          checkValid(d2);
-          int secDiff = Long.compare(d1.getSeconds(), d2.getSeconds());
-          return (secDiff != 0) ? secDiff : Integer.compare(d1.getNanos(), d2.getNanos());
-        }
-      };
+  private static enum DurationComparator implements Comparator<Duration>, Serializable {
+    INSTANCE;
+
+    @Override
+    public int compare(Duration d1, Duration d2) {
+      checkValid(d1);
+      checkValid(d2);
+      int secDiff = Long.compare(d1.getSeconds(), d2.getSeconds());
+      return (secDiff != 0) ? secDiff : Integer.compare(d1.getNanos(), d2.getNanos());
+    }
+  }
 
   /**
    * Returns a {@link Comparator} for {@link Duration}s which sorts in increasing chronological
-   * order. Nulls and invalid {@link Duration}s are not allowed (see {@link #isValid}).
+   * order. Nulls and invalid {@link Duration}s are not allowed (see {@link #isValid}). The returned
+   * comparator is serializable.
    */
   public static Comparator<Duration> comparator() {
-    return COMPARATOR;
+    return DurationComparator.INSTANCE;
+  }
+
+  /**
+   * Compares two durations. The value returned is identical to what would be returned by: {@code
+   * Durations.comparator().compare(x, y)}.
+   *
+   * @return the value {@code 0} if {@code x == y}; a value less than {@code 0} if {@code x < y};
+   *     and a value greater than {@code 0} if {@code x > y}
+   */
+  public static int compare(Duration x, Duration y) {
+    return DurationComparator.INSTANCE.compare(x, y);
   }
 
   /**
@@ -105,6 +128,7 @@ public final class Durations {
    * and a positive or negative {@code nanos} field. For durations of one second or more, a non-zero
    * value for the {@code nanos} field must be of the same sign as the {@code seconds} field.
    */
+  @SuppressWarnings("GoodTime") // this is a legacy conversion API
   public static boolean isValid(long seconds, int nanos) {
     if (seconds < DURATION_SECONDS_MIN || seconds > DURATION_SECONDS_MAX) {
       return false;
@@ -120,19 +144,67 @@ public final class Durations {
     return true;
   }
 
+  /** Returns whether the given {@link Duration} is negative or not. */
+  public static boolean isNegative(Duration duration) {
+    checkValid(duration);
+    return (duration.getSeconds() == 0) ? duration.getNanos() < 0 : duration.getSeconds() < 0;
+  }
+
+  /** Returns whether the given {@link Duration} is positive or not. */
+  public static boolean isPositive(Duration duration) {
+    checkValid(duration);
+    return !isNegative(duration) && !duration.equals(ZERO);
+  }
+
+  /**
+   * Ensures that the given {@link Duration} is not negative.
+   *
+   * @throws IllegalArgumentException if {@code duration} is negative or invalid
+   * @throws NullPointerException if {@code duration} is {@code null}
+   */
+  @CanIgnoreReturnValue
+  public static Duration checkNotNegative(Duration duration) {
+    checkArgument(!isNegative(duration), "duration (%s) must not be negative", toString(duration));
+    return duration;
+  }
+
+  /**
+   * Ensures that the given {@link Duration} is positive.
+   *
+   * @throws IllegalArgumentException if {@code duration} is negative, {@code ZERO}, or invalid
+   * @throws NullPointerException if {@code duration} is {@code null}
+   */
+  @CanIgnoreReturnValue
+  public static Duration checkPositive(Duration duration) {
+    checkArgument(isPositive(duration), "duration (%s) must be positive", toString(duration));
+    return duration;
+  }
+
   /** Throws an {@link IllegalArgumentException} if the given {@link Duration} is not valid. */
+  @CanIgnoreReturnValue
   public static Duration checkValid(Duration duration) {
     long seconds = duration.getSeconds();
     int nanos = duration.getNanos();
-    checkArgument(
-        isValid(seconds, nanos),
-        "Duration is not valid. See proto definition for valid values. "
-            + "Seconds (%s) must be in range [-315,576,000,000, +315,576,000,000]. "
-            + "Nanos (%s) must be in range [-999,999,999, +999,999,999]. "
-            + "Nanos must have the same sign as seconds",
-        seconds,
-        nanos);
+    if (!isValid(seconds, nanos)) {
+      throw new IllegalArgumentException(
+          String.format(
+              "Duration is not valid. See proto definition for valid values. "
+                  + "Seconds (%s) must be in range [-315,576,000,000, +315,576,000,000]. "
+                  + "Nanos (%s) must be in range [-999,999,999, +999,999,999]. "
+                  + "Nanos must have the same sign as seconds",
+              seconds, nanos));
+    }
     return duration;
+  }
+
+  /**
+   * Builds the given builder and throws an {@link IllegalArgumentException} if it is not valid. See
+   * {@link #checkValid(Duration)}.
+   *
+   * @return A valid, built {@link Duration}.
+   */
+  public static Duration checkValid(Duration.Builder durationBuilder) {
+    return checkValid(durationBuilder.build());
   }
 
   /**
@@ -204,30 +276,144 @@ public final class Durations {
     }
   }
 
+  /**
+   * Parses a string in RFC 3339 format into a {@link Duration}.
+   *
+   * <p>Identical to {@link #parse(String)}, but throws an {@link IllegalArgumentException} instead
+   * of a {@link ParseException} if parsing fails.
+   *
+   * @return a {@link Duration} parsed from the string
+   * @throws IllegalArgumentException if parsing fails
+   */
+  public static Duration parseUnchecked(@CompileTimeConstant String value) {
+    try {
+      return parse(value);
+    } catch (ParseException e) {
+      // While `java.time.format.DateTimeParseException` is a more accurate representation of the
+      // failure, this library is currently not JDK8 ready because of Android dependencies.
+      throw new IllegalArgumentException(e);
+    }
+  }
+
+  // Static factories
+
+  /** Create a Duration from the number of days. */
+  @SuppressWarnings("GoodTime") // this is a legacy conversion API
+  public static Duration fromDays(long days) {
+    return Duration.newBuilder()
+        .setSeconds(checkedMultiply(days, SECONDS_PER_DAY))
+        .setNanos(0)
+        .build();
+  }
+
+  /** Create a Duration from the number of hours. */
+  @SuppressWarnings("GoodTime") // this is a legacy conversion API
+  public static Duration fromHours(long hours) {
+    return Duration.newBuilder()
+        .setSeconds(checkedMultiply(hours, SECONDS_PER_HOUR))
+        .setNanos(0)
+        .build();
+  }
+
+  /** Create a Duration from the number of minutes. */
+  @SuppressWarnings("GoodTime") // this is a legacy conversion API
+  public static Duration fromMinutes(long minutes) {
+    return Duration.newBuilder()
+        .setSeconds(checkedMultiply(minutes, SECONDS_PER_MINUTE))
+        .setNanos(0)
+        .build();
+  }
+
   /** Create a Duration from the number of seconds. */
+  @SuppressWarnings("GoodTime") // this is a legacy conversion API
   public static Duration fromSeconds(long seconds) {
     return normalizedDuration(seconds, 0);
   }
 
-  /**
-   * Convert a Duration to the number of seconds. The result will be rounded towards 0 to the
-   * nearest second. E.g., if the duration represents -1 nanosecond, it will be rounded to 0.
-   */
-  public static long toSeconds(Duration duration) {
-    return checkValid(duration).getSeconds();
-  }
-
   /** Create a Duration from the number of milliseconds. */
+  @SuppressWarnings("GoodTime") // this is a legacy conversion API
   public static Duration fromMillis(long milliseconds) {
     return normalizedDuration(
         milliseconds / MILLIS_PER_SECOND,
         (int) (milliseconds % MILLIS_PER_SECOND * NANOS_PER_MILLISECOND));
   }
 
+  /** Create a Duration from the number of microseconds. */
+  @SuppressWarnings("GoodTime") // this is a legacy conversion API
+  public static Duration fromMicros(long microseconds) {
+    return normalizedDuration(
+        microseconds / MICROS_PER_SECOND,
+        (int) (microseconds % MICROS_PER_SECOND * NANOS_PER_MICROSECOND));
+  }
+
+  /** Create a Duration from the number of nanoseconds. */
+  @SuppressWarnings("GoodTime") // this is a legacy conversion API
+  public static Duration fromNanos(long nanoseconds) {
+    return normalizedDuration(
+        nanoseconds / NANOS_PER_SECOND, (int) (nanoseconds % NANOS_PER_SECOND));
+  }
+
+  // Conversion APIs
+
+  /**
+   * Convert a Duration to the number of days. The result will be rounded towards 0 to the nearest
+   * day.
+   */
+  @SuppressWarnings("GoodTime") // this is a legacy conversion API
+  public static long toDays(Duration duration) {
+    return checkValid(duration).getSeconds() / SECONDS_PER_DAY;
+  }
+
+  /**
+   * Convert a Duration to the number of hours. The result will be rounded towards 0 to the nearest
+   * hour.
+   */
+  @SuppressWarnings("GoodTime") // this is a legacy conversion API
+  public static long toHours(Duration duration) {
+    return checkValid(duration).getSeconds() / SECONDS_PER_HOUR;
+  }
+
+  /**
+   * Convert a Duration to the number of minutes. The result will be rounded towards 0 to the
+   * nearest minute.
+   */
+  @SuppressWarnings("GoodTime") // this is a legacy conversion API
+  public static long toMinutes(Duration duration) {
+    return checkValid(duration).getSeconds() / SECONDS_PER_MINUTE;
+  }
+
+  /**
+   * Convert a Duration to the number of seconds. The result will be rounded towards 0 to the
+   * nearest second. E.g., if the duration represents -1 nanosecond, it will be rounded to 0.
+   */
+  @SuppressWarnings("GoodTime") // this is a legacy conversion API
+  public static long toSeconds(Duration duration) {
+    return checkValid(duration).getSeconds();
+  }
+
+  /**
+   * Returns the number of seconds of the given duration as a {@code double}. This method should be
+   * used to accommodate APIs that <b>only</b> accept durations as {@code double} values.
+   *
+   * <p>This conversion may lose precision.
+   *
+   * <p>If you need the number of seconds in this duration as a {@code long} (not a {@code double}),
+   * simply use {@code duration.getSeconds()} or {@link #toSeconds} (which includes validation).
+   */
+  @SuppressWarnings({
+    "DurationSecondsToDouble", // that's the whole point of this method
+    "GoodTime" // this is a legacy conversion API
+  })
+  public static double toSecondsAsDouble(Duration duration) {
+    checkValid(duration);
+    return duration.getSeconds() + duration.getNanos() / 1e9;
+  }
+
   /**
    * Convert a Duration to the number of milliseconds. The result will be rounded towards 0 to the
    * nearest millisecond. E.g., if the duration represents -1 nanosecond, it will be rounded to 0.
    */
+  @SuppressWarnings("GoodTime") // this is a legacy conversion API
   public static long toMillis(Duration duration) {
     checkValid(duration);
     return checkedAdd(
@@ -235,17 +421,11 @@ public final class Durations {
         duration.getNanos() / NANOS_PER_MILLISECOND);
   }
 
-  /** Create a Duration from the number of microseconds. */
-  public static Duration fromMicros(long microseconds) {
-    return normalizedDuration(
-        microseconds / MICROS_PER_SECOND,
-        (int) (microseconds % MICROS_PER_SECOND * NANOS_PER_MICROSECOND));
-  }
-
   /**
    * Convert a Duration to the number of microseconds. The result will be rounded towards 0 to the
    * nearest microseconds. E.g., if the duration represents -1 nanosecond, it will be rounded to 0.
    */
+  @SuppressWarnings("GoodTime") // this is a legacy conversion API
   public static long toMicros(Duration duration) {
     checkValid(duration);
     return checkedAdd(
@@ -253,18 +433,15 @@ public final class Durations {
         duration.getNanos() / NANOS_PER_MICROSECOND);
   }
 
-  /** Create a Duration from the number of nanoseconds. */
-  public static Duration fromNanos(long nanoseconds) {
-    return normalizedDuration(
-        nanoseconds / NANOS_PER_SECOND, (int) (nanoseconds % NANOS_PER_SECOND));
-  }
-
   /** Convert a Duration to the number of nanoseconds. */
+  @SuppressWarnings("GoodTime") // this is a legacy conversion API
   public static long toNanos(Duration duration) {
     checkValid(duration);
     return checkedAdd(
         checkedMultiply(duration.getSeconds(), NANOS_PER_SECOND), duration.getNanos());
   }
+
+  // Math operations
 
   /** Add two durations. */
   public static Duration add(Duration d1, Duration d2) {

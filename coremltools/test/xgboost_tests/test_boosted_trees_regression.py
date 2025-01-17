@@ -7,6 +7,7 @@ import json
 import tempfile
 import unittest
 
+from ..utils import load_boston
 from coremltools._deps import _HAS_SKLEARN, _HAS_XGBOOST
 from coremltools.models.utils import _macos_version
 
@@ -16,11 +17,11 @@ if _HAS_XGBOOST:
     from coremltools.converters import xgboost as xgb_converter
 
 if _HAS_SKLEARN:
-    from sklearn.datasets import load_boston
     from sklearn.ensemble import GradientBoostingRegressor
     from sklearn.preprocessing import OneHotEncoder
 
     from coremltools.converters import sklearn as skl_converter
+
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing scikit-learn. Skipping tests.")
 class GradientBoostingRegressorScikitTest(unittest.TestCase):
@@ -33,9 +34,6 @@ class GradientBoostingRegressorScikitTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        if not _HAS_SKLEARN:
-            return
-
         scikit_data = load_boston()
         scikit_model = GradientBoostingRegressor(random_state=1)
         scikit_model.fit(scikit_data["data"], scikit_data["target"])
@@ -51,7 +49,7 @@ class GradientBoostingRegressorScikitTest(unittest.TestCase):
         cls.scikit_model = scikit_model
 
     def test_conversion(self):
-        input_names = self.scikit_data.feature_names
+        input_names = self.scikit_data["feature_names"]
         output_name = "target"
         spec = skl_converter.convert(
             self.scikit_model, input_names, "target"
@@ -111,32 +109,32 @@ class BoostedTreeRegressorXGboostTest(unittest.TestCase):
 
         scikit_data = load_boston()
         dtrain = xgboost.DMatrix(
-            scikit_data.data,
-            label=scikit_data.target,
-            feature_names=scikit_data.feature_names,
+            scikit_data["data"],
+            label=scikit_data["target"],
+            feature_names=scikit_data["feature_names"],
         )
         xgb_model = xgboost.train({}, dtrain, 1)
 
         # Save the data and the model
         self.scikit_data = scikit_data
         self.xgb_model = xgb_model
-        self.feature_names = self.scikit_data.feature_names
+        self.feature_names = self.scikit_data["feature_names"]
 
         # train a booster with special characters in feature names
         x = scikit_data['data']
         # prepare feature names with special chars
         self.feature_names_special_chars = [f'\t"{i}"\n' for i in range(x.shape[1])]
         # create training dmatrix
-        dm = xgboost.DMatrix(x, label=scikit_data.target, feature_names=self.feature_names_special_chars)
+        dm = xgboost.DMatrix(x, label=scikit_data["target"], feature_names=self.feature_names_special_chars)
         # train booster
         self.xgb_model_special_chars = xgboost.train({}, dm, 1)
         # create XGBClassifier from a copy of trainer booster
         self.xgb_regressor_special_chars = xgboost.XGBRegressor(xgb_model=self.xgb_model_special_chars.copy(), n_estimators=1)
-        self.xgb_regressor_special_chars.fit(x, scikit_data.target)
+        self.xgb_regressor_special_chars.fit(x, scikit_data["target"])
 
     def test_conversion(self):
 
-        feature_names = self.scikit_data.feature_names
+        feature_names = self.scikit_data["feature_names"]
         output_name = "target"
         spec = xgb_converter.convert(self.xgb_model, feature_names, "target").get_spec()
         self.assertIsNotNone(spec)
@@ -205,15 +203,15 @@ class BoostedTreeRegressorXGboostTest(unittest.TestCase):
 
     def test_unsupported_conversion(self):
 
-        feature_names = self.scikit_data.feature_names
+        feature_names = self.scikit_data["feature_names"]
         output_name = "target"
         xgb_model = xgboost.XGBRegressor(objective="reg:gamma")
-        xgb_model.fit(self.scikit_data.data, self.scikit_data.target)
+        xgb_model.fit(self.scikit_data["data"], self.scikit_data["target"])
         with self.assertRaises(ValueError):
             spec = xgb_converter.convert(xgb_model, feature_names, "target")
 
         xgb_model = xgboost.XGBRegressor(objective="reg:tweedie")
-        xgb_model.fit(self.scikit_data.data, self.scikit_data.target)
+        xgb_model.fit(self.scikit_data["data"], self.scikit_data["target"])
         with self.assertRaises(ValueError):
             spec = xgb_converter.convert(xgb_model, feature_names, "target")
 

@@ -24,7 +24,7 @@ class fill_like(Operation):
 
     Parameters
     ----------
-    ref_tensor: tensor<\*?, T> (Required)
+    ref_tensor: tensor<\\*?, T> (Required)
         * Input tensor.
     value: const<U> (Optional)
         * Default is ``0.0``.
@@ -32,7 +32,7 @@ class fill_like(Operation):
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * Tensor with shape determined by the input tensor.
 
     Attributes
@@ -81,10 +81,10 @@ class topk(_topk_iOS15):
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * Values of top/bottom ``k`` elements.
 
-    tensor<\*?, int32>
+    tensor<\\*?, int32>
         * Only returned when ``return_indices = True``
         * Indices of the top/bottom ``k`` elements along axis.
 

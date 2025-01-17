@@ -5,11 +5,14 @@
 
 from os.path import expanduser as _expanduser
 from typing import Optional as _Optional
+from typing import Type as _Type
 
 from coremltools import ComputeUnit as _ComputeUnit
 from coremltools.models.model import MLState as _MLState
 
 from .model import MLModel as _MLModel
+from .model import MLModelAsset as _MLModelAsset
+from .model import _verify_optimization_hint_input
 from .utils import _macos_version
 
 try:
@@ -21,7 +24,13 @@ except:
 class CompiledMLModel:
 
     @staticmethod
-    def _init_check(path: str, compute_units: _ComputeUnit, function_name: str):
+    def _init_check(
+        path: str,
+        compute_units: _ComputeUnit,
+        function_name: str,
+        optimization_hints: _Optional[dict] = None,
+        asset: _Optional[_MLModelAsset] = None,
+    ):
         if _macos_version() < (10, 13):
             raise Exception("Loading compiled Core ML models is only support on macOS 10.13 or higher.")
         if _MLModelProxy is None:
@@ -30,16 +39,25 @@ class CompiledMLModel:
 
         if not isinstance(path, str):
             raise TypeError('The "path" parameter must be of type "str".')
+
+        if not asset is None and not isinstance(asset, _MLModelAsset):
+            raise TypeError('The "asset" parameter must be of type "MLModelAsset".')
+
         if not isinstance(compute_units, _ComputeUnit):
             raise TypeError('The "compute_units" parameter must be of type: "coremltools.ComputeUnit".')
+
         if not isinstance(function_name, str):
             raise TypeError('The "function_name" parameter must be of type "str".')
+
+        _verify_optimization_hint_input(optimization_hints)
 
     def __init__(
         self,
         path: str,
         compute_units: _ComputeUnit = _ComputeUnit.ALL,
         function_name: _Optional[str] = None,
+        optimization_hints: _Optional[dict] = None,
+        asset: _Optional[_MLModelAsset] = None,
     ):
         """
         Loads a compiled Core ML model.
@@ -59,6 +77,13 @@ class CompiledMLModel:
                 - ``coremltools.ComputeUnit.CPU_AND_NE``: Use both the CPU and neural engine, but
                   not the GPU. Available only for macOS >= 13.0.
 
+        optimization_hints : dict or None
+            Keys are the names of the optimization hint, either 'reshapeFrequency' or 'specializationStrategy'.
+            Values are enumeration values of type ``coremltools.ReshapeFrequency`` or ``coremltools.SpecializationStrategy``.
+
+        asset : MLModelAsset or None
+            The model asset.
+
         Examples
         --------
         .. sourcecode:: python
@@ -73,10 +98,88 @@ class CompiledMLModel:
         if function_name is None:
             function_name = ""
 
-        self._init_check(path, compute_units, function_name)
+        self._init_check(
+            path=path,
+            asset=asset,
+            compute_units=compute_units,
+            function_name=function_name,
+            optimization_hints=optimization_hints,
+        )
 
-        path = _expanduser(path)
-        self._proxy = _MLModelProxy(path, compute_units.name, function_name)
+        path_or_asset = _expanduser(path)
+        if asset is not None:
+            path_or_asset = asset
+
+        self.compute_unit = compute_units
+        self.function_name = function_name
+        self.path_or_asset = path_or_asset
+        if optimization_hints is not None:
+            self.optimization_hints = optimization_hints.copy()
+        else:
+            self.optimization_hints = None
+
+        asset_proxy = asset.__proxy__ if asset is not None else None
+
+        if self.optimization_hints is not None:
+            optimization_hints_str_vals = {k: v.name for k, v in self.optimization_hints.items()}
+        else:
+            optimization_hints_str_vals = {}
+        self._proxy = _MLModelProxy(
+            path, compute_units.name, function_name, optimization_hints_str_vals, asset_proxy
+        )
+
+    @classmethod
+    def from_asset(
+        cls,
+        asset: _MLModelAsset,
+        compute_units: _ComputeUnit = _ComputeUnit.ALL,
+        function_name: _Optional[str] = None,
+        optimization_hints: _Optional[dict] = None,
+    ) -> _Type["CompiledMLModel"]:
+        """
+        Creates a CompiledModel instance from an asset.
+
+        Parameters
+        ----------
+        asset: MLModelAsset
+            The model asset to create the compiled model from.
+
+        compute_units : coremltools.ComputeUnit
+            An enum with the following possible values:
+                - ``coremltools.ComputeUnit.ALL``: Use all compute units available, including the
+                  neural engine.
+                - ``coremltools.ComputeUnit.CPU_ONLY``: Limit the model to only use the CPU.
+                - ``coremltools.ComputeUnit.CPU_AND_GPU``: Use both the CPU and GPU, but not the
+                  neural engine.
+                - ``coremltools.ComputeUnit.CPU_AND_NE``: Use both the CPU and neural engine, but
+                  not the GPU. Available only for macOS >= 13.0.
+
+        optimization_hints : dict or None
+            Keys are the names of the optimization hint, either 'reshapeFrequency' or 'specializationStrategy'.
+            Values are enumeration values of type ``coremltools.ReshapeFrequency`` or ``coremltools.SpecializationStrategy``.
+
+        Returns
+        -------
+        CompiledMLModel
+            An instance of ``CompiledMLModel`` loaded from the provided asset.
+
+        Examples
+        --------
+        .. sourcecode:: python
+
+            my_model_asset = MLModelAsset.from_memory(spec_data)
+            my_compiled_model = CompiledMLModel.from_asset(my_model_asset)
+            y = my_compiled_model.predict({"x": 3})
+
+        """
+        return cls(
+            asset=asset,
+            path="",
+            compute_units=compute_units,
+            function_name=function_name,
+            optimization_hints=optimization_hints,
+        )
+
 
     def predict(self, data, state: _Optional[_MLState] = None):
         """
@@ -118,6 +221,7 @@ class CompiledMLModel:
         return _MLModel._get_predictions(
             self._proxy, _MLModel._update_float16_multiarray_input_to_float32, data, state
         )
+
 
     def make_state(self) -> _MLState:
         """

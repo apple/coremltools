@@ -182,14 +182,14 @@ class select_optimization(AbstractGraphPass):
         assert select_op.op_type == "select"
         assert cond_val is not None
 
-        # check if a or b is inf const
+        # check if a or b is all infinity constants
         # if a is not but b is, then swap a and b
         a: np.ndarray = None
         b: Var = None
-        if a_val is not None and np.all(np.abs(a_val) > 1e38):
+        if a_val is not None and np.all(np.logical_not(np.isfinite(a_val))):
             a = a_val
             b = select_op.b
-        elif b_val is not None and np.all(np.abs(b_val) > 1e38):
+        elif b_val is not None and np.all(np.logical_not(np.isfinite(b_val))):
             a = b_val
             b = select_op.a
             cond_val = np.logical_not(cond_val)
@@ -427,7 +427,10 @@ class rank0_expand_dims_swap(AbstractGraphPass):
 
         # check the expand_dim op has axes = [0]
         expand_dims_op = expand_dims_ops[0]
-        if expand_dims_op.axes.val != [0]:
+        expand_dims_op_axes_val = expand_dims_op.axes.val
+        if isinstance(expand_dims_op_axes_val, np.ndarray):
+            expand_dims_op_axes_val = expand_dims_op_axes_val.tolist()
+        if expand_dims_op_axes_val != [0]:
             return False
         ops_to_remove.append(expand_dims_op)
         ops_to_remove += other_ops

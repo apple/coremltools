@@ -6,6 +6,7 @@
 import re
 import warnings
 from collections import OrderedDict
+from typing import Optional
 
 from coremltools import _logger as logger
 from coremltools.converters.mil.input_types import EnumeratedShapes, ImageType, Shape
@@ -121,7 +122,7 @@ class NameSanitizer:
     def _replace_invalid_char_with_underscore(name):
         return re.sub("[^a-zA-Z0-9_]", "_", name)
 
-    def sanitize_name(self, name):
+    def sanitize_name(self, name: str, allow_prefix_underscore: Optional[bool] = True) -> str:
         """
         Sanitize the input string and return it back.
         Input string should be of the format: [a-zA-Z_][a-zA-Z0-9_]*
@@ -175,6 +176,11 @@ class NameSanitizer:
         ]
         if new_name in reserved_names:
             new_name += "_workaround"
+
+        # if the name start with _, we append "var" in front of it
+        if not allow_prefix_underscore:
+            if new_name.startswith("_"):
+                new_name = "var" + new_name
 
         if new_name == name:
             # return if nothing has changed

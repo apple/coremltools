@@ -50,18 +50,18 @@ namespace {
 
 TEST(StringUtilityTest, ImmuneToLocales) {
   // Remember the old locale.
-  char* old_locale_cstr = setlocale(LC_NUMERIC, NULL);
-  ASSERT_TRUE(old_locale_cstr != NULL);
-  string old_locale = old_locale_cstr;
+  char* old_locale_cstr = setlocale(LC_NUMERIC, nullptr);
+  ASSERT_TRUE(old_locale_cstr != nullptr);
+  std::string old_locale = old_locale_cstr;
 
   // Set the locale to "C".
-  ASSERT_TRUE(setlocale(LC_NUMERIC, "C") != NULL);
+  ASSERT_TRUE(setlocale(LC_NUMERIC, "C") != nullptr);
 
   EXPECT_EQ("1.5", SimpleDtoa(1.5));
   EXPECT_EQ("1.5", SimpleFtoa(1.5));
 
-  if (setlocale(LC_NUMERIC, "es_ES") == NULL &&
-      setlocale(LC_NUMERIC, "es_ES.utf8") == NULL) {
+  if (setlocale(LC_NUMERIC, "es_ES") == nullptr &&
+      setlocale(LC_NUMERIC, "es_ES.utf8") == nullptr) {
     // Some systems may not have the desired locale available.
     GOOGLE_LOG(WARNING)
       << "Couldn't set locale to es_ES.  Skipping this test.";
@@ -83,7 +83,7 @@ TEST(StringUtilityTest, ImmuneToLocales) {
 static struct {
   int plain_length;
   const char* plaintext;
-  const char* cyphertext;
+  const char* ciphertext;
 } base64_tests[] = {
   // Empty string.
   { 0, "", ""},
@@ -343,95 +343,99 @@ static struct {
 
 static struct {
   const char* plaintext;
-  const char* cyphertext;
+  const char* ciphertext;
 } base64_strings[] = {
-  // Some google quotes
-  // Cyphertext created with "uuencode (GNU sharutils) 4.6.3"
-  // (Note that we're testing the websafe encoding, though, so if
-  // you add messages, be sure to run "tr -- '+/' '-_'" on the output)
-  { "I was always good at math and science, and I never realized "
-    "that was unusual or somehow undesirable. So one of the things "
-    "I care a lot about is helping to remove that stigma, "
-    "to show girls that you can be feminine, you can like the things "
-    "that girls like, but you can also be really good at technology. "
-    "You can be really good at building things."
-    " - Marissa Meyer, Newsweek, 2010-12-22" "\n",
+    // Some google quotes
+    // Ciphertext created with "uuencode (GNU sharutils) 4.6.3"
+    // (Note that we're testing the websafe encoding, though, so if
+    // you add messages, be sure to run "tr -- '+/' '-_'" on the output)
+    {"I was always good at math and science, and I never realized "
+     "that was unusual or somehow undesirable. So one of the things "
+     "I care a lot about is helping to remove that stigma, "
+     "to show girls that you can be feminine, you can like the things "
+     "that girls like, but you can also be really good at technology. "
+     "You can be really good at building things."
+     " - Marissa Meyer, Newsweek, 2010-12-22"
+     "\n",
 
-    "SSB3YXMgYWx3YXlzIGdvb2QgYXQgbWF0aCBhbmQgc2NpZW5jZSwgYW5kIEkg"
-    "bmV2ZXIgcmVhbGl6ZWQgdGhhdCB3YXMgdW51c3VhbCBvciBzb21laG93IHVu"
-    "ZGVzaXJhYmxlLiBTbyBvbmUgb2YgdGhlIHRoaW5ncyBJIGNhcmUgYSBsb3Qg"
-    "YWJvdXQgaXMgaGVscGluZyB0byByZW1vdmUgdGhhdCBzdGlnbWEsIHRvIHNo"
-    "b3cgZ2lybHMgdGhhdCB5b3UgY2FuIGJlIGZlbWluaW5lLCB5b3UgY2FuIGxp"
-    "a2UgdGhlIHRoaW5ncyB0aGF0IGdpcmxzIGxpa2UsIGJ1dCB5b3UgY2FuIGFs"
-    "c28gYmUgcmVhbGx5IGdvb2QgYXQgdGVjaG5vbG9neS4gWW91IGNhbiBiZSBy"
-    "ZWFsbHkgZ29vZCBhdCBidWlsZGluZyB0aGluZ3MuIC0gTWFyaXNzYSBNZXll"
-    "ciwgTmV3c3dlZWssIDIwMTAtMTItMjIK" },
+     "SSB3YXMgYWx3YXlzIGdvb2QgYXQgbWF0aCBhbmQgc2NpZW5jZSwgYW5kIEkg"
+     "bmV2ZXIgcmVhbGl6ZWQgdGhhdCB3YXMgdW51c3VhbCBvciBzb21laG93IHVu"
+     "ZGVzaXJhYmxlLiBTbyBvbmUgb2YgdGhlIHRoaW5ncyBJIGNhcmUgYSBsb3Qg"
+     "YWJvdXQgaXMgaGVscGluZyB0byByZW1vdmUgdGhhdCBzdGlnbWEsIHRvIHNo"
+     "b3cgZ2lybHMgdGhhdCB5b3UgY2FuIGJlIGZlbWluaW5lLCB5b3UgY2FuIGxp"
+     "a2UgdGhlIHRoaW5ncyB0aGF0IGdpcmxzIGxpa2UsIGJ1dCB5b3UgY2FuIGFs"
+     "c28gYmUgcmVhbGx5IGdvb2QgYXQgdGVjaG5vbG9neS4gWW91IGNhbiBiZSBy"
+     "ZWFsbHkgZ29vZCBhdCBidWlsZGluZyB0aGluZ3MuIC0gTWFyaXNzYSBNZXll"
+     "ciwgTmV3c3dlZWssIDIwMTAtMTItMjIK"},
 
-  { "Typical first year for a new cluster: "
-    "~0.5 overheating "
-    "~1 PDU failure "
-    "~1 rack-move "
-    "~1 network rewiring "
-    "~20 rack failures "
-    "~5 racks go wonky "
-    "~8 network maintenances "
-    "~12 router reloads "
-    "~3 router failures "
-    "~dozens of minor 30-second blips for dns "
-    "~1000 individual machine failures "
-    "~thousands of hard drive failures "
-    "slow disks, bad memory, misconfigured machines, flaky machines, etc."
-    " - Jeff Dean, The Joys of Real Hardware" "\n",
+    {"Typical first year for a new cluster: "
+     "~0.5 overheating "
+     "~1 PDU failure "
+     "~1 rack-move "
+     "~1 network rewiring "
+     "~20 rack failures "
+     "~5 racks go wonky "
+     "~8 network maintenances "
+     "~12 router reloads "
+     "~3 router failures "
+     "~dozens of minor 30-second blips for dns "
+     "~1000 individual machine failures "
+     "~thousands of hard drive failures "
+     "slow disks, bad memory, misconfigured machines, flaky machines, etc."
+     " - Jeff Dean, The Joys of Real Hardware"
+     "\n",
 
-    "VHlwaWNhbCBmaXJzdCB5ZWFyIGZvciBhIG5ldyBjbHVzdGVyOiB-MC41IG92"
-    "ZXJoZWF0aW5nIH4xIFBEVSBmYWlsdXJlIH4xIHJhY2stbW92ZSB-MSBuZXR3"
-    "b3JrIHJld2lyaW5nIH4yMCByYWNrIGZhaWx1cmVzIH41IHJhY2tzIGdvIHdv"
-    "bmt5IH44IG5ldHdvcmsgbWFpbnRlbmFuY2VzIH4xMiByb3V0ZXIgcmVsb2Fk"
-    "cyB-MyByb3V0ZXIgZmFpbHVyZXMgfmRvemVucyBvZiBtaW5vciAzMC1zZWNv"
-    "bmQgYmxpcHMgZm9yIGRucyB-MTAwMCBpbmRpdmlkdWFsIG1hY2hpbmUgZmFp"
-    "bHVyZXMgfnRob3VzYW5kcyBvZiBoYXJkIGRyaXZlIGZhaWx1cmVzIHNsb3cg"
-    "ZGlza3MsIGJhZCBtZW1vcnksIG1pc2NvbmZpZ3VyZWQgbWFjaGluZXMsIGZs"
-    "YWt5IG1hY2hpbmVzLCBldGMuIC0gSmVmZiBEZWFuLCBUaGUgSm95cyBvZiBS"
-    "ZWFsIEhhcmR3YXJlCg" },
+     "VHlwaWNhbCBmaXJzdCB5ZWFyIGZvciBhIG5ldyBjbHVzdGVyOiB-MC41IG92"
+     "ZXJoZWF0aW5nIH4xIFBEVSBmYWlsdXJlIH4xIHJhY2stbW92ZSB-MSBuZXR3"
+     "b3JrIHJld2lyaW5nIH4yMCByYWNrIGZhaWx1cmVzIH41IHJhY2tzIGdvIHdv"
+     "bmt5IH44IG5ldHdvcmsgbWFpbnRlbmFuY2VzIH4xMiByb3V0ZXIgcmVsb2Fk"
+     "cyB-MyByb3V0ZXIgZmFpbHVyZXMgfmRvemVucyBvZiBtaW5vciAzMC1zZWNv"
+     "bmQgYmxpcHMgZm9yIGRucyB-MTAwMCBpbmRpdmlkdWFsIG1hY2hpbmUgZmFp"
+     "bHVyZXMgfnRob3VzYW5kcyBvZiBoYXJkIGRyaXZlIGZhaWx1cmVzIHNsb3cg"
+     "ZGlza3MsIGJhZCBtZW1vcnksIG1pc2NvbmZpZ3VyZWQgbWFjaGluZXMsIGZs"
+     "YWt5IG1hY2hpbmVzLCBldGMuIC0gSmVmZiBEZWFuLCBUaGUgSm95cyBvZiBS"
+     "ZWFsIEhhcmR3YXJlCg"},
 
-  { "I'm the head of the webspam team at Google.  "
-    "That means that if you type your name into Google and get porn back, "
-    "it's my fault. Unless you're a porn star, in which case porn is a "
-    "completely reasonable response."
-    " - Matt Cutts, Google Plus" "\n",
+    {"I'm the head of the webspam team at Google.  "
+     "That means that if you type your name into Google and get porn back, "
+     "it's my fault. Unless you're a porn star, in which case porn is a "
+     "completely reasonable response."
+     " - Matt Cutts, Google Plus"
+     "\n",
 
-    "SSdtIHRoZSBoZWFkIG9mIHRoZSB3ZWJzcGFtIHRlYW0gYXQgR29vZ2xlLiAg"
-    "VGhhdCBtZWFucyB0aGF0IGlmIHlvdSB0eXBlIHlvdXIgbmFtZSBpbnRvIEdv"
-    "b2dsZSBhbmQgZ2V0IHBvcm4gYmFjaywgaXQncyBteSBmYXVsdC4gVW5sZXNz"
-    "IHlvdSdyZSBhIHBvcm4gc3RhciwgaW4gd2hpY2ggY2FzZSBwb3JuIGlzIGEg"
-    "Y29tcGxldGVseSByZWFzb25hYmxlIHJlc3BvbnNlLiAtIE1hdHQgQ3V0dHMs"
-    "IEdvb2dsZSBQbHVzCg" },
+     "SSdtIHRoZSBoZWFkIG9mIHRoZSB3ZWJzcGFtIHRlYW0gYXQgR29vZ2xlLiAg"
+     "VGhhdCBtZWFucyB0aGF0IGlmIHlvdSB0eXBlIHlvdXIgbmFtZSBpbnRvIEdv"
+     "b2dsZSBhbmQgZ2V0IHBvcm4gYmFjaywgaXQncyBteSBmYXVsdC4gVW5sZXNz"
+     "IHlvdSdyZSBhIHBvcm4gc3RhciwgaW4gd2hpY2ggY2FzZSBwb3JuIGlzIGEg"
+     "Y29tcGxldGVseSByZWFzb25hYmxlIHJlc3BvbnNlLiAtIE1hdHQgQ3V0dHMs"
+     "IEdvb2dsZSBQbHVzCg"},
 
-  { "It will still be a long time before machines approach human intelligence. "
-    "But luckily, machines don't actually have to be intelligent; "
-    "they just have to fake it. Access to a wealth of information, "
-    "combined with a rudimentary decision-making capacity, "
-    "can often be almost as useful. Of course, the results are better yet "
-    "when coupled with intelligence. A reference librarian with access to "
-    "a good search engine is a formidable tool."
-    " - Craig Silverstein, Siemens Pictures of the Future, Spring 2004" "\n",
+    {"It will still be a long time before machines approach human "
+     "intelligence. "
+     "But luckily, machines don't actually have to be intelligent; "
+     "they just have to fake it. Access to a wealth of information, "
+     "combined with a rudimentary decision-making capacity, "
+     "can often be almost as useful. Of course, the results are better yet "
+     "when coupled with intelligence. A reference librarian with access to "
+     "a good search engine is a formidable tool."
+     " - Craig Silverstein, Siemens Pictures of the Future, Spring 2004"
+     "\n",
 
-    "SXQgd2lsbCBzdGlsbCBiZSBhIGxvbmcgdGltZSBiZWZvcmUgbWFjaGluZXMg"
-    "YXBwcm9hY2ggaHVtYW4gaW50ZWxsaWdlbmNlLiBCdXQgbHVja2lseSwgbWFj"
-    "aGluZXMgZG9uJ3QgYWN0dWFsbHkgaGF2ZSB0byBiZSBpbnRlbGxpZ2VudDsg"
-    "dGhleSBqdXN0IGhhdmUgdG8gZmFrZSBpdC4gQWNjZXNzIHRvIGEgd2VhbHRo"
-    "IG9mIGluZm9ybWF0aW9uLCBjb21iaW5lZCB3aXRoIGEgcnVkaW1lbnRhcnkg"
-    "ZGVjaXNpb24tbWFraW5nIGNhcGFjaXR5LCBjYW4gb2Z0ZW4gYmUgYWxtb3N0"
-    "IGFzIHVzZWZ1bC4gT2YgY291cnNlLCB0aGUgcmVzdWx0cyBhcmUgYmV0dGVy"
-    "IHlldCB3aGVuIGNvdXBsZWQgd2l0aCBpbnRlbGxpZ2VuY2UuIEEgcmVmZXJl"
-    "bmNlIGxpYnJhcmlhbiB3aXRoIGFjY2VzcyB0byBhIGdvb2Qgc2VhcmNoIGVu"
-    "Z2luZSBpcyBhIGZvcm1pZGFibGUgdG9vbC4gLSBDcmFpZyBTaWx2ZXJzdGVp"
-    "biwgU2llbWVucyBQaWN0dXJlcyBvZiB0aGUgRnV0dXJlLCBTcHJpbmcgMjAw"
-    "NAo" },
+     "SXQgd2lsbCBzdGlsbCBiZSBhIGxvbmcgdGltZSBiZWZvcmUgbWFjaGluZXMg"
+     "YXBwcm9hY2ggaHVtYW4gaW50ZWxsaWdlbmNlLiBCdXQgbHVja2lseSwgbWFj"
+     "aGluZXMgZG9uJ3QgYWN0dWFsbHkgaGF2ZSB0byBiZSBpbnRlbGxpZ2VudDsg"
+     "dGhleSBqdXN0IGhhdmUgdG8gZmFrZSBpdC4gQWNjZXNzIHRvIGEgd2VhbHRo"
+     "IG9mIGluZm9ybWF0aW9uLCBjb21iaW5lZCB3aXRoIGEgcnVkaW1lbnRhcnkg"
+     "ZGVjaXNpb24tbWFraW5nIGNhcGFjaXR5LCBjYW4gb2Z0ZW4gYmUgYWxtb3N0"
+     "IGFzIHVzZWZ1bC4gT2YgY291cnNlLCB0aGUgcmVzdWx0cyBhcmUgYmV0dGVy"
+     "IHlldCB3aGVuIGNvdXBsZWQgd2l0aCBpbnRlbGxpZ2VuY2UuIEEgcmVmZXJl"
+     "bmNlIGxpYnJhcmlhbiB3aXRoIGFjY2VzcyB0byBhIGdvb2Qgc2VhcmNoIGVu"
+     "Z2luZSBpcyBhIGZvcm1pZGFibGUgdG9vbC4gLSBDcmFpZyBTaWx2ZXJzdGVp"
+     "biwgU2llbWVucyBQaWN0dXJlcyBvZiB0aGUgRnV0dXJlLCBTcHJpbmcgMjAw"
+     "NAo"},
 
-  // Degenerate edge case
-  { "",
-    "" },
+    // Degenerate edge case
+    {"", ""},
 };
 
 TEST(Base64, EscapeAndUnescape) {
@@ -441,8 +445,8 @@ TEST(Base64, EscapeAndUnescape) {
     int encode_length;
     char decode_buffer[100];
     int decode_length;
-    int cypher_length;
-    string decode_str;
+    int cipher_length;
+    std::string decode_str;
 
     const unsigned char* unsigned_plaintext =
       reinterpret_cast<const unsigned char*>(base64_tests[i].plaintext);
@@ -450,7 +454,7 @@ TEST(Base64, EscapeAndUnescape) {
     StringPiece plaintext(base64_tests[i].plaintext,
                           base64_tests[i].plain_length);
 
-    cypher_length = strlen(base64_tests[i].cyphertext);
+    cipher_length = strlen(base64_tests[i].ciphertext);
 
     // The basic escape function:
     memset(encode_buffer, 0, sizeof(encode_buffer));
@@ -459,30 +463,29 @@ TEST(Base64, EscapeAndUnescape) {
                                  encode_buffer,
                                  sizeof(encode_buffer));
     //    Is it of the expected length?
-    EXPECT_EQ(encode_length, cypher_length);
+    EXPECT_EQ(encode_length, cipher_length);
     // Would it have been okay to allocate only CalculateBase64EscapeLen()?
     EXPECT_EQ(CalculateBase64EscapedLen(base64_tests[i].plain_length),
               encode_length);
 
     //    Is it the expected encoded value?
-    ASSERT_STREQ(encode_buffer, base64_tests[i].cyphertext);
+    ASSERT_STREQ(encode_buffer, base64_tests[i].ciphertext);
 
     // If we encode it into a buffer of exactly the right length...
     memset(encode_buffer, 0, sizeof(encode_buffer));
-    encode_length = Base64Escape(unsigned_plaintext,
-                                          base64_tests[i].plain_length,
-                                          encode_buffer,
-                                          cypher_length);
+    encode_length =
+        Base64Escape(unsigned_plaintext, base64_tests[i].plain_length,
+                     encode_buffer, cipher_length);
     //    Is it still of the expected length?
-    EXPECT_EQ(encode_length, cypher_length);
+    EXPECT_EQ(encode_length, cipher_length);
 
     //    And is the value still correct?  (i.e., not losing the last byte)
-    EXPECT_STREQ(encode_buffer, base64_tests[i].cyphertext);
+    EXPECT_STREQ(encode_buffer, base64_tests[i].ciphertext);
 
     // If we decode it back:
     decode_str.clear();
-    EXPECT_TRUE(Base64Unescape(
-        StringPiece(encode_buffer, cypher_length), &decode_str));
+    EXPECT_TRUE(
+        Base64Unescape(StringPiece(encode_buffer, cipher_length), &decode_str));
 
     //    Is it of the expected length?
     EXPECT_EQ(base64_tests[i].plain_length, decode_str.length());
@@ -491,15 +494,15 @@ TEST(Base64, EscapeAndUnescape) {
     EXPECT_EQ(plaintext, decode_str);
 
     // Let's try with a pre-populated string.
-    string encoded("this junk should be ignored");
-    Base64Escape(string(base64_tests[i].plaintext,
-                        base64_tests[i].plain_length),
-                 &encoded);
-    EXPECT_EQ(encoded, string(encode_buffer, cypher_length));
+    std::string encoded("this junk should be ignored");
+    Base64Escape(
+        std::string(base64_tests[i].plaintext, base64_tests[i].plain_length),
+        &encoded);
+    EXPECT_EQ(encoded, std::string(encode_buffer, cipher_length));
 
-    string decoded("this junk should be ignored");
-    EXPECT_TRUE(Base64Unescape(
-        StringPiece(encode_buffer, cypher_length), &decoded));
+    std::string decoded("this junk should be ignored");
+    EXPECT_TRUE(
+        Base64Unescape(StringPiece(encode_buffer, cipher_length), &decoded));
     EXPECT_EQ(decoded.size(), base64_tests[i].plain_length);
     EXPECT_EQ_ARRAY(decoded.size(), decoded, base64_tests[i].plaintext, i);
 
@@ -514,7 +517,7 @@ TEST(Base64, EscapeAndUnescape) {
 
       // Try chopping off the equals sign(s) entirely.  The decoder
       // should still be okay with this.
-      string decoded2("this junk should also be ignored");
+      std::string decoded2("this junk should also be ignored");
       *first_equals = '\0';
       EXPECT_TRUE(Base64Unescape(
           StringPiece(encode_buffer, first_equals - encode_buffer), &decoded2));
@@ -578,7 +581,7 @@ TEST(Base64, EscapeAndUnescape) {
 
     char websafe[100];
     memset(websafe, 0, sizeof(websafe));
-    strncpy(websafe, base64_tests[i].cyphertext, cypher_length);
+    strncpy(websafe, base64_tests[i].ciphertext, cipher_length);
     for (int c = 0; c < sizeof(websafe); ++c) {
       if ('+' == websafe[c]) { websafe[c] = '-'; }
       if ('/' == websafe[c]) { websafe[c] = '_'; }
@@ -592,7 +595,7 @@ TEST(Base64, EscapeAndUnescape) {
                                                  sizeof(encode_buffer),
                                                  true);
     //    Is it of the expected length?
-    EXPECT_EQ(encode_length, cypher_length);
+    EXPECT_EQ(encode_length, cipher_length);
     EXPECT_EQ(
         CalculateBase64EscapedLen(base64_tests[i].plain_length, true),
         encode_length);
@@ -602,13 +605,11 @@ TEST(Base64, EscapeAndUnescape) {
 
     //    If we encode it into a buffer of exactly the right length...
     memset(encode_buffer, 0, sizeof(encode_buffer));
-    encode_length = WebSafeBase64Escape(unsigned_plaintext,
-                                                 base64_tests[i].plain_length,
-                                                 encode_buffer,
-                                                 cypher_length,
-                                                 true);
+    encode_length =
+        WebSafeBase64Escape(unsigned_plaintext, base64_tests[i].plain_length,
+                            encode_buffer, cipher_length, true);
     //    Is it still of the expected length?
-    EXPECT_EQ(encode_length, cypher_length);
+    EXPECT_EQ(encode_length, cipher_length);
 
     //    And is the value still correct?  (i.e., not losing the last byte)
     EXPECT_STREQ(encode_buffer, websafe);
@@ -618,15 +619,13 @@ TEST(Base64, EscapeAndUnescape) {
     WebSafeBase64Escape(
         unsigned_plaintext, base64_tests[i].plain_length,
         &encoded, true);
-    EXPECT_EQ(encoded.size(), cypher_length);
+    EXPECT_EQ(encoded.size(), cipher_length);
     EXPECT_STREQ(encoded.c_str(), websafe);
 
     //    If we decode it back:
     memset(decode_buffer, 0, sizeof(decode_buffer));
-    decode_length = WebSafeBase64Unescape(encode_buffer,
-                                                   cypher_length,
-                                                   decode_buffer,
-                                                   sizeof(decode_buffer));
+    decode_length = WebSafeBase64Unescape(encode_buffer, cipher_length,
+                                          decode_buffer, sizeof(decode_buffer));
 
     //    Is it of the expected length?
     EXPECT_EQ(decode_length, base64_tests[i].plain_length);
@@ -637,10 +636,8 @@ TEST(Base64, EscapeAndUnescape) {
 
     //    If we decode it into a buffer of exactly the right length...
     memset(decode_buffer, 0, sizeof(decode_buffer));
-    decode_length = WebSafeBase64Unescape(encode_buffer,
-                                                   cypher_length,
-                                                   decode_buffer,
-                                                   decode_length);
+    decode_length = WebSafeBase64Unescape(encode_buffer, cipher_length,
+                                          decode_buffer, decode_length);
 
     //    Is it still of the expected length?
     EXPECT_EQ(decode_length, base64_tests[i].plain_length);
@@ -650,16 +647,14 @@ TEST(Base64, EscapeAndUnescape) {
               memcmp(decode_buffer, base64_tests[i].plaintext, decode_length));
 
     // Try using '.' for the pad character.
-    for (int c = cypher_length - 1; c >= 0 && '=' == encode_buffer[c]; --c) {
+    for (int c = cipher_length - 1; c >= 0 && '=' == encode_buffer[c]; --c) {
       encode_buffer[c] = '.';
     }
 
     // If we decode it back:
     memset(decode_buffer, 0, sizeof(decode_buffer));
-    decode_length = WebSafeBase64Unescape(encode_buffer,
-                                                   cypher_length,
-                                                   decode_buffer,
-                                                   sizeof(decode_buffer));
+    decode_length = WebSafeBase64Unescape(encode_buffer, cipher_length,
+                                          decode_buffer, sizeof(decode_buffer));
 
     // Is it of the expected length?
     EXPECT_EQ(decode_length, base64_tests[i].plain_length);
@@ -670,10 +665,8 @@ TEST(Base64, EscapeAndUnescape) {
 
     // If we decode it into a buffer of exactly the right length...
     memset(decode_buffer, 0, sizeof(decode_buffer));
-    decode_length = WebSafeBase64Unescape(encode_buffer,
-                                                   cypher_length,
-                                                   decode_buffer,
-                                                   decode_length);
+    decode_length = WebSafeBase64Unescape(encode_buffer, cipher_length,
+                                          decode_buffer, decode_length);
 
     // Is it still of the expected length?
     EXPECT_EQ(decode_length, base64_tests[i].plain_length);
@@ -684,8 +677,8 @@ TEST(Base64, EscapeAndUnescape) {
 
     // Let's try the string version of the decoder
     decoded = "this junk should be ignored";
-    EXPECT_TRUE(WebSafeBase64Unescape(
-        StringPiece(encode_buffer, cypher_length), &decoded));
+    EXPECT_TRUE(WebSafeBase64Unescape(StringPiece(encode_buffer, cipher_length),
+                                      &decoded));
     EXPECT_EQ(decoded.size(), base64_tests[i].plain_length);
     EXPECT_EQ_ARRAY(decoded.size(), decoded, base64_tests[i].plaintext, i);
 
@@ -695,7 +688,7 @@ TEST(Base64, EscapeAndUnescape) {
     for (int c = 0; c < sizeof(websafe); ++c) {
       if ('=' == websafe[c]) {
         websafe[c] = '\0';
-        cypher_length = c;
+        cipher_length = c;
         break;
       }
     }
@@ -708,7 +701,7 @@ TEST(Base64, EscapeAndUnescape) {
                                                  sizeof(encode_buffer),
                                                  false);
     //    Is it of the expected length?
-    EXPECT_EQ(encode_length, cypher_length);
+    EXPECT_EQ(encode_length, cipher_length);
     EXPECT_EQ(
         CalculateBase64EscapedLen(base64_tests[i].plain_length, false),
         encode_length);
@@ -718,30 +711,26 @@ TEST(Base64, EscapeAndUnescape) {
 
     //    If we encode it into a buffer of exactly the right length...
     memset(encode_buffer, 0, sizeof(encode_buffer));
-    encode_length = WebSafeBase64Escape(unsigned_plaintext,
-                                                 base64_tests[i].plain_length,
-                                                 encode_buffer,
-                                                 cypher_length,
-                                                 false);
+    encode_length =
+        WebSafeBase64Escape(unsigned_plaintext, base64_tests[i].plain_length,
+                            encode_buffer, cipher_length, false);
     //    Is it still of the expected length?
-    EXPECT_EQ(encode_length, cypher_length);
+    EXPECT_EQ(encode_length, cipher_length);
 
     //    And is the value still correct?  (i.e., not losing the last byte)
     EXPECT_STREQ(encode_buffer, websafe);
 
     // Let's try the (other) string version of the encoder
-    string plain(base64_tests[i].plaintext, base64_tests[i].plain_length);
+    std::string plain(base64_tests[i].plaintext, base64_tests[i].plain_length);
     encoded = "this junk should be ignored";
     WebSafeBase64Escape(plain, &encoded);
-    EXPECT_EQ(encoded.size(), cypher_length);
+    EXPECT_EQ(encoded.size(), cipher_length);
     EXPECT_STREQ(encoded.c_str(), websafe);
 
     //    If we decode it back:
     memset(decode_buffer, 0, sizeof(decode_buffer));
-    decode_length = WebSafeBase64Unescape(encode_buffer,
-                                                   cypher_length,
-                                                   decode_buffer,
-                                                   sizeof(decode_buffer));
+    decode_length = WebSafeBase64Unescape(encode_buffer, cipher_length,
+                                          decode_buffer, sizeof(decode_buffer));
 
     //    Is it of the expected length?
     EXPECT_EQ(decode_length, base64_tests[i].plain_length);
@@ -752,10 +741,8 @@ TEST(Base64, EscapeAndUnescape) {
 
     //    If we decode it into a buffer of exactly the right length...
     memset(decode_buffer, 0, sizeof(decode_buffer));
-    decode_length = WebSafeBase64Unescape(encode_buffer,
-                                                   cypher_length,
-                                                   decode_buffer,
-                                                   decode_length);
+    decode_length = WebSafeBase64Unescape(encode_buffer, cipher_length,
+                                          decode_buffer, decode_length);
 
     //    Is it still of the expected length?
     EXPECT_EQ(decode_length, base64_tests[i].plain_length);
@@ -767,8 +754,8 @@ TEST(Base64, EscapeAndUnescape) {
 
     // Let's try the string version of the decoder
     decoded = "this junk should be ignored";
-    EXPECT_TRUE(WebSafeBase64Unescape(
-        StringPiece(encode_buffer, cypher_length), &decoded));
+    EXPECT_TRUE(WebSafeBase64Unescape(StringPiece(encode_buffer, cipher_length),
+                                      &decoded));
     EXPECT_EQ(decoded.size(), base64_tests[i].plain_length);
     EXPECT_EQ_ARRAY(decoded.size(), decoded, base64_tests[i].plaintext, i);
 
@@ -781,29 +768,116 @@ TEST(Base64, EscapeAndUnescape) {
     const unsigned char* unsigned_plaintext =
       reinterpret_cast<const unsigned char*>(base64_strings[i].plaintext);
     int plain_length = strlen(base64_strings[i].plaintext);
-    int cypher_length = strlen(base64_strings[i].cyphertext);
-    vector<char> buffer(cypher_length+1);
+    int cipher_length = strlen(base64_strings[i].ciphertext);
+    std::vector<char> buffer(cipher_length + 1);
     int encode_length = WebSafeBase64Escape(unsigned_plaintext,
                                                      plain_length,
                                                      &buffer[0],
                                                      buffer.size(),
                                                      false);
-    EXPECT_EQ(cypher_length, encode_length);
+    EXPECT_EQ(cipher_length, encode_length);
     EXPECT_EQ(
         CalculateBase64EscapedLen(plain_length, false), encode_length);
     buffer[ encode_length ] = '\0';
-    EXPECT_STREQ(base64_strings[i].cyphertext, &buffer[0]);
+    EXPECT_STREQ(base64_strings[i].ciphertext, &buffer[0]);
   }
 
   // Verify the behavior when decoding bad data
   {
     const char* bad_data = "ab-/";
-    string buf;
+    std::string buf;
     EXPECT_FALSE(Base64Unescape(StringPiece(bad_data), &buf));
     EXPECT_TRUE(!WebSafeBase64Unescape(bad_data, &buf));
     EXPECT_TRUE(buf.empty());
   }
 }
+
+// Test StrCat of ints and longs of various sizes and signdedness.
+TEST(StrCat, Ints) {
+  const short s = -1;  // NOLINT(runtime/int)
+  const uint16_t us = 2;
+  const int i = -3;
+  const unsigned int ui = 4;
+  const long l = -5;                 // NOLINT(runtime/int)
+  const unsigned long ul = 6;        // NOLINT(runtime/int)
+  const long long ll = -7;           // NOLINT(runtime/int)
+  const unsigned long long ull = 8;  // NOLINT(runtime/int)
+  const ptrdiff_t ptrdiff = -9;
+  const size_t size = 10;
+  const intptr_t intptr = -12;
+  const uintptr_t uintptr = 13;
+  std::string answer;
+  answer = StrCat(s, us);
+  EXPECT_EQ(answer, "-12");
+  answer = StrCat(i, ui);
+  EXPECT_EQ(answer, "-34");
+  answer = StrCat(l, ul);
+  EXPECT_EQ(answer, "-56");
+  answer = StrCat(ll, ull);
+  EXPECT_EQ(answer, "-78");
+  answer = StrCat(ptrdiff, size);
+  EXPECT_EQ(answer, "-910");
+  answer = StrCat(ptrdiff, intptr);
+  EXPECT_EQ(answer, "-9-12");
+  answer = StrCat(uintptr, 0);
+  EXPECT_EQ(answer, "130");
+}
+
+class ReplaceChars
+    : public ::testing::TestWithParam<
+          std::tuple<std::string, std::string, const char*, char>> {};
+
+TEST_P(ReplaceChars, ReplacesAllOccurencesOfAnyCharInReplaceWithAReplaceChar) {
+  std::string expected = std::get<0>(GetParam());
+  std::string string_to_replace_in = std::get<1>(GetParam());
+  const char* what_to_replace = std::get<2>(GetParam());
+  char replacement = std::get<3>(GetParam());
+  ReplaceCharacters(&string_to_replace_in, what_to_replace, replacement);
+  ASSERT_EQ(expected, string_to_replace_in);
+}
+
+INSTANTIATE_TEST_CASE_P(
+    Replace, ReplaceChars,
+    ::testing::Values(
+        std::make_tuple("", "", "", '_'),    // empty string should remain empty
+        std::make_tuple(" ", " ", "", '_'),  // no replacement string
+        std::make_tuple(" ", " ", "_-abcedf",
+                        '*'),  // replacement character not in string
+        std::make_tuple("replace", "Replace", "R",
+                        'r'),  // replace one character
+        std::make_tuple("not_spaces__", "not\nspaces\t ", " \t\r\n",
+                        '_'),  // replace some special characters
+        std::make_tuple("c++", "cxx", "x",
+                        '+'),  // same character multiple times
+        std::make_tuple("qvvvvvng v T", "queueing a T", "aeiou",
+                        'v')));  // replace all voewls
+
+class StripWs
+    : public ::testing::TestWithParam<std::tuple<std::string, std::string>> {};
+
+TEST_P(StripWs, AlwaysStripsLeadingAndTrailingWhitespace) {
+  std::string expected = std::get<0>(GetParam());
+  std::string string_to_strip = std::get<1>(GetParam());
+  StripWhitespace(&string_to_strip);
+  ASSERT_EQ(expected, string_to_strip);
+}
+
+INSTANTIATE_TEST_CASE_P(
+    Strip, StripWs,
+    ::testing::Values(
+        std::make_tuple("", ""),   // empty string should remain empty
+        std::make_tuple("", " "),  // only ws should become empty
+        std::make_tuple("no whitespace",
+                        " no whitespace"),  // leading ws removed
+        std::make_tuple("no whitespace",
+                        "no whitespace "),  // trailing ws removed
+        std::make_tuple("no whitespace",
+                        " no whitespace "),  // same nb. of leading and trailing
+        std::make_tuple(
+            "no whitespace",
+            "  no whitespace "),  // different nb. of leading/trailing
+        std::make_tuple("no whitespace",
+                        " no whitespace  ")));  // more trailing than leading
 
 }  // anonymous namespace
 }  // namespace protobuf

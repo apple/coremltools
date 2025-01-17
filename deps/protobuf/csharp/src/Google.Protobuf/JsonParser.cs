@@ -37,6 +37,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -63,6 +64,7 @@ namespace Google.Protobuf
         private static readonly Regex DurationRegex = new Regex(@"^(?<sign>-)?(?<int>[0-9]{1,12})(?<subseconds>\.[0-9]{1,9})?s$", FrameworkPortability.CompiledRegexWhereAvailable);
         private static readonly int[] SubsecondScalingFactors = { 0, 100000000, 100000000, 10000000, 1000000, 100000, 10000, 1000, 100, 10, 1 };
         private static readonly char[] FieldMaskPathSeparators = new[] { ',' };
+        private static readonly EnumDescriptor NullValueDescriptor = StructReflection.Descriptor.EnumTypes.Single(ed => ed.ClrType == typeof(NullValue));
 
         private static readonly JsonParser defaultInstance = new JsonParser(Settings.Default);
 
@@ -110,7 +112,7 @@ namespace Google.Protobuf
         /// <param name="settings">The settings.</param>
         public JsonParser(Settings settings)
         {
-            this.settings = settings;
+            this.settings = ProtoPreconditions.CheckNotNull(settings, nameof(settings));
         }
 
         /// <summary>
@@ -203,10 +205,14 @@ namespace Google.Protobuf
                 }
                 else
                 {
-                    // TODO: Is this what we want to do? If not, we'll need to skip the value,
-                    // which may be an object or array. (We might want to put code in the tokenizer
-                    // to do that.)
-                    throw new InvalidProtocolBufferException("Unknown field: " + name);
+                    if (settings.IgnoreUnknownFields)
+                    {
+                        tokenizer.SkipValue();
+                    }
+                    else
+                    {
+                        throw new InvalidProtocolBufferException("Unknown field: " + name);
+                    }
                 }
             }
         }
@@ -217,10 +223,11 @@ namespace Google.Protobuf
             if (token.Type == JsonToken.TokenType.Null)
             {
                 // Clear the field if we see a null token, unless it's for a singular field of type
-                // google.protobuf.Value.
+                // google.protobuf.Value or google.protobuf.NullValue.
                 // Note: different from Java API, which just ignores it.
                 // TODO: Bring it more in line? Discuss...
-                if (field.IsMap || field.IsRepeated || !IsGoogleProtobufValueField(field))
+                if (field.IsMap || field.IsRepeated ||
+                    !(IsGoogleProtobufValueField(field) || IsGoogleProtobufNullValueField(field)))
                 {
                     field.Accessor.Clear(message);
                     return;
@@ -260,11 +267,12 @@ namespace Google.Protobuf
                     return;
                 }
                 tokenizer.PushBack(token);
-                if (token.Type == JsonToken.TokenType.Null)
+                object value = ParseSingleValue(field, tokenizer);
+                if (value == null)
                 {
                     throw new InvalidProtocolBufferException("Repeated field elements cannot be null");
                 }
-                list.Add(ParseSingleValue(field, tokenizer));
+                list.Add(value);
             }
         }
 
@@ -309,6 +317,12 @@ namespace Google.Protobuf
                 field.MessageType.FullName == Value.Descriptor.FullName;
         }
 
+        private static bool IsGoogleProtobufNullValueField(FieldDescriptor field)
+        {
+            return field.FieldType == FieldType.Enum &&
+                field.EnumType.FullName == NullValueDescriptor.FullName;
+        }
+
         private object ParseSingleValue(FieldDescriptor field, JsonTokenizer tokenizer)
         {
             var token = tokenizer.Next();
@@ -319,6 +333,10 @@ namespace Google.Protobuf
                 if (IsGoogleProtobufValueField(field))
                 {
                     return Value.ForNull();
+                }
+                if (IsGoogleProtobufNullValueField(field))
+                {
+                    return NullValue.NullValue;
                 }
                 return null;
             }
@@ -669,7 +687,7 @@ namespace Google.Protobuf
             if (value != Math.Floor(value))
             {
                 throw new InvalidProtocolBufferException($"Value not an integer: {value}");
-            }            
+            }
         }
 
         private static object ParseSingleStringValue(FieldDescriptor field, string text)
@@ -914,7 +932,7 @@ namespace Google.Protobuf
                 messagePaths.Add(ToSnakeCase(path));
             }
         }
-        
+
         // Ported from src/google/protobuf/util/internal/utility.cc
         private static string ToSnakeCase(string text)
         {
@@ -997,6 +1015,19 @@ namespace Google.Protobuf
             public TypeRegistry TypeRegistry { get; }
 
             /// <summary>
+            /// Whether the parser should ignore unknown fields (<c>true</c>) or throw an exception when
+            /// they are encountered (<c>false</c>).
+            /// </summary>
+            public bool IgnoreUnknownFields { get; }
+
+            private Settings(int recursionLimit, TypeRegistry typeRegistry, bool ignoreUnknownFields)
+            {
+                RecursionLimit = recursionLimit;
+                TypeRegistry = ProtoPreconditions.CheckNotNull(typeRegistry, nameof(typeRegistry));
+                IgnoreUnknownFields = ignoreUnknownFields;
+            }
+
+            /// <summary>
             /// Creates a new <see cref="Settings"/> object with the specified recursion limit.
             /// </summary>
             /// <param name="recursionLimit">The maximum depth of messages to parse</param>
@@ -1009,11 +1040,34 @@ namespace Google.Protobuf
             /// </summary>
             /// <param name="recursionLimit">The maximum depth of messages to parse</param>
             /// <param name="typeRegistry">The type registry used to parse <see cref="Any"/> messages</param>
-            public Settings(int recursionLimit, TypeRegistry typeRegistry)
+            public Settings(int recursionLimit, TypeRegistry typeRegistry) : this(recursionLimit, typeRegistry, false)
             {
-                RecursionLimit = recursionLimit;
-                TypeRegistry = ProtoPreconditions.CheckNotNull(typeRegistry, nameof(typeRegistry));
             }
+
+            /// <summary>
+            /// Creates a new <see cref="Settings"/> object set to either ignore unknown fields, or throw an exception
+            /// when unknown fields are encountered.
+            /// </summary>
+            /// <param name="ignoreUnknownFields"><c>true</c> if unknown fields should be ignored when parsing; <c>false</c> to throw an exception.</param>
+            public Settings WithIgnoreUnknownFields(bool ignoreUnknownFields) =>
+                new Settings(RecursionLimit, TypeRegistry, ignoreUnknownFields);
+
+            /// <summary>
+            /// Creates a new <see cref="Settings"/> object based on this one, but with the specified recursion limit.
+            /// </summary>
+            /// <param name="recursionLimit">The new recursion limit.</param>
+            public Settings WithRecursionLimit(int recursionLimit) =>
+                new Settings(recursionLimit, TypeRegistry, IgnoreUnknownFields);
+
+            /// <summary>
+            /// Creates a new <see cref="Settings"/> object based on this one, but with the specified type registry.
+            /// </summary>
+            /// <param name="typeRegistry">The new type registry. Must not be null.</param>
+            public Settings WithTypeRegistry(TypeRegistry typeRegistry) =>
+                new Settings(
+                    RecursionLimit,
+                    ProtoPreconditions.CheckNotNull(typeRegistry, nameof(typeRegistry)),
+                    IgnoreUnknownFields);
         }
     }
 }

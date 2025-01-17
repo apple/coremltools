@@ -9,22 +9,27 @@ python3 tools/codespell_ignore_lines_from_errors.py /tmp/codespell_errors.txt > 
 git diff to review changes, then commit, push.
 """
 
+from __future__ import annotations
+
 import sys
-from typing import List
 
 
-def run(args: List[str]) -> None:
+def run(args: list[str]) -> None:
     assert len(args) == 1, "codespell_errors.txt"
     cache = {}
     done = set()
-    for line in sorted(open(args[0]).read().splitlines()):
+    with open(args[0]) as f:
+        lines = f.read().splitlines()
+
+    for line in sorted(lines):
         i = line.find(" ==> ")
         if i > 0:
             flds = line[:i].split(":")
             if len(flds) >= 2:
                 filename, line_num = flds[:2]
                 if filename not in cache:
-                    cache[filename] = open(filename).read().splitlines()
+                    with open(filename) as f:
+                        cache[filename] = f.read().splitlines()
                 supp = cache[filename][int(line_num) - 1]
                 if supp not in done:
                     print(supp)

@@ -12,22 +12,26 @@ import torch
 from coremltools import _logger as logger
 from coremltools.converters.mil.input_types import TensorType
 
-from .utils import TORCH_DTYPE_TO_NUM, sanitize_op_kind
-from .exir_utils import extract_inputs_from_exir_program
+from .exir_utils import extract_io_from_exir_program
+from .torch_op_registry import _TORCH_OPS_REGISTRY
 from .torchscript_utils import _expand_and_optimize_ir
+from .utils import TORCH_DTYPE_TO_NUM, sanitize_op_kind
 
 
-def _make_ssa_name(name: str) -> str:
+def _make_ssa_name(name: Optional[Union[str, int]]) -> str:
     """
     Converts a symbol name (string) into an SSA name, by prepending '%'.
+    If the name is a parameter value (int), directly printing it without prepending '%'.
     Only used for pretty printing the graph.
     """
     if name is None:
         return "None"
+    if type(name) is int:
+        return str(name)
     return "%" + name
 
 
-def _ssa_name_list(names: List[str]) -> List[str]:
+def _ssa_name_list(names: List[Optional[Union[str, int]]]) -> List[str]:
     """
     Take a list of symbol names (strings) and return them as SSA names. Only
     used for pretty printing the graph.
@@ -161,6 +165,7 @@ class InternalTorchIRNode:
         kind: str,
         inputs: List[str],
         outputs: List[str],
+        kwinputs: Optional[Dict[str, str]] = None,
         name: Optional[str] = None,
         parent: Optional[Union["InternalTorchIRGraph", "InternalTorchIRBlock"]] = None,
         attr: Optional[Dict[str, Any]] = None,
@@ -174,6 +179,7 @@ class InternalTorchIRNode:
             kind: the kind (op) of the node.
             inputs: list of input symbols.
             outputs: list of output symbols.
+            kwinputs: dict of keyword input symbols.
             parent: The InternalTorchIRGraph/Block this node belongs to.
             attr:  dict of named attributes.
             blocks: list of InternalTorchIRBlock.
@@ -188,6 +194,7 @@ class InternalTorchIRNode:
         self.kind = kind
         self.inputs = inputs
         self.outputs = outputs
+        self.kwinputs = kwinputs
         self.parent = parent
         self.attr = attr if attr is not None else {"value": None}
         self.blocks = blocks if blocks is not None else []
@@ -233,34 +240,42 @@ class InternalTorchIRNode:
 
     @classmethod
     def from_exir_node(cls, node):
-        def get_arguments(alist):
+        def get_arguments(alist: List) -> Tuple:
             args = []
             for i in alist:
                 if isinstance(i, torch.fx.Node):
                     args.append(i.name)
                 elif isinstance(i, torch.fx.immutable_collections.immutable_list):
                     args.append(get_arguments(i))
-                elif isinstance(i, (int, float)):
+                elif isinstance(i, (int, float, str)):
+                    # The current simple implementation (simply appending string argument to args)
+                    # confuses context look up: Is this string a name or a value?
+                    # TODO (rdar://138953006): Investigate how we can make string argument
+                    # follow the `name: value` mapping format later in context.
                     args.append(i)
-                # This is necessitated by backward compatibility:
-                # * TorchScript used to store dtype as integers/enums
-                # * Subsequently, we built our PyTorch converter based on numbered dtypes
-                # * Now EXIR uses dtype directly...
-                # * Until refactoring EXIR converter to be independent from TorchScript converter,
-                #   we have to map dtype to number ourselves
-                #   to leverage the existing TorchScript converter infra
                 elif isinstance(i, torch.dtype):
+                    # This is necessitated by backward compatibility:
+                    # * TorchScript used to store dtype as integers/enums
+                    # * Subsequently, we built our PyTorch converter based on numbered dtypes
+                    # * Now EXIR uses dtype directly...
+                    # * Until refactoring EXIR converter to be independent from TorchScript converter,
+                    #   we have to map dtype to number ourselves
+                    #   to leverage the existing TorchScript converter infra
                     args.append(TORCH_DTYPE_TO_NUM[i])
+                elif (
+                    isinstance(i, torch.device)
+                    or isinstance(i, torch.layout)
+                    or isinstance(i, torch.memory_format)
+                ):
+                    # PyMIL graph does not care about these things
+                    pass
                 elif i is None:
                     args.append(None)
                 else:
-                    raise AssertionError(f"Unhandled type of the node: {type(i)}")
+                    raise AssertionError(
+                        f"Unhandled node type {type(i)}. Node content is: {str(i)}"
+                    )
             return tuple(args)
-
-        # TODO (rdar://128768037) handle kwargs
-        inputs = get_arguments(node.args)
-        # TODO: rdar://115846125 ([Executorch] Handle Models/Layers with Multiple outputs)
-        outputs = [node.name]
 
         try:
             kind = node.target.name()
@@ -270,6 +285,18 @@ class InternalTorchIRNode:
             else:
                 kind = str(node.target)
         kind = sanitize_op_kind(kind)
+        if kind not in _TORCH_OPS_REGISTRY:
+            raise ValueError(f"Unsupported fx node {str(node)}, kind {kind}")
+
+        inputs = get_arguments(node.args)
+        outputs = [node.name]
+
+        kwinputs = {}
+        for keyword, arg in node.kwargs.items():
+            if arg is not None:
+                kwinputs[keyword] = get_arguments([arg])
+        if len(kwinputs) == 0:
+            kwinputs = None
 
         name = node.name
         return cls(
@@ -277,6 +304,7 @@ class InternalTorchIRNode:
             kind=kind,
             inputs=inputs,
             outputs=outputs,
+            kwinputs=kwinputs,
             parent=None,
             attr=None,
             blocks=None,
@@ -418,6 +446,8 @@ class InternalTorchIRGraph:
         outputs: List[str],
         nodes: Optional[List["InternalTorchIRNode"]] = None,
         buffers: Optional[Dict[str, torch.Tensor]] = None,
+        input_name_to_source_buffer_name: Optional[Dict[str, str]] = None,
+        output_name_to_target_buffer_name: Optional[Dict[str, str]] = None,
     ):
         """
         Arguments:
@@ -426,12 +456,21 @@ class InternalTorchIRGraph:
             outputs: list[str], list of outputs from the graph.
             nodes: list of InternalTorchIRNode in the graph.
             buffers: Dict mapping torch model buffers to their names.
+            input_name_to_source_buffer_name: Dict[str, str] (EXIR only)
+                dictionary mapping input variable names to underlying mutable buffer names,
+                i.e. these input variables are "read" from mutable buffer
+            output_name_to_target_buffer_name: Dict[str, str] (EXIR only)
+                dictionary mapping output variable names to underlying mutable buffer names,
+                i.e. these output variables are "written" to mutable buffer
         """
         self.nodes = nodes
         self.params = params
         self.inputs = inputs
         self.outputs = outputs
         self.buffers = buffers
+        self.input_name_to_source_buffer_name = input_name_to_source_buffer_name
+        self.output_name_to_target_buffer_name = output_name_to_target_buffer_name
+
         self.params_scope = {}
 
     @classmethod
@@ -443,10 +482,9 @@ class InternalTorchIRGraph:
             cut_at_symbols: The list of desired outputs from the graph. Symbols
                 must be present in the graph. For debugging use only.
         """
-        if not isinstance(torchscript, torch.jit.ScriptModule):
-            raise AssertionError(
-                f"Input should be an object of type torch.jit.ScriptModule. Provide: {type(torchscript)}"
-            )
+        assert isinstance(
+            torchscript, torch.jit.ScriptModule
+        ), f"Input should be an object of type torch.jit.ScriptModule. Provide: {type(torchscript)}"
 
         if hasattr(torchscript, "training") and torchscript.training:
             logger.warning(
@@ -461,7 +499,6 @@ class InternalTorchIRGraph:
 
         nodes = []
         inputs_name_to_type = OrderedDict()
-        outputs = []
 
         raw_graph, params, buffers = _expand_and_optimize_ir(torchscript)
 
@@ -477,11 +514,10 @@ class InternalTorchIRGraph:
             inputs_name_to_type[name] = inputs[index]
 
         # Add outputs, cutting if @cut_at_symbols is set
-        output_names = cut_at_symbols
-        if output_names is None:
-            output_names = [x.debugName() for x in raw_graph.outputs()]
-        for output in output_names:
-            outputs.append(output)
+        if cut_at_symbols is not None:
+            outputs = cut_at_symbols
+        else:
+            outputs = [x.debugName() for x in raw_graph.outputs()]
 
         internal_graph = cls(
             nodes=nodes,
@@ -518,17 +554,37 @@ class InternalTorchIRGraph:
         cache_model_hierarchy_block(self)
 
     @classmethod
-    def from_exir(cls, exir):
-        exported_program: torch.export.ExportedProgram = exir
-        user_inputs, lifted_parameters, lifted_buffers, lifted_constants = (
-            extract_inputs_from_exir_program(exported_program)
-        )
+    def from_exir(cls, exir, cut_at_symbols=None):
+        """
+        Arguments:
+            exir: ExportedProgram object representing the model to convert.
+            inputs: A list of input types to the graph.
+            cut_at_symbols: The list of desired outputs from the graph. Symbols
+                must be present in the graph. For debugging use only.
+        """
+        assert isinstance(
+            exir, torch.export.ExportedProgram
+        ), f"Input should be an object of type torch.export.ExportedProgram. Provide: {type(exir)}"
 
-        params = {**lifted_parameters, **lifted_buffers, **lifted_constants}
+        exported_program: torch.export.ExportedProgram = exir
+        (
+            user_inputs,
+            user_outputs,
+            params,
+            buffers,
+            input_name_to_source_buffer_name,
+            output_name_to_target_buffer_name,
+        ) = extract_io_from_exir_program(exported_program)
+
         inputs = OrderedDict([(i.name, i) for i in user_inputs])
 
+        # Add outputs, cutting if @cut_at_symbols is set
+        if cut_at_symbols is not None:
+            outputs = cut_at_symbols
+        else:
+            outputs = user_outputs
+
         nodes = []
-        outputs = []
         for node in exported_program.graph_module.graph.nodes:
             if node.op == "call_function":
                 nodes.append(InternalTorchIRNode.from_exir_node(node=node))
@@ -544,13 +600,19 @@ class InternalTorchIRGraph:
             elif node.op == "placeholder":
                 continue
             elif node.op == "output":
-                outputs = [
-                    node.name for node in node.args[0]
-                ]  # TODO: rdar://115846125 ([Executorch] Handle Models/Layers with Multiple outputs)
+                continue
             else:
                 raise NotImplementedError(f"Nodes of type {node.op} not yet implemented")
 
-        return cls(nodes=nodes, params=params, inputs=inputs, outputs=outputs)
+        return cls(
+            nodes=nodes,
+            params=params,
+            inputs=inputs,
+            outputs=outputs,
+            buffers=buffers,
+            input_name_to_source_buffer_name=input_name_to_source_buffer_name,
+            output_name_to_target_buffer_name=output_name_to_target_buffer_name,
+        )
 
     def __str__(self):
         graph_str = "graph(\n"

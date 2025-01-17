@@ -10,15 +10,19 @@ import torch as _torch
 from torch.jit._script import RecursiveScriptModule
 
 from coremltools import _logger as logger
-from coremltools._deps import _HAS_TORCH_EXPORT_API
+from coremltools._deps import _HAS_EXECUTORCH, _HAS_TORCH_EXPORT_API
 from coremltools.converters.mil.frontend.torch.converter import TorchConverter
 from coremltools.converters.mil.input_types import StateType, TensorType
 from coremltools.converters.mil.mil.program import Program
 
 from .converter import TorchConverter
+from .utils import TorchFrontend
 
 if _HAS_TORCH_EXPORT_API:
     from torch.export import ExportedProgram
+
+if _HAS_EXECUTORCH:
+    import executorch.exir
 
 
 def load(
@@ -105,12 +109,41 @@ def _torchscript_from_spec(model_spec: Union[str, RecursiveScriptModule]) -> Rec
 
     elif isinstance(model_spec, _torch.jit.ScriptModule):
         return model_spec
+
     else:
         raise TypeError(
-            "A PyTorch model must either be a .pt or .pth file, or a TorchScript object. Received: {}".format(
-                type(model_spec)
-            )
+            "A PyTorch model must either be a .pt or .pth file, or a TorchScript object. "
+            f"Received: {type(model_spec)}"
         )
+
+
+if _HAS_TORCH_EXPORT_API:
+
+    def _torchexport_from_spec(
+        model_spec: Union[str, ExportedProgram],
+        frontend=TorchFrontend.TORCHEXPORT,
+    ) -> ExportedProgram:
+        # Load torch.export serialization
+        if isinstance(model_spec, str) and model_spec.endswith(".pt2"):
+            filename = _os_path.abspath(model_spec)
+            try:
+                model = _torch.export.load(filename)
+            except Exception as e:
+                logger.error(
+                    "\n\nERROR - Could not load the PyTorch model. Got the following error:\n"
+                )
+                raise e
+        elif isinstance(model_spec, ExportedProgram):
+            model = model_spec
+        else:
+            raise TypeError(
+                "A PyTorch model must either be a .pt2 file, or an ExportedProgram object. "
+                f"Received: {type(model_spec)}"
+            )
+        # To edge if edge dialect is desired
+        if frontend == TorchFrontend.EXECUTORCH and model.dialect != "EDGE":
+            model = executorch.exir.to_edge(model).exported_program()
+        return model
 
 
 def _perform_torch_convert(converter: TorchConverter, debug: bool) -> Program:

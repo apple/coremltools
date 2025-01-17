@@ -4,13 +4,14 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import copy
+from typing import List, Optional, Tuple
 
 import numpy as np
 
 from coremltools import _logger as logger
 from coremltools.converters.mil.mil import Block
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import Operation, types
+from coremltools.converters.mil.mil import Operation, Program, types
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import (
     _check_child_op_type,
@@ -458,6 +459,17 @@ class fuse_conv_batchnorm(AbstractGraphPass):
                 "conv_batchnorm pass. "
             )
 
+        # the new weight / bias should inherit the meta data from the old conv layer
+        # TODO: this is currently a temporary solution, we should consider a more general approach.
+        # the follow-up is tracked by: rdar://131637107
+        new_conv_weight = mb.const(val=new_conv_weight, before_op=conv_op)
+        new_conv_bias = mb.const(val=new_conv_bias, before_op=conv_op)
+
+        if conv_op.weight.op.op_type == "const":
+            block = conv_op.enclosing_block
+            block._copy_metadata(conv_op.weight, new_conv_weight)
+            block._copy_metadata(conv_op.weight, new_conv_bias)
+
         # create a new conv op with the new bias value, copying rest of the attributes
         out_name = bn_op.outputs[0].name
         conv_kargs = {
@@ -901,7 +913,7 @@ class fuse_conv_scale(AbstractGraphPass):
 
         # for the vector scale case, check if the shape is broacastable
         if not is_scalar:
-            if not np.product(scale.shape) == Cout:
+            if not np.prod(scale.shape) == Cout:
                 return False
             if len(scale.shape) == len(conv_weight.shape):
                 if not scale.shape[1] == Cout:
@@ -1149,5 +1161,175 @@ class fuse_pad_conv(AbstractGraphPass):
             transpose_ops = self._match_pattern(op)
             if transpose_ops is not None:
                 if self._try_to_transform(op, transpose_ops, block):
+                    fusion_occurred = True
+        return fusion_occurred
+
+
+
+
+@register_pass(namespace="common")
+class fuse_dilated_conv(AbstractGraphPass):
+    """
+    When we observe ``space_to_batch -> conv (2D) -> batch_to_space``, we attempt to fuse these
+    three ops into a single ``conv`` with dilations.
+
+    .. code-block::
+
+        Given:
+            %1 = space_to_batch(%0, ...)
+            %2 = conv(%1, ...)
+            %3 = batch_to_space(%2, ...)
+            ...
+
+        Result:
+            %3 = conv(%0, dilations=...)
+            ...
+    """
+
+    @staticmethod
+    def _uses_same_padding(
+        input_h: int,
+        input_w: int,
+        W_h: int,
+        W_w: int,
+        dilation_factor: List[int],
+        padding: List[int],
+        crop: List[int],
+    ) -> bool:
+        base_paddings = [0] * 4
+
+        dilated_W_h = dilation_factor[0] * (W_h - 1) + 1
+        dilated_W_w = dilation_factor[1] * (W_w - 1) + 1
+
+        base_paddings[0] = (dilated_W_h - 1) // 2
+        base_paddings[1] = dilated_W_h - 1 - (dilated_W_h - 1) // 2
+        base_paddings[2] = (dilated_W_w - 1) // 2
+        base_paddings[3] = dilated_W_w - 1 - (dilated_W_w - 1) // 2
+
+        pad_start_h = base_paddings[0]
+        pad_start_w = base_paddings[2]
+        orig_pad_end_h = base_paddings[1]
+        orig_pad_end_w = base_paddings[3]
+        full_input_h = input_h + pad_start_h + orig_pad_end_h
+        full_input_w = input_w + pad_start_w + orig_pad_end_w
+        pad_end_extra_h = (
+            dilation_factor[0] - full_input_h % dilation_factor[0]
+        ) % dilation_factor[0]
+        pad_end_extra_w = (
+            dilation_factor[1] - full_input_w % dilation_factor[1]
+        ) % dilation_factor[1]
+        pad_end_h = orig_pad_end_h + pad_end_extra_h
+        pad_end_w = orig_pad_end_w + pad_end_extra_w
+
+        return (
+            padding[0] == pad_start_h
+            and padding[1] == pad_end_h
+            and padding[2] == pad_start_w
+            and padding[3] == pad_end_w
+            and crop[0] == 0
+            and crop[1] == pad_end_extra_h
+            and crop[2] == 0
+            and crop[3] == pad_end_extra_w
+        )
+
+    def apply(self: AbstractGraphPass, prog: Program) -> None:
+        for f in prog.functions.values():
+            block_changed = True
+            while block_changed:
+                block_changed = self._fuse_dilated_conv_block(f)
+
+    @staticmethod
+    def _match_pattern(op: Operation) -> Optional[List[Operation]]:
+        if op.op_type != "space_to_batch":
+            return None
+
+        if not _check_child_op_type(op, 'conv'):
+            return None
+
+        conv_op = op.outputs[0].child_ops[0]
+
+        if len(conv_op.inputs['x'].shape[2:]) != 2:
+            # restricted to Conv2d for now because in _try_to_transform function,
+            # the logic for calculating whether padding is same or not, works only for 2d conv config.
+            return None
+
+        if not _check_child_op_type(conv_op, 'batch_to_space'):
+            return None
+
+        batch_to_space_op = conv_op.outputs[0].child_ops[0]
+
+        return (op, conv_op, batch_to_space_op)
+
+    @staticmethod
+    def _try_to_transform(matched_ops: Tuple[Operation], block: Block) -> bool:
+
+        if not _check_no_output_connection(block, matched_ops):
+            return False
+
+        space_to_batch_op, conv_op, batch_to_space_op = matched_ops
+
+        stb_dilation_factor = space_to_batch_op.inputs['block_shape'].val
+        bts_dilation_factor = batch_to_space_op.inputs['block_shape'].val
+
+        if stb_dilation_factor is None or bts_dilation_factor is None:
+            return False
+
+        if list(stb_dilation_factor) != list(bts_dilation_factor):
+            # If block_shape for space_to_batch and batch_to_space doesn't match,
+            # we do not fuse.
+            return False
+
+        padding_val = space_to_batch_op.inputs['paddings'].val
+        if padding_val is None:
+            return False
+        padding_val = padding_val.flatten()
+
+        crop_val = batch_to_space_op.inputs['crops'].val
+        if crop_val is None:
+            return False
+        crop_val = crop_val.flatten()
+
+        has_same_padding = False
+        if np.any(padding_val != 0):
+            input_shape = space_to_batch_op.inputs['x'].shape
+            W_shape = conv_op.inputs['weight'].shape
+            W_h, W_w = W_shape[2], W_shape[3]
+            HW = input_shape[2:]
+            has_same_padding = fuse_dilated_conv._uses_same_padding(
+                HW[0], HW[1], W_h, W_w, stb_dilation_factor, padding_val, crop_val
+            )
+            if not has_same_padding:
+                return False
+
+        conv_args = conv_op.inputs
+        conv_args['x'] = space_to_batch_op.inputs['x']
+        conv_args['dilations'] = list(stb_dilation_factor)
+        if has_same_padding:
+            conv_args['pad_type'] = 'same'
+
+        new_var = mb.conv(**conv_args, before_op=conv_op)
+
+        if conv_op.enclosing_block.try_replace_uses_of_var_after_op(
+            anchor_op=conv_op, old_var=batch_to_space_op.outputs[0], new_var=new_var
+        ):
+            block.remove_ops(matched_ops)
+            return True
+        return False
+
+    @block_context_manager
+    def _fuse_dilated_conv_block(self: AbstractGraphPass, block: Block) -> bool:
+        fusion_occurred = False
+        for op in list(block.operations):
+            if op.enclosing_block is None:
+                continue
+
+            for b in op.blocks:
+                block_changed = True
+                while block_changed:
+                    block_changed = self._fuse_dilated_conv_block(b)
+
+            matched_ops = self._match_pattern(op)
+            if matched_ops is not None:
+                if self._try_to_transform(matched_ops, block):
                     fusion_occurred = True
         return fusion_occurred

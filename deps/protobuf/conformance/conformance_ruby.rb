@@ -32,20 +32,25 @@
 
 require 'conformance_pb'
 require 'google/protobuf/test_messages_proto3_pb'
+require 'google/protobuf/test_messages_proto2_pb'
 
 $test_count = 0
 $verbose = false
 
 def do_test(request)
-  test_message = ProtobufTestMessages::Proto3::TestAllTypes.new
+  test_message = ProtobufTestMessages::Proto3::TestAllTypesProto3.new
   response = Conformance::ConformanceResponse.new
+  descriptor = Google::Protobuf::DescriptorPool.generated_pool.lookup(request.message_type)
+
+  unless descriptor
+    response.skipped = "Unknown message type: " + request.message_type
+  end
 
   begin
     case request.payload
     when :protobuf_payload
       begin
-        test_message = ProtobufTestMessages::Proto3::TestAllTypes.decode(
-            request.protobuf_payload)
+        test_message = descriptor.msgclass.decode(request.protobuf_payload)
       rescue Google::Protobuf::ParseError => err
         response.parse_error = err.message.encode('utf-8')
         return response
@@ -53,10 +58,19 @@ def do_test(request)
 
     when :json_payload
       begin
-        test_message = ProtobufTestMessages::Proto3::TestAllTypes.decode_json(
-            request.json_payload)
+        options = {}
+        if request.test_category == :JSON_IGNORE_UNKNOWN_PARSING_TEST
+          options[:ignore_unknown_fields] = true
+        end
+        test_message = descriptor.msgclass.decode_json(request.json_payload, options)
       rescue Google::Protobuf::ParseError => err
         response.parse_error = err.message.encode('utf-8')
+        return response
+      end
+
+    when :text_payload
+      begin
+        response.skipped = "Ruby doesn't support text format"
         return response
       end
 
@@ -69,10 +83,18 @@ def do_test(request)
       fail 'Unspecified output format'
 
     when :PROTOBUF
-      response.protobuf_payload = test_message.to_proto
+      begin
+        response.protobuf_payload = test_message.to_proto
+      rescue Google::Protobuf::ParseError => err
+        response.serialize_error = err.message.encode('utf-8')
+      end
 
     when :JSON
-      response.json_payload = test_message.to_json
+      begin
+        response.json_payload = test_message.to_json
+      rescue Google::Protobuf::ParseError => err
+        response.serialize_error = err.message.encode('utf-8')
+      end
 
     when nil
       fail "Request didn't have requested output format"

@@ -33,9 +33,9 @@ package com.google.protobuf;
 import junit.framework.TestCase;
 
 /**
- * Tests that proto2 api generation doesn't cause compile errors when
- * compiling protocol buffers that have names that would otherwise conflict
- * if not fully qualified (like @Deprecated and @Override).
+ * Tests that proto2 api generation doesn't cause compile errors when compiling protocol buffers
+ * that have names that would otherwise conflict if not fully qualified (like @Deprecated
+ * and @Override).
  *
  * @author jonp@google.com (Jon Perlow)
  */
@@ -43,22 +43,18 @@ public class TestBadIdentifiers extends TestCase {
 
   public void testCompilation() {
     // If this compiles, it means the generation was correct.
-    TestBadIdentifiersProto.Deprecated.newBuilder();
-    TestBadIdentifiersProto.Override.newBuilder();
+    TestBadIdentifiersProto.Deprecated unused1 =
+        TestBadIdentifiersProto.Deprecated.newBuilder().build();
+    TestBadIdentifiersProto.Override unused2 =
+        TestBadIdentifiersProto.Override.getDefaultInstance();
   }
 
   public void testGetDescriptor() {
-    Descriptors.FileDescriptor fileDescriptor =
-        TestBadIdentifiersProto.getDescriptor();
-    String descriptorField = TestBadIdentifiersProto.Descriptor
-        .getDefaultInstance().getDescriptor();
-    Descriptors.Descriptor protoDescriptor = TestBadIdentifiersProto.Descriptor
-        .getDefaultInstance().getDescriptorForType();
-    String nestedDescriptorField = TestBadIdentifiersProto.Descriptor
-        .NestedDescriptor.getDefaultInstance().getDescriptor();
-    Descriptors.Descriptor nestedProtoDescriptor = TestBadIdentifiersProto
-        .Descriptor.NestedDescriptor.getDefaultInstance()
-        .getDescriptorForType();
+    TestBadIdentifiersProto.getDescriptor();
+    TestBadIdentifiersProto.Descriptor.getDefaultInstance().getDescriptor();
+    TestBadIdentifiersProto.Descriptor.getDefaultInstance().getDescriptorForType();
+    TestBadIdentifiersProto.Descriptor.NestedDescriptor.getDefaultInstance().getDescriptor();
+    TestBadIdentifiersProto.Descriptor.NestedDescriptor.getDefaultInstance().getDescriptorForType();
   }
 
   public void testConflictingFieldNames() throws Exception {
@@ -87,10 +83,42 @@ public class TestBadIdentifiers extends TestCase {
     assertEquals(0, message.getInt32FieldList31());
 
     assertEquals(0, message.getInt64FieldCount());
-    assertEquals(0L, message.getExtension(
-        TestBadIdentifiersProto.TestConflictingFieldNames.int64FieldCount).longValue());
-    assertEquals(0L, message.getExtension(
-        TestBadIdentifiersProto.TestConflictingFieldNames.int64FieldList).longValue());
+    assertEquals(
+        0L,
+        message
+            .getExtension(TestBadIdentifiersProto.TestConflictingFieldNames.int64FieldCount)
+            .longValue());
+    assertEquals(
+        0L,
+        message
+            .getExtension(TestBadIdentifiersProto.TestConflictingFieldNames.int64FieldList)
+            .longValue());
+
+    assertEquals("", message.getFieldName32());
+    assertEquals("", message.getFieldName33());
+    assertEquals(0, message.get2Conflict34());
+    assertEquals(0, message.get2Conflict35());
+
+  }
+
+  public void testNumberFields() throws Exception {
+    TestBadIdentifiersProto.TestLeadingNumberFields message =
+        TestBadIdentifiersProto.TestLeadingNumberFields.getDefaultInstance();
+    // Make sure generated accessors are properly named.
+    assertFalse(message.has30DayImpressions());
+    assertEquals(0, message.get30DayImpressions());
+    assertEquals(0, message.get60DayImpressionsCount());
+    assertEquals(0, message.get60DayImpressionsList().size());
+
+    assertFalse(message.has2Underscores());
+    assertEquals("", message.get2Underscores());
+    assertEquals(0, message.get2RepeatedUnderscoresCount());
+    assertEquals(0, message.get2RepeatedUnderscoresList().size());
+
+    assertFalse(message.has32());
+    assertEquals(0, message.get32());
+    assertEquals(0, message.get64Count());
+    assertEquals(0, message.get64List().size());
 
   }
 }

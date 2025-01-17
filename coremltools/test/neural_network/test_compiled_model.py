@@ -3,12 +3,14 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+
+import itertools
 from shutil import copytree, rmtree
 from tempfile import TemporaryDirectory
 
 import pytest
 
-from coremltools import ComputeUnit
+from coremltools import ComputeUnit, ReshapeFrequency, SpecializationStrategy, utils
 from coremltools.models import CompiledMLModel, MLModel
 from coremltools.models.utils import compile_model, load_spec, save_spec
 from coremltools.proto import Model_pb2
@@ -16,8 +18,7 @@ from coremltools.proto import Model_pb2
 
 class TestCompiledModel:
 
-    @classmethod
-    def setup(self):
+    def setup_class(self):
         spec = Model_pb2.Model()
         spec.specificationVersion = 1
         input_ = spec.description.input.add()
@@ -35,6 +36,12 @@ class TestCompiledModel:
 
         spec.description.predictedFeatureName = 'y'
         self.spec = spec
+
+        self.compiled_model_path = compile_model(self.spec)
+
+
+    def teardown_class(self):
+        rmtree(self.compiled_model_path)
 
 
     def _test_compile_model_path(self, compiled_model_path, compute_units=ComputeUnit.ALL):
@@ -114,3 +121,24 @@ class TestCompiledModel:
             my_spec = load_spec(file_path)
             compiled_model_path = compile_model(my_spec)
         self._test_compile_model_path(compiled_model_path)
+
+
+    @pytest.mark.skipif(utils._macos_version() < (15, 0),
+                        reason="optimization hints available only on macOS15+")
+    @pytest.mark.parametrize("reshapeFrequency, specializationStrategy",
+                             itertools.product(
+                                 (ReshapeFrequency.Frequent, ReshapeFrequency.Infrequent, None),
+                                 (SpecializationStrategy.FastPrediction, SpecializationStrategy.Default, None),
+                             ))
+    def test_optimization_hints(self, reshapeFrequency, specializationStrategy):
+        optimization_hints={}
+        if reshapeFrequency is not None:
+            optimization_hints['reshapeFrequency'] = reshapeFrequency
+        if specializationStrategy is not None:
+            optimization_hints["specializationStrategy"] = specializationStrategy
+        if len(optimization_hints) == 0:
+            optimization_hints = None
+
+        m = CompiledMLModel(self.compiled_model_path, optimization_hints=optimization_hints)
+        assert isinstance(m, CompiledMLModel)
+        assert(m.optimization_hints == optimization_hints)

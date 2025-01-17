@@ -420,50 +420,50 @@ def numpy_type_to_builtin_type(nptype) -> type:
             return builtin_type
 
     # If this is a data type object, use the corresponding scalar data type.
-    if np.issubclass_(type(nptype), np.dtype):
+    if issubclass(type(nptype), np.dtype):
         nptype = nptype.type
 
-    if np.issubclass_(nptype, (bool, np.bool_)):
+    if issubclass(nptype, (bool, np.bool_)):
         # numpy as 2 bool types it looks like. what is the difference?
         return types_bool
     # Because np.uint is a subclass of int,
     # we need to first check for np.uint before
     # checking for int
-    elif np.issubclass_(nptype, np.uint8):
+    elif issubclass(nptype, np.uint8):
         return types_uint8
-    elif np.issubclass_(nptype, np.int8):
+    elif issubclass(nptype, np.int8):
         return types_int8
-    elif np.issubclass_(nptype, np.uint16):
+    elif issubclass(nptype, np.uint16):
         return types_uint16
-    elif np.issubclass_(nptype, np.int16):
+    elif issubclass(nptype, np.int16):
         return types_int16
-    elif np.issubclass_(nptype, np.uint32):
+    elif issubclass(nptype, np.uint32):
         return types_uint32
-    elif np.issubclass_(nptype, np.int32):
+    elif issubclass(nptype, np.int32):
         return types_int32
-    elif np.issubclass_(nptype, np.uint64):
+    elif issubclass(nptype, np.uint64):
         return types_uint64
-    elif np.issubclass_(nptype, np.int64):
+    elif issubclass(nptype, np.int64):
         return types_int64
-    elif np.issubclass_(nptype, int) or nptype == int:
+    elif issubclass(nptype, int) or nptype == int:
         # Catch all int
         return types_int32
-    elif np.issubclass_(nptype, np.object_):
+    elif issubclass(nptype, np.object_):
         # symbolic shape is considered int32
         return types_int32
-    elif np.issubclass_(nptype, np.float16):
+    elif issubclass(nptype, np.float16):
         return types_fp16
     elif (
-        np.issubclass_(nptype, (np.float32, np.single)) or nptype == float
+        issubclass(nptype, (np.float32, np.single)) or nptype == float
     ):
         return types_fp32
-    elif np.issubclass_(nptype, (np.float64, np.double)):
+    elif issubclass(nptype, (np.float64, np.double)):
         return types_fp64
-    elif np.issubclass_(nptype, np.complex64):
+    elif issubclass(nptype, np.complex64):
         return types_complex64
-    elif np.issubclass_(nptype, (np.complex128, complex)):
+    elif issubclass(nptype, (np.complex128, complex)):
         return types_complex128
-    elif np.issubclass_(nptype, (str, np.string_, np.str_)):
+    elif issubclass(nptype, (str, np.bytes_, np.str_)):
         return types_str
     else:
         raise TypeError(f"Unsupported numpy type: {nptype}.")
@@ -477,15 +477,15 @@ def type_to_builtin_type(type):
         return numpy_type_to_builtin_type(type)
 
     # Otherwise, try to infer from a few generic python types
-    if np.issubclass_(type, bool):
+    if issubclass(type, bool):
         return types_bool
-    elif np.issubclass_(type, int):
+    elif issubclass(type, int):
         return types_int32
-    elif np.issubclass_(type, str):
+    elif issubclass(type, str):
         return types_str
-    elif np.issubclass_(type, float):
+    elif issubclass(type, float):
         return types_fp32
-    elif np.issubclass_(type, complex):
+    elif issubclass(type, complex):
         return types_complex64
     else:
         raise TypeError("Could not determine builtin type for " + str(type))

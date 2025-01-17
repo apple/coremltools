@@ -41,13 +41,13 @@ class clamped_relu(_clamped_relu_iOS15):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
     alpha: const U (Required)
     beta: const U (Required)
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * A tensor of the same type and shape as ``x``.
 
     Attributes
@@ -78,12 +78,12 @@ class elu(_elu_iOS15):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
     alpha: const U (Required)
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * A tensor of the same shape and type as ``x``.
 
     Attributes
@@ -118,7 +118,7 @@ class leaky_relu(_leaky_relu_iOS15):
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * A tensor of the same shape and type as ``x``.
 
     Attributes
@@ -148,13 +148,13 @@ class linear_activation(_linear_activation_iOS15):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
     alpha: const U (Required)
     beta: const U (Required)
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * A tensor of the same shape and type as ``x``.
 
     Attributes
@@ -223,14 +223,14 @@ class scaled_tanh(_scaled_tanh_iOS15):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
         * Input range is ``(-inf, inf)``.
     alpha: const U (Required)
     beta: const U (Required)
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * A tensor of the same shape and type as ``x``.
 
     Attributes
@@ -261,13 +261,13 @@ class sigmoid_hard(_sigmoid_hard_iOS15):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
     alpha: const U (Required)
     beta: const U (Required)
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * A tensor of the same shape and type as ``x``.
 
     Attributes
@@ -332,12 +332,12 @@ class thresholded_relu(_thresholded_relu_iOS15):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
     alpha: const U (Required)
 
     Returns
     -------
-    tensor<\*, T>
+    tensor<\\*, T>
         * A tensor of the same shape and type as ``x``.
 
     Attributes

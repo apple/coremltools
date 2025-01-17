@@ -1141,3 +1141,47 @@ class TestPassFusePow2Sqrt:
             backend=("mlprogram", "fp32"),
             expected_output_shapes={block.outputs[0].name: tuple(x_shape[:-1])},
         )
+
+    @pytest.mark.skipif(ct.utils._macos_version() < (12, 0), reason="mlprogram predict available only on macOS12+")
+    def test_fuse_multiple_exponents(self):
+        x_shape = (2, )
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=x_shape)])
+        def program(x):
+            return mb.pow(x=mb.sqrt(x=x), y=np.array([2.0, 2.0]))
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            program, "mil_backend::fuse_pow2_sqrt"
+        )
+
+        assert set(get_op_types_in_program(prev_prog)) == set(("pow", "sqrt"))
+        assert get_op_types_in_program(program) == ["identity"]
+
+        assert_model_is_valid(
+            program=program,
+            inputs={"x": x_shape},
+            backend=("mlprogram", "fp32"),
+            expected_output_shapes={block.outputs[0].name: x_shape},
+        )
+
+    @pytest.mark.skipif(ct.utils._macos_version() < (12, 0), reason="mlprogram predict available only on macOS12+")
+    def test_no_fuse_multiple_exponents(self):
+        x_shape = (2, )
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=x_shape)])
+        def program(x):
+            return mb.pow(x=mb.sqrt(x=x), y=np.array([2.0, 3.0]))
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            program, "mil_backend::fuse_pow2_sqrt"
+        )
+
+        assert set(get_op_types_in_program(prev_prog)) == set(("pow", "sqrt"))
+        assert set(get_op_types_in_program(program)) == set(["pow", "sqrt"])
+
+        assert_model_is_valid(
+            program=program,
+            inputs={"x": x_shape},
+            backend=("mlprogram", "fp32"),
+            expected_output_shapes={block.outputs[0].name: x_shape},
+        )

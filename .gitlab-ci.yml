@@ -11,7 +11,7 @@ stages:
 
 check_python_flake8:
   tags:
-    - macOS13
+    - macOS_M1
   stage: check
   script:
     - python -m pip install --upgrade pip
@@ -37,21 +37,21 @@ check_python_flake8:
 build_wheel_macos_py37_intel:
   <<: *build_macos
   tags:
-    - macOS13
+    - macOS_intel
   variables:
     PYTHON: "3.7"
 
 build_wheel_macos_py39_intel:
   <<: *build_macos
   tags:
-    - macOS13
+    - macOS_intel
   variables:
     PYTHON: "3.9"
 
 build_wheel_macos_py310:
   <<: *build_macos
   tags:
-    - macOS13_M1
+    - macOS_M1
   variables:
     PYTHON: "3.10"
 
@@ -71,7 +71,7 @@ build_wheel_macos_py310:
 test_py39_coremltools_test_intel:
   <<: *test_macos_pkg
   tags:
-    - macOS13
+    - macOS_intel
   dependencies:
     - build_wheel_macos_py39_intel
   variables:
@@ -83,7 +83,7 @@ test_py39_coremltools_test_intel:
 test_py39_pytorch_intel:
   <<: *test_macos_pkg
   tags:
-    - macOS13
+    - macOS_intel
   dependencies:
     - build_wheel_macos_py39_intel
   variables:
@@ -95,7 +95,7 @@ test_py39_pytorch_intel:
 test_py37_tf1_intel:
   <<: *test_macos_pkg
   tags:
-    - macOS13
+    - macOS_intel
   dependencies:
     - build_wheel_macos_py37_intel
   variables:
@@ -107,7 +107,7 @@ test_py37_tf1_intel:
 test_py39_tf2_intel-1:
   <<: *test_macos_pkg
   tags:
-    - macOS13
+    - macOS_intel
   dependencies:
     - build_wheel_macos_py39_intel
   variables:
@@ -119,7 +119,7 @@ test_py39_tf2_intel-1:
 test_py39_tf2_intel-2:
   <<: *test_macos_pkg
   tags:
-    - macOS13
+    - macOS_intel
   dependencies:
     - build_wheel_macos_py39_intel
   variables:
@@ -131,7 +131,7 @@ test_py39_tf2_intel-2:
 test_py39_mil_intel:
   <<: *test_macos_pkg
   tags:
-    - macOS13
+    - macOS_intel
   dependencies:
     - build_wheel_macos_py39_intel
   variables:
@@ -143,7 +143,7 @@ test_py39_mil_intel:
 test_py39_backends_intel:
   <<: *test_macos_pkg
   tags:
-    - macOS13
+    - macOS_intel
   dependencies:
     - build_wheel_macos_py39_intel
   variables:
@@ -155,7 +155,7 @@ test_py39_backends_intel:
 test_py39_shapes_intel:
   <<: *test_macos_pkg
   tags:
-    - macOS13
+    - macOS_intel
   dependencies:
     - build_wheel_macos_py39_intel
   variables:
@@ -167,7 +167,7 @@ test_py39_shapes_intel:
 test_py39_milproto_intel:
   <<: *test_macos_pkg
   tags:
-    - macOS13
+    - macOS_intel
   dependencies:
     - build_wheel_macos_py39_intel
   variables:
@@ -181,7 +181,7 @@ test_py39_milproto_intel:
 test_py310_coremltools_test:
   <<: *test_macos_pkg
   tags:
-    - macOS13_M1
+    - macOS_M1
   dependencies:
     - build_wheel_macos_py310
   variables:
@@ -190,10 +190,10 @@ test_py310_coremltools_test:
     PYTHON: "3.10"
     REQUIREMENTS: reqs/test.pip
 
-test_py310_pytorch:
+test_py310_pytorch_script:
   <<: *test_macos_pkg
   tags:
-    - macOS13_M1
+    - macOS_M1
   dependencies:
     - build_wheel_macos_py310
   variables:
@@ -201,11 +201,38 @@ test_py310_pytorch:
     TEST_PACKAGE: coremltools.converters.mil.frontend.torch
     WHEEL_PATH: build/dist/*cp310*11*
     REQUIREMENTS: reqs/test.pip
+    TORCH_FRONTENDS: TORCHSCRIPT
+
+test_py310_pytorch_export:
+  <<: *test_macos_pkg
+  tags:
+    - macOS_M1
+  dependencies:
+    - build_wheel_macos_py310
+  variables:
+    PYTHON: "3.10"
+    TEST_PACKAGE: coremltools.converters.mil.frontend.torch
+    WHEEL_PATH: build/dist/*cp310*11*
+    REQUIREMENTS: reqs/test.pip
+    TORCH_FRONTENDS: TORCHEXPORT
+
+test_py310_pytorch_executorch:
+  <<: *test_macos_pkg
+  tags:
+    - macOS_M1
+  dependencies:
+    - build_wheel_macos_py310
+  variables:
+    PYTHON: "3.10"
+    TEST_PACKAGE: coremltools.converters.mil.frontend.torch
+    WHEEL_PATH: build/dist/*cp310*11*
+    REQUIREMENTS: reqs/test.pip
+    TORCH_FRONTENDS: EXECUTORCH
 
 test_py310_tf2-1:
   <<: *test_macos_pkg
   tags:
-    - macOS13_M1
+    - macOS_M1
   dependencies:
     - build_wheel_macos_py310
   variables:
@@ -217,7 +244,7 @@ test_py310_tf2-1:
 test_py310_tf2-2:
   <<: *test_macos_pkg
   tags:
-    - macOS13_M1
+    - macOS_M1
   dependencies:
     - build_wheel_macos_py310
   variables:
@@ -229,7 +256,7 @@ test_py310_tf2-2:
 test_py310_mil:
   <<: *test_macos_pkg
   tags:
-    - macOS13_M1
+    - macOS_M1
   dependencies:
     - build_wheel_macos_py310
   variables:
@@ -241,7 +268,7 @@ test_py310_mil:
 test_py310_backends:
   <<: *test_macos_pkg
   tags:
-    - macOS13_M1
+    - macOS_M1
   dependencies:
     - build_wheel_macos_py310
   variables:
@@ -253,7 +280,7 @@ test_py310_backends:
 test_py310_shapes:
   <<: *test_macos_pkg
   tags:
-    - macOS13_M1
+    - macOS_M1
   dependencies:
     - build_wheel_macos_py310
   variables:
@@ -265,7 +292,7 @@ test_py310_shapes:
 test_py310_milproto:
   <<: *test_macos_pkg
   tags:
-    - macOS13_M1
+    - macOS_M1
   dependencies:
     - build_wheel_macos_py310
   variables:
@@ -283,18 +310,18 @@ test_py310_milproto:
 #########################################################################
 build_documentation:
   tags:
-    - macOS13
+    - macOS_M1
   stage: test
   script:
     - export PATH=$PATH:/opt/anaconda/bin/
     - bash -e scripts/build_docs.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
   dependencies:
-    - build_wheel_macos_py39_intel
+    - build_wheel_macos_py310
   artifacts:
     when: always
     expire_in: 2 weeks
     paths:
       - _build/html/
   variables:
-    WHEEL_PATH: build/dist/coremltools*cp39-none-macosx_10_15_x86_64.whl
-    PYTHON: "3.9"
+    WHEEL_PATH: build/dist/coremltools*cp310-none-macosx_11_0_arm64.whl
+    PYTHON: "3.10"

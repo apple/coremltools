@@ -3,6 +3,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import math
 import operator as _operator
 from collections import defaultdict
 from enum import Enum as _Enum
@@ -14,6 +15,7 @@ from typing import Tuple as _Tuple
 import torch as _torch
 import torch.ao.quantization as _aoquant
 import torch.fx as _fx
+from torch.ao.nn.quantized.reference.modules.utils import _quantize_and_dequantize_weight_decomposed
 from torch.ao.quantization.backend_config import BackendConfig as _BackendConfig
 from torch.ao.quantization.backend_config import ObservationType as _ObservationType
 
@@ -21,6 +23,38 @@ from coremltools.optimize.torch._utils.metadata_utils import (
     CompressionMetadata as _CompressionMetadata,
 )
 from coremltools.optimize.torch._utils.version_utils import is_torch_2 as _is_torch_2
+
+
+def is_per_channel_quant(qscheme: _torch.qscheme) -> bool:
+    """
+    Returns True if provided qscheme is for per-channel quantization. Otherwise returns False.
+    """
+    return qscheme in [_torch.per_channel_symmetric, _torch.per_channel_affine]
+
+
+def is_symmetric_quant(qscheme: _torch.qscheme) -> bool:
+    """
+    Returns True if provided qscheme is for symmetric quantization. Otherwise returns False.
+    """
+    return qscheme in [_torch.per_tensor_symmetric, _torch.per_channel_symmetric]
+
+
+def is_pytorch_defined_observer(observer: _aoquant.ObserverBase):
+    """
+    Returns True if provided observer instance is defined by PyTorch. Otherwise returns False.
+    """
+
+    checklist = (
+        _aoquant.MinMaxObserver,
+        _aoquant.PerChannelMinMaxObserver,
+        _aoquant.MovingAverageMinMaxObserver,
+        _aoquant.MovingAveragePerChannelMinMaxObserver,
+        _aoquant.HistogramObserver,
+        _aoquant.PlaceholderObserver,
+        _aoquant.NoopObserver,
+        _aoquant.FixedQParamsObserver,
+    )
+    return isinstance(observer, checklist)
 
 
 class CombinationOpType(_Enum):
@@ -173,10 +207,50 @@ def get_quant_range(n_bits: int, dtype: _torch.dtype) -> _Tuple[int, int]:
     return int(quant_min), int(quant_max)
 
 
-def register_compression_metadata(submodule, config):
+def get_n_bits_from_range(quant_min: int, quant_max: int) -> int:
+    """
+    Returns quantization n_bits for given quantization range
+    """
+    n_bits = int(math.log2(quant_max + 1))
+    if quant_min < 0:
+        n_bits += 1
+
+    return n_bits
+
+
+def register_compression_metadata(submodule):
     metadata = _CompressionMetadata("weight")
     metadata.compression_type = ["quantization"]
-    metadata.quantization_n_bits = config.weight_n_bits
-    metadata.quantization_scale = submodule.weight_scale.detach().clone().unsqueeze(-1)
-    metadata.zero_point = submodule.weight_zero_point.detach().clone().unsqueeze(-1)
+    metadata.quantization_n_bits = get_n_bits_from_range(
+        submodule.weight_quant_min, submodule.weight_quant_max
+    )
+    metadata.quantization_scale = (
+        submodule.weight_scale.detach().clone().unsqueeze(-1)
+        if submodule.weight_axis == 0
+        else submodule.weight_scale.detach().clone().unsqueeze(-1).transpose(1, 0)
+    )
+    metadata.zero_point = (
+        submodule.weight_zero_point.detach().clone().unsqueeze(-1)
+        if submodule.weight_axis == 0
+        else submodule.weight_zero_point.detach().clone().unsqueeze(-1).transpose(1, 0)
+    )
     metadata.register(submodule)
+
+
+def pre_apply_weight_quant(model: _torch.nn.Module):
+    for module in model.modules():
+        if isinstance(
+            module,
+            _torch.ao.nn.quantized.reference.modules.utils.ReferenceQuantizedModule,
+        ):
+            weight = _quantize_and_dequantize_weight_decomposed(
+                module.weight,
+                module.weight_qscheme,
+                module.weight_dtype,
+                module.weight_scale,
+                module.weight_zero_point,
+                module.weight_axis_int,
+                module.weight_quant_min,
+                module.weight_quant_max,
+            )
+            module.weight.detach().copy_(weight)

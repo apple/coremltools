@@ -37,6 +37,21 @@ class QuantizedConvAct3d(_QuantizedConvAct):
     pass
 
 
+class QuantizedConvTransposeAct1d(_QuantizedConvAct):
+    ref_quant_mod = _reference.ConvTranspose1d
+    pass
+
+
+class QuantizedConvTransposeAct2d(_QuantizedConvAct):
+    ref_quant_mod = _reference.ConvTranspose2d
+    pass
+
+
+class QuantizedConvTransposeAct3d(_QuantizedConvAct):
+    ref_quant_mod = _reference.ConvTranspose3d
+    pass
+
+
 class QuantizedLinearAct(_nn.Sequential):
     def __init__(self, linear: _reference.Linear, act: _nn.Module):
         super().__init__(_OrderedDict([("linear", linear), ("act", act)]))

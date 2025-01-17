@@ -8,13 +8,13 @@ import unittest
 import pandas as pd
 from packaging.version import Version
 
+from ..utils import load_boston
 from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
 from coremltools.converters.sklearn import convert
 from coremltools.models.utils import (_is_macos, _macos_version,
                                       evaluate_regressor, evaluate_transformer)
 
 if _HAS_SKLEARN:
-    from sklearn.datasets import load_boston
     from sklearn.ensemble import GradientBoostingRegressor
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import OneHotEncoder, StandardScaler

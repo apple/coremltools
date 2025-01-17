@@ -36,7 +36,7 @@ class slice_update(Operation):
     ----------
     x: tensor<*?, T> (Required)
         * Input tensor.
-    update: tensor<\*K, T> (Required)
+    update: tensor<\\*K, T> (Required)
         * Value tensor to be inserted.
         * The shape of the update tensor must match the slicing result of the input data.
         * rank-0 update is not supported.
@@ -59,7 +59,7 @@ class slice_update(Operation):
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         - Scalar or tensor.
 
     Attributes

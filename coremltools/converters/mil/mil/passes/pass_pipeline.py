@@ -17,7 +17,6 @@ from coremltools.converters.mil.mil.passes.helper import classproperty as _class
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 
 _COMMON_PASSES: List[Text] = [
-    "common::reorder_lut_per_channel_scale",
     "common::lower_complex_dialect_ops",
     "common::update_output_dtypes",
     "common::cast_optimization",
@@ -35,6 +34,7 @@ _COMMON_PASSES: List[Text] = [
     # after all quantization passes, since constexpr will not be further optimized
     # before const elimination, otherwise const dequantize would get bloated
     "common::dequantize_to_constexpr",
+    "common::canonicalize_quantized_lut_pattern",
     "common::const_elimination",
     "common::sanitize_input_output_names",
     "common::divide_to_multiply",
@@ -61,6 +61,7 @@ _COMMON_PASSES: List[Text] = [
     "common::replace_stack_reshape",
     # should come before detect_concat_interleave since it may add concat
     "common::reduce_transposes",
+    "common::fuse_dilated_conv",
     "common::fuse_conv_scale",
     "common::fuse_conv_bias",
     "common::fuse_onehot_matmul_to_gather",
@@ -87,15 +88,25 @@ _COMMON_PASSES: List[Text] = [
     "common::fuse_transpose_matmul",
     # "expand_high_rank_reshape_and_transpose" must come after "common::merge_consecutive_transposes"
     "common::expand_high_rank_reshape_and_transpose",
+    "common::fuse_stack_split",
     "common::reduce_transposes",
     # "remove_redundant_ops" pass should be applied towards the end, once other graph passes have done their optimizations.
     # For instance, it should come after passes such as "reduce_transpose" that can introduce redundant transposes
     # in the network (while reducing the total number of transposes), and after passes such as "fuse_layernorm_or_instancenorm"
     # which detects patterns that involve redundant ops ("sub") etc.
     "common::remove_redundant_ops",
+    "common::dedup_op_and_var_names",  # Must be applied before "add_fp16_cast" because "add_fp16_cast" use unique name cache.
     "common::add_fp16_cast",  # Will be removed if compute precision is not FP16.
     "common::add_int16_cast",  # Will be removed if compute precision is not FP16.
     "common::update_output_dtypes",  # Must run again after `add_fp16_cast` and `add_int16_cast`.
+    "common::const_elimination",
+    "common::dead_code_elimination",
+    "common::cast_optimization",
+    "common::dead_code_elimination",  # must follow cast_optimization
+    "common::const_elimination",
+    # After all fusions have settled, start inserting state ops
+    "common::canonicalize_inplace_pattern",  # always start with canonicalizations
+    "common::prefer_state_in_downstream",
     "common::const_elimination",
     "common::dead_code_elimination",  # always end with dce
 ]

@@ -4,7 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import hashlib
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 import numpy as np
 
@@ -46,13 +46,31 @@ class const_deduplication(AbstractGraphPass):
     (2) Deduplication of ``constexpr_*`` op:
 
         We consider a ``constexpr_*`` as duplicated if there exists such a previous ``constexpr_*`` that has the same ``op_type`` and input attributes.
+
+    Support options:
+
+    - ``const_threshold``: Skip deduplicating ``const`` ops that have smaller number of elements than a threshold. Defaults to ``100``. i.e. the constants with ``size < 100`` will not be deduplicated.
     """
 
-    NUMEL_THRESH = 100
+    # const with size < _const_threshold will not be deduplicated
+    _const_threshold = 100
+
+    # length of the number value hashkey
+    LENGTH_OF_HASHKEY = 100
     DTYPE2ATOL = {
         types.fp16: 6e-8,
         types.fp32: 1e-12,
     }
+
+    @property
+    def const_threshold(self) -> int:
+        return const_deduplication._const_threshold
+
+    @const_threshold.setter
+    def const_threshold(self, val: int) -> None:
+        if not isinstance(val, int):
+            raise ValueError(f"Expect option 'const_threshold' to be type of int. Got {type(val)}.")
+        const_deduplication._const_threshold = val
 
     def apply(self, prog) -> None:
         for f in prog.functions.values():
@@ -85,7 +103,7 @@ class const_deduplication(AbstractGraphPass):
             all_vars = [k] + list(v)
             all_vars = list(set(all_vars))
             for duplicate in all_vars:
-                duplicate.op.weight_id = i
+                duplicate.op.weight_id = str(i)
 
     def remove_duplicate_ops(
         self, block: Block, unique2duplicates: Dict[Var, List[Var]], force_replace: bool
@@ -132,15 +150,18 @@ class const_deduplication(AbstractGraphPass):
         hashkey_2_duplicates: Dict[Tuple, List[Var]] = {}
         for block in blocks:
             for op in list(block.operations):
-                if "constexpr" not in op.op_type:
+                if not op.op_type.startswith("constexpr_"):
                     continue
-                hash_key = [op.op_type]
+                if hasattr(op, "weight_key"):
+                    hash_key = [op.op_type, op.weight_key]
+                else:
+                    hash_key = [op.op_type]
                 for v in op.inputs.values():
                     hash_key.append(v.dtype)
-                    if np.prod(v.shape) < const_deduplication.NUMEL_THRESH:
-                        hash_key.append(str(v.val))
-                    else:
+                    if v.val is None or const_deduplication.should_be_deduplicated(v.val):
                         hash_key.append(v)
+                    else:
+                        hash_key.append(str(v.val))
                 hash_key = tuple(hash_key)
                 if hash_key not in hashkey_2_duplicates:
                     hashkey_2_duplicates[hash_key] = [op.outputs[0]]
@@ -148,6 +169,15 @@ class const_deduplication(AbstractGraphPass):
                     hashkey_2_duplicates[hash_key].append(op.outputs[0])
 
         return {v[0]: v[1:] for v in hashkey_2_duplicates.values()}
+
+    @staticmethod
+    def should_be_deduplicated(val: Union[str, bool, np.ndarray]) -> bool:
+        assert val is not None, "val should only be type of (str, bool, np.ndarray)"
+        if isinstance(val, (str, bool)):
+            return False
+        if np.prod(val.shape) < const_deduplication._const_threshold:
+            return False
+        return True
 
     @staticmethod
     def find_constants(blocks: List[Block]) -> Dict[Var, List[Var]]:
@@ -170,18 +200,21 @@ class const_deduplication(AbstractGraphPass):
                 constant_var = op.outputs[0]
                 if isinstance(constant_var, ListVar):
                     continue
-                shape = constant_var.shape
 
-                numel = np.prod(shape)
-                if numel < const_deduplication.NUMEL_THRESH:
+                if not const_deduplication.should_be_deduplicated(constant_var.val):
                     continue
 
+                shape = constant_var.shape
                 dtype = constant_var.dtype
                 value = constant_var.val
+
                 hash = hashlib.sha1(
-                    np.ascontiguousarray(value.reshape(-1)[: const_deduplication.NUMEL_THRESH])
+                    np.ascontiguousarray(value.reshape(-1)[: const_deduplication.LENGTH_OF_HASHKEY])
                 ).hexdigest()
-                key = (dtype, shape, hash)
+                if hasattr(op, "weight_key"):
+                    key = (op.weight_key, dtype, shape, hash)
+                else:
+                    key = (dtype, shape, hash)
 
                 if key not in constant_dict:
                     constant_dict[key] = [constant_var]

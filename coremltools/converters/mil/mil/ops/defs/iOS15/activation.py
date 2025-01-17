@@ -61,13 +61,13 @@ class clamped_relu(activation_with_alpha_and_beta):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
     alpha: const T (Required)
     beta: const T (Required)
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * A tensor of the same type and shape as ``x``.
 
     Attributes
@@ -89,12 +89,12 @@ class elu(activation_with_alpha):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
     alpha: const T (Required)
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * A tensor of the same shape and type as ``x``.
 
     Attributes
@@ -135,7 +135,7 @@ class gelu(Operation):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
 
     mode: const str (Optional)
         * Use ``'EXACT'``, ``'TANH_APPROXIMATION'``, or ``'SIGMOID_APPROXIMATION'`` for ``str``.
@@ -143,7 +143,7 @@ class gelu(Operation):
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * A tensor of the same shape and type as ``x``.
 
     Attributes
@@ -197,7 +197,7 @@ class leaky_relu(activation_with_alpha):
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * A tensor of the same shape and type as ``x``.
 
     Attributes
@@ -219,13 +219,13 @@ class linear_activation(activation_with_alpha_and_beta):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
     alpha: const T (Required)
     beta: const T (Required)
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * A tensor of the same shape and type as ``x``.
 
     Attributes
@@ -306,11 +306,11 @@ class relu(elementwise_unary):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * A tensor of the same shape and type as ``x``.
 
     Attributes
@@ -330,11 +330,11 @@ class relu6(elementwise_unary):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * A tensor of the same shape and type as ``x``.
 
     Attributes
@@ -354,14 +354,14 @@ class scaled_tanh(activation_with_alpha_and_beta):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
         * Input range is ``(-inf, inf)``.
     alpha: const T (Required)
     beta: const T (Required)
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * A tensor of the same shape and type as ``x``.
 
     Attributes
@@ -381,11 +381,11 @@ class sigmoid(elementwise_unary):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * A tensor of the same shape as ``x``.
 
     Attributes
@@ -405,13 +405,13 @@ class sigmoid_hard(activation_with_alpha_and_beta):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
     alpha: const T (Required)
     beta: const T (Required)
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * A tensor of the same shape and type as ``x``.
 
     Attributes
@@ -433,11 +433,11 @@ class silu(elementwise_unary):
 
     Parameters
     ----------
-    x: tensor<\*, T>
+    x: tensor<\\*, T>
 
     Returns
     -------
-    tensor<\*, T>
+    tensor<\\*, T>
 
     Attributes
     ----------
@@ -454,11 +454,11 @@ class softplus(elementwise_unary):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * A tensor of the same shape and type as ``x``.
 
     Attributes
@@ -530,13 +530,13 @@ class softmax(Operation):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
     axis: const i32 (Optional)
         * Default is ``-1``.
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * A tensor of the same shape and type as ``x``.
 
     Attributes
@@ -577,11 +577,11 @@ class softsign(elementwise_unary):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
 
     Returns
     -------
-    tensor<\*?, T>
+    tensor<\\*?, T>
         * A tensor of the same shape and type as ``x``.
 
     Attributes
@@ -601,12 +601,12 @@ class thresholded_relu(activation_with_alpha):
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<\\*?, T> (Required)
     alpha: const T (Required)
 
     Returns
     -------
-    tensor<\*, T>
+    tensor<\\*, T>
         * A tensor of the same shape and type as ``x``.
 
     Attributes

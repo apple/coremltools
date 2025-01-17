@@ -99,7 +99,7 @@ namespace CoreML {
         int intLabelCount = knnClassifier.has_int64classlabels() ? knnClassifier.int64classlabels().vector_size() : 0;
         int stringLabelCount = knnClassifier.has_stringclasslabels() ? knnClassifier.stringclasslabels().vector_size() : 0;
 
-        int labelCount = MAX(intLabelCount, stringLabelCount);
+        int labelCount = std::max(intLabelCount, stringLabelCount);
 
         auto classLabelCase = knnClassifier.ClassLabels_case();
         auto defaultClassLabelIsInt64 = false;

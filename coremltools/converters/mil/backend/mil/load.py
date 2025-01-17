@@ -6,7 +6,7 @@
 import os
 import warnings
 from collections import OrderedDict
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -62,12 +62,19 @@ except Exception as e:
     BlobWriter = None
 
 
-def should_use_weight_file(val):
+def should_use_weight_file(
+    val: Union[np.ndarray, np.generic],
+    specification_version: Optional[int] = _SPECIFICATION_VERSION_IOS_15,
+) -> bool:
+    # additional dtype are supported >= iOS18
+    supported_dtypes = ["float16", "float32", "uint8", "int8"]
+    if specification_version >= _SPECIFICATION_VERSION_IOS_18:
+        supported_dtypes += ["uint16", "int16", "int32", "uint32"]
     return (
         val is not None
         and isinstance(val, (np.ndarray, np.generic))
         and val.size >= 10
-        and val.dtype in ['float16', 'float32', 'uint8', 'int8']
+        and val.dtype in supported_dtypes
     )
 
 
@@ -80,12 +87,25 @@ class MILProtoExporter:
         self,
         prog: Program,
         weights_dir: str,
+        specification_version: int,
     ):
         self.prog = prog
         self.weights_dir = weights_dir
+        self.specification_version = specification_version
         self.blob_writers = {}
         self.weight_id_to_file_value = {}  # mapping from weight_id to file value
         self.prog.validate(check_essential_scope=True)
+
+    @staticmethod
+    def _get_valid_kwargs(kwargs: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Get a valid kwargs to initialize a MILProtoExporter object.
+        """
+        return {
+            "prog": kwargs["prog"],
+            "weights_dir": kwargs["weights_dir"],
+            "specification_version": kwargs["specification_version"],
+        }
 
     def translate_program_attributes(self) -> Dict[str, Any]:
         """
@@ -142,7 +162,9 @@ class MILProtoExporter:
         # use the cached file value
         weight_id = var.op.weight_id
         if weight_id is None:
-            return create_file_value_helper()
+            # The weight_id is only for const across functions.
+            # For caching vars within a function, we use block (function) name + var name.
+            weight_id = f"{var.op.enclosing_block.name}_{var.name}"
 
         if weight_id in self.weight_id_to_file_value:
             assert weight_id is not None, "invalid weight_id"
@@ -157,7 +179,7 @@ class MILProtoExporter:
         """
         Translate a pymil Var into milproto value.
         """
-        if should_use_weight_file(var.val):
+        if should_use_weight_file(var.val, self.specification_version):
             return self.create_file_value(var)
         else:
             return create_immediate_value(var)
@@ -475,9 +497,7 @@ class MILProtoExporter:
             inputs=inputs, opset=opset, block_specializations={opset: block}
         )
 
-    def export(
-        self, specification_version: Optional[str] = _SPECIFICATION_VERSION_IOS_15
-    ) -> proto.MIL_pb2.Program:
+    def export(self) -> proto.MIL_pb2.Program:
         """
         Export a pymil program into mil proto with the given specification version.
         """
@@ -486,7 +506,9 @@ class MILProtoExporter:
 
         function_protos = {}
         for func_name, func in self.prog.functions.items():
-            function_protos[func_name] = self.convert_function(func, _OPSET[specification_version])
+            function_protos[func_name] = self.convert_function(
+                func, _OPSET[self.specification_version]
+            )
 
         kwargs = {
             "version": 1,
@@ -585,7 +607,6 @@ class CoreMLProtoExporter:
         classifier_config: ClassifierConfig,
         convert_to: str,
         convert_from: str,
-        export_multi_functions: bool,
     ):
         self.prog = prog
         self.mil_proto = mil_proto
@@ -594,7 +615,7 @@ class CoreMLProtoExporter:
         self.classifier_config = classifier_config
         self.convert_to = convert_to
         self.convert_from = convert_from
-        self.export_multi_functions = export_multi_functions
+        self.export_as_multifunction = self.prog.export_as_multifunction
         self.prog.validate(check_essential_scope=True)
 
     @staticmethod
@@ -932,7 +953,7 @@ class CoreMLProtoExporter:
         Utils to get a coreml model description.
         For the multifunction export, we utilize the FunctionDescription proto message.
         """
-        if self.export_multi_functions:
+        if self.export_as_multifunction:
             # For multifunction export, we use the FunctionDescription
             if specification_version < _SPECIFICATION_VERSION_IOS_18:
                 raise ValueError(
@@ -1040,11 +1061,14 @@ def load(
         )
 
     # convert pymil program into mil proto
+    kwargs["prog"] = prog
+    kwargs["weights_dir"] = weights_dir
+    kwargs["specification_version"] = specification_version
+    exporter_kwargs = MILProtoExporter._get_valid_kwargs(kwargs)
     mil_proto_exporter = MILProtoExporter(
-        prog,
-        weights_dir,
+        **exporter_kwargs,
     )
-    mil_proto = mil_proto_exporter.export(specification_version)
+    mil_proto = mil_proto_exporter.export()
 
     # return the model provided by users
     desc = kwargs.get("model_description", None)
@@ -1067,6 +1091,5 @@ def load(
         classifier_config=kwargs.get("classifier_config", None),
         convert_to=kwargs.get("convert_to", None),
         convert_from=kwargs.get("convert_from", None),
-        export_multi_functions=kwargs.get("export_multi_functions", False),
     )
     return coreml_proto_exporter.export(specification_version)

@@ -79,8 +79,8 @@ setup(
         ]
     },
     install_requires=[
-        "numpy >= 1.14.5, < 2.0.0",
-        "protobuf >= 3.1.0, <= 4.0.0",
+        "numpy >= 1.14.5",
+        "protobuf >= 3.1.0",
         "sympy",
         "tqdm",
         "packaging",
@@ -98,6 +98,7 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Topic :: Scientific/Engineering",
         "Topic :: Software Development",
     ],

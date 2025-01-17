@@ -65,4 +65,7 @@ def get_output_classes(model):
 
 
 def get_input_dimension(model):
-    return model.n_features_
+    if hasattr(model, "n_features_in_"):
+        return model.n_features_in_
+    else:
+        return model.n_features_

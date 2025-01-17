@@ -48,4 +48,7 @@ def convert(model, feature_names, target):
 
 
 def get_input_dimension(model):
-    return model.n_features_
+    if hasattr(model, "n_features_"):
+        return model.n_features_
+    else:
+        return model.n_features_in_
