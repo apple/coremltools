@@ -157,6 +157,7 @@ fp64 = make_float(64)
 float = fp32
 double = fp64
 
+_FLOAT_TYPES = (fp16, fp32, fp64)
 
 def is_float(t):
-    return any(t is i or isinstance(t, i) for i in [fp16, fp32, fp64])
+    return any(t is i or isinstance(t, i) for i in _FLOAT_TYPES)

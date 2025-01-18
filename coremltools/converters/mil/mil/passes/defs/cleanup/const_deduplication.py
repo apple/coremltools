@@ -95,7 +95,20 @@ class const_deduplication(AbstractGraphPass):
 
         # deduplication across functions
         blocks = list(prog.functions.values())
-        unique2duplicates_const = self.find_constants(blocks)
+
+        try:
+            # Locally be very aggressive for identifying duplicated consts
+            # to make sure they are shared across functions, as failure to do 
+            # so may result in weight unsharing after pre-compilation.
+            # This is typically true for ANE and 4bits + 6bits palettization lut values
+            # which are below the 100 threshold, and end up unsharing the lut indices as well
+            # due to operator fusion.
+            old_threshold = self.const_threshold
+            self.const_threshold = 1
+            unique2duplicates_const = self.find_constants(blocks)
+        finally:
+            self.const_threshold = old_threshold
+
         for i, (k, v) in enumerate(unique2duplicates_const.items()):
             if len(v) == 0:
                 continue

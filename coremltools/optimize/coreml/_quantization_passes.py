@@ -18,25 +18,13 @@ from coremltools.converters.mil.frontend import _utils as frontend_utils
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Operation, Program, types
 from coremltools.converters.mil.mil.block import is_current_opset_version_compatible_with
-from coremltools.converters.mil.mil.ops.defs.iOS16 import constexpr_affine_dequantize
-from coremltools.converters.mil.mil.ops.defs.iOS16 import (
-    constexpr_lut_to_dense as constexpr_lut_to_dense_ios16,
-)
-from coremltools.converters.mil.mil.ops.defs.iOS16 import (
-    constexpr_sparse_to_dense as constexpr_sparse_to_dense_ios16,
-)
-from coremltools.converters.mil.mil.ops.defs.iOS18 import (
-    constexpr_blockwise_shift_scale,
-    constexpr_lut_to_dense,
-    constexpr_sparse_to_dense,
-)
 from coremltools.converters.mil.mil.passes.defs.quantization import AbstractQuantizationPass
 from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil.var import Var
 from coremltools.models._deprecation import deprecated
 from coremltools.models.neural_network.quantization_utils import _get_kmeans_lookup_table_and_weight
-from coremltools.optimize.coreml import _utils as optimize_utils
+from coremltools.optimize import _utils as optimize_utils
 from coremltools.optimize.coreml._config import (
     CompressionGranularity,
     OpLinearQuantizerConfig,
@@ -300,7 +288,7 @@ class prune_weights(AbstractCompressionPass):
             raise ValueError(f"The op {op} is not a const/constexpr.")
 
     @staticmethod
-    def _produce_sparse_param(val) -> optimize_utils.SparseParamsIos16:
+    def _produce_sparse_param(val) -> "optimize_utils.SparseParamsIos16":
         flattened_val = val.flatten()
         return optimize_utils.SparseParamsIos16(
             nonzero_data=flattened_val[np.where(flattened_val != 0)],
@@ -311,7 +299,7 @@ class prune_weights(AbstractCompressionPass):
     @staticmethod
     def compress_by_threshold(
         val, threshold, minimum_sparsity_percentile
-    ) -> Optional[optimize_utils.SparseParamsIos16]:
+    ) -> Optional["optimize_utils.SparseParamsIos16"]:
         val = np.where(np.abs(val) <= threshold, 0, val)
         sparsity_percentile = np.sum(val == 0.0) / val.size
         if sparsity_percentile < minimum_sparsity_percentile:
@@ -325,7 +313,7 @@ class prune_weights(AbstractCompressionPass):
     @staticmethod
     def compress_by_magnitude(
         val, target_sparsity, block_size=None, dim=None
-    ) -> Optional[optimize_utils.SparseParamsIos16]:
+    ) -> Optional["optimize_utils.SparseParamsIos16"]:
         def _apply_block_sparsity(val, block_size, dim):
             shape = val.shape
             rank = len(shape)
@@ -394,7 +382,9 @@ class prune_weights(AbstractCompressionPass):
         return prune_weights._produce_sparse_param(val)
 
     @staticmethod
-    def compress_by_nm_sparsity(val, n_m_ratio, dim) -> Optional[optimize_utils.SparseParamsIos16]:
+    def compress_by_nm_sparsity(
+        val, n_m_ratio, dim
+    ) -> Optional["optimize_utils.SparseParamsIos16"]:
         n, m = n_m_ratio
         assert n <= m
         shape = val.shape
@@ -451,20 +441,15 @@ class prune_weights(AbstractCompressionPass):
 
     @staticmethod
     def decompress(
-        params: Union[optimize_utils.SparseParamsIos16, optimize_utils.SparseParams]
+        params: Union["optimize_utils.SparseParamsIos16", "optimize_utils.SparseParams"]
     ) -> np.ndarray:
         if isinstance(params, optimize_utils.SparseParamsIos16):
-            return constexpr_sparse_to_dense_ios16.decompress(
-                params.nonzero_data, params.mask, params.shape
-            )
-        elif isinstance(params, optimize_utils.SparseParams):
-            return constexpr_sparse_to_dense.decompress(params.nonzero_data, params.mask)
-        else:
-            raise ValueError("Invalid type of params")
+            params = optimize_utils.ios16_sparse_params_to_ios18(params)
+        return optimize_utils.sparse_to_dense(params.nonzero_data, params.mask)
 
     @staticmethod
     def _create_constexpr_var(
-        op: Operation, sparse_params: optimize_utils.SparseParams, joint_compression: bool = False
+        op: Operation, sparse_params: "optimize_utils.SparseParams", joint_compression: bool = False
     ) -> Var:
         if not is_current_opset_version_compatible_with(AvailableTarget.iOS18):
             sparse_params_ios16 = optimize_utils.ios18_sparse_params_to_ios16(sparse_params)
@@ -785,7 +770,7 @@ class palettize_weights(AbstractCompressionPass):
         version="8.2",
         obj_prefix="coremltools.optimize.coreml.palettize_weights.",
     )
-    def compress(val, mode, nbits=None, lut_function=None) -> optimize_utils.LutParamsIos16:
+    def compress(val, mode, nbits=None, lut_function=None) -> "optimize_utils.LutParamsIos16":
         """
         [Legacy] Per-tensor palletization.
 
@@ -838,7 +823,7 @@ class palettize_weights(AbstractCompressionPass):
         cluster_dim: int = 1,
         channel_axis: Optional[int] = None,
         num_kmeans_workers: int = 1,
-    ) -> Optional[optimize_utils.LutParams]:
+    ) -> Optional["optimize_utils.LutParams"]:
         """
         Compress original_data into n-bit representation by palettization.
 
@@ -898,7 +883,7 @@ class palettize_weights(AbstractCompressionPass):
         lut_function: Optional[Callable] = None,
         cluster_dim: int = 1,
         num_kmeans_workers: int = 1,
-    ) -> Optional[optimize_utils.LutParams]:
+    ) -> Optional["optimize_utils.LutParams"]:
         """
         Compress original_data into n-bit representation by grouped channelwise palettization.
 
@@ -1028,13 +1013,10 @@ class palettize_weights(AbstractCompressionPass):
         )
 
     @staticmethod
-    def decompress(params: Union[optimize_utils.LutParamsIos16, optimize_utils.LutParams]):
+    def decompress(params: Union["optimize_utils.LutParamsIos16", "optimize_utils.LutParams"]):
         if isinstance(params, optimize_utils.LutParamsIos16):
-            return constexpr_lut_to_dense_ios16.decompress(params.lut, params.indices, params.shape)
-        elif isinstance(params, optimize_utils.LutParams):
-            return constexpr_lut_to_dense.decompress(params.indices, params.lut, None)
-        else:
-            raise ValueError("Invalid type of params")
+            params = optimize_utils.ios16_lut_params_to_ios18(params)
+        return optimize_utils.lut_to_dense(params.indices, params.lut, params.vector_axis)
 
     def transform_op(self, op: Operation):
         op_config = self.config._get_const_op_config(op)
@@ -1050,7 +1032,7 @@ class palettize_weights(AbstractCompressionPass):
             if child_op.op_type == "constexpr_sparse_to_dense":
                 # When the child op is sparse_to_dense op, the weight_to_compress is the sparse
                 # representation, which need to be restored to dense representation for compression.
-                weight_to_compress = constexpr_sparse_to_dense.decompress(
+                weight_to_compress = optimize_utils.sparse_to_dense(
                     weight_to_compress, child_op.mask.val
                 )
 
@@ -1225,12 +1207,6 @@ class linear_quantize_weights(AbstractCompressionPass):
     For details about different quantization schemas, see `OpLinearQuantizerConfig` for more details.
     """
     _SUPPORTED_CONFIG_TYPE = OpLinearQuantizerConfig
-    _MODE_DTYPE_TO_RANGE = {
-        (types.int8, "LINEAR"): (-128, 127),
-        (types.int8, "LINEAR_SYMMETRIC"): (-127, 127),
-        (types.uint8, "LINEAR"): (0, 255),
-        (types.uint8, "LINEAR_SYMMETRIC"): (0, 254),
-    }
 
     def _validate_child_constexpr_for_compress(self, op: Operation) -> bool:
         """
@@ -1270,7 +1246,7 @@ class linear_quantize_weights(AbstractCompressionPass):
     )
     def compress(
         cls, val: np.ndarray, axis: int, mode: str, dtype: type
-    ) -> optimize_utils.QuantParamsIos16:
+    ) -> "optimize_utils.QuantParamsIos16":
         """
         [Legacy] Per-channel quantization on axis.
 
@@ -1306,7 +1282,7 @@ class linear_quantize_weights(AbstractCompressionPass):
         mode: str,
         signed: bool,
         block_sizes: List[int],
-    ) -> Optional[optimize_utils.QuantParams]:
+    ) -> Optional["optimize_utils.QuantParams"]:
         """
         Compress original_data into n-bit representation by quantization.
 
@@ -1317,15 +1293,27 @@ class linear_quantize_weights(AbstractCompressionPass):
         Returns None if the weight cannot be compressed (for example, the dim size on an axis is not
         divisible by the corresponding block_size).
         """
-        if not isinstance(original_data, np.ndarray):
-            raise ValueError("Only numpy arrays are supported")
+        dtype = types.get_nbits_int_builtin_type(nbits, signed)
+        return cls.blockwise_compress_by_dtype(original_data, dtype, mode, block_sizes)
 
-        result = optimize_utils.compute_qparams(
+    @classmethod
+    def blockwise_compress_by_dtype(
+        cls,
+        original_data: np.ndarray,
+        dtype: Union["types", str],
+        mode: str,
+        block_sizes: List[int],
+    ) -> Optional["optimize_utils.QuantParams"]:
+        """
+        Similar to `blockwise_compress`, but use `dtype` to specify quant dtype.
+        """
+        if isinstance(dtype, str):
+            dtype = types.string_to_builtin(dtype)
+
+        result = optimize_utils.compute_qparams_by_dtype(
             original_data,
-            nbits,
-            signed,
+            dtype,
             mode,
-            types.nptype_from_builtin(types.get_nbits_int_builtin_type(nbits, signed)),
             block_sizes,
         )
 
@@ -1334,26 +1322,27 @@ class linear_quantize_weights(AbstractCompressionPass):
 
         quantized_data, scale, zero_point = result
         return optimize_utils.QuantParams(
-            data=quantized_data, scale=scale, offset=zero_point, nbits=np.uint8(nbits)
+            data=quantized_data,
+            scale=scale,
+            offset=zero_point,
+            nbits=np.uint8(dtype.get_bitwidth()),
         )
 
     @staticmethod
-    def decompress(params: Union[optimize_utils.QuantParamsIos16, optimize_utils.QuantParams]):
+    def decompress(params: Union["optimize_utils.QuantParamsIos16", "optimize_utils.QuantParams"]):
         if isinstance(params, optimize_utils.QuantParamsIos16):
-            return constexpr_affine_dequantize.decompress(
-                params.quantized_data, params.zero_point, params.scale, params.axis
+            return optimize_utils.dequantize_by_scale_and_zp(
+                params.quantized_data, params.scale, params.zero_point, params.axis
             )
         elif isinstance(params, optimize_utils.QuantParams):
-            return constexpr_blockwise_shift_scale.decompress(
-                params.data,
-                params.scale,
-                params.offset,
+            return optimize_utils.dequantize_by_scale_and_zp(
+                params.data, params.scale, params.offset
             )
         else:
             raise ValueError("Invalid type of params")
 
     @staticmethod
-    def _create_constexpr_var(op: Operation, quant_params: optimize_utils.QuantParams) -> Var:
+    def _create_constexpr_var(op: Operation, quant_params: "optimize_utils.QuantParams") -> Var:
         """Create constexpr quant op based on opset version."""
         if not is_current_opset_version_compatible_with(AvailableTarget.iOS18):
             quant_params_ios16 = optimize_utils.ios18_quant_params_to_ios16(quant_params)
@@ -1411,7 +1400,7 @@ class linear_quantize_weights(AbstractCompressionPass):
             if child_op.op_type == "constexpr_sparse_to_dense":
                 # When the child op is sparse_to_dense op, the weight_to_compress is the sparse
                 # representation, which need to be restored to dense representation for compression.
-                weight_to_compress = constexpr_sparse_to_dense.decompress(
+                weight_to_compress = optimize_utils.sparse_to_dense(
                     weight_to_compress, child_op.mask.val
                 )
             elif child_op.op_type.startswith("constexpr_lut_to_"):
@@ -1429,11 +1418,10 @@ class linear_quantize_weights(AbstractCompressionPass):
             )
             return
 
-        quant_params = self.blockwise_compress(
+        quant_params = self.blockwise_compress_by_dtype(
             weight_to_compress,
-            op_config.nbits,
+            op_config.dtype,
             op_config.mode,
-            op_config.signed,
             block_sizes,
         )
 
@@ -1521,3 +1509,217 @@ class WeightDecompressor(AbstractQuantizationPass):
             )
 
         op.enclosing_block.remove_ops([op])
+
+
+class AbstractActCompressionPass(AbstractQuantizationPass):
+    """
+    The abstract class for the activation compression graph passes.
+    """
+
+    _MINIMUM_OPSET_VERSION = AvailableTarget.iOS17
+
+    def __init__(self, config: OptimizationConfig = None, fake_compression: bool = False):
+        if not isinstance(config, (OptimizationConfig, type(None))):
+            raise ValueError(f"config must be of type OptimizationConfig. Got {type(config)}.")
+
+        op_selector = None if config is None else config._op_selector
+
+        super().__init__(op_selector=op_selector)
+
+        self.fake_compression = fake_compression
+        self._config = config
+        if config is not None:
+            self._check_config_type(config)
+
+    def apply(self, prog):
+        if not isinstance(prog, Program):
+            raise TypeError('Transform "{}" can only be applied on PyMIL programs.'.format(self))
+
+        @block_context_manager
+        def apply_block(block):
+            if not is_current_opset_version_compatible_with(self._MINIMUM_OPSET_VERSION):
+                logger.warning(
+                    f"The program's opset is not compatible with {self._MINIMUM_OPSET_VERSION}. "
+                    f"Skipped the compression pass {self.__class__}."
+                )
+                return
+
+            valid_consts = []
+            for op in list(block.operations):
+                for b in op.blocks:
+                    apply_block(b)
+
+                if self.is_valid_op(op):
+                    need_transform = True
+                    if self.op_selector is not None:
+                        need_transform = self.op_selector(op)
+
+                    if need_transform:
+                        valid_consts.append(op)
+
+            for op in tqdm(
+                valid_consts,
+                desc=f"Running activation compression pass {self.__class__.__name__}",
+                unit=" ops",
+            ):
+                with mb.set_before_op(op):
+                    self.transform_op(op)
+
+        for f in prog.functions.values():
+            apply_block(f)
+
+    @property
+    def config(self) -> OptimizationConfig:
+        return self._config
+
+    @config.setter
+    def config(self, value: OptimizationConfig):
+        self._check_config_type(value)
+        self._config = value
+        if value._op_selector is not None:
+            self.op_selector = value._op_selector
+
+    def _check_config_type(self, config: OptimizationConfig):
+        """
+        The utility function is checking the OptimizationConfig is holding correct type of op config.
+        """
+
+        def get_supported_types_as_str(supported_type):
+            if not isinstance(supported_type, (tuple, list)):
+                supported_type = [supported_type]
+            return ", ".join([f"{val.__name__}" for val in supported_type])
+
+        all_configs = []
+        if config.global_config is not None:
+            all_configs.append(config.global_config)
+        all_configs.extend(list(config.op_type_configs.values()))
+        all_configs.extend(list(config.op_name_configs.values()))
+
+        for config in all_configs:
+            if not isinstance(config, self._SUPPORTED_CONFIG_TYPE) and config is not None:
+                supported_type_str = get_supported_types_as_str(self._SUPPORTED_CONFIG_TYPE)
+                raise ValueError(
+                    f"{self.__class__.__name__} only accept {supported_type_str} type config. Got {config.__class__.__name__}."
+                )
+
+    def is_valid_op(self, op: Operation):
+        return True
+
+
+@register_pass(namespace="compression")
+class insert_prefix_quantize_dequantize_pair(AbstractActCompressionPass):
+    """
+    This graph pass applies transform on each valid activation quantization pattern.
+    A valid activation quantization pattern should be surrounded by a quantize/dequantize pair before and after this pattern.
+    This transform adds a quantize/dequantize pair before valid activation quantization patterns.
+
+    .. code-block::
+        Input graph:
+            ... -> downstream op
+        Output graph:
+            quantize -> dequantize -> downstream op
+    """
+
+    _SUPPORTED_CONFIG_TYPE = OpLinearQuantizerConfig
+
+    SUPPORTED_UNARY_OP_TYPES = ["conv", "avg_pool", "max_pool"]
+    SUPPORTED_BINARY_OP_TYPES = ["add"]
+    SUPPORTED_OP_TYPES = SUPPORTED_UNARY_OP_TYPES + SUPPORTED_BINARY_OP_TYPES
+
+    # Graph pass option for setting activation stats.
+    _activation_stats = None
+
+    @property
+    def activation_stats(self) -> dict:
+        return self._activation_stats
+
+    @activation_stats.setter
+    def activation_stats(self, activation_stats: dict):
+        if not isinstance(activation_stats, dict):
+            raise ValueError(
+                f"activation_stats only supports dict, but got {type(activation_stats)}"
+            )
+        self._activation_stats = activation_stats
+
+    def _construct_quant_dequant_op(self, input_var: Var, dtype: types, mode: str) -> Operation:
+        """Construct new quant-dequant pairs based on an input var."""
+        input_min_max = optimize_utils.get_min_and_max_values(
+            self._activation_stats, var_name=input_var.name
+        )
+        # Numerically the scale and zero point won't change if the input array only have two elements:
+        # the min and max values of the input array. That's the trick to re-use the util function.
+        _, scale, zero_point = optimize_utils.quantize_weight_by_dtype(
+            input_min_max,
+            axes=0,
+            dtype=dtype,
+            quantization_mode=mode,
+        )
+        scale_dtype = np.float16 if input_var.dtype == types.fp16 else np.float32
+        scale = scale.astype(scale_dtype)
+        if zero_point is not None:
+            zero_point = zero_point.astype(types.nptype_from_builtin(dtype))
+
+        if np.all(scale == 0) and zero_point is None:
+            # If scale is unexpectedly set as 0, change it to 1 for non-effect scale.
+            scale = np.ones_like(scale)
+
+        new_quantize_op = mb.quantize(
+            input=input_var,
+            scale=scale,
+            zero_point=zero_point,
+            output_dtype=types.builtin_to_string(dtype),
+        )
+        new_dequantize_op = mb.dequantize(
+            input=new_quantize_op,
+            scale=scale,
+            zero_point=zero_point,
+        )
+        return new_dequantize_op
+
+    def transform_op(self, op: Operation):
+        """Insert quant-dequant pair for the op."""
+        if op.op_type not in self.SUPPORTED_OP_TYPES:
+            return
+
+        # Checking op-level config. Skip if we disable compression on certain ops.
+        op_config = self.config._get_op_config(op)
+        if op_config is None:
+            return
+
+        new_op_args = dict()
+        new_op_args.update(op.inputs.items())
+        new_op_args["x"] = self._construct_quant_dequant_op(
+            op.inputs["x"], op_config.dtype, op_config.mode
+        )
+        if op.op_type in self.SUPPORTED_BINARY_OP_TYPES:
+            """
+            For op with two live inputs (e.g. add):
+                Input graph:
+                    ... ->|
+                          |-> downstream op
+                    ... ->|
+                Output graph:
+                    quantize -> dequantize |
+                                           |-> downstream op
+                    quantize -> dequantize |
+            So we need to quantize y in the same way.
+            """
+            x_is_const = op.inputs["x"].op is not None and op.inputs["x"].op.op_type == "const"
+            y_is_const = op.inputs["y"].op is not None and op.inputs["y"].op.op_type == "const"
+            if x_is_const or y_is_const:
+                return  # Both inputs x and y need to be non-const.
+            new_op_args["y"] = self._construct_quant_dequant_op(
+                op.inputs["y"], op_config.dtype, op_config.mode
+            )
+
+        new_op_args["name"] = op.name
+        new_core_op = getattr(mb, op.op_type)(**new_op_args)
+        new_core_op.name = op.outputs[0].name
+
+        if new_core_op.op.enclosing_block.try_replace_uses_of_var_after_op(
+            old_var=op.outputs[0],
+            new_var=new_core_op,
+            anchor_op=new_core_op.op,
+            end_op=new_core_op,
+        ):
+            new_core_op.op.enclosing_block.remove_ops([op])

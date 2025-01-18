@@ -59,6 +59,7 @@ from .type_mapping import (
     promote_dtypes,
     promote_types,
     string_to_builtin,
+    string_to_nptype,
     type_to_builtin_type,
 )
 from .type_state import is_state, state
@@ -74,3 +75,17 @@ from .type_unknown import unknown
 from .type_void import void
 
 apply_delayed_types()
+
+# For immediate values, those types are stored in bytes (MIL parser reads those types from bytes).
+IMMEDIATE_VALUE_TYPES_IN_BYTES = (
+    fp16,
+    int4,
+    int8,
+    uint1,
+    uint2,
+    uint3,
+    uint4,
+    uint6,
+    uint8,
+    uint32,
+)

@@ -5,12 +5,13 @@
 
 from packaging.version import Version
 
+from coremltools import proto
+
 from ... import SPECIFICATION_VERSION
 from ..._deps import _HAS_SKLEARN, _SKLEARN_VERSION
 from ...models import MLModel as _MLModel
 from ...models import datatypes
 from ...models._interface_management import set_transform_interface_params
-from ...proto import Model_pb2 as _Model_pb2
 from . import _sklearn_util
 
 if _HAS_SKLEARN:
@@ -55,7 +56,7 @@ def convert(model, input_features, output_features):
         )
 
     # Set the interface params.
-    spec = _Model_pb2.Model()
+    spec = proto.Model_pb2.Model()
     spec.specificationVersion = SPECIFICATION_VERSION
 
     assert len(input_features) == 1

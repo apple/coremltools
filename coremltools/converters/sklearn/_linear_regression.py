@@ -5,11 +5,12 @@
 
 import numpy as _np
 
+from coremltools import proto
+
 from ... import SPECIFICATION_VERSION
 from ..._deps import _HAS_SKLEARN
 from ...models import MLModel as _MLModel
 from ...models._interface_management import set_regressor_interface_params
-from ...proto import Model_pb2 as _Model_pb2
 
 if _HAS_SKLEARN:
     import sklearn
@@ -53,7 +54,7 @@ def convert(model, features, target):
 
 def _convert(model, features, target):
     # Set the model class (regressor)
-    spec = _Model_pb2.Model()
+    spec = proto.Model_pb2.Model()
     spec.specificationVersion = SPECIFICATION_VERSION
     spec = set_regressor_interface_params(spec, features, target)
 

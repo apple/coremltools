@@ -3,6 +3,9 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 import numpy as np
 
 from coremltools.converters.mil.mil import Block
@@ -11,6 +14,10 @@ from coremltools.converters.mil.mil import Operation, types
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import _check_child_op_type, block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.optimize import _utils as optimize_utils
+
+if TYPE_CHECKING:  # Only imports the below statements during type checking
+    from coremltools.optimize.coreml._config import OpLinearQuantizerConfig
 
 
 @register_pass(namespace="compression")
@@ -94,7 +101,7 @@ class insert_suffix_quantize_dequantize_pair(AbstractGraphPass):
             self._insert_quantize_dequantize(f, self._config, visited_ops)
 
     @block_context_manager
-    def _insert_quantize_dequantize(self, block: Block, config, visited_ops: set):
+    def _insert_quantize_dequantize(self, block: Block, config: OpLinearQuantizerConfig, visited_ops: set):
         def help_insert_quantize_dequantize(block: Block) -> bool:
             fusion_occurred = False
 
@@ -127,7 +134,7 @@ class insert_suffix_quantize_dequantize_pair(AbstractGraphPass):
         self,
         dequantize_op: Operation,
         block: Block,
-        config,
+        config: OpLinearQuantizerConfig,
         visited_ops: set,
     ) -> bool:
         """
@@ -197,7 +204,7 @@ class insert_suffix_quantize_dequantize_pair(AbstractGraphPass):
                     last_op = _child_op
                     _child_op = _child_child_op
 
-        return self._try_apply_transform(last_op, _child_op, block, visited_ops)
+        return self._try_apply_transform(last_op, _child_op, block, visited_ops, op_config)
 
     def _try_apply_transform(
         self,
@@ -205,6 +212,7 @@ class insert_suffix_quantize_dequantize_pair(AbstractGraphPass):
         _child_op: Operation,
         block: Block,
         visited_ops: set,
+        op_config: OpLinearQuantizerConfig,
     ) -> bool:
         """
         last_op: last op of a valid pattern.
@@ -236,33 +244,33 @@ class insert_suffix_quantize_dequantize_pair(AbstractGraphPass):
         kargs["before_op"] = last_op
         new_last_op = new_last_op(**kargs)
 
-        from coremltools.optimize.coreml._utils import get_min_and_max_values, quantize_weight
-
         var_name = last_op.outputs[0].name
-        val = get_min_and_max_values(self._activation_stats, var_name)
+        val = optimize_utils.get_min_and_max_values(self._activation_stats, var_name)
 
         # Numerically the scale and zero point won't change if the input array only have two elements:
-        # the min and max values of the input array. That's the trick to re-use quantize_weight util.
-        _, _scale, _zero_point = quantize_weight(
+        # the min and max values of the input array. That's the trick to re-use optimize_utils.quantize_weight util.
+        _dtype = np.int8 if op_config.signed else np.uint8
+        _, _scale, _zero_point = optimize_utils.quantize_weight(
             val,
             axes=0,
             nbits=8,
-            signed=True,
-            quantization_mode="LINEAR_SYMMETRIC",
-            dtype=types.int8,
+            signed=op_config.signed,
+            quantization_mode=op_config.mode,
+            dtype=_dtype,
         )
-
+        if _zero_point is None:
+            _zero_point = np.int32(0)
         new_quantize_op = mb.quantize(
             input=new_last_op,
             scale=_scale,
-            zero_point=_zero_point,
-            output_dtype="int8",
+            zero_point=_zero_point.astype(_dtype),
+            output_dtype="int8" if op_config.signed else "uint8",
             before_op=last_op,
         )
         new_dequantize_op = mb.dequantize(
             input=new_quantize_op,
             scale=_scale,
-            zero_point=_zero_point,
+            zero_point=_zero_point.astype(_dtype),
             before_op=last_op,
         )
         ops_to_remove = [last_op]

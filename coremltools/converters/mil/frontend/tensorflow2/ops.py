@@ -5,16 +5,12 @@
 
 import numpy as _np
 
+from coremltools.converters.mil.frontend.tensorflow import ops
 # TF 2.x now imports and registers all TF 1.x op against the new registry
-# (separated from TF 1.x registry). Overwrite might needed in case the op
-# semantics are different between TF 1.x and TF 2.x.<
-from coremltools.converters.mil.frontend.tensorflow.convert_utils import \
-    convert_graph
-from coremltools.converters.mil.frontend.tensorflow.ops import (
-    _transpose_NCDHW_to_NDHWC, _transpose_NCHW_to_NHWC,
-    _transpose_NDHWC_to_NCDHW, _transpose_NHWC_to_NCHW)
-from coremltools.converters.mil.frontend.tensorflow.tf_op_registry import \
-    register_tf_op
+# (separated from TF 1.x registry). Overwrite might be needed in case the op
+# semantics are different between TF 1.x and TF 2.x.
+from coremltools.converters.mil.frontend.tensorflow.convert_utils import convert_graph
+from coremltools.converters.mil.frontend.tensorflow.tf_op_registry import register_tf_op
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.types import builtin_to_string
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
@@ -67,18 +63,18 @@ def FusedBatchNormV3(context, node):
     batch_norm_name = node.name + "_nchw" if data_format == "NHWC" else node.name
 
     if data_format == "NHWC":
-        x = _transpose_NHWC_to_NCHW(x)
+        x = ops._transpose_NHWC_to_NCHW(x)
     elif data_format == "NDHWC":
-        x = _transpose_NDHWC_to_NCDHW(x)
+        x = ops._transpose_NDHWC_to_NCDHW(x)
 
     x = mb.cast(x=x, dtype=builtin_to_string(mean.dtype))
 
     x = _add_batch_norm(x, mean, variance, scale, offset, epsilon, batch_norm_name)
 
     if data_format == "NHWC":
-        x = _transpose_NCHW_to_NHWC(x, node.name + "_to_NHWC")
+        x = ops._transpose_NCHW_to_NHWC(x, node.name + "_to_NHWC")
     elif data_format == "NDHWC":
-        x = _transpose_NCDHW_to_NDHWC(x, node.name + "_to_NDHWC")
+        x = ops._transpose_NCDHW_to_NDHWC(x, node.name + "_to_NDHWC")
 
     x = mb.cast(x=x, dtype=builtin_to_string(input_dtype), name=node.name)
 

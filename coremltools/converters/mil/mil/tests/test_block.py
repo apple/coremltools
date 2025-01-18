@@ -548,3 +548,8 @@ class TestCacheDoublyLinkedList:
             ValueError, match="Doubly linked list does not support indexing other than 0, -1."
         ):
             operations[1]
+
+    def test_deep_copy(self):
+        operations = CacheDoublyLinkedList([x for x in range(0, 5000)])
+        copy_operations = copy.deepcopy(operations)
+        assert list(copy_operations) == [x for x in range(0, 5000)]

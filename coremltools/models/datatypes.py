@@ -8,7 +8,7 @@ Basic Data Types.
 """
 import numpy as _np
 
-from ..proto import Model_pb2
+from coremltools import proto
 
 
 class _DatatypeBase:
@@ -199,9 +199,10 @@ def _normalize_datatype(datatype_instance):
     raise ValueError("Datatype instance not recognized.")
 
 
-def _set_datatype(
-    proto_type_obj, datatype_instance, array_datatype=Model_pb2.ArrayFeatureType.DOUBLE
-):
+def _set_datatype(proto_type_obj, datatype_instance, array_datatype=None):
+    if array_datatype is None:
+        array_datatype = proto.Model_pb2.ArrayFeatureType.DOUBLE
+
     # Remap so we can still use the python types for the simple cases
     global _simple_type_remap
     if datatype_instance in _simple_type_remap:

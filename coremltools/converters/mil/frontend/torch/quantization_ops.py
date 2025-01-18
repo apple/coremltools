@@ -22,7 +22,6 @@ from .utils import (
     TORCH_EXPORT_BASED_FRONTENDS,
     TORCH_QTYPE_TO_NP_TYPE,
     TORCH_QTYPE_TO_STR,
-    TYPE_TO_DTYPE_STRING,
     TorchFrontend,
 )
 
@@ -156,7 +155,7 @@ def _dequantize_general(
     # but Core ML requires input and zero_point to have a same dtype,
     # so cast zero_point dtype to input dtype
     if input.dtype != zero_point.dtype:
-        zero_point = mb.cast(x=zero_point, dtype=TYPE_TO_DTYPE_STRING[input.dtype])
+        zero_point = mb.cast(x=zero_point, dtype=types.builtin_to_string(input.dtype))
     # Not sure why torch may quantize a scalar... does not make sense,
     # since the floating point scale is as big as the original floating point input data scalar
     if input.rank == 0:

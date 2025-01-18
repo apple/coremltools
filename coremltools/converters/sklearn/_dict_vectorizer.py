@@ -3,13 +3,14 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from coremltools import proto
+
 from ... import SPECIFICATION_VERSION
 from ..._deps import _HAS_SKLEARN
 from ...models import MLModel as _MLModel
 from ...models._feature_management import process_or_validate_features
 from ...models._interface_management import set_transform_interface_params
 from ...models.feature_vectorizer import create_feature_vectorizer
-from ...proto import Model_pb2 as _Model_pb2
 
 if _HAS_SKLEARN:
     from sklearn.feature_extraction import DictVectorizer
@@ -57,7 +58,7 @@ def convert(model, input_features, output_features):
     pline = Pipeline(input_features, output_features)
 
     # Set the basic model parameters of the dict vectorizer component.
-    dv_spec = _Model_pb2.Model()
+    dv_spec = proto.Model_pb2.Model()
     dv_spec.specificationVersion = SPECIFICATION_VERSION
 
     # Set up the dict vectorizer parameters

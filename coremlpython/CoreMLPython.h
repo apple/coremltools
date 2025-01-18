@@ -17,6 +17,7 @@
 #import <Availability.h>
 
 #import <vector>
+#import <optional>
 
 #ifndef BUILT_WITH_MACOS15_SDK
 #define BUILT_WITH_MACOS15_SDK \
@@ -73,6 +74,9 @@ namespace CoreML {
         };
 
         struct CPUComputeDevice {
+            inline CPUComputeDevice():
+            m_impl(nil) {}
+
             // MLCPUComputeDevice must be wrapped in a C++ class for PyBind.
             inline CPUComputeDevice(id impl):
             m_impl(impl) {}
@@ -90,6 +94,9 @@ namespace CoreML {
         };
 
         struct GPUComputeDevice {
+            inline GPUComputeDevice():
+            m_impl(nil) {}
+
             // MLGPUComputeDevice must be wrapped in a C++ class for PyBind.
             inline GPUComputeDevice(id impl):
             m_impl(impl) {}
@@ -107,6 +114,9 @@ namespace CoreML {
         };
 
         struct NeuralEngineComputeDevice {
+            inline NeuralEngineComputeDevice():
+            m_impl(nil) {}
+
             // MLNeuralEngineComputeDevice must be wrapped in a C++ class for PyBind.
             inline NeuralEngineComputeDevice(id impl):
             m_impl(impl) {}
@@ -160,6 +170,9 @@ namespace CoreML {
         };
 
         struct ComputePlan {
+            inline ComputePlan():
+            m_impl(nil), m_modelStructure(py::none()) {}
+
             // MLComputePlan must be wrapped in a C++ class for PyBind.
             inline ComputePlan(id impl, py::object modelStructure):
             m_impl(impl),
@@ -191,10 +204,12 @@ namespace CoreML {
             m_impl(impl),
             m_datas(std::move(datas)) {}
 
+#if ML_MODEL_ASSET_IS_AVAILABLE
             API_AVAILABLE(macos(13.0))
             inline MLModelAsset *getImpl() const {
                 return (MLModelAsset *)m_impl;
             }
+#endif
 
             id m_impl = nil;
             std::vector<py::bytes> m_datas;
@@ -205,6 +220,8 @@ namespace CoreML {
             MLModel *m_model = nil;
             NSURL *compiledUrl = nil;
             bool m_deleteCompiledModelOnExit = false;
+            std::optional<uint64_t> m_loadDurationInNanoSeconds;
+            std::optional<uint64_t> m_lastPredictDurationInNanoSeconds;
 
         public:
             static py::bytes autoSetSpecificationVersion(const py::bytes& modelBytes);
@@ -229,11 +246,16 @@ namespace CoreML {
 
             explicit Model(MLModel* m_model, NSURL* compiledUrl, bool deleteCompiledModelOnExit);
 
-            py::list batchPredict(const py::list& batch) const;
+            py::list batchPredict(const py::list& batch);
 
             py::str getCompiledModelPath() const;
 
-            py::dict predict(const py::dict& input, State* state=NULL) const;
+            py::dict predict(const py::dict& input, State* state=NULL);
+
+            py::object getLoadDurationInNanoSeconds() const;
+
+            py::object getLastPredictDurationInNanoSeconds() const;
+
 
 #if BUILT_WITH_MACOS15_SDK
             static void setOptimizationHints(MLModelConfiguration *configuration, const py::dict& optimizationHints);

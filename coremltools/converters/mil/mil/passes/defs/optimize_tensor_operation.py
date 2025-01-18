@@ -6,7 +6,7 @@
 import numpy as np
 
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget
-from coremltools.converters.mil.frontend._utils import value_at
+from coremltools.converters.mil.frontend import _utils
 from coremltools.converters.mil.mil import Block
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Operation, Program
@@ -640,7 +640,9 @@ class fuse_onehot_matmul_to_gather(AbstractGraphPass):
                 a=root_var,
                 b=mb.add(
                     x=root_var,
-                    y=value_at(mb.shape(x=W_var, before_op=matmul_op), 0, before_op=matmul_op),
+                    y=_utils.pymil_value_at(
+                        mb.shape(x=W_var, before_op=matmul_op), 0, before_op=matmul_op
+                    ),
                     before_op=matmul_op,
                 ),
                 before_op=matmul_op,

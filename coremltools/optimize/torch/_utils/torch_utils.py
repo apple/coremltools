@@ -98,10 +98,15 @@ def maybe_convert_str_to_dtype(dtype: _Union[str, _torch.dtype]) -> _torch.dtype
         "quint4": _torch.quint8,
         "uint3": _torch.uint8,
         "int3": _torch.int8,
-        "fp8_e4m3": _torch.float8_e4m3fn,
-        "fp8_e5m2": _torch.float8_e5m2,
         "float16": _torch.float16,
     }
+    if hasattr(_torch, "float8_e4m3fn"):
+        _str_to_dtype_map.update(
+            {
+                "fp8_e4m3fn": _torch.float8_e4m3fn,
+                "fp8_e5m2": _torch.float8_e5m2,
+            }
+        )
     if isinstance(dtype, str):
         dtype = dtype.lower()
         if dtype in _str_to_dtype_map:

@@ -1,0 +1,14 @@
+# torch 2.3 dropped support for x86 macOS
+torch==2.2.0; platform_machine != "arm64"
+torch==2.5.0; platform_machine == "arm64"
+
+# TODO (rdar://141476542) support a more recent torchao
+torchao==0.4.0; platform_machine == "arm64" and python_version == '3.10'
+
+torchaudio==2.2.0; platform_machine != "arm64"
+torchaudio==2.5.0; platform_machine == "arm64"
+torchvision==0.17.0; platform_machine != "arm64"
+torchvision==0.20.0; platform_machine == "arm64"
+torchsr==1.0.4; platform_machine == "arm64"
+# TODO (rdar://141476729) support a more recent timm
+timm==0.6.13; platform_machine == "arm64"

@@ -205,10 +205,11 @@ class MLModelStructureProgram:
 
     Attributes
     ----------
-    functions : List[MLModelStructureProgramFunction]
+    functions : Dict[str, MLModelStructureProgramFunction]
         The functions in the program.
     """
-    functions: _List[MLModelStructureProgramFunction]
+
+    functions: _Dict[str, MLModelStructureProgramFunction]
 
 
 @_dataclass(frozen=True)

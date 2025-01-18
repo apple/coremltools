@@ -10,7 +10,7 @@ Utilities to annotate neural network features with flexible shape information.
 from typing import List as _List
 from typing import Tuple as _Tuple
 
-from coremltools.proto import Model_pb2 as _ml
+from coremltools import proto as _proto
 
 from ... import _MINIMUM_FLEXIBLE_SHAPES_SPEC_VERSION, _MINIMUM_NDARRAY_SPEC_VERSION
 from ..utils import _get_feature
@@ -301,7 +301,7 @@ class NeuralNetworkImageSizeRange:
 
 
 def _set_multiarray_ndshape_range_for_feature(
-    feature: _ml.FeatureDescription,
+    feature: "_proto.Model_pb2.FeatureDescription",
     lower_bounds: _List[int],
     upper_bounds: _List[int],
 ):
@@ -346,7 +346,7 @@ def _set_multiarray_ndshape_range_for_feature(
 
 
 def _update_image_size_range_for_feature(
-    feature: _ml.FeatureDescription,
+    feature: "_proto.Model_pb2.FeatureDescription",
     size_range: NeuralNetworkImageSizeRange,
 ):
     if not isinstance(size_range, NeuralNetworkImageSizeRange):
@@ -372,7 +372,7 @@ def _update_image_size_range_for_feature(
 
 
 def _add_multiarray_ndshape_enumeration_for_feature(
-    feature: _ml.FeatureDescription,
+    feature: "_proto.Model_pb2.FeatureDescription",
     enumerated_shapes: _List[_Tuple[int]],
 ):
     if not isinstance(enumerated_shapes, list):
@@ -410,7 +410,7 @@ def _add_multiarray_ndshape_enumeration_for_feature(
 
 
 def _add_enumerated_image_sizes_for_feature(
-    feature: _ml.FeatureDescription,
+    feature: "_proto.Model_pb2.FeatureDescription",
     sizes: _List[NeuralNetworkImageSize],
 ):
     if not isinstance(sizes, list):

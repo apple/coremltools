@@ -5,7 +5,7 @@
 
 import numpy as np
 
-from coremltools.converters.mil.input_types import ColorLayout, ImageType
+from coremltools.converters.mil import input_types as _input_types
 from coremltools.converters.mil.mil import Builder as mb
 # import mil internal ops to add it to the builder
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
@@ -33,7 +33,7 @@ def _insert_image_preprocessing_ops(block):
     input_types = list(block.input_types)
 
     for input_type in input_types:
-        if isinstance(input_type, ImageType):
+        if isinstance(input_type, _input_types.ImageType):
             if input_type.name not in block.inputs:
                 continue
 
@@ -52,8 +52,8 @@ def _insert_image_preprocessing_ops(block):
                 )
             if has_bias:
                 if input_type.color_layout in (
-                    ColorLayout.GRAYSCALE,
-                    ColorLayout.GRAYSCALE_FLOAT16,
+                    _input_types.ColorLayout.GRAYSCALE,
+                    _input_types.ColorLayout.GRAYSCALE_FLOAT16,
                 ):
                     last_output = mb.add(
                         x=last_output,

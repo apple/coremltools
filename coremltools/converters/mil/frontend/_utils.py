@@ -8,9 +8,10 @@ import math as math
 from typing import List, Optional, Union
 
 import numpy as np
+import sympy as sm
 
+from coremltools import _logger as logger
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget as target
-from coremltools.converters.mil.input_types import InputType
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Operation, Var, types
 from coremltools.converters.mil.mil.block import is_current_opset_version_compatible_with
@@ -19,9 +20,13 @@ from coremltools.converters.mil.mil.ops.defs._utils import (
     promote_input_dtypes,
 )
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbolic
+from coremltools.optimize import _utils as optimize_utils
+
+SYMBOLIC_SHAPE_TYPE = List[Union[int, sm.Basic]]
+VARIABLE_SHAPE_TYPE = List[Union[int, Var]]
 
 
-def value_at(x: Var, idx: int, name=None, before_op=None):
+def pymil_value_at(x: Var, idx: int, name=None, before_op=None) -> Var:
     """
     input x: 1D tensor (vector).
     return value at index idx: x[idx].
@@ -39,6 +44,161 @@ def value_at(x: Var, idx: int, name=None, before_op=None):
     if before_op is not None:
         args["before_op"] = before_op
     return mb.slice_by_index(**args)
+
+
+def maybe_replace_symbols_with_source_tensor_shape_variables(
+    shape: SYMBOLIC_SHAPE_TYPE, source_tensors: List[Var]
+) -> VARIABLE_SHAPE_TYPE:
+    """
+    Given symbolic shape, replace symbols with source tensor shape variables
+
+    Example:
+        Given
+            shape = [is0, is1]
+            source_tensors = [x, y]
+        where
+            x.shape = [is0, 1]
+            y.shape = [1, is1]
+        we will return
+            result_shape = [
+                mb.slice_by_index(x=mb.shape(x=x), begin=[0], squeeze_mask=[True]),
+                mb.slice_by_index(x=mb.shape(x=y), begin=[1], squeeze_mask=[True]),
+            ]
+    """
+    result_shape = []
+    for size in shape:
+        if is_symbolic(size):
+            found_symbol_source = False
+            for tensor in source_tensors:
+                for i in range(tensor.rank):
+                    if str(size) == str(tensor.shape[i]):
+                        result_shape.append(pymil_value_at(mb.shape(x=tensor), i))
+                        found_symbol_source = True
+                        break
+                if found_symbol_source:
+                    break
+            if not found_symbol_source:
+                raise ValueError(f"Symbol {str(size)} not found in source tensor shapes")
+        else:
+            result_shape.append(size)
+    return result_shape
+
+
+def does_tile_necessary(
+    original_shape: SYMBOLIC_SHAPE_TYPE, broadcast_shape: SYMBOLIC_SHAPE_TYPE
+) -> bool:
+    """
+    Does tile necessary to broadcast original shape to broadcast shape?
+    """
+    if len(original_shape) < len(broadcast_shape):
+        original_shape = [1] * (len(broadcast_shape) - len(original_shape)) + original_shape
+    for original_size, broadcast_size in zip(original_shape, broadcast_shape):
+        if original_size != broadcast_size and broadcast_size != 1:
+            return True
+    return False
+
+
+def pymil_broadcast_to(tensor: Var, shape: Union[Var, VARIABLE_SHAPE_TYPE], name: str) -> Var:
+    """
+    Similar to numpy.broadcast_to, broadcast a tensor to a new shape
+    """
+    if isinstance(shape, Var):
+        shape_var = shape
+        shape = shape_var.val
+        if shape is not None:
+            shape = shape.tolist()
+    else:
+        shape_var = mb.concat(values=shape, axis=0)
+
+    # prepend extra dims
+    rank = shape_var.shape[0]
+    if rank > tensor.rank:
+        new_dims = rank - tensor.rank
+        tensor = mb.expand_dims(x=tensor, axes=list(range(new_dims)))
+
+    # For symbolic shape, we can confirm if tile is necessary
+    if (
+        isinstance(shape, list)
+        and all(not isinstance(size, Var) for size in shape)
+        and not does_tile_necessary(tensor.shape, shape)
+    ):
+        return mb.identity(x=tensor, name=name)
+
+    if any_symbolic(tensor.shape) or shape_var.val is None:
+        tensor_shape = mb.shape(x=tensor)
+        reps = mb.real_div(x=shape_var, y=tensor_shape)
+        reps = mb.cast(x=reps, dtype="int32")
+        res = mb.tile(x=tensor, reps=reps, name=name)
+    else:
+        reps = []
+        for ts, ds in zip(tensor.shape, shape_var.val):
+            if ts == 1 and ds > 0:
+                reps.append(ds)
+            else:
+                reps.append(1)
+        res = mb.tile(x=tensor, reps=reps, name=name)
+    return res
+
+
+def pymil_broadcast_shapes(shapes: List[SYMBOLIC_SHAPE_TYPE]) -> SYMBOLIC_SHAPE_TYPE:
+    """
+    Similar to numpy.broadcast_shapes, broadcast the input shapes into a single shape
+    """
+    rank = np.max([len(shape) for shape in shapes])
+    shapes = [[1] * (rank - len(shape)) + shape for shape in shapes]
+    result_shape = []
+    for i in range(rank):
+        dims = [shapes[j][i] for j in range(len(shapes))]
+        if any_symbolic(dims):
+            symbols = set()
+            integers = set()
+            for dim in dims:
+                if is_symbolic(dim):
+                    symbols.add(dim)
+                else:
+                    integers.add(dim)
+            # Integers can be safely ignored
+            if integers == {1} or integers == set():
+                result_dim = list(symbols)[0]
+                result_shape.append(result_dim)
+                # In principle, there must be only 1 symbol
+                # In practise, since our symbol propagation is imperfect,
+                # we may see multiple symbols, even if they must equal to each other / 1
+                if len(symbols) != 1:
+                    logger.warning(f"Recklessly broadcast {symbols} to {result_dim}")
+            # In principle, in such case the symbols must be 1 or equal to the integer
+            # In practise, since our symbol propagation is imperfect,
+            # we may still see symbols, even if they must equal to max integer / 1
+            else:
+                result_dim = np.max(list(integers))
+                result_shape.append(result_dim)
+                logger.warning(f"Recklessly broadcast {symbols} and {integers} to {result_dim}")
+        else:
+            result_shape.append(np.max(dims))
+    return result_shape
+
+
+def pymil_broadcast_tensors(tensors: List[Var]) -> List[Var]:
+    """
+    Similar to numpy.broadcast_arrays, broadcast a list of tensors against each other
+    """
+    if len(tensors) == 1:
+        return tensors
+
+    # solve the broadcast shape
+    symbolic_input_shapes = [list(x.shape) for x in tensors]
+    symbolic_broadcast_shape = pymil_broadcast_shapes(symbolic_input_shapes)
+    broadcast_shape = maybe_replace_symbols_with_source_tensor_shape_variables(
+        symbolic_broadcast_shape, tensors
+    )
+    broadcast_shape_var = mb.concat(values=broadcast_shape, axis=0)
+
+    # do the broadcasting
+    results = []
+    for tensor in tensors:
+        name = tensor.name + "_after_broadcast"
+        results.append(pymil_broadcast_to(tensor, broadcast_shape_var, name))
+    return results
 
 
 def _construct_gather_op(
@@ -271,6 +431,9 @@ def get_output_names(outputs) -> Optional[List[str]]:
     :param: list[ct.TensorType/ct.ImageType]
     :return: list[str] or None
     """
+    # Avoid circular import
+    from coremltools.converters.mil.input_types import InputType
+
     output_names = None
     if outputs is not None:
         assert all([isinstance(t, InputType) for t in outputs]), \
@@ -320,7 +483,7 @@ def solve_diagonal_einsum(parsed_vectors, vars):
                     parsed_vector[i], parsed_vector[j] = parsed_vector[j], parsed_vector[i]
 
                 dims = mb.shape(x=x)
-                dim_length = value_at(dims, duplicated_indices[0])
+                dim_length = pymil_value_at(dims, duplicated_indices[0])
 
                 indices = mb.range_1d(end=dim_length, start=0, step=1)
                 indices = mb.stack(values=[indices] * len(duplicated_indices), axis=1)
@@ -445,7 +608,7 @@ def solve_binary_generic_einsum(parsed_vectors, a_var, b_var, name) -> Var:
     b_unique_dims = []
 
     for i, a_axis in enumerate(a_axes):
-        a_dim = value_at(a_dims, i)
+        a_dim = pymil_value_at(a_dims, i)
         if a_axis in b_axes:
             if a_axis in out_axes:
                 batched_axes.append(a_axis)
@@ -465,7 +628,7 @@ def solve_binary_generic_einsum(parsed_vectors, a_var, b_var, name) -> Var:
     concat_a_unique_dims = _concat_dims(a_unique_dims)
 
     for i, b_axis in enumerate(b_axes):
-        b_dim = value_at(b_dims, i)
+        b_dim = pymil_value_at(b_dims, i)
         if b_axis not in a_axes:
             b_unique_axes.append(b_axis)
             b_unique_dims.append(b_dim)
@@ -672,9 +835,6 @@ def _construct_constexpr_lut_op(
 
     The input `indices`, `lut` and `vector_axis` (if provided) should follow iOS18 `constexpr_lut_to_dense` op's def.
     """
-    # Avoid circular import
-    from coremltools.optimize.coreml import _utils as optimize_utils
-
     kwargs = {"indices": indices, "lut": lut}
     if name is not None:
         kwargs["name"] = name

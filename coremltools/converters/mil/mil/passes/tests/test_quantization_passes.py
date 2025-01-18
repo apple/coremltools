@@ -2026,13 +2026,13 @@ class TestReorderQuantizedLut:
             prev_prog,
             pass_pipeline=ct.PassPipeline.EMPTY,
             convert_to="mlprogram",
-            minimum_deployment_target=ct.target.iOS18,
+            minimum_deployment_target=prev_prog._get_max_opset_version_and_op()[0],
         )
         model = ct.convert(
             prog,
             pass_pipeline=ct.PassPipeline.EMPTY,
             convert_to="mlprogram",
-            minimum_deployment_target=ct.target.iOS18,
+            minimum_deployment_target=prog._get_max_opset_version_and_op()[0],
         )
         output_name = block.outputs[0].name
         x_val = np.random.rand(*input_shape).astype(np.float16)

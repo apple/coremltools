@@ -4,7 +4,7 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import coremltools
-from coremltools.proto import FeatureTypes_pb2
+from coremltools import proto
 
 from ..._deps import _HAS_SCIPY, _HAS_SKLEARN
 from ...models import MLModel as _MLModel
@@ -110,9 +110,7 @@ def _convert_k_neighbors_classifier(model, input_name, output_name):
     input_features = spec.description.input.add()
     input_features.name = input_name[0][0]
     input_features.type.multiArrayType.shape.extend([number_of_dimensions])
-    input_features.type.multiArrayType.dataType = (
-        FeatureTypes_pb2.ArrayFeatureType.FLOAT32
-    )
+    input_features.type.multiArrayType.dataType = proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT32
 
     output_label = spec.description.output.add()
     output_label.name = output_name[0][0]

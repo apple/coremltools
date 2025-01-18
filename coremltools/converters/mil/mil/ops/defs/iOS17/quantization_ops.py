@@ -3,26 +3,16 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from typing import Optional, Tuple
+
 import numpy as np
 
-from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil import Var, types
 from coremltools.converters.mil.mil.input_type import InputSpec, TensorInputType
 from coremltools.converters.mil.mil.operation import VALUE, Operation, precondition
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.ops.defs.iOS17 import _IOS17_TARGET
-
-
-def _rank_promoted_to_same_as_data(data, axis, param):
-    """
-    Reshapes `param` to be the same shape as `data`.
-    """
-    if axis is not None:
-        axis = axis if axis >= 0 else axis + len(data.shape)
-    if len(param.shape) == 0:
-        return np.reshape(param, np.ones(len(data.shape), np.int32))
-    else:
-        axes = [i for i in range(len(data.shape)) if i != axis]
-        return np.expand_dims(param, axis=tuple(axes))
+from coremltools.optimize import _utils as optimize_utils
 
 
 def _check_scale_zp_shapes(input_data, scale, zero_point, axis):
@@ -58,6 +48,22 @@ def _check_scale_zp_shapes(input_data, scale, zero_point, axis):
             )
     else:
         raise ValueError("Params scale & zero_point should both be scalars or vectors")
+
+
+def _prepare_scale_and_zero_point(
+    input_data: Var, scale: Var, zero_point: Optional[Var], axis: Optional[Var]
+) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+    input_data = input_data.val
+    scale = scale.val
+    if zero_point is not None:
+        zero_point = zero_point.val
+    if axis is not None:
+        axis = axis.val
+
+    scale = optimize_utils.promote_rank_to_same_as_data(scale, input_data, axis)
+    if zero_point is not None:
+        zero_point = optimize_utils.promote_rank_to_same_as_data(zero_point, input_data, axis)
+    return scale, zero_point
 
 
 @register_op(opset_version=_IOS17_TARGET)
@@ -124,7 +130,7 @@ class quantize(Operation):
 
     def type_inference(self):
         out_dtype = types.string_to_builtin(self.output_dtype.val)
-        if out_dtype not in {types.int8, types.uint8}:
+        if out_dtype not in self.type_domains["DstT"]:
             raise ValueError(
                 '"quantize" op: unrecognized output dtype "{}"'.format(self.output_dtype.val)
             )
@@ -137,29 +143,21 @@ class quantize(Operation):
                     )
                 )
 
+        if np.all(self.scale.val == 0):
+            raise ValueError("quantize op: scale cannot be 0")
+
         _check_scale_zp_shapes(self.input, self.scale, self.zero_point, self.axis)
 
         return types.tensor(out_dtype, self.input.shape)
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        original_data = self.input.val
-        if self.zero_point is not None:
-            zero_point = self.zero_point.val
-        else:
-            zero_point = np.int8(0) if self.output_dtype.val == "int8" else np.uint8(0)
-        scale = self.scale.val
-        axis = None
-        if self.axis is not None:
-            axis = self.axis.val
-        dtype_info = np.iinfo(zero_point.dtype)
-
-        sc = _rank_promoted_to_same_as_data(original_data, axis, scale)
-        zp = _rank_promoted_to_same_as_data(original_data, axis, zero_point)
-        val = np.clip(
-            np.around(original_data / sc) + zp.astype(np.float32), dtype_info.min, dtype_info.max
+        scale, zero_point = _prepare_scale_and_zero_point(
+            self.input, self.scale, self.zero_point, self.axis
         )
-        return val.astype(zero_point.dtype)
+        return optimize_utils.quantize_by_scale_and_zp(
+            self.input.val, scale, zero_point, types.string_to_builtin(self.output_dtype.val)
+        )
 
 
 @register_op(opset_version=_IOS17_TARGET)
@@ -239,17 +237,7 @@ class dequantize(Operation):
         if not self.can_materialize_val():
             return None
 
-        quantized_data = self.input.val
-        if self.zero_point is not None:
-            zero_point = self.zero_point.val
-        else:
-            zero_point = np.int8(0) if self.input.dtype == types.int8 else np.uint8(0)
-        scale = self.scale.val
-        axis = None
-        if self.axis is not None:
-            axis = self.axis.val
-
-        sc = _rank_promoted_to_same_as_data(quantized_data, axis, scale)
-        zp = _rank_promoted_to_same_as_data(quantized_data, axis, zero_point)
-        val = sc * (quantized_data.astype(np.float32) - zp.astype(np.float32))
-        return val.astype(scale.dtype)
+        scale, zero_point = _prepare_scale_and_zero_point(
+            self.input, self.scale, self.zero_point, self.axis
+        )
+        return optimize_utils.dequantize_by_scale_and_zp(self.input.val, scale, zero_point)

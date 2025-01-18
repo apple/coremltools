@@ -89,7 +89,7 @@ class TestScaledDotProductAttention:
         mask = None
         if mask_dtype is not None:
             mask = np.zeros((1, 1, S), dtype=mask_dtype)
-            mask[:, :, S // 2 :] = False if mask_dtype is bool else -np.inf
+            mask[:, :, S // 2 :] = True if mask_dtype is bool else -np.inf
 
         attention_coreml = self._mb_eval_scaled_dot_product_attention(query, key, value, mask)
         attention_torch = self._torch_scaled_dot_product_attention(query, key, value, mask)
@@ -161,7 +161,7 @@ class TestScaledDotProductAttention:
         mask = None
         if mask_dtype is not None:
             mask = np.zeros((1, 1, S), dtype=mask_dtype)
-            mask[:, :, S - 1 :] = False if mask_dtype is bool else -np.inf
+            mask[:, :, S - 1 :] = True if mask_dtype is bool else -np.inf
 
             input_placeholders["mask"] = mb.placeholder(
                 shape=mask.shape, dtype=types.numpy_type_to_builtin_type(mask_dtype)
@@ -252,7 +252,7 @@ class TestScaledDotProductAttention:
         mask = None
         if mask_dtype is not None:
             mask = np.zeros((1, S), dtype=mask_dtype)
-            mask[:, S - 1 :] = False if mask_dtype is bool else -np.inf
+            mask[:, S - 1 :] = True if mask_dtype is bool else -np.inf
 
             dynamic_mask_shape = []
             for i in range(len(mask.shape)):

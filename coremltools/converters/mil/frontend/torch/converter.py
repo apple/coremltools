@@ -32,7 +32,7 @@ from coremltools.converters.mil.mil.scope import ScopeInfo, ScopeSource
 from coremltools.converters.mil.mil.types import builtin_to_string, is_float
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbolic
 from coremltools.converters.mil.mil.var import Var
-from coremltools.optimize.coreml import _utils as optimize_utils
+from coremltools.optimize import _utils as optimize_utils
 from coremltools.optimize.coreml._quantization_passes import prune_weights
 
 from .exir_utils import WRAPPED_SCALAR_INPUT_SUFFIX
@@ -1255,8 +1255,7 @@ class TorchConverter:
                 # since inputs/constants will not contribute to debugging/profiling
                 # TODO (rdar://125572392): Support torch.export IO metadata
                 scopes = [ScopeInfo(source=ScopeSource.EXIR_STACK_TRACE, data=[None])]
-                if self.context.frontend == TorchFrontend.EXECUTORCH:
-                    scopes.append(ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None]))
+                scopes.append(ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None]))
                 with mb.scope(*scopes):
                     self._add_const(name, val)
             else:
@@ -1265,11 +1264,12 @@ class TorchConverter:
     def convert(self) -> Program:
         logger.info("Converting graph.")
 
-        # Set SSA function input name to user defined name if provided.
-        for index, (name, spec) in enumerate(self.graph.inputs.items()):
-            if spec.name is not None:
-                name = spec.name
-            self.inputs[index].name = name
+        if self.context.frontend == TorchFrontend.TORCHSCRIPT:
+            # Set SSA function input name to user defined name if provided.
+            for index, (name, spec) in enumerate(self.graph.inputs.items()):
+                if spec.name is not None:
+                    name = spec.name
+                self.inputs[index].name = name
 
         # This will hold the converted model.
         prog = self._prog
@@ -1318,12 +1318,9 @@ class TorchConverter:
                         exir_input_dtype = self.graph.inputs[torch_name].dtype
                         if user_input_dtype != exir_input_dtype:
                             scopes = [
-                                ScopeInfo(source=ScopeSource.EXIR_STACK_TRACE, data=torch_name)
+                                ScopeInfo(source=ScopeSource.EXIR_STACK_TRACE, data=torch_name),
+                                ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None]),
                             ]
-                            if self.context.frontend == TorchFrontend.EXECUTORCH:
-                                scopes.append(
-                                    ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None])
-                                )
                             with mb.scope(*scopes):
                                 input_var = mb.cast(
                                     x=input_var, dtype=builtin_to_string(exir_input_dtype)
@@ -1345,12 +1342,9 @@ class TorchConverter:
                             ScopeInfo(
                                 source=ScopeSource.EXIR_STACK_TRACE,
                                 data=f"unwrap_scalar_input_{torch_name}",
-                            )
+                            ),
                         ]
-                        if self.context.frontend == TorchFrontend.EXECUTORCH:
-                            scopes.append(
-                                ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None])
-                            )
+                        scopes.append(ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None]))
                         with mb.scope(*scopes):
                             input_var = mb.squeeze(x=input_var, name=torch_name)
                 else:
@@ -1367,8 +1361,7 @@ class TorchConverter:
                     scopes = [
                         ScopeInfo(source=ScopeSource.EXIR_STACK_TRACE, data=f"read_{buffer_name}")
                     ]
-                    if self.context.frontend == TorchFrontend.EXECUTORCH:
-                        scopes.append(ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None]))
+                    scopes.append(ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None]))
                     with mb.scope(*scopes):
                         input_var = mb.read_state(input=buffer_var)
                         # As of iOS 18, Core ML state can only be fp16
@@ -1397,10 +1390,9 @@ class TorchConverter:
                     output_var = self.context[output_name]
                     buffer_var = self.context[buffer_name]
                     scopes = [
-                        ScopeInfo(source=ScopeSource.EXIR_STACK_TRACE, data=f"write_{buffer_name}")
+                        ScopeInfo(source=ScopeSource.EXIR_STACK_TRACE, data=f"write_{buffer_name}"),
+                        ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None]),
                     ]
-                    if self.context.frontend == TorchFrontend.EXECUTORCH:
-                        scopes.append(ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None]))
                     with mb.scope(*scopes):
                         cast_value = mb.cast(
                             x=output_var, dtype=builtin_to_string(buffer_var.dtype)
@@ -1448,8 +1440,7 @@ class TorchConverter:
                 ]
             elif self.context.frontend in TORCH_EXPORT_BASED_FRONTENDS:
                 essential_scope_sources = [ScopeSource.EXIR_STACK_TRACE]
-                if self.context.frontend == TorchFrontend.EXECUTORCH:
-                    essential_scope_sources.append(ScopeSource.EXIR_DEBUG_HANDLE)
+                essential_scope_sources.append(ScopeSource.EXIR_DEBUG_HANDLE)
             else:
                 raise ValueError(f"Invalid PyTorch frontend {self.context.frontend}")
             prog._add_essential_scope_source(essential_scope_sources)

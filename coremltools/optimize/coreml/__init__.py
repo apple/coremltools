@@ -15,6 +15,7 @@ from ._post_training_quantization import (
     CoreMLWeightMetaData,
     decompress_weights,
     get_weights_metadata,
+    linear_quantize_activations,
     linear_quantize_weights,
     palettize_weights,
     prune_weights,

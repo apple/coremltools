@@ -8,8 +8,6 @@ SPACES = "  "
 from .block import Block, Function, curr_block
 from .builder import Builder
 from .input_type import (
-    SUPPORT_FLOAT_TYPES,
-    SUPPORT_INT_TYPES,
     DefaultInputs,
     InputSpec,
     InternalVar,
