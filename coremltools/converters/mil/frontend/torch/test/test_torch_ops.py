@@ -237,6 +237,24 @@ class TestScriptedModels(TorchBaseTest):
             use_scripting=True,
         )
 
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
+    def test_shape_dynamic(self, compute_unit, backend):
+        class Model(nn.Module):
+            def forward(self, x):
+                a, _, b = x.shape
+                return torch.zeros([a, b])
+        model = Model().eval()
+        
+        input_shape = torch.randint(1, 10, [3]).tolist()
+        input_type = ct.TensorType(shape=ct.Shape([input_shape[0], input_shape[1], ct.RangeDim(1, 1_000)]))
+        self.run_compare_torch(
+            [input_shape],
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            converter_input_type=[input_type],
+            use_scripting=True,
+        )
 
 class TestAffineGrid(TorchBaseTest):
     @pytest.mark.parametrize(

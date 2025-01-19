@@ -4193,6 +4193,12 @@ def tupleunpack(context, node):
     inputs = _get_inputs(context, node, expected=1)
     values = inputs[0]
 
+    if isinstance(values, (Var)) and values.op.op_type == "shape":
+        for i in range(len(node.outputs)):
+            val = _list_select(values, i)
+            context.add(val, node.outputs[i])
+        return
+
     # Node input could have been turned into constant array in @tupleconstruct
     if not isinstance(values, (tuple, list)):
         if values.val is not None:
