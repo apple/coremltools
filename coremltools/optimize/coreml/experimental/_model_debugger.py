@@ -106,7 +106,8 @@ class ModelDebugger:
         return ProgramInfo(functions, program_spec)
 
     @classmethod
-    def get_model_info(cls, model: "MLModel") -> ModelInfo:
+    def get_model_info(cls, model) -> ModelInfo:
+        model: ct.models.MLModel
         model_spec = model.get_spec()
         return ModelInfo(cls.get_program_info(model_spec.mlProgram), model_spec)
 
@@ -162,7 +163,8 @@ class ModelDebugger:
 
         return data_type_to_feature_type[data_type]
 
-    def __init__(self, model: "MLModel"):
+    def __init__(self, model):
+        model: ct.models.MLModel
         self.weights_dir = model.weights_dir
         self.model_info = self.__class__.get_model_info(model)
         self.block_info = self.__class__.get_any_block(self.model_info)

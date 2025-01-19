@@ -1334,6 +1334,7 @@ def _convolution(context, node):
 
     def _construct_conv_transpose(
         node,
+        x: Var,
         weight: Var,
         pad: np.ndarray,
         out_padding: np.ndarray,
@@ -1441,7 +1442,7 @@ def _convolution(context, node):
         kwargs["groups"] = groups
 
     if transposed:
-        conv = _construct_conv_transpose(node, weight, pad, out_padding, kwargs)
+        conv = _construct_conv_transpose(node, x, weight, pad, out_padding, kwargs)
     else:
         conv = mb.conv(**kwargs)
     context.add(conv)
