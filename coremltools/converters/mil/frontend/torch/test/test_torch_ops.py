@@ -32,6 +32,7 @@ from coremltools.converters.mil.testing_utils import (
     gen_input_shapes_einsum,
     get_op_types_in_program,
     hardcoded_einsum_equations,
+    random_gen,
 )
 from coremltools.models.utils import _macos_version, _python_version
 
@@ -8098,7 +8099,9 @@ class TestTopk(TorchBaseTest):
 
         model = TopkModel()
 
-        input_data = torch.rand(input_shape)
+        # If multiple elements are identical, then indices may have multiple possible values,
+        # making testing hard, so we make sure all elements are unique
+        input_data = torch.tensor(random_gen(input_shape, allow_duplicate=False))
         k_list = torch.tensor([k + 1, k, k + 2])
         expected_results = model(input_data, k_list)
 
