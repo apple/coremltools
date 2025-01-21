@@ -19,10 +19,7 @@ import torch.multiprocessing as _mp
 from attr import define as _define
 
 from coremltools._deps import _kmeans1d
-from coremltools.converters.mil.mil.ops.defs.iOS18 import (
-    constexpr_blockwise_shift_scale as _quantize_op,
-)
-from coremltools.optimize.coreml._utils import compute_qparams as _compute_qparams
+from coremltools.optimize import _utils as optimize_utils
 from coremltools.optimize.torch._utils.metadata_utils import (
     CompressionMetadata as _CompressionMetadata,
 )
@@ -756,7 +753,7 @@ class KMeans:
     @classmethod
     def _quantize_centroids(cls, dtype: _torch.dtype, centroids: _torch.Tensor):
         centroids = centroids.numpy()
-        ret = _compute_qparams(
+        ret = optimize_utils.compute_qparams(
             weight=centroids,
             nbits=get_n_bits_from_dtype(dtype),
             quantization_mode="LINEAR_SYMMETRIC",
@@ -770,7 +767,7 @@ class KMeans:
             return
 
         quant_centroids, scale, zp = ret
-        dequant_centroids = _quantize_op.decompress(
+        dequant_centroids = optimize_utils.dequantize_by_scale_and_zp(
             quant_centroids,
             scale,
             zp,

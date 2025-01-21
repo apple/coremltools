@@ -1,6 +1,3 @@
-#include <iostream>
-#include <exception>
-
 #ifndef MLMODEL_DECLARE_TEST
 #define MLMODEL_DECLARE_TEST(x) int x();
 #endif

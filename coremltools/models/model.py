@@ -847,7 +847,9 @@ class MLModel:
     def _is_multifunction(self) -> bool:
         return len(self._spec.description.functions) > 0
 
-    def _get_function_description(self, function_name: str) -> _proto.Model_pb2.FunctionDescription:
+    def _get_function_description(
+        self, function_name: str
+    ) -> "_proto.Model_pb2.FunctionDescription":
         f = list(filter(lambda f: f.name == function_name, self._spec.description.functions))
 
         if len(f) == 0:

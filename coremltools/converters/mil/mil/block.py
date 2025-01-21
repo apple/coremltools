@@ -9,8 +9,8 @@ from typing import List, Optional, Set, Tuple, Union
 
 from coremltools import _OPSET
 from coremltools import _logger as logger
+from coremltools.converters.mil import input_types as _input_types
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget as _target
-from coremltools.converters.mil.input_types import InputType
 
 from . import SPACES, types
 from .operation import Operation
@@ -1117,7 +1117,7 @@ class Function(Block):
         update_max_opset_version_block(self)
         return max_opset_version, op_with_max_opset_version
 
-    def set_output_types(self, outputs: Optional[List[InputType]] = None) -> None:
+    def set_output_types(self, outputs: Optional[List["_input_types.InputType"]] = None) -> None:
         """
         Set the user defined output type for a function.
         Note: the common::update_output_dtypes graph pass takes this information,
@@ -1125,16 +1125,17 @@ class Function(Block):
         """
         if outputs is not None:
             if not (
-                isinstance(outputs, list) and all([isinstance(out, InputType) for out in outputs])
+                isinstance(outputs, list)
+                and all([isinstance(out, _input_types.InputType) for out in outputs])
             ):
                 raise TypeError(
                     "main outputs should be a list of type ct.TensorType or ct.ImageType"
                 )
         self.output_types = outputs
 
-    def set_input_types(self, input_types: List[InputType]):
+    def set_input_types(self, input_types: List["_input_types.InputType"]):
         if not isinstance(input_types, tuple):
             raise ValueError("main inputs should be tuple of TensorType or ImageType")
-        elif not all([isinstance(inp, InputType) for inp in input_types]):
+        elif not all([isinstance(inp, _input_types.InputType) for inp in input_types]):
             raise ValueError("main inputs should be tuple of InputSpec")
         self.input_types = input_types

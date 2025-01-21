@@ -3,7 +3,8 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from ..proto import Model_pb2
+from coremltools import proto
+
 from . import _feature_management as _fm
 from . import datatypes
 
@@ -173,11 +174,14 @@ def set_transform_interface_params(
     output_features,
     are_optional=False,
     training_features=None,
-    array_datatype=Model_pb2.ArrayFeatureType.DOUBLE,
+    array_datatype=None,
 ):
     """
     Common utilities to set transform interface params.
     """
+    if array_datatype is None:
+        array_datatype = proto.Model_pb2.ArrayFeatureType.DOUBLE
+
     input_features = _fm.process_or_validate_features(input_features)
     output_features = _fm.process_or_validate_features(output_features)
 

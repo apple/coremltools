@@ -16,15 +16,13 @@ import pytest
 
 import coremltools
 import coremltools as ct
-from coremltools import ComputeUnit, utils
+from coremltools import ComputeUnit, proto, utils
 from coremltools._deps import _HAS_EXECUTORCH, _HAS_TORCH
-from coremltools.converters.mil import Builder as mb
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.builder import Builder as mb
 from coremltools.libmodelpackage import ModelPackage
 from coremltools.models import _METADATA_VERSION, CompiledMLModel, MLModel
 from coremltools.models.utils import _MLPACKAGE_AUTHOR_NAME, _WEIGHTS_DIR_NAME
-from coremltools.proto import Model_pb2
 
 if _HAS_TORCH:
     import torch
@@ -43,7 +41,7 @@ def _remove_path(path):
 class TestMLModel:
 
     def setup_class(self):
-        spec = Model_pb2.Model()
+        spec = proto.Model_pb2.Model()
         spec.specificationVersion = coremltools.SPECIFICATION_VERSION
 
         features = ["feature_1", "feature_2"]

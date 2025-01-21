@@ -8,11 +8,10 @@ Tree ensemble builder class to construct CoreML models.
 """
 import collections as _collections
 
+from coremltools import proto as _proto
+
 from .. import SPECIFICATION_VERSION as _SPECIFICATION_VERSION
-from ..proto import Model_pb2 as _Model_pb2
-from ..proto import TreeEnsemble_pb2 as _TreeEnsemble_pb2
-from ._interface_management import (set_classifier_interface_params,
-                                    set_regressor_interface_params)
+from ._interface_management import set_classifier_interface_params, set_regressor_interface_params
 
 
 class TreeEnsembleBase:
@@ -27,7 +26,7 @@ class TreeEnsembleBase:
         High level Python API to build a tree ensemble model for Core ML.
         """
         # Set inputs and outputs
-        spec = _Model_pb2.Model()
+        spec = _proto.Model_pb2.Model()
         spec.specificationVersion = _SPECIFICATION_VERSION
 
         # Save the spec in the protobuf
@@ -93,8 +92,8 @@ class TreeEnsembleBase:
 
 
         """
-        self.tree_spec.postEvaluationTransform = _TreeEnsemble_pb2.TreeEnsemblePostEvaluationTransform.Value(
-            value
+        self.tree_spec.postEvaluationTransform = (
+            _proto.TreeEnsemble_pb2.TreeEnsemblePostEvaluationTransform.Value(value)
         )
 
     def add_branch_node(
@@ -188,8 +187,10 @@ class TreeEnsembleBase:
         spec_node.branchFeatureValue = feature_value
         spec_node.trueChildNodeId = true_child_id
         spec_node.falseChildNodeId = false_child_id
-        spec_node.nodeBehavior = _TreeEnsemble_pb2.TreeEnsembleParameters.TreeNode.TreeNodeBehavior.Value(
-            branch_mode
+        spec_node.nodeBehavior = (
+            _proto.TreeEnsemble_pb2.TreeEnsembleParameters.TreeNode.TreeNodeBehavior.Value(
+                branch_mode
+            )
         )
 
         if relative_hit_rate is not None:
@@ -224,8 +225,10 @@ class TreeEnsembleBase:
         spec_node = self.tree_parameters.nodes.add()
         spec_node.treeId = tree_id
         spec_node.nodeId = node_id
-        spec_node.nodeBehavior = _TreeEnsemble_pb2.TreeEnsembleParameters.TreeNode.TreeNodeBehavior.Value(
-            "LeafNode"
+        spec_node.nodeBehavior = (
+            _proto.TreeEnsemble_pb2.TreeEnsembleParameters.TreeNode.TreeNodeBehavior.Value(
+                "LeafNode"
+            )
         )
 
         if not isinstance(values, _collections.abc.Iterable):
@@ -243,8 +246,10 @@ class TreeEnsembleBase:
             ev_info = spec_node.evaluationInfo.add()
             ev_info.evaluationIndex = index
             ev_info.evaluationValue = float(value)
-            spec_node.nodeBehavior = _TreeEnsemble_pb2.TreeEnsembleParameters.TreeNode.TreeNodeBehavior.Value(
-                "LeafNode"
+            spec_node.nodeBehavior = (
+                _proto.TreeEnsemble_pb2.TreeEnsembleParameters.TreeNode.TreeNodeBehavior.Value(
+                    "LeafNode"
+                )
             )
 
 
@@ -257,7 +262,7 @@ class TreeEnsembleRegressor(TreeEnsembleBase):
 
     Examples
     --------
-    
+
     In the following example, the code saves the model to disk, which is a
     recommended practice but not required.
 

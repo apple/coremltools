@@ -17,6 +17,7 @@ from coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops import (
 )
 from coremltools.converters.mil.mil.ops.defs.iOS18 import _IOS18_TARGET
 from coremltools.converters.mil.mil.var import Var
+from coremltools.optimize import _utils as optimize_utils
 
 
 @register_op(opset_version=_IOS18_TARGET)
@@ -381,53 +382,7 @@ class constexpr_lut_to_dense(Operation):
         lut: np.ndarray,
         vector_axis: Optional[np.generic],
     ):
-        num_palettes = lut.shape[-2]
-        vector_size = lut.shape[-1]
-        original_lut_shape = lut.shape
-        block_size = [indices.shape[idx] // lut.shape[idx] for idx in range(len(indices.shape))]
-
-        if vector_axis is not None and vector_axis < 0:
-            vector_axis += len(indices.shape)
-
-        lut = lut.reshape(-1, num_palettes, vector_size)
-        decompressed_res = indices.astype(lut.dtype)
-        if vector_size > 1:
-            # Tile the vector_axis to make room for the vector retrieved from lut.
-            decompressed_res = np.repeat(decompressed_res, vector_size, axis=vector_axis)
-        else:
-            lut = np.squeeze(lut, axis=-1)
-
-        # TODO (rdar://115061946): Vectorize the computation.
-        for table_idx in range(lut.shape[0]):
-            # Get the corresponding idx in indices for the current table.
-            # For example, if table coord is (1, 3), the corresponding indices should be
-            # [1*block_size[0] : 2*block_size[0], 3*block_size[1], 4*block_size[1]].
-            original_table_coord = np.unravel_index(table_idx, original_lut_shape[:-2])
-            slice_idxes = tuple(
-                slice(coord * block_size[idx], (coord + 1) * block_size[idx])
-                for idx, coord in enumerate(original_table_coord)
-            )
-            unquantized_values = lut[table_idx][indices[slice_idxes]]
-            if vector_size > 1:
-                if vector_axis is None:
-                    raise ValueError("vector_axis must be provided for vector lut.")
-                # Merge the vector dim into the decompressed values (flatten the vector).
-                unquantized_values = np.swapaxes(unquantized_values, vector_axis, -2)
-                unquantized_values = unquantized_values.reshape(
-                    unquantized_values.shape[:-2] + (-1,)
-                )
-                unquantized_values = np.swapaxes(unquantized_values, vector_axis, -1)
-                # Resize the slice to make room for the merged vector dequantized values.
-                slice_idxes = list(slice_idxes)
-                resized_slice = slice(
-                    slice_idxes[vector_axis].start * vector_size,
-                    slice_idxes[vector_axis].stop * vector_size,
-                    slice_idxes[vector_axis].step,
-                )
-                slice_idxes[vector_axis] = resized_slice
-            decompressed_res[tuple(slice_idxes)] = unquantized_values
-
-        return decompressed_res
+        return optimize_utils.lut_to_dense(indices, lut, vector_axis)
 
 
 @register_op(opset_version=_IOS18_TARGET)

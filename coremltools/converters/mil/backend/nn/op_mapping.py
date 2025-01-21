@@ -7,19 +7,16 @@ import numpy as _np
 from tqdm import tqdm as _tqdm
 
 from coremltools import _logger as logger
+from coremltools import proto
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry
-from coremltools.converters.mil.mil.types.symbolic import (any_symbolic,
-                                                           is_symbolic,
-                                                           is_variadic)
+from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbolic, is_variadic
 from coremltools.converters.mil.mil.types.type_mapping import np_val_to_py_type
 from coremltools.models import neural_network as neural_network
 from coremltools.models.neural_network.quantization_utils import \
     _convert_array_to_nbit_quantized_bytes
-from coremltools.proto import NeuralNetwork_pb2
 
-from .mil_to_nn_mapping_registry import (MIL_TO_NN_MAPPING_REGISTRY,
-                                         register_mil_to_nn_mapping)
+from .mil_to_nn_mapping_registry import MIL_TO_NN_MAPPING_REGISTRY, register_mil_to_nn_mapping
 
 
 def convert_ops(const_context, builder, ops, outputs):
@@ -3451,7 +3448,7 @@ def custom_op(const_context, builder, op):
     output_names = [_output.name for _output in op.outputs]
 
     # Load custom params
-    params = NeuralNetwork_pb2.CustomLayerParams()
+    params = proto.NeuralNetwork_pb2.CustomLayerParams()
     params.className = class_name
     params.description = description
 

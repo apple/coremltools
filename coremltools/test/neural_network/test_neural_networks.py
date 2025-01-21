@@ -6,15 +6,14 @@
 import unittest
 
 import coremltools
-from coremltools.models.utils import (_get_custom_layer_names,
-                                      _replace_custom_layer_name)
-from coremltools.proto import Model_pb2
+from coremltools import proto
+from coremltools.models.utils import _get_custom_layer_names, _replace_custom_layer_name
 
 
 class CustomLayerUtilsTest(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        spec = Model_pb2.Model()
+        spec = proto.Model_pb2.Model()
         spec.specificationVersion = coremltools.SPECIFICATION_VERSION
 
         features = ["feature_1", "feature_2"]

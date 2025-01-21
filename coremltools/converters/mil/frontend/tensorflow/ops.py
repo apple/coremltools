@@ -1196,7 +1196,7 @@ def ExpandDims(context, node):
     context.add(node.name, x)
 
 
-@register_tf_op(tf_alias=["FusedBatchNormV2", "FusedBatchNormV3"])
+@register_tf_op(tf_alias=["FusedBatchNormV2", "FusedBatchNormV3"], strict=False)
 def FusedBatchNorm(context, node):
     # Get attributes
     data_format = node.attr.get("data_format", "NHWC")
@@ -2892,7 +2892,7 @@ def function_entry(context, node):
     context.add(node.name, context.get_func_inputs())
 
 
-@register_tf_op(tf_alias=["while"])
+@register_tf_op(tf_alias=["while"], strict=False)
 def While(context, node):
     # TF while will never have break statement, because break can always be
     # transformed into while and condition. Example:

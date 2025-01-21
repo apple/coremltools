@@ -8,36 +8,6 @@ from collections import OrderedDict
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.var import InternalVar
 
-SUPPORT_FLOAT_TYPES = [
-    types.fp16,
-    types.fp32,
-    types.fp64,
-]
-
-SUPPORT_INT_TYPES = [
-    types.uint8,
-    types.uint16,
-    types.uint32,
-    types.uint64,
-    types.int8,
-    types.int16,
-    types.int32,
-    types.int64,
-] + list(types._SUB_BYTE_TYPES)
-
-SUPPORT_COMPLEX_TYPES = [
-    types.complex64,
-    types.complex128,
-]
-
-_SUPPORT_TYPES = (
-    SUPPORT_FLOAT_TYPES
-    + SUPPORT_INT_TYPES
-    + SUPPORT_COMPLEX_TYPES
-    + [types.bool, types.str]
-    + list(types._SUB_BYTE_TYPES)
-)
-
 
 class DefaultInputs:
     def __init__(self, **kwargs):
@@ -287,9 +257,13 @@ class TensorInputType(_InputType):
 
     @type_domain.setter
     def type_domain(self, val):
-        msg = f"type_domain {val} must be a tuple of builtin types"
-        if not isinstance(val, tuple) or any(map(lambda t: t not in _SUPPORT_TYPES, val)):
-            raise ValueError(msg)
+        if not (isinstance(val, tuple)):
+            raise ValueError(f"type_domain {val} must be a tuple of builtin types")
+        for it_type in val:
+            if it_type not in types.type_mapping._TYPES_TO_STRINGS:
+                raise ValueError(
+                    f"All elements in type_domain must be builtin types, but got {it_type}"
+                )
         self._type_domain = val
 
     @property

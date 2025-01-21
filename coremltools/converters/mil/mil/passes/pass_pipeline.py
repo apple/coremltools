@@ -15,6 +15,11 @@ from coremltools.converters.mil.mil import Program
 from coremltools.converters.mil.mil.passes.graph_pass import PassOption
 from coremltools.converters.mil.mil.passes.helper import classproperty as _classproperty
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
+from coremltools.optimize.coreml import (
+    OpPalettizerConfig,
+    OpThresholdPrunerConfig,
+    OptimizationConfig,
+)
 
 _COMMON_PASSES: List[Text] = [
     "common::lower_complex_dialect_ops",
@@ -428,8 +433,6 @@ class PassPipeline:
     @_classproperty
     def DEFAULT_PALETTIZATION(cls) -> PassPipeline:
         """Create a default palettization pipeline to convert a compressed source model"""
-        # We use delayed import to avoid circular import
-        from coremltools.optimize.coreml import OpPalettizerConfig, OptimizationConfig
         pipeline = cls.get_pipeline("default_palettization")
 
         # set default palettization
@@ -440,8 +443,6 @@ class PassPipeline:
     @_classproperty
     def DEFAULT_PRUNING(cls) -> PassPipeline:
         """Create a default sparsification pipeline to convert a compressed source model"""
-        # We use delayed import to avoid circular import
-        from coremltools.optimize.coreml import OpThresholdPrunerConfig, OptimizationConfig
         pipeline = cls.get_pipeline("default_sparsification")
 
         # set default sparsification

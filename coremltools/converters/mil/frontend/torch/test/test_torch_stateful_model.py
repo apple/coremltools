@@ -10,6 +10,7 @@ import numpy as np
 import pytest
 
 import coremltools as ct
+from coremltools import proto
 from coremltools.converters.mil.frontend.torch.utils import TorchFrontend
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
@@ -22,7 +23,6 @@ from coremltools.converters.mil.testing_utils import (
     get_op_types_in_program,
     verify_prediction,
 )
-from coremltools.proto import FeatureTypes_pb2 as ft
 
 torch = pytest.importorskip("torch")
 
@@ -1046,7 +1046,9 @@ class TestStateConversionAPI:
             minimum_deployment_target=ct.target.iOS18,
             compute_units=compute_unit,
         )
-        assert_spec_input_image_type(mlmodel._spec, expected_feature_type=ft.ImageFeatureType.RGB)
+        assert_spec_input_image_type(
+            mlmodel._spec, expected_feature_type=proto.FeatureTypes_pb2.ImageFeatureType.RGB
+        )
         assert_prog_output_type(mlmodel._mil_program, expected_dtype_str="fp32")
         verify_prediction(mlmodel)
 
@@ -1068,8 +1070,12 @@ class TestStateConversionAPI:
             minimum_deployment_target=ct.target.iOS18,
             compute_units=compute_unit,
         )
-        assert_spec_input_image_type(mlmodel._spec, expected_feature_type=ft.ImageFeatureType.BGR)
-        assert_spec_output_image_type(mlmodel._spec, expected_feature_type=ft.ImageFeatureType.RGB)
+        assert_spec_input_image_type(
+            mlmodel._spec, expected_feature_type=proto.FeatureTypes_pb2.ImageFeatureType.BGR
+        )
+        assert_spec_output_image_type(
+            mlmodel._spec, expected_feature_type=proto.FeatureTypes_pb2.ImageFeatureType.RGB
+        )
         assert_prog_output_type(mlmodel._mil_program, expected_dtype_str="fp32")
         verify_prediction(mlmodel)
 
@@ -1092,7 +1098,7 @@ class TestStateConversionAPI:
                 compute_units=compute_unit,
             )
             assert_spec_output_image_type(
-                mlmodel._spec, expected_feature_type=ft.ImageFeatureType.RGB
+                mlmodel._spec, expected_feature_type=proto.FeatureTypes_pb2.ImageFeatureType.RGB
             )
             assert_prog_output_type(mlmodel._mil_program, expected_dtype_str="fp32")
             if is_dynamic:
@@ -1116,7 +1122,7 @@ class TestStateConversionAPI:
             compute_units=compute_unit,
         )
         assert_spec_input_image_type(
-            mlmodel._spec, expected_feature_type=ft.ImageFeatureType.GRAYSCALE
+            mlmodel._spec, expected_feature_type=proto.FeatureTypes_pb2.ImageFeatureType.GRAYSCALE
         )
         assert_prog_output_type(mlmodel._mil_program, expected_dtype_str="fp32")
         verify_prediction(mlmodel)
@@ -1133,7 +1139,8 @@ class TestStateConversionAPI:
             compute_units=compute_unit,
         )
         assert_spec_input_image_type(
-            mlmodel._spec, expected_feature_type=ft.ImageFeatureType.GRAYSCALE_FLOAT16
+            mlmodel._spec,
+            expected_feature_type=proto.FeatureTypes_pb2.ImageFeatureType.GRAYSCALE_FLOAT16,
         )
         assert_output_dtype(mlmodel, expected_type_str="fp16")
         verify_prediction(mlmodel)
@@ -1157,10 +1164,12 @@ class TestStateConversionAPI:
             compute_units=compute_unit,
         )
         assert_spec_input_image_type(
-            mlmodel._spec, expected_feature_type=ft.ImageFeatureType.GRAYSCALE_FLOAT16
+            mlmodel._spec,
+            expected_feature_type=proto.FeatureTypes_pb2.ImageFeatureType.GRAYSCALE_FLOAT16,
         )
         assert_spec_output_image_type(
-            mlmodel._spec, expected_feature_type=ft.ImageFeatureType.GRAYSCALE_FLOAT16
+            mlmodel._spec,
+            expected_feature_type=proto.FeatureTypes_pb2.ImageFeatureType.GRAYSCALE_FLOAT16,
         )
         assert_prog_output_type(mlmodel._mil_program, expected_dtype_str="fp16")
         verify_prediction(mlmodel)
@@ -1174,10 +1183,11 @@ class TestStateConversionAPI:
             compute_units=compute_unit,
         )
         assert_spec_input_image_type(
-            mlmodel._spec, expected_feature_type=ft.ImageFeatureType.GRAYSCALE
+            mlmodel._spec, expected_feature_type=proto.FeatureTypes_pb2.ImageFeatureType.GRAYSCALE
         )
         assert_spec_output_image_type(
-            mlmodel._spec, expected_feature_type=ft.ImageFeatureType.GRAYSCALE_FLOAT16
+            mlmodel._spec,
+            expected_feature_type=proto.FeatureTypes_pb2.ImageFeatureType.GRAYSCALE_FLOAT16,
         )
         assert_prog_output_type(mlmodel._mil_program, expected_dtype_str="fp16")
         verify_prediction(mlmodel)

@@ -9,7 +9,7 @@ import pytest
 from coremltools import ImageType, StateType, TensorType
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types import type_mapping
-from coremltools.optimize.coreml import _utils as optimize_utils
+from coremltools.optimize import _utils as optimize_utils
 
 
 class TestTypes:

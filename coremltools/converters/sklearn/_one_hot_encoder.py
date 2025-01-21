@@ -3,6 +3,8 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from coremltools import proto
+
 from ... import SPECIFICATION_VERSION
 from ..._deps import _HAS_SKLEARN, _SKLEARN_VERSION
 from ...models import MLModel as _MLModel
@@ -11,8 +13,6 @@ from ...models._interface_management import set_transform_interface_params
 from ...models.array_feature_extractor import create_array_feature_extractor
 from ...models.feature_vectorizer import create_feature_vectorizer
 from ...models.pipeline import Pipeline
-from ...proto import Model_pb2 as _Model_pb2
-from ...proto import OneHotEncoder_pb2 as _OHE_pb2
 from . import _sklearn_util
 
 if _HAS_SKLEARN:
@@ -78,7 +78,7 @@ def convert(model, input_features, output_features):
         for i in model._n_features_outs:
             t = t + i
             model.feature_indices_.append(t)
-        
+
     # Create a pipeline that can do all of the subsequent feature extraction.
     feature_vectorizer_input_features = []
     feature_vectorizer_size_map = {}
@@ -117,7 +117,7 @@ def convert(model, input_features, output_features):
             ohe_output_features = [(f_name, datatypes.Dictionary("Int64"))]
 
             # Create a one hot encoder per column
-            o_spec = _Model_pb2.Model()
+            o_spec = proto.Model_pb2.Model()
             o_spec.specificationVersion = SPECIFICATION_VERSION
             o_spec = set_transform_interface_params(
                 o_spec, ohe_input_features, ohe_output_features
@@ -127,11 +127,11 @@ def convert(model, input_features, output_features):
             ohe_spec.outputSparse = True
 
             if model.handle_unknown == "error":
-                ohe_spec.handleUnknown = _OHE_pb2.OneHotEncoder.HandleUnknown.Value(
+                ohe_spec.handleUnknown = proto.OneHotEncoder_pb2.OneHotEncoder.HandleUnknown.Value(
                     "ErrorOnUnknown"
                 )
             else:
-                ohe_spec.handleUnknown = _OHE_pb2.OneHotEncoder.HandleUnknown.Value(
+                ohe_spec.handleUnknown = proto.OneHotEncoder_pb2.OneHotEncoder.HandleUnknown.Value(
                     "IgnoreUnknown"
                 )
 

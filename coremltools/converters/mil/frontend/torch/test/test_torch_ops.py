@@ -6,7 +6,7 @@
 import itertools
 import platform
 from contextlib import nullcontext
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 from unittest.mock import patch
 
 import numpy as np
@@ -32,6 +32,7 @@ from coremltools.converters.mil.testing_utils import (
     gen_input_shapes_einsum,
     get_op_types_in_program,
     hardcoded_einsum_equations,
+    random_gen,
 )
 from coremltools.models.utils import _macos_version, _python_version
 
@@ -2128,11 +2129,11 @@ class TestConvTranspose(TorchBaseTest):
         )
 
 
-def _is_float_value(x, threshold=0.001):
-    return x - np.floor(x) > threshold
-
-
 class TestUpsample(TorchBaseTest):
+    @staticmethod
+    def _is_float_value(x, threshold=0.001):
+        return x - np.floor(x) > threshold
+
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, output_size, align_corners",
         itertools.product(
@@ -2172,7 +2173,7 @@ class TestUpsample(TorchBaseTest):
         Height = 8
         input_shape = (1, 3, Height)
         output_h = Height * scale
-        is_h_float = _is_float_value(output_h)
+        is_h_float = self._is_float_value(output_h)
 
         if is_h_float and not align_corners and not recompute_scale_factor:
             pytest.xfail("rdar://81124053 (Support recompute_scale_factor)")
@@ -2199,7 +2200,7 @@ class TestUpsample(TorchBaseTest):
     def test_upsample_linear1d_with_scales_dynamic(
         self, compute_unit, backend, frontend, scales, align_corners, recompute_scale_factor
     ):
-        is_float = _is_float_value(scales)
+        is_float = self._is_float_value(scales)
         input_shape = (1, 3, 22)
 
         if is_float and not align_corners and not recompute_scale_factor:
@@ -2332,8 +2333,8 @@ class TestUpsample(TorchBaseTest):
         input_shape = (1, 3, Height, Width)
         output_h = Height * scales_h
         output_w = Width * scales_w
-        is_h_float = _is_float_value(output_h)
-        is_w_float = _is_float_value(output_w)
+        is_h_float = self._is_float_value(output_h)
+        is_w_float = self._is_float_value(output_w)
 
         if (
             (is_h_float or is_w_float)
@@ -2381,8 +2382,8 @@ class TestUpsample(TorchBaseTest):
         align_corners,
         recompute_scale_factor,
     ):
-        is_h_float = _is_float_value(scales_h)
-        is_w_float = _is_float_value(scales_w)
+        is_h_float = self._is_float_value(scales_h)
+        is_w_float = self._is_float_value(scales_w)
         input_shape = (1, 3, 9, 22)
 
         if (is_h_float or is_w_float) and not align_corners and not recompute_scale_factor:
@@ -7339,8 +7340,10 @@ class TestRepeatInterleave(TorchBaseTest):
     def test_scalar_repeat(self, compute_unit, backend, frontend, rank, dim, repeat):
         if dim is not None and dim >= rank:
             pytest.skip()
-        if frontend == TorchFrontend.EXECUTORCH:
-            pytest.skip("torch._ops.aten.repeat_interleave.Tensor is not Aten Canonical")
+        if isinstance(repeat, torch.Tensor) and frontend == TorchFrontend.EXECUTORCH:
+            pytest.xfail("torch._ops.aten.repeat_interleave.Tensor is not Aten Canonical")
+        if rank == 5 and frontend == TorchFrontend.EXECUTORCH:
+            pytest.xfail("ExecuTorch produces rank+1 const, but Core ML supports up to rank 5")
 
         input_shape = tuple(np.random.randint(low=1, high=6, size=rank))
         model = ModuleWrapper(function=lambda x: x.repeat_interleave(repeat, dim=dim))
@@ -7353,7 +7356,11 @@ class TestRepeatInterleave(TorchBaseTest):
             frontend=frontend,
         )[1]
         # when repeat = 1, repeat_interelave is a noop
-        if repeat in (1, torch.tensor(1), torch.tensor([1])):
+        # ExecuTorch decomposes repeat_interleave, though, so we will not get noop from it
+        if (
+            repeat in (1, torch.tensor(1), torch.tensor([1]))
+            and frontend != TorchFrontend.EXECUTORCH
+        ):
             assert get_op_types_in_program(mlmodel._mil_program) in (
                 ["identity"],
                 ["identity", "identity"],
@@ -7372,7 +7379,7 @@ class TestRepeatInterleave(TorchBaseTest):
     )
     def test_single_fill_tensor_repeat(self, compute_unit, backend, frontend):
         if frontend == TorchFrontend.EXECUTORCH:
-            pytest.skip("torch._ops.aten.repeat_interleave.Tensor is not Aten Canonical")
+            pytest.xfail("torch._ops.aten.repeat_interleave.Tensor is not Aten Canonical")
 
         input_shape = (3, 2)
         model = ModuleWrapper(function=lambda x: x.repeat_interleave(torch.tensor([2, 2]), dim=1))
@@ -7406,7 +7413,7 @@ class TestRepeatInterleave(TorchBaseTest):
     )
     def test_dynamic(self, compute_unit, backend, frontend, dim):
         if frontend == TorchFrontend.EXECUTORCH:
-            pytest.skip("ExecuTorch size op does not work on FakeTensor")
+            pytest.xfail("ExecuTorch size op does not work on FakeTensor")
         if platform.machine() == "x86_64":
             pytest.xfail("rdar://135843153 ([Bug] Models failed on x86_64 platform)")
 
@@ -8092,7 +8099,9 @@ class TestTopk(TorchBaseTest):
 
         model = TopkModel()
 
-        input_data = torch.rand(input_shape)
+        # If multiple elements are identical, then indices may have multiple possible values,
+        # making testing hard, so we make sure all elements are unique
+        input_data = torch.tensor(random_gen(input_shape, allow_duplicate=False))
         k_list = torch.tensor([k + 1, k, k + 2])
         expected_results = model(input_data, k_list)
 
@@ -8551,11 +8560,32 @@ class TestWhere(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_where_scalarself(self, compute_unit, backend, frontend):
+        """Test torch.ops.aten.where.ScalarSelf in torch.export"""
+        INVALID_LOGIT_BIAS = -40000.0
+
+        class Model(torch.nn.Module):
+            def forward(self, x):
+                return torch.where(x != INVALID_LOGIT_BIAS, 0.0, x)
+
+        self.run_compare_torch(
+            [torch.zeros(1, 2048, 1, 48)],
+            Model(),
+            compute_unit=compute_unit,
+            frontend=frontend,
+            backend=backend,
+            input_as_shape=False,
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend, shape",
         itertools.product(compute_units, backends, frontends, COMMON_SHAPES + [(10,)]),
     )
     def test_where_single_param(self, compute_unit, backend, frontend, shape):
-        if frontend in TORCH_EXPORT_BASED_FRONTENDS:
+        if frontend == TorchFrontend.EXECUTORCH:
             pytest.xfail(
                 "https://github.com/apple/coremltools/issues/2183: "
                 "Operator torch._ops.aten._assert_async.msg is not Aten Canonical"
@@ -9452,7 +9482,7 @@ class TestIndexPut(TorchBaseTest):
         ),
     )
     def test_index_put_bool_index_case_1(self, compute_unit, backend, frontend, minimum_deployment_target):
-        if frontend in TORCH_EXPORT_BASED_FRONTENDS:
+        if frontend == TorchFrontend.EXECUTORCH:
             pytest.xfail(
                 "https://github.com/apple/coremltools/issues/2183: "
                 "Operator torch._ops.aten._assert_async.msg is not Aten Canonical"
@@ -9460,6 +9490,8 @@ class TestIndexPut(TorchBaseTest):
 
         class IndexPutModel(torch.nn.Module):
             def forward(self, x, y):
+                if frontend in TORCH_EXPORT_BASED_FRONTENDS:
+                    x = x.clone()
                 y = x + 1
                 mask = torch.tensor([True, False, False, False, True, True]).view(3, 2)
                 x[mask] = y[mask]
@@ -9488,15 +9520,6 @@ class TestIndexPut(TorchBaseTest):
     def test_index_put_bool_index_case_2(
         self, compute_unit, backend, frontend, rank, minimum_deployment_target
     ):
-        if backend[0] == "neuralnetwork" and frontend in (
-            TorchFrontend.TORCHEXPORT,
-            TorchFrontend.EXECUTORCH,
-        ):
-            pytest.xfail(
-                "https://github.com/apple/coremltools/issues/2185: "
-                "EXIR IndexPut Fails on NeuralNetwork Backend"
-            )
-
         class IndexPutModel(torch.nn.Module):
             def forward(self, x):
                 mask = torch.tensor([True, False, False, False, True, True]).view(3, 2)
@@ -9510,6 +9533,32 @@ class TestIndexPut(TorchBaseTest):
 
         self.run_compare_torch(
             (3, 2),
+            IndexPutModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            minimum_deployment_target=minimum_deployment_target,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, minimum_deployment_target",
+        itertools.product(compute_units, backends, frontends, [None, ct.target.iOS17]),
+    )
+    def test_index_put_bool_index_broadcast(
+        self, compute_unit, backend, frontend, minimum_deployment_target
+    ):
+        class IndexPutModel(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.ge = torch.tensor([[True]])
+                self.value = torch.tensor(1.0)
+
+            def forward(self, x):
+                z = torch.ops.aten.index_put(x, [self.ge], self.value)
+                return z
+
+        self.run_compare_torch(
+            (1, 1, 2),
             IndexPutModel(),
             frontend=frontend,
             backend=backend,
@@ -9562,14 +9611,6 @@ class TestIndexPut(TorchBaseTest):
     def test_index_put_dynamic_bool_index(
         self, compute_unit, backend, frontend, minimum_deployment_target
     ):
-        if backend[0] == "neuralnetwork" and frontend in (
-            TorchFrontend.TORCHEXPORT,
-            TorchFrontend.EXECUTORCH,
-        ):
-            pytest.xfail(
-                "https://github.com/apple/coremltools/issues/2185: "
-                "EXIR IndexPut Fails on NeuralNetwork Backend"
-            )
         if _macos_version() < (13, 0):
             pytest.skip("Issue fixed in iOS16/macOS13")
 
@@ -9609,15 +9650,6 @@ class TestIndexPut(TorchBaseTest):
     def test_index_put_int_index_case_1(
         self, compute_unit, backend, frontend, rank, accumulate, minimum_deployment_target
     ):
-        if backend[0] == "neuralnetwork" and frontend in (
-            TorchFrontend.TORCHEXPORT,
-            TorchFrontend.EXECUTORCH,
-        ):
-            pytest.xfail(
-                "https://github.com/apple/coremltools/issues/2185: "
-                "EXIR IndexPut Fails on NeuralNetwork Backend"
-            )
-
         class IndexPutModel(torch.nn.Module):
             def forward(self, x, indices, values):
                 if frontend in TORCH_EXPORT_BASED_FRONTENDS:
@@ -9796,7 +9828,7 @@ class TestIndexPut(TorchBaseTest):
         self, compute_unit, backend, frontend, accumulate, minimum_deployment_target
     ):
         if frontend in TORCH_EXPORT_BASED_FRONTENDS:
-            pytest.skip(
+            pytest.xfail(
                 "https://github.com/pytorch/pytorch/issues/134443 "
                 "Torch exported program outputs fake tensor"
             )
@@ -9835,15 +9867,6 @@ class TestIndexPut(TorchBaseTest):
     def test_index_put_negative_indices_case_2(
         self, compute_unit, backend, frontend, rank, accumulate, minimum_deployment_target
     ):
-        if backend[0] == "neuralnetwork" and frontend in (
-            TorchFrontend.TORCHEXPORT,
-            TorchFrontend.EXECUTORCH,
-        ):
-            pytest.xfail(
-                "https://github.com/apple/coremltools/issues/2185: "
-                "EXIR IndexPut Fails on NeuralNetwork Backend"
-            )
-
         if (
             backend[0] == "mlprogram"
             and frontend == TorchFrontend.TORCHSCRIPT
@@ -9901,7 +9924,7 @@ class TestIndexPut(TorchBaseTest):
     def test_index_put_updates_bool(
         self, compute_unit, backend, frontend, minimum_deployment_target
     ):
-        if frontend in TORCH_EXPORT_BASED_FRONTENDS:
+        if frontend == TorchFrontend.EXECUTORCH:
             pytest.xfail(
                 "https://github.com/apple/coremltools/issues/2183: "
                 "Operator torch._ops.aten._assert_async.msg is not Aten Canonical"
@@ -9934,7 +9957,7 @@ class TestIndexPut(TorchBaseTest):
         ),
     )
     def test_index_put_vector(self, compute_unit, backend, frontend, minimum_deployment_target):
-        if frontend in TORCH_EXPORT_BASED_FRONTENDS:
+        if frontend == TorchFrontend.EXECUTORCH:
             pytest.xfail(
                 "https://github.com/apple/coremltools/issues/2183: "
                 "Operator torch._ops.aten._assert_async.msg is not Aten Canonical"
@@ -9942,6 +9965,8 @@ class TestIndexPut(TorchBaseTest):
 
         class IndexPutModel(torch.nn.Module):
             def forward(self, x):
+                if frontend in TORCH_EXPORT_BASED_FRONTENDS:
+                    x = x.clone()
                 y = x + 1
                 mask = torch.tensor([True, False, False, False, True, True]).view(2, 3)
                 x[mask] = y[mask]
@@ -9959,6 +9984,34 @@ class TestIndexPut(TorchBaseTest):
 
 class TestIndex(TorchBaseTest):
     @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_index_cast_to_int(self, compute_unit, backend):
+        """Test the index are cast into the correct dtype."""
+
+        class IndexModel(torch.nn.Module):
+            def forward(self, x, y):
+                mask = y > 2
+                index = mask.sum(0).unsqueeze(0)
+                return x[index, :]
+
+        x = torch.rand((2, 3))
+        y = torch.Tensor([1.0, 2.0, 3.0])
+
+        self.run_compare_torch(
+            [x, y],
+            IndexModel(),
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+            minimum_deployment_target=ct.target.iOS17,
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend, input_dtype, shape, minimum_deployment_target",
         itertools.product(
             compute_units,
@@ -9975,7 +10028,7 @@ class TestIndex(TorchBaseTest):
     def test_index_bool_indices(
         self, compute_unit, backend, frontend, input_dtype, shape, minimum_deployment_target
     ):
-        if frontend in TORCH_EXPORT_BASED_FRONTENDS:
+        if frontend == TorchFrontend.EXECUTORCH:
             pytest.xfail(
                 "https://github.com/apple/coremltools/issues/2183: "
                 "Operator torch._ops.aten._assert_async.msg is not Aten Canonical"
@@ -10036,15 +10089,13 @@ class TestIndex(TorchBaseTest):
     def test_index_int_index_case_1(
         self, compute_unit, backend, frontend, input_dtype, shape, minimum_deployment_target
     ):
-        if frontend in TORCH_EXPORT_BASED_FRONTENDS:
-            pytest.xfail(
-                "https://github.com/apple/coremltools/issues/2184: "
-                "Cannot Convert Empty EXIR Model"
-            )
-
         # all elements are selected
         class IndexModel(torch.nn.Module):
             def forward(self, x):
+                if frontend in TORCH_EXPORT_BASED_FRONTENDS:
+                    # For now we cannot convert empty EXIR model, so we add an extra layer
+                    # TODO (https://github.com/apple/coremltools/issues/2184): remove this +1
+                    x = x + 1
                 if len(shape) == 2:
                     return x[:, :]
                 elif len(shape) == 4:
@@ -10372,7 +10423,7 @@ class TestIndex(TorchBaseTest):
     def test_index_int_index_case_9(
         self, compute_unit, backend, frontend, input_dtype, shape, minimum_deployment_target
     ):
-        if frontend in TORCH_EXPORT_BASED_FRONTENDS:
+        if frontend == TorchFrontend.EXECUTORCH:
             pytest.xfail(
                 "https://github.com/apple/coremltools/issues/2183: "
                 "Operator torch._ops.aten._assert_async.msg is not Aten Canonical"
@@ -10418,8 +10469,8 @@ class TestIndex(TorchBaseTest):
     ):
         if frontend in TORCH_EXPORT_BASED_FRONTENDS:
             pytest.xfail(
-                "https://github.com/apple/coremltools/issues/2183: "
-                "Operator torch._ops.aten._assert_async.msg is not Aten Canonical"
+                "Torch.export considers broadcast of these bool indices as data dependent, "
+                "so it errors out"
             )
 
         """Multiple axes are sliced through bool masks with possible broadcasting."""
@@ -10761,7 +10812,7 @@ class TestMaskedFill(TorchBaseTest):
 
 class TestMeshgrid(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, frontend, x, y, z, dtype, inp_mode, indexing",
+        "compute_unit, backend, frontend, x, y, z, dtype, inp_mode, indexing, dynamic",
         itertools.product(
             compute_units,
             backends,
@@ -10772,6 +10823,7 @@ class TestMeshgrid(TorchBaseTest):
             [torch.int, torch.float],
             ["norm", "list"],
             [None, "ij", "xy"],
+            (True, False),
         ),
     )
     def test_meshgrid(
@@ -10785,6 +10837,7 @@ class TestMeshgrid(TorchBaseTest):
         dtype,
         inp_mode,
         indexing,
+        dynamic,
     ):
         class TestModel(nn.Module):
             def forward(self, x, y, z):
@@ -10802,11 +10855,36 @@ class TestMeshgrid(TorchBaseTest):
         )
         model = TestModel().eval()
         expected_results = model(*inputs)
+
+        torch_export_dynamic_shapes = None
+        converter_input_type = None
+        if dynamic:
+            if frontend in TORCH_EXPORT_BASED_FRONTENDS:
+                torch_export_dynamic_shapes = {}
+                if x == 1:
+                    torch_export_dynamic_shapes["x"] = {}
+                else:
+                    dimx = torch.export.Dim(name="dimx", max=128)
+                    torch_export_dynamic_shapes["x"] = {0: dimx}
+                dimy = torch.export.Dim(name="dimy", max=128)
+                torch_export_dynamic_shapes["y"] = {0: dimy}
+                dimz = torch.export.Dim(name="dimz", max=128)
+                torch_export_dynamic_shapes["z"] = {0: dimz}
+
+            if frontend == TorchFrontend.TORCHSCRIPT:
+                converter_input_type = [
+                    TensorType(shape=(RangeDim(lower_bound=1, upper_bound=128),)),
+                    TensorType(shape=(RangeDim(lower_bound=1, upper_bound=128),)),
+                    TensorType(shape=(RangeDim(lower_bound=1, upper_bound=128),)),
+                ]
+
         self.run_compare_torch(
             inputs,
             model,
             expected_results,
             input_as_shape=False,
+            torch_export_dynamic_shapes=torch_export_dynamic_shapes,
+            converter_input_type=converter_input_type,
             frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
@@ -12759,13 +12837,15 @@ class TestFold(TorchBaseTest):
     @staticmethod
     def construct_block_count(
         output_size: Tuple[int],
-        kernel_size: Tuple[int],
-        dilation=1,
-        padding=0,
-        stride=1,
+        kernel_size: Union[int, Tuple[int]],
+        dilation: Union[int, Tuple[int]] = 1,
+        padding: Union[int, Tuple[int]] = 0,
+        stride: Union[int, Tuple[int]] = 1,
     ):
-        dim = len(kernel_size)
+        dim = len(output_size)
 
+        if not isinstance(kernel_size, tuple):
+            kernel_size = (kernel_size,) * dim
         if not isinstance(dilation, tuple):
             dilation = (dilation,) * dim
         if not isinstance(padding, tuple):
@@ -12783,7 +12863,7 @@ class TestFold(TorchBaseTest):
         return block_count
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, frontend, N, C, output_size, kernel_size",
+        "compute_unit, backend, frontend, N, C, output_size, kernel_size, padding",
         itertools.product(
             compute_units,
             backends,
@@ -12791,28 +12871,38 @@ class TestFold(TorchBaseTest):
             [1, 2],
             [1, 3],
             [(12, 12), (12, 24)],
-            [(2, 2), (2, 3)],
+            [2, (2, 3)],
+            [None, 1, (1, 2)],
         ),
     )
-    def test_unfold(self, compute_unit, backend, frontend, N, C, output_size, kernel_size):
+    def test_fold(self, compute_unit, backend, frontend, N, C, output_size, kernel_size, padding):
         if frontend == TorchFrontend.EXECUTORCH:
             pytest.skip("torch._ops.aten._unsafe_index_put.default is not Aten Canonical")
 
-        block_count = self.construct_block_count(
-            output_size,
-            kernel_size,
-            stride=kernel_size,
-        )
+        if padding is not None:
+            if isinstance(padding, int):
+                output_size = (output_size[0] - 2 * padding, output_size[1] - 2 * padding)
+            else:
+                output_size = (output_size[0] - 2 * padding[0], output_size[1] - 2 * padding[1])
+        kwargs = {
+            "output_size": output_size,
+            "kernel_size": kernel_size,
+            "stride": kernel_size,  # parametrize stride once we support arbitrary stride
+        }
+        if padding is not None:
+            kwargs["padding"] = padding
+        if isinstance(kernel_size, int):
+            block_size = C * kernel_size * kernel_size
+        else:
+            block_size = C * np.prod(kernel_size)
+        block_count = self.construct_block_count(**kwargs)
+
+        model = torch.nn.Fold(**kwargs)
+        model.eval()
+
         self.run_compare_torch(
-            (N, C * np.prod(kernel_size), block_count),
-            ModuleWrapper(
-                function=torch.nn.functional.fold,
-                kwargs={
-                    "output_size": output_size,
-                    "kernel_size": kernel_size,
-                    "stride": kernel_size,
-                },
-            ),
+            (N, block_size, block_count),
+            model,
             frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
@@ -13036,6 +13126,10 @@ class TestScaledDotProductAttention(TorchBaseTest):
             upper_bound = 10
             batch_coreml = ct.RangeDim(default=batch_size, upper_bound=upper_bound)
             batch_torch = torch.export.Dim(name="batch", max=upper_bound)
+            n_heads_1_coreml = ct.RangeDim(default=n_heads_1, upper_bound=upper_bound)
+            n_heads_1_torch = torch.export.Dim(name="n_heads_1", max=upper_bound)
+            n_heads_2_coreml = ct.RangeDim(default=n_heads_2, upper_bound=upper_bound)
+            n_heads_2_torch = torch.export.Dim(name="n_heads_2", max=upper_bound)
             seq_coreml = ct.RangeDim(default=seq_len, upper_bound=upper_bound)
             seq_torch = torch.export.Dim(name="seq", max=upper_bound)
             if rank == 2:
@@ -13058,26 +13152,32 @@ class TestScaledDotProductAttention(TorchBaseTest):
                 }
             elif rank == 4:
                 converter_input_type = [
-                    ct.TensorType(shape=(batch_coreml, n_heads_1, seq_coreml, embedding_dim))
+                    ct.TensorType(shape=(batch_coreml, n_heads_1_coreml, seq_coreml, embedding_dim))
                     for _ in range(3)
                 ]
                 torch_export_dynamic_shapes = {
-                    "query": {0: batch_torch, 2: seq_torch},
-                    "key": {0: batch_torch, 2: seq_torch},
-                    "value": {0: batch_torch, 2: seq_torch},
+                    "query": {0: batch_torch, 1: n_heads_1_torch, 2: seq_torch},
+                    "key": {0: batch_torch, 1: n_heads_1_torch, 2: seq_torch},
+                    "value": {0: batch_torch, 1: n_heads_1_torch, 2: seq_torch},
                 }
             else:
                 assert rank == 5
                 converter_input_type = [
                     ct.TensorType(
-                        shape=(batch_coreml, n_heads_1, n_heads_2, seq_coreml, embedding_dim)
+                        shape=(
+                            batch_coreml,
+                            n_heads_1_coreml,
+                            n_heads_2_coreml,
+                            seq_coreml,
+                            embedding_dim,
+                        )
                     )
                     for _ in range(3)
                 ]
                 torch_export_dynamic_shapes = {
-                    "query": {0: batch_torch, 3: seq_torch},
-                    "key": {0: batch_torch, 3: seq_torch},
-                    "value": {0: batch_torch, 3: seq_torch},
+                    "query": {0: batch_torch, 1: n_heads_1_torch, 2: n_heads_2_torch, 3: seq_torch},
+                    "key": {0: batch_torch, 1: n_heads_1_torch, 2: n_heads_2_torch, 3: seq_torch},
+                    "value": {0: batch_torch, 1: n_heads_1_torch, 2: n_heads_2_torch, 3: seq_torch},
                 }
         else:
             converter_input_type = None
@@ -13199,20 +13299,28 @@ class TestScaledDotProductAttention(TorchBaseTest):
             upper_bound = 10
             batch_coreml = ct.RangeDim(default=batch_size, upper_bound=upper_bound)
             batch_torch = torch.export.Dim(name="batch", max=upper_bound)
+            n_heads_coreml = ct.RangeDim(default=n_heads, upper_bound=upper_bound)
+            n_heads_torch = torch.export.Dim(name="n_heads", max=upper_bound)
             source_seq_coreml = ct.RangeDim(default=source_seq_len, upper_bound=upper_bound)
             source_seq_torch = torch.export.Dim(name="source_seq", max=upper_bound)
             target_seq_coreml = ct.RangeDim(default=target_seq_len, upper_bound=upper_bound)
             target_seq_torch = torch.export.Dim(name="target_seq", max=upper_bound)
             if include_heads:
                 converter_input_type = [
-                    ct.TensorType(shape=(batch_coreml, n_heads, target_seq_coreml, embedding_dim)),
-                    ct.TensorType(shape=(batch_coreml, n_heads, source_seq_coreml, embedding_dim)),
-                    ct.TensorType(shape=(batch_coreml, n_heads, source_seq_coreml, embedding_dim)),
+                    ct.TensorType(
+                        shape=(batch_coreml, n_heads_coreml, target_seq_coreml, embedding_dim)
+                    ),
+                    ct.TensorType(
+                        shape=(batch_coreml, n_heads_coreml, source_seq_coreml, embedding_dim)
+                    ),
+                    ct.TensorType(
+                        shape=(batch_coreml, n_heads_coreml, source_seq_coreml, embedding_dim)
+                    ),
                 ]
                 torch_export_dynamic_shapes = {
-                    "query": {0: batch_torch, 2: target_seq_torch},
-                    "key": {0: batch_torch, 2: source_seq_torch},
-                    "value": {0: batch_torch, 2: source_seq_torch},
+                    "query": {0: batch_torch, 1: n_heads_torch, 2: target_seq_torch},
+                    "key": {0: batch_torch, 1: n_heads_torch, 2: source_seq_torch},
+                    "value": {0: batch_torch, 1: n_heads_torch, 2: source_seq_torch},
                 }
             else:
                 converter_input_type = [
@@ -13270,9 +13378,10 @@ class TestScaledDotProductAttention(TorchBaseTest):
         bool_mask,
         dynamic,
     ):
-        pytest.xfail(
-            "rdar://139827570 (ExecuTorch frontend test failures because the MLModel couldn't be loaded)"
-        )
+        if frontend == TorchFrontend.EXECUTORCH and bool_mask and dynamic:
+            pytest.xfail(
+                "rdar://139827570 (ExecuTorch frontend test failures because the MLModel couldn't be loaded)"
+            )
 
         batch_size, n_heads, embedding_dim = 2, 3, 7
         source_seq_len, target_seq_len = seq_lengths
@@ -13307,22 +13416,30 @@ class TestScaledDotProductAttention(TorchBaseTest):
             upper_bound = 10
             batch_coreml = ct.RangeDim(default=batch_size, upper_bound=upper_bound)
             batch_torch = torch.export.Dim(name="batch", max=upper_bound)
+            n_heads_coreml = ct.RangeDim(default=n_heads, upper_bound=upper_bound)
+            n_heads_torch = torch.export.Dim(name="n_heads", max=upper_bound)
             source_seq_coreml = ct.RangeDim(default=source_seq_len, upper_bound=upper_bound)
             source_seq_torch = torch.export.Dim(name="source_seq", max=upper_bound)
             target_seq_coreml = ct.RangeDim(default=target_seq_len, upper_bound=upper_bound)
             target_seq_torch = torch.export.Dim(name="target_seq", max=upper_bound)
             converter_input_type = [
-                ct.TensorType(shape=(batch_coreml, n_heads, target_seq_coreml, embedding_dim)),
-                ct.TensorType(shape=(batch_coreml, n_heads, source_seq_coreml, embedding_dim)),
-                ct.TensorType(shape=(batch_coreml, n_heads, source_seq_coreml, embedding_dim)),
+                ct.TensorType(
+                    shape=(batch_coreml, n_heads_coreml, target_seq_coreml, embedding_dim)
+                ),
+                ct.TensorType(
+                    shape=(batch_coreml, n_heads_coreml, source_seq_coreml, embedding_dim)
+                ),
+                ct.TensorType(
+                    shape=(batch_coreml, n_heads_coreml, source_seq_coreml, embedding_dim)
+                ),
                 ct.TensorType(
                     shape=(target_seq_coreml, source_seq_coreml), dtype=bool if bool_mask else None
                 ),
             ]
             torch_export_dynamic_shapes = {
-                "query": {0: batch_torch, 2: target_seq_torch},
-                "key": {0: batch_torch, 2: source_seq_torch},
-                "value": {0: batch_torch, 2: source_seq_torch},
+                "query": {0: batch_torch, 1: n_heads_torch, 2: target_seq_torch},
+                "key": {0: batch_torch, 1: n_heads_torch, 2: source_seq_torch},
+                "value": {0: batch_torch, 1: n_heads_torch, 2: source_seq_torch},
                 "mask": {0: target_seq_torch, 1: source_seq_torch},
             }
         else:
@@ -13389,6 +13506,8 @@ class TestScaledDotProductAttention(TorchBaseTest):
             pytest.xfail(
                 "https://github.com/apple/coremltools/issues/2199: placeholder assertion error"
             )
+        if minimum_deployment_target == ct.target.iOS18 and mask_as_input and dynamic:
+            pytest.xfail("rdar://139460266 (SDPA Failed with Dynamic-Shape Mask)")
 
         embedding_size = 32
         seq_length = 16

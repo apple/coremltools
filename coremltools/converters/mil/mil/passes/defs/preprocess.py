@@ -9,7 +9,7 @@ from collections import OrderedDict
 from typing import Optional
 
 from coremltools import _logger as logger
-from coremltools.converters.mil.input_types import EnumeratedShapes, ImageType, Shape
+from coremltools.converters.mil import input_types
 from coremltools.converters.mil.mil import Block
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, Program, types
@@ -53,25 +53,25 @@ class image_input_preprocess(AbstractGraphPass):
 
         main_input_types = list(prog.functions["main"].input_types)
         for idx, input_type in enumerate(main_input_types):
-            if isinstance(input_type, ImageType) and not input_type.channel_first:
+            if isinstance(input_type, input_types.ImageType) and not input_type.channel_first:
                 name = input_type.name
                 # Build new ImageType to change data layout
-                if isinstance(input_type.shape, Shape):
+                if isinstance(input_type.shape, input_types.Shape):
                     new_shape = _transform_to_channel_first(input_type.shape.shape)
                     new_default = _transform_to_channel_first(input_type.shape.default)
-                    shape_type = Shape(shape=new_shape, default=new_default)
-                elif isinstance(input_type.shape, EnumeratedShapes):
+                    shape_type = input_types.Shape(shape=new_shape, default=new_default)
+                elif isinstance(input_type.shape, input_types.EnumeratedShapes):
                     shape_list = []
                     for shape in input_type.shape.shapes:
-                        if isinstance(shape, Shape):
+                        if isinstance(shape, input_types.Shape):
                             shape_list.append(_transform_to_channel_first(shape.shape))
                         else:
                             shape_list.append(_transform_to_channel_first(shape))
-                    shape_type = EnumeratedShapes(
+                    shape_type = input_types.EnumeratedShapes(
                         shapes=shape_list,
                         default=_transform_to_channel_first(input_type.shape.default),
                     )
-                new_image_type = ImageType(
+                new_image_type = input_types.ImageType(
                     name=name,
                     shape=shape_type,
                     bias=input_type.bias,

@@ -1,0 +1,5 @@
+-r ./common_test_packages.pip
+-r ./pytorch.pip
+
+numpy<2.0.0,>1.18.4; platform_machine != "arm64"
+numpy==2.1.3; python_version >= "3.9" and platform_machine == "arm64"

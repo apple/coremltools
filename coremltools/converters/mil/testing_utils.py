@@ -15,6 +15,7 @@ from PIL import Image
 
 import coremltools as ct
 import coremltools.models.utils as coremltoolsutils
+from coremltools import proto
 from coremltools._deps import _IS_MACOS
 from coremltools.converters.mil import mil
 from coremltools.converters.mil.mil import Block, Function, Program
@@ -22,15 +23,8 @@ from coremltools.converters.mil.mil.passes.defs.preprocess import NameSanitizer 
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 from coremltools.converters.mil.mil.scope import ScopeSource
-from coremltools.proto import FeatureTypes_pb2 as ft
 
 np.random.seed(10)
-
-DTYPE_TO_FEATURE_TYPE_MAP: Dict[str, ft.ArrayFeatureType] = {
-    "int32": ft.ArrayFeatureType.INT32,
-    "fp32": ft.ArrayFeatureType.FLOAT32,
-    "fp16": ft.ArrayFeatureType.FLOAT16,
-}
 
 # The minimum macOS version for an IOS target. For example, iOS16 target requires macOS13+.
 IOS_TO_MINIMUM_MACOS_VERSION: Dict[ct.target, int] = {
@@ -152,6 +146,17 @@ def _serialize_current_pytest_mlmodel(mlmodel) -> None:
     mlpackage_path = _create_current_pytest_serialization_path() + "model.mlpackage"
     Path(mlpackage_path).mkdir(parents=True, exist_ok=True)
     mlmodel.save(mlpackage_path)
+
+
+def str_to_proto_feature_type(dtype: str) -> "proto.FeatureTypes_pb2.ArrayFeatureType":
+    if dtype == "int32":
+        return proto.FeatureTypes_pb2.ArrayFeatureType.INT32
+    elif dtype == "fp32":
+        return proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT32
+    elif dtype == "fp16":
+        return proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT16
+    else:
+        raise TypeError(f"{dtype} doesn't have a corresponding protobuf feature type")
 
 
 def assert_op_count_match(program, expect, op=None, verbose=False):
@@ -707,10 +712,16 @@ def assert_spec_input_type(spec, expected_feature_type, expected_name=None, inde
                 assert input.type.multiArrayType.dataType == expected_feature_type
 
 def assert_input_dtype(mlmodel, expected_type_str, expected_name=None, index=0):
-    assert_prog_input_type(mlmodel._mil_program, expected_type_str,
-                           expected_name=expected_name, index=index)
-    assert_spec_input_type(mlmodel._spec, DTYPE_TO_FEATURE_TYPE_MAP[expected_type_str],
-                           expected_name=expected_name, index=index)
+    assert_prog_input_type(
+        mlmodel._mil_program, expected_type_str, expected_name=expected_name, index=index
+    )
+    assert_spec_input_type(
+        mlmodel._spec,
+        str_to_proto_feature_type(expected_type_str),
+        expected_name=expected_name,
+        index=index,
+    )
+
 
 def assert_spec_output_type(spec, expected_feature_type, expected_name=None, index=0):
     assert spec.description.output[index].type.multiArrayType.dataType == expected_feature_type
@@ -725,35 +736,61 @@ def assert_prog_output_type(prog, expected_dtype_str, expected_name=None, index=
         assert output_var.name == expected_name
 
 def assert_output_dtype(mlmodel, expected_type_str, expected_name=None, index=0):
-    assert_prog_output_type(mlmodel._mil_program, expected_type_str,
-                            expected_name=expected_name, index=index)
-    assert_spec_output_type(mlmodel._spec, DTYPE_TO_FEATURE_TYPE_MAP[expected_type_str],
-                            expected_name=expected_name, index=index)
+    assert_prog_output_type(
+        mlmodel._mil_program, expected_type_str, expected_name=expected_name, index=index
+    )
+    assert_spec_output_type(
+        mlmodel._spec,
+        str_to_proto_feature_type(expected_type_str),
+        expected_name=expected_name,
+        index=index,
+    )
+
 
 def random_gen_input_feature_type(input_desc):
     if input_desc.type.WhichOneof("Type") == "multiArrayType":
         shape = [s for s in input_desc.type.multiArrayType.shape]
-        if input_desc.type.multiArrayType.dataType == ft.ArrayFeatureType.FLOAT32:
+        if (
+            input_desc.type.multiArrayType.dataType
+            == proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT32
+        ):
             dtype = np.float32
-        elif input_desc.type.multiArrayType.dataType == ft.ArrayFeatureType.INT32:
+        elif (
+            input_desc.type.multiArrayType.dataType == proto.FeatureTypes_pb2.ArrayFeatureType.INT32
+        ):
             dtype = np.int32
-        elif input_desc.type.multiArrayType.dataType == ft.ArrayFeatureType.FLOAT16:
+        elif (
+            input_desc.type.multiArrayType.dataType
+            == proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT16
+        ):
             dtype = np.float16
-        elif input_desc.type.multiArrayType.dataType == ft.ArrayFeatureType.FLOAT64:
+        elif (
+            input_desc.type.multiArrayType.dataType
+            == proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT64
+        ):
             dtype = np.float64
         else:
             raise ValueError("unsupported type")
         return np.random.rand(*shape).astype(dtype)
     elif input_desc.type.WhichOneof("Type") == "imageType":
-        if input_desc.type.imageType.colorSpace in (ft.ImageFeatureType.BGR, ft.ImageFeatureType.RGB):
+        if input_desc.type.imageType.colorSpace in (
+            proto.FeatureTypes_pb2.ImageFeatureType.BGR,
+            proto.FeatureTypes_pb2.ImageFeatureType.RGB,
+        ):
             shape = [3, input_desc.type.imageType.height, input_desc.type.imageType.width]
             x = np.random.randint(low=0, high=256, size=shape)
             return Image.fromarray(np.transpose(x, [1, 2, 0]).astype(np.uint8))
-        elif input_desc.type.imageType.colorSpace == ft.ImageFeatureType.GRAYSCALE:
+        elif (
+            input_desc.type.imageType.colorSpace
+            == proto.FeatureTypes_pb2.ImageFeatureType.GRAYSCALE
+        ):
             shape = [input_desc.type.imageType.height, input_desc.type.imageType.width]
             x = np.random.randint(low=0, high=256, size=shape)
-            return Image.fromarray(x.astype(np.uint8), 'L')
-        elif input_desc.type.imageType.colorSpace == ft.ImageFeatureType.GRAYSCALE_FLOAT16:
+            return Image.fromarray(x.astype(np.uint8), "L")
+        elif (
+            input_desc.type.imageType.colorSpace
+            == proto.FeatureTypes_pb2.ImageFeatureType.GRAYSCALE_FLOAT16
+        ):
             shape = (input_desc.type.imageType.height, input_desc.type.imageType.width)
             x = np.random.rand(*shape)
             return Image.fromarray(x.astype(np.float32), 'F')

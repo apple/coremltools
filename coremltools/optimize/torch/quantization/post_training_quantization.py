@@ -23,8 +23,7 @@ from attr import define as _define
 from attr import field as _field
 from attrs import validators as _validators
 
-from coremltools.converters.mil.mil.ops.defs.iOS18 import constexpr_blockwise_shift_scale
-from coremltools.optimize.coreml._utils import compute_qparams as _cti_compute_qparams
+from coremltools.optimize import _utils as optimize_utils
 from coremltools.optimize.torch._utils.metadata_utils import (
     CompressionMetadata as _CompressionMetadata,
 )
@@ -359,7 +358,7 @@ class PostTrainingQuantizer(_BasePostTrainingModelOptimizer):
         Compute quantization parameters
         """
 
-        ret = _cti_compute_qparams(
+        ret = optimize_utils.compute_qparams(
             weight=weight,
             nbits=nbits,
             quantization_mode=quantization_mode,
@@ -381,7 +380,7 @@ class PostTrainingQuantizer(_BasePostTrainingModelOptimizer):
         De-quantize weights
         """
 
-        dequantized_weight = constexpr_blockwise_shift_scale.decompress(
+        dequantized_weight = optimize_utils.dequantize_by_scale_and_zp(
             quantized_weight, scale, zero_point
         )
 

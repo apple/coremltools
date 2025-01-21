@@ -697,15 +697,14 @@ class TestMLComputePlan:
             for compute_device in compute_device_usage.supported_compute_devices:
                 assert isinstance(compute_device, MLComputeDevice)
 
-            if platform.machine() == "x86_64":
-                pytest.xfail("rdar://140167930 ([CI] Estimated cost assert fails on x86_64)")
+            if platform.machine() == "arm64":
+                # ``get_estimated_cost_for_mlprogram_operation`` could return None on Intel machines.
+                estimated_cost = compute_plan.get_estimated_cost_for_mlprogram_operation(
+                    operation=operation,
+                )
 
-            estimated_cost = compute_plan.get_estimated_cost_for_mlprogram_operation(
-                operation=operation,
-            )
-
-            assert estimated_cost is not None
-            assert estimated_cost.weight >= 0.0 and estimated_cost.weight <= 1.0
+                assert estimated_cost is not None
+                assert estimated_cost.weight >= 0.0 and estimated_cost.weight <= 1.0
 
     def test_neuralnetwork_compute_plan(self):
         model = TestMLModelStructure._get_test_model(type="neuralnetwork")

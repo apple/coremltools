@@ -10,7 +10,7 @@ import pytest
 
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.ops.defs.iOS18.compression import constexpr_lut_to_dense
-from coremltools.optimize.coreml import _utils as optimize_utils
+from coremltools.optimize import _utils as optimize_utils
 
 
 class TestComputeQuantizationParams:

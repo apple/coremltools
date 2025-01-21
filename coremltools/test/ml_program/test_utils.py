@@ -16,20 +16,27 @@ import pytest
 import torch
 
 import coremltools as ct
+import coremltools.optimize as cto
 from coremltools import _SPECIFICATION_VERSION_IOS_18, proto
 from coremltools.converters.mil import mil
 from coremltools.converters.mil.converter import mil_convert as _mil_convert
 from coremltools.converters.mil.mil import Program, types
 from coremltools.converters.mil.mil.builder import Builder as mb
-from coremltools.converters.mil.mil.passes.pass_pipeline import (
-    PassPipeline,
-    PassPipelineManager,
+from coremltools.converters.mil.mil.passes.pass_pipeline import PassPipeline, PassPipelineManager
+from coremltools.converters.mil.testing_utils import (
+    assert_spec_input_type,
+    assert_spec_output_type,
+    get_op_types_in_program,
+    str_to_proto_feature_type,
 )
-from coremltools.converters.mil.testing_utils import assert_spec_input_type, assert_spec_output_type, DTYPE_TO_FEATURE_TYPE_MAP, get_op_types_in_program
-from coremltools.models.datatypes import Array
-from coremltools.models.utils import bisect_model, MultiFunctionDescriptor, load_spec, save_multifunction, load_spec, change_input_output_tensor_type
+from coremltools.models.utils import (
+    MultiFunctionDescriptor,
+    bisect_model,
+    change_input_output_tensor_type,
+    load_spec,
+    save_multifunction,
+)
 from coremltools.proto.FeatureTypes_pb2 import ArrayFeatureType
-import coremltools.optimize as cto
 
 
 class TestMILConvertCall:
@@ -1676,11 +1683,11 @@ class TestBisectModel:
 
         def check_output_dtype(model_path, expected_output_dtype):
             spec = load_spec(model_path)
-            assert_spec_output_type(spec, DTYPE_TO_FEATURE_TYPE_MAP[expected_output_dtype])
+            assert_spec_output_type(spec, str_to_proto_feature_type(expected_output_dtype))
 
         def check_input_dtype(model_path, expected_input_dtype):
             spec = load_spec(model_path)
-            assert_spec_input_type(spec, DTYPE_TO_FEATURE_TYPE_MAP[expected_input_dtype])
+            assert_spec_input_type(spec, str_to_proto_feature_type(expected_input_dtype))
 
 
         model = self.get_test_model_path(ct.target.iOS17, return_as_mlmodel=mlmodel_as_input)

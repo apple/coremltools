@@ -3,9 +3,11 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from typing import Dict, List, Optional
+from copy import deepcopy
+from typing import Any, Dict, List, Optional, Tuple
 
 from .operation import Operation
+
 
 class OpNode:
     """
@@ -17,6 +19,58 @@ class OpNode:
         self.op = op
         self.next: Optional[OpNode] = None
         self.prev: Optional[OpNode] = None
+
+    def __deepcopy__(
+        self,
+        memo: Dict[int, Any],
+    ) -> "OpNode":
+        # The implementation overrides the default ``__deepcopy__`` to prevent infinite recursion
+        # when dealing with a large number of linked nodes that exceed the Python
+        # call stack limit. It implements a non-recursive deep copy algorithm.
+        if id(self) in memo:
+            return memo[id(self)]
+
+        def copy_node(node: "OpNode") -> "OpNode":
+            if id(node) in memo:
+                return memo[id(node)]
+
+            op_copy = deepcopy(node.op, memo=memo)
+            node_copy = OpNode(op=op_copy)
+            memo[id(node)] = node_copy
+
+            return node_copy
+
+        def copy_linked_nodes(node: OpNode) -> List[Tuple[OpNode, OpNode]]:
+            nodes = []
+            visited = set()
+            queue = [node]
+            while len(queue) > 0:
+                curr_node = queue.pop(0)
+                if id(curr_node) in visited:
+                    continue
+
+                visited.add(id(curr_node))
+                copied_node = copy_node(node=curr_node)
+                nodes.append((curr_node, copied_node))
+
+                if curr_node.next is not None:
+                    queue.append(curr_node.next)
+
+                if curr_node.prev is not None:
+                    queue.append(curr_node.prev)
+
+            return nodes
+
+        # Copy all nodes that are reachable from ``self``
+        all_nodes = copy_linked_nodes(self)
+        for node, node_copy in all_nodes:
+            if node.next is not None:
+                node_copy.next = memo[id(node.next)]
+
+            if node.prev is not None:
+                node_copy.prev = memo[id(node.prev)]
+
+        return memo[id(self)]
 
 class CacheDoublyLinkedList:
     """

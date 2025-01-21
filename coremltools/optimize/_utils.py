@@ -5,7 +5,7 @@
 
 import math
 from collections import namedtuple
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Collection, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -26,6 +26,20 @@ QuantParamsIos16 = namedtuple("QuantParamsIos16", "quantized_data zero_point sca
 SparseParams = namedtuple("SparseParams", "nonzero_data mask")
 LutParams = namedtuple("LutParams", "indices lut vector_axis")
 QuantParams = namedtuple("QuantParams", "data scale offset nbits")
+
+
+def get_quant_range_by_dtype(
+    dtype: types, mode: str
+) -> Tuple[Union[int, float], Union[int, float]]:
+    if types.is_int(dtype):
+        nbits = dtype.get_bitwidth()
+        signed = not dtype.is_unsigned()
+        return get_quant_range(nbits, signed, mode)
+    else:
+        raise NotImplementedError(
+            "Only support getting quant range for int dtype, "
+            f"but got {types.builtin_to_string(dtype)}"
+        )
 
 
 def get_quant_range(n_bits: int, signed: bool, mode: str) -> Tuple[int, int]:
@@ -56,6 +70,23 @@ def quantize_weight(
     dtype: np.dtype,
 ) -> Tuple[np.ndarray, np.ndarray, Optional[np.ndarray]]:
     """Get quantized data along with metadata (scale, zero_point)."""
+    builtin_dtype = types.get_nbits_int_builtin_type(nbits, signed)
+    quantized_data, scale, zero_point = quantize_weight_by_dtype(
+        weight, axes, builtin_dtype, quantization_mode
+    )
+    quantized_data = quantized_data.astype(dtype)
+    if zero_point is not None:
+        zero_point = zero_point.astype(dtype)
+    return quantized_data, scale, zero_point
+
+
+def quantize_weight_by_dtype(
+    weight: np.ndarray,
+    axes: Union[int, Tuple[int, ...]],
+    dtype: types,
+    quantization_mode: str,
+) -> Tuple[np.ndarray, np.ndarray, Optional[np.ndarray]]:
+    """Similar to `quantize_weight, but use `dtype` to specify quant dtype."""
     if not np.issubdtype(weight.dtype, np.floating):
         # In principle, all dtypes are quantizable, e.g. int can be cast to float then quantize
         # In practise, Core ML constexpr dequantization ops return float,
@@ -64,37 +95,132 @@ def quantize_weight(
 
     val_min = np.amin(weight, axis=axes, keepdims=True)
     val_max = np.amax(weight, axis=axes, keepdims=True)
-
-    q_val_min, q_val_max = get_quant_range(nbits, signed, quantization_mode)
-
+    q_val_min, q_val_max = get_quant_range_by_dtype(dtype, quantization_mode)
     zero_point = None
+
     if quantization_mode == "LINEAR_SYMMETRIC":
         # For the linear_symmetric quantization_mode, the range is symmetrical to 0
         max_abs = np.maximum(np.abs(val_min), np.abs(val_max))
         val_min = -max_abs
         val_max = max_abs
-
-        if not signed:
-            zero_point_shift = q_val_max // 2
-            zero_point = zero_point_shift * np.ones(val_min.shape)
     else:
         assert quantization_mode == "LINEAR"
         # For the linear quantization_mode, we need to make sure the data range contains `0`
         val_min = np.minimum(0.0, val_min)
         val_max = np.maximum(0.0, val_max)
-        zero_point = (q_val_min * val_max - q_val_max * val_min) / (val_max - val_min)
-        zero_point = np.round(zero_point)
-        zero_point = np.clip(zero_point, q_val_min, q_val_max)
 
     scale = (val_max - val_min) / (q_val_max - q_val_min)
     quantized_data = np.round(weight / scale)
+
+    if types.is_int(dtype):
+        if quantization_mode == "LINEAR_SYMMETRIC" and dtype.is_unsigned():
+            zero_point_shift = q_val_max // 2
+            zero_point = zero_point_shift * np.ones(val_min.shape)
+        elif quantization_mode == "LINEAR":
+            zero_point = (q_val_min * val_max - q_val_max * val_min) / (val_max - val_min)
+            zero_point = np.round(zero_point)
+            zero_point = np.clip(zero_point, q_val_min, q_val_max)
+
     if zero_point is not None:
         quantized_data += zero_point
-        zero_point = zero_point.squeeze().astype(dtype)
-    quantized_data = np.clip(quantized_data, q_val_min, q_val_max).astype(dtype)
+        zero_point = zero_point.squeeze()
+    quantized_data = np.clip(quantized_data, q_val_min, q_val_max)
     scale = scale.astype(weight.dtype).squeeze()
 
     return quantized_data, scale, zero_point
+
+
+def promote_rank_to_same_as_data(
+    param: np.ndarray, data: np.ndarray, axis: Optional[int]
+) -> np.ndarray:
+    """
+    Promote param (i.e. zero point or scale) rank to same as quantized data,
+    so subtraction or multiplication can happen properly on the specified axis.
+
+    For example, when `param` has shape [2] while `data` has shape [2, 2, 2],
+    - if `axis` is 0, `param` will be promoted to shape [2, 1, 1].
+    - if `axis` is 1, `param` will be promoted to shape [1, 2, 1].
+    - if `axis` is 2, `param` will be promoted to shape [1, 1, 2].
+    """
+    if len(param.shape) == len(data.shape):
+        return param  # already have the same rank
+
+    if axis is not None:
+        axis = axis if axis >= 0 else axis + len(data.shape)
+
+    if len(param.shape) == 0:
+        return np.reshape(param, np.ones(len(data.shape), np.int32))
+    else:
+        axes = [i for i in range(len(data.shape)) if i != axis]
+        return np.expand_dims(param, axis=tuple(axes))
+
+
+def _cast_to_quantized_dtype(input_data: np.ndarray, output_dtype: types) -> np.ndarray:
+    """Cast the input from dequantized dtype to quantized dtype."""
+    return input_data.astype(types.nptype_from_builtin(output_dtype))
+
+
+def _cast_from_quantized_dtype(input_data: np.ndarray) -> np.ndarray:
+    """Cast the input from quantized dtype to dequantized dtype."""
+    return input_data.astype(np.float32)
+
+
+def _need_manual_broadcast(input1: np.ndarray, input2: np.ndarray) -> bool:
+    """Check if the np auto broadcast can handle. If not, need manual broadcasting."""
+    for axis, (dim1, dim2) in enumerate(zip(input1.shape, input2.shape)):
+        if dim1 != dim2 and not (dim1 == 1 or dim2 == 1):
+            return True
+    return False
+
+
+def quantize_by_scale_and_zp(
+    input_data: np.ndarray,
+    scale: np.ndarray,
+    zero_point: Optional[np.ndarray],
+    output_dtype: Union["types", str],
+) -> np.ndarray:
+    """Given scale and zero_point (if any), calculate quantized data."""
+    if isinstance(output_dtype, str):
+        output_dtype = types.string_to_builtin(output_dtype)
+    output_range = types.type_mapping.builtin_to_range(output_dtype)
+
+    if _need_manual_broadcast(scale, input_data):
+        scale = repeat_data_as(scale, input_data.shape)
+    quantized_data = input_data / scale
+    if types.is_int(output_dtype):
+        quantized_data = np.around(quantized_data)
+    if zero_point is not None:
+        if _need_manual_broadcast(zero_point, input_data):
+            zero_point = repeat_data_as(zero_point, input_data.shape)
+        quantized_data += zero_point.astype(np.float32)
+    quantized_data = np.clip(quantized_data, output_range.low, output_range.high)
+    return _cast_to_quantized_dtype(quantized_data, output_dtype)
+
+
+def dequantize_by_scale_and_zp(
+    quantized_data: np.ndarray,
+    scale: np.ndarray,
+    zero_point: Optional[np.ndarray],
+    axis: Optional[int] = None,
+) -> np.ndarray:
+    """
+    Given scale and zero_point (if any), calculate dequantized data.
+
+    The axis is for promoting scale and zero_point to the same rank as quantized_data.
+    """
+    scale = promote_rank_to_same_as_data(scale, quantized_data, axis)
+    if zero_point is not None:
+        zero_point = promote_rank_to_same_as_data(zero_point, quantized_data, axis)
+
+    dequantized_data = _cast_from_quantized_dtype(quantized_data)
+    if zero_point is not None:
+        if _need_manual_broadcast(zero_point, dequantized_data):
+            zero_point = repeat_data_as(zero_point, dequantized_data.shape)
+        dequantized_data -= _cast_from_quantized_dtype(zero_point)
+    if _need_manual_broadcast(scale, dequantized_data):
+        scale = repeat_data_as(scale, dequantized_data.shape)
+    dequantized_data *= scale
+    return dequantized_data.astype(scale.dtype)
 
 
 def compute_qparams(
@@ -102,7 +228,7 @@ def compute_qparams(
     nbits: int,
     signed: bool,
     quantization_mode: str,
-    dtype: np.dtype,
+    dtype: np.dtype,  # Unused parameter for backward compatibility.
     block_sizes: List[int],
 ) -> Optional[Tuple[np.ndarray, np.ndarray, Optional[np.ndarray]]]:
     """
@@ -113,6 +239,22 @@ def compute_qparams(
     Note that per-tensor, per-channel, channelwise-grouped and per-block are
     just variants of specifying the block sizes for each dimension.
     """
+    dtype = types.get_nbits_int_builtin_type(nbits, signed)
+    return compute_qparams_by_dtype(weight, dtype, quantization_mode, block_sizes)
+
+
+def compute_qparams_by_dtype(
+    weight: np.ndarray,
+    dtype: types,
+    quantization_mode: str,
+    block_sizes: List[int],
+) -> Optional[Tuple[np.ndarray, np.ndarray, Optional[np.ndarray]]]:
+    """
+    Similar to `compute_qparams`, ut use `dtype` to specify quant dtype.
+    """
+    if not isinstance(weight, np.ndarray):
+        raise ValueError(f"Only numpy arrays are supported, but got weight type {type(weight)}")
+
     if len(block_sizes) != len(weight.shape):
         raise AssertionError(
             "Each axis should have a block size, which means len(block_sizes) must be "
@@ -144,16 +286,86 @@ def compute_qparams(
     # Axes to reduce while compute min & max values
     axes = tuple(filter(lambda x: x not in axes_to_skip, range(len(new_shape))))
 
-    quantized_data, scale, zero_point = quantize_weight(
-        weight.reshape(new_shape), axes, nbits, signed, quantization_mode, dtype
+    quantized_data, scale, zero_point = quantize_weight_by_dtype(
+        weight.reshape(new_shape), axes, dtype, quantization_mode
     )
 
-    quantized_data = quantized_data.reshape(weight.shape)
+    np_dtype = types.nptype_from_builtin(dtype)
+    quantized_data = quantized_data.reshape(weight.shape).astype(np_dtype)
     scale = scale.reshape(scale_shape)
     if zero_point is not None:
-        zero_point = zero_point.reshape(scale_shape)
+        zero_point = zero_point.reshape(scale_shape).astype(np_dtype)
 
     return quantized_data, scale, zero_point
+
+
+def repeat_data_as(input_data: np.ndarray, target_shape: Collection[int]) -> np.ndarray:
+    """
+    Repeat the first K dimensions of input_data where len(target_shape) == K.
+    It should be guaranteed that each dimension of the K dimensions is divisible by the
+    corresponding dimension given by the target_shape.
+
+    For example, lut has shape [block_num0, block_num1, ..., 2**nbits, vector_size], so
+    it needs to be interleaved repeated to make each block match the target shape.
+    """
+    if len(input_data.shape) < len(target_shape):
+        raise ValueError(
+            "The provided input_data's rank should be >= target shape's "
+            f"length. But got {len(input_data.shape)} vs {len(target_shape)}"
+        )
+    repeated_data = input_data
+    for axis, target_dim_size in enumerate(target_shape):
+        input_dim_size = input_data.shape[axis]
+        if target_dim_size % input_dim_size != 0:
+            raise ValueError(
+                "The dim size in each axis must be divisible by the tensor dimension. "
+                f"Got invalid input_data shape {input_data.shape} for target shape "
+                f"{target_shape[axis]} at axis {axis}"
+            )
+        block_size = target_dim_size // input_dim_size
+        # Can use kron for higher efficiency, but repeat is easier to understand.
+        if block_size > 1:
+            repeated_data = np.repeat(repeated_data, block_size, axis=axis)
+    return repeated_data
+
+
+def lut_to_dense(
+    indices: np.ndarray,
+    lut: np.ndarray,
+    vector_axis: Optional[int] = None,
+) -> np.ndarray:
+    """Decompress the lut with indices to dense (decompressed) output."""
+    palette_num = lut.shape[-2]
+    vector_size = lut.shape[-1]
+
+    output_shape = list(indices.shape)
+    if vector_size > 1:
+        if vector_axis < 0:
+            vector_axis += len(output_shape)
+        # Swap the vector axis to the last dim to vectorize computations.
+        indices = np.swapaxes(indices, -1, vector_axis)
+        lut = np.swapaxes(lut, -3, vector_axis)
+        output_shape = list(indices.shape)
+        output_shape[-1] *= vector_size
+
+    flattened_indices = indices.astype(np.uint8).flatten()
+    repeated_lut = repeat_data_as(lut, indices.shape).reshape(
+        len(flattened_indices), palette_num, vector_size
+    )
+
+    output = repeated_lut[np.arange(repeated_lut.shape[0]), flattened_indices.astype(np.int32)]
+    output = output.reshape(output_shape)
+    if vector_size > 1:
+        output = np.swapaxes(output, -1, vector_axis)
+
+    return output
+
+
+def sparse_to_dense(nonzero_data: np.ndarray, mask: np.ndarray) -> np.ndarray:
+    """Decompress the sparse data to dense (decompressed) output."""
+    decompressed_val = np.zeros_like(mask, dtype=nonzero_data.dtype)
+    decompressed_val[mask != 0] = nonzero_data
+    return decompressed_val
 
 
 def reshape_weight_for_vector_lut(
@@ -224,21 +436,10 @@ def find_indices_for_lut(
             )
         data = reshape_weight_for_vector_lut(data, vector_size, vector_axis)
 
-    # lut has shape [block_num0, block_num1, ..., 2**nbits, vector_size], so need to interleaved
-    # repeat it to make each block match the weight.
-    repeated_lut = lut
-    for axis, block_num in enumerate(lut.shape[:-2]):
-        weight_dim_size = data.shape[axis]
-        if weight_dim_size % block_num != 0:
-            raise ValueError(
-                "The weight dim size in each axis must be divisible by the number "
-                f"of luts. Got invalid lut {lut.shape} for weight shape "
-                f"{data.shape[axis]} at axis {axis}"
-            )
-        block_size = weight_dim_size // block_num
-        # Can use np.kron for higher efficiency, but repeat is easier to understand.
-        if block_size > 1:
-            repeated_lut = np.repeat(repeated_lut, block_size, axis=axis)
+    repeated_lut_shape = data.shape
+    if lut.shape[-1] > 1:
+        repeated_lut_shape = repeated_lut_shape[:-1]
+    repeated_lut = repeat_data_as(lut, repeated_lut_shape)
 
     if lut.shape[-1] == 1:
         # For scalar palettization, we can simply find the closest value for each element.
@@ -654,3 +855,110 @@ def get_min_and_max_values(
     return np.array(
         [activation_stats[var_name]["rmin"], activation_stats[var_name]["rmax"]], dtype=np.float16
     )
+
+
+def _update_tensor_range(
+    tensor_name: str,
+    tensor_value: Union[int, float],
+    activation_stats_dict: Dict[str, Dict[str, float]],
+) -> None:
+    """
+    Utility to update the "rmin" and "rmax" values in activation stats dictionary.
+    """
+    tensor_min = np.min(np.array(tensor_value).flatten())
+    tensor_max = np.max(np.array(tensor_value).flatten())
+    activation_stats_dict[tensor_name]["rmin"] = tensor_min
+    activation_stats_dict[tensor_name]["rmax"] = tensor_max
+    if tensor_name in activation_stats_dict:
+        activation_stats_dict[tensor_name]["rmin"] = min(
+            tensor_min, activation_stats_dict[tensor_name]["rmin"]
+        )
+        activation_stats_dict[tensor_name]["rmax"] = max(
+            tensor_max, activation_stats_dict[tensor_name]["rmax"]
+        )
+    else:
+        activation_stats_dict[tensor_name]["rmin"] = tensor_min
+        activation_stats_dict[tensor_name]["rmax"] = tensor_max
+
+
+def _combine_lists_with_common_elements(data: List[List[str]]) -> List[List[str]]:
+    """
+    Utility for merging lists with common elements.
+
+    Parameters
+    ----------
+    data: list[list[]]
+        data is a list of lists with strings.
+
+    Returns
+    -------
+    merged: combined lists with common elements.
+
+    Example
+    -------
+    input: [["conv0", "conv1", "conv2"], ["conv0", "conv3"], ["relu0"]]
+    output: [["conv0", "conv1", "conv2", "conv3"], ["relu0"]]
+    """
+
+    merged = []
+    for item in data:
+        item_set = set(item)
+        not_exsit = True
+        for result in merged:
+            if result & item_set:
+                result.update(item_set)
+                not_exsit = False
+                break
+        if not_exsit:
+            merged.append(item_set)
+    return merged
+
+
+def _adjust_concat_surrounding_activation_stats(
+    concat_op_info_list: List[List[str]], activation_stats_dict: Dict[str, Dict[str, float]]
+) -> None:
+    """
+    Adjust the activation calibration stats of inputs/outputs to the same concat ops to maximize hardware efficiency.
+    Tensor values of inputs/outputs to the same concat op should share same range (same min/max), so the quantized
+    concat could be surrounded by quantize/dequantize pairs with same scale and zero point values.
+
+    Example
+    -------
+    - concat 1 -
+    inputs:  "input_1", "input_2", "input_3"
+    output:  "output_1"
+
+    - concat 2 -
+    inputs:  "input_1", "input_4"
+    output:  "output_2"
+
+    Input/output tensors range of concat 1 should be identical.
+    Input/output tensors range of concat 2 should be identical.
+    "input_1" is in both, which means activation calibration stats of all 6 tensors above should be identical.
+    """
+
+    if concat_op_info_list is None:
+        return
+
+    # Merge tensor names which should have identical values, to the same list.
+    concat_list_adjusted = _combine_lists_with_common_elements(concat_op_info_list)
+
+    for concat_group in concat_list_adjusted:
+        group_rmin_list, group_rmax_list = [], []
+
+        for tensor_name in concat_group:
+            # Some tensor_name may not have rmin/rmax if the calibration failed before.
+            if tensor_name in activation_stats_dict:
+                group_rmin_list.append(activation_stats_dict[tensor_name]["rmin"])
+                group_rmax_list.append(activation_stats_dict[tensor_name]["rmax"])
+
+        if len(group_rmin_list) == 0:
+            raise ValueError(
+                "None of the calibration run succeeded. Please check logs about calibrating sample failures."
+            )
+        group_rmin, group_rmax = min(group_rmin_list), max(group_rmax_list)
+
+        for tensor_name in concat_group:
+            if tensor_name in activation_stats_dict:
+                activation_stats_dict[tensor_name]["rmin"] = group_rmin
+                activation_stats_dict[tensor_name]["rmax"] = group_rmax

@@ -3,8 +3,9 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import coremltools as ct
 from coremltools import __version__ as ct_version
-from coremltools.models import _METADATA_SOURCE, _METADATA_VERSION
+from coremltools import proto
 
 from ... import SPECIFICATION_VERSION
 from ..._deps import _HAS_LIBSVM
@@ -58,12 +59,11 @@ def convert(libsvm_model, feature_names, target, input_length, probability):
     from libsvm import svm as _svm
 
     from ...models import MLModel
-    from ...proto import Model_pb2
 
     svm_type_enum = libsvm_model.param.svm_type
 
     # Create the spec
-    export_spec = Model_pb2.Model()
+    export_spec = proto.Model_pb2.Model()
     export_spec.specificationVersion = SPECIFICATION_VERSION
 
     if svm_type_enum == _svm.EPSILON_SVR or svm_type_enum == _svm.NU_SVR:
@@ -90,7 +90,7 @@ def convert(libsvm_model, feature_names, target, input_length, probability):
         input = export_spec.description.input.add()
         input.name = feature_names
         input.type.multiArrayType.shape.append(input_length)
-        input.type.multiArrayType.dataType = Model_pb2.ArrayFeatureType.DOUBLE
+        input.type.multiArrayType.dataType = proto.Model_pb2.ArrayFeatureType.DOUBLE
 
     else:
         # input will be a series of doubles
@@ -193,7 +193,7 @@ def convert(libsvm_model, feature_names, target, input_length, probability):
     from libsvm import __version__ as libsvm_version
 
     libsvm_version = "libsvm=={0}".format(libsvm_version)
-    model.user_defined_metadata[_METADATA_VERSION] = ct_version
-    model.user_defined_metadata[_METADATA_SOURCE] = libsvm_version
+    model.user_defined_metadata[ct.models._METADATA_VERSION] = ct_version
+    model.user_defined_metadata[ct.models._METADATA_SOURCE] = libsvm_version
 
     return model

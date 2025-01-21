@@ -8,12 +8,10 @@ from typing import Tuple
 
 import numpy as np
 
-import coremltools.converters.mil.frontend.milproto.load
 from coremltools import _logger as logger
 from coremltools import proto
 from coremltools.converters.mil import mil
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget as _target
-from coremltools.converters.mil.backend.mil import helper
 from coremltools.converters.mil.mil import Block
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import (
@@ -28,6 +26,7 @@ from coremltools.converters.mil.mil import (
 from coremltools.converters.mil.mil.block import curr_block
 from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry as _SSAOpRegistry
 from coremltools.converters.mil.mil.program import StateTensorPlaceholder
+from coremltools.optimize import _utils as optimize_utils
 
 from .helper import proto_to_types
 
@@ -156,9 +155,6 @@ def _load_file_value(context, filevalue_spec, dtype):
 
 
 def _restore_np_from_bytes_value(value: bytes, dtype: types, shape: Tuple[int]) -> np.ndarray:
-    # Import _utils here to avoid circular import.
-    from coremltools.optimize.coreml import _utils as optimize_utils
-
     if types.is_sub_byte(dtype) and isinstance(value, bytes):
         result = np.frombuffer(value, types.nptype_from_builtin(dtype))
         # For sub-byte data, the np array restored from bytes is packed, so we need to unpack it.
@@ -194,7 +190,7 @@ def _load_value(context, value_spec):
             value = _load_file_value(context, value_spec.blobFileValue, dtype)
 
         target_np_dtype = types.nptype_from_builtin(dtype)
-        if dtype in helper.IMMEDIATE_VALUE_TYPES_IN_BYTES:
+        if dtype in types.IMMEDIATE_VALUE_TYPES_IN_BYTES:
             value = _restore_np_from_bytes_value(value, dtype, shape).astype(target_np_dtype)
         elif dtype == types.str and shape == ():
             value = str(value[0])
@@ -305,9 +301,9 @@ def _set_inputs_for_control_flow_op(inputs, blocks, op_type):
         inputs["_true_fn"] = _dummy_true_fn
         inputs["_false_fn"] = _dummy_false_fn
 
-
 def _load_const_op(context, op_spec):
     inputs = {k: _load_value(context, v) for k, v in op_spec.attributes.items()}
+    input_weight_keys = {}
     if len(op_spec.inputs) > 0:
         for param_name, argument in op_spec.inputs.items():
             vars = []
@@ -317,6 +313,10 @@ def _load_const_op(context, op_spec):
                     vars.append(context.get_var_from_name(binding.name))
                 elif binding_type == "value":
                     vars.append(_load_value(context, binding.value))
+                    if hasattr(binding.value, "blobFileValue"):
+                        filevalue_spec = binding.value.blobFileValue
+                        filename = filevalue_spec.fileName.split("/")[-1]
+                        input_weight_keys[param_name] = filename
                 else:
                     raise ValueError(f"Invalid binding_type {binding_type}")
             if len(vars) == 1:
@@ -332,9 +332,13 @@ def _load_const_op(context, op_spec):
             if filename != "weight.bin":
                 output_var.op.weight_key = filename.split(".")[0]
 
-
     if not isinstance(output_var, (tuple, list)):
         output_var = [output_var]
+
+    for input_name, weight_name in input_weight_keys.items():
+        if weight_name != "weight.bin":
+            output_var[0].op.inputs[input_name].op.weight_key = weight_name.split(".")[0]
+
     if len(output_var) != len(op_spec.outputs):
         raise AssertionError(
             "Mismatch between number of outputs in operation specification vs PyMIL outputs"
@@ -578,7 +582,7 @@ def load_mil_proto(program_spec, specification_version, file_weights_dir=""):
             func_name, _load_function(context, func_spec, specification_version)
         )
 
-    coremltools.converters.mil.frontend.milproto.load._load_program_spec_attributes(context, program_spec, pymil_program)
+    _load_program_spec_attributes(context, program_spec, pymil_program)
 
     return pymil_program
 

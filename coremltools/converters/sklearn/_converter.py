@@ -3,8 +3,8 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import coremltools as ct
 from coremltools import __version__ as ct_version
-from coremltools.models import _METADATA_SOURCE, _METADATA_VERSION
 
 """
 Defines the primary function for converting scikit-learn models.
@@ -154,8 +154,8 @@ def convert(sk_obj, input_features=None, output_feature_names=None):
     model = MLModel(spec)
     from sklearn import __version__ as sklearn_version
 
-    model.user_defined_metadata[_METADATA_VERSION] = ct_version
-    model.user_defined_metadata[_METADATA_SOURCE] = "scikit-learn=={0}".format(
+    model.user_defined_metadata[ct.models._METADATA_VERSION] = ct_version
+    model.user_defined_metadata[ct.models._METADATA_SOURCE] = "scikit-learn=={0}".format(
         sklearn_version
     )
     return model
