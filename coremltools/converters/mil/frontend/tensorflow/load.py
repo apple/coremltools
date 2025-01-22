@@ -5,7 +5,7 @@
 
 import gc
 import os
-from tempfile import mktemp
+from tempfile import NamedTemporaryFile
 
 import tensorflow as tf
 from packaging.version import Version
@@ -262,7 +262,7 @@ class TF1Loader(TFLoader):
         sess.close()
 
         # get frozen graph
-        output_graph = mktemp()
+        output_graph = NamedTemporaryFile(delete=False).name
         tf.compat.v1.reset_default_graph() if _get_version(tf.__version__) >= Version("1.13.1") else tf.reset_default_graph()
         freeze_graph.freeze_graph(
             input_graph=None,
