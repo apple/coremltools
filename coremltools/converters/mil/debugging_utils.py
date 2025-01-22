@@ -77,7 +77,14 @@ def extract_submodel(
                 reachable_vars.add(op.outputs[0])
 
         for op in func.operations:
-            if all([x in reachable_vars for x in op.inputs.values()]):
+            input_values = []
+            for v in op.inputs.values():
+                if isinstance(v, (list, tuple)):
+                    input_values.extend(v)
+                else:
+                    input_values.append(v)
+
+            if all([x in reachable_vars for x in input_values]):
                 reachable_vars.update(op.outputs)
 
         for out in func.outputs:
@@ -171,6 +178,6 @@ def extract_submodel(
         PASS_REGISTRY["common::dead_code_elimination"](prog)
 
     prog.skip_all_passes = True
-    submodel = ct.convert(prog, convert_to=backend, compute_units=model.compute_unit)
+    submodel = ct.convert(prog, convert_to=backend, compute_units=model.compute_unit, minimum_deployment_target=func.opset_version)
 
     return submodel
