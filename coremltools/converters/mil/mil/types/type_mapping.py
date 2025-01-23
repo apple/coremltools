@@ -10,8 +10,8 @@ import numpy as _np
 import numpy as np
 import sympy as sm
 
-import coremltools.converters.mil.backend.mil.helper as mil_helper
 import coremltools.proto.MIL_pb2 as _mil_pm
+from coremltools.converters.mil.mil import types
 
 from .get_type_info import get_type_info
 from .type_bool import bool as types_bool
@@ -550,7 +550,7 @@ def is_subtype(type1, type2):
 
 def _numpy_val_to_bytes(val: Union[np.ndarray, np.generic]) -> bytes:
     # Import here to avoid circular import.
-    from coremltools.optimize.coreml import _utils as optimize_utils
+    from coremltools.optimize import _utils as optimize_utils
 
     builtin_type = numpy_type_to_builtin_type(val.dtype)
     if is_sub_byte(builtin_type):
@@ -571,7 +571,7 @@ def np_val_to_py_type(val):
         return val
 
     builtin_type = numpy_type_to_builtin_type(val.dtype)
-    if builtin_type in mil_helper.IMMEDIATE_VALUE_TYPES_IN_BYTES:
+    if builtin_type in types.IMMEDIATE_VALUE_TYPES_IN_BYTES:
         return _numpy_val_to_bytes(val)
     else:
         if val.dtype in (_np.uint16, _np.int16):

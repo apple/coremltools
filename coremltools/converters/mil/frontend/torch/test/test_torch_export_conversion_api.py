@@ -20,19 +20,19 @@ if TorchFrontend.TORCHSCRIPT in frontends:
 if len(frontends) == 0:
     pytest.skip(allow_module_level=True)
 
-from coremltools.converters.mil.frontend.torch.exir_utils import WRAPPED_SCALAR_INPUT_SUFFIX
-
 import torch
+
+from coremltools.converters.mil.frontend.torch.exir_utils import WRAPPED_SCALAR_INPUT_SUFFIX
 
 if TorchFrontend.EXECUTORCH in frontends:
     import executorch.exir
 
 import coremltools as ct
+from coremltools import proto
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil.scope import ScopeSource
 from coremltools.converters.mil.testing_utils import assert_spec_input_image_type, verify_prediction
 from coremltools.models import _METADATA_SOURCE_DIALECT
-from coremltools.proto import FeatureTypes_pb2 as ft
 
 from .testing_utils import TorchBaseTest, export_torch_model_to_frontend
 
@@ -68,7 +68,9 @@ class TestTorchExportConversionAPI(TorchBaseTest):
             outputs=[ct.TensorType(dtype=np.float32)],
         )
 
-        assert_spec_input_image_type(mlmodel._spec, expected_feature_type=ft.ImageFeatureType.RGB)
+        assert_spec_input_image_type(
+            mlmodel._spec, expected_feature_type=proto.FeatureTypes_pb2.ImageFeatureType.RGB
+        )
         verify_prediction(mlmodel)
 
     @pytest.mark.parametrize("frontend", frontends)

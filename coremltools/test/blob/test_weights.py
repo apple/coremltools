@@ -14,6 +14,7 @@ import coremltools as ct
 from coremltools import _SPECIFICATION_VERSION_IOS_18
 from coremltools.converters.mil import mil
 from coremltools.converters.mil.converter import mil_convert as _mil_convert
+from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.builder import Builder as mb
 from coremltools.libmilstoragepython import _BlobStorageReader as BlobReader
 from coremltools.libmilstoragepython import _BlobStorageWriter as BlobWriter
@@ -32,9 +33,9 @@ class TestWeightBlob:
     def test_weight_blob_int4(self):
         writer = BlobWriter(self.working_dir + "/net.wt")
         # All values in input_arr should be within range of int4, although they are stored in int8.
-        input_arr1 = np.array([-8, -2, 0, 2, 7], dtype=np.int8)
+        input_arr1 = np.array([-8, -2, 0, 2, 7], dtype=types.np_int4_dtype)
         offset1 = writer.write_int4_data(input_arr1)
-        input_arr2 = np.array([3, -8, 5, 7, -6], dtype=np.int8)
+        input_arr2 = np.array([3, -8, 5, 7, -6], dtype=types.np_int4_dtype)
         offset2 = writer.write_int4_data(input_arr2)
         writer = None
 
@@ -56,10 +57,14 @@ class TestWeightBlob:
     def test_weight_blob_unsigned_sub_byte(self, nbits):
         writer = BlobWriter(self.working_dir + "/net.wt")
         # All values in input_arr are within range of uint{nbits}, but stored in uint8.
-        input_arr1 = np.random.randint(0, 2**nbits, (5,), dtype=np.uint8)
+        input_arr1 = np.random.randint(
+            0, 2**nbits, (5,), dtype=types.string_to_nptype(f"uint{nbits}")
+        )
         write_method = getattr(writer, f"write_uint{nbits}_data")
         offset1 = write_method(input_arr1)
-        input_arr2 = np.random.randint(0, 2**nbits, (5,), dtype=np.uint8)
+        input_arr2 = np.random.randint(
+            0, 2**nbits, (5,), dtype=types.string_to_nptype(f"uint{nbits}")
+        )
         offset2 = write_method(input_arr2)
         writer = None
 

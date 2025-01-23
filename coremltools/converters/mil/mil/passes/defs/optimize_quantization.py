@@ -19,6 +19,7 @@ from coremltools.converters.mil.mil.passes.helper import (
     block_context_manager,
 )
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.optimize import _utils as optimize_utils
 
 
 @register_pass(namespace="common")
@@ -1039,9 +1040,6 @@ class reorder_lut_per_channel_scale(AbstractGraphPass):
             apply_block(f)
 
     def _reorder_lut_per_channel_scale(self, block: Block, lut_op: Operation):
-        # Lazy import to avoid circular import error.
-        from coremltools.optimize.coreml import _utils as optimize_utils
-
         # The original order is lut_op -> scale_op -> output_op.
         scale_op = lut_op.outputs[0].child_ops[0]
 
@@ -1137,16 +1135,25 @@ class canonicalize_quantized_lut_pattern(AbstractGraphPass):
 
     _DEQUANT_FIRST = True  # First dequantize and then depalettize (use pattern 1).
 
-    def apply(self, prog):
-        wrong_order_op1 = (
-            "constexpr_lut_to_dense" if self._DEQUANT_FIRST else "constexpr_blockwise_shift_scale"
-        )
-        wrong_order_op2 = (
-            "constexpr_blockwise_shift_scale" if self._DEQUANT_FIRST else "constexpr_lut_to_dense"
-        )
+    @staticmethod
+    def get_order_to_reverse(expect_dequant_first: bool) -> Tuple[str, str]:
+        """Get the wrong order pattern which will be canonicalized."""
+        if expect_dequant_first:
+            # The LUT -> shift_scale op pattern will be reversed.
+            wrong_order_op1 = "constexpr_lut_to_dense"
+            wrong_order_op2 = "constexpr_blockwise_shift_scale"
+        else:
+            # The shift_scale -> LUT op pattern will be reversed.
+            wrong_order_op1 = "constexpr_blockwise_shift_scale"
+            wrong_order_op2 = "constexpr_lut_to_dense"
 
+        return wrong_order_op1, wrong_order_op2
+
+    def apply(self, prog):
         @block_context_manager
         def apply_block(block: Block):
+            wrong_order_op1, wrong_order_op2 = self.get_order_to_reverse(self._DEQUANT_FIRST)
+
             for op in list(block.operations):
                 for b in op.blocks:
                     apply_block(b)
@@ -1160,7 +1167,7 @@ class canonicalize_quantized_lut_pattern(AbstractGraphPass):
     def _reorder_quant_lut(self, block: Block, old_op1: Operation):
         """
         Original order is op1 -> op2 -> output_op, and after reorder it becomes op2 -> op1 -> output_op.
-        Here op1 and op2 corresponds to either lut op or quant op, depending on `_DEQUANT_FIRST`.
+        Here op1 and op2 corresponds to either lut op or quant op, depending on the desired order.
         """
         old_op2 = old_op1.outputs[0].child_ops[0]
         # If the old op has some meaningful info in the name (such as "conv1.weight"), we need to keep it.

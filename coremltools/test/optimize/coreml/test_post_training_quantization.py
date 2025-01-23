@@ -27,7 +27,7 @@ from coremltools.converters.mil.mil.ops.tests.iOS18 import backends
 from coremltools.converters.mil.testing_reqs import compute_units
 from coremltools.converters.mil.testing_utils import compute_snr_and_psnr, get_op_types_in_program
 from coremltools.models.utils import MultiFunctionDescriptor, _macos_version, save_multifunction
-from coremltools.optimize.coreml import _utils as optimize_utils
+from coremltools.optimize import _utils as optimize_utils
 from coremltools.optimize.coreml._post_training_quantization import CoreMLWeightMetaData
 from coremltools.test.ml_program.test_compression import get_test_model_and_data
 
@@ -302,7 +302,7 @@ class TestLinearQuantizeWeights:
             (np.int8, np.uint8, types.int8, types.uint8),
         ),
     )
-    def test_linear_quanitzation_stress(mode, dtype):
+    def test_linear_quantization_stress(mode, dtype):
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data()
         torchmodel = torch.jit.trace(model, torch_input_values)
         mlmodel = ct.convert(torchmodel, inputs=inputs, convert_to="mlprogram")
@@ -399,7 +399,7 @@ class TestLinearQuantizeWeights:
             (0, 1, 2, 4),
         ),
     )
-    def test_blockwise_quanitzation_stress(compute_unit, backend, mode, nbits, signed, block_size):
+    def test_blockwise_quantization_stress(compute_unit, backend, mode, nbits, signed, block_size):
         if platform.machine() == "x86_64":
             pytest.xfail("rdar://137153993 ([CI] Quantization Tests Failing only on *native* x86_64 (not with Rosetta))")
 

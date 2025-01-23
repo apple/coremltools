@@ -216,7 +216,7 @@ class MLModelAsset:
             The file path to the compiled model.
 
         Returns
-        ----------
+        -------
         MLModelAsset
             An instance of MLModelAsset created from the specified path.
         """
@@ -240,7 +240,7 @@ class MLModelAsset:
             A dictionary with blob path as the key and blob data as the value.
 
         Returns
-        ----------
+        -------
         MLModelAsset
             An instance of MLModelAsset created from the provided memory data.
         """
@@ -483,7 +483,7 @@ class MLModel:
                 self.package_path = filename
                 self._weights_dir = _try_get_weights_dir_path(filename)
             else:
-                filename = _tempfile.mktemp(suffix=_MLMODEL_EXTENSION)
+                filename = _tempfile.NamedTemporaryFile(suffix=_MLMODEL_EXTENSION, delete=False).name
                 _save_spec(model, filename)
 
             self.__proxy__, self._spec, self._framework_error = self._get_proxy_and_spec(
@@ -847,7 +847,9 @@ class MLModel:
     def _is_multifunction(self) -> bool:
         return len(self._spec.description.functions) > 0
 
-    def _get_function_description(self, function_name: str) -> _proto.Model_pb2.FunctionDescription:
+    def _get_function_description(
+        self, function_name: str
+    ) -> "_proto.Model_pb2.FunctionDescription":
         f = list(filter(lambda f: f.name == function_name, self._spec.description.functions))
 
         if len(f) == 0:

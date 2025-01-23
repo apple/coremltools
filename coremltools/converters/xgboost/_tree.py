@@ -3,10 +3,9 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import coremltools as ct
 from coremltools import __version__ as ct_version
-from coremltools.models import _METADATA_SOURCE, _METADATA_VERSION
 
-from ...models import MLModel as _MLModel
 from ._tree_ensemble import convert_tree_ensemble as _convert_tree_ensemble
 
 
@@ -71,7 +70,7 @@ def convert(
 		# Saving the Core ML model to a file.
 		>>> coreml_model.save('my_model.mlmodel')
     """
-    model = _MLModel(
+    model = ct.models.MLModel(
         _convert_tree_ensemble(
             model,
             feature_names,
@@ -85,9 +84,7 @@ def convert(
 
     from xgboost import __version__ as xgboost_version
 
-    model.user_defined_metadata[_METADATA_VERSION] = ct_version
-    model.user_defined_metadata[_METADATA_SOURCE] = "xgboost=={0}".format(
-        xgboost_version
-    )
+    model.user_defined_metadata[ct.models._METADATA_VERSION] = ct_version
+    model.user_defined_metadata[ct.models._METADATA_SOURCE] = "xgboost=={0}".format(xgboost_version)
 
     return model

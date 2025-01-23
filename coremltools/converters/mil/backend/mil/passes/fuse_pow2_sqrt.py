@@ -1,17 +1,18 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import numpy as np
+
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
-
 def _match_pattern(op):
     pow_op, sqrt_op = None, None
 
     # check the current op is pow(2) or sqrt
-    if op.op_type == "pow" and op.y.val == 2:
+    if op.op_type == "pow" and np.all(op.y.val == 2):
         pow_op = op
     if op.op_type == "sqrt":
         sqrt_op = op
@@ -27,7 +28,7 @@ def _match_pattern(op):
     if pow_op and child_ops[0].op_type == "sqrt":
         sqrt_op = child_ops[0]
     # if we have sqrt, check for pow(2)
-    elif sqrt_op and child_ops[0].op_type == "pow" and child_ops[0].y.val == 2:
+    elif sqrt_op and child_ops[0].op_type == "pow" and np.all(child_ops[0].y.val == 2):
         pow_op = child_ops[0]
 
     # if we don't have both ops, fast fail

@@ -10,16 +10,15 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
-from coremltools import ComputeUnit, ReshapeFrequency, SpecializationStrategy, utils
+from coremltools import ComputeUnit, ReshapeFrequency, SpecializationStrategy, proto, utils
 from coremltools.models import CompiledMLModel, MLModel
 from coremltools.models.utils import compile_model, load_spec, save_spec
-from coremltools.proto import Model_pb2
 
 
 class TestCompiledModel:
 
     def setup_class(self):
-        spec = Model_pb2.Model()
+        spec = proto.Model_pb2.Model()
         spec.specificationVersion = 1
         input_ = spec.description.input.add()
         input_.name = 'x'
@@ -65,8 +64,8 @@ class TestCompiledModel:
             file_path = save_dir + '/m.mlmodel'
             MLModel(self.spec).save(file_path)
 
-            with pytest.raises(TypeError, match=", first load the model, "):
-                compiled_model_path = compile_model(file_path)
+            compiled_model_path = compile_model(file_path)
+            self._test_compile_model_path(compiled_model_path)
 
 
     def test_spec_input(self):

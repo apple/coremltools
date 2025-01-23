@@ -13,13 +13,13 @@ import pytest
 import coremltools as ct
 from coremltools.converters.mil import Builder as mb
 from coremltools.converters.mil.debugging_utils import extract_submodel
-from coremltools.converters.mil.mil import get_new_symbol
+from coremltools.converters.mil.mil import get_new_symbol, types
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.testing_utils import get_op_types_in_program
 
 
-def get_simple_program():
-    @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 3, 4)),])
+def get_simple_program(opset_version=None):
+    @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 3, 4)),], opset_version=opset_version)
     def prog(x):
         x = mb.add(x=x, y=1.2, name="add")
         x = mb.transpose(x=x, perm=[0, 2, 3, 1])
@@ -94,6 +94,32 @@ class TestExtractSubModel:
         output = func.outputs[0]
         assert output.shape[0] == 1
         assert is_symbolic(output.shape[1])
+
+    def test_extract_submodel_change_output_type_count(self):
+        """
+        Input graph:
+        x -> sin -> cos -> sub -> output_1
+        """
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2), dtype=types.fp16)], opset_version=ct.target.iOS16)
+        def prog(x):
+            sin = mb.sin(x=x, name="sin")
+            cos = mb.cos(x=sin, name="cos")
+            relu = mb.relu(x=cos, name="relu")
+            return relu
+
+        model = ct.convert(prog, convert_to="mlprogram")
+
+        # Original program has a single output_types entry.
+        model._mil_program.functions["main"].set_output_types([ct.TensorType(dtype=np.float16)])
+
+        submodel = extract_submodel(model, outputs=["cos", "relu"])
+        func = submodel._mil_program.functions["main"]
+
+        outputs = list(func.outputs)
+        names = [output.name for output in outputs]
+        assert len(outputs) == 2
+        assert "cos" in names and "relu" in names
+        assert all([o.dtype == types.fp16 for o in outputs]), "all fp16 dtypes"
 
     def test_extract_submodel_complex(self):
         """
@@ -228,6 +254,32 @@ class TestExtractSubModel:
         with pytest.raises(ValueError, match="output sin not reachable from inputs"):
             submodel = extract_submodel(model, outputs=["sin"], inputs=["mul"])
 
+    def test_extract_submodel_tuple_input_ops(self):
+        """
+        Input graph:
+        x -> relu ---> sin ---
+                   |         |
+                   v         v
+                   cos -> concat -> tanh -> output_1
+        """
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2), dtype=types.fp16)], opset_version=ct.target.iOS16)
+        def prog(x):
+            relu = mb.relu(x=x, name="relu")
+            sin = mb.sin(x=relu, name="sin")
+            cos = mb.cos(x=relu, name="cos")
+            concat = mb.concat(values=[sin, cos], axis=1, name="concat")
+            tanh = mb.tanh(x=concat, name="tanh")
+            return tanh
+
+        model = ct.convert(prog, convert_to="mlprogram")
+        submodel = extract_submodel(model, outputs=["tanh"], inputs=["relu"])
+
+        assert get_op_types_in_program(submodel._mil_program) == ["sin", "cos", "concat", "tanh"]
+
+        outputs = list(submodel._mil_program.functions["main"].outputs)
+        assert len(outputs) == 1
+        assert outputs[0].name == "tanh"
+
     @pytest.mark.parametrize(
         "compute_unit",
         [
@@ -268,7 +320,7 @@ class TestExtractSubModel:
         )
     )
     def test_extract_submodel_mlprogram(self, compute_unit, store_to_disk):
-        prog = get_simple_program()
+        prog = get_simple_program(ct.target.iOS16)
         model = ct.convert(
                     prog,
                     convert_to="mlprogram",

@@ -5,7 +5,5 @@
 
 from coremltools._deps import _IMPORT_CT_OPTIMIZE_TORCH
 
-from . import coreml
-
 if _IMPORT_CT_OPTIMIZE_TORCH:
     from . import torch

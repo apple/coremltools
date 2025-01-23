@@ -3,8 +3,9 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from coremltools import proto
+
 from .. import SPECIFICATION_VERSION
-from ..proto import Model_pb2 as _Model_pb2
 from . import datatypes
 from ._interface_management import set_transform_interface_params
 
@@ -14,7 +15,7 @@ def create_array_feature_extractor(
 ):
     """
     Creates a feature extractor from an input array ``(feature, return)``.
-    
+
     Parameters
     ----------
     input_features:
@@ -31,7 +32,7 @@ def create_array_feature_extractor(
     assert isinstance(input_features[0][1], datatypes.Array)
 
     # Create the model.
-    spec = _Model_pb2.Model()
+    spec = proto.Model_pb2.Model()
     spec.specificationVersion = SPECIFICATION_VERSION
 
     if isinstance(extract_indices, int):

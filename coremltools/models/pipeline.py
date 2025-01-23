@@ -6,14 +6,18 @@
 """
 Pipeline utils for this package.
 """
+
+from coremltools import proto as _proto
+
 from .. import SPECIFICATION_VERSION as _SPECIFICATION_VERSION
-from ..proto import Model_pb2 as _Model_pb2
 from . import _feature_management
 from . import model as _model
-from ._interface_management import (set_classifier_interface_params,
-                                    set_regressor_interface_params,
-                                    set_training_features,
-                                    set_transform_interface_params)
+from ._interface_management import (
+    set_classifier_interface_params,
+    set_regressor_interface_params,
+    set_training_features,
+    set_transform_interface_params,
+)
 
 
 class Pipeline:
@@ -48,7 +52,7 @@ class Pipeline:
             contained models.
 
         """
-        spec = _Model_pb2.Model()
+        spec = _proto.Model_pb2.Model()
         spec.specificationVersion = _SPECIFICATION_VERSION
 
         # Access this to declare it as a pipeline
@@ -156,7 +160,7 @@ class PipelineRegressor(Pipeline):
             contained models.
 
         """
-        spec = _Model_pb2.Model()
+        spec = _proto.Model_pb2.Model()
         spec.specificationVersion = _SPECIFICATION_VERSION
 
         # Access this to declare it as a pipeline
@@ -249,7 +253,7 @@ class PipelineClassifier(Pipeline):
             output_features, class_labels
         )
 
-        spec = _Model_pb2.Model()
+        spec = _proto.Model_pb2.Model()
         spec.specificationVersion = _SPECIFICATION_VERSION
         spec = set_classifier_interface_params(
             spec,

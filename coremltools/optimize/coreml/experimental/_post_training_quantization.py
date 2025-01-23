@@ -3,30 +3,28 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+# TODO: coreml.experimental.linear_quantize_activations has been deprecated and related code will be removed in rdar://140233515.
 from collections import defaultdict
 from typing import Dict, List, Optional, Union
 
 import numpy as np
 from tqdm import tqdm
 
-from coremltools import _SPECIFICATION_VERSION_IOS_17
-from coremltools import _logger as logger
-from coremltools.converters.mil.converter import mil_convert as _mil_convert
-from coremltools.converters.mil.frontend.milproto import load as _milproto_to_pymil
-from coremltools.converters.mil.mil.passes.graph_pass import PassOption
-from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
-from coremltools.models import MLModel as _MLModel
-from coremltools.models import utils as _model_utils
+import coremltools as ct
+from coremltools.models._deprecation import deprecated as _deprecated
 from coremltools.optimize.coreml import OptimizationConfig as _OptimizationConfig
+from coremltools.optimize.coreml import _post_training_quantization
 
 from ._model_debugger import ModelDebugger
-from ._quantization_passes import (
-    insert_prefix_quantize_dequantize_pair as _insert_prefix_quantize_dequantize_pair,
+
+
+@_deprecated(
+    suffix="Please use coremltools.optimize.coreml.linear_quantize_activations",
+    version="8.3",
+    obj_prefix="coremltools.optimize.coreml.experimental.",
 )
-
-
 def linear_quantize_activations(
-    mlmodel: _MLModel,
+    mlmodel: "ct.models.MLModel",
     config: _OptimizationConfig,
     sample_data: List[Dict[Optional[str], np.ndarray]],
     calibration_op_group_size: int = -1,
@@ -79,11 +77,9 @@ def linear_quantize_activations(
 
         model = ct.coreml.models.MLModel("my_model.mlpackage")
         activation_config = cto.coreml.OptimizationConfig(
-            global_config=cto.coreml.experimental.OpActivationLinearQuantizerConfig(
-                mode="linear_symmetric"
-            )
+            global_config=cto.coreml.OpLinearQuantizerConfig(mode="linear_symmetric")
         )
-        compressed_model_a8 = cto.coreml.experimental.linear_quantize_activations(
+        compressed_model_a8 = cto.coreml.linear_quantize_activations(
             model, activation_config, sample_data
         )
 
@@ -93,68 +89,9 @@ def linear_quantize_activations(
         )
         compressed_model_w8a8 = cto.linear_quantize_weights(compressed_model_a8, weight_config)
     """
-    # Validate Sample data. If the sample data name is not provided, try to infer it.
-    for sample in sample_data:
-        if None in sample.keys():
-            input_spec = mlmodel.get_spec().description.input
-            if len(sample.keys()) > 1 or len(input_spec) > 1:
-                raise ValueError(
-                    "When the model has multiple inputs, please provide the name for each data in `sample_data`"
-                )
-            inferred_input_name = input_spec[0].name
-            sample[inferred_input_name] = sample[None]
-            del sample[None]
-
-    ### Apply four major graph passes in order.
-
-    # Insert prefix quantize/dequantize pairs to valid patterns.
-    logger.info("Running compression pass linear_quantize_activations phase 1/3 ...")
-    linear_activation_quantizer = PASS_REGISTRY[
-        "compression::insert_prefix_quantize_dequantize_pair"
-    ]
-    linear_activation_quantizer = _insert_prefix_quantize_dequantize_pair(
-        config, fake_compression=False
+    return _post_training_quantization.linear_quantize_activations(
+        mlmodel, config, sample_data, calibration_op_group_size
     )
-    linear_activation_quantizer.set_options([PassOption("config", config)])
-    activation_stats = _get_activation_calibration_stats(mlmodel, sample_data)
-    linear_activation_quantizer.set_options([PassOption("activation_stats", activation_stats)])
-
-    prog = _model_utils._apply_graph_pass(
-        mlmodel,
-        linear_activation_quantizer,
-        spec_version=_SPECIFICATION_VERSION_IOS_17,
-        pymil_load_func=_milproto_to_pymil.load,
-        skip_model_load=True,  # Save memony
-        return_pymil_prog=True,
-    )
-
-    # Insert suffix quantize/dequantize pairs to valid patterns.
-    logger.info("Running compression pass linear_quantize_activations phase 2/3 ...")
-    graph_pass = PASS_REGISTRY["compression::insert_suffix_quantize_dequantize_pair"]
-    graph_pass.set_options([PassOption("config", config)])
-    graph_pass.set_options([PassOption("activation_stats", activation_stats)])
-    graph_pass(prog)
-    prog.validate()
-
-    # Re-use exsiting path to dedup quantize/dequantize operations.
-    logger.info("Running compression pass linear_quantize_activations phase 3/3 ...")
-    graph_pass = PASS_REGISTRY["common::dequantize_quantize_pair_elimination"]
-    graph_pass(prog)
-    prog.validate()
-
-    # Convert the pymil program (prog) back to mlmodel
-    model_spec = mlmodel.get_spec()
-    specification_version = max(model_spec.specificationVersion, _SPECIFICATION_VERSION_IOS_17)
-    mlmodel_activation_quantized = _mil_convert(
-        prog,
-        convert_to="mlprogram",
-        convert_from="milinternal",
-        specification_version=specification_version,
-        compute_units=mlmodel.compute_unit,
-        model_description=model_spec.description,
-        skip_model_load=False,  # Must be False to avoid manually re-loading from disk before running prediction.
-    )
-    return mlmodel_activation_quantized
 
 
 def _update_tensor_range(
@@ -260,7 +197,7 @@ def _adjust_concat_surrounding_activation_stats(
 
 
 def _get_activation_calibration_stats(
-    fpmodel: _MLModel,
+    fpmodel: "ct.models.MLModel",
     sample_data: List[Dict[str, np.ndarray]],
     calibration_op_group_size: int = -1,
 ) -> Dict[str, Dict[str, float]]:
@@ -285,15 +222,6 @@ def _get_activation_calibration_stats(
     -------
     activation_calibration_stats: dict
     """
-    logger.warning(
-        "Running compression pass linear_quantize_activations: start calibrating {} samples".format(
-            len(sample_data)
-        )
-    )
-    logger.warning(
-        "Running compression pass linear_quantize_activations: calibration may take a while ..."
-    )
-
     debugger = ModelDebugger(fpmodel)
     activation_stats_dict = defaultdict(dict)
     intermediate_output_names = debugger.get_intermediate_output_names(

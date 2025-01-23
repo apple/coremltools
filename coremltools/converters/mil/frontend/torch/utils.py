@@ -20,7 +20,6 @@ from coremltools.converters.mil.mil import types
 # When mapping from integer number back to torch dtype, we map
 #     * int64's number to int32
 #     * float64's number to float32
-# TODO(https://github.com/apple/coremltools/issues/2153): This is confusing... we should refactor
 NUM_TO_TORCH_DTYPE = {
     0: torch.uint8,
     1: torch.int8,
@@ -78,15 +77,6 @@ NUM_TO_DTYPE_STRING = {
     6: "fp32",
     7: "fp32",
     11: "bool",
-}
-
-TYPE_TO_DTYPE_STRING = {
-    types.uint8: "uint8",
-    types.int8: "int8",
-    types.int32: "int32",
-    types.fp16: "fp16",
-    types.fp32: "fp32",
-    types.bool: "bool",
 }
 
 TORCH_QTYPE_TO_NP_TYPE = {

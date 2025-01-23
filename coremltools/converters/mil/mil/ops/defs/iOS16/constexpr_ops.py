@@ -10,6 +10,7 @@ from coremltools.converters.mil.mil.input_type import InputSpec, TensorInputType
 from coremltools.converters.mil.mil.operation import Operation
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.ops.defs.iOS16 import _IOS16_TARGET
+from coremltools.optimize import _utils as optimize_utils
 
 
 @register_op(opset_version=_IOS16_TARGET)
@@ -116,38 +117,16 @@ class constexpr_affine_dequantize(Operation):
         )
 
     def is_all_zeros(self) -> bool:
-        zero_point = self.promote_rank_to_same_as_quantized_data(
+        zero_point = optimize_utils.promote_rank_to_same_as_data(
             self.zero_point.val, self.quantized_data.val, self.axis.val
         )
         return np.all(self.quantized_data.val == zero_point)
 
     @staticmethod
-    def promote_rank_to_same_as_quantized_data(
-        param: np.ndarray, quantized_data: np.ndarray, axis: int
-    ) -> np.ndarray:
-        """
-        Promote param (i.e. zero point or scale) rank to same as quantized data,
-        so subtraction or multiplication can happen properly on the specified axis
-        """
-        if len(param.shape) == 0:
-            return np.reshape(param, np.ones(len(quantized_data.shape), np.int32))
-        else:
-            axes = [i for i in range(len(quantized_data.shape)) if i != axis]
-            return np.expand_dims(param, axis=tuple(axes))
-
-    @staticmethod
     def decompress(
         quantized_data: np.ndarray, zero_point: np.ndarray, scale: np.ndarray, axis: int
     ) -> np.ndarray:
-        axis = axis if axis >= 0 else axis + len(quantized_data.shape)
-        sc = constexpr_affine_dequantize.promote_rank_to_same_as_quantized_data(
-            scale, quantized_data, axis
-        )
-        zp = constexpr_affine_dequantize.promote_rank_to_same_as_quantized_data(
-            zero_point, quantized_data, axis
-        )
-        val = sc * (quantized_data.astype(np.float32) - zp.astype(np.float32))
-        return val.astype(scale.dtype)
+        return optimize_utils.dequantize_by_scale_and_zp(quantized_data, scale, zero_point, axis)
 
 
 @register_op(opset_version=_IOS16_TARGET)
@@ -288,9 +267,6 @@ class constexpr_lut_to_dense(Operation):
 
     @staticmethod
     def decompress(lut, indices, shape):
-        # Import here to avoid circular import.
-        from coremltools.optimize.coreml import _utils as optimize_utils
-
         nbits = np.log2(lut.size).astype(np.int32)
         indices = optimize_utils.restore_elements_from_packed_bits(indices, nbits, np.prod(shape))
         flatten_val = lut[indices]

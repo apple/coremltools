@@ -1,0 +1,8 @@
+-r ./common_test_packages.pip
+-r ./pytorch.pip
+
+# TODO (https://github.com/pytorch/executorch/issues/6639)
+# use latest numpy after ExecuTorch removes numpy==1.21.3 restriction
+numpy==1.21.3; platform_machine == "arm64" and python_version >= '3.10' and python_version <= '3.11'
+
+executorch==0.4.0; platform_machine == "arm64" and python_version >= '3.10' and python_version <= '3.11'

@@ -185,6 +185,9 @@ def quantize_model(
 @pytest.mark.skipif(not _HAS_TORCH_EXPORT_API or _TORCH_VERSION < _EXPECTED_TORCH_VERSION,
                     reason="This test requires PyTorch Export APIs and PyTorch >= 2.2.0.")
 def test_weight_module_act_fusion(model_for_quant, is_qat, config):
+    if _TORCH_VERSION >= "2.5.0" and config.global_config.activation_dtype == torch.quint8:
+        pytest.xfail("TODO (rdar://141183574): Upgrade cto.torch for torch 2.5")
+
     model = model_for_quant
     data = torch.randn(2, 1, 28, 28)
     converted_model = quantize_model(model, data, config, is_qat=is_qat)

@@ -3,9 +3,9 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from coremltools import proto
 from coremltools.converters.mil.input_types import ColorLayout
 from coremltools.converters.mil.mil.passes.defs.preprocess import NameSanitizer
-from coremltools.proto import FeatureTypes_pb2 as ft
 
 
 def _get_probability_var_for_classifier(prog, classifier_config):
@@ -47,13 +47,13 @@ def _get_probability_var_for_classifier(prog, classifier_config):
 
 def _get_colorspace_enum(color_layout):
     if color_layout == ColorLayout.GRAYSCALE:
-        return ft.ImageFeatureType.ColorSpace.GRAYSCALE
+        return proto.FeatureTypes_pb2.ImageFeatureType.ColorSpace.GRAYSCALE
     elif color_layout == ColorLayout.GRAYSCALE_FLOAT16:
-        return ft.ImageFeatureType.ColorSpace.GRAYSCALE_FLOAT16
+        return proto.FeatureTypes_pb2.ImageFeatureType.ColorSpace.GRAYSCALE_FLOAT16
     elif color_layout == ColorLayout.BGR:
-        return ft.ImageFeatureType.ColorSpace.BGR
+        return proto.FeatureTypes_pb2.ImageFeatureType.ColorSpace.BGR
     else:
-        return ft.ImageFeatureType.ColorSpace.RGB
+        return proto.FeatureTypes_pb2.ImageFeatureType.ColorSpace.RGB
 
 def _validate_image_input_output_shapes(color_layout, shape, name, is_input=True):
     io_str = "input" if is_input else "output"

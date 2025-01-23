@@ -116,9 +116,9 @@ _OPSET = {
 _LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_NEURALNETWORK = _SPECIFICATION_VERSION_IOS_13
 _LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_MILPROGRAM = _SPECIFICATION_VERSION_IOS_15
 
-
 # expose sub packages as directories
 from . import converters, models, optimize, proto
+
 # expose unified converter in coremltools package level
 from .converters import ClassifierConfig
 from .converters import ColorLayout as colorlayout

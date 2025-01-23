@@ -1,4 +1,5 @@
 #include <cstring>
+#include <iostream>
 
 #define STR(s) #s
 #define ML_ASSERT(x) { if (!(x)) { \

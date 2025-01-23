@@ -16,7 +16,6 @@ import sys as _sys
 import tempfile as _tempfile
 import warnings as _warnings
 from collections import OrderedDict as _OrderedDict
-from collections.abc import Iterable as _Iterable
 from copy import deepcopy as _deepcopy
 from functools import lru_cache as _lru_cache
 from typing import Callable as _Callable
@@ -36,6 +35,7 @@ from coremltools import ComputeUnit as _ComputeUnit
 from coremltools import _logger
 from coremltools import proto as _proto
 from coremltools.converters.mil import mil as _mil
+from coremltools.converters.mil.converter import mil_convert as _mil_convert
 from coremltools.converters.mil.frontend.milproto import load as _milproto_to_pymil
 from coremltools.converters.mil.mil import Builder as _mb
 from coremltools.converters.mil.mil import Program as _Program
@@ -89,7 +89,7 @@ def _remove_invalid_keys(input_dict, model):
 
 
 def _create_mlpackage(
-    proto_spec: _proto.Model_pb2,
+    proto_spec: "_proto.Model_pb2",
     weights_dir: _Optional[str] = None,
     package_path: _Optional[str] = None,
 ) -> str:
@@ -225,7 +225,7 @@ def save_spec(spec, filename, auto_set_specification_version=False, weights_dir=
             f.write(spec.SerializeToString())
 
 
-def load_spec(model_path: str) -> _proto.Model_pb2:
+def load_spec(model_path: str) -> "_proto.Model_pb2":
     """
     Load a protobuf model specification from file (``mlmodel``) or directory (``mlpackage``).
 
@@ -338,12 +338,9 @@ def _wp_to_fp16wp(wp):
     del wp.floatValue[:]
 
 def _convert_neural_network_spec_weights_to_fp16(fp_spec):
-    from .neural_network.quantization_utils import (
-        _QUANTIZATION_MODE_LINEAR_QUANTIZATION,
-        _quantize_spec_weights,
-    )
+    from .neural_network.quantization_utils import _quantize_spec_weights
 
-    qspec = _quantize_spec_weights(fp_spec, 16, _QUANTIZATION_MODE_LINEAR_QUANTIZATION)
+    qspec = _quantize_spec_weights(fp_spec, 16, _ct.models._QUANTIZATION_MODE_LINEAR_QUANTIZATION)
     return qspec
 
 
@@ -374,12 +371,10 @@ def _get_model(spec, compute_units=_ComputeUnit.ALL):
     """
     Utility to get the model and the data.
     """
-    from . import MLModel
-
-    if isinstance(spec, MLModel):
+    if isinstance(spec, _ct.models.MLModel):
         return spec
     else:
-        return MLModel(spec, compute_units=compute_units)
+        return _ct.models.MLModel(spec, compute_units=compute_units)
 
 def evaluate_regressor(model, data, target="target", verbose=False):
     """
@@ -1036,16 +1031,17 @@ def convert_double_to_float_multiarray_type(spec):
             convert_double_to_float_multiarray_type(model_spec)
 
 
-def compile_model(model: _proto.Model_pb2.Model, destination_path: _Optional[str] = None) -> str:
+def compile_model(
+    model: _Union["_proto.Model_pb2.Model", str],
+    destination_path: _Optional[str] = None,
+) -> str:
     """
-    Compiles a Core ML model spec.
+    Compiles a Core ML model.
 
     Parameters
     ----------
-    model: Model_pb2
-        Spec/protobuf to compile.
-
-        Note: an ``mlprogam`` which uses a blob file is not supported.
+    model: Model_pb2 | str
+        Either a Core ML model specification (protobuf object) or a path to a saved model (.mlmodel or .mlpackage) file.
 
     destination_path: str
         Path where the compiled model will be saved.
@@ -1089,6 +1085,10 @@ def compile_model(model: _proto.Model_pb2.Model, destination_path: _Optional[str
     --------
     coremltools.models.CompiledMLModel
     """
+    def is_valid_model_file(source_path: str) -> bool:
+        extension = source_path.rstrip("/")
+        return extension.endswith(".mlpackage") or extension.endswith(".mlmodel")
+
     # Check environment
     if _macos_version() < (10, 13):
         raise Exception("Compiling a Core ML models is only support on macOS 10.13 or higher.")
@@ -1097,30 +1097,47 @@ def compile_model(model: _proto.Model_pb2.Model, destination_path: _Optional[str
     except:
         raise Exception("Unable to compile any Core ML models.")
 
+    source_model_path = None
     # Check model parameter
     if isinstance(model, str):
-        raise TypeError("To get a compiled model from a saved MLModel, first load the model, "
-                        " then call \"get_compiled_model_path\".")
-    if isinstance(model, _ct.models.MLModel):
-        raise TypeError("This model has already been compiled. Call \"get_compiled_model_path\""
-                        " to get the compiled model.")
-    if not isinstance(model, _proto.Model_pb2.Model):
-        raise TypeError("Unrecognized input for \"model\" parameter. It should be a spec.")
+        if is_valid_model_file(model):
+            source_model_path = model
+        else:
+            raise ValueError(
+                f"Invalid model file path: '{model}'."
+                "Expected a file with .mlpackage or .model extension. "
+            )
+
+    if source_model_path is None:
+        if isinstance(model, _ct.models.MLModel):
+            raise TypeError(
+                'This model has already been compiled. Call "get_compiled_model_path"'
+                " to get the compiled model."
+            )
+
+        if not isinstance(model, _proto.Model_pb2.Model):
+            raise TypeError(
+                'Unrecognized input for "model" parameter. It should be a spec or model file path.'
+            )
 
     # Check file extension of destination_path parameter
     if destination_path is not None and not destination_path.rstrip('/').endswith(".mlmodelc"):
         raise Exception("\"destination_path\" parameter must have \".mlmodelc\" file extension.")
 
     # Compile model
-    with _tempfile.TemporaryDirectory() as save_dir:
-        spec_file_path = save_dir + '/spec.mlmodel'
-        save_spec(model, spec_file_path)
-        original_compiled_model_path =  _MLModelProxy.compileModel(spec_file_path)
+    if source_model_path is None:
+        with _tempfile.TemporaryDirectory() as save_dir:
+            spec_file_path = save_dir + "/spec.mlmodel"
+            save_spec(model, spec_file_path)
+            original_compiled_model_path = _MLModelProxy.compileModel(spec_file_path)
+    else:
+        original_compiled_model_path = _MLModelProxy.compileModel(source_model_path)
 
     # Move the compiled model if needed
     if destination_path is None:
         return original_compiled_model_path
     _shutil.move(original_compiled_model_path, destination_path)
+
     return destination_path
 
 
@@ -1315,15 +1332,12 @@ def _convert_model_spec_to_pymil_prog(
 
 def _apply_graph_pass(
     mlmodel: "_ct.models.MLModel",
-    graph_pass: _AbstractGraphPass,
+    graph_pass: _Union[_AbstractGraphPass, _Iterable[_AbstractGraphPass]],
     spec_version: int = _SPECIFICATION_VERSION_IOS_16,
     skip_model_load: _Optional[bool] = None,
     pymil_load_func: _Callable = _milproto_to_pymil.load,
     return_pymil_prog: bool = False,
 ) -> _Union["_ct.models.MLModel", _Program]:
-    # We do the lazy import to prevent circular import
-    from coremltools.converters.mil.converter import mil_convert as _mil_convert
-
     if skip_model_load is None:
         # Determine if skip the model load by the original mlmodel.
         skip_model_load = mlmodel.__proxy__ is None
@@ -1334,11 +1348,15 @@ def _apply_graph_pass(
     specification_version = max(model_spec.specificationVersion, spec_version)
     prog = _convert_model_spec_to_pymil_prog(mlmodel, specification_version, pymil_load_func)
 
-    # Apply graph pass.
-    assert isinstance(
-        graph_pass, _AbstractGraphPass
-    ), f"graph pass must be an AbstractGraphPass instance, but got {type(graph_pass)}"
-    graph_pass.apply(prog)
+    # Apply graph pass(es).
+    if isinstance(graph_pass, _AbstractGraphPass):
+        graph_pass = [graph_pass]
+    for cur_graph_pass in graph_pass:
+        if not isinstance(cur_graph_pass, _AbstractGraphPass):
+            raise AssertionError(
+                "graph pass must be an AbstractGraphPass instance, " f"but got {type(graph_pass)}"
+            )
+        cur_graph_pass.apply(prog)
 
     # An early return can prevent running all other optimization paths triggered by _mil_convert.
     if return_pymil_prog:
@@ -1552,11 +1570,8 @@ def save_multifunction(
     MultiFunctionDescriptor
 
     """
-    # We do the lazy import to prevent circular import
-    from coremltools.converters.mil.converter import mil_convert as _mil_convert
-
     def get_function_spec(
-        spec: _proto.Model_pb2, func_name: str
+        spec: "_proto.Model_pb2", func_name: str
     ) -> _proto.Model_pb2.FunctionDescription:
         """
         Utils to construct a FunctionDescription from the source spec.
@@ -1739,9 +1754,6 @@ def materialize_dynamic_shape_mlmodel(
     coremltools.converters.mil.mil.passes.defs.experiment.materialize_symbolic_shape_program
 
     """
-    # We do the lazy import to prevent circular import
-    from coremltools.converters.mil.converter import mil_convert as _mil_convert
-
     if not isinstance(dynamic_shape_mlmodel, _ct.models.MLModel):
         raise ValueError(
             "Dynamic shape mlmodel must be type of ct.models.MLModel, "
@@ -1908,11 +1920,6 @@ def bisect_model(
             merge_chunks_to_pipeline=True,
         )
     """
-    # We do the lazy import to prevent circular import
-    from coremltools.converters.mil.converter import mil_convert as _mil_convert
-
-    from . import MLModel
-
     def get_pymil_prog_and_spec_from_model(model):
 
         # get the model spec and weight directory
@@ -1939,7 +1946,7 @@ def bisect_model(
         return prog, spec
 
     # check the input type of model
-    if not isinstance(model, (str, MLModel)):
+    if not isinstance(model, (str, _ct.models.MLModel)):
         raise ValueError(f"'model' must be type of [str, MLModel]. Got {type(model)}.")
 
     # The below implementation assumes that the model is single function, with a "main" function.
@@ -2258,8 +2265,8 @@ def _make_second_chunk_prog(prog: _mil.Program, op_idx: int) -> _mil.Program:
 
 def change_input_output_tensor_type(
     ml_model: "_ct.models.MLModel",
-    from_type: _proto.FeatureTypes_pb2.ArrayFeatureType,
-    to_type: _proto.FeatureTypes_pb2.ArrayFeatureType,
+    from_type: "_proto.FeatureTypes_pb2.ArrayFeatureType",
+    to_type: "_proto.FeatureTypes_pb2.ArrayFeatureType",
     function_names: _Optional[_List[str]] = None,
     input_names: _Optional[_List[str]] = None,
     output_names: _Optional[_List[str]] = None,
@@ -2297,26 +2304,23 @@ def change_input_output_tensor_type(
     .. sourcecode:: python
 
         from coremltools.models.model import MLModel
-        from coremltools.utils import change_array_output_type
+        from coremltools.utils import change_input_output_tensor_type
         from coremltools.proto.FeatureTypes_pb2 import ArrayFeatureType
 
         model = MLModel("my_model.mlpackage")
-        updated_model = change_output_tensor_type(
+        updated_model = change_input_output_tensor_type(
             ml_model=model,
             from_type=ArrayFeatureType.FLOAT32,
             to_type=ArrayFeatureType.FLOAT16,
         )
         updated_model.save("my_updated_model.mlpackage")
     """
-    # We do the lazy import to prevent circular import
-    from coremltools.converters.mil.converter import mil_convert as _mil_convert
-
     SUPPORTED_TYPES = (
         _proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT16,
         _proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT32,
     )
 
-    def _get_model_spec(model: _ct.models.MLModel) -> _proto.Model_pb2.Model:
+    def _get_model_spec(model: _ct.models.MLModel) -> "_proto.Model_pb2.Model":
         if not isinstance(model, _ct.models.MLModel):
             raise ValueError(f"input model must be of type ct.models.MLModel, actual type is {type(model)})")
         model_spec = model.get_spec()
@@ -2327,7 +2331,9 @@ def change_input_output_tensor_type(
 
         return model_spec
 
-    def _get_dtype(feature_type: _proto.FeatureTypes_pb2.ArrayFeatureType) -> _Type[_mil.types.double]:
+    def _get_dtype(
+        feature_type: "_proto.FeatureTypes_pb2.ArrayFeatureType",
+    ) -> _Type[_mil.types.double]:
         if feature_type == _proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT16:
             return _mil.types.fp16
         if feature_type == _proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT32:
@@ -2340,9 +2346,9 @@ def change_input_output_tensor_type(
         return [x.name for x in desc_list if "*" in names or x.name in names]
 
     def _eligible_feature_desc(
-            feature_desc: _proto.Model_pb2.FeatureDescription,
-            names: _List[str],
-            data_type: _proto.FeatureTypes_pb2.ArrayFeatureType,
+        feature_desc: "_proto.Model_pb2.FeatureDescription",
+        names: _List[str],
+        data_type: _proto.FeatureTypes_pb2.ArrayFeatureType,
     ) -> bool:
         if feature_desc.name not in names:
             _logger.debug(f"ignoring feature {feature_desc.name} as it's not in the list of required names {names}")
@@ -2381,9 +2387,9 @@ def change_input_output_tensor_type(
                 yield func, var
 
     def _cast_input_type(
-            feature_desc: _proto.Model_pb2.FeatureDescription,
-            feature_var: _mil.Var,
-            first_operation: _mil.Operation,
+        feature_desc: "_proto.Model_pb2.FeatureDescription",
+        feature_var: _mil.Var,
+        first_operation: _mil.Operation,
     ) -> None:
         with first_operation.enclosing_block:
             from_dtype_str = f"fp{from_dtype.get_bitwidth()}"
@@ -2397,7 +2403,9 @@ def change_input_output_tensor_type(
             feature_desc.type.multiArrayType.dataType = to_type
             feature_var._sym_type = _mil.types.tensor(to_dtype, feature_var.sym_type.get_shape())
 
-    def _cast_output_type(feature_desc: _proto.Model_pb2.FeatureDescription, feature_var: _mil.Var) -> None:
+    def _cast_output_type(
+        feature_desc: "_proto.Model_pb2.FeatureDescription", feature_var: _mil.Var
+    ) -> None:
         with feature_var.op.enclosing_block:
             to_dtype_str = f"fp{to_dtype.get_bitwidth()}"
             var_name = feature_desc.name + f"_to_{to_dtype_str}"

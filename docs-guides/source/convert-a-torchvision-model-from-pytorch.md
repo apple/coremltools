@@ -135,14 +135,9 @@ mlmodel_from_trace = ct.convert(
     classifier_config = ct.ClassifierConfig(class_labels),
     compute_units=ct.ComputeUnit.CPU_ONLY,
 )
-```
-
-Torch.export path does not support image input yet (as of Core ML Tools 8.0), so it still uses tensor input
-```python
-# Using image_input in the inputs parameter:
-# Convert to Core ML using the Unified Conversion API.
 mlmodel_from_export = ct.convert(
     exported_program,
+    inputs=[image_input],
     classifier_config = ct.ClassifierConfig(class_labels),
     compute_units=ct.ComputeUnit.CPU_ONLY,
 )
@@ -152,7 +147,7 @@ Save the ML program using the `.mlpackage` extension. It may also be helpful to 
 
 ```python
 # Save the converted model.
-mlmodel_from_trace.save("mobilenet.mlpackage")
+mlmodel_from_export.save("mobilenet.mlpackage")
 # Print a confirmation message.
 print("model converted and saved")
 ```
@@ -254,7 +249,7 @@ To get the fields and types used in the model, get the protobuf spec with [get_s
 
 ```python
 # Get the protobuf spec of the model.
-spec = mlmodel_from_trace.get_spec()
+spec = mlmodel_from_export.get_spec()
 for out in spec.description.output:
     if out.type.WhichOneof("Type") == "dictionaryType":
         coreml_dict_name = out.name
@@ -266,60 +261,41 @@ You can now make a prediction with the converted model, using the test image. To
 
 ```python
 # Make a prediction with the Core ML version of the model.
-coreml_out_dict = mlmodel_from_trace.predict({"x": img})
-print("coreml predictions: ")
-print("top class label: ", coreml_out_dict["classLabel"])
+def predict_with_coreml(mlmodel):
+    coreml_out_dict = mlmodel.predict({"x": img})
+    print("top class label: ", coreml_out_dict["classLabel"])
 
-coreml_prob_dict = coreml_out_dict[coreml_dict_name]
+    coreml_prob_dict = coreml_out_dict[coreml_dict_name]
 
-values_vector = np.array(list(coreml_prob_dict.values()))
-keys_vector = list(coreml_prob_dict.keys())
-top_3_indices_coreml = np.argsort(-values_vector)[:3]
-for i in range(3):
-    idx = top_3_indices_coreml[i]
-    score_value = values_vector[idx]
-    class_id = keys_vector[idx]
-    print("class name: {}, raw score value: {}".format(class_id, score_value))
+    values_vector = np.array(list(coreml_prob_dict.values()))
+    keys_vector = list(coreml_prob_dict.keys())
+    top_3_indices_coreml = np.argsort(-values_vector)[:3]
+    for i in range(3):
+        idx = top_3_indices_coreml[i]
+        score_value = values_vector[idx]
+        class_id = keys_vector[idx]
+        print("class name: {}, raw score value: {}".format(class_id, score_value))
+
+print("coreml (converted from torch.jit.trace) predictions: ")
+predict_with_coreml(mlmodel_from_trace)
+
+print("coreml (converted from torch.export) predictions: ")
+predict_with_coreml(mlmodel_from_export)
 ```
 
 When you run this example, the output should be something like the following, using the image of a daisy as the input:
 
 ```text Output
-coreml predictions: 
+coreml (converted from torch.jit.trace) predictions: 
 top class label:  daisy
 class name: daisy, raw score value: 15.8046875
 class name: vase, raw score value: 8.4921875
 class name: ant, raw score value: 8.2109375
-```
-
-The model converted from torch.export will need to use the image tensor same to torch
-
-```python
-# Make a prediction with the Core ML version of the model.
-coreml_out_dict = mlmodel_from_export.predict({"x": img_torch.detach().numpy()})
-print("coreml predictions: ")
-print("top class label: ", coreml_out_dict["classLabel"])
-
-coreml_prob_dict = coreml_out_dict[coreml_dict_name]
-
-values_vector = np.array(list(coreml_prob_dict.values()))
-keys_vector = list(coreml_prob_dict.keys())
-top_3_indices_coreml = np.argsort(-values_vector)[:3]
-for i in range(3):
-    idx = top_3_indices_coreml[i]
-    score_value = values_vector[idx]
-    class_id = keys_vector[idx]
-    print("class name: {}, raw score value: {}".format(class_id, score_value))
-```
-
-When you run this example, the output should be something like the following, using the image of a daisy as the input:
-
-```text Output
-coreml predictions: 
+coreml (converted from torch.export) predictions: 
 top class label:  daisy
-class name: daisy, raw score value: 15.7890625
-class name: vase, raw score value: 8.546875
-class name: ant, raw score value: 8.34375
+class name: daisy, raw score value: 15.8046875
+class name: vase, raw score value: 8.4921875
+class name: ant, raw score value: 8.2109375
 ```
 
 As you can see from the results, the converted model performs very closely to the original model — the raw score values are very similar.

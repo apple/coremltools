@@ -1,0 +1,32 @@
+boto3==1.14.8; python_version < '3.12'
+boto3==1.24.22; python_version >= '3.12'
+
+configparser
+future
+
+olefile==0.44
+pandas
+parameterized==0.8.1
+protobuf
+pillow
+pytest==7.1.2
+pytest-cov
+pytest-sugar
+pytest-timeout
+pytest-asyncio
+
+scikit-learn==0.19.2; python_version < '3.8'
+scikit-learn==1.1.2; python_version == '3.8'
+scikit-learn==1.5.1; python_version > '3.8'
+
+six
+sympy > 1.6
+gast==0.4.0
+
+mock
+wrapt
+tqdm
+
+transformers==4.26.0; platform_machine != "arm64"
+transformers==4.38.2; platform_machine == "arm64"
+peft==0.13.2

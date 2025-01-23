@@ -4,12 +4,13 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 
+from coremltools import proto
+
 from ... import SPECIFICATION_VERSION
 from ..._deps import _HAS_SKLEARN
 from ...models import MLModel as _MLModel
 from ...models._interface_management import \
     set_transform_interface_params as _set_transform_interface_params
-from ...proto import Model_pb2 as _Model_pb2
 
 if _HAS_SKLEARN:
     from sklearn.preprocessing import StandardScaler
@@ -51,7 +52,7 @@ def convert(model, input_features, output_features):
     _sklearn_util.check_fitted(model, lambda m: hasattr(m, "scale_"))
 
     # Set the interface params.
-    spec = _Model_pb2.Model()
+    spec = proto.Model_pb2.Model()
     spec.specificationVersion = SPECIFICATION_VERSION
     spec = _set_transform_interface_params(spec, input_features, output_features)
 

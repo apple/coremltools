@@ -3,11 +3,12 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from coremltools import proto
+
 from ... import SPECIFICATION_VERSION as _SPECIFICATION_VERSION
 from ..._deps import _HAS_SKLEARN
 from ...models import MLModel as _MLModel
 from ...models._interface_management import set_classifier_interface_params
-from ...proto import Model_pb2 as _Model_pb2
 
 if _HAS_SKLEARN:
     from sklearn.svm import SVC as _SVC
@@ -33,7 +34,7 @@ def _generate_base_svm_classifier_spec(model):
 
     check_fitted(model, lambda m: hasattr(m, "support_vectors_"))
 
-    spec = _Model_pb2.Model()
+    spec = proto.Model_pb2.Model()
     spec.specificationVersion = _SPECIFICATION_VERSION
     svm = spec.supportVectorClassifier
 

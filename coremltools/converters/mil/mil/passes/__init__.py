@@ -44,5 +44,6 @@ from coremltools.converters.mil.mil.passes.defs import (
     optimize_state,
     optimize_tensor_operation,
     preprocess,
+    transformer,
     symbol_transform,
 )

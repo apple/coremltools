@@ -3,11 +3,12 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from coremltools import proto
+
 from ... import SPECIFICATION_VERSION
 from ..._deps import _HAS_SKLEARN
 from ...models import MLModel as _MLModel
 from ...models._interface_management import set_regressor_interface_params
-from ...proto import Model_pb2 as _Model_pb2
 
 if _HAS_SKLEARN:
     from sklearn.svm import SVR as _SVR
@@ -31,7 +32,7 @@ def _generate_base_svm_regression_spec(model):
             "scikit-learn not found. scikit-learn conversion API is disabled."
         )
 
-    spec = _Model_pb2.Model()
+    spec = proto.Model_pb2.Model()
     spec.specificationVersion = SPECIFICATION_VERSION
     svm = spec.supportVectorRegressor
 

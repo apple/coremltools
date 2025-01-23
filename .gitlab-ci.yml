@@ -90,7 +90,7 @@ test_py39_pytorch_intel:
     PYTHON: "3.9"
     TEST_PACKAGE: coremltools.converters.mil.frontend.torch
     WHEEL_PATH: build/dist/*cp39*10_15*
-    REQUIREMENTS: reqs/test.pip
+    REQUIREMENTS: reqs/test_torch.pip
 
 test_py37_tf1_intel:
   <<: *test_macos_pkg
@@ -200,7 +200,7 @@ test_py310_pytorch_script:
     PYTHON: "3.10"
     TEST_PACKAGE: coremltools.converters.mil.frontend.torch
     WHEEL_PATH: build/dist/*cp310*11*
-    REQUIREMENTS: reqs/test.pip
+    REQUIREMENTS: reqs/test_torch.pip
     TORCH_FRONTENDS: TORCHSCRIPT
 
 test_py310_pytorch_export:
@@ -213,7 +213,7 @@ test_py310_pytorch_export:
     PYTHON: "3.10"
     TEST_PACKAGE: coremltools.converters.mil.frontend.torch
     WHEEL_PATH: build/dist/*cp310*11*
-    REQUIREMENTS: reqs/test.pip
+    REQUIREMENTS: reqs/test_torch.pip
     TORCH_FRONTENDS: TORCHEXPORT
 
 test_py310_pytorch_executorch:
@@ -226,7 +226,7 @@ test_py310_pytorch_executorch:
     PYTHON: "3.10"
     TEST_PACKAGE: coremltools.converters.mil.frontend.torch
     WHEEL_PATH: build/dist/*cp310*11*
-    REQUIREMENTS: reqs/test.pip
+    REQUIREMENTS: reqs/test_executorch.pip
     TORCH_FRONTENDS: EXECUTORCH
 
 test_py310_tf2-1:

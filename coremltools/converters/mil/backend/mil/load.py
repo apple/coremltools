@@ -620,8 +620,10 @@ class CoreMLProtoExporter:
 
     @staticmethod
     def _decouple_state_and_input(
-        input_features: List[proto.Model_pb2.FeatureDescription],
-    ) -> Tuple[List[proto.Model_pb2.FeatureDescription], List[proto.Model_pb2.FeatureDescription]]:
+        input_features: List["proto.Model_pb2.FeatureDescription"],
+    ) -> Tuple[
+        List["proto.Model_pb2.FeatureDescription"], List["proto.Model_pb2.FeatureDescription"]
+    ]:
         """
         Utils seperates state input from non-state input features.
         """
@@ -636,7 +638,7 @@ class CoreMLProtoExporter:
 
         return state_features, non_state_input_features
 
-    def get_func_input(self, func: mil.Function) -> List[proto.Model_pb2.FeatureDescription]:
+    def get_func_input(self, func: mil.Function) -> List["proto.Model_pb2.FeatureDescription"]:
         """
         Utils to get function input feature description.
         """
@@ -852,7 +854,7 @@ class CoreMLProtoExporter:
                     )
         return input_features
 
-    def get_func_output(self, func: mil.Function) -> List[proto.Model_pb2.FeatureDescription]:
+    def get_func_output(self, func: mil.Function) -> List["proto.Model_pb2.FeatureDescription"]:
         """
         Utils to get function output feature description.
         """
@@ -945,10 +947,10 @@ class CoreMLProtoExporter:
 
     def get_coreml_model(
         self,
-        input: Dict[str, List[proto.Model_pb2.FeatureDescription]],
-        output: Dict[str, List[proto.Model_pb2.FeatureDescription]],
+        input: Dict[str, List["proto.Model_pb2.FeatureDescription"]],
+        output: Dict[str, List["proto.Model_pb2.FeatureDescription"]],
         specification_version: int,
-    ) -> proto.Model_pb2.Model:
+    ) -> "proto.Model_pb2.Model":
         """
         Utils to get a coreml model description.
         For the multifunction export, we utilize the FunctionDescription proto message.
@@ -1018,7 +1020,7 @@ class CoreMLProtoExporter:
 
     def export(
         self, specification_version: Optional[int] = _SPECIFICATION_VERSION_IOS_15
-    ) -> proto.Model_pb2.Model:
+    ) -> "proto.Model_pb2.Model":
 
         # get functions input / output description
         func_to_input = OrderedDict()
@@ -1048,7 +1050,7 @@ def load(
     resume_on_errors: Optional[bool] = False,
     specification_version: Optional[int] = _SPECIFICATION_VERSION_IOS_15,
     **kwargs,
-) -> proto.Model_pb2.Model:
+) -> "proto.Model_pb2.Model":
     if prog.default_function_name not in prog.functions:
         raise ValueError(f"Default function {prog.default_function_name} not found in program")
 

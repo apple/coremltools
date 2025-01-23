@@ -4,6 +4,7 @@
 // found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 #import <CoreML/CoreML.h>
+#include <mach/mach_time.h>
 #import "CoreMLPythonArray.h"
 #import "CoreMLPython.h"
 #import "CoreMLPythonUtils.h"
@@ -289,20 +290,34 @@ namespace {
     }
 #endif
 
+uint64_t convertMachTimeToNanoSeconds(uint64_t time) {
+    static dispatch_once_t once;
+    static mach_timebase_info_data_t timebase;
+    dispatch_once(&once, ^{
+        mach_timebase_info(&timebase);
+    });
+    uint64_t result = (time * timebase.numer) / timebase.denom;
+    return result;
+}
 
 #if ML_MODEL_ASSET_IS_AVAILABLE
     API_AVAILABLE(macos(13.0))
-    MLModel * createModelFromModelAsset(MLModelAsset *modelAsset,
-                                        MLModelConfiguration *configuration,
-                                        NSError * __autoreleasing *error) {
+    std::pair<MLModel *, uint64_t> createModelFromModelAsset(
+        MLModelAsset *modelAsset,
+        MLModelConfiguration *configuration,
+        NSError * __autoreleasing *error
+    ) {
         dispatch_semaphore_t sem = dispatch_semaphore_create(0);
         __block MLModel *result = nil;
         __block NSError *lError = nil;
+        uint64_t loadStartTime = mach_absolute_time();
+        __block uint64_t loadEndTime = loadStartTime;
         [MLModel loadModelAsset:modelAsset
                  configuration:configuration
              completionHandler:^(MLModel * _Nullable model, NSError * _Nullable loadError){
                 result = model;
                 lError = loadError;
+                loadEndTime = mach_absolute_time();
                 dispatch_semaphore_signal(sem);
         }];
 
@@ -312,9 +327,9 @@ namespace {
             *error = lError;
         }
 
-        return result;
+        uint64_t loadDurationInNanoSeconds = convertMachTimeToNanoSeconds(loadEndTime - loadStartTime);
+        return {result, loadDurationInNanoSeconds};
     }
-
 #endif
 }
 
@@ -380,18 +395,25 @@ Model::Model(
             configuration.functionName = [NSString stringWithUTF8String:functionName.c_str()];
         }
 #endif
+        uint64_t loadDurationInNanoSeconds = 0;
         // Create MLModel
         if (asset.is_none()) {
+            uint64_t loadStartTime = mach_absolute_time();
             m_model = [MLModel modelWithContentsOfURL:compiledUrl configuration:configuration error:&error];
+            uint64_t loadEndTime = mach_absolute_time();
+            loadDurationInNanoSeconds = convertMachTimeToNanoSeconds(loadEndTime - loadStartTime);
         } else {
 #if ML_MODEL_ASSET_IS_AVAILABLE
-            m_model = createModelFromModelAsset(py::cast<ModelAsset>(asset).getImpl(), configuration, &error);
+            auto pair = createModelFromModelAsset(py::cast<ModelAsset>(asset).getImpl(), configuration, &error);
+            m_model = pair.first;
+            loadDurationInNanoSeconds = pair.second;
 #else
             throw std::runtime_error("MLModelAsset is only available on macOS >= 13.0");
 #endif
         }
 
         Utils::handleError(error);
+        m_loadDurationInNanoSeconds = loadDurationInNanoSeconds;
     }
 }
 
@@ -410,13 +432,14 @@ Model::Model(MLModel* mlModel, NSURL* compiledUrl, bool deleteCompiledModelOnExi
 }
 
 
-py::dict Model::predict(const py::dict& input, State* state) const {
+py::dict Model::predict(const py::dict& input, State* state) {
     @autoreleasepool {
         NSError *error = nil;
         MLDictionaryFeatureProvider *inFeatures = Utils::dictToFeatures(input, &error);
         Utils::handleError(error);
 
         id<MLFeatureProvider> outFeatures;
+        uint64_t predictStartTime = mach_absolute_time();
 #if BUILT_WITH_MACOS15_SDK
         if (state == NULL) {
           outFeatures = [m_model predictionFromFeatures:static_cast<MLDictionaryFeatureProvider * _Nonnull>(inFeatures)
@@ -430,8 +453,10 @@ py::dict Model::predict(const py::dict& input, State* state) const {
         outFeatures = [m_model predictionFromFeatures:static_cast<MLDictionaryFeatureProvider * _Nonnull>(inFeatures)
                                                 error:&error];
 #endif
-
+        uint64_t predictEndTime = mach_absolute_time();
         Utils::handleError(error);
+
+        m_lastPredictDurationInNanoSeconds = convertMachTimeToNanoSeconds(predictEndTime - predictStartTime);
         return Utils::featuresToDict(outFeatures);
     }
 }
@@ -485,7 +510,7 @@ void Model::setOptimizationHints(MLModelConfiguration *configuration, const py::
 }
 #endif
 
-py::list Model::batchPredict(const py::list& batch) const {
+py::list Model::batchPredict(const py::list& batch) {
   @autoreleasepool {
       NSError* error = nil;
 
@@ -498,11 +523,14 @@ py::list Model::batchPredict(const py::list& batch) const {
       }
       MLArrayBatchProvider* batchProvider = [[MLArrayBatchProvider alloc] initWithFeatureProviderArray: array];
 
+      uint64_t predictStartTime = mach_absolute_time();
       // Get predictions
       MLArrayBatchProvider* predictions = (MLArrayBatchProvider*)[m_model predictionsFromBatch:batchProvider
                                                                                          error:&error];
+      uint64_t predictEndTime = mach_absolute_time();
       Utils::handleError(error);
 
+      m_lastPredictDurationInNanoSeconds = convertMachTimeToNanoSeconds(predictEndTime - predictStartTime);
       // Convert predictions to output
       py::list ret;
       for (int i = 0; i < predictions.array.count; i++) {
@@ -773,6 +801,22 @@ int32_t Model::maximumSupportedSpecificationVersion() {
     return CoreML::MLMODEL_SPECIFICATION_VERSION_NEWEST;
 }
 
+py::object Model::getLoadDurationInNanoSeconds() const {
+    if (m_loadDurationInNanoSeconds) {
+        return py::cast(m_loadDurationInNanoSeconds.value());
+    }
+
+    return py::none();
+}
+
+py::object Model::getLastPredictDurationInNanoSeconds() const {
+    if (m_lastPredictDurationInNanoSeconds) {
+        return py::cast(m_lastPredictDurationInNanoSeconds.value());
+    }
+
+    return py::none();
+}
+
 /*
  *
  * bindings
@@ -788,6 +832,8 @@ PYBIND11_PLUGIN(libcoremlpython) {
         .def("predict", &Model::predict)
         .def("batchPredict", &Model::batchPredict)
         .def("get_compiled_model_path", &Model::getCompiledModelPath)
+        .def("get_load_duration_in_nano_seconds", &Model::getLoadDurationInNanoSeconds)
+        .def("get_last_predict_duration_in_nano_seconds", &Model::getLastPredictDurationInNanoSeconds)
         .def_static("auto_set_specification_version", &Model::autoSetSpecificationVersion)
         .def_static("maximum_supported_specification_version", &Model::maximumSupportedSpecificationVersion)
 #if BUILT_WITH_MACOS15_SDK
@@ -804,14 +850,18 @@ PYBIND11_PLUGIN(libcoremlpython) {
     py::class_<State>(m, "_State", py::module_local());
 
 #if ML_COMPUTE_DEVICE_IS_AVAILABLE
-    py::class_<CPUComputeDevice>(m, "_MLCPUComputeDeviceProxy", py::module_local());
-    py::class_<GPUComputeDevice>(m, "_MLGPUComputeDeviceProxy", py::module_local());
+    py::class_<CPUComputeDevice>(m, "_MLCPUComputeDeviceProxy", py::module_local())
+       .def(py::init());
+    py::class_<GPUComputeDevice>(m, "_MLGPUComputeDeviceProxy", py::module_local())
+       .def(py::init());
     py::class_<NeuralEngineComputeDevice>(m, "_MLNeuralEngineComputeDeviceProxy", py::module_local())
+        .def(py::init())
         .def("get_total_core_count", &NeuralEngineComputeDevice::getTotalCoreCount);
 #endif
 
 #if ML_COMPUTE_PLAN_IS_AVAILABLE
     py::class_<ComputePlan>(m, "_MLComputePlanProxy", py::module_local())
+        .def(py::init())
         .def_property_readonly("model_structure", &ComputePlan::getModelStructure)
         .def("get_compute_device_usage_for_mlprogram_operation", &ComputePlan::getComputeDeviceUsageForMLProgramOperation)
         .def("get_compute_device_usage_for_neuralnetwork_layer", &ComputePlan::getComputeDeviceUsageForNeuralNetworkLayer)

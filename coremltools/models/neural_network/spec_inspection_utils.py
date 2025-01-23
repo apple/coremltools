@@ -3,13 +3,13 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from ...proto import NeuralNetwork_pb2 as _NeuralNetwork_pb2
+from coremltools import proto
 
 
 def _get_weight_param_summary(wp):
-    """Get a summary of _NeuralNetwork_pb2.WeightParams
+    """Get a summary of proto.NeuralNetwork_pb2.WeightParams
     Args:
-    wp : _NeuralNetwork_pb2.WeightParams - the _NeuralNetwork_pb2.WeightParams message to display
+    wp : proto.NeuralNetwork_pb2.WeightParams - the proto.NeuralNetwork_pb2.WeightParams message to display
     Returns:
     a str summary for wp
     """
@@ -109,9 +109,9 @@ def _summarize_network_layer_info(layer):
     for name in layer_field_names:
         field = getattr(typed_layer, name)
         summary_str = ""
-        if type(field) == _NeuralNetwork_pb2.LSTMWeightParams:
+        if type(field) == proto.NeuralNetwork_pb2.LSTMWeightParams:
             summary_str = _get_lstm_weight_param_summary(field)
-        elif type(field) == _NeuralNetwork_pb2.WeightParams:
+        elif type(field) == proto.NeuralNetwork_pb2.WeightParams:
             summary_str = _get_weight_param_summary(field)
         else:
             field_str = str(field)

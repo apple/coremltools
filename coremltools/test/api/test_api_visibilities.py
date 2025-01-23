@@ -194,6 +194,7 @@ class TestApiVisibilities:
             "OptimizationConfig",
             "OpThresholdPrunerConfig",
             "experimental",
+            "linear_quantize_activations",
             "linear_quantize_weights",
             "palettize_weights",
             "prune_weights",

@@ -11,17 +11,20 @@ import numpy as np
 import PIL.Image
 
 import coremltools
-from coremltools import ComputeUnit
+from coremltools import ComputeUnit, proto
 from coremltools._deps import _HAS_TORCH
 from coremltools.converters.mil import Builder as mb
 from coremltools.models import MLModel, datatypes
 from coremltools.models.neural_network import NeuralNetworkBuilder
-from coremltools.models.neural_network.utils import (make_image_input,
-                                                     make_nn_classifier)
+from coremltools.models.neural_network.utils import make_image_input, make_nn_classifier
 from coremltools.models.utils import (
-    _convert_neural_network_spec_weights_to_fp16, _is_macos, _macos_version,
-    convert_double_to_float_multiarray_type, rename_feature, save_spec)
-from coremltools.proto import Model_pb2
+    _convert_neural_network_spec_weights_to_fp16,
+    _is_macos,
+    _macos_version,
+    convert_double_to_float_multiarray_type,
+    rename_feature,
+    save_spec,
+)
 
 if _HAS_TORCH:
     import torch as _torch
@@ -31,7 +34,7 @@ class MLModelTest(unittest.TestCase):
     @classmethod
     def setUpClass(self):
 
-        spec = Model_pb2.Model()
+        spec = proto.Model_pb2.Model()
         spec.specificationVersion = coremltools.SPECIFICATION_VERSION
 
         features = ["feature_1", "feature_2"]
@@ -300,20 +303,20 @@ class MLModelTest(unittest.TestCase):
         spec = builder.spec
         self.assertEqual(
             spec.description.input[0].type.multiArrayType.dataType,
-            Model_pb2.ArrayFeatureType.DOUBLE,
+            proto.Model_pb2.ArrayFeatureType.DOUBLE,
         )
         self.assertEqual(
             spec.description.output[0].type.multiArrayType.dataType,
-            Model_pb2.ArrayFeatureType.DOUBLE,
+            proto.Model_pb2.ArrayFeatureType.DOUBLE,
         )
         convert_double_to_float_multiarray_type(spec)
         self.assertEqual(
             spec.description.input[0].type.multiArrayType.dataType,
-            Model_pb2.ArrayFeatureType.FLOAT32,
+            proto.Model_pb2.ArrayFeatureType.FLOAT32,
         )
         self.assertEqual(
             spec.description.output[0].type.multiArrayType.dataType,
-            Model_pb2.ArrayFeatureType.FLOAT32,
+            proto.Model_pb2.ArrayFeatureType.FLOAT32,
         )
 
     @unittest.skipUnless(

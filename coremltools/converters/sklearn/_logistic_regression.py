@@ -15,9 +15,10 @@ if _HAS_SKLEARN:
 
     sklearn_class = LogisticRegression
 
+from coremltools import proto
+
 from ... import SPECIFICATION_VERSION
 from ...models._interface_management import set_classifier_interface_params
-from ...proto import Model_pb2 as _Model_pb2
 
 model_type = "classifier"
 
@@ -52,7 +53,7 @@ def convert(model, feature_names, target):
 
 
 def _convert(model, feature_names, target):
-    spec = _Model_pb2.Model()
+    spec = proto.Model_pb2.Model()
     spec.specificationVersion = SPECIFICATION_VERSION
 
     set_classifier_interface_params(

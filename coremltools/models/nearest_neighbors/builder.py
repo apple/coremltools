@@ -6,8 +6,8 @@
 import numpy as _np
 
 import coremltools
+from coremltools import proto
 
-from ...proto import FeatureTypes_pb2
 from .. import datatypes
 
 
@@ -33,7 +33,7 @@ class KNearestNeighborsClassifierBuilder:
 
         # save the spec by the builder
         >>> save_spec(builder.spec, 'knnclassifier.mlmodel')
-        
+
 
     """
 
@@ -67,36 +67,36 @@ class KNearestNeighborsClassifierBuilder:
     ):
         """
         Create a KNearestNeighborsClassifierBuilder object.
-        
+
         Parameters
         ----------
         input_name
-        	Name of the model input.
-        
+                Name of the model input.
+
         output_name
-        	Name of the output.
-        
+                Name of the output.
+
         number_of_dimensions
-        	Number of dimensions of the input data.
-        
+                Number of dimensions of the input data.
+
         default_class_label
-        	The default class label to use for predictions. Must be either an
-        	int64 or a string.
-        
+                The default class label to use for predictions. Must be either an
+                int64 or a string.
+
         number_of_neighbors
-        	Number of neighbors to use for predictions. Default = 5 with allowed values
-        	between 1-1000.
-        
+                Number of neighbors to use for predictions. Default = 5 with allowed values
+                between 1-1000.
+
         weighting_scheme
-        	Weight function used in prediction. One of ``'uniform'`` (default) or
-        	``'inverse_distance'``.
-        
+                Weight function used in prediction. One of ``'uniform'`` (default) or
+                ``'inverse_distance'``.
+
         index_type
-        	Algorithm to compute nearest neighbors. One of ``'linear'`` (default), or
-        	``'kd_tree'``.
-        
+                Algorithm to compute nearest neighbors. One of ``'linear'`` (default), or
+                ``'kd_tree'``.
+
         leaf_size
-        	Leaf size for the kd-tree. Ignored if index type is ``'linear'``. Default = 30.
+                Leaf size for the kd-tree. Ignored if index type is ``'linear'``. Default = 30.
         """
         self.spec = coremltools.proto.Model_pb2.Model()
         self.spec.specificationVersion = (
@@ -115,9 +115,9 @@ class KNearestNeighborsClassifierBuilder:
         input_type = kwargs.get(
             self._PARAMETER_KEY_INPUT_TYPE, self._PARAMETER_DEFAULT_INPUT_TYPE
         )
-        input_feature_type = FeatureTypes_pb2.ArrayFeatureType.FLOAT32
+        input_feature_type = proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT32
         if input_type == datatypes.Double:
-            input_feature_type = FeatureTypes_pb2.ArrayFeatureType.DOUBLE
+            input_feature_type = proto.FeatureTypes_pb2.ArrayFeatureType.DOUBLE
 
         input_feature = self.spec.description.input.add()
         input_feature.name = input_name
@@ -192,7 +192,7 @@ class KNearestNeighborsClassifierBuilder:
     def author(self):
         """
         Get the author for the KNearestNeighborsClassifier model.
-        
+
         Returns
         -------
         The author
@@ -203,12 +203,12 @@ class KNearestNeighborsClassifierBuilder:
     def author(self, author):
         """
         Add an author for the KNearestNeighborsClassifier model.
-        
+
         Parameters
         ----------
         author
-        	The author.
-        
+                The author.
+
         Returns
         -------
         None
@@ -234,8 +234,8 @@ class KNearestNeighborsClassifierBuilder:
         Parameters
         ----------
         license
-        	The license.
-        	
+                The license.
+
         Returns
         -------
         None
@@ -246,7 +246,7 @@ class KNearestNeighborsClassifierBuilder:
     def description(self):
         """
         Get the description for the KNearestNeighborsClassifier model.
-        
+
         Returns
         -------
         The description.
@@ -261,8 +261,8 @@ class KNearestNeighborsClassifierBuilder:
         Parameters
         ----------
         description
-        	The description
-        
+                The description
+
         Returns
         -------
         None
@@ -273,7 +273,7 @@ class KNearestNeighborsClassifierBuilder:
     def is_updatable(self):
         """
         Check if the KNearestNeighborsClassifier is updatable.
-        
+
         Returns
         -------
         Is updatable.
@@ -284,11 +284,11 @@ class KNearestNeighborsClassifierBuilder:
     def is_updatable(self, is_updatable):
         """
         Set the KNearestNeighborsClassifier to be updatable.
-        
+
         Parameters
         ----------
         is_updatable
-        	Boolean
+                Boolean
 
         Returns
         -------
@@ -300,7 +300,7 @@ class KNearestNeighborsClassifierBuilder:
     def weighting_scheme(self):
         """
         Get the weighting scheme for the KNearestNeighborsClassifier model.
-        
+
         Returns
         -------
         The weighting scheme.
@@ -311,12 +311,12 @@ class KNearestNeighborsClassifierBuilder:
     def weighting_scheme(self, weighting_scheme):
         """
         Set the weighting scheme for the KNearestNeighborsClassifier model.
-        
+
         Parameters
         ----------
         weighting_scheme
-        	One of [ ``'uniform'``, ``'inverse_distance'`` ].
-        
+                One of [ ``'uniform'``, ``'inverse_distance'`` ].
+
         Returns
         -------
         None
@@ -339,7 +339,7 @@ class KNearestNeighborsClassifierBuilder:
     def index_type(self):
         """
         Get the index type for the KNearestNeighborsClassifier model.
-        
+
         Returns
         -------
         The index type.
@@ -349,15 +349,15 @@ class KNearestNeighborsClassifierBuilder:
     def set_index_type(self, index_type, leaf_size=30):
         """
         Set the index type for the KNearestNeighborsClassifier model.
-        
+
         Parameters
         ----------
         index_type
-        	One of [ ``'linear'``, ``'kd_tree'`` ].
-        
+                One of [ ``'linear'``, ``'kd_tree'`` ].
+
         leaf_size
-        	For kd_tree indexes, the leaf size to use (default = 30).
-        
+                For kd_tree indexes, the leaf size to use (default = 30).
+
         Returns
         -------
         None
@@ -384,7 +384,7 @@ class KNearestNeighborsClassifierBuilder:
     def leaf_size(self):
         """
         Get the leaf size for the KNearestNeighborsClassifier.
-        
+
         Returns
         -------
         The leaf size.
@@ -397,12 +397,12 @@ class KNearestNeighborsClassifierBuilder:
     def leaf_size(self, leaf_size):
         """
         Set the leaf size for a KNearestNeighborsClassifier model. Only for kd-tree indexes.
-        
+
         Parameters
         ----------
         leaf_size
-        	The leaf size.
-        
+                The leaf size.
+
         Returns
         -------
         None
@@ -418,7 +418,7 @@ class KNearestNeighborsClassifierBuilder:
         """
         Get the number of dimensions of the input data for the
         KNearestNeighborsClassifier model.
-        
+
         Returns
         -------
         Number of dimensions.
@@ -431,7 +431,7 @@ class KNearestNeighborsClassifierBuilder:
     def number_of_neighbors(self):
         """
         Get the number of neighbors value for the KNearestNeighborsClassifier model.
-        
+
         Returns
         -------
         The number of neighbors default value.
@@ -443,15 +443,15 @@ class KNearestNeighborsClassifierBuilder:
     ):
         """
         Set the numberOfNeighbors parameter for the KNearestNeighborsClassifier model.
-        
+
         Parameters
         ----------
         allowed_range
-        	Tuple of (``min_value``, ``max_value``) defining the range of allowed values.
-        
+                Tuple of (``min_value``, ``max_value``) defining the range of allowed values.
+
         allowed_values
-        	Set of allowed values for the number of neighbors.
-    	
+                Set of allowed values for the number of neighbors.
+
         Returns
         -------
         None
@@ -524,7 +524,7 @@ class KNearestNeighborsClassifierBuilder:
     def number_of_neighbors_allowed_range(self):
         """
         Get the range of allowed values for the numberOfNeighbors parameter.
-        
+
         Returns
         -------
         Tuple of (``min_value``, ``max_value``) or ``None`` if the range hasn't been set.
@@ -539,7 +539,7 @@ class KNearestNeighborsClassifierBuilder:
     def number_of_neighbors_allowed_set(self):
         """
         Get the set of allowed values for the numberOfNeighbors parameter.
-        
+
         Returns
         -------
         Set of allowed values or ``None`` if the set of allowed values hasn't been
@@ -558,15 +558,15 @@ class KNearestNeighborsClassifierBuilder:
     def add_samples(self, data_points, labels):
         """
         Add some samples to the KNearestNeighborsClassifier model.
-        
+
         Parameters
         ----------
         data_points
-        	List of input data points.
-        
+                List of input data points.
+
         labels
-        	List of corresponding labels.
-        
+                List of corresponding labels.
+
         Returns
         -------
         None
@@ -610,15 +610,15 @@ class KNearestNeighborsClassifierBuilder:
     def _validate_label_types(self, labels):
         """
         Ensure the label types matched the expected types.
-        
+
         Parameters
         ----------
         spec
-        	The spec.
-        
+                The spec.
+
         labels
-        	The list of labels.
-        
+                The list of labels.
+
         Returns
         -------
         None, throws a TypeError if not expected.
@@ -635,12 +635,12 @@ class KNearestNeighborsClassifierBuilder:
     def _is_valid_text_type(obj):
         """
         Checks if the object is a valid text type.
-        
+
         Parameters
         ----------
         obj
-        	The object to check.
-        
+                The object to check.
+
         Returns
         -------
         True if a valid text type, False otherwise.
@@ -651,12 +651,12 @@ class KNearestNeighborsClassifierBuilder:
     def _is_valid_number_type(obj):
         """
         Checks if the object is a valid number type.
-        
+
         Parameters
         ----------
         obj
-        	The object to check.
-        
+                The object to check.
+
         Returns
         -------
         True if a valid number type, False otherwise.
