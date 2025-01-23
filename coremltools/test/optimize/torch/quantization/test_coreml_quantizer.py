@@ -27,7 +27,7 @@ if _HAS_TORCH_EXPORT_API:
     )
 
 _TORCH_VERSION = torch.__version__
-_EXPECTED_TORCH_VERSION = '2.2.0'
+_EXPECTED_TORCH_VERSION = '2.5.0'
 if _TORCH_VERSION >= _EXPECTED_TORCH_VERSION:
     from coremltools.optimize.torch.quantization._coreml_quantizer import CoreMLQuantizer
 
