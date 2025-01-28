@@ -163,7 +163,7 @@ try:
 
     torch_version = _get_version(torch.__version__)
 
-    if torch_version >= Version("2.1.0"):
+    if torch_version >= Version("2.5.0"):
         _HAS_TORCH_EXPORT_API = True
 
     if torch_version >= Version(_CT_OPTIMIZE_TORCH_MIN_VERSION):

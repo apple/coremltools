@@ -22,13 +22,13 @@ if len(frontends) == 0:
 import torch
 
 _TORCH_VERSION = torch.__version__
-_EXPECTED_TORCH_VERSION = "2.2.0"
+_EXPECTED_TORCH_VERSION = "2.5.0"
 if _TORCH_VERSION < _EXPECTED_TORCH_VERSION:
     pytest.skip(
         allow_module_level=True, reason=f"PyTorch {_EXPECTED_TORCH_VERSION} or higher is required"
     )
 
-from torch._export import capture_pre_autograd_graph
+from torch.export import export_for_training
 from torch.ao.quantization.quantize_pt2e import convert_pt2e, prepare_pt2e, prepare_qat_pt2e
 from torch.ao.quantization.quantizer.xnnpack_quantizer import (
     XNNPACKQuantizer,
@@ -68,7 +68,7 @@ class TestTorchExportQuantization(TorchBaseTest):
             if (quantizer_name, is_per_channel, nbit) != ("CoreML", False, 8):
                 pytest.xfail("Need at least torch 2.3.0 to run this test.")
 
-        pre_autograd_aten_dialect = capture_pre_autograd_graph(model, example_inputs)
+        pre_autograd_aten_dialect = export_for_training(model, example_inputs).module()
 
         if quantizer_name == "XNNPack":
             # As of iOS 18, Core ML does not have 4-bit activation quantization,
