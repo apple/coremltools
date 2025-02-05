@@ -370,7 +370,7 @@ class MLComputePlan:
 
         Parameters
         ----------
-        operation MLModelStructureProgramOperation:
+        operation : MLModelStructureProgramOperation
             A NeuralNetwork layer.
 
         Returns
