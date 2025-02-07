@@ -5485,11 +5485,8 @@ def rand_like(context, node):
 
 @register_torch_op
 def randn(context, node):
-    inputs = _get_inputs(context, node, expected=[5, 6])
-
+    inputs = _get_inputs(context, node, expected=1)
     shape = inputs[0]
-    dtype = inputs[1]
-    _assert_torch_dtype_num_is_not_complex_number(dtype)
     rand_normal = mb.random_normal(shape=shape)
     rand_fp32 = mb.cast(x=rand_normal, dtype="fp32", name=node.name)
     context.add(rand_fp32)
