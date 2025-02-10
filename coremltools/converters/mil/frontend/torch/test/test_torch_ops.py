@@ -4573,7 +4573,7 @@ class TestRandn(TorchBaseTest):
             [(1,), (2, 3)],
         ),
     )
-    def test_randn(self, compute_unit, backend, frontend, shape):
+    def test_randn_shape_only(self, compute_unit, backend, frontend, shape):
         class TestModel(nn.Module):
             def forward(self, x):
                 y = torch.randn(*x.shape)
@@ -4588,6 +4588,30 @@ class TestRandn(TorchBaseTest):
             compute_unit=compute_unit,
             backend=backend,
             frontend=frontend,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+        ),
+    )
+    def test_randn(self, compute_unit, backend, frontend):
+        class TestModel(torch.nn.Module):
+            def forward(self, x):
+                noise = torch.randn(x.shape)
+                return x + noise
+
+        self.run_compare_torch(
+            (1, 3, 16, 16),
+            TestModel(),
+            compute_unit=compute_unit,
+            backend=backend,
+            frontend=frontend,
+            atol=100.0,  # Don't verify numerical results due to randomness.
+            rtol=100.0,  # Don't verify numerical results due to randomness.
         )
 
     @pytest.mark.parametrize(
