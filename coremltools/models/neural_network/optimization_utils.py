@@ -124,7 +124,17 @@ def _conv_bn_fusion(conv_idx, bn_idx, layers):
         b = _np.zeros(conv.outputChannels)
 
     w = w.reshape(conv.outputChannels, int(len(w) / conv.outputChannels))
+    if gamma.shape[0] == 0 or variance.shape[0] == 0 or w.shape[0] == 0:
+     print("Skipping fusion due to empty tensor shapes.")
+     return  # Skip processing empty tensors
+
+# Ensure correct shape before multiplication
+    gamma = gamma.reshape(-1, 1)
+    variance = variance.reshape(-1, 1)
+    w = w.reshape(-1, w.shape[-1])
+
     wp = (gamma / _np.sqrt(variance))[:, None] * w
+
     bp = (gamma * b / _np.sqrt(variance)) - (gamma * mean / _np.sqrt(variance)) + beta
 
     del conv.weights.floatValue[:]
