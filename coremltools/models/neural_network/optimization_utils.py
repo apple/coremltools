@@ -8,6 +8,7 @@ Neural Network optimization utilities.
 """
 
 import numpy as _np
+from coremltools import _logger as logger
 
 
 def _fuse_layer_with_scale_layer(layer_idx, scale_idx, layers):
@@ -125,7 +126,7 @@ def _conv_bn_fusion(conv_idx, bn_idx, layers):
 
     w = w.reshape(conv.outputChannels, int(len(w) / conv.outputChannels))
     if gamma.shape[0] == 0 or variance.shape[0] == 0 or w.shape[0] == 0:
-     print("Skipping fusion due to empty tensor shapes.")
+     logger.info("Skipping fusion due to empty tensor shapes.")
      return  # Skip processing empty tensors
 
 # Ensure correct shape before multiplication
