@@ -126,7 +126,7 @@ def _conv_bn_fusion(conv_idx, bn_idx, layers):
 
     w = w.reshape(conv.outputChannels, int(len(w) / conv.outputChannels))
     if gamma.shape[0] == 0 or variance.shape[0] == 0 or w.shape[0] == 0:
-     logger.info("Skipping fusion due to empty tensor shapes.")
+     _logger.info("Skipping fusion due to empty tensor shapes.")
      return  # Skip processing empty tensors
 
 # Ensure correct shape before multiplication
