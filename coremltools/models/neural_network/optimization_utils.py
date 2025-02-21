@@ -8,7 +8,7 @@ Neural Network optimization utilities.
 """
 
 import numpy as _np
-from coremltools import _logger as logger
+from coremltools import _logger
 
 
 def _fuse_layer_with_scale_layer(layer_idx, scale_idx, layers):
