@@ -6279,7 +6279,7 @@ def noop(context, node):
         context.add(_input, torch_name=node.name)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["argmin"])
 def argmax(context, node):
     def _parse_positional_args(context, node) -> Tuple[Var]:
         inputs = _get_inputs(context, node, expected=(1, 2, 3, 4))
@@ -6290,7 +6290,7 @@ def argmax(context, node):
         dim = inputs[1] if nargs > 1 else None
         keepdim = inputs[2] if nargs > 2 else False
 
-        # When node.kind == argmax.out, there can be 1 more arg `Tensor(a!) out`,
+        # When node.kind == argmax.out or node.kind == argmin.out, there can be 1 more arg `Tensor(a!) out`,
         # which is for in-place mutation, so we ignore it since Core ML is functional
         return x, dim, keepdim
 
@@ -6307,9 +6307,13 @@ def argmax(context, node):
         keepdim = keepdim.val
 
     if types.is_int(x.dtype) and x.dtype._width == 64:
-        # MIL reduce_argmax doesn't support int64.
+        # MIL reduce_argmax and reduce_argmin doesn't support int64.
         x = mb.cast(x=x, dtype="int32")
-    res = mb.reduce_argmax(x=x, axis=dim, keep_dims=keepdim, name=node.name)
+    if node.kind == "argmax":
+        res = mb.reduce_argmax(x=x, axis=dim, keep_dims=keepdim, name=node.name)
+    else:
+        assert node.kind == "argmin"
+        res = mb.reduce_argmin(x=x, axis=dim, keep_dims=keepdim, name=node.name)
     context.add(res)
 
 
