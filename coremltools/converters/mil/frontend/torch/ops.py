@@ -5398,7 +5398,10 @@ def full(context, node):
     dtype = None
     if len(inputs) < 3 or inputs[2] is None:
         dtype = _get_kwinputs(context, node, "dtype", default=[np.float32])[0]
-        dtype = NUM_TO_NUMPY_DTYPE[dtype.val]
+        if isinstance(dtype, Var):
+            dtype = dtype.val
+        if isinstance(dtype, int):
+            dtype = NUM_TO_NUMPY_DTYPE[dtype]
     elif isinstance(inputs[2].val, torch.dtype):
         dtype = NUM_TO_NUMPY_DTYPE[TORCH_DTYPE_TO_NUM[inputs[2].val]]
     elif isinstance(inputs[2].val, (int, np.generic)):
