@@ -46,8 +46,8 @@ def _construct_symbol_name_to_ct_range_dim_dict(
     symbol_name_to_ct_range_dim = {}
     for symbol, value_ranges in exported_program.range_constraints.items():
         symbol_name = str(symbol)
-        symbol_name_to_ct_range_dim[symbol_name] = (
-            _construct_ct_range_dim_from_torch_value_ranges(value_ranges)
+        symbol_name_to_ct_range_dim[symbol_name] = _construct_ct_range_dim_from_torch_value_ranges(
+            value_ranges
         )
     return symbol_name_to_ct_range_dim
 
@@ -74,7 +74,7 @@ def _construct_ct_tensor_type_from_torch(
                 size_as_int = int(size_str)
             except:
                 raise ValueError(
-                    f"Core ML does not support size variables that are expressions of symbolic variables, but got {size_str} in tensor {name}"
+                    f"Core ML does not support size variables that are expressions of symbolic variables, but got {size_str} in tensor {name}."
                 )
             shape.append(size_as_int)
 
@@ -94,9 +94,7 @@ def _construct_ct_input_types_from_torch_user_inputs(
     torch_user_inputs: Dict[str, torch.Tensor],
 ) -> List[TensorType]:
     ct_input_types = []
-    symbol_name_to_ct_range_dim = _construct_symbol_name_to_ct_range_dim_dict(
-        exported_program
-    )
+    symbol_name_to_ct_range_dim = _construct_symbol_name_to_ct_range_dim_dict(exported_program)
     for name, tensor in torch_user_inputs.items():
         ct_input_type = _construct_ct_tensor_type_from_torch(
             name, tensor, symbol_name_to_ct_range_dim
@@ -106,7 +104,7 @@ def _construct_ct_input_types_from_torch_user_inputs(
 
 
 def _extract_placeholders_from_exir_program(
-    exported_program,  # torch.export.ExportedProgram
+    exported_program  # torch.export.ExportedProgram
 ) -> Dict[str, torch.fx.Node]:
     """
     Given:
@@ -165,12 +163,7 @@ def _extract_buffers_from_exir_program(
 
 def _extract_inputs_from_exir_program(
     exported_program,  # torch.export.ExportedProgram
-) -> Tuple[
-    List[TensorType],
-    Dict[str, torch.Tensor],
-    Dict[str, torch.Tensor],
-    Dict[str, str],
-]:
+) -> Tuple[List[TensorType], Dict[str, torch.Tensor], Dict[str, torch.Tensor], Dict[str, str],]:
     """
     Extract "input"s from torch.export.ExportedProgram
 
@@ -256,18 +249,11 @@ def _extract_inputs_from_exir_program(
             constants[input_spec.arg.name] = parameters[input_spec.target]
 
         elif input_spec.kind == torch.export.graph_signature.InputKind.CONSTANT_TENSOR:
-            constants[input_spec.arg.name] = exported_program.constants[
-                input_spec.target
-            ]
+            constants[input_spec.arg.name] = exported_program.constants[input_spec.target]
 
         elif input_spec.kind == torch.export.graph_signature.InputKind.BUFFER:
-            if (
-                input_spec.target
-                in exported_program.graph_signature.buffers_to_mutate.values()
-            ):
-                input_name_to_source_buffer_name[input_spec.arg.name] = (
-                    input_spec.target
-                )
+            if input_spec.target in exported_program.graph_signature.buffers_to_mutate.values():
+                input_name_to_source_buffer_name[input_spec.arg.name] = input_spec.target
             else:
                 constants[input_spec.arg.name] = buffers.pop(input_spec.target)
 
@@ -286,10 +272,7 @@ def _extract_inputs_from_exir_program(
 
 def _extract_outputs_from_exir_program(
     exported_program,  # torch.export.ExportedProgram
-) -> Tuple[
-    List[str],
-    Dict[str, str],
-]:
+) -> Tuple[List[str], Dict[str, str],]:
     """
     Extract "outputs" from torch.export.ExportedProgram
 
@@ -312,15 +295,10 @@ def _extract_outputs_from_exir_program(
         if output_spec.kind == torch.export.graph_signature.OutputKind.USER_OUTPUT:
             user_outputs.append(output_spec.arg.name)
 
-        elif (
-            output_spec.kind == torch.export.graph_signature.OutputKind.BUFFER_MUTATION
-        ):
+        elif output_spec.kind == torch.export.graph_signature.OutputKind.BUFFER_MUTATION:
             output_name_to_target_buffer_name[output_spec.arg.name] = output_spec.target
 
-        elif (
-            output_spec.kind
-            == torch.export.graph_signature.OutputKind.USER_INPUT_MUTATION
-        ):
+        elif output_spec.kind == torch.export.graph_signature.OutputKind.USER_INPUT_MUTATION:
             raise ValueError(
                 "Core ML cannot handle user input mutation, because Core ML distinguishes "
                 "input (immutable) and state (mutable). You have 2 options:\n"
@@ -380,8 +358,8 @@ def extract_io_from_exir_program(
         buffers,
         input_name_to_source_buffer_name,
     ) = _extract_inputs_from_exir_program(exported_program)
-    user_outputs, output_name_to_target_buffer_name = (
-        _extract_outputs_from_exir_program(exported_program)
+    user_outputs, output_name_to_target_buffer_name = _extract_outputs_from_exir_program(
+        exported_program
     )
     return (
         user_inputs,
