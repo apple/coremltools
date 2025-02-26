@@ -11922,6 +11922,42 @@ class TestArgmax(TorchBaseTest):
             compute_unit=compute_unit,
         )
 
+class TestArgmin(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, shape, axis, input_dtype",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            COMMON_SHAPES,
+            [-1, 0],
+            [np.float32, np.int32, np.int64],
+        ),
+    )
+    def test_argmin(
+        self,
+        compute_unit,
+        backend: Tuple[str, str],
+        frontend: TorchFrontend,
+        shape: Tuple[int],
+        axis: int,
+        input_dtype: np.dtype,
+    ):
+        input_data = torch.rand(*shape) if input_dtype == np.float32 else torch.randint(10, shape)
+        converter_input_type = [ct.TensorType(shape=input_data.shape, dtype=input_dtype)]
+        model = ModuleWrapper(function=torch.argmin, kwargs={"dim": axis})
+        expected_results = model(input_data)
+        TorchBaseTest.run_compare_torch(
+            input_data,
+            model,
+            expected_results=expected_results,
+            input_as_shape=False,
+            frontend=frontend,
+            backend=backend,
+            converter_input_type=converter_input_type,
+            compute_unit=compute_unit,
+        )
+
 
 class TestStack(TorchBaseTest):
     @pytest.mark.parametrize(
