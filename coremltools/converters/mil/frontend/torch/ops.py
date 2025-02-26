@@ -5400,7 +5400,7 @@ def full(context, node):
         dtype = _get_kwinputs(context, node, "dtype", default=[np.float32])[0]
         if isinstance(dtype, Var):
             dtype = dtype.val
-        if isinstance(dtype, int):
+        if isinstance(dtype, (int, np.integer)):
             dtype = NUM_TO_NUMPY_DTYPE[dtype]
     elif isinstance(inputs[2].val, torch.dtype):
         dtype = NUM_TO_NUMPY_DTYPE[TORCH_DTYPE_TO_NUM[inputs[2].val]]
