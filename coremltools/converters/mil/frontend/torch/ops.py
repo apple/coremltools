@@ -2020,7 +2020,7 @@ def mul(context, node):
 
 
 @register_torch_op
-def pow(context, node):
+def pow(context, node, torch_alias=["pow.tensor_tensor"]):
     inputs = _get_inputs(context, node, expected=2)
     x, y = promote_input_dtypes(inputs)
     res = mb.pow(x=x, y=y, name=node.name)
