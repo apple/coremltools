@@ -5397,13 +5397,21 @@ def full(context, node):
     # dtype could be torch.dtype or an integer that maps to a numpy.dtype
     dtype = None
     if len(inputs) < 3 or inputs[2] is None:
-        dtype = np.float32
+        dtype = _get_kwinputs(context, node, "dtype", default=[np.float32])[0]
+        if isinstance(dtype, Var):
+            dtype = dtype.val
+        if isinstance(dtype, (int, np.integer)):
+            dtype = NUM_TO_NUMPY_DTYPE[dtype]
     elif isinstance(inputs[2].val, torch.dtype):
         dtype = NUM_TO_NUMPY_DTYPE[TORCH_DTYPE_TO_NUM[inputs[2].val]]
     elif isinstance(inputs[2].val, (int, np.generic)):
         dtype = NUM_TO_NUMPY_DTYPE[inputs[2].val]
     else:
         raise ValueError(f"unsupported type {type(inputs[2].val)}.")
+    # Core ML `fill` op supports fp16, fp32, i32, bool value
+    # so any integer other than i32 has to be cast to i32
+    if dtype != np.int32 and np.issubdtype(dtype, np.integer):
+        dtype = np.int32
 
     val = dtype(inputs[1].val)
 
