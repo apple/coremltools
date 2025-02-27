@@ -19,9 +19,12 @@ WRAPPED_SCALAR_INPUT_SUFFIX = "_wrapped_as_tensor_for_coreml"
 
 
 def _map_sympy_number_to_int(sympy_number: sympy.core.numbers.Number) -> int:
-    MAX_DIM = 2147483647
+    MAX_DIM = 2**31 - 1
+    MIN_DIM = -(2**31)
     if sympy_number == sympy.oo or sympy_number > MAX_DIM:
         return MAX_DIM
+    elif sympy_number == -sympy.oo or sympy_number < MIN_DIM:
+        return MIN_DIM
     else:
         return int(sympy_number)
 
@@ -67,7 +70,13 @@ def _construct_ct_tensor_type_from_torch(
         if size_str in symbol_name_to_ct_range_dim:
             shape.append(symbol_name_to_ct_range_dim[size_str])
         else:
-            shape.append(int(size))
+            try:
+                size_as_int = int(size_str)
+            except:
+                raise ValueError(
+                    f"Core ML does not support size variables that are expressions of symbolic variables, but got {size_str} in tensor {name}."
+                )
+            shape.append(size_as_int)
 
     if len(shape) == 0:
         shape = [1]
