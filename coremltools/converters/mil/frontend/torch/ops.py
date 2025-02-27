@@ -5408,6 +5408,10 @@ def full(context, node):
         dtype = NUM_TO_NUMPY_DTYPE[inputs[2].val]
     else:
         raise ValueError(f"unsupported type {type(inputs[2].val)}.")
+    # Core ML `fill` op supports fp16, fp32, i32, bool value
+    # so any integer other than i32 has to be cast to i32
+    if dtype != np.int32 and np.issubdtype(dtype, np.integer):
+        dtype = np.int32
 
     val = dtype(inputs[1].val)
 
