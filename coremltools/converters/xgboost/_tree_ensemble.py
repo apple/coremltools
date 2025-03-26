@@ -208,6 +208,11 @@ def convert_tree_ensemble(
             feature_names = model.feature_names
         if feature_names is None:
             feature_names = model.feature_names
+        else:  
+            # When XGboost model artifact does not have feature names
+            # (seems to be the default in new Xgboost releases),
+            # but the user provides them, use them as they are expecting later.
+            model.feature_names=feature_names
 
         xgb_model_str = model.get_dump(with_stats=True, dump_format="json")
 
