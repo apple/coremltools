@@ -209,7 +209,7 @@ def convert_tree_ensemble(
         if feature_names is None:
             feature_names = model.feature_names
         else:  
-            # When XGboost model artefact does not have feature names
+            # When XGboost model artifact does not have feature names
             # (seems to be the default in new Xgboost releases),
             # but the user provides them, use them as they are expecting later.
             model.feature_names=feature_names
