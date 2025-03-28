@@ -1384,12 +1384,16 @@ def _convolution(context, node):
             if len(post_crop) == 2 and conv.rank == 3:
                 # Number of elements to crop from right = post_crop[-1].
                 # Since slicing supports negative indexing, end_id = -1 * post_crop[-1]
+                end_mask = False
+                if post_crop[-1] == 0:
+                    end_mask = True
+
                 conv = mb.slice_by_index(
                     x=conv,
                     begin=[0, 0, post_crop[0]],
                     end=[0, 0, -1 * post_crop[-1]],
                     begin_mask=[True, True, False],
-                    end_mask=[True, True, False],
+                    end_mask=[True, True, end_mask],
                     name=node.name,
                 )
             elif len(post_crop) == 4 and conv.rank == 4:
