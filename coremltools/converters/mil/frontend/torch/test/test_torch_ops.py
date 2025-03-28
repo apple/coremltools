@@ -1888,6 +1888,78 @@ class TestConvTranspose(TorchBaseTest):
                 "compute_unit",
                 "backend",
                 "frontend",
+                "width",
+                "in_channels",
+                "out_channels",
+                "kernel_size",
+                "stride",
+                "padding",
+                "dilation",
+                "output_padding",
+            ]
+        ),
+        [
+            (compute_unit, backend, frontend, *param)
+            for compute_unit, backend, frontend, param in itertools.product(
+                compute_units,
+                backends,
+                frontends,
+                [
+                    (5, 3, 3, 1, 3, 1, 3, 0),
+                    (5, 3, 3, 1, 3, 1, 1, 2),
+                    (5, 3, 3, 1, 3, 2, 1, 1),
+                    (5, 3, 3, 1, 3, 2, 1, 3),
+                    (5, 3, 3, 1, 3, 3, 3, 3),
+                    (5, 3, 3, 1, 3, 1, 3, 1),
+                    (5, 3, 3, 1, 3, 2, 1, 2),
+                ],
+            )
+        ],
+    )
+    def test_convolution_transpose1d_output_padding(
+        self,
+        compute_unit,
+        backend,
+        frontend,
+        width,
+        in_channels,
+        out_channels,
+        kernel_size,
+        stride,
+        padding,
+        dilation,
+        output_padding,
+    ):
+
+        # Output padding must be less than either stride or dilation
+        # Skip testing invalid combinations
+        if isinstance(output_padding, int):
+            if output_padding >= stride and output_padding >= dilation:
+                return
+
+        model = nn.ConvTranspose1d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+            output_padding=output_padding,
+        )
+        self.run_compare_torch(
+            (1, in_channels, width),
+            model,
+            compute_unit=compute_unit,
+            backend=backend,
+            frontend=frontend,
+        )
+
+    @pytest.mark.parametrize(
+        ",".join(
+            [
+                "compute_unit",
+                "backend",
+                "frontend",
                 "height",
                 "width",
                 "in_channels",
