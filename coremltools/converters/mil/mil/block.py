@@ -1126,7 +1126,7 @@ class Function(Block):
         if outputs is not None:
             if not (
                 isinstance(outputs, list)
-                and all([isinstance(out, _input_types.InputType) for out in outputs])
+                and all(isinstance(out, _input_types.InputType) for out in outputs)
             ):
                 raise TypeError(
                     "main outputs should be a list of type ct.TensorType or ct.ImageType"
@@ -1136,6 +1136,6 @@ class Function(Block):
     def set_input_types(self, input_types: List["_input_types.InputType"]):
         if not isinstance(input_types, tuple):
             raise ValueError("main inputs should be tuple of TensorType or ImageType")
-        elif not all([isinstance(inp, _input_types.InputType) for inp in input_types]):
+        elif not all(isinstance(inp, _input_types.InputType) for inp in input_types):
             raise ValueError("main inputs should be tuple of InputSpec")
         self.input_types = input_types

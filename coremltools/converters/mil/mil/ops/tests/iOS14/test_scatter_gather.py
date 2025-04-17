@@ -478,7 +478,7 @@ class TestGather:
             res = mb.gather(x=params, indices=indices, axis=-1)
             return res
 
-        if any([idx > 2 for idx in indices_val]):
+        if any(idx > 2 for idx in indices_val):
             with pytest.raises(IndexError, match="index 3 is out of bounds for axis 1 with size 3"):
                 mb.program(
                     input_specs=[mb.TensorSpec(shape=(1,), dtype=types.fp32)],
@@ -672,7 +672,7 @@ class TestGatherAlongAxis:
             res = mb.gather_along_axis(x=params, indices=indices, axis=0)
             return res
 
-        if any([idx > 1 for sub_indices in indices_val for idx in sub_indices]):
+        if any(idx > 1 for sub_indices in indices_val for idx in sub_indices):
             with pytest.raises(IndexError, match="index 2 is out of bounds for axis 0 with size 2"):
                 mb.program(
                     input_specs=[mb.TensorSpec(shape=(1,), dtype=types.fp32)],

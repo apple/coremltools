@@ -6266,7 +6266,7 @@ def meshgrid(context, node):
         assert isinstance(tensor_inputs, (list, tuple))
         if len(tensor_inputs) < 2:
             raise ValueError("Requires >= 2 tensor inputs.")
-        if any([tensor_input.rank > 1 for tensor_input in tensor_inputs]):
+        if any(tensor_input.rank > 1 for tensor_input in tensor_inputs):
             raise ValueError("meshgrid received non-1d tensor.")
 
         if indexing not in ("ij", "xy"):
@@ -7249,7 +7249,7 @@ def where(context, node):
     if not types.is_bool(cond.dtype):
         # cond must be bool type
         cond = mb.cast(x=cond, dtype="bool")
-    if not any([any_symbolic(x.shape) for x in (cond, a, b)]):
+    if not any(any_symbolic(x.shape) for x in (cond, a, b)):
         # broadcast all tensors to the same shape
         cond, a, b = _utils.pymil_broadcast_tensors([cond, a, b])
     result = mb.select(cond=cond, a=a, b=b, name=node.name)
@@ -7741,7 +7741,7 @@ def _pad_packed_sequence(context, node):
 
     # we only support pack and unpack translation for static tensor shape,
     # i.e., the three dimensions are all known during compile time.
-    if any([is_symbolic(x) for x in input_tensor.shape]):
+    if any(is_symbolic(x) for x in input_tensor.shape):
         raise NotImplementedError("Only static shape of PackedSequence object is supported.")
 
     # the input always has batch first layout.

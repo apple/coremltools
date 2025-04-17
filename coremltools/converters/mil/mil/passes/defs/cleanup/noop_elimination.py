@@ -127,7 +127,7 @@ class noop_elimination(AbstractGraphPass):
 
             if op.stride is not None and op.stride.val is not None:
                 stride = op.stride.val.flatten().tolist()
-                if any([x < 0 for x in stride]):
+                if any(x < 0 for x in stride):
                     return False
 
             if op.enclosing_block.try_replace_uses_of_var_after_op(

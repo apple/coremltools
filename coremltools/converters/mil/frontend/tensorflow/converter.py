@@ -179,7 +179,7 @@ class TFConverter:
                         type(inputs)
                     )
                 )
-            if not all([isinstance(i, InputType) for i in inputs]):
+            if not all(isinstance(i, InputType) for i in inputs):
                 raise ValueError(
                     "Type of inputs should be list or tuple of TensorType or ImageType, got {} instead.".format(
                         [type(i) for i in inputs]
@@ -238,7 +238,7 @@ class TFConverter:
         for inputtype in self.inputs:
             if not isinstance(inputtype.shape, InputShape):
                 continue
-            if any([isinstance(s, RangeDim) for s in inputtype.shape.shape]):
+            if any(isinstance(s, RangeDim) for s in inputtype.shape.shape):
                 continue
             if inputtype.name not in graph:
                 raise ValueError(

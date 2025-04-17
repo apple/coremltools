@@ -2535,7 +2535,7 @@ class TestTransformFunctionSignatures:
         assert block.outputs[2] is block.inputs["x"]
         assert block.outputs[3] is block.inputs["x"]
 
-        assert all([x.dtype == types.fp16 for x in block.output_types])
+        assert all(x.dtype == types.fp16 for x in block.output_types)
 
         assert get_op_types_in_program(prog) == ["cast", "relu"]
         cast_op = block.find_ops(op_type="cast")[0]

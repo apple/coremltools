@@ -131,7 +131,7 @@ class TestScatter:
 
         if not isinstance(expected_error_msg, tuple):
             expected_error_msg = expected_error_msg
-        assert any([err in str(excinfo.value) for err in expected_error_msg])
+        assert any(err in str(excinfo.value) for err in expected_error_msg)
 
 class TestScatterAlongAxis:
     @pytest.mark.parametrize(
@@ -224,7 +224,7 @@ class TestScatterAlongAxis:
 
         if not isinstance(expected_error_msg, tuple):
             expected_error_msg = expected_error_msg
-        assert any([err in str(excinfo.value) for err in expected_error_msg])
+        assert any(err in str(excinfo.value) for err in expected_error_msg)
 
 
 class TestScatterNd:
@@ -295,7 +295,7 @@ class TestScatterNd:
             )
         if not isinstance(expected_error_msg, tuple):
             expected_error_msg = expected_error_msg
-        assert any([err in str(excinfo.value) for err in expected_error_msg])
+        assert any(err in str(excinfo.value) for err in expected_error_msg)
 
 
 class TestGather(_TestGatherIOS16):
@@ -333,7 +333,7 @@ class TestGather(_TestGatherIOS16):
                     input_specs=[mb.TensorSpec(shape=(1,), dtype=types.fp32)],
                     opset_version=backend.opset_version,
                 )(prog)
-        elif any([idx > 2 for idx in indices_val]):
+        elif any(idx > 2 for idx in indices_val):
             # If the indices are not validated during type inference for IOS17, the `gather` op's
             # value inference will raise error for out-of-bound index.
             with pytest.raises(IndexError, match="index 3 is out of bounds for axis 1 with size 3"):
@@ -410,7 +410,7 @@ class TestGatherAlongAxis:
                     input_specs=[mb.TensorSpec(shape=(1,), dtype=types.fp32)],
                     opset_version=backend.opset_version,
                 )(prog)
-        elif any([idx > 1 for sub_indices in indices_val for idx in sub_indices]):
+        elif any(idx > 1 for sub_indices in indices_val for idx in sub_indices):
             # If the indices are not validated during type inference for IOS17, the `gather` op's
             # value inference will raise error for out-of-bound index.
             with pytest.raises(IndexError, match="index 2 is out of bounds for axis 0 with size 2"):
