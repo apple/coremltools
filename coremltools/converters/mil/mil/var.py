@@ -179,7 +179,7 @@ class Var:
         ):
             return True
         flattened_inputs = op.get_flattened_inputs()
-        return all([x.is_descendant_of_const for x in flattened_inputs])
+        return all(x.is_descendant_of_const for x in flattened_inputs)
 
     def _set_nonreplaceable_vars_upstream(self):
         """

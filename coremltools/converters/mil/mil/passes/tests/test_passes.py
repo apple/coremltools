@@ -2259,7 +2259,7 @@ class TestCastOptimizationComplexPatterns:
             "identity",
         ]
         cast_ops = block.find_ops(op_type="cast")
-        assert all([v.dtype.val == "int32" for v in cast_ops])
+        assert all(v.dtype.val == "int32" for v in cast_ops)
 
         apply_pass_and_basic_check(prog, "common::remove_redundant_ops")
         _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
@@ -2352,7 +2352,7 @@ class TestCastOptimizationComplexPatterns:
             "abs",
         ]
         cast_ops = block.find_ops(op_type="cast")
-        assert all([v.dtype.val == "int32" for v in cast_ops])
+        assert all(v.dtype.val == "int32" for v in cast_ops)
 
         apply_pass_and_basic_check(prog, "common::remove_redundant_ops")
         _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
@@ -5875,7 +5875,7 @@ class TestUpdateOutputDtypes:
             "common::update_output_dtypes",
         )
         warning_msg = "Output var 'input' is also an input var, hence the dtype cannot be changed: output var 'input' remains dtype fp32"
-        assert any([warning_msg in rec.message for rec in caplog.records])
+        assert any(warning_msg in rec.message for rec in caplog.records)
         assert get_op_types_in_program(prog) == []
         assert block.outputs[0].dtype == types.fp32
 

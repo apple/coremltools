@@ -196,7 +196,7 @@ def _try_convert_global_pool(const_context, builder, op, mode):
 
     if tuple(op.outputs[0].shape[:-2]) != tuple(op.inputs["x"].shape[:-2]):
         return False
-    if not all([s == 1 for s in op.outputs[0].shape[-2:]]):
+    if not all(s == 1 for s in op.outputs[0].shape[-2:]):
         return False
 
     builder.add_pooling(
@@ -795,11 +795,11 @@ def _add_elementwise_binary(
                 # INTERNAL_MUL_XYKN not implemented
                 continue
             if all(shape_x[indices] == shape_y[indices]):
-                if all([True if i in indices else s == 1 for i, s in enumerate(shape_x)]):
+                if all(True if i in indices else s == 1 for i, s in enumerate(shape_x)):
                     internal_y = op.x
                     internal_x = op.y
                     break
-                if all([True if i in indices else s == 1 for i, s in enumerate(shape_y)]):
+                if all(True if i in indices else s == 1 for i, s in enumerate(shape_y)):
                     internal_x = op.x
                     internal_y = op.y
                     break
@@ -3323,7 +3323,7 @@ def stack(const_context, builder, op):
 def split(const_context, builder, op):
     split = op.sizes
     split = [size for size in split if size != 0]
-    has_equal_splits = all([size == split[0] for size in split])
+    has_equal_splits = all(size == split[0] for size in split)
     num_splits = len(split)
     output_names = [op.outputs[i].name for i in range(len(op.sizes)) if op.sizes[i] != 0]
 
@@ -3545,7 +3545,7 @@ def _realloc_list(const_context, builder, ls_var, index_var, value_var, mode):
 
     # check if elem_shape is runtime-determined
     elem_shape = tuple(value_var.shape)
-    has_dynamic_shape = any([is_symbolic(i) for i in elem_shape])
+    has_dynamic_shape = any(is_symbolic(i) for i in elem_shape)
 
     # get the fill shape of the tensor array
     # [length, elem_dim1, elem_dim2, ...]
