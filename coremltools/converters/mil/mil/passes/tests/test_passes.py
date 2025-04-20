@@ -5332,6 +5332,29 @@ class TestUseReflectionPadding:
             expected_output_shapes={block.outputs[0].name: (1, 2, 6, 10)},
         )
 
+    def test_failure_all_true_mask(self):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 6, 8))])
+        def prog(x1):
+            left = mb.slice_by_index(
+                x=x1, begin=[0, 0, 0, 1], end=[1, 2, 6, 8],
+            )
+            right = mb.slice_by_index(
+                x=x1, begin=[0, 0, 0, -2], end=[1, 2, 6, 7],
+            )
+            x = mb.concat(values=[left, x1, right], axis=3)
+
+            return x
+
+        prev_prog, _, block = apply_pass_and_basic_check(prog, "common::use_reflection_padding")
+        assert get_op_types_in_program(prev_prog) == ["slice_by_index", "slice_by_index", "concat"]
+        assert get_op_types_in_program(prog) == ["slice_by_index", "slice_by_index", "concat"]
+
+        inputs = {"x1": (1, 2, 6, 8)}
+        assert_model_is_valid(
+            prog,
+            inputs,
+            expected_output_shapes={block.outputs[0].name: (1, 2, 6, 16)},
+        )
 
 class TestDivideToMultiply:
     def test_divide_to_multiply(self):

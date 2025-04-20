@@ -896,13 +896,9 @@ class use_reflection_padding(AbstractGraphPass):
 
             if end_mask is None:
                 end_mask = use_reflection_padding._resolve_end_mask(slice_op)
-                if end_mask is None:
+                if end_mask is None or False not in end_mask:
                     return False
-
                 axis = list(end_mask).index(False, 0, len(end_mask))
-
-            if axis != list(end_mask).index(False, 0, len(end_mask)):
-                return False
 
             # Check that we're only taking a slice of size 1
             end = slice_op.inputs["end"].val
