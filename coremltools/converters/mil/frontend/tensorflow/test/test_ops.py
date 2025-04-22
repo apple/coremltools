@@ -1767,7 +1767,7 @@ class TestSeparableConv(TensorFlowBaseTest):
             )
 
         test_static_W()
-        if not any([True if d > 1 else False for d in dilations]):
+        if not any(True if d > 1 else False for d in dilations):
             if backend[0] == "neuralnetwork":
                 pytest.skip("dynamic conv with groups > 1 is not supported on the neuralnetwork backend")
             test_dynamic_W()

@@ -5965,7 +5965,7 @@ class NeuralNetworkBuilder:
                 or self.spec.specificationVersion < _SPECIFICATION_VERSION_IOS_14
             ):
                 self.spec.specificationVersion = _SPECIFICATION_VERSION_IOS_14
-        assert all([i > 0 for i in reps])
+        assert all(i > 0 for i in reps)
         spec_layer_params.reps.extend(reps)
         return spec_layer
 

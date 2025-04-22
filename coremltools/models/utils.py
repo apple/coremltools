@@ -2369,7 +2369,7 @@ def change_input_output_tensor_type(
     def _get_input_vars(var_name: str) -> _Iterable[_Tuple[_Optional[_mil.block.Function], _Optional[_mil.Var]]]:
         for name in function_names:
             func = prog.functions[name]
-            var = next(iter([v for k, v in func.inputs.items() if k == var_name]), None)
+            var = next(iter(v for k, v in func.inputs.items() if k == var_name), None)
             if var:
                 if func.opset_version < _ct.target.iOS16:
                     _logger.warning(f"upgrading opset_version for function {func.name} to iOS16")
@@ -2379,7 +2379,7 @@ def change_input_output_tensor_type(
     def _get_output_vars(var_name: str) -> _Iterable[_Tuple[_Optional[_mil.block.Function], _Optional[_mil.Var]]]:
         for name in function_names:
             func = prog.functions[name]
-            var = next(iter([v for v in func.outputs if v.name == var_name]), None)
+            var = next(iter(v for v in func.outputs if v.name == var_name), None)
             if var:
                 if func.opset_version < _ct.target.iOS16:
                     _logger.warning(f"upgrading opset_version for function {func.name} to iOS16")

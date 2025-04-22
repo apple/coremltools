@@ -750,14 +750,14 @@ def _validate_outputs_argument(outputs):
                                  'or of types ct.ImageType/ct.TensorType'
         if isinstance(outputs[0], str):
             # if one of the elements is a string, all elements must be strings
-            if not all([isinstance(t, str) for t in outputs]):
+            if not all(isinstance(t, str) for t in outputs):
                 raise ValueError(msg_inconsistent_types)
             return outputs, [TensorType(name=name) for name in outputs]
 
         if isinstance(outputs[0], InputType):
-            if not all([isinstance(t, TensorType) or isinstance(t, ImageType) for t in outputs]):
+            if not all(isinstance(t, TensorType) or isinstance(t, ImageType) for t in outputs):
                 raise ValueError(msg_inconsistent_types)
-            if any([t.shape is not None for t in outputs]):
+            if any(t.shape is not None for t in outputs):
                 msg = "The 'shape' argument must not be specified for the outputs, since it is " \
                       "automatically inferred from the input shapes and the ops in the model"
                 raise ValueError(msg)
@@ -777,9 +777,9 @@ def _validate_outputs_argument(outputs):
             output_names = [t.name for t in outputs]
             # verify that either all of the entries in output_names is "None" or none of them is "None"
             msg_consistent_names = 'Either none or all the outputs must have the "name" argument specified'
-            if output_names[0] is None and not all([name is None for name in output_names]):
+            if output_names[0] is None and not all(name is None for name in output_names):
                 raise ValueError(msg_consistent_names)
-            if output_names[0] is not None and not all([name is not None for name in output_names]):
+            if output_names[0] is not None and not all(name is not None for name in output_names):
                 raise ValueError(msg_consistent_names)
             if output_names[0] is not None:
                 if len(set(output_names)) != len(output_names):
@@ -914,7 +914,7 @@ def _validate_conversion_arguments(
         if inputs is not None:
             raise_if_duplicated(inputs)
 
-        if inputs is not None and not all([isinstance(_input, InputType) for _input in inputs]):
+        if inputs is not None and not all(isinstance(_input, InputType) for _input in inputs):
             raise ValueError("Input should be a list of TensorType or ImageType")
 
     elif exact_source == "pytorch":

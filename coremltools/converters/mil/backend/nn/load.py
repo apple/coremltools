@@ -266,7 +266,7 @@ def load(prog, **kwargs):
 
     proto = builder.spec
     # image input
-    has_image_input = any([isinstance(s, ImageType) for s in input_types])
+    has_image_input = any(isinstance(s, ImageType) for s in input_types)
     if has_image_input:
         proto = _convert_to_image_input(proto, input_types,
                                         skip_model_load=kwargs.get("skip_model_load", False))
@@ -284,7 +284,7 @@ def load(prog, **kwargs):
                 shape = var.sym_type.get_shape()
                 if any_variadic(shape):
                     raise ValueError("Variable rank model outputs, that are ImageTypes, are not supported")
-                if any([is_symbolic(d) for d in shape]):
+                if any(is_symbolic(d) for d in shape):
                     raise NotImplementedError("Image output '{}' has symbolic dimensions in its shape".
                                               format(var.name))
                 _validate_image_input_output_shapes(output_types[i].color_layout, shape, var.name, is_input=False)
