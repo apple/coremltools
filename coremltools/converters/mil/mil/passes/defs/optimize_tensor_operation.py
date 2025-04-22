@@ -840,20 +840,21 @@ class use_reflection_padding(AbstractGraphPass):
             self._reflection_padding_block(f)
 
     @staticmethod
-    def _resolve_end_mask(slice_op):
-        if "end_mask" in slice_op.inputs:
-            return slice_op.inputs["end_mask"].val
-
-        if slice_op.inputs["end"].val is None:
-            return None
-
-        infered_mask = []
-        for end_idx, axis_dim in zip(slice_op.inputs["end"].val, slice_op.inputs["x"].shape):
-            infered_mask.append(end_idx == axis_dim)
-        return infered_mask
-
-    @staticmethod
     def _match_pattern(concat_op, block):
+
+        def resolve_end_mask(slice_op):
+            # Helper function to resolve the end_mask attribute of the slice op if it is not present
+            if "end_mask" in slice_op.inputs:
+                return slice_op.inputs["end_mask"].val
+
+            if slice_op.inputs["end"].val is None:
+                return None
+
+            infered_mask = []
+            for end_idx, axis_dim in zip(slice_op.inputs["end"].val, slice_op.inputs["x"].shape):
+                infered_mask.append(end_idx == axis_dim)
+            return infered_mask
+
         if concat_op.op_type != "concat":
             return False
 
@@ -895,7 +896,7 @@ class use_reflection_padding(AbstractGraphPass):
                 return False
 
             if end_mask is None:
-                end_mask = use_reflection_padding._resolve_end_mask(slice_op)
+                end_mask = resolve_end_mask(slice_op)
                 if end_mask is None or False not in end_mask:
                     return False
                 axis = list(end_mask).index(False, 0, len(end_mask))
