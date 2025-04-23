@@ -58,7 +58,7 @@ class MILFrontend:
                         type(inputs)
                     )
                 )
-            if not all(isinstance(i, input_types.InputType) for i in inputs):
+            if not all([isinstance(i, input_types.InputType) for i in inputs]):
                 raise ValueError(
                     "Type of inputs should be list or tuple of TensorType or ImageType, got {} instead.".format(
                         [type(i) for i in inputs]

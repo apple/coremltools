@@ -1091,7 +1091,7 @@ class concat(Operation):
             symbolic_tensor = np.reshape(np.array(symbolic_tensor), shape)
             values.append(symbolic_tensor)
 
-        if any(val is None for val in values):
+        if any([val is None for val in values]):
             return None
 
         if not isinstance(values[0], np.ndarray) or values[0].shape == ():
@@ -1301,13 +1301,13 @@ class stack(Operation):
     @precondition(allow=VALUE | SYMBOL | NONE)
     def value_inference(self):
 
-        is_all_rank_zero = all(v.rank == 0 for v in self.values)
+        is_all_rank_zero = all([v.rank == 0 for v in self.values])
         values = [
             v.sym_val if v.sym_val is not None else get_new_symbol()
             for v in self.values
         ]
 
-        if any(is_symbolic(v) for v in values) and not is_all_rank_zero:
+        if any([is_symbolic(v) for v in values]) and not is_all_rank_zero:
             return None
 
         return np.stack(values, self.axis.val)

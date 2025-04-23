@@ -119,7 +119,7 @@ class TestExtractSubModel:
         names = [output.name for output in outputs]
         assert len(outputs) == 2
         assert "cos" in names and "relu" in names
-        assert all(o.dtype == types.fp16 for o in outputs), "all fp16 dtypes"
+        assert all([o.dtype == types.fp16 for o in outputs]), "all fp16 dtypes"
 
     def test_extract_submodel_complex(self):
         """

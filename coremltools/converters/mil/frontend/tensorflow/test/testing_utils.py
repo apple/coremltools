@@ -164,7 +164,7 @@ def tf_graph_to_mlmodel(
             input_types.append(
                 ct.TensorType(name=input_placeholder.name.split(":")[0], shape=input_shape)
             )
-            if any(dim.value is None for dim in input_placeholder.shape):
+            if any([dim.value is None for dim in input_placeholder.shape]):
                 has_dynamic_shape = True
         if has_dynamic_shape:
             inputs_for_conversion = input_types

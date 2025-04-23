@@ -182,7 +182,7 @@ class conv(Operation):
         custom_pad = None if self.pad_type.val != 'custom' else self.pad.val
 
         is_weight_dynamic = not self.weight.is_descendant_of_const
-        if is_weight_dynamic and any(True if d > 1 else False for d in dilations):
+        if is_weight_dynamic and any([True if d > 1 else False for d in dilations]):
             raise ValueError("Convolution with dynamic weights does not support dilations!")
 
         N = inshape[0]
