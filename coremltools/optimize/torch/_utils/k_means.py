@@ -14,9 +14,11 @@ from typing import Tuple as _Tuple
 from typing import Type as _Type
 from typing import Union as _Union
 
+import numpy as _np
 import torch as _torch
 import torch.multiprocessing as _mp
 from attr import define as _define
+from tqdm import tqdm
 
 from coremltools._deps import _kmeans1d
 from coremltools.optimize import _utils as optimize_utils
@@ -47,6 +49,8 @@ class KMeansConfig:
     enable_per_channel_scale: bool = False
     mask: _Optional[_torch.Tensor] = None
     importance: _Optional[_torch.Tensor] = None
+    enable_fast_kmeans_mode: _Optional[bool] = True
+    rounding_precision: _Optional[int] = 4
 
 
 class KMeansSupportedModulesRegistry(_ClassRegistryMixin):
@@ -221,15 +225,21 @@ class KMeansModule:
         return param
 
     def _get_compression_metadata(
-        self, param_name: str, param: _torch.Tensor
+        self, param_name: str, param: _torch.Tensor, lut: _torch.Tensor
     ) -> _CompressionMetadata:
         """
         Return compression metadata to be stored in the model for this parameter
         """
         metadata = _CompressionMetadata(param_name)
         compression_type = ["palettization"]
+
         # LUT
-        metadata.lut, _ = self._compute_lut_and_indices(param_name, param)
+        # Incorporate param dimensions in lut shape
+        orig_param_shape = self._parameter_metadata[param_name]["shape"]
+        for i in range(len(orig_param_shape) - lut.dim() + 2):
+            lut = lut.unsqueeze(-3)
+        metadata.lut = lut
+
         # Per channel scale
         if self.config[param_name].enable_per_channel_scale:
             per_channel_scale = self._parameter_metadata[param_name]["per_channel_scale"]
@@ -261,11 +271,13 @@ class KMeansModule:
         metadata.compression_type = compression_type
         return metadata
 
-    def _register_compression_metadata(self, param_name: str, param: _torch.Tensor):
+    def _register_compression_metadata(
+        self, param_name: str, param: _torch.Tensor, lut: _torch.Tensor
+    ):
         """
         Register compression metadata on the model so that it can be serialized.
         """
-        metadata = self._get_compression_metadata(param_name, param)
+        metadata = self._get_compression_metadata(param_name, param, lut)
         metadata.register(self.module)
 
     def _unscale_by_per_channel_scale(self, param_name: str, param: _torch.Tensor) -> _torch.Tensor:
@@ -295,12 +307,12 @@ class KMeansModule:
         """
         return self._get_parameters_impl()
 
-    def update_parameters(self, param_name: str, new_value: _torch.Tensor):
+    def update_parameters(self, param_name: str, new_value: _torch.Tensor, lut: _torch.Tensor):
         """
         Update the parameter corresponding to this parameter name with the
         new value.
         """
-        self._register_compression_metadata(param_name, new_value)
+        self._register_compression_metadata(param_name, new_value, lut)
         self._update_parameters_impl(param_name, new_value)
 
     def get_param_config(self, param_name: str, param: _torch.Tensor) -> KMeansConfig:
@@ -322,6 +334,8 @@ class KMeansModule:
             enable_per_channel_scale=config.enable_per_channel_scale,
             mask=mask,
             importance=importance,
+            enable_fast_kmeans_mode=config.enable_fast_kmeans_mode,
+            rounding_precision=config.rounding_precision,
         )
 
 
@@ -534,17 +548,57 @@ class KMeans:
         """
         num_clusters = 2**config.n_bits
 
-        block_weight_flatten = block_weight.flatten()
+        block_weight_flatten = block_weight.flatten().numpy()
         if block_importance is not None:
-            block_importance_flatten = block_importance.flatten()
+            block_importance_flatten = block_importance.flatten().numpy()
             kmeans_results = _kmeans1d.cluster(
-                block_weight_flatten.numpy(),
+                block_weight_flatten,
                 num_clusters,
-                weights=block_importance_flatten.numpy(),
+                weights=block_importance_flatten,
+            )
+        elif (block_weight_flatten.dtype == _np.float16) or (
+            config.enable_fast_kmeans_mode
+            and _np.max(block_weight_flatten) <= _np.finfo(_np.float16).max
+            and _np.min(block_weight_flatten) >= _np.finfo(_np.float16).min
+        ):
+            # With fp16 values we often have a reduced amount of unique values
+            # and performing weighted kmeans becomes much faster
+
+            # Add rounding before computing unique values to further reduce clustered weight size
+            if config.enable_fast_kmeans_mode:
+                # Cast fp32 -> fp16
+                if block_weight_flatten.dtype != _np.float16:
+                    block_weight_flatten = block_weight_flatten.astype(_np.float16)
+
+                # Rounding
+                scale = 10**config.rounding_precision
+                block_weight_flatten = (
+                    _np.round(block_weight_flatten.astype(_np.float32) * scale) / scale
+                )
+
+            # To speed up parallel kmeans, use numpy.unique instead of
+            # torch.unique in multiprocessing setting.
+            values, indices, counts = _np.unique(
+                block_weight_flatten,
+                return_inverse=True,
+                return_counts=True,
+            )
+            num_clusters = min(len(values), num_clusters)
+            kmeans_results = _kmeans1d.cluster(values, num_clusters, weights=counts)
+            # Expand clusters according to np.unique indices
+            # XXX: kmeans_results is a namedtuple, which is why we use this constructor
+            kmeans_results = type(kmeans_results)(
+                clusters=_np.array(kmeans_results.clusters)[indices].tolist(),
+                centroids=kmeans_results.centroids,
             )
         else:
-            kmeans_results = _kmeans1d.cluster(block_weight_flatten.numpy(), num_clusters)
-        return _torch.tensor(kmeans_results.centroids), _torch.tensor(kmeans_results.clusters)
+            kmeans_results = _kmeans1d.cluster(block_weight_flatten, num_clusters)
+
+        # First create numpy array from list and then tensor from numpy array.
+        # This is much faster than creating tensor from list.
+        centroids = _torch.from_numpy(_np.array(kmeans_results.centroids))
+        clusters = _torch.from_numpy(_np.array(kmeans_results.clusters))
+        return centroids, clusters
 
     @classmethod
     def _cluster_weights_2d(
@@ -667,6 +721,7 @@ class KMeans:
         rank: int,
         work_q: _Union[_mp.Queue, _queue.Queue],
         results_q: _Union[_mp.Queue, _queue.Queue],
+        progress_bar: _Optional[tqdm] = None,
     ):
         while True:
             try:
@@ -679,7 +734,13 @@ class KMeans:
             except _queue.Empty:
                 break
 
-            _logger.info(f"Starting to process layer {layer_name}")
+            if config.mask is not None and config.cluster_dim > 1:
+                _logger.info(
+                    f"Skipping palettizing layer: {layer_name} with "
+                    f"cluster_dim: {config.cluster_dim} and mask, because "
+                    f"vector palettization with masking is not supported."
+                )
+                return
 
             new_weight = _torch.zeros_like(weight, dtype=weight.dtype)
 
@@ -689,6 +750,8 @@ class KMeans:
 
             lut_quant_scale = []
             lut_quant_zp = []
+            lut = []
+            num_clusters = 2**config.n_bits
 
             for block_idx in range(0, weight.shape[config.axis], config.block_size):
                 block_weight, block_importance, block_mask = cls._get_block_to_cluster(
@@ -696,19 +759,9 @@ class KMeans:
                 )
 
                 if block_mask is not None:
-                    if config.cluster_dim == 1:
-                        centroids, clusters = cls._cluster_weights_with_masking(
-                            block_weight, block_importance, block_mask, config
-                        )
-                    else:
-                        # Masking not supported for cluster_dim > 1
-                        centroids, clusters = None, None
-                        _logger.info(
-                            f"Skipping palettizing layer: {layer_name} with "
-                            f"cluster_dim: {config.cluster_dim} and mask, because "
-                            f"vector palettization with masking is not supported."
-                        )
-                        new_weight = weight.clone()
+                    centroids, clusters = cls._cluster_weights_with_masking(
+                        block_weight, block_importance, block_mask, config
+                    )
                 else:
                     if config.cluster_dim == 1:
                         centroids, clusters = cls._cluster_weights_1d(
@@ -718,6 +771,7 @@ class KMeans:
                         centroids, clusters = cls._cluster_weights_2d(
                             block_weight, block_importance, config, rank
                         )
+
                 if centroids is not None and clusters is not None:
                     # quantize LUT
                     if config.lut_dtype is not None:
@@ -737,18 +791,34 @@ class KMeans:
                         block_idx,
                     )
 
-            # Combine quantization scales / zp for all LUTs into single tensor
+                    if len(centroids) < num_clusters:
+                        padded_lut = _torch.zeros(num_clusters)
+                        padded_lut[: len(centroids)] = centroids
+                        centroids = padded_lut
+
+                lut.append(centroids.to(weight.dtype))
+
+            # Combine LUTs / quantization scales / zp for all blocks into single tensor
+            lut = _torch.stack(lut).unsqueeze(1 - config.axis)
+            if config.cluster_dim == 1:
+                lut = lut.unsqueeze(-1)
             scale, zp = None, None
             if config.lut_dtype is not None and len(lut_quant_scale) > 0:
                 scale = _torch.stack(lut_quant_scale, dim=config.axis)
                 if len(lut_quant_zp) > 0:
                     zp = _torch.stack(lut_quant_zp, dim=config.axis)
 
-            _logger.info(f"Finished processing {weight_name} in layer {layer_name} successfully")
+            if progress_bar:
+                progress_bar.update(1)
+            else:
+                _logger.info(
+                    f"Finished processing {weight_name} in layer {layer_name} successfully"
+                )
 
-            results_q.put((layer_name, weight_name, new_weight, scale, zp))
+            results_q.put((layer_name, weight_name, new_weight, lut, scale, zp))
 
         _logger.info("Process done, work queue is empty")
+
 
     @classmethod
     def _quantize_centroids(cls, dtype: _torch.dtype, centroids: _torch.Tensor):
@@ -857,6 +927,7 @@ class KMeans:
         config: _Union[_Dict[str, _Dict[str, KMeansConfig]], KMeansConfig] = KMeansConfig(),
         num_workers: int = 1,
     ) -> _torch.nn.Module:
+        _logger.info("Clustering weights")
         work_q, results_q, worker_processes = cls._prepare_worker_processes(num_workers)
         k_means_module_map, param_dict = cls._get_weights_to_cluster(
             model=model,
@@ -874,7 +945,7 @@ class KMeans:
             last_chance = False
             while remaining_params:
                 try:
-                    layer_name, param_name, new_value, scale, zp = results_q.get(timeout=10)
+                    layer_name, param_name, new_value, lut, scale, zp = results_q.get(timeout=10)
                 except _queue.Empty:
                     if worker_processes is not None:
                         # This if path is for ParallelKMeans
@@ -920,7 +991,7 @@ class KMeans:
                     k_means_module = k_means_module_map[layer_name]
                     k_means_module._parameter_metadata[param_name]["lut_quantization_scale"] = scale
                     k_means_module._parameter_metadata[param_name]["lut_quantization_zp"] = zp
-                    k_means_module.update_parameters(param_name, new_value)
+                    k_means_module.update_parameters(param_name, new_value, lut)
                     remaining_params.pop(f"{layer_name}${param_name}")
                     # Even though it might not have succeeded
                     num_params_left -= 1
@@ -961,8 +1032,7 @@ class KMeans:
 class ParallelKMeans(KMeans):
     @classmethod
     def _prepare_worker_processes(
-        cls,
-        num_workers: int,
+        cls, num_workers: int
     ) -> _Tuple[
         _Union[_mp.Queue, _queue.Queue],
         _Union[_mp.Queue, _queue.Queue],
@@ -1022,7 +1092,9 @@ class SequentialKMeans(KMeans):
         results_q: _Union[_mp.Queue, _queue.Queue],
         worker_processes: _Optional[_List[_mp.Process]],
     ):
-        cls._cluster_weights_worker(0, work_q, results_q)
+        pbar = tqdm(total=work_q.qsize())
+        cls._cluster_weights_worker(0, work_q, results_q, pbar)
+        pbar.close()
 
     @classmethod
     def _join_worker_processes(cls, worker_processes: _Optional[_List[_mp.Process]]):

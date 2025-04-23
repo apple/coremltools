@@ -352,3 +352,30 @@ class TestExtractSubModel:
         assert len(coreml_out) == len(gt)
         for k, v in gt.items():
             np.testing.assert_allclose(v, coreml_out[k], atol=0.2)
+
+    @pytest.mark.parametrize(
+        "minimum_deployment_target",
+        [ct.target.iOS16, ct.target.iOS17, ct.target.iOS18],
+    )
+    def test_extract_submodel_minimum_deployment_target(self, minimum_deployment_target: ct.target):
+        prog = get_simple_program()
+        model = ct.convert(
+            prog,
+            convert_to="mlprogram",
+            compute_units=ct.ComputeUnit.CPU_ONLY,
+            minimum_deployment_target=minimum_deployment_target,
+            compute_precision=ct.precision.FLOAT32,
+        )
+
+        original_specification_version = model.get_spec().specificationVersion
+        submodel = extract_submodel(model, outputs=["output_0", "output_1"])
+
+        # check that the submodel retains the same backend
+        assert submodel.get_spec().WhichOneof("Type") == "mlProgram"
+
+        specification_version = submodel.get_spec().specificationVersion
+
+        # check the ``specificationVersion``
+        assert (
+            specification_version == original_specification_version
+        ), f"Specification version mismatch: expected {original_specification_version}, but got {specification_version}"

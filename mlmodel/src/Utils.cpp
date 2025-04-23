@@ -10,8 +10,35 @@
 
 using namespace CoreML;
 
+static bool isCustomModel(const Specification::Model& model);
+static bool hasFlexibleShapes(const Specification::Model& model);
+static bool isAppleWordTagger(const Specification::Model& model);
+static bool isAppleTextClassifier(const Specification::Model& model);
+static bool isAppleGazetteer(const Specification::Model& model);
+static bool isAppleWordEmbedding(const Specification::Model& model);
+static bool isScenePrint(const Specification::Model& model);
+static bool isObjectPrint(const Specification::Model& model);
+static bool isAppleAudioFeatureExtractor(const Specification::Model& model);
+static bool isSoundPrint(const Specification::Model& model);
+static bool hasCategoricalSequences(const Specification::Model& model);
+static bool isNonMaxSuppression(const Specification::Model& model);
+static bool isBayesianProbitRegressor(const Specification::Model& model);
+static bool hasIOS12NewNeuralNetworkLayers(const Specification::Model& model);
+static bool hasIOS13NeuralNetworkFeatures(const Specification::Model& model);
+static bool hasIOS14NeuralNetworkFeatures(const Specification::Model& model);
+static bool hasDefaultValueForOptionalInputs(const Specification::Model& model);
+static bool nonMaxSuppressionUsesFloat32InputsOrOutputs(const Specification::Model& model);
+static bool hasFloat16MultiArray(const Specification::Model& model);
+static bool hasGrayscaleFloat16Image(const Specification::Model& model);
+static bool hasCoreML6Opsets(const Specification::Model& model);
+static bool hasCoreML7Opsets(const Specification::Model& model);
+static bool hasCoreML8Opsets(const Specification::Model& model);
+static bool hasMultiFunctions(const Specification::Model& model);
+static bool hasEmptyInput(const Specification::Model& model);
+static bool hasWeightOfType(const Specification::Model& model, const WeightParamType& wt);
+
 // Returning a pointer here because of verification issues with allocating this type on the stack
-google::protobuf::RepeatedPtrField<Specification::NeuralNetworkLayer> const *getNNSpec(const Specification::Model& model)  {
+google::protobuf::RepeatedPtrField<Specification::NeuralNetworkLayer> const *CoreML::getNNSpec(const Specification::Model& model)  {
     switch (model.Type_case()) {
         case Specification::Model::TypeCase::kNeuralNetwork:
             return &(model.neuralnetwork().layers());
@@ -26,91 +53,148 @@ google::protobuf::RepeatedPtrField<Specification::NeuralNetworkLayer> const *get
     }
 }
 
-// Helper functions for determining model version
-bool CoreML::hasCustomLayer(const Specification::Model& model) {
-    auto layers = getNNSpec(model);
-    if (layers) {
-        for (int i =0; i< layers->size(); i++){
-            const Specification::NeuralNetworkLayer& layer = (*layers)[i];
-            if (layer.layer_case() == Specification::NeuralNetworkLayer::kCustom) {
-                return true;
+/// A utility function to traverse a pipeline model and invoke a handler.
+///
+/// If the model is not a pipeline, it simply invokes the handler with the model.
+///
+/// If the model is a pipeline, it invokes the handler with each sub
+/// model first, and then with the pipeline model.
+///
+/// The traversal stops if the handler returns `true`.
+static bool walkModelAndPipeline(const Specification::Model &model,
+                                 std::function<bool(const Specification::Model& m)> handler) {
+    switch (model.Type_case()) {
+        case Specification::Model::kPipeline:
+            for (auto &m : model.pipeline().models()) {
+                if (walkModelAndPipeline(m, handler)) {
+                    return true;
+                }
             }
+            break;
+        case Specification::Model::kPipelineRegressor:
+            for (auto &m : model.pipelineregressor().pipeline().models()) {
+                if (walkModelAndPipeline(m, handler)) {
+                    return true;
+                }
+            }
+            break;
+        case Specification::Model::kPipelineClassifier:
+            for (auto &m : model.pipelineclassifier().pipeline().models()) {
+                if (walkModelAndPipeline(m, handler)) {
+                    return true;
+                }
+            }
+            break;
+        default:
+            break;
+    }
+    if (handler(model)) {
+        return true;
+    }
+    return false;
+}
+
+/// A utility function to invoke a handler with input, output, and
+/// state feature description.
+///
+/// The `description` parameter template can be either a model
+/// description or a function description.
+///
+/// The function returns `true` if any of the feature descriptions met
+/// the specified criteria predicate function.
+template <typename Description>
+static bool anyFeatureDescriptionOfDescription(const Description &description,
+                                               std::function<bool(const Specification::FeatureDescription& fd)> criteria) {
+    for (const auto& fd: description.input()) {
+        if (criteria(fd)) {
+            return true;
+        }
+    }
+
+    for (const auto& fd: description.output()) {
+        if (criteria(fd)) {
+            return true;
+        }
+    }
+
+    for (const auto& fd: description.state()) {
+        if (criteria(fd)) {
+            return true;
         }
     }
     return false;
 }
 
-
-inline void collectCustomLayerNamesAndDescriptions(const Specification::Model &model, std::vector<StringPair> *output) {
-
-    switch (model.Type_case()) {
-        case Specification::Model::kPipeline:
-            for (auto &m : model.pipeline().models()) {
-                collectCustomLayerNamesAndDescriptions(m,output);
-            }
-            break;
-        case Specification::Model::kPipelineRegressor:
-            for (auto &m : model.pipelineregressor().pipeline().models()) {
-                collectCustomLayerNamesAndDescriptions(m,output);
-            }
-            break;
-        case Specification::Model::kPipelineClassifier:
-            for (auto &m : model.pipelineclassifier().pipeline().models()) {
-                collectCustomLayerNamesAndDescriptions(m,output);
-            }
-            break;
-        default:
-            auto layers = getNNSpec(model);
-            if (layers) {
-                for (int i =0; i< layers->size(); i++){
-                    const Specification::NeuralNetworkLayer& layer = (*layers)[i];
-                    if (layer.layer_case() == Specification::NeuralNetworkLayer::kCustom) {
-                        output->push_back(std::make_pair(layer.custom().classname(), layer.custom().description()));
+/// A utility function to invoke a handler with input, output, and
+/// state feature description of the model.
+///
+/// It traverses a pipeline model.
+///
+/// The function returns `true` if any of the feature descriptions met
+/// the specified criteria predicate function.
+static bool anyFeatureDescriptionOfModel(const Specification::Model &model,
+                                         std::function<bool(const Specification::FeatureDescription& fd)> criteria) {
+    return walkModelAndPipeline(
+        model,
+        [&criteria](const Specification::Model& m) {
+            const auto& modelDescription = m.description();
+            if (modelDescription.functions_size() == 0) {
+                // A single function syntax
+                if (anyFeatureDescriptionOfDescription(modelDescription, criteria)) {
+                    return true;
+                }
+            } else {
+                // A multi function syntax
+                for (const auto& functionDescription: modelDescription.functions()) {
+                    if (anyFeatureDescriptionOfDescription(modelDescription, criteria)) {
+                        return true;
                     }
                 }
             }
-            break;
-        }
+            return false;
+        });
+}
+
+bool CoreML::hasCustomLayer(const Specification::Model& model) {
+    return walkModelAndPipeline(
+        model,
+        [](const auto& m) {
+            if (const auto *layers = getNNSpec(m)) {
+                for (const auto& layer: *layers) {
+                    if (layer.layer_case() == Specification::NeuralNetworkLayer::kCustom) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        });
 }
 
 std::vector<StringPair> CoreML::getCustomLayerNamesAndDescriptions(const Specification::Model& model) {
     std::vector<std::pair<std::string, std::string> > retval;
-    collectCustomLayerNamesAndDescriptions(model, &retval);
+    walkModelAndPipeline(model, [&retval](const auto& m) {
+        if (const auto *layers = getNNSpec(m)) {
+            for (const auto& layer: *layers) {
+                if (layer.layer_case() == Specification::NeuralNetworkLayer::kCustom) {
+                    retval.push_back(std::make_pair(layer.custom().classname(), layer.custom().description()));
+                }
+            }
+        }
+        return false; // Do not stop walking
+    });
     return retval;
-}
-
-inline void collectCustomModelNamesAndDescriptions(const Specification::Model &model, std::vector<StringPair> *output) {
-
-    switch (model.Type_case()) {
-        case Specification::Model::kPipeline:
-            for (auto &m : model.pipeline().models()) {
-                collectCustomModelNamesAndDescriptions(m,output);
-            }
-            break;
-        case Specification::Model::kPipelineRegressor:
-            for (auto &m : model.pipelineregressor().pipeline().models()) {
-                collectCustomModelNamesAndDescriptions(m,output);
-            }
-            break;
-        case Specification::Model::kPipelineClassifier:
-            for (auto &m : model.pipelineclassifier().pipeline().models()) {
-                collectCustomModelNamesAndDescriptions(m,output);
-            }
-            break;
-        case Specification::Model::kCustomModel:
-            output->push_back(std::make_pair(model.custommodel().classname(),model.custommodel().description()));
-            break;
-        default:
-            break;
-    }
 }
 
 std::vector<std::pair<std::string, std::string> > CoreML::getCustomModelNamesAndDescriptions(const Specification::Model& model) {
     std::vector<std::pair<std::string, std::string> > retval;
-    collectCustomModelNamesAndDescriptions(model,&retval);
+    walkModelAndPipeline(model, [&retval](const auto& m) {
+        if (m.Type_case() == Specification::Model::kCustomModel) {
+            retval.push_back(std::make_pair(m.custommodel().classname(), m.custommodel().description()));
+        }
+        return false; // Do not stop walking
+    });
     return retval;
 }
-
 
 void CoreML::downgradeSpecificationVersion(Specification::Model *pModel) {
 
@@ -172,13 +256,13 @@ void CoreML::downgradeSpecificationVersion(Specification::Model *pModel) {
 
 }
 
-static inline bool isWeightParamOfType(const Specification::WeightParams &weight,
-                                       const WeightParamType& type) {
+static bool isWeightParamOfType(const Specification::WeightParams &weight,
+                                const WeightParamType& type) {
     return valueType(weight) == type;
 }
 
 static bool hasLSTMWeightParamOfType(const Specification::LSTMWeightParams& params,
-                                               const WeightParamType& type) {
+                                     const WeightParamType& type) {
 
     return (isWeightParamOfType(params.inputgateweightmatrix(), type) ||
             isWeightParamOfType(params.forgetgateweightmatrix(), type) ||
@@ -200,8 +284,8 @@ static bool hasLSTMWeightParamOfType(const Specification::LSTMWeightParams& para
             isWeightParamOfType(params.outputgatepeepholevector(), type));
 }
 
-bool CoreML::hasWeightOfType(const Specification::NeuralNetworkLayer& layer,
-                             const WeightParamType& type) {
+static bool hasWeightOfType(const Specification::NeuralNetworkLayer& layer,
+                            const WeightParamType& type) {
 
     switch (layer.layer_case()) {
         case Specification::NeuralNetworkLayer::LayerCase::kConvolution:
@@ -273,304 +357,210 @@ bool CoreML::hasWeightOfType(const Specification::NeuralNetworkLayer& layer,
     return false;
 }
 
-bool CoreML::hasfp16Weights(const Specification::Model& model) {
+bool CoreML::hasFP16Weights(const Specification::Model& model) {
     // If any of the weight param is of type FP16, the model has FP16 weight
     return hasWeightOfType(model, FLOAT16);
 }
 
-bool CoreML::hasUnsignedQuantizedWeights(const Specification::Model& model) {
+static bool hasUnsignedQuantizedWeights(const Specification::Model& model) {
     return hasWeightOfType(model, QUINT);
 }
 
-bool CoreML::hasWeightOfType(const Specification::Model& model, const WeightParamType& wt) {
-    auto layers = getNNSpec(model);
-    if(layers) {
-        for(int i =0; i< layers->size(); i++){
-            const Specification::NeuralNetworkLayer& layer = (*layers)[i];
-            if(hasWeightOfType(layer,wt)) {
-                return true;
+static bool hasWeightOfType(const Specification::Model& model, const WeightParamType& wt) {
+    return walkModelAndPipeline(
+        model,
+        [wt](const Specification::Model& m) {
+            if (const auto *layers = getNNSpec(m)) {
+                for (const auto& layer: *layers) {
+                    if (hasWeightOfType(layer, wt)) {
+                        return true;
+                    }
+                }
             }
-        }
-    }
-    return false;
+            return false;
+        });
 }
 
 // We'll check if the model has ONLY the IOS12 shape specifications
 // if the old ones are also filled in with something plausible, then there is nothing
 // preventing us from running on older versions of Core ML.
-bool CoreML::hasFlexibleShapes(const Specification::Model& model) {
-
-    auto inputs = model.description().input();
-    for (const auto& input: inputs) {
-        if (input.type().Type_case() == Specification::FeatureType::kMultiArrayType) {
-            if (input.type().multiarraytype().ShapeFlexibility_case() != Specification::ArrayFeatureType::SHAPEFLEXIBILITY_NOT_SET) {
+static bool hasFlexibleShapes(const Specification::Model& model) {
+    return anyFeatureDescriptionOfModel(
+        model,
+        [](const auto& fd) {
+            if (fd.type().Type_case() == Specification::FeatureType::kMultiArrayType &&
+                fd.type().multiarraytype().ShapeFlexibility_case() != Specification::ArrayFeatureType::SHAPEFLEXIBILITY_NOT_SET) {
+                return true;
+            } else if (fd.type().Type_case() == Specification::FeatureType::kImageType &&
+                       fd.type().imagetype().SizeFlexibility_case() != Specification::ImageFeatureType::SIZEFLEXIBILITY_NOT_SET) {
                 return true;
             }
-        }
-        else if (input.type().Type_case() == Specification::FeatureType::kImageType) {
-            if (input.type().imagetype().SizeFlexibility_case() != Specification::ImageFeatureType::SIZEFLEXIBILITY_NOT_SET) {
-                return true;
-            }
-        }
-    }
-    return false;
+            return false;
+        });
 }
 
-bool CoreML::hasFloat16MultiArray(const Specification::Model& model) {
-    for (const auto& input: model.description().input()) {
-        if (input.type().Type_case() == Specification::FeatureType::kMultiArrayType) {
-            if (input.type().multiarraytype().datatype() == Specification::ArrayFeatureType_ArrayDataType_FLOAT16) {
-                return true;
-            }
-        }
-    }
-
-    for (const auto& output: model.description().output()) {
-        if (output.type().Type_case() == Specification::FeatureType::kMultiArrayType) {
-            if (output.type().multiarraytype().datatype() == Specification::ArrayFeatureType_ArrayDataType_FLOAT16) {
-                return true;
-            }
-        }
-    }
-
-    return false;
+static bool hasFloat16MultiArray(const Specification::Model& model) {
+    return anyFeatureDescriptionOfModel(
+        model,
+        [](const auto& fd) {
+            return
+                (fd.type().Type_case() == Specification::FeatureType::kMultiArrayType) &&
+                (fd.type().multiarraytype().datatype() == Specification::ArrayFeatureType_ArrayDataType_FLOAT16);
+        });
 }
 
-bool CoreML::hasCoreML8Opsets(const Specification::Model& model) {
-    if (model.Type_case() == Specification::Model::kMlProgram) {
-        auto main_iter = model.mlprogram().functions().find("main");
-        if (main_iter != model.mlprogram().functions().end()) {
-            const auto& main = main_iter->second;
-            if (main.opset() == "CoreML8") {
-                return true;
+static bool hasOpsets(const Specification::Model& model, const std::string& opset) {
+    return walkModelAndPipeline(
+        model,
+        [opset](const Specification::Model& m) {
+            if (m.Type_case() != Specification::Model::kMlProgram) {
+                return false;
             }
-        }
-    }
-    return false;
+
+            auto main_iter = m.mlprogram().functions().find("main");
+            if (main_iter != m.mlprogram().functions().end()) {
+                const auto& main = main_iter->second;
+                if (main.opset() == opset) {
+                    return true;
+                }
+            }
+            return false;
+        });
 }
 
-bool CoreML::hasCoreML7Opsets(const Specification::Model& model) {
-    if (model.Type_case() == Specification::Model::kMlProgram) {
-        auto main_iter = model.mlprogram().functions().find("main");
-        if (main_iter != model.mlprogram().functions().end()) {
-            const auto& main = main_iter->second;
-            if (main.opset() == "CoreML7") {
-                return true;
-            }
-        }
-    }
-    return false;
+static bool hasCoreML8Opsets(const Specification::Model& model) {
+    return hasOpsets(model, "CoreML8");
 }
 
-bool CoreML::hasCoreML6Opsets(const Specification::Model& model) {
-    if (model.Type_case() == Specification::Model::kMlProgram) {
-        auto main_iter = model.mlprogram().functions().find("main");
-        if (main_iter != model.mlprogram().functions().end()) {
-            const auto& main = main_iter->second;
-            if (main.opset() == "CoreML6") {
-                return true;
-            }
-        }
-    }
-    return false;
+static bool hasCoreML7Opsets(const Specification::Model& model) {
+    return hasOpsets(model, "CoreML7");
 }
 
-bool CoreML::hasGrayscaleFloat16Image(const Specification::Model& model) {
-    for (const auto& input: model.description().input()) {
-        if (input.type().Type_case() == Specification::FeatureType::kImageType) {
-            if (input.type().imagetype().colorspace() == Specification::ImageFeatureType_ColorSpace_GRAYSCALE_FLOAT16) {
-                return true;
-            }
-        }
-    }
+static bool hasCoreML6Opsets(const Specification::Model& model) {
+    return hasOpsets(model, "CoreML6");
+}
 
-    for (const auto& output: model.description().output()) {
-        if (output.type().Type_case() == Specification::FeatureType::kMultiArrayType) {
-            if (output.type().imagetype().colorspace() == Specification::ImageFeatureType_ColorSpace_GRAYSCALE_FLOAT16) {
-                return true;
-            }
-        }
-    }
-
-    return false;
+static bool hasGrayscaleFloat16Image(const Specification::Model& model) {
+    return anyFeatureDescriptionOfModel(
+        model,
+        [](const auto& fd) {
+            return
+                (fd.type().Type_case() == Specification::FeatureType::kImageType) &&
+                (fd.type().imagetype().colorspace() == Specification::ImageFeatureType_ColorSpace_GRAYSCALE_FLOAT16);
+        });
 }
 
 bool CoreML::hasIOS11_2Features(const Specification::Model& model) {
-    bool result = false;
-    switch (model.Type_case()) {
-        case Specification::Model::kPipeline:
-            for (auto &m : model.pipeline().models()) {
-                result = result || hasIOS11_2Features(m);
-                if (result) {
-                    return true;
-                }
-            }
-            break;
-        case Specification::Model::kPipelineRegressor:
-            for (auto &m : model.pipelineregressor().pipeline().models()) {
-                result = result || hasIOS11_2Features(m);
-                if (result) {
-                    return true;
-                }
-            }
-            break;
-        case Specification::Model::kPipelineClassifier:
-            for (auto &m : model.pipelineclassifier().pipeline().models()) {
-                result = result || hasIOS11_2Features(m);
-                if (result) {
-                    return true;
-                }
-            }
-            break;
-        default:
-            return (hasCustomLayer(model) || hasfp16Weights(model));
-    }
-    return false;
+    return walkModelAndPipeline(
+        model,
+        [](const Specification::Model& m) {
+            return
+                hasCustomLayer(m) ||
+                hasFP16Weights(m);
+        });
 }
 
 bool CoreML::hasIOS12Features(const Specification::Model& model) {
     // New IOS12 features: flexible shapes, custom model, sequence feature type,
     // text classifier, word tagger, vision feature print, unsigned integer quantization
-    bool result = false;
-    switch (model.Type_case()) {
-        case Specification::Model::kPipeline:
-            for (auto &m : model.pipeline().models()) {
-                result = result || hasIOS12Features(m);
-                if (result) {
-                    return true;
-                }
-            }
-            break;
-        case Specification::Model::kPipelineRegressor:
-            for (auto &m : model.pipelineregressor().pipeline().models()) {
-                result = result ||hasIOS12Features(m);
-                if (result) {
-                    return true;
-                }
-            }
-            break;
-        case Specification::Model::kPipelineClassifier:
-            for (auto &m : model.pipelineclassifier().pipeline().models()) {
-                result = result || hasIOS12Features(m);
-                if (result) {
-                    return true;
-                }
-            }
-            break;
-        default:
-            return (hasFlexibleShapes(model) || hasCustomModel(model) || hasCategoricalSequences(model) ||
-                    hasAppleTextClassifier(model) || hasAppleWordTagger(model) ||
-                    hasScenePrint(model) || hasUnsignedQuantizedWeights(model) ||
-                    hasNonmaxSuppression(model) || hasBayesianProbitRegressor(model) ||
-                    hasIOS12NewNeuralNetworkLayers(model));
-    }
-    return false;
+    return walkModelAndPipeline(
+        model,
+        [](const Specification::Model& m) {
+            return
+                hasFlexibleShapes(m) ||
+                isCustomModel(m) ||
+                hasCategoricalSequences(m) ||
+                isAppleTextClassifier(m) ||
+                isAppleWordTagger(m) ||
+                isScenePrint(m) ||
+                hasUnsignedQuantizedWeights(m) ||
+                isNonMaxSuppression(m) ||
+                isBayesianProbitRegressor(m) ||
+                hasIOS12NewNeuralNetworkLayers(m);
+        });
 }
 
 bool CoreML::hasIOS13Features(const Specification::Model& model) {
     // New IOS13 features:
     // - no constraint on rank for NN inputs
     // - model is marked as updatable
-    // - model parameters are specified
+    //
     // - model is of type kKNearestNeighborsClassifier
-    // - model is of sound analysis preprocessing
     // - model is of type LinkedModel
+    // - model is of type kItemSimilarityRecommender
+    // - model is of sound analysis preprocessing
+    //
     // - model is of type TextClassifier with revision == 2
-    // - model is of type Gazetteer
-    // - model is of type WordEmbedding
-    // - (... add others here ...)
+    // - model is of type Gazetteer with revision == 2
+    // - model is of type WordEmbedding with revision == 2
 
-    if (model.isupdatable()) {
-        return true;
-    }
+    return walkModelAndPipeline(
+        model,
+        [](const Specification::Model& m) {
+            if (m.isupdatable()) {
+                return true;
+            }
 
-    bool result = false;
-    switch (model.Type_case()) {
-        case Specification::Model::kPipeline:
-            for (auto &m : model.pipeline().models()) {
-                result = result || hasIOS13Features(m);
-                if (result) {
+            switch (m.Type_case()) {
+                case Specification::Model::kKNearestNeighborsClassifier:
+                case Specification::Model::kLinkedModel:
+                case Specification::Model::kItemSimilarityRecommender:
+                case Specification::Model::kSoundAnalysisPreprocessing:
                     return true;
-                }
-            }
-            break;
-        case Specification::Model::kPipelineRegressor:
-            for (auto &m : model.pipelineregressor().pipeline().models()) {
-                result = result ||hasIOS13Features(m);
-                if (result) {
-                    return true;
-                }
-            }
-            break;
-        case Specification::Model::kPipelineClassifier:
-            for (auto &m : model.pipelineclassifier().pipeline().models()) {
-                result = result || hasIOS13Features(m);
-                if (result) {
-                    return true;
-                }
-            }
-            break;
-        case Specification::Model::kKNearestNeighborsClassifier:
-        case Specification::Model::kLinkedModel:
-            return true;
-        case Specification::Model::kItemSimilarityRecommender:
-            return hasItemSimilarityRecommender(model);
-        case Specification::Model::kSoundAnalysisPreprocessing:
-            return hasSoundAnalysisPreprocessing(model);
-        case Specification::Model::kTextClassifier:
-            return model.textclassifier().revision() == 2;
-        case Specification::Model::kGazetteer:
-            return model.gazetteer().revision() == 2;
-        case Specification::Model::kWordEmbedding:
-            return model.wordembedding().revision() == 2;
-        default:
-            return hasIOS13NeuralNetworkFeatures(model);
-    }
-    return false;
-}
-
-bool CoreML::hasDefaultValueForOptionalInputs(const Specification::Model& model) {
-    // Checks if default optional value has been set or not
-    for (const auto& input: model.description().input()) {
-        if (input.type().isoptional()){
-            switch (input.type().multiarraytype().defaultOptionalValue_case()) {
-                case CoreML::Specification::ArrayFeatureType::kDoubleDefaultValue:
-                case CoreML::Specification::ArrayFeatureType::kFloatDefaultValue:
-                case CoreML::Specification::ArrayFeatureType::kIntDefaultValue:
+                case Specification::Model::kTextClassifier:
+                    if (m.textclassifier().revision() == 2) {
                         return true;
+                    }
+                    break;
+                case Specification::Model::kGazetteer:
+                    if (m.gazetteer().revision() == 2) {
+                        return true;
+                    }
+                    break;
+                case Specification::Model::kWordEmbedding:
+                    if (m.wordembedding().revision() == 2) {
+                        return true;
+                    }
+                    break;
                 default:
                     break;
             }
-        }
-    }
-    return false;
+            return hasIOS13NeuralNetworkFeatures(m);
+        });    
 }
 
-bool CoreML::hasFloat32InputsOrOutputsForNonmaxSuppression(const Specification::Model& model) {
-    if (!hasNonmaxSuppression(model)) {
+static bool hasDefaultValueForOptionalInputs(const Specification::Model& model) {
+    // Checks if default optional value has been set or not
+    return anyFeatureDescriptionOfModel(
+        model,
+        [](const auto& fd) {
+            if (fd.type().Type_case() == Specification::FeatureType::kMultiArrayType && fd.type().isoptional()){
+                switch (fd.type().multiarraytype().defaultOptionalValue_case()) {
+                    case CoreML::Specification::ArrayFeatureType::kDoubleDefaultValue:
+                    case CoreML::Specification::ArrayFeatureType::kFloatDefaultValue:
+                    case CoreML::Specification::ArrayFeatureType::kIntDefaultValue:
+                        return true;
+                    default:
+                        break;
+                }
+            }
+            return false;
+        });
+}
+
+static bool nonMaxSuppressionUsesFloat32InputsOrOutputs(const Specification::Model& model) {
+    if (!isNonMaxSuppression(model)) {
         // not NMS.
         return false;
     }
 
-    auto inputs = model.description().input();
-    for (const auto& input: inputs) {
-        if (input.type().Type_case() == Specification::FeatureType::kMultiArrayType) {
-            if (input.type().multiarraytype().datatype() == Specification::ArrayFeatureType_ArrayDataType_FLOAT32) {
-                return true;
-            }
-        }
-    }
-
-    auto outputs = model.description().output();
-    for (const auto& output: outputs) {
-        if (output.type().Type_case() == Specification::FeatureType::kMultiArrayType) {
-            if (output.type().multiarraytype().datatype() == Specification::ArrayFeatureType_ArrayDataType_FLOAT32) {
-                return true;
-            }
-        }
-    }
-
-    return false;
+    return anyFeatureDescriptionOfModel(
+        model,
+        [](const auto& fd) {
+            return
+                (fd.type().Type_case() == Specification::FeatureType::kMultiArrayType) &&
+                (fd.type().multiarraytype().datatype() == Specification::ArrayFeatureType_ArrayDataType_FLOAT32);
+        });
 }
 
 bool CoreML::hasIOS14Features(const Specification::Model& model) {
@@ -581,42 +571,26 @@ bool CoreML::hasIOS14Features(const Specification::Model& model) {
     // - Float32 input/output for Non-Maximum Suppression
     // - Apple Word Tagger using transfer learning (revision == 3)
 
-    bool result = false;
-
-    switch (model.Type_case()) {
-        case Specification::Model::kPipeline:
-            for (auto &m : model.pipeline().models()) {
-                result = result || hasIOS14Features(m);
-                if (result) {
+    return walkModelAndPipeline(
+        model,
+        [](const Specification::Model& m) {
+            switch (m.Type_case()) {
+                case Specification::Model::kSerializedModel:
+                    // SerializedModel proto message was added in ios14
                     return true;
-                }
+                case Specification::Model::kWordTagger:
+                    if (m.wordtagger().revision() == 3) {
+                        return true;
+                    }
+                    break;
+                default:
+                    break;
             }
-            break;
-        case Specification::Model::kPipelineRegressor:
-            for (auto &m : model.pipelineregressor().pipeline().models()) {
-                result = result || hasIOS14Features(m);
-                if (result) {
-                    return true;
-                }
-            }
-            break;
-        case Specification::Model::kPipelineClassifier:
-            for (auto &m : model.pipelineclassifier().pipeline().models()) {
-                result = result || hasIOS14Features(m);
-                if (result) {
-                    return true;
-                }
-            }
-            break;
-        case Specification::Model::kSerializedModel:
-            // SerializedModel proto message was added in ios14
-            return true;
-        case Specification::Model::kWordTagger:
-            return model.wordtagger().revision() == 3;
-        default:
-            return (hasIOS14NeuralNetworkFeatures(model) || hasObjectPrint(model) || hasFloat32InputsOrOutputsForNonmaxSuppression(model));
-    }
-    return false;
+            return
+                hasIOS14NeuralNetworkFeatures(m) ||
+                isObjectPrint(m) ||
+                nonMaxSuppressionUsesFloat32InputsOrOutputs(m);
+        });
 }
 
 bool CoreML::hasIOS15Features(const Specification::Model& model) {
@@ -624,39 +598,22 @@ bool CoreML::hasIOS15Features(const Specification::Model& model) {
     // - mlProgram proto message
     // - new sound print
     //
-    bool result = false;
-
-    switch (model.Type_case()) {
-        case Specification::Model::kPipeline:
-            for (auto &m : model.pipeline().models()) {
-                result = result || hasIOS15Features(m);
-                if (result) {
+    return walkModelAndPipeline(
+        model,
+        [](const Specification::Model& m) {
+            switch (m.Type_case()) {
+                case Specification::Model::kMlProgram:
                     return true;
-                }
+                case Specification::Model::kAudioFeaturePrint:
+                    if (m.audiofeatureprint().has_sound()) {
+                        return true;
+                    }
+                    break;
+                default:
+                    break;
             }
-            break;
-        case Specification::Model::kPipelineRegressor:
-            for (auto &m : model.pipelineregressor().pipeline().models()) {
-                result = result || hasIOS15Features(m);
-                if (result) {
-                    return true;
-                }
-            }
-            break;
-        case Specification::Model::kPipelineClassifier:
-            for (auto &m : model.pipelineclassifier().pipeline().models()) {
-                result = result || hasIOS15Features(m);
-                if (result) {
-                    return true;
-                }
-            }
-            break;
-        case Specification::Model::kMlProgram:
-            return true;
-        default:
-            return (hasSoundPrint(model));
-    }
-    return false;
+            return false;
+        });
 }
 
 bool CoreML::hasIOS16Features(const Specification::Model& model) {
@@ -664,13 +621,15 @@ bool CoreML::hasIOS16Features(const Specification::Model& model) {
     //  - FLOAT16 array data type
     //  - GRAYSCALE_FLOAT16 image color space.
     //  - CoreML6 Opsets for mlProgram models
-
-    bool result = false;
-    result = result || hasFloat16MultiArray(model);
-    result = result || hasGrayscaleFloat16Image(model);
-    result = result || hasCoreML6Opsets(model);
-
-    return result;
+    //
+    return walkModelAndPipeline(
+        model,
+        [](const Specification::Model& m) {
+            return
+                hasFloat16MultiArray(m) ||
+                hasGrayscaleFloat16Image(m) ||
+                hasCoreML6Opsets(m);
+        });
 }
 
 bool CoreML::hasIOS17Features(const Specification::Model& model) {
@@ -678,236 +637,166 @@ bool CoreML::hasIOS17Features(const Specification::Model& model) {
     // - Revision 2 of Apple Vision feature extractor for scenes
     // - BERT embedding for text classifier and word tagger (revision == 4)
 
-    bool result = false;
-
-    switch (model.Type_case()) {
-        case Specification::Model::kPipeline:
-            for (auto &m : model.pipeline().models()) {
-                result = result || hasIOS17Features(m);
-                if (result) {
+    return walkModelAndPipeline(
+        model,
+        [](const Specification::Model& m) {
+            switch (m.Type_case()) {
+                case Specification::Model::kVisionFeaturePrint:
+                    if (m.visionfeatureprint().has_scene() &&
+                        m.visionfeatureprint().scene().version() == 2) {
+                        return true;
+                    }
+                    break;
+                case Specification::Model::kClassConfidenceThresholding:
                     return true;
-                }
+                case Specification::Model::kWordTagger:
+                    if (m.wordtagger().revision() == 4) {
+                        return true;
+                    }
+                    break;
+                case Specification::Model::kTextClassifier:
+                    if (m.textclassifier().revision() == 4) {
+                        return true;
+                    }
+                    break;
+                case Specification::Model::kMlProgram:
+                    if (hasCoreML7Opsets(m)) {
+                        return true;
+                    }
+                    break;
+                default:
+                    break;
             }
-            break;
-        case Specification::Model::kPipelineRegressor:
-            for (auto &m : model.pipelineregressor().pipeline().models()) {
-                result = result || hasIOS17Features(m);
-                if (result) {
-                    return true;
-                }
-            }
-            break;
-        case Specification::Model::kPipelineClassifier:
-            for (auto &m : model.pipelineclassifier().pipeline().models()) {
-                result = result || hasIOS17Features(m);
-                if (result) {
-                    return true;
-                }
-            }
-            break;
-        case Specification::Model::kVisionFeaturePrint:
-            if (model.visionfeatureprint().has_scene() && model.visionfeatureprint().scene().version() == 2) {
-                return true;
-            }
-            break;
-        case Specification::Model::kClassConfidenceThresholding:
-            return true;
-        case Specification::Model::kWordTagger:
-            return model.wordtagger().revision() == 4;
-        case Specification::Model::kTextClassifier:
-            return model.textclassifier().revision() == 4;
-        default:
-            break;
-    }
-
-    result = result || hasCoreML7Opsets(model);
-
-    return result;
+            return false;
+        });
 }
 
 bool CoreML::hasIOS18Features(const Specification::Model& model) {
     // New in IOS18 features:
     // - Language expansion for multilingual BERT used in text classifier and word tagger (revision == 5)
 
-    bool result = false;
+    return walkModelAndPipeline(
+        model,
+        [](const Specification::Model& m) {
+            if (hasMultiFunctions(m) ||
+                hasEmptyInput(m)) {
+                return true;
+            }
 
-    switch (model.Type_case()) {
-        case Specification::Model::kPipeline:
-            for (auto &m : model.pipeline().models()) {
-                result = result || hasIOS18Features(m);
-                if (result) {
-                    return true;
-                }
+            switch (m.Type_case()) {
+                case Specification::Model::kWordTagger:
+                    if (m.wordtagger().revision() == 5) {
+                        return true;
+                    }
+                    break;
+                case Specification::Model::kTextClassifier:
+                    if (m.textclassifier().revision() == 5) {
+                        return true;
+                    }
+                    break;
+                case Specification::Model::kMlProgram:
+                    if (hasCoreML8Opsets(m)) {
+                        return true;
+                    }
+                    break;
+                default:
+                    break;
             }
-            break;
-        case Specification::Model::kPipelineRegressor:
-            for (auto &m : model.pipelineregressor().pipeline().models()) {
-                result = result || hasIOS18Features(m);
-                if (result) {
-                    return true;
-                }
-            }
-            break;
-        case Specification::Model::kPipelineClassifier:
-            for (auto &m : model.pipelineclassifier().pipeline().models()) {
-                result = result || hasIOS18Features(m);
-                if (result) {
-                    return true;
-                }
-            }
-            break;
-        case Specification::Model::kWordTagger:
-            return model.wordtagger().revision() == 5;
-        case Specification::Model::kTextClassifier:
-            return model.textclassifier().revision() == 5;
-        default:
-            break;
-    }
-
-    result = result || hasCoreML8Opsets(model);
-    result = result || hasMultiFunctions(model);
-    result = result || hasEmptyInput(model);
-    return result;
+            return false;
+        });
 }
 
-bool CoreML::hasCustomModel(const Specification::Model& model) {
+static bool isCustomModel(const Specification::Model& model) {
     return (model.Type_case() == Specification::Model::kCustomModel);
 }
 
-bool CoreML::hasAppleWordTagger(const Specification::Model& model) {
+static bool isAppleWordTagger(const Specification::Model& model) {
     return (model.Type_case() == Specification::Model::kWordTagger);
 }
 
-bool CoreML::hasAppleTextClassifier(const Specification::Model& model) {
+static bool isAppleTextClassifier(const Specification::Model& model) {
     return (model.Type_case() == Specification::Model::kTextClassifier);
 }
 
-bool CoreML::hasAppleGazetteer(const Specification::Model& model) {
+static bool isAppleGazetteer(const Specification::Model& model) {
     return (model.Type_case() == Specification::Model::kGazetteer);
 }
 
-bool CoreML::hasAppleWordEmbedding(const Specification::Model& model) {
+static bool isAppleWordEmbedding(const Specification::Model& model) {
     return (model.Type_case() == Specification::Model::kWordEmbedding);
 }
 
 bool CoreML::hasAppleImageFeatureExtractor(const Specification::Model& model) {
-    return (model.Type_case() == Specification::Model::kVisionFeaturePrint);
+    return walkModelAndPipeline(
+        model,
+        [](const auto& m) {
+            return m.Type_case() == Specification::Model::kVisionFeaturePrint;
+        });
 }
 
-bool CoreML::hasScenePrint(const Specification::Model& model) {
-    return (hasAppleImageFeatureExtractor(model) && model.visionfeatureprint().has_scene());
+static bool isScenePrint(const Specification::Model& model) {
+    return
+        model.Type_case() == Specification::Model::kVisionFeaturePrint &&
+        model.visionfeatureprint().has_scene();
 }
 
-bool CoreML::hasObjectPrint(const Specification::Model& model) {
-    return (hasAppleImageFeatureExtractor(model) && model.visionfeatureprint().has_objects());
+static bool isObjectPrint(const Specification::Model& model) {
+    return
+        model.Type_case() == Specification::Model::kVisionFeaturePrint &&
+        model.visionfeatureprint().has_objects();
 }
 
-bool CoreML::hasAppleAudioFeatureExtractor(const Specification::Model& model) {
+static bool isAppleAudioFeatureExtractor(const Specification::Model& model) {
     return (model.Type_case() == Specification::Model::kAudioFeaturePrint);
 }
 
-bool CoreML::hasSoundPrint(const Specification::Model& model) {
-    return (hasAppleAudioFeatureExtractor(model) && model.audiofeatureprint().has_sound());
+static bool isSoundPrint(const Specification::Model& model) {
+    return (isAppleAudioFeatureExtractor(model) && model.audiofeatureprint().has_sound());
 }
 
-bool CoreML::hasNonmaxSuppression(const Specification::Model& model) {
+static bool isNonMaxSuppression(const Specification::Model& model) {
     return (model.Type_case() == Specification::Model::kNonMaximumSuppression);
 }
 
-bool CoreML::hasBayesianProbitRegressor(const Specification::Model& model) {
+static bool isBayesianProbitRegressor(const Specification::Model& model) {
     return (model.Type_case() == Specification::Model::kBayesianProbitRegressor);
 }
 
-bool CoreML::hasItemSimilarityRecommender(const Specification::Model& model) {
-    return (model.Type_case() == Specification::Model::kItemSimilarityRecommender);
-}
-
-bool CoreML::hasSoundAnalysisPreprocessing(const Specification::Model& model) {
-    return (model.Type_case() == Specification::Model::kSoundAnalysisPreprocessing);
-}
-
-bool CoreML::hasCategoricalSequences(const Specification::Model& model) {
-
-    for (int i=0; i<model.description().input_size(); i++) {
-        auto &feature = model.description().input(i);
-        if (feature.type().Type_case() == Specification::FeatureType::kSequenceType) {
-            switch (feature.type().sequencetype().Type_case()) {
-                case Specification::SequenceFeatureType::kStringType:
-                case Specification::SequenceFeatureType::kInt64Type:
-                    return true;
-                default:
-                    break;
+static bool hasCategoricalSequences(const Specification::Model& model) {
+    return anyFeatureDescriptionOfModel(
+        model,
+        [](const auto& fd) {
+            if (fd.type().Type_case() == Specification::FeatureType::kSequenceType) {
+                switch (fd.type().sequencetype().Type_case()) {
+                    case Specification::SequenceFeatureType::kStringType:
+                    case Specification::SequenceFeatureType::kInt64Type:
+                        return true;
+                    default:
+                        break;
+                }
             }
-        }
-    }
-
-    for (int i=0; i<model.description().output_size(); i++) {
-        auto &feature = model.description().output(i);
-        if (feature.type().Type_case() == Specification::FeatureType::kSequenceType) {
-            switch (feature.type().sequencetype().Type_case()) {
-                case Specification::SequenceFeatureType::kStringType:
-                case Specification::SequenceFeatureType::kInt64Type:
-                    return true;
-                default:
-                    break;
-            }
-        }
-    }
-
-    return false;
+            return false;
+        });
 }
 
-bool CoreML::hasIOS12NewNeuralNetworkLayers(const Specification::Model& model) {
+static bool hasIOS12NewNeuralNetworkLayers(const Specification::Model& model) {
 
     // Return True if the model has the two new NN layers added in iOS 12, which are
     // resizeBilinear and CropResize
 
-    auto layers = getNNSpec(model);
-    if (layers) {
-        for (int i=0; i< layers->size(); i++){
-            const Specification::NeuralNetworkLayer& layer = (*layers)[i];
-            if (layer.layer_case() == Specification::NeuralNetworkLayer::kResizeBilinear) {
-                return true;
-            }
-            if (layer.layer_case() == Specification::NeuralNetworkLayer::kCropResize) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-bool CoreML::hasModelOrSubModelProperty(const Specification::Model& model, const std::function<bool(const Specification::Model&)> &boolFunc) {
-    bool result = false;
-    switch (model.Type_case()) {
-        case Specification::Model::kPipeline:
-            for (auto &m : model.pipeline().models()) {
-                result = result || boolFunc(m);
-                if (result) {
-                    return true;
+    return walkModelAndPipeline(
+        model,
+        [](const Specification::Model& m) {
+            if (const auto *layers = getNNSpec(m)) {
+                for (const auto& layer: *layers) {
+                    if (layer.layer_case() == Specification::NeuralNetworkLayer::kResizeBilinear ||
+                        layer.layer_case() == Specification::NeuralNetworkLayer::kCropResize) {
+                        return true;
+                    }
                 }
             }
-            break;
-        case Specification::Model::kPipelineRegressor:
-            for (auto &m : model.pipelineregressor().pipeline().models()) {
-                result = result || boolFunc(m);
-                if (result) {
-                    return true;
-                }
-            }
-            break;
-        case Specification::Model::kPipelineClassifier:
-            for (auto &m : model.pipelineclassifier().pipeline().models()) {
-                result = result || boolFunc(m);
-                if (result) {
-                    return true;
-                }
-            }
-            break;
-        default:
-            return boolFunc(model);
-    }
-    return false;
+            return false;
+        });
 }
 
 bool CoreML::isIOS12NeuralNetworkLayer(const Specification::NeuralNetworkLayer& layer) {
@@ -970,8 +859,7 @@ bool CoreML::isIOS12NeuralNetworkLayer(const Specification::NeuralNetworkLayer& 
     }
 }
 
-
-bool CoreML::hasIOS13NeuralNetworkFeatures(const Specification::Model& model) {
+static bool hasIOS13NeuralNetworkFeatures(const Specification::Model& model) {
 
     /* check if any of the messages in NeuralNetwork.proto, that were added in iOS version 13, are being used.
       If they are, return True, otherwise return False.
@@ -980,112 +868,135 @@ bool CoreML::hasIOS13NeuralNetworkFeatures(const Specification::Model& model) {
      1. any new layer type, which was not in iOS 12.
      2. if the value of enums "NeuralNetworkMultiArrayShapeMapping" or "NeuralNetworkImageShapeMapping" is non 0
      */
+    return walkModelAndPipeline(
+        model,
+        [](const Specification::Model& m) {
+            if (m.Type_case() == Specification::Model::TypeCase::kNeuralNetwork) {
+                if (m.neuralnetwork().arrayinputshapemapping() != Specification::NeuralNetworkMultiArrayShapeMapping::RANK5_ARRAY_MAPPING) {
+                    return true;
+                }
+                if (m.neuralnetwork().imageinputshapemapping() != Specification::NeuralNetworkImageShapeMapping::RANK5_IMAGE_MAPPING) {
+                    return true;
+                }
+            } else if (m.Type_case() == Specification::Model::TypeCase::kNeuralNetworkRegressor) {
+                if (m.neuralnetworkregressor().arrayinputshapemapping() != Specification::NeuralNetworkMultiArrayShapeMapping::RANK5_ARRAY_MAPPING) {
+                    return true;
+                }
+                if (m.neuralnetworkregressor().imageinputshapemapping() != Specification::NeuralNetworkImageShapeMapping::RANK5_IMAGE_MAPPING) {
+                    return true;
+                }
+            } else if (m.Type_case() == Specification::Model::TypeCase::kNeuralNetworkClassifier) {
+                if (m.neuralnetworkclassifier().arrayinputshapemapping() != Specification::NeuralNetworkMultiArrayShapeMapping::RANK5_ARRAY_MAPPING) {
+                    return true;
+                }
+                if (m.neuralnetworkclassifier().imageinputshapemapping() != Specification::NeuralNetworkImageShapeMapping::RANK5_IMAGE_MAPPING) {
+                    return true;
+                }
+            }
 
-    switch (model.Type_case()) {
-        case Specification::Model::TypeCase::kNeuralNetwork:
-            if (model.neuralnetwork().arrayinputshapemapping() != Specification::NeuralNetworkMultiArrayShapeMapping::RANK5_ARRAY_MAPPING) {
-                return true;
+            // check for new layers: by checking if its NOT one of the layers supported in iOS 12
+            if (const auto *layers = getNNSpec(m)) {
+                for (const auto& layer: *layers) {
+                    if (!isIOS12NeuralNetworkLayer(layer)) {
+                        return true;
+                    }
+                }
             }
-            if (model.neuralnetwork().imageinputshapemapping() != Specification::NeuralNetworkImageShapeMapping::RANK5_IMAGE_MAPPING) {
-                return true;
-            }
-        case Specification::Model::TypeCase::kNeuralNetworkRegressor:
-            if (model.neuralnetworkregressor().arrayinputshapemapping() != Specification::NeuralNetworkMultiArrayShapeMapping::RANK5_ARRAY_MAPPING) {
-                return true;
-            }
-            if (model.neuralnetworkregressor().imageinputshapemapping() != Specification::NeuralNetworkImageShapeMapping::RANK5_IMAGE_MAPPING) {
-                return true;
-            }
-        case Specification::Model::TypeCase::kNeuralNetworkClassifier:
-            if (model.neuralnetworkclassifier().arrayinputshapemapping() != Specification::NeuralNetworkMultiArrayShapeMapping::RANK5_ARRAY_MAPPING) {
-                return true;
-            }
-            if (model.neuralnetworkclassifier().imageinputshapemapping() != Specification::NeuralNetworkImageShapeMapping::RANK5_IMAGE_MAPPING) {
-                return true;
-            }
-        default:
-            break;
-    }
-
-    // check for new layers: by checking if its NOT one of the layers supported in iOS 12
-    auto layers = getNNSpec(model);
-    if (layers) {
-        for (int i=0; i< layers->size(); i++){
-            const Specification::NeuralNetworkLayer& layer = (*layers)[i];
-            if (!isIOS12NeuralNetworkLayer(layer)) {
-                return true;
-            }
-        }
-    }
-
-    return false;
+            return false;
+        });
 }
 
-bool CoreML::hasIOS14NeuralNetworkFeatures(const Specification::Model& model) {
+static bool hasIOS14NeuralNetworkFeatures(const Specification::Model& model) {
 
     // Return True if the model has the new Neural network features added in
     // ios 14
-
-    if (hasDefaultValueForOptionalInputs(model)) {
-        return true;
-    }
-
-
-    auto layers = getNNSpec(model);
-    if (layers) {
-        for (int i=0; i<layers->size(); i++){
-            const Specification::NeuralNetworkLayer& layer = (*layers)[i];
-            switch (layer.layer_case()) {
-                case Specification::NeuralNetworkLayer::kCumSum:
-                case Specification::NeuralNetworkLayer::kOneHot:
-                case Specification::NeuralNetworkLayer::kClampedReLU:
-                case Specification::NeuralNetworkLayer::kArgSort:
-                case Specification::NeuralNetworkLayer::kPooling3D:
-                case Specification::NeuralNetworkLayer::kGlobalPooling3D:
-                case Specification::NeuralNetworkLayer::kSliceBySize:
-                case Specification::NeuralNetworkLayer::kConvolution3D:
-                    return true;
-                case Specification::NeuralNetworkLayer::kSliceDynamic:
-                    if (layer.input().size() == 7) {
-                        return true;
-                    } else if (layer.slicedynamic().squeezemasks_size()) {
-                        return true;
-                    }
-                case Specification::NeuralNetworkLayer::kUpsample:
-                    if (layer.upsample().linearupsamplemode() != Specification::UpsampleLayerParams_LinearUpsampleMode_DEFAULT) {
-                        return true;
-                    }
-                    if (layer.upsample().fractionalscalingfactor_size() > 0) {
-                        return true;
-                    }
-                case Specification::NeuralNetworkLayer::kReorganizeData:
-                    if (layer.reorganizedata().mode() == Specification::ReorganizeDataLayerParams::PIXEL_SHUFFLE) {
-                      return true;
-                    }
-                case Specification::NeuralNetworkLayer::kInnerProduct:
-                    if (layer.innerproduct().int8dynamicquantize())
-                        return true;
-                case Specification::NeuralNetworkLayer::kBatchedMatmul:
-                    if (layer.batchedmatmul().int8dynamicquantize())
-                        return true;
-                case Specification::NeuralNetworkLayer::kConcatND:
-                    if (layer.concatnd().interleave()) {
-                        return true;
-                    }
-                default:
-                    continue;
+    return walkModelAndPipeline(
+        model,
+        [](const Specification::Model& m) {
+            if (hasDefaultValueForOptionalInputs(m)) {
+                return true;
             }
-        }
-    }
-    return false;
+
+            const auto *layers = getNNSpec(m);
+            if (!layers) {
+                return false;
+            }
+
+            for (const auto& layer: *layers) {
+                switch (layer.layer_case()) {
+                    case Specification::NeuralNetworkLayer::kCumSum:
+                    case Specification::NeuralNetworkLayer::kOneHot:
+                    case Specification::NeuralNetworkLayer::kClampedReLU:
+                    case Specification::NeuralNetworkLayer::kArgSort:
+                    case Specification::NeuralNetworkLayer::kPooling3D:
+                    case Specification::NeuralNetworkLayer::kGlobalPooling3D:
+                    case Specification::NeuralNetworkLayer::kSliceBySize:
+                    case Specification::NeuralNetworkLayer::kConvolution3D:
+                        return true;
+                    case Specification::NeuralNetworkLayer::kSliceDynamic:
+                        if (layer.input().size() == 7) {
+                            return true;
+                        } else if (layer.slicedynamic().squeezemasks_size()) {
+                            return true;
+                        }
+                    case Specification::NeuralNetworkLayer::kUpsample:
+                        if (layer.upsample().linearupsamplemode() != Specification::UpsampleLayerParams_LinearUpsampleMode_DEFAULT) {
+                            return true;
+                        }
+                        if (layer.upsample().fractionalscalingfactor_size() > 0) {
+                            return true;
+                        }
+                    case Specification::NeuralNetworkLayer::kReorganizeData:
+                        if (layer.reorganizedata().mode() == Specification::ReorganizeDataLayerParams::PIXEL_SHUFFLE) {
+                            return true;
+                        }
+                    case Specification::NeuralNetworkLayer::kInnerProduct:
+                        if (layer.innerproduct().int8dynamicquantize()) {
+                            return true;
+                        }
+                    case Specification::NeuralNetworkLayer::kBatchedMatmul:
+                        if (layer.batchedmatmul().int8dynamicquantize()) {
+                            return true;
+                        }
+                    case Specification::NeuralNetworkLayer::kConcatND:
+                        if (layer.concatnd().interleave()) {
+                            return true;
+                        }
+                    default:
+                        continue;
+                }
+            }
+            return false;
+        });
 }
 
-bool CoreML::hasMultiFunctions(const Specification::Model& model) {
-    const auto& description = model.description();
-    return description.functions_size() != 0 || !description.defaultfunctionname().empty();
+static bool hasMultiFunctions(const Specification::Model& model) {
+    return walkModelAndPipeline(
+        model,
+        [](const Specification::Model& m) {
+            const auto& description = m.description();
+            return description.functions_size() != 0 || !description.defaultfunctionname().empty();
+        });
 }
 
-bool CoreML::hasEmptyInput(const Specification::Model& model) {
-    const auto& description = model.description();
-    return  description.input_size() == 0;
+static bool hasEmptyInput(const Specification::Model& model) {
+    return walkModelAndPipeline(
+        model,
+        [](const Specification::Model& m) {
+            const auto& modelDescription = m.description();
+            if (modelDescription.functions_size() == 0) {
+                // A single function syntax
+                if (modelDescription.input_size() == 0) {
+                    return true;
+                }
+            } else {
+                // A multi function syntax
+                for (const auto& functionDescription: modelDescription.functions()) {
+                    if (functionDescription.input_size() == 0) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        });
 }

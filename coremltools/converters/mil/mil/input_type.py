@@ -7,6 +7,7 @@ from collections import OrderedDict
 
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.var import InternalVar
+from coremltools.converters.mil.mil.types.get_type_info import get_type_info
 
 
 class DefaultInputs:

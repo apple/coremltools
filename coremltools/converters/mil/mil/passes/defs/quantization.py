@@ -10,8 +10,8 @@ from typing import Dict, Set, Text, Tuple
 import numpy as np
 
 from coremltools import _logger as logger
+from coremltools.converters.mil import input_types
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget
-from coremltools.converters.mil.input_types import TensorType
 from coremltools.converters.mil.mil import Block
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, Operation, Var, types
@@ -190,7 +190,7 @@ class CastTypeQuantization(AbstractQuantizationPass):
               } -> (%output)
             }
 
-        and function.output_types is set to [TensorType(dtype=types.fp16)],
+        and function.output_types is set to [input_types.TensorType(dtype=types.fp16)],
         in which will be used in common::update_output_dtypes to upgrade the function output dtype accordingly.
 
         """
@@ -236,13 +236,15 @@ class CastTypeQuantization(AbstractQuantizationPass):
 
         # reset output signatures
         if func.output_types is None:
-            output_types = [TensorType(dtype=v.dtype) for v in func.outputs]
+            output_types = [input_types.TensorType(dtype=v.dtype) for v in func.outputs]
         else:
             output_types = func.output_types
 
         for idx, v in enumerate(output_types):
             if v.dtype == string_to_builtin(self.origin_dtype):
-                output_types[idx] = TensorType(dtype=string_to_builtin(self.target_dtype))
+                output_types[idx] = input_types.TensorType(
+                    dtype=string_to_builtin(self.target_dtype)
+                )
 
         func.output_types = output_types
 
@@ -268,7 +270,6 @@ class CastTypeQuantization(AbstractQuantizationPass):
         """
         return getattr(mb, op.op_type)(**casted_inputs)
 
-
     def transform_op(self, op) -> None:
         """Transform the input(s)/output(s) dtypes of the op."""
         block = op.enclosing_block
@@ -285,35 +286,42 @@ class CastTypeQuantization(AbstractQuantizationPass):
 
             casted_inputs[param] = list(inputs[:])
             for i, var in enumerate(inputs):
-                if not var.is_tensor_or_scalar_of(dtype=self.origin_dtype):
-                    continue
-
-                inputs_modified = True
-                casted_var_name = f"{var.name}_to_{self.target_dtype}"
-                if (
-                    len(var._child_ops) > 1
-                    and casted_var_name in self.current_cache_vars()
-                ):
-                    if self.current_cache_vars()[casted_var_name].op.x != var:
-                        logger.warning(
-                            "The cached cast Var doesn't match the original Var. It's due to duplicated Var "
-                            f"names in the graph for {casted_var_name}."
-                        )
-                    casted_inputs[param][i] = self.current_cache_vars()[casted_var_name]
+                if var.dtype == types.str and var.val == "int32":
+                    # input may be a string that specifies the dtype, so simply replace with "int16"
+                    inputs_modified = True
+                    if op.op_type in {"topk"}:
+                        # these ops can use uint16
+                        casted_inputs[param][i] = "uint16"
+                    else:
+                        casted_inputs[param][i] = "int16"
                 else:
-                    x = mb.cast(
-                        x=var,
-                        dtype=self.target_dtype,
-                        name=casted_var_name,
-                        before_op=op,
-                    )
-                    if self.target_dtype == "fp16":
-                        self._check_underflow_to_zero(x, var)
-                    Block._copy_metadata(var, x)
+                    # otherwise only int32 tensor / scalar should get cast to int16
+                    if not var.is_tensor_or_scalar_of(dtype=self.origin_dtype):
+                        continue
 
-                    casted_inputs[param][i] = x
-                    if len(var._child_ops) > 1:
-                        self.current_cache_vars()[casted_var_name] = casted_inputs[param][i]
+                    inputs_modified = True
+                    casted_var_name = f"{var.name}_to_{self.target_dtype}"
+                    if len(var._child_ops) > 1 and casted_var_name in self.current_cache_vars():
+                        if self.current_cache_vars()[casted_var_name].op.x != var:
+                            logger.warning(
+                                "The cached cast Var doesn't match the original Var. It's due to duplicated Var "
+                                f"names in the graph for {casted_var_name}."
+                            )
+                        casted_inputs[param][i] = self.current_cache_vars()[casted_var_name]
+                    else:
+                        x = mb.cast(
+                            x=var,
+                            dtype=self.target_dtype,
+                            name=casted_var_name,
+                            before_op=op,
+                        )
+                        if self.target_dtype == "fp16":
+                            self._check_underflow_to_zero(x, var)
+                        Block._copy_metadata(var, x)
+
+                        casted_inputs[param][i] = x
+                        if len(var._child_ops) > 1:
+                            self.current_cache_vars()[casted_var_name] = casted_inputs[param][i]
 
             if not is_list_input:
                 casted_inputs[param] = casted_inputs[param][0]
@@ -527,7 +535,7 @@ class add_int16_cast(CastTypeQuantization):
     # then int16 cast will be inserted only if the iOS version is high enough
     # (e.g. nothing will happen for iOS15 gather)
     # This is achieved by type domain confirmation in `CastTypeQuantization.should_cast_parameter`
-    _PREFER_INT16_OPS: Set[str] = {"gather", "gather_along_axis", "gather_nd", "squeeze"}
+    _PREFER_INT16_OPS: Set[str] = {"gather", "gather_along_axis", "gather_nd", "squeeze", "topk"}
 
     def __init__(self, op_selector=None):
         super().__init__(op_selector=op_selector)
@@ -560,7 +568,12 @@ class add_int16_cast(CastTypeQuantization):
         _UINT16_MIN = np.iinfo(np.uint16).min
 
         input_var = op.inputs[param_name]
-        if not input_var.is_tensor_or_scalar_of(dtype="int32"):
+        # input may be a string that specifies the dtype,
+        # so if it is "int32" then we would like to replace with "int16"
+        if input_var.dtype == types.str:
+            return input_var.val == "int32"
+        # otherwise only int32 tensor / scalar should get cast to int16
+        elif not input_var.is_tensor_or_scalar_of(dtype="int32"):
             return False
 
         input_op = input_var.op

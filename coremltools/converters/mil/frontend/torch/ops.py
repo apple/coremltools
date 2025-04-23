@@ -581,6 +581,32 @@ def dot(context, node):
 
 
 @register_torch_op
+def linalg_vecdot(context: TranscriptionContext, node: InternalTorchIRNode):
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, expected=(2, 3))
+        nargs = len(inputs)
+
+        x = inputs[0]
+        y = inputs[1]
+        dim = inputs[2] if nargs > 2 else -1
+
+        return x, y, dim
+
+    def _parse_keyword_args(context, node, dim) -> Var:
+        dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
+        return dim
+
+    x, y, dim = _parse_positional_args(context, node)
+    dim = _parse_keyword_args(context, node, dim)
+
+    if isinstance(dim, Var):
+        dim = dim.val
+
+    xy = mb.mul(x=x, y=y)
+    sum_xy = mb.reduce_sum(x=xy, axes=[dim])
+    context.add(sum_xy, node.name)
+
+@register_torch_op
 def mv(context, node):
     inputs = _get_inputs(context, node, expected=2)
     expand = mb.expand_dims(x=inputs[1], axes=[-1], name=node.name + "_expanded")
@@ -2681,13 +2707,36 @@ def batch_norm(context, node):
         )
         return bn
 
+    def preprocess_batch_norm_params():
+        """
+        Before iOS17, the params needed to have the same dtype as input, we can just
+        cast them to the same dtype as the input.
+        Since iOS17, the batch_norm op allows params to have different dtypes from
+        input, but the params themselves need to have the same dtype.
+        """
+        nonlocal running_mean, running_var, weight, bias, eps
+        batch_norm_params = [running_mean, running_var, weight, bias, eps]
+        if is_current_opset_version_compatible_with(target.iOS17):
+            running_mean, running_var, weight, bias, eps = promote_input_dtypes(batch_norm_params)
+        else:
+            new_params = []
+            for batch_norm_param in batch_norm_params:
+                if batch_norm_param.dtype != _input.dtype:
+                    batch_norm_param = mb.cast(
+                        x=batch_norm_param, dtype=types.builtin_to_string(_input.dtype)
+                    )
+                new_params.append(batch_norm_param)
+            running_mean, running_var, weight, bias, eps = new_params
+
     is_batch_norm_1d_rank_2 = input_rank == 2
 
     if training or running_mean.val is None or running_var.val is None or weight is None or bias is None:
         bn = _add_batch_norm_dynamic()
     elif is_batch_norm_1d_rank_2:
+        preprocess_batch_norm_params()
         bn = _add_batch_norm_1d()
     else:
+        preprocess_batch_norm_params()
         bn = _add_batch_norm()
 
     if node.kind == "_native_batch_norm_legit_no_training":

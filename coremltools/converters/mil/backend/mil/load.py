@@ -18,6 +18,7 @@ from coremltools import (
 )
 from coremltools import _logger as logger
 from coremltools import proto
+from coremltools.converters.mil import input_types as mil_input_types
 from coremltools.converters.mil import mil
 from coremltools.converters.mil.backend.backend_helper import _get_probability_var_for_classifier
 from coremltools.converters.mil.backend.mil import helper
@@ -33,13 +34,6 @@ from coremltools.converters.mil.backend.mil.helper import (
     types_to_proto_primitive,
 )
 from coremltools.converters.mil.backend.nn.load import _set_optional_inputs
-from coremltools.converters.mil.input_types import (
-    ClassifierConfig,
-    EnumeratedShapes,
-    ImageType,
-    RangeDim,
-    TensorType,
-)
 from coremltools.converters.mil.mil import Block
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, Operation, Program, Var, mil_list, types
@@ -604,7 +598,7 @@ class CoreMLProtoExporter:
         mil_proto: proto.MIL_pb2.Program,
         predicted_feature_name: str,
         predicted_probabilities_name: str,
-        classifier_config: ClassifierConfig,
+        classifier_config: "mil_input_types.ClassifierConfig",
         convert_to: str,
         convert_from: str,
     ):
@@ -649,7 +643,7 @@ class CoreMLProtoExporter:
         input_shape_map = {}
 
         for input_type in input_types:
-            if isinstance(input_type, ImageType):
+            if isinstance(input_type, mil_input_types.ImageType):
                 image_input_names[input_type.name] = input_type
                 # error checking for input(s) marked as images
                 if input_type.name not in list(func.inputs.keys()):
@@ -766,8 +760,8 @@ class CoreMLProtoExporter:
             default_bound_used = False
             input_type = input_shape_map.get(name, None)
 
-            if isinstance(input_type, ImageType):
-                if isinstance(input_type.shape, EnumeratedShapes):
+            if isinstance(input_type, mil_input_types.ImageType):
+                if isinstance(input_type.shape, mil_input_types.EnumeratedShapes):
                     enumerated_shapes = []
                     for s in input_type.shape.shapes:
                         enumerated_shapes.append(
@@ -781,14 +775,14 @@ class CoreMLProtoExporter:
                     H = input_type.shape.shape[-2]
                     W = input_type.shape.shape[-1]
 
-                    if isinstance(H, RangeDim):
+                    if isinstance(H, mil_input_types.RangeDim):
                         img_range.add_height_range((H.lower_bound, H.upper_bound))
                     elif is_symbolic(H):
                         img_range.add_height_range((default_lower_bound, default_upper_bound))
                         default_bound_used = True
                     else:
                         img_range.add_height_range((H, H))
-                    if isinstance(W, RangeDim):
+                    if isinstance(W, mil_input_types.RangeDim):
                         img_range.add_width_range((W.lower_bound, W.upper_bound))
                     elif is_symbolic(W):
                         img_range.add_width_range((default_lower_bound, default_upper_bound))
@@ -799,8 +793,8 @@ class CoreMLProtoExporter:
                     flexible_shape_utils._update_image_size_range_for_feature(
                         input_features[-1], img_range
                     )
-            elif isinstance(input_type, TensorType):
-                if isinstance(input_type.shape, EnumeratedShapes):
+            elif isinstance(input_type, mil_input_types.TensorType):
+                if isinstance(input_type.shape, mil_input_types.EnumeratedShapes):
                     flexible_shape_utils._add_multiarray_ndshape_enumeration_for_feature(
                         input_features[-1], [tuple(s.shape) for s in input_type.shape.shapes]
                     )
@@ -808,7 +802,7 @@ class CoreMLProtoExporter:
                     lb = []
                     ub = []
                     for s in input_type.shape.shape:
-                        if isinstance(s, RangeDim):
+                        if isinstance(s, mil_input_types.RangeDim):
                             lb.append(s.lower_bound)
                             ub.append(s.upper_bound)
                         elif is_symbolic(s):
@@ -842,7 +836,7 @@ class CoreMLProtoExporter:
                     "Some dimensions in the input shape are unknown, hence they are set to flexible ranges "
                     f"with lower bound and default value = {default_lower_bound}, and upper bound = "
                     f"{default_upper_bound}. To set different values for the default shape and upper bound, "
-                    "please use the ct.RangeDim() method as described here: "
+                    "please use the ct.mil_input_types.RangeDim() method as described here: "
                     "https://coremltools.readme.io/docs/flexible-inputs#set-the-range-for-each-dimension.",
                     UserWarning,
                 )
@@ -870,7 +864,9 @@ class CoreMLProtoExporter:
         for i, var in enumerate(func.outputs):
             output_feature_type = proto.FeatureTypes_pb2.FeatureType()
             if types.is_tensor(var.sym_type) or types.is_primitive(var.sym_type):
-                if output_types is not None and isinstance(output_types[i], ImageType):
+                if output_types is not None and isinstance(
+                    output_types[i], mil_input_types.ImageType
+                ):
                     if not types.is_tensor(var.sym_type):
                         raise ValueError(
                             "Image output, '{}', is a scalar, but it should be a tensor of rank 4".format(
@@ -883,7 +879,7 @@ class CoreMLProtoExporter:
                     shape = var.sym_type.get_shape()
                     if any_variadic(shape):
                         raise ValueError(
-                            "Variable rank model outputs, that are ImageTypes, are not supported"
+                            "Variable rank model outputs, that are mil_input_types.ImageTypes, are not supported"
                         )
                     if any_symbolic(shape):
                         # For flexible shape output, we set the imageSizeRange to [1, -1],
@@ -1054,7 +1050,7 @@ def load(
     if prog.default_function_name not in prog.functions:
         raise ValueError(f"Default function {prog.default_function_name} not found in program")
 
-    # if user has specified "ClassifierConfig", then add the "classify" op to the prog
+    # if user has specified "mil_input_types.ClassifierConfig", then add the "classify" op to the prog
     classifier_config = kwargs.get("classifier_config", None)
     predicted_feature_name, predicted_probabilities_name = None, None
     if classifier_config is not None:

@@ -390,6 +390,29 @@ def test_palettization_int8_lut(
 # endregion
 
 
+@pytest.mark.slow
+@pytest.mark.skipif(not torch.backends.mps.is_available(), reason="No MPS device found")
+def test_compression_for_dkm_on_non_cpu_device_with_pcs(mnist_model, mnist_example_input):
+    device = "mps"
+
+    config = {
+        "module_type_configs": {
+            "Linear": {
+                "n_bits": 2,
+                "granularity": "per_grouped_channel",
+                "group_size": 1,
+                "enable_per_channel_scale": True,
+            }
+        }
+    }
+    palettizer_config = DKMPalettizerConfig.from_dict(config)
+    palettizer = DKMPalettizer(mnist_model.to(device), palettizer_config)
+
+    prepared_model = palettizer.prepare(inplace=True)
+    palettizer.step()
+    prepared_model(mnist_example_input.to(device))
+    _ = palettizer.finalize()
+
 # region HelperMethods
 
 
@@ -417,7 +440,6 @@ def get_compressed_model_for_dkm(mnist_model, mnist_example_input, config):
     prepared_model(mnist_example_input)
     model = palettizer.finalize()
     return model
-
 
 # Get a compressed MNIST model with SKMPalettizer and calibration data.
 def get_compressed_model_for_skm(mnist_model, mnist_example_input, mnist_example_output, config):

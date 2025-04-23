@@ -38,6 +38,10 @@ from coremltools.optimize.torch._utils.k_means import (
 )
 from coremltools.optimize.torch._utils.k_means import ParallelKMeans as _ParallelKMeans
 from coremltools.optimize.torch._utils.k_means import SequentialKMeans as _SequentialKMeans
+from coremltools.optimize.torch._utils.optimizer_utils import (
+    _ConfigToOptimizerRegistry,
+    _ModuleToOptConfigRegistry,
+)
 from coremltools.optimize.torch._utils.report_utils import (
     compute_post_training_report as _compute_post_training_report,
 )
@@ -156,7 +160,7 @@ _ModuleTypeConfigType = _NewType(
     _Dict[_Union[_Callable, str], _Optional[ModuleSKMPalettizerConfig]],
 )
 
-
+@_ModuleToOptConfigRegistry.register_module_cfg(ModuleSKMPalettizerConfig)
 @_define
 class SKMPalettizerConfig(_OptimizationConfig):
     """
@@ -225,6 +229,7 @@ class SKMPalettizerConfig(_OptimizationConfig):
         return converter.structure_attrs_fromdict(config_dict, cls)
 
 
+@_ConfigToOptimizerRegistry.register_config(SKMPalettizerConfig)
 class SKMPalettizer(_BaseDataCalibratedModelOptimizer):
     """
     Perform post-training palettization of weights by running a weighted k-means
@@ -473,8 +478,8 @@ class SKMPalettizer(_BaseDataCalibratedModelOptimizer):
                 how different submodules of ``model`` are wrapped with individual
                 :py:class:`FullyShardedDataParallel` wrappers. This argument is only used when
                 ``num_sensitivity_workers > 1`` and it is only necessary when the model cannot be fit on a single GPU.
-                 Please refer to documentation of :py:class:`_FSDPAutoWrapPolicy` for more details.
-                 Defaults to ``None`.
+                Please refer to documentation of :py:class:`_FSDPAutoWrapPolicy` for more details.
+                Defaults to ``None``.
         """
         if num_sensitivity_workers > 1 and not _torch.cuda.is_available():
             _logger.warning(
@@ -627,8 +632,8 @@ class SKMPalettizer(_BaseDataCalibratedModelOptimizer):
                 how different submodules of ``model`` are wrapped with individual
                 :py:class:`FullyShardedDataParallel` wrappers. This argument is only used when
                 ``num_sensitivity_workers > 1`` and it is only necessary when the model cannot be fit on a single GPU.
-                 Please refer to documentation of :py:class:`_FSDPAutoWrapPolicy` for more details.
-                 Defaults to ``None`.
+                Please refer to documentation of :py:class:`_FSDPAutoWrapPolicy` for more details.
+                Defaults to ``None``.
         """
         self._model = super().compress(dataloader=dataloader, inplace=inplace)
         if sensitivity_path is None:

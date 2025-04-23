@@ -3,6 +3,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import random
 import sys
 
 import numpy as np
@@ -10,6 +11,9 @@ import torch
 
 import coremltools as ct
 
+torch.manual_seed(42)
+random.seed(42)
+np.random.seed(42)
 
 def convert_and_verify(
     pytorch_model,

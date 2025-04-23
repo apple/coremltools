@@ -114,6 +114,8 @@ class TestApiVisibilities:
             "weights_dir",
             "make_state",
             "get_available_compute_devices",
+            "last_predict_duration_in_nano_seconds",
+            "load_duration_in_nano_seconds",
         ]
         _check_visible_modules(_get_visible_items(ct.models.MLModel), expected)
 
@@ -306,6 +308,7 @@ class TestApiVisibilities:
             "get_compute_device_usage_for_neuralnetwork_layer",
             "get_estimated_cost_for_mlprogram_operation",
             "load_from_path",
+            "load_from_path_on_device",
         ]
         _check_visible_modules(_get_visible_items(ct.models.compute_plan.MLComputePlan), expected)
 

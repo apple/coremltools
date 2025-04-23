@@ -9,6 +9,7 @@ import platform
 import re
 import shutil
 import tempfile
+from contextlib import nullcontext
 from typing import Tuple
 
 import numpy as np
@@ -23,7 +24,7 @@ from coremltools.converters.mil.frontend.torch.test.test_torch_conversion_api im
 )
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.mil.ops.tests.iOS18 import backends
+from coremltools.converters.mil.mil.ops.tests.iOS16 import backends
 from coremltools.converters.mil.testing_reqs import compute_units
 from coremltools.converters.mil.testing_utils import compute_snr_and_psnr, get_op_types_in_program
 from coremltools.models.utils import MultiFunctionDescriptor, _macos_version, save_multifunction
@@ -229,8 +230,12 @@ def verify_model_outputs(model, compressed_model, input_values, rtol=1e-7, atol=
 
 
 class TestLinearQuantizeWeights:
-    @staticmethod
-    def test_linear_quantization_with_classifier():
+    _ERR_MSG = (
+        "The {} quantization is supported since iOS18. Please re-convert your "
+        "model with minimum_deployment_target set to at least ct.target.iOS18."
+    )
+
+    def test_linear_quantization_with_classifier(self):
         traced_model, example_input = TestPyTorchConverterExamples._get_classifier_model()
         for class_type in ("str", "int"):
             mlmodel = TestPyTorchConverterExamples._convert_classifier_model(
@@ -258,8 +263,7 @@ class TestLinearQuantizeWeights:
             ]
             assert get_op_types_in_program(mlmodel._mil_program) == expected_ops
 
-    @staticmethod
-    def test_linear_quantization():
+    def test_linear_quantization(self):
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data_complex()
         torchmodel = torch.jit.trace(model, torch_input_values)
         mlmodel = ct.convert(torchmodel, inputs=inputs, convert_to="mlprogram", compute_precision=ct.precision.FLOAT32)
@@ -294,7 +298,6 @@ class TestLinearQuantizeWeights:
         for dtype, op in zip(expected_dtype, affine_ops):
             assert op.quantized_data.val.dtype == dtype
 
-    @staticmethod
     @pytest.mark.parametrize(
         "mode, dtype",
         itertools.product(
@@ -302,7 +305,7 @@ class TestLinearQuantizeWeights:
             (np.int8, np.uint8, types.int8, types.uint8),
         ),
     )
-    def test_linear_quantization_stress(mode, dtype):
+    def test_linear_quantization_stress(self, mode, dtype):
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data()
         torchmodel = torch.jit.trace(model, torch_input_values)
         mlmodel = ct.convert(torchmodel, inputs=inputs, convert_to="mlprogram")
@@ -360,6 +363,11 @@ class TestLinearQuantizeWeights:
             conv_not_to_compress_name += "_cast_fp16"
         config.set_op_name(conv_not_to_compress_name, None)
 
+        if backend.opset_version < ct.target.iOS18:
+            with pytest.raises(ValueError, match=self._ERR_MSG.format("per_block")):
+                cto.coreml.linear_quantize_weights(mlmodel, config)
+            return
+
         mlmodel_quantized = cto.coreml.linear_quantize_weights(mlmodel, config)
         expected_ops = [
             "constexpr_blockwise_shift_scale",
@@ -387,7 +395,6 @@ class TestLinearQuantizeWeights:
                 mlmodel, mlmodel_quantized, coreml_input_values, rtol=1e-2, atol=4e-2
             )
 
-    @staticmethod
     @pytest.mark.parametrize(
         "compute_unit, backend, mode, nbits, signed, block_size",
         itertools.product(
@@ -399,7 +406,9 @@ class TestLinearQuantizeWeights:
             (0, 1, 2, 4),
         ),
     )
-    def test_blockwise_quantization_stress(compute_unit, backend, mode, nbits, signed, block_size):
+    def test_blockwise_quantization_stress(
+        self, compute_unit, backend, mode, nbits, signed, block_size
+    ):
         if platform.machine() == "x86_64":
             pytest.xfail("rdar://137153993 ([CI] Quantization Tests Failing only on *native* x86_64 (not with Rosetta))")
 
@@ -421,6 +430,12 @@ class TestLinearQuantizeWeights:
             mode=mode, dtype=dtype_str, granularity="per_block", block_size=block_size
         )
         config = cto.coreml.OptimizationConfig(global_config=op_config)
+
+        if backend.opset_version < ct.target.iOS18:
+            with pytest.raises(ValueError, match=self._ERR_MSG.format("per_block")):
+                cto.coreml.linear_quantize_weights(mlmodel, config)
+            return
+
         mlmodel_quantized = cto.coreml.linear_quantize_weights(mlmodel, config)
 
         # Verify ops.
@@ -461,7 +476,6 @@ class TestLinearQuantizeWeights:
 
                 np.testing.assert_allclose(v, original_output[k], atol=atol, rtol=rtol)
 
-    @staticmethod
     @pytest.mark.parametrize(
         "compute_unit, backend, mode, nbits",
         itertools.product(
@@ -471,7 +485,7 @@ class TestLinearQuantizeWeights:
             (4, 8),
         ),
     )
-    def test_per_tensor_quantization_with_blockwise_op(compute_unit, backend, mode, nbits):
+    def test_per_tensor_quantization_with_blockwise_op(self, compute_unit, backend, mode, nbits):
         if platform.machine() == "x86_64":
             pytest.xfail("rdar://137153993 ([CI] Quantization Tests Failing only on *native* x86_64 (not with Rosetta))")
 
@@ -495,29 +509,39 @@ class TestLinearQuantizeWeights:
             compute_units=compute_unit,
         )
 
+        if backend.opset_version < ct.target.iOS18 and nbits == 4:
+            with pytest.raises(ValueError, match=self._ERR_MSG.format("4-bit")):
+                cto.coreml.linear_quantize_weights(mlmodel, config)
+            return
+
         mlmodel_quantized = cto.coreml.linear_quantize_weights(mlmodel, config)
 
         # Verify ops.
+        quant_op_name = (
+            "constexpr_blockwise_shift_scale"
+            if backend.opset_version >= ct.target.iOS18
+            else "constexpr_affine_dequantize"
+        )
         if backend.precision == "fp16":
             # For fp16 precision there is no extra cast op inserted.
-            expected_ops = ["constexpr_blockwise_shift_scale", "conv"]
+            expected_ops = [quant_op_name, "conv"]
         else:
-            expected_ops = ["constexpr_blockwise_shift_scale", "cast", "conv", "cast"]
+            expected_ops = [quant_op_name, "cast", "conv", "cast"]
         assert get_op_types_in_program(mlmodel_quantized._mil_program) == expected_ops
         quantize_op = mlmodel_quantized._mil_program.functions["main"].find_ops(
-            op_type="constexpr_blockwise_shift_scale"
+            op_type=quant_op_name
         )[0]
-        assert types.builtin_to_string(quantize_op.data.dtype) == f"int{nbits}"
-        if mode == "linear":
-            assert types.builtin_to_string(quantize_op.offset.dtype) == f"int{nbits}"
-        # For int4, we still use np.int8 to store the data.
-        assert quantize_op.data.val.dtype == np.int8
-        assert model.weight.detach().numpy().size == quantize_op.data.val.size
+        if backend.opset_version >= ct.target.iOS18:
+            assert types.builtin_to_string(quantize_op.data.dtype) == f"int{nbits}"
+            if mode == "linear":
+                assert types.builtin_to_string(quantize_op.offset.dtype) == f"int{nbits}"
+            # For int4, we still use np.int8 to store the data.
+            assert quantize_op.data.val.dtype == np.int8
+            assert model.weight.detach().numpy().size == quantize_op.data.val.size
 
         if _macos_version() >= (15, 0):
             verify_model_outputs(mlmodel, mlmodel_quantized, coreml_input_values)
 
-    @staticmethod
     @pytest.mark.parametrize(
         "compute_unit, backend, mode, nbits, granularity",
         itertools.product(
@@ -528,7 +552,9 @@ class TestLinearQuantizeWeights:
             ("per_tensor", "per_channel", "per_block"),
         ),
     )
-    def test_quantization_conv_transpose_axis(compute_unit, backend, mode, nbits, granularity):
+    def test_quantization_conv_transpose_axis(
+        self, compute_unit, backend, mode, nbits, granularity
+    ):
         """The conv_transpose has [Cin, Cout, ...], which is different from conv."""
         (
             model,
@@ -553,20 +579,36 @@ class TestLinearQuantizeWeights:
             mode=mode, dtype=dtype_str, granularity=granularity
         )
         config = cto.coreml.OptimizationConfig(global_config=op_config)
+
+        if backend.opset_version < ct.target.iOS18:
+            if granularity == "per_block":
+                with pytest.raises(ValueError, match=self._ERR_MSG.format("per_block")):
+                    cto.coreml.linear_quantize_weights(mlmodel, config)
+                return
+            if nbits == 4:
+                with pytest.raises(ValueError, match=self._ERR_MSG.format("4-bit")):
+                    cto.coreml.linear_quantize_weights(mlmodel, config)
+                return
+
         mlmodel_quantized = cto.coreml.linear_quantize_weights(mlmodel, config)
 
         # Verify ops.
+        quant_op_name = (
+            "constexpr_blockwise_shift_scale"
+            if backend.opset_version >= ct.target.iOS18
+            else "constexpr_affine_dequantize"
+        )
         if backend.precision == "fp16":
             # For fp16 precision there is no extra cast op inserted.
             expected_ops = [
-                "constexpr_blockwise_shift_scale",
+                quant_op_name,
                 "conv_transpose",
                 "conv_transpose",
                 "add",
             ]
         else:
             expected_ops = [
-                "constexpr_blockwise_shift_scale",
+                quant_op_name,
                 "cast",
                 "conv_transpose",
                 "conv_transpose",
@@ -577,28 +619,28 @@ class TestLinearQuantizeWeights:
 
         # Verify quantization ops are on the expected axis.
         quantize_op = mlmodel_quantized._mil_program.functions["main"].find_ops(
-            op_type="constexpr_blockwise_shift_scale"
+            op_type=quant_op_name
         )[0]
-        assert types.builtin_to_string(quantize_op.data.dtype) == dtype_str
-        if granularity == "per_tensor":
-            expected_scale_shape = (1, 1, 1, 1)
-        elif granularity == "per_channel":
-            # The weight has shape [64, 32, 2, 2], and the second axis is output channel.
-            expected_scale_shape = (1, 32, 1, 1)
-        else:
-            # The per_block has default block_size 32.
-            expected_scale_shape = (64 // 32, 32, 1, 1)
-        assert quantize_op.scale.shape == expected_scale_shape
+        if backend.opset_version >= ct.target.iOS18:
+            assert types.builtin_to_string(quantize_op.data.dtype) == dtype_str
+            if granularity == "per_tensor":
+                expected_scale_shape = (1, 1, 1, 1)
+            elif granularity == "per_channel":
+                # The weight has shape [64, 32, 2, 2], and the second axis is output channel.
+                expected_scale_shape = (1, 32, 1, 1)
+            else:
+                # The per_block has default block_size 32.
+                expected_scale_shape = (64 // 32, 32, 1, 1)
+            assert quantize_op.scale.shape == expected_scale_shape
 
         if _macos_version() >= (15, 0):
             verify_model_outputs(mlmodel, mlmodel_quantized, coreml_input_values, atol=2e-2)
 
-    @staticmethod
     @pytest.mark.parametrize(
         "backend, skip_model_load",
         itertools.product(backends, (True, False)),
     )
-    def test_skip_model_load_in_compression_pass(backend, skip_model_load):
+    def test_skip_model_load_in_compression_pass(self, backend, skip_model_load):
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data_complex()
         torchmodel = torch.jit.trace(model, torch_input_values)
         mlmodel = ct.convert(
@@ -619,6 +661,12 @@ class TestLinearQuantizeWeights:
                 weight_threshold=500,
             )
         )
+
+        if backend.opset_version < ct.target.iOS18:
+            with pytest.raises(ValueError, match=self._ERR_MSG.format("per_block")):
+                cto.coreml.linear_quantize_weights(mlmodel, config)
+            return
+
         mlmodel_quantized = cto.coreml.linear_quantize_weights(mlmodel, config)
 
         if skip_model_load:
@@ -629,12 +677,11 @@ class TestLinearQuantizeWeights:
         else:
             mlmodel_quantized.predict(coreml_input_values)
 
-    @staticmethod
     @pytest.mark.parametrize(
         "compute_unit, backend",
         itertools.product(compute_units, backends),
     )
-    def test_skip_inf(compute_unit, backend):
+    def test_skip_inf(self, compute_unit, backend):
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data_complex()
 
         # Make conv_1's weight with inf and linear_2's weight with -inf.
@@ -680,12 +727,14 @@ class TestLinearQuantizeWeights:
         if _macos_version() >= (13, 0):
             verify_model_outputs(mlmodel, mlmodel_quantized, coreml_input_values)
 
-    @staticmethod
     @pytest.mark.parametrize(
         "compute_unit, backend, use_int01_as_bool",
         itertools.product(compute_units, backends, (True, False)),
     )
-    def test_skip_bool(compute_unit, backend, use_int01_as_bool):
+    def test_skip_bool(self, compute_unit, backend, use_int01_as_bool):
+        if backend.opset_version < ct.target.iOS18:
+            pytest.skip("The scaled_dot_product_attention op needs iOS 18+.")
+
         batch_dim, seq_len = 128, 512
         embedding_dim, projected_embedding_dim = 32, 64
 
@@ -780,8 +829,7 @@ class TestLinearQuantizeWeights:
             torchmodel,
             inputs=coreml_input_types,
             convert_to="mlprogram",
-            # must deploy to iOS 18+ for scaled_dot_product_attention op
-            minimum_deployment_target=max(backend.opset_version, ct.target.iOS18),
+            minimum_deployment_target=backend.opset_version,
             compute_precision=ct.precision.FLOAT16
             if backend.precision == "fp16"
             else ct.precision.FLOAT32,
@@ -832,8 +880,12 @@ class TestLinearQuantizeWeights:
 
 
 class TestPalettizeWeights:
-    @staticmethod
-    def test_palettization_with_classifier():
+    _ERR_MSG = (
+        "The {} palettization is supported since iOS18. Please re-convert "
+        "your model with minimum_deployment_target set to at least ct.target.iOS18."
+    )
+
+    def test_palettization_with_classifier(self):
         traced_model, example_input = TestPyTorchConverterExamples._get_classifier_model()
         for class_type in ("str", "int"):
             mlmodel = TestPyTorchConverterExamples._convert_classifier_model(
@@ -861,8 +913,7 @@ class TestPalettizeWeights:
             ]
             assert get_op_types_in_program(mlmodel._mil_program) == expected_ops
 
-    @staticmethod
-    def test_palettization():
+    def test_palettization(self):
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data_complex()
         torchmodel = torch.jit.trace(model, torch_input_values)
         mlmodel = ct.convert(torchmodel, inputs=inputs, convert_to="mlprogram", compute_precision=ct.precision.FLOAT32)
@@ -903,12 +954,11 @@ class TestPalettizeWeights:
         for nbits, op in zip(expected_nbits, lut_ops):
             assert op.lut.val.shape == (2**nbits,)
 
-    @staticmethod
     @pytest.mark.parametrize(
         "mode",
         ("uniform", "kmeans") if _HAS_SKLEARN else ("uniform",)
     )
-    def test_weight_palettization_stress(mode):
+    def test_weight_palettization_stress(self, mode):
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data()
         torchmodel = torch.jit.trace(model, torch_input_values)
         mlmodel = ct.convert(torchmodel, inputs=inputs, convert_to="mlprogram")
@@ -926,8 +976,7 @@ class TestPalettizeWeights:
         # validate the model
         verify_model_outputs(mlmodel, mlmodel_palettized, coreml_input_values)
 
-    @staticmethod
-    def test_weight_palettization_unique_case_1():
+    def test_weight_palettization_unique_case_1(self):
         # In this model, both conv weights can be palettized
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data(multi_layer=True)
 
@@ -984,8 +1033,7 @@ class TestPalettizeWeights:
         # validate the model
         verify_model_outputs(mlmodel, mlmodel_palettized, coreml_input_values)
 
-    @staticmethod
-    def test_weight_palettization_custom():
+    def test_weight_palettization_custom(self):
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data()
         torchmodel = torch.jit.trace(model, torch_input_values)
         mlmodel = ct.convert(torchmodel, inputs=inputs, convert_to="mlprogram")
@@ -1016,8 +1064,7 @@ class TestPalettizeWeights:
         # validate the model
         verify_model_outputs(mlmodel, mlmodel_palettized, coreml_input_values)
 
-    @staticmethod
-    def test_convert_palettized_source_model_default():
+    def test_convert_palettized_source_model_default(self):
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data_complex()
 
         weight_1_unique = create_unique_weight(model.conv_1.weight, nbits=2)
@@ -1061,8 +1108,7 @@ class TestPalettizeWeights:
         for nbits, op in zip(expected_nbits, lut_ops):
             assert op.lut.val.shape == (2**nbits,)
 
-    @staticmethod
-    def test_convert_palettized_source_model_custom():
+    def test_convert_palettized_source_model_custom(self):
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data_complex()
 
         weight_1_unique = create_unique_weight(model.conv_1.weight, nbits=2)
@@ -1165,6 +1211,11 @@ class TestPalettizeWeights:
             conv_not_to_compress_name += "_cast_fp16"
         config.set_op_name(conv_not_to_compress_name, None)
 
+        if backend.opset_version < ct.target.iOS18:
+            with pytest.raises(ValueError, match=self._ERR_MSG.format("per_grouped_channel")):
+                cto.coreml.palettize_weights(mlmodel, config)
+            return
+
         mlmodel_palettized = cto.coreml.palettize_weights(mlmodel, config)
         expected_ops = [
             "constexpr_lut_to_dense",
@@ -1225,6 +1276,12 @@ class TestPalettizeWeights:
         )
         config.set_global(global_config)
         config.set_op_type("conv", conv_config)
+
+        if backend.opset_version < ct.target.iOS18:
+            with pytest.raises(ValueError, match=self._ERR_MSG.format("per_grouped_channel")):
+                cto.coreml.palettize_weights(mlmodel, config)
+            return
+
         mlmodel_palettized = cto.coreml.palettize_weights(mlmodel, config)
         assert any(
             [
@@ -1242,7 +1299,6 @@ class TestPalettizeWeights:
         if _macos_version() >= (15, 0):
             verify_model_outputs(mlmodel, mlmodel_palettized, coreml_input_values)
 
-    @staticmethod
     @pytest.mark.parametrize(
         "compute_unit, backend, mode, nbits, channel_axis, channel_group_size",
         itertools.product(
@@ -1255,7 +1311,7 @@ class TestPalettizeWeights:
         ),
     )
     def test_channelwise_palettization_stress(
-        compute_unit, backend, mode, nbits, channel_axis, channel_group_size
+        self, compute_unit, backend, mode, nbits, channel_axis, channel_group_size
     ):
         if platform.machine() == "x86_64":
             pytest.xfail("rdar://137153993 ([CI] Quantization Tests Failing only on *native* x86_64 (not with Rosetta))")
@@ -1281,6 +1337,12 @@ class TestPalettizeWeights:
             channel_axis=channel_axis,
         )
         config = cto.coreml.OptimizationConfig(global_config=op_config)
+
+        if backend.opset_version < ct.target.iOS18:
+            with pytest.raises(ValueError, match=self._ERR_MSG.format("per_grouped_channel")):
+                cto.coreml.palettize_weights(mlmodel, config)
+            return
+
         mlmodel_palettized = cto.coreml.palettize_weights(mlmodel, config)
 
         # Verify ops.
@@ -1357,6 +1419,11 @@ class TestPalettizeWeights:
         if _macos_version() < (15, 0):
             pytest.skip("Channelwise palettization prediction only support in iOS18+")
 
+        if backend.opset_version < ct.target.iOS18:
+            with pytest.raises(ValueError, match=self._ERR_MSG.format("per_grouped_channel")):
+                cto.coreml.palettize_weights(mlmodel, grouped_channelwise_config)
+            return
+
         mlmodel_per_tensor_palettized = cto.coreml.palettize_weights(mlmodel, per_tensor_config)
         mlmodel_grouped_channelwise_palettized = cto.coreml.palettize_weights(
             mlmodel, grouped_channelwise_config
@@ -1421,17 +1488,27 @@ class TestPalettizeWeights:
                 )
             },
         )
-        mlmodel_palettized = ct.convert(
-            torchmodel,
-            inputs=inputs,
-            convert_to="mlprogram",
-            minimum_deployment_target=backend.opset_version,
-            compute_precision=ct.precision.FLOAT16
-            if backend.precision == "fp16"
-            else ct.precision.FLOAT32,
-            compute_units=compute_unit,
-            pass_pipeline=pass_pipeline,
-        )
+
+        pytest_context_manager = nullcontext()
+        if backend.opset_version < ct.target.iOS18:
+            pytest_context_manager = pytest.raises(
+                ValueError, match=self._ERR_MSG.format("per_grouped_channel")
+            )
+
+        with pytest_context_manager:
+            mlmodel_palettized = ct.convert(
+                torchmodel,
+                inputs=inputs,
+                convert_to="mlprogram",
+                minimum_deployment_target=backend.opset_version,
+                compute_precision=ct.precision.FLOAT16
+                if backend.precision == "fp16"
+                else ct.precision.FLOAT32,
+                compute_units=compute_unit,
+                pass_pipeline=pass_pipeline,
+            )
+        if backend.opset_version < ct.target.iOS18:
+            return
 
         expected_ops = ["constexpr_lut_to_dense", "constexpr_lut_to_dense", "conv", "conv"]
         assert get_op_types_in_program(mlmodel_palettized._mil_program) == expected_ops
@@ -1476,12 +1553,17 @@ class TestPalettizeWeights:
             global_config=cto.coreml.OpPalettizerConfig(
                 mode=mode,
                 nbits=4 if mode == "kmeans" else None,
-                granularity="per_grouped_channel",
-                group_size=0,
+                granularity="per_tensor",
                 cluster_dim=cluster_dim,
                 weight_threshold=500,
             )
         )
+
+        if backend.opset_version < ct.target.iOS18:
+            with pytest.raises(ValueError, match=self._ERR_MSG.format("vector")):
+                cto.coreml.palettize_weights(mlmodel, vector_lut_config)
+            return
+
         mlmodel_palettized = cto.coreml.palettize_weights(mlmodel, vector_lut_config)
 
         # Verify ops.
@@ -1534,12 +1616,17 @@ class TestPalettizeWeights:
             global_config=cto.coreml.OpPalettizerConfig(
                 mode=mode,
                 nbits=4 if mode == "kmeans" else None,
-                granularity="per_grouped_channel",
-                group_size=0,
+                granularity="per_tensor",
                 cluster_dim=cluster_dim,
                 weight_threshold=30,  # The weight shape is [32, 1, 1, 1].
             )
         )
+
+        if backend.opset_version < ct.target.iOS18:
+            with pytest.raises(ValueError, match=self._ERR_MSG.format("vector")):
+                cto.coreml.palettize_weights(mlmodel, vector_lut_config)
+            return
+
         with caplog.at_level(logging.WARNING):
             mlmodel_palettized = cto.coreml.palettize_weights(mlmodel, vector_lut_config)
 
@@ -1583,6 +1670,12 @@ class TestPalettizeWeights:
                 weight_threshold=500,
             )
         )
+
+        if backend.opset_version < ct.target.iOS18:
+            with pytest.raises(ValueError, match=self._ERR_MSG.format("per_grouped_channel")):
+                cto.coreml.palettize_weights(mlmodel, vector_lut_config)
+            return
+
         mlmodel_palettized = cto.coreml.palettize_weights(mlmodel, vector_lut_config)
 
         # Verify ops.
@@ -1915,6 +2008,8 @@ class TestPruneWeights:
 class TestJointCompressWeights:
     """Test using coremltools PTQ to do joint compression."""
 
+    _ERR_MSG = "Please re-convert your model with minimum_deployment_target set to at least ct.target.iOS18."
+
     @pytest.mark.parametrize(
         "compute_unit, backend, dtype, block_size, output_channel_block_size, prune_first",
         itertools.product(
@@ -1970,16 +2065,24 @@ class TestJointCompressWeights:
             },
         )
 
-        if prune_first:
-            mlmodel_pruned = cto.coreml.prune_weights(mlmodel, prune_config)
-            mlmodel_joint_pruned_quantized = cto.coreml.linear_quantize_weights(
-                mlmodel_pruned, quant_config, joint_compression=True
-            )
-        else:
-            mlmodel_quantized = cto.coreml.linear_quantize_weights(mlmodel, quant_config)
-            mlmodel_joint_pruned_quantized = cto.coreml.prune_weights(
-                mlmodel_quantized, prune_config, joint_compression=True
-            )
+        pytest_context_manager = nullcontext()
+        if backend.opset_version < ct.target.iOS18:
+            pytest_context_manager = pytest.raises(ValueError, match=self._ERR_MSG)
+
+        with pytest_context_manager:
+            if prune_first:
+                mlmodel_pruned = cto.coreml.prune_weights(mlmodel, prune_config)
+                mlmodel_joint_pruned_quantized = cto.coreml.linear_quantize_weights(
+                    mlmodel_pruned, quant_config, joint_compression=True
+                )
+            else:
+                mlmodel_quantized = cto.coreml.linear_quantize_weights(mlmodel, quant_config)
+                mlmodel_joint_pruned_quantized = cto.coreml.prune_weights(
+                    mlmodel_quantized, prune_config, joint_compression=True
+                )
+
+        if backend.opset_version < ct.target.iOS18:
+            return
 
         # If run prune first, the all-zero const for lstm won't have nonzero-data, so it won't be
         # further quantized.
@@ -2076,16 +2179,24 @@ class TestJointCompressWeights:
             )
         )
 
-        if prune_first:
-            mlmodel_pruned = cto.coreml.prune_weights(mlmodel, prune_config)
-            mlmodel_joint_pruned_palettized = cto.coreml.palettize_weights(
-                mlmodel_pruned, palettize_config, joint_compression=True
-            )
-        else:
-            mlmodel_palettized = cto.coreml.palettize_weights(mlmodel, palettize_config)
-            mlmodel_joint_pruned_palettized = cto.coreml.prune_weights(
-                mlmodel_palettized, prune_config, joint_compression=True
-            )
+        pytest_context_manager = nullcontext()
+        if backend.opset_version < ct.target.iOS18:
+            pytest_context_manager = pytest.raises(ValueError, match=self._ERR_MSG)
+
+        with pytest_context_manager:
+            if prune_first:
+                mlmodel_pruned = cto.coreml.prune_weights(mlmodel, prune_config)
+                mlmodel_joint_pruned_palettized = cto.coreml.palettize_weights(
+                    mlmodel_pruned, palettize_config, joint_compression=True
+                )
+            else:
+                mlmodel_palettized = cto.coreml.palettize_weights(mlmodel, palettize_config)
+                mlmodel_joint_pruned_palettized = cto.coreml.prune_weights(
+                    mlmodel_palettized, prune_config, joint_compression=True
+                )
+
+        if backend.opset_version < ct.target.iOS18:
+            return
 
         # If run prune first, the all-zero const for lstm won't have nonzero-data, so it won't be
         # further quantized.
@@ -2198,16 +2309,24 @@ class TestJointCompressWeights:
             )
         )
 
-        if quantize_first:
-            mlmodel_quantized = cto.coreml.linear_quantize_weights(mlmodel, quant_config)
-            mlmodel_joint_palettized_quantized = cto.coreml.palettize_weights(
-                mlmodel_quantized, palettize_config, joint_compression=True
-            )
-        else:
-            mlmodel_palettized = cto.coreml.palettize_weights(mlmodel, palettize_config)
-            mlmodel_joint_palettized_quantized = cto.coreml.linear_quantize_weights(
-                mlmodel_palettized, quant_config, joint_compression=True
-            )
+        pytest_context_manager = nullcontext()
+        if backend.opset_version < ct.target.iOS18:
+            pytest_context_manager = pytest.raises(ValueError, match=self._ERR_MSG)
+
+        with pytest_context_manager:
+            if quantize_first:
+                mlmodel_quantized = cto.coreml.linear_quantize_weights(mlmodel, quant_config)
+                mlmodel_joint_palettized_quantized = cto.coreml.palettize_weights(
+                    mlmodel_quantized, palettize_config, joint_compression=True
+                )
+            else:
+                mlmodel_palettized = cto.coreml.palettize_weights(mlmodel, palettize_config)
+                mlmodel_joint_palettized_quantized = cto.coreml.linear_quantize_weights(
+                    mlmodel_palettized, quant_config, joint_compression=True
+                )
+
+        if backend.opset_version < ct.target.iOS18:
+            return
 
         expected_ops = (
             ["constexpr_blockwise_shift_scale", "constexpr_lut_to_dense", "conv"] * 2
@@ -2282,7 +2401,16 @@ class TestJointCompressWeights:
             )
         )
 
-        mlmodel_palettized = cto.coreml.palettize_weights(mlmodel, palettize_config)
+        pytest_context_manager = nullcontext()
+        if backend.opset_version < ct.target.iOS18:
+            pytest_context_manager = pytest.raises(ValueError, match=self._ERR_MSG)
+
+        with pytest_context_manager:
+            mlmodel_palettized = cto.coreml.palettize_weights(mlmodel, palettize_config)
+
+        if backend.opset_version < ct.target.iOS18:
+            return
+
         with pytest.raises(
             NotImplementedError,
             match="When use joint compression for palettization-quantization, "
@@ -2345,13 +2473,22 @@ class TestJointCompressWeights:
             )
         )
 
-        mlmodel_pruned = cto.coreml.prune_weights(mlmodel, prune_config)
-        mlmodel_joint_pruned_palettized = cto.coreml.palettize_weights(
-            mlmodel_pruned, palettize_config, joint_compression=True
-        )
-        mlmodel_joint_pruned_palettized_quantized = cto.coreml.linear_quantize_weights(
-            mlmodel_joint_pruned_palettized, quant_config, joint_compression=True
-        )
+        pytest_context_manager = nullcontext()
+        if backend.opset_version < ct.target.iOS18:
+            pytest_context_manager = pytest.raises(ValueError, match=self._ERR_MSG)
+
+        with pytest_context_manager:
+            mlmodel_pruned = cto.coreml.prune_weights(mlmodel, prune_config)
+            mlmodel_joint_pruned_palettized = cto.coreml.palettize_weights(
+                mlmodel_pruned, palettize_config, joint_compression=True
+            )
+            mlmodel_joint_pruned_palettized_quantized = cto.coreml.linear_quantize_weights(
+                mlmodel_joint_pruned_palettized, quant_config, joint_compression=True
+            )
+
+        if backend.opset_version < ct.target.iOS18:
+            return
+
         expected_ops = (
             [
                 "constexpr_blockwise_shift_scale",
@@ -2468,6 +2605,14 @@ class TestJointCompressWeights:
             )
         )
         mlmodel_pruned = cto.coreml.prune_weights(mlmodel, prune_config)
+
+        if backend.opset_version < ct.target.iOS18:
+            with pytest.raises(ValueError, match=self._ERR_MSG.format("per_grouped_channel")):
+                cto.coreml.linear_quantize_weights(
+                    mlmodel_pruned, quant_config, joint_compression=True
+                )
+            return
+
         mlmodel_joint_pruned_quantized = cto.coreml.linear_quantize_weights(
             mlmodel_pruned, quant_config, joint_compression=True
         )

@@ -2550,10 +2550,9 @@ class TestPalettizer(TestCompressionPasses):
 
         prog = self._get_test_program()
         with pytest.raises(
-            AssertionError,
+            ValueError,
             match=re.escape(
-                "The pre-iOS18 palettization only supports per-tensor lut, but got more than one lut "
-                "on 0th axis. LUT shape: (30, 1, 1, 1, 16, 1)\nPlease set the minimum_deployment_target to iOS18"
+                "Please re-convert your model with minimum_deployment_target set to at least ct.target.iOS18"
             ),
         ):
             compressor.apply(prog)

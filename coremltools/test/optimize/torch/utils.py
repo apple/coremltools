@@ -4,15 +4,56 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import contextlib
+import importlib
+import inspect
 import io
 import logging
+import os
 import pathlib
+import pkgutil
 import sys
 
 import torch
 import torch.nn.functional as F
 import torch.utils.data
 from packaging import version
+
+import coremltools as ct
+
+# region package_utils
+
+
+def get_classes_in_module(module):
+    """
+    Get all classes defined in a module (excluding imported ones)
+    """
+    return {
+        name: obj
+        for name, obj in inspect.getmembers(module, inspect.isclass)
+        if obj.__module__.startswith(module.__name__)
+    }
+
+
+def get_classes_recursively(module):
+    """
+    Recursively get all classes from a module and its submodules
+    """
+    classes = get_classes_in_module(module)
+
+    if hasattr(module, "__path__"):  # Only packages have __path__
+        for _, submodule_name, is_pkg in pkgutil.walk_packages(
+            module.__path__, module.__name__ + "."
+        ):
+            try:
+                submodule = importlib.import_module(submodule_name)
+                classes.update(get_classes_recursively(submodule))
+            except ModuleNotFoundError:
+                pass  # Ignore any submodules that fail to import
+
+    return classes
+
+
+# endregion
 
 
 # region version_utils
@@ -158,6 +199,54 @@ def get_logging_capture_context_manager():
             logger.handlers = original_handlers
 
     return capture_logs
+
+
+# endregion
+
+# region model_size utils
+
+
+def convert_to_coreml(model, example_input, minimum_deployment_target=ct.target.iOS18):
+    # Trace model
+    traced_model = torch.jit.trace(model, example_input)
+    # Convert model
+    coreml_model = ct.convert(
+        traced_model,
+        inputs=[ct.TensorType(shape=example_input.shape)],
+        minimum_deployment_target=minimum_deployment_target,
+    )
+    return coreml_model
+
+
+def get_total_params(model):
+    total_params = 0
+    for param in model.parameters():
+        total_params += torch.numel(param)
+    return total_params
+
+
+def get_model_size(model, example_input):
+    coreml_model = convert_to_coreml(model, example_input)
+
+    model_path = "/tmp/model.mlpackage"
+    coreml_model.save(model_path)
+
+    model_size_bytes = os.path.getsize(
+        os.path.join(model_path, "Data/com.apple.CoreML/weights/weight.bin")
+    )
+    return model_size_bytes
+
+
+# endregion
+
+# region misc utils
+
+
+def psnr(pred, target):
+    mse = torch.mean((pred - target) ** 2)
+    eps = 1e-5
+    eps2 = 1e-10
+    return 20 * torch.log10((torch.max(torch.abs(target)) + eps) / (torch.sqrt(mse) + eps2))
 
 
 # endregion

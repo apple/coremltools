@@ -4,7 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools import proto
-from coremltools.converters.mil.input_types import ColorLayout
+from coremltools.converters.mil import input_types
 from coremltools.converters.mil.mil.passes.defs.preprocess import NameSanitizer
 
 
@@ -46,11 +46,11 @@ def _get_probability_var_for_classifier(prog, classifier_config):
 
 
 def _get_colorspace_enum(color_layout):
-    if color_layout == ColorLayout.GRAYSCALE:
+    if color_layout == input_types.ColorLayout.GRAYSCALE:
         return proto.FeatureTypes_pb2.ImageFeatureType.ColorSpace.GRAYSCALE
-    elif color_layout == ColorLayout.GRAYSCALE_FLOAT16:
+    elif color_layout == input_types.ColorLayout.GRAYSCALE_FLOAT16:
         return proto.FeatureTypes_pb2.ImageFeatureType.ColorSpace.GRAYSCALE_FLOAT16
-    elif color_layout == ColorLayout.BGR:
+    elif color_layout == input_types.ColorLayout.BGR:
         return proto.FeatureTypes_pb2.ImageFeatureType.ColorSpace.BGR
     else:
         return proto.FeatureTypes_pb2.ImageFeatureType.ColorSpace.RGB
@@ -60,12 +60,18 @@ def _validate_image_input_output_shapes(color_layout, shape, name, is_input=True
     if len(shape) != 4:
         raise ValueError("Image {}, '{}', must have rank 4. Instead it has rank {}".
                          format(io_str, name, len(shape)))
-    if color_layout in (ColorLayout.BGR, ColorLayout.RGB):
+    if color_layout in (input_types.ColorLayout.BGR, input_types.ColorLayout.RGB):
         if shape[1] != 3 or shape[0] != 1:
-            raise ValueError("Shape of the RGB/BGR image {}, '{}', must be of kind (1, 3, H, W), "
-                             "i.e., first two dimensions must be (1, 3), instead they are: {}".
-                             format(io_str, name, shape[:2]))
-    elif color_layout in (ColorLayout.GRAYSCALE, ColorLayout.GRAYSCALE_FLOAT16):
+            raise ValueError(
+                "Shape of the RGB/BGR image {}, '{}', must be of kind (1, 3, H, W), "
+                "i.e., first two dimensions must be (1, 3), instead they are: {}".format(
+                    io_str, name, shape[:2]
+                )
+            )
+    elif color_layout in (
+        input_types.ColorLayout.GRAYSCALE,
+        input_types.ColorLayout.GRAYSCALE_FLOAT16,
+    ):
         if shape[1] != 1 or shape[0] != 1:
             raise ValueError("Shape of the Grayscale image {}, '{}', must be of kind (1, 1, H, W), "
                              "i.e., first two dimensions must be (1, 1), instead they are: {}".

@@ -15,6 +15,27 @@ from torch.distributed.fsdp.wrap import ModuleWrapPolicy as _TorchModuleWrapPoli
 from torch.distributed.fsdp.wrap import size_based_auto_wrap_policy as _size_based_auto_wrap_policy
 
 
+# Examples of reduction ops: ReduceOp.AVG, ReduceOp.SUM, ReduceOp.PRODUCT, ReduceOp.MIN, ReduceOp.MAX
+def sync_tensor(
+    tensor: _torch.Tensor,
+    reduce_op: _torch.distributed.ReduceOp = _torch.distributed.ReduceOp.AVG,
+):
+    """
+    If the input tensor is not on CPU and torch.distributed is initialized,
+    then sync the input tensor using the specified reduction operation across
+    multiple GPUs and return the resulting tensor.
+    Otherwise, return the original tensor.
+    """
+
+    if tensor.device != _torch.device("cpu") and _torch.distributed.is_initialized():
+        world_size = _torch.distributed.get_world_size()
+        if world_size >= 1:
+            # Synchronous call
+            _torch.distributed.all_reduce(tensor.data, op=reduce_op)
+
+    return tensor
+
+
 class FSDPAutoWrapPolicy(_ABC):
     """
     An abstract base class for implementing an `FSDP <https://pytorch.org/docs/stable/fsdp.html>`_ auto wrap policy.

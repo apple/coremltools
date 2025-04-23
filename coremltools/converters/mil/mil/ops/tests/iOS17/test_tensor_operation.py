@@ -52,8 +52,11 @@ class TestTopK:
         prog = mlmodel._mil_program
         topk_op = prog["main"].find_ops(op_type="topk")[0]
         expected_x_dtype = x_mb_dtype
-        if backend.precision == "fp16" and types.is_float(x_mb_dtype):
-            expected_x_dtype = types.fp16
+        if backend.precision == "fp16":
+            if types.is_float(x_mb_dtype):
+                expected_x_dtype = types.fp16
+            elif x_mb_dtype == types.int32:
+                expected_x_dtype = types.int16
         assert types.builtin_to_string(topk_op.x.dtype) == types.builtin_to_string(expected_x_dtype)
 
     @pytest.mark.parametrize(
@@ -90,9 +93,12 @@ class TestTopK:
         topk_op = prog["main"].find_ops(op_type="topk")[0]
 
         # If output_indices_dtype is not set, the output should be in type int32
-        expected_output_indices_dtype = "int32"
-        if output_indices_dtype is not None:
-            expected_output_indices_dtype = output_indices_dtype
+        expected_output_indices_dtype = (
+            "int32" if output_indices_dtype is None else output_indices_dtype
+        )
+        # unless fp16 compute precision specified
+        if backend.precision == "fp16":
+            expected_output_indices_dtype = "uint16"
 
         assert types.builtin_to_string(topk_op.outputs[1].dtype) == expected_output_indices_dtype
 

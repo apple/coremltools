@@ -5,15 +5,8 @@
 
 import coremltools as ct
 from coremltools.converters._profile_utils import _profile
+from coremltools.converters.mil import input_types as mil_input_types
 from coremltools.converters.mil.backend.backend_helper import _get_probability_var_for_classifier
-from coremltools.converters.mil.input_types import (
-    ColorLayout,
-    EnumeratedShapes,
-    ImageType,
-    RangeDim,
-    Shape,
-    TensorType,
-)
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic, any_variadic, is_symbolic
 from coremltools.models import model, neural_network
@@ -32,20 +25,23 @@ from .op_mapping import convert_ops
 def _convert_to_image_input(proto, inputs, skip_model_load=False):
     tmp_model = model.MLModel(proto, skip_model_load=skip_model_load)
     for input_type in inputs:
-        if isinstance(input_type, ImageType):
-            if input_type.color_layout in (ColorLayout.GRAYSCALE, ColorLayout.GRAYSCALE_FLOAT16):
+        if isinstance(input_type, mil_input_types.ImageType):
+            if input_type.color_layout in (
+                mil_input_types.ColorLayout.GRAYSCALE,
+                mil_input_types.ColorLayout.GRAYSCALE_FLOAT16,
+            ):
                 gray_bias = input_type.bias
                 red_bias, green_bias, blue_bias = 0.0, 0.0, 0.0
-            elif input_type.color_layout == ColorLayout.RGB:
+            elif input_type.color_layout == mil_input_types.ColorLayout.RGB:
                 gray_bias = 0.0
                 red_bias, green_bias, blue_bias = input_type.bias
-            elif input_type.color_layout == ColorLayout.BGR:
+            elif input_type.color_layout == mil_input_types.ColorLayout.BGR:
                 gray_bias = 0.0
                 blue_bias, green_bias, red_bias = input_type.bias
             tmp_model = neural_network.utils.make_image_input(
                 tmp_model,
                 input_type.name,
-                is_bgr=input_type.color_layout == ColorLayout.BGR,
+                is_bgr=input_type.color_layout == mil_input_types.ColorLayout.BGR,
                 image_format="NCHW" if input_type.channel_first else "NHWC",
                 red_bias=red_bias,
                 green_bias=green_bias,
@@ -70,8 +66,8 @@ def _convert_to_classifier(proto, classifier_config, skip_model_load=False):
 def _set_user_inputs(proto, inputs):
     for input_type in inputs:
         shape = input_type.shape
-        if isinstance(shape, EnumeratedShapes):
-            if isinstance(input_type, ImageType):
+        if isinstance(shape, mil_input_types.EnumeratedShapes):
+            if isinstance(input_type, mil_input_types.ImageType):
                 default_height, default_width = 0, 0
                 for inp in proto.description.input:
                     if inp.name == input_type.name:
@@ -104,16 +100,16 @@ def _set_user_inputs(proto, inputs):
                 add_multiarray_ndshape_enumeration(
                     proto, input_type.name, [tuple(s.shape) for s in shape.shapes]
                 )
-        elif isinstance(shape, Shape):
-            shape = shape.shape  # This is shape in Shape
+        elif isinstance(shape, mil_input_types.Shape):
+            shape = shape.shape  # This is shape in mil_input_types.Shape
             if all(
                 [
-                    not isinstance(s, RangeDim) and not is_symbolic(s) and s > 0
+                    not isinstance(s, mil_input_types.RangeDim) and not is_symbolic(s) and s > 0
                     for s in shape
                 ]
             ):
                 continue
-            if isinstance(input_type, ImageType):
+            if isinstance(input_type, mil_input_types.ImageType):
                 img_range = flexible_shape_utils.NeuralNetworkImageSizeRange()
                 if input_type.channel_first:
                     H = shape[-2]
@@ -122,13 +118,13 @@ def _set_user_inputs(proto, inputs):
                     H = shape[-3]
                     W = shape[-2]
 
-                if isinstance(H, RangeDim):
+                if isinstance(H, mil_input_types.RangeDim):
                     img_range.add_height_range((H.lower_bound, H.upper_bound))
                 elif is_symbolic(H):
                     img_range.add_height_range((1, -1))
                 else:
                     img_range.add_height_range((H, H))
-                if isinstance(W, RangeDim):
+                if isinstance(W, mil_input_types.RangeDim):
                     img_range.add_width_range((W.lower_bound, W.upper_bound))
                 elif is_symbolic(W):
                     img_range.add_width_range((1, -1))
@@ -142,7 +138,7 @@ def _set_user_inputs(proto, inputs):
                 lb = []
                 ub = []
                 for s in shape:
-                    if isinstance(s, RangeDim):
+                    if isinstance(s, mil_input_types.RangeDim):
                         lb.append(s.lower_bound)
                         ub.append(s.upper_bound)
                     elif is_symbolic(s):
@@ -169,7 +165,7 @@ def _set_optional_inputs(proto, input_types):
     # Set default values for optional input_types
     default_map = {}
     for input_type in input_types:
-        if not isinstance(input_type, TensorType):
+        if not isinstance(input_type, mil_input_types.TensorType):
             continue
         if input_type.default_value is not None:
             default_map[input_type.name] = input_type.default_value
@@ -266,7 +262,7 @@ def load(prog, **kwargs):
 
     proto = builder.spec
     # image input
-    has_image_input = any([isinstance(s, ImageType) for s in input_types])
+    has_image_input = any([isinstance(s, mil_input_types.ImageType) for s in input_types])
     if has_image_input:
         proto = _convert_to_image_input(proto, input_types,
                                         skip_model_load=kwargs.get("skip_model_load", False))
@@ -277,13 +273,15 @@ def load(prog, **kwargs):
                 "number of mil program outputs do not match the number of outputs provided by the user"
         for i, output_proto_desc in enumerate(proto.description.output):
             output_var = prog.functions["main"].outputs[i]
-            if isinstance(output_types[i], ImageType):
+            if isinstance(output_types[i], mil_input_types.ImageType):
                 if not types.is_tensor(var.sym_type):
                     raise ValueError("Image output, '{}', is a scalar, but it should be a tensor of rank 4".format(
                         var.name))
                 shape = var.sym_type.get_shape()
                 if any_variadic(shape):
-                    raise ValueError("Variable rank model outputs, that are ImageTypes, are not supported")
+                    raise ValueError(
+                        "Variable rank model outputs, that are mil_input_types.ImageTypes, are not supported"
+                    )
                 if any([is_symbolic(d) for d in shape]):
                     raise NotImplementedError("Image output '{}' has symbolic dimensions in its shape".
                                               format(var.name))

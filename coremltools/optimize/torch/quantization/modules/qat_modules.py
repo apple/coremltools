@@ -46,6 +46,10 @@ class _ConvAct(_torch.nn.Sequential):
         return self.act(self.conv(x))
 
     @property
+    def bias(self):
+        return self.conv.bias
+
+    @property
     def weight(self):
         return self.conv.weight
 
@@ -201,6 +205,10 @@ class LinearAct(_torch.nn.Sequential):
 
     def forward(self, x: _torch.Tensor) -> _torch.Tensor:
         return self.act(self.linear(x))
+
+    @property
+    def bias(self):
+        return self.linear.bias
 
     @property
     def weight(self):

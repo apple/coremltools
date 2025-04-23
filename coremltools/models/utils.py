@@ -149,6 +149,16 @@ def _create_mlpackage(
     return package_path
 
 
+def _get_model_spec_path(save_path: str) -> str:
+    """
+    Gets the filepath to save a protobuf model if it's within a `mlpackage`.
+
+    Parameters
+    ----------
+    """
+    return _os.path.join(save_path, "Data", _MLPACKAGE_AUTHOR_NAME, _MODEL_FILE_NAME)
+
+
 def save_spec(spec, filename, auto_set_specification_version=False, weights_dir=None):
     """
     Save a protobuf model specification to file.

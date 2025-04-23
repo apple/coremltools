@@ -27,6 +27,10 @@ from coremltools.optimize import _utils as optimize_utils
 from coremltools.optimize.torch._utils.metadata_utils import (
     CompressionMetadata as _CompressionMetadata,
 )
+from coremltools.optimize.torch._utils.optimizer_utils import (
+    _ConfigToOptimizerRegistry,
+    _ModuleToOptConfigRegistry,
+)
 from coremltools.optimize.torch._utils.report_utils import (
     compute_post_training_report as _compute_post_training_report,
 )
@@ -34,6 +38,7 @@ from coremltools.optimize.torch._utils.torch_utils import get_atomic_layers as _
 from coremltools.optimize.torch._utils.torch_utils import (
     get_n_bits_from_dtype as _get_n_bits_from_dtype,
 )
+from coremltools.optimize.torch._utils.torch_utils import is_signed_dtype as _is_signed_dtype
 from coremltools.optimize.torch._utils.torch_utils import (
     maybe_convert_str_to_dtype as _maybe_convert_str_to_dtype,
 )
@@ -117,13 +122,13 @@ class ModulePostTrainingQuantizerConfig(_ModuleOptimizationConfig):
     3. **Per-block quantization**: This configuration is used to structure the tensor for blockwise quantization. The ``granularity``
     is set to ``per_block``, and the ``block_size`` argument has to be specified. The ``block_size`` argument can either be of type
     ``int`` or ``tuple``:
-        * int: In this configuration, each row along the output channel axis will have its own quantization parameters, similar to the ``per_channel`` configuration.
-               Additionally, ``block_size`` number of values will share the same quantization parameters along the input channel axis.
-               For example, for a weight matrix of shape ``(10, 10)``, if we provide ``block_size = 2``, the shape of the quantization
-               parameters would be ``(10, 5)``.
+        * int: In this configuration, each row along the output channel axis will have its own quantization parameters,
+            similar to the ``per_channel`` configuration. Additionally, ``block_size`` number of values will share the same
+            quantization parameters along the input channel axis. For example, for a weight matrix of shape ``(10, 10)``,
+            if we provide ``block_size = 2``, the shape of the quantization parameters would be ``(10, 5)``.
         * tuple: For a more advanced configuration, users can provide an arbitrary n-dimensional block to share the quantization parameters.
-                 This is specified in the form of a tuple, where each value corresponds to the block size for the respective axis of the
-                 weight matrix. The length of the provided tuple should be at most the number of dimensions of the weight matrix.
+            This is specified in the form of a tuple, where each value corresponds to the block size for the respective axis of the
+            weight matrix. The length of the provided tuple should be at most the number of dimensions of the weight matrix.
 
     .. note::
         When performing 4-bit quantization, ``weight_dtype`` is set to :py:class:`torch.int8` for ``int4`` or
@@ -134,6 +139,7 @@ class ModulePostTrainingQuantizerConfig(_ModuleOptimizationConfig):
     weight_dtype: _Union[str, _torch.dtype] = _field(
         default=_default_ptq_options["weight_dtype"],
     )
+    weight_n_bits: int = _field(init=False)
     granularity: QuantizationGranularity = _field(
         default=_default_ptq_options["granularity"],
         converter=QuantizationGranularity,
@@ -190,6 +196,7 @@ _ModuleTypeConfigType = _NewType(
 )
 
 
+@_ModuleToOptConfigRegistry.register_module_cfg(ModulePostTrainingQuantizerConfig)
 @_define
 class PostTrainingQuantizerConfig(_OptimizationConfig):
     """
@@ -260,6 +267,7 @@ class PostTrainingQuantizerConfig(_OptimizationConfig):
         return converter.structure_attrs_fromdict(config_dict, cls)
 
 
+@_ConfigToOptimizerRegistry.register_config(PostTrainingQuantizerConfig)
 class PostTrainingQuantizer(_BasePostTrainingModelOptimizer):
     """
     Perform post-training quantization on a torch model. After quantization, weights of all
@@ -362,9 +370,9 @@ class PostTrainingQuantizer(_BasePostTrainingModelOptimizer):
             weight=weight,
             nbits=nbits,
             quantization_mode=quantization_mode,
-            dtype=dtype,
+            dtype=dtype,  # Unused parameter in coremltools
             block_sizes=block_sizes,
-            signed=signed,  # Always used signed dtype range
+            signed=signed,
         )
 
         return ret
@@ -461,9 +469,9 @@ class PostTrainingQuantizer(_BasePostTrainingModelOptimizer):
             weight=weight,
             nbits=submod_config.weight_n_bits,
             quantization_mode=quantization_mode,
-            dtype=weight.dtype,
+            dtype=submod_config.weight_dtype,
             block_sizes=block_sizes,
-            signed=True,
+            signed=_is_signed_dtype(submod_config.weight_dtype),
         )  # Always used signed dtype range
 
         if ret is None:
@@ -493,7 +501,9 @@ class PostTrainingQuantizer(_BasePostTrainingModelOptimizer):
         metadata.compression_type = ["quantization"]
         metadata.quantization_n_bits = submod_config.weight_n_bits
         metadata.quantization_scale = scale
-        if submod_config.quantization_scheme == _QuantizationScheme.affine:
+        if submod_config.quantization_scheme == _QuantizationScheme.affine or not _is_signed_dtype(
+            submod_config.weight_dtype
+        ):
             assert zero_point is not None
             metadata.zero_point = zero_point
 

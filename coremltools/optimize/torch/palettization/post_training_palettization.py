@@ -25,6 +25,10 @@ from coremltools.optimize.torch._utils.k_means import (
 )
 from coremltools.optimize.torch._utils.k_means import ParallelKMeans as _ParallelKMeans
 from coremltools.optimize.torch._utils.k_means import SequentialKMeans as _SequentialKMeans
+from coremltools.optimize.torch._utils.optimizer_utils import (
+    _ConfigToOptimizerRegistry,
+    _ModuleToOptConfigRegistry,
+)
 from coremltools.optimize.torch._utils.report_utils import (
     compute_post_training_report as _compute_post_training_report,
 )
@@ -76,6 +80,12 @@ class ModulePostTrainingPalettizerConfig(_ModuleOptimizationConfig):
             using the same 2-D centroid. The length of each entry in the lookup tables is equal to ``cluster_dim``.
         enable_per_channel_scale (:obj:`bool`): When set to ``True``, weights are normalized along the output channels
             using per-channel scales before being palettized. This is not supported with ``cluster_dim > 1``.
+        enable_fast_kmeans_mode (:obj:`bool`): When turned on, will round the weights before clustering if data is in fp16 range.
+            If weight dtype is fp32, weights are cast to fp16 and then rounded. This is not supported with ``cluster_dim > 1``.
+            Defaults to True.
+        rounding_precision (:obj:`int`): The number of decimal places to set for rounding, when `enable_fast_kmeans_mode` is enabled.
+            Choose a lower precision for faster processing, at the cost of coarser approximation. Defaults to 4.
+
 
     This class supports two different configurations to structure the palettization:
 
@@ -121,6 +131,12 @@ class ModulePostTrainingPalettizerConfig(_ModuleOptimizationConfig):
     enable_per_channel_scale: _Optional[bool] = _field(
         default=False, validator=_validators.optional(_validators.instance_of(bool))
     )
+    enable_fast_kmeans_mode: _Optional[bool] = _field(
+        default=True, validator=_validators.optional(_validators.instance_of(bool))
+    )
+    rounding_precision: _Optional[int] = _field(
+        default=4, validator=_validators.optional(_validators.instance_of(int))
+    )
 
     @group_size.validator
     def per_grouped_channel_granularity(self, attribute, value):
@@ -145,7 +161,7 @@ _ModuleTypeConfigType = _NewType(
     _Dict[_Union[_Callable, str], _Optional[ModulePostTrainingPalettizerConfig]],
 )
 
-
+@_ModuleToOptConfigRegistry.register_module_cfg(ModulePostTrainingPalettizerConfig)
 @_define
 class PostTrainingPalettizerConfig(_OptimizationConfig):
     """
@@ -211,6 +227,7 @@ class PostTrainingPalettizerConfig(_OptimizationConfig):
         return converter.structure_attrs_fromdict(config_dict, cls)
 
 
+@_ConfigToOptimizerRegistry.register_config(PostTrainingPalettizerConfig)
 class PostTrainingPalettizer(_BasePostTrainingModelOptimizer):
     """
     Perform post-training palettization on a torch model. Post palettization, all the weights in supported
@@ -264,9 +281,12 @@ class PostTrainingPalettizer(_BasePostTrainingModelOptimizer):
     def compress(self, num_kmeans_workers: int = 1, inplace: bool = False) -> _torch.nn.Module:
         """
         The compress method performs a `k-means` operation on all supported modules.
+
         Args:
             num_kmeans_workers (:obj:`int`): Number of worker processes used for
-                performing post-training palettization. Defaults to ``1``.
+                performing post-training palettization. It is recommended to use more than one worker
+                process to parallelize the clustering, especially when multiple CPUs are available.
+                Defaults to ``1``.
             inplace (:obj:`bool`): If ``True``, model transformations are carried out in-place and
                 the original module is mutated, otherwise a copy of the model is mutated and returned.
                 Defaults to ``False``.
@@ -305,6 +325,8 @@ class PostTrainingPalettizer(_BasePostTrainingModelOptimizer):
                     block_size=updated_config.group_size,
                     cluster_dim=updated_config.cluster_dim,
                     enable_per_channel_scale=updated_config.enable_per_channel_scale,
+                    enable_fast_kmeans_mode=updated_config.enable_fast_kmeans_mode,
+                    rounding_precision=updated_config.rounding_precision,
                 )
 
         if num_kmeans_workers > 1:

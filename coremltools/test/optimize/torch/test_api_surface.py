@@ -120,6 +120,8 @@ class TestApiVisibilities:
         _check_visible_modules(visible_modules, expected)
         # coremltools.optimize.torch.quantization.LinearQuantizer.*
         expected = [
+            "disable_observer_sync",
+            "enable_observer_sync",
             "finalize",
             "prepare",
             "step",
@@ -139,6 +141,7 @@ class TestApiVisibilities:
         _check_visible_modules(visible_modules, expected)
 
     def test_layerwise_compression_module(self):
+        # coremltools.optimize.torch.layerwise_compression.*
         expected = [
             "algorithms",
             "LayerwiseCompressionAlgorithm",

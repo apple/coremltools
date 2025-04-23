@@ -8,19 +8,23 @@ from collections import OrderedDict
 from typing import List, Optional
 
 import coremltools as ct
+from coremltools import _logger as logger
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget as target
 from coremltools.converters.mil.frontend.milproto.load import load as milproto_to_pymil
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 from coremltools.models import MLModel
 
+from .._converters_entry import _set_default_specification_version
+
 
 def extract_submodel(
-        model: MLModel,
-        outputs: List[str],
-        inputs: Optional[List[str]] = None,
-        function_name: str = "main"
-    ) -> MLModel:
+    model: MLModel,
+    outputs: List[str],
+    inputs: Optional[List[str]] = None,
+    function_name: str = "main",
+) -> MLModel:
     """
     This utility function lets you extract a submodel from a Core ML model.
 
@@ -178,6 +182,21 @@ def extract_submodel(
         PASS_REGISTRY["common::dead_code_elimination"](prog)
 
     prog.skip_all_passes = True
-    submodel = ct.convert(prog, convert_to=backend, compute_units=model.compute_unit, minimum_deployment_target=func.opset_version)
+
+    minimum_deployment_target = None
+    try:
+        minimum_deployment_target = target(model_spec.specificationVersion)
+    except ValueError:
+        default_specification_version = _set_default_specification_version(backend)
+        logger.warning(
+            f"Failed to set 'minimum_deployment_target' for specification version '{model_spec.specificationVersion}'. Proceeding with default value '{default_specification_version}'"
+        )
+
+    submodel = ct.convert(
+        prog,
+        convert_to=backend,
+        compute_units=model.compute_unit,
+        minimum_deployment_target=minimum_deployment_target,
+    )
 
     return submodel

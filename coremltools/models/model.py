@@ -28,10 +28,9 @@ from coremltools.converters.mil.mil.scope import ScopeSource as _ScopeSource
 
 from .utils import (
     _MLMODEL_EXTENSION,
-    _MLPACKAGE_AUTHOR_NAME,
     _MLPACKAGE_EXTENSION,
-    _MODEL_FILE_NAME,
     _create_mlpackage,
+    _get_model_spec_path,
     _has_custom_layer,
     _is_macos,
     _macos_version,
@@ -682,9 +681,7 @@ class MLModel:
                     with open(saved_debug_handle_to_ops_mapping_path, "w") as f:
                         f.write(debug_handle_to_ops_mapping_as_json)
 
-            saved_spec_path = _os.path.join(
-                save_path, "Data", _MLPACKAGE_AUTHOR_NAME, _MODEL_FILE_NAME
-            )
+            saved_spec_path = _get_model_spec_path(save_path)
             _save_spec(self._spec, saved_spec_path)
         else:
             _save_spec(self._spec, save_path)
@@ -1047,3 +1044,41 @@ class MLModel:
 
         """
         return _MLModelProxy.get_available_compute_devices()
+
+    @property
+    def load_duration_in_nano_seconds(self) -> _Optional[int]:
+        """
+        Retrieves the duration of the model loading process in nanoseconds.
+        Notes
+        -----
+        Calculates the time elapsed during the model loading process, specifically
+        measuring the execution time of ``[MLModel loadContentsOfURL:configuration:error:]`` method
+        of the Core ML framework.
+        Returns
+        -------
+        Optional[int]:
+            The duration of the model loading process in nanoseconds.
+            Returns None if duration is not available.
+        """
+
+        return self.__proxy__.get_load_duration_in_nano_seconds()
+
+    @property
+    def last_predict_duration_in_nano_seconds(self) -> _Optional[int]:
+        """
+        Retrieves the duration of the last predict operation in nanoseconds.
+        This method returns the time taken for the most recent prediction made by
+        the model, measured in nanoseconds.
+        Notes
+        -----
+        Calculates the time elapsed during the model predict call, specifically
+        measuring the execution time of ``[MLModel predictionFromFeatures:error:]``
+        or ``[MLModel predictionFromBatch:error:]` method of the Core ML framework.
+        Returns
+        -------
+        Optional[int]:
+            The duration of the last prediction operation in nanoseconds.
+            Returns None if no prediction has been made yet.
+        """
+
+        return self.__proxy__.get_last_predict_duration_in_nano_seconds()

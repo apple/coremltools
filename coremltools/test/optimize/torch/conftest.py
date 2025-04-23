@@ -4,6 +4,10 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import os
+
+# Needed for test_compression_for_dkm_on_non_cpu_device_with_pcs that uses mps in test/conversion/palettization/test_palettization_conversion.py
+os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
+
 import shutil
 
 import pytest

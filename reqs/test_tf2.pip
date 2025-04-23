@@ -8,10 +8,12 @@ pytest-timeout
 # TODO(rdar://123269464): Support a recent version of TensorFlow
 
 # TensorFlow (x86) related package
-tensorflow==2.12.0; platform_machine != "arm64"
-tensorflow-estimator==2.12.0; platform_machine != "arm64"
-keras==2.12.0; platform_machine != "arm64"
+tensorflow==2.7.0; platform_machine != "arm64"
+tensorflow-estimator==2.7.0; platform_machine != "arm64"
+keras==2.7.0; platform_machine != "arm64"
 jax==0.4.13; platform_machine != "arm64" and python_version < "3.10" and python_version > "3.8"
+# Getting weird errors on recent protobuf versions with TF2
+protobuf==3.20.3; platform_machine != "arm64"
 
 # TensorFlow (arm64) related package. Currently no Python 3.11 support.
 tensorflow-macos==2.11.0; platform_machine == "arm64" and python_version < "3.11"

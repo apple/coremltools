@@ -24,6 +24,7 @@ from coremltools.optimize.torch._utils.math_utils import rmse_error as _rmse_err
 from coremltools.optimize.torch._utils.metadata_utils import (
     register_metadata_version as _register_metadata_version,
 )
+from coremltools.optimize.torch._utils.optimizer_utils import _ConfigToOptimizerRegistry
 from coremltools.optimize.torch._utils.torch_utils import get_eval_model as _get_eval_model
 from coremltools.optimize.torch.base_model_optimizer import (
     BaseTrainingTimeModelOptimizer as _BaseTrainingTimeModelOptimizer,
@@ -42,12 +43,18 @@ from coremltools.optimize.torch.quantization._qconfig_mapping import _QConfigMap
 from coremltools.optimize.torch.quantization._utils import (
     is_per_channel_quant as _is_per_channel_quant,
 )
+from coremltools.optimize.torch.quantization._utils import (
+    is_pytorch_defined_observer as _is_pytorch_defined_observer,
+)
 from coremltools.optimize.torch.quantization._utils import is_symmetric_quant as _is_symmetric_quant
 from coremltools.optimize.torch.quantization._utils import (
     pre_apply_weight_quant as _pre_apply_weight_quant,
 )
 from coremltools.optimize.torch.quantization._utils import (
     register_compression_metadata as _register_compression_metadata,
+)
+from coremltools.optimize.torch.quantization.modules.learnable_fake_quantize import (
+    LearnableFakeQuantize as _LearnableFakeQuantize,
 )
 from coremltools.optimize.torch.quantization.quantization_config import (
     LinearQuantizerConfig as _LinearQuantizerConfig,
@@ -63,6 +70,7 @@ class Quantizer(_BaseTrainingTimeModelOptimizer):
     pass
 
 
+@_ConfigToOptimizerRegistry.register_config(_LinearQuantizerConfig)
 class LinearQuantizer(Quantizer):
     """
     Perform quantization aware training (QAT) of models. This algorithm simulates the effects of
@@ -134,6 +142,7 @@ class LinearQuantizer(Quantizer):
     _supported_modules: _Tuple = tuple(_get_supported_modules())
     _qconfig_mapping_builder_cls: _Type = _QConfigMappingBuilder
     _qat_configuration_handler_cls: _Type = _QATConfigurationHandler
+    _observer_sync: bool = True
 
     def __init__(self, model: _torch.nn.Module, config: _Optional[_LinearQuantizerConfig] = None):
         config = _LinearQuantizerConfig() if config is None else config
@@ -309,6 +318,47 @@ class LinearQuantizer(Quantizer):
             self._model = finalized_model
         return finalized_model
 
+    def _set_observer_sync(self, to_sync: bool):
+        if self._is_prepared and self._observer_sync != to_sync:
+            self._observer_sync = to_sync
+            for name, module in self._model.named_modules(remove_duplicate=True):
+                if (
+                    hasattr(module, "weight_fake_quant")
+                    and module.weight_fake_quant is not None
+                    and module.weight_fake_quant.activation_post_process is not None
+                    and not _is_pytorch_defined_observer(
+                        module.weight_fake_quant.activation_post_process
+                    )
+                ):
+                    module.weight_fake_quant.activation_post_process.synchronize = to_sync
+                elif (
+                    not name.endswith(".weight_fake_quant")
+                    and isinstance(module, (_aoquant.FakeQuantize, _LearnableFakeQuantize))
+                    and hasattr(module, "activation_post_process")
+                    and module.activation_post_process is not None
+                    and not _is_pytorch_defined_observer(module.activation_post_process)
+                ):
+                    module.activation_post_process.synchronize = to_sync
+
+    def enable_observer_sync(self):
+        """
+        Enable custom observer synchronization of quantization parameters
+        when training on multiple GPUs.
+        By default, the custom observers will always synchronize when training on multiple GPUs.
+        This should be used to re-enable synchronization for training after disabling it (if needed).
+        """
+        self._set_observer_sync(True)
+
+    def disable_observer_sync(self):
+        """
+        Disable custom observer synchronization of quantization parameters
+        when training on multiple GPUs.
+        This should be used in between interleaved training and validation when the validation is performed
+        on only one GPU and observation is not disabled (technically an error).
+        This should also be used when finalizing the quantized model on only one GPU to avoid deadlock.
+        """
+        self._set_observer_sync(False)
+
     def report(self) -> _Report:
         """
         Returns a dictionary with important statistics related to current state of quantization.
@@ -316,14 +366,13 @@ class LinearQuantizer(Quantizer):
         value is a dictionary containing the statistics such as scale, zero point,
         number of parameters, and so on.
 
-        Note that error will be nan and #params will be -1 for activations.
+        Note that error will be NaN and #params will be -1 for activations.
         """
 
         report = _Report()
         with _get_eval_model(self._model) as model:
             with _torch.no_grad():
                 for name, module in model.named_modules(remove_duplicate=True):
-
                     if (
                         hasattr(module, "weight_fake_quant")
                         and module.weight_fake_quant is not None
@@ -333,6 +382,13 @@ class LinearQuantizer(Quantizer):
                         module_summary["type"] = "weight"
 
                         module_summary["device"] = module.weight.device
+
+                        if isinstance(module.weight_fake_quant, _aoquant.FakeQuantize):
+                            algorithm = "vanilla"
+                        else:
+                            assert isinstance(module.weight_fake_quant, _LearnableFakeQuantize)
+                            algorithm = "learnable"
+                        module_summary["algorithm"] = algorithm
 
                         qscheme = module.weight_fake_quant.qscheme
                         module_summary["qscheme"] = (
@@ -354,7 +410,7 @@ class LinearQuantizer(Quantizer):
 
                     elif (
                         not name.endswith(".weight_fake_quant")
-                        and isinstance(module, _aoquant.FakeQuantize)
+                        and isinstance(module, (_aoquant.FakeQuantize, _LearnableFakeQuantize))
                         and hasattr(module, "activation_post_process")
                         and module.activation_post_process is not None
                     ):
@@ -364,6 +420,13 @@ class LinearQuantizer(Quantizer):
 
                         scale, zp = module.activation_post_process.calculate_qparams()
                         module_summary["device"] = scale.device
+
+                        if isinstance(module, _aoquant.FakeQuantize):
+                            algorithm = "vanilla"
+                        else:
+                            assert isinstance(module, _LearnableFakeQuantize)
+                            algorithm = "learnable"
+                        module_summary["algorithm"] = algorithm
 
                         qscheme = module.qscheme
                         module_summary["qscheme"] = (

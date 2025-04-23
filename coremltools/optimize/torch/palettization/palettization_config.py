@@ -19,6 +19,7 @@ from attr import define as _define
 from attr import field as _field
 from attrs import validators as _validators
 
+from coremltools.optimize.torch._utils.optimizer_utils import _ModuleToOptConfigRegistry
 from coremltools.optimize.torch._utils.torch_utils import (
     maybe_convert_str_to_dtype as _maybe_convert_str_to_dtype,
 )
@@ -213,7 +214,7 @@ class ModuleDKMPalettizerConfig(_ModuleOptimizationConfig):
 
     2. **Per-grouped-channel palettization**: In this configuration, ``group_size`` number of channels along
     ``channel_axis`` share the same lookup table. For example, for a weight matrix of shape ``(16, 25)``, if we provide
-     ``group_size = 8``, the shape of the lookup table would be ``(2, 2^n_bits)``.
+    ``group_size = 8``, the shape of the lookup table would be ``(2, 2^n_bits)``.
 
     .. note::
         Grouping is currently only supported along the output channel axis.
@@ -433,6 +434,7 @@ def _validate_dkm_config_type(instance, attribute, value):
             )
 
 
+@_ModuleToOptConfigRegistry.register_module_cfg(ModuleDKMPalettizerConfig)
 @_define
 class DKMPalettizerConfig(_OptimizationConfig):
     """

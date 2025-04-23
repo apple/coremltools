@@ -3,6 +3,8 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import time
+
 import pytest
 import torch
 
@@ -14,6 +16,41 @@ from coremltools.optimize.torch._utils.k_means import (
 )
 from coremltools.test.optimize.torch.utils import count_unique_params
 
+
+@pytest.mark.filterwarnings("error")
+def test_k_means_rounding_no_warnings():
+    """
+    Test to ensure that no overflow warnings are raised when using rounding.
+    Since rounding will require some sort of multiplication by 10^d (e.g. d=4),
+    it could lead to overflow warnings by numpy if proper up-casting of fp16 values
+    is not handled. This test uses weight values that are "high" to test this scenario.
+    """
+    model = torch.nn.Linear(4, 1, dtype=torch.float16)
+    weight = torch.tensor([[1000.1, 53.2, 23.4, 50000.12]], dtype=torch.float16)
+    config = KMeansConfig(n_bits=2, enable_fast_kmeans_mode=True, rounding_precision=4)
+    with torch.no_grad():
+        model.weight.copy_(weight)
+        SequentialKMeans.cluster_weights(model, config)
+
+
+@pytest.mark.parametrize(
+    "config",
+    [
+        KMeansConfig(n_bits=8),
+        KMeansConfig(n_bits=8, block_size=32),
+    ],
+)
+@pytest.mark.parametrize("num_workers", [1, 10])
+def test_k_means_perf(config, num_workers):
+    model_to_compress = torch.nn.Linear(50272, 2048, dtype=torch.float16)
+    start_time = time.perf_counter()
+    if num_workers == 1:
+        SequentialKMeans.cluster_weights(model_to_compress, config)
+    else:
+        ParallelKMeans.cluster_weights(model_to_compress, config, num_workers)
+    end_time = time.perf_counter()
+    elapsed_time = end_time - start_time
+    assert elapsed_time < 60
 
 @pytest.mark.parametrize(
     "config",
