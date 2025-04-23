@@ -106,7 +106,7 @@ def _try_get_last_cell_state_in_tf_lstm_block(op: Operation) -> Var:
         return cs
     if len(cs.consuming_blocks) > 1:
         return None
-    if not all(child_op.op_type == "slice_by_index" for child_op in cs.child_ops):
+    if not all([child_op.op_type == "slice_by_index" for child_op in cs.child_ops]):
         return None
     child_ops = cs.child_ops[:]
     block = op.enclosing_block

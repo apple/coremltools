@@ -125,7 +125,8 @@ def make_nn_classifier(
         classes = classes.splitlines()
     elif isinstance(classes_in, list):  # list[int or str]
         classes = classes_in
-        assert all(isinstance(x, (int, str)) for x in classes), message
+        assert all([isinstance(x, \
+            (int, str)) for x in classes]), message
     else:
         raise ValueError(message)
 

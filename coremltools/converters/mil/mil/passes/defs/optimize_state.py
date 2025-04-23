@@ -199,7 +199,7 @@ class prefer_state_in_downstream(AbstractGraphPass):
                 return
 
             # if the var only feeds into coreml_update_state ops, this pass should do nothing
-            if all(val.op_type == "coreml_update_state" for val in other_child_ops):
+            if all([val.op_type == "coreml_update_state" for val in other_child_ops]):
                 return
 
             block.try_replace_uses_of_var_after_op(

@@ -239,7 +239,7 @@ class fuse_matmul_weight_bias(AbstractGraphPass):
         d_out = weight.shape[1] if not transpose_weight else weight.shape[0]
         bias = add_op.x.val if add_op.x.val is not None else add_op.y.val
         if len(bias.shape) > 1:
-            if any(d != 1 for d in bias.shape[:-1]):
+            if any([d != 1 for d in bias.shape[:-1]]):
                 return  # cannot transform
 
             # squeeze leading dims of size 1

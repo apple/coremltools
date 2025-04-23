@@ -223,7 +223,7 @@ class TestCompressionNumerical:
         )
         assert result is None
         expected_warning_msg = "Invalid block_sizes"
-        assert any(expected_warning_msg in rec.message for rec in caplog.records)
+        assert any([expected_warning_msg in rec.message for rec in caplog.records])
 
     @pytest.mark.parametrize(
         "mode, nbits, shape",
@@ -1815,7 +1815,7 @@ class TestLinearQuantizer(TestCompressionPasses):
         prog = self._get_test_program_3()
         compressor.apply(prog)
         warning_msg = "Invalid block_sizes; On 1th axis, the dim size 30 is not divisible by block size 13. Unable to perform structured quantization."
-        assert any(re.match(warning_msg, rec.message) for rec in caplog.records)
+        assert any([re.match(warning_msg, rec.message) for rec in caplog.records])
 
 
 class TestPruner(TestCompressionPasses):
@@ -2530,7 +2530,7 @@ class TestPalettizer(TestCompressionPasses):
                 f"Can't perform palettization: The number of channels at {axis}th axis .* is not "
                 "divisible by channel_group_size"
             )
-            assert any(re.match(warning_msg, rec.message) for rec in caplog.records)
+            assert any([re.match(warning_msg, rec.message) for rec in caplog.records])
         # Only the conv get compressed.
         lut_ops = prog.find_ops(op_type="constexpr_lut_to_dense")
         assert len(lut_ops) == 1

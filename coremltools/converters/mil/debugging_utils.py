@@ -84,7 +84,7 @@ def extract_submodel(
                 else:
                     input_values.append(v)
 
-            if all(x in reachable_vars for x in input_values):
+            if all([x in reachable_vars for x in input_values]):
                 reachable_vars.update(op.outputs)
 
         for out in func.outputs:
