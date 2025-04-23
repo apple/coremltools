@@ -4,7 +4,7 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import random
-import shutil
+import platform
 import subprocess
 import tempfile
 import time
@@ -33,7 +33,19 @@ from coremltools.models.ml_program.experimental.remote_device import (
     _TensorDescriptor,
 )
 
+IS_INTEL_MAC = platform.machine() == "x86_64"
 
+def has_xcodebuild():
+    try:
+        subprocess.run(
+            ["xcodebuild", "-version"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=True,
+        )
+        return True
+    except Exception:
+        return False
 class MockDeviceCtlSocket(_JSONRPCSocket):
     def __init__(
         self,
@@ -359,7 +371,7 @@ class TestRemoteMLModelService:
 class TestModelRunnerApp:
     @staticmethod
     @pytest.mark.skipif(
-        shutil.which("xcodebuild") is None, reason="xcodebuild doesn't exist, skipping test"
+        not has_xcodebuild() or IS_INTEL_MAC, reason="Either xcodebuild not available/usable or platform is intel based"
     )
     def test_model_runner():
         def can_sudo_without_password():

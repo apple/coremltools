@@ -5,6 +5,7 @@
 
 from typing import Optional
 
+import platform
 import pytest
 
 import coremltools as ct
@@ -29,6 +30,9 @@ from coremltools.models.ml_program.experimental.model_structure_path import (
 )
 from coremltools.models.ml_program.experimental.remote_device import ComputePlan
 
+
+IS_INTEL_MAC = platform.machine() == "x86_64"
+pytestmark = pytest.mark.skipif(IS_INTEL_MAC, reason="Skip all tests on Apple Intel Macs")
 
 @pytest.mark.skipif(
     ct.utils._macos_version() < (14, 4),

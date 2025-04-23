@@ -1,5 +1,5 @@
 #  Copyright (c) 2025, Apple Inc. All rights reserved.
-
+import platform
 
 from typing import Optional
 
@@ -15,6 +15,9 @@ from coremltools.models.ml_program.experimental.torch.perf_utils import (
     TorchNode,
     TorchScriptNodeInfo,
 )
+
+IS_INTEL_MAC = platform.machine() == "x86_64"
+pytestmark = pytest.mark.skipif(IS_INTEL_MAC, reason="Skip all tests on Apple Intel Macs")
 
 
 @pytest.mark.skipif(

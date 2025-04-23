@@ -168,6 +168,9 @@ class TestTorchMapping:
 
     @pytest.mark.parametrize("export_method", ["jit", "export"])
     def test_stack_frame_infos(self, export_method: str):
+        if export_method == "export" and not _HAS_TORCH_EXPORT_API:
+            pytest.skip("This test requires PyTorch Export APIs.")
+
         model = TestTorchMapping._get_simple_model()
         input1 = torch.full((1, 10), 1, dtype=torch.float)
         input2 = torch.full((1, 10), 2, dtype=torch.float)

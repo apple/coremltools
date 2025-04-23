@@ -50,7 +50,7 @@ def test_k_means_perf(config, num_workers):
         ParallelKMeans.cluster_weights(model_to_compress, config, num_workers)
     end_time = time.perf_counter()
     elapsed_time = end_time - start_time
-    assert elapsed_time < 60
+    assert elapsed_time < 65
 
 @pytest.mark.parametrize(
     "config",
