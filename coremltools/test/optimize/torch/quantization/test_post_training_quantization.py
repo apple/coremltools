@@ -9,14 +9,16 @@ import pytest
 import torch
 
 ct = pytest.importorskip("coremltools")
-pytest.importorskip("coremltools.optimize.coreml._utils")
+pytest.importorskip("coremltools.optimize._utils")
 
+from coremltools.optimize.torch._utils.torch_utils import get_n_bits_from_dtype
 from coremltools.optimize.torch.optimization_config import QuantizationGranularity
 from coremltools.optimize.torch.quantization import (
     PostTrainingQuantizer,
     PostTrainingQuantizerConfig,
     QuantizationScheme,
 )
+from coremltools.optimize.torch.quantization._utils import get_quant_range
 
 np.random.seed(0)
 torch.manual_seed(0)
@@ -300,6 +302,38 @@ def test_ptq_post_compress_multihead(
     )
 
 
+@pytest.mark.parametrize("weight_dtype", ["uint4", "uint8"])
+@pytest.mark.parametrize("qscheme", ["affine", "symmetric"])
+def test_ptq_unsigned(weight_dtype, qscheme):
+    config = PostTrainingQuantizerConfig.from_dict(
+        {
+            "global_config": {
+                "weight_dtype": weight_dtype,
+                "quantization_scheme": qscheme,
+            }
+        }
+    )
+    q_min, q_max = get_quant_range(
+        get_n_bits_from_dtype(weight_dtype), config.global_config.weight_dtype
+    )
+
+    module = torch.nn.Linear(10, 10)
+    ptq = PostTrainingQuantizer(module, config)
+
+    model = ptq.compress()
+
+    assert hasattr(model, "_COREML_/weight/quantization_scale")
+    scale = getattr(model, "_COREML_/weight/quantization_scale")
+    quant_weight = model.weight / scale
+
+    # We should always have zero point since we are doing unsigned int
+    assert hasattr(model, "_COREML_/weight/zero_point")
+    quant_weight += getattr(model, "_COREML_/weight/zero_point")
+    quant_weight.round_()
+
+    assert quant_weight.min() == q_min, quant_weight.max() == q_max
+
+
 @pytest.mark.parametrize(
     "weight_dtype,n_bits",
     [
@@ -319,18 +353,31 @@ def test_ptq_compression_metadata(weight_dtype, n_bits, qscheme):
             }
         }
     )
+
     ptq = PostTrainingQuantizer(torch.nn.Linear(10, 10), config)
+
+    # Updated model has quantized weights
     model = ptq.compress()
 
     from coremltools.optimize.torch._utils.metadata_utils import CompressionType
 
     assert hasattr(model, "_COREML_/weight/compression_type")
+
     assert torch.IntTensor([CompressionType.quantization.value]) == getattr(
         model, "_COREML_/weight/compression_type"
     )
+
     assert torch.IntTensor([n_bits]) == getattr(model, "_COREML_/weight/quantization_n_bits")
+
     scale = getattr(model, "_COREML_/weight/quantization_scale")
+
+    # model.weight is FP32 weights
     quant_weight = model.weight / scale
+
     if hasattr(model, "_COREML_/weight/zero_point"):
         quant_weight += getattr(model, "_COREML_/weight/zero_point")
+
+    q_min, q_max = get_quant_range(n_bits, config.global_config.weight_dtype)
+    quant_weight = torch.clamp(quant_weight.round(), q_min, q_max)
+
     assert (quant_weight.max() - quant_weight.min()) <= (2**n_bits - 1)

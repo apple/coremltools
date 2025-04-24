@@ -22,6 +22,7 @@ from attr import define as _define
 from attr import field as _field
 from attrs import validators as _validators
 
+from coremltools.optimize.torch._utils.optimizer_utils import _ModuleToOptConfigRegistry
 from coremltools.optimize.torch._utils.torch_utils import (
     get_n_bits_from_dtype as _get_n_bits_from_dtype,
 )
@@ -36,6 +37,9 @@ from coremltools.optimize.torch.optimization_config import (
 )
 from coremltools.optimize.torch.optimization_config import OptimizationConfig as _OptimizationConfig
 from coremltools.optimize.torch.optimization_config import _structure_from_dict_hook_factory
+from coremltools.optimize.torch.quantization.modules.observers import (
+    EMAMinMaxObserver as _EMAMinMaxObserver,
+)
 
 _logger = _logging.getLogger(__name__)
 
@@ -44,19 +48,22 @@ _logger = _logging.getLogger(__name__)
 class ObserverType(_Enum):
     """
     An enum indicating the type of observer.
-    Allowed options are moving_average_min_max, min_max, ema_min_max, ema_percentile, mse, ema_mse, lsq and lsq_plus.
+    Allowed options are moving_average_min_max, min_max, ema_min_max.
     """
 
     moving_average_min_max = "moving_average_min_max"
     min_max = "min_max"
+    ema_min_max = "ema_min_max"
 
     @staticmethod
     def get_observer(observer_type: "ObserverType", is_per_channel: bool) -> _Any:
         _str_to_observer_map = {
             "moving_average_min_max": _aoquant.MovingAverageMinMaxObserver,
             "min_max": _aoquant.MinMaxObserver,
+            "ema_min_max": _EMAMinMaxObserver,
             "moving_average_min_max_per_channel": _aoquant.MovingAveragePerChannelMinMaxObserver,
             "min_max_per_channel": _aoquant.PerChannelMinMaxObserver,
+            "ema_min_max_per_channel": _EMAMinMaxObserver,
         }
         observer_name = observer_type.value
         if is_per_channel:
@@ -91,6 +98,7 @@ class QuantizationScheme(_Enum):
 
 
 _default_quantization_options = {
+    "algorithm": "vanilla",
     "weight_dtype": _torch.qint8,
     "weight_per_channel": True,
     "weight_ch_axis": 0,
@@ -100,6 +108,7 @@ _default_quantization_options = {
 }
 
 
+_SUPPORTED_ALGORITHMS = ["vanilla", "learnable"]
 # Backends only support 4 and 8 bit quantization
 _SUPPORTED_N_BITS = [4, 8, 32]
 _SUPPORTED_WEIGHT_DTYPE = [
@@ -179,6 +188,8 @@ class ModuleLinearQuantizerConfig(_ModuleOptimizationConfig):
             # mode, thus more closely simulating the inference numerics during training time.
 
     Args:
+        algorithm (:obj:`str`): Quantization algorithm to use. Supported values are
+            ``"vanilla"`` and ``"learnable"``. Defaults to ``"vanilla"``.
         weight_dtype (:py:class:`torch.dtype`): The dtype to use for quantizing the weights. The number of bits used
             for quantization is inferred from the dtype. When dtype is set to :py:class:`torch.float32`, the weights
             corresponding to that layer are not quantized.  Defaults to :py:class:`torch.int8` which corresponds to
@@ -203,11 +214,23 @@ class ModuleLinearQuantizerConfig(_ModuleOptimizationConfig):
             Defaults to ``None``, which means the ``step`` method of :py:class:`LinearQuantizer` will be a no-op and
             all observers and quantization simulation will be turned on from the first step, batch norm layers always
             operate in training mode, and mean and variance statistics collection is not frozen.
+
+    .. note
+        The learnable quantization algorithm treats the quantization parameters as parameters that are
+        learned as part of training. Please see :py:class:`LearnableFakeQuantize` for further information.
     """
 
+    algorithm: str = _field(
+        default=_default_quantization_options["algorithm"],
+        validator=[
+            _validators.instance_of(str),
+            _validators.in_(_SUPPORTED_ALGORITHMS),
+        ],
+    )
     weight_dtype: _Union[str, _torch.dtype] = _field(
         default=_default_quantization_options["weight_dtype"],
     )
+    weight_n_bits: int = _field(init=False)
     weight_observer: ObserverType = _field(
         default=_default_quantization_options["observer"],
         converter=ObserverType,
@@ -278,6 +301,7 @@ _ModuleTypeConfigType = _NewType(
 )
 
 
+@_ModuleToOptConfigRegistry.register_module_cfg(ModuleLinearQuantizerConfig)
 @_define
 class LinearQuantizerConfig(_OptimizationConfig):
     """
@@ -405,6 +429,15 @@ class LinearQuantizerConfig(_OptimizationConfig):
             for key, val in self.module_type_configs.items()
         }
         self._validate_same_params(["quantization_scheme"])
+        algorithm = "vanilla" if self.global_config is None else self.global_config.algorithm
+        for mod_type, config in self.module_type_configs.items():
+            assert (
+                config is None or config.algorithm == algorithm
+            ), "Must use the same quantization algorithm across LinearQuantizerConfig"
+        for mod_name, config in self.module_name_configs.items():
+            assert (
+                config is None or config.algorithm == algorithm
+            ), "Must use the same quantization algorithm across LinearQuantizerConfig"
 
     @classmethod
     def from_dict(cls, config_dict: _Dict[str, _Any]) -> "LinearQuantizerConfig":

@@ -19,6 +19,7 @@ from coremltools.optimize.torch._utils.math_utils import rmse_error as _rmse_err
 from coremltools.optimize.torch._utils.metadata_utils import (
     register_metadata_version as _register_metadata_version,
 )
+from coremltools.optimize.torch._utils.optimizer_utils import _ConfigToOptimizerRegistry
 from coremltools.optimize.torch._utils.torch_utils import get_eval_model as _get_eval_model
 from coremltools.optimize.torch._utils.torch_utils import (
     normalize_fsdp_module_name as _normalize_fsdp_module_name,
@@ -71,6 +72,7 @@ class _PalettizerLUTObserver(_torch.quantization.MovingAveragePerChannelMinMaxOb
         self.eps = _torch.tensor([_torch.finfo(_torch.float32).eps])
 
 
+@_ConfigToOptimizerRegistry.register_config(_DKMPalettizerConfig)
 class DKMPalettizer(Palettizer):
     """
     A palettization algorithm based on `"DKM: Differentiable K-Means Clustering Layer for Neural Network

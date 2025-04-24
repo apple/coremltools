@@ -2837,6 +2837,47 @@ class TestInt32CastToInt16:
                 # When `x` is float, this int pass has no effect
                 assert get_op_types_in_program(prog) == ["squeeze"]
 
+    @pytest.mark.parametrize(
+        "opset_version", [ct.target.iOS15, ct.target.iOS16, ct.target.iOS17, ct.target.iOS18]
+    )
+    def test_topk(self, opset_version):
+        x_dtype = types.fp16 if opset_version >= ct.target.iOS16 else types.fp32
+
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=(1, 32, 1, 8), dtype=x_dtype)],
+            opset_version=opset_version,
+        )
+        def prog(x):
+            if opset_version > ct.target.iOS16:
+                result = mb.topk(
+                    x=x,
+                    k=8,
+                    axis=1,
+                    ascending=False,
+                    sort=True,
+                    return_indices=True,
+                    output_indices_dtype="int32",
+                )
+            elif opset_version == ct.target.iOS16:
+                result = mb.topk(x=x, k=8, axis=1, ascending=False, sort=True, return_indices=True)
+            else:
+                result = mb.topk(x=x, k=8, axis=1, ascending=False)
+            return result
+
+        prev_prog, _, block = apply_pass_and_basic_check(prog, "common::add_int16_cast")
+
+        if opset_version < ct.target.iOS17:
+            # Prior to iOS 17, `topk` does not support int16, so this pass has no effect
+            assert get_op_types_in_program(prog) == get_op_types_in_program(prev_prog)
+        else:
+            # `topk` outputs indices in uint16, which needs to be cast to int32 for output
+            assert get_op_types_in_program(prog) == ["topk", "cast"]
+            topk = block.find_ops(op_type="topk")[0]
+            assert topk.outputs[1].dtype == types.uint16
+            cast_int16_to_int32 = block.find_ops(op_type="cast")[0]
+            assert cast_int16_to_int32.dtype.val == "int32"
+            assert len(cast_int16_to_int32.outputs[0].child_ops) == 0
+
     @patch(
         "coremltools.converters.mil.mil.passes.defs.quantization.add_int16_cast._PREFER_INT16_OPS",
         set(),

@@ -3,6 +3,9 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+# Implementation for transform_to_ch_axis function has been adapted from
+# https://github.com/pytorch/pytorch/blob/main/torch/ao/quantization/observer.py
+
 import logging as _logging
 import operator as _operator
 import re as _re
@@ -20,6 +23,29 @@ import torch as _torch
 import torch.nn as _nn
 
 _logger = _logging.getLogger(__name__)
+
+
+def transform_to_ch_axis(x: _torch.Tensor, ch_axis: int):
+    """
+    Transform the given input tensor x so that the specified channel axis dimension
+    becomes the outermost tensor dimension by permuting the tensor such that
+    dimension 0 and the channel axis dimension are swapped. Then flatten all the
+    dimensions from index 1 onwards in the permuted tensor and return the resulting tensor.
+
+    The input tensor x is expected to be detached.
+    """
+
+    assert x.ndim >= 2
+
+    assert ch_axis >= 0 and ch_axis < len(x.shape)
+
+    new_axis_list = [i for i in range(len(x.shape))]
+    new_axis_list[ch_axis] = 0
+    new_axis_list[0] = ch_axis
+    y = x.permute(new_axis_list)
+    y = _torch.flatten(y, start_dim=1)
+
+    return y
 
 
 def list_or_str_to_tensor(alist: _Union[_List[int], str, _torch.Tensor]) -> _torch.Tensor:
@@ -100,6 +126,7 @@ def maybe_convert_str_to_dtype(dtype: _Union[str, _torch.dtype]) -> _torch.dtype
         "int3": _torch.int8,
         "float16": _torch.float16,
     }
+
     if hasattr(_torch, "float8_e4m3fn"):
         _str_to_dtype_map.update(
             {
@@ -107,6 +134,7 @@ def maybe_convert_str_to_dtype(dtype: _Union[str, _torch.dtype]) -> _torch.dtype
                 "fp8_e5m2": _torch.float8_e5m2,
             }
         )
+
     if isinstance(dtype, str):
         dtype = dtype.lower()
         if dtype in _str_to_dtype_map:

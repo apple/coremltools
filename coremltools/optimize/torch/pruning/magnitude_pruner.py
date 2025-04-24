@@ -22,6 +22,10 @@ from attr import field as _field
 from attrs import validators as _validators
 
 from coremltools.optimize.torch._typing import ParamsDict as _ParamsDict
+from coremltools.optimize.torch._utils.optimizer_utils import (
+    _ConfigToOptimizerRegistry,
+    _ModuleToOptConfigRegistry,
+)
 from coremltools.optimize.torch.optimization_config import (
     ModuleOptimizationConfig as _ModuleOptimizationConfig,
 )
@@ -309,6 +313,7 @@ _ModuleTypeConfigType = _NewType(
 )
 
 
+@_ModuleToOptConfigRegistry.register_module_cfg(ModuleMagnitudePrunerConfig)
 @_define
 class MagnitudePrunerConfig(_OptimizationConfig):
     """
@@ -419,6 +424,7 @@ class _MagnitudePrunerInfo:
     sparsity_level: float
 
 
+@_ConfigToOptimizerRegistry.register_config(MagnitudePrunerConfig)
 class MagnitudePruner(_BasePrunerWithPruningMethod):
     """
     A pruning algorithm based on `To prune, or not to prune: exploring the efficacy of

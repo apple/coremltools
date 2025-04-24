@@ -30,6 +30,10 @@ from attrs import validators as _validators
 from coremltools.optimize.torch._utils.metadata_utils import (
     register_metadata_version as _register_metadata_version,
 )
+from coremltools.optimize.torch._utils.optimizer_utils import (
+    _ConfigToOptimizerRegistry,
+    _ModuleToOptConfigRegistry,
+)
 from coremltools.optimize.torch._utils.report_utils import (
     compute_post_training_report as _compute_post_training_report,
 )
@@ -61,7 +65,7 @@ _ModuleTypeConfigType = _NewType(
 
 _SUPPORTED_MODULES = [_torch.nn.Conv2d, _torch.nn.Linear]
 
-
+@_ModuleToOptConfigRegistry.register_module_cfg(_LayerwiseCompressionAlgorithmConfig)
 @_define
 class LayerwiseCompressorConfig(_OptimizationConfig):
     """
@@ -182,7 +186,7 @@ def _set_torch_flags():
         _torch.backends.cuda.matmul.allow_tf32 = cuda_matmul_tf32
         _torch.backends.cudnn.allow_tf32 = cudnn_allow_tf32
 
-
+@_ConfigToOptimizerRegistry.register_config(LayerwiseCompressorConfig)
 class LayerwiseCompressor(_BaseDataCalibratedModelOptimizer):
     """
     A post-training compression algorithm which compresses a sequential model layer by layer

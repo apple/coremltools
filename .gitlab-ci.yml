@@ -9,14 +9,16 @@ stages:
 ##
 #########################################################################
 
-check_python_flake8:
-  tags:
-    - macOS_M1
-  stage: check
-  script:
-    - python -m pip install --upgrade pip
-    - pip install flake8
-    - flake8 ./coremltools --count --select=E9,F5,F63,F7,F82 --show-source --statistics
+
+# TODO: Enable Flake8 once it's integrated in the regular dev workflow
+# check_python_flake8:
+#   tags:
+#     - macOS_M1
+#   stage: check
+#   script:
+#     - python -m pip install --upgrade pip
+#     - pip install flake8
+#     - flake8 ./coremltools --count --select=E9,F5,F63,F7,F82 --show-source --statistics
 
 
 #########################################################################

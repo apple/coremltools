@@ -243,12 +243,17 @@ def pre_apply_weight_quant(model: _torch.nn.Module):
             module,
             _torch.ao.nn.quantized.reference.modules.utils.ReferenceQuantizedModule,
         ):
+            # Apply ternary if-else statement to quantization parameters to avoid errors caused by 0-dimensional tensors
             weight = _quantize_and_dequantize_weight_decomposed(
                 module.weight,
                 module.weight_qscheme,
                 module.weight_dtype,
-                module.weight_scale,
-                module.weight_zero_point,
+                module.weight_scale.unsqueeze(0)
+                if module.weight_scale.ndim == 0
+                else module.weight_scale,
+                module.weight_zero_point.unsqueeze(0)
+                if module.weight_zero_point.ndim == 0
+                else module.weight_zero_point,
                 module.weight_axis_int,
                 module.weight_quant_min,
                 module.weight_quant_max,

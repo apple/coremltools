@@ -20,20 +20,6 @@ namespace CoreML {
     // This is the type used internally
     typedef unsigned short float16;
 
-    // insert_or_assign not available until C++17
-    template<typename K, typename V>
-    inline void insert_or_assign(std::unordered_map<K, V>& map, const K& k, const V& v) {
-        const auto result = map.find(k);
-        if (result == map.end()) {
-            // insert case
-            map.insert(std::make_pair(k, v));
-        } else {
-            // assign case
-            V& existing = map.at(k);
-            existing = v;
-        }
-    }
-
     template <typename T>
     static inline Result saveSpecification(const T& formatObj,
                                            std::ostream& out) {
@@ -88,10 +74,10 @@ namespace CoreML {
      */
     void downgradeSpecificationVersion(Specification::Model *pModel);
 
-    // Helper functions for determining model version
+    /**
+     * Returns true if the specified model is a neural network and it has a custom layer.
+     */
     bool hasCustomLayer(const Specification::Model& model);
-
-    bool hasFlexibleShapes(const Specification::Model& model);
 
     /**
      * The method "hasIOSXFeatures" will return false if the model does not express any "feature"
@@ -120,58 +106,12 @@ namespace CoreML {
     // Returns a vector of pairs of strings, one pair per custom model instance
     std::vector<StringPair> getCustomModelNamesAndDescriptions(const Specification::Model& model);
 
-    bool hasfp16Weights(const Specification::Model& model);
-    bool hasUnsignedQuantizedWeights(const Specification::Model& model);
-    bool hasWeightOfType(const Specification::Model& model, const WeightParamType& type);
-    bool hasWeightOfType(const Specification::NeuralNetworkLayer& layer, const WeightParamType& type);
-
-    bool hasCustomModel(const Specification::Model& model);
-    bool hasAppleWordTagger(const Specification::Model& model);
-    bool hasAppleTextClassifier(const Specification::Model& model);
-    bool hasAppleGazetteer(const Specification::Model& model);
-    bool hasAppleWordEmbedding(const Specification::Model& model);
+    bool hasFP16Weights(const Specification::Model& model);
     bool hasAppleImageFeatureExtractor(const Specification::Model& model);
-    bool hasScenePrint(const Specification::Model& model);
-    bool hasObjectPrint(const Specification::Model& model);
-    bool hasAppleAudioFeatureExtractor(const Specification::Model& model);
-    bool hasSoundPrint(const Specification::Model& model);
-    bool hasCategoricalSequences(const Specification::Model& model);
-    bool hasNonmaxSuppression(const Specification::Model& model);
-    bool hasBayesianProbitRegressor(const Specification::Model& model);
-    bool hasItemSimilarityRecommender(const Specification::Model& model);
-    bool hasSoundAnalysisPreprocessing(const Specification::Model& model);
-    bool hasIOS12NewNeuralNetworkLayers(const Specification::Model& model);
     bool isIOS12NeuralNetworkLayer(const Specification::NeuralNetworkLayer& layer);
-    bool hasIOS13NeuralNetworkFeatures(const Specification::Model& model);
-    bool hasIOS14NeuralNetworkFeatures(const Specification::Model& model);
-    bool hasDefaultValueForOptionalInputs(const Specification::Model& model);
-    bool hasFloat32InputsOrOutputsForNonmaxSuppression(const Specification::Model& model);
-    bool hasFloat16MultiArray(const Specification::Model& model);
-    bool hasGrayscaleFloat16Image(const Specification::Model& model);
-    bool hasCoreML6Opsets(const Specification::Model& model);
-    bool hasCoreML7Opsets(const Specification::Model& model);
-    bool hasCoreML8Opsets(const Specification::Model& model);
-    bool hasMultiFunctions(const Specification::Model& model);
-    bool hasModelOrSubModelProperty(const Specification::Model& model, const std::function<bool(const Specification::Model&)> &boolFunc);
-    bool hasEmptyInput(const Specification::Model& model);
 
-    // We also need a hasNonmaxSupression and hasBayesianProbitRegressor
-    static inline std::vector<float16> readFloat16Weights(const Specification::WeightParams& weights) {
-
-        std::string weight_bytes = weights.float16value();
-        std::vector<float16> output(weight_bytes.size() / 2);
-
-        for (size_t i = 0; i < weight_bytes.size(); i+=2) {
-
-            float16 out = static_cast<float16>((static_cast<float16>(weight_bytes[i]) << 8)) | static_cast<float16>(weight_bytes[i+1]);
-            output[i/2] = out;
-
-        }
-        return output;
-    }
-
+    google::protobuf::RepeatedPtrField<CoreML::Specification::NeuralNetworkLayer> const *getNNSpec(const CoreML::Specification::Model& model);
 }
 
-google::protobuf::RepeatedPtrField<CoreML::Specification::NeuralNetworkLayer> const *getNNSpec(const CoreML::Specification::Model& model);
 
 #endif

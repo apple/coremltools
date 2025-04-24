@@ -19,6 +19,7 @@ from coremltools.converters.mil import mil
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget as _target
 from coremltools.converters.mil.frontend import _utils as frontend_utils
 from coremltools.converters.mil.input_types import (
+    ColorLayout,
     EnumeratedShapes,
     ImageType,
     InputType,
@@ -585,6 +586,12 @@ class TorchConverter:
             # is True. Make the default input type to fp16
             self._adjust_default_input_to_fp16()
 
+        if outputs is not None:
+            if any(map(
+                    lambda o: isinstance(o, ImageType) and o.grayscale_use_uint8,
+                    outputs
+            )):
+                raise ValueError("'grayscale_use_uint8' can not be set on image output")
         self.outputs = outputs
         self.output_names = frontend_utils.get_output_names(self.outputs)
         self.opset_version = _target(opset_version) if opset_version is not None else None
@@ -812,8 +819,7 @@ class TorchConverter:
                 missing_ops.update(_miss)
         return implemented_ops, missing_ops
 
-    @staticmethod
-    def _create_placeholder(_input: InputType) -> Placeholder:
+    def _create_placeholder(self, _input: InputType) -> Placeholder:
         """
         Converts an InputType into a Placeholder.
 
@@ -829,6 +835,12 @@ class TorchConverter:
         elif dtype == types.fp64:
             dtype = types.fp32
             logger.warning(f"fp64 dtype input {_input.name} down casted to fp32.")
+        elif isinstance(_input, ImageType) and  _input.grayscale_use_uint8:
+            # Only supported on iOS17+
+            if self.opset_version is None or self.opset_version < _target.iOS17:
+                raise ValueError("'grayscale_use_uint8' on image input can only be set when" \
+                                 " minimum_deployment_target is iOS17 or higher")
+            dtype = types.uint8
 
         if isinstance(_input, StateType):
             return mb.state_tensor_placeholder(shape, dtype=dtype)
@@ -1379,6 +1391,10 @@ class TorchConverter:
             has_states = len(getattr(self, "states", [])) > 0
             convert_nodes(self.context, self.graph, early_exit=not has_states)
 
+            # Only torch script needs to convert memory layout
+            if self.context.frontend == TorchFrontend.TORCHSCRIPT:
+                self.convert_output_to_memory_layout()
+
             # EXIR represents stateful execution as buffer mutation at output,
             # i.e. buffer.copy_(...) at the end of EXIR program,
             # so analogously we update state at the end of pymil function
@@ -1446,3 +1462,10 @@ class TorchConverter:
             prog._add_essential_scope_source(essential_scope_sources)
             prog.validate(check_essential_scope=True)
         return prog
+
+    def convert_output_to_memory_layout(self):
+        """
+        A placeholder function for the output memory layout conversion logic.
+        Left as empty for now, but subclasses could implement this function as needed.
+        """
+        pass

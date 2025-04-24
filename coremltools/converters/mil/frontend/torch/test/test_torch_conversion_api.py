@@ -30,6 +30,7 @@ from coremltools.converters.mil.frontend.torch.torch_op_registry import (
     TorchOpsRegistry,
     register_torch_op,
 )
+from coremltools.converters.mil.mil.types import builtin_to_string
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 from coremltools.converters.mil.testing_reqs import backends
 from coremltools.converters.mil.testing_utils import (
@@ -1426,6 +1427,172 @@ class TestTorchInputs(_TestInputs):
                 np.testing.assert_allclose(
                     result[name], expected.detach().numpy(), rtol=rtol, atol=atol
                 )
+
+
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "enable_behavior",
+        [True, False],
+    )
+    def test_grayscale_use_uint8(enable_behavior):
+        class MyModel(nn.Module):
+            def forward(self, x):
+                return torch.transpose(x, -2, -1)
+
+        shape = (256, 256)
+        x = np.random.randint(low=0, high=246, size=shape, dtype=np.uint8)
+        image = Image.fromarray(x, mode="L")
+        x = torch.Tensor(x)
+
+        torch_model = MyModel().eval()
+        torch_model = torch.jit.trace(torch_model, torch.Tensor(x))
+
+        input_type = ct.ImageType(
+            name="x",
+            shape=(1,1)+shape,
+            color_layout=ct.colorlayout.GRAYSCALE,
+            grayscale_use_uint8=enable_behavior,
+        )
+
+        mlmodel = ct.convert(
+            torch_model,
+            inputs=[input_type],
+            minimum_deployment_target=ct.target.iOS17,
+            outputs=[
+                ct.ImageType(name="y", color_layout=ct.colorlayout.GRAYSCALE)
+            ],
+        )
+        assert mlmodel is not None
+
+        # Check parameter for MIL main function has right type.
+        mil_main_func = mlmodel._mil_program.functions["main"]
+        param_type = mil_main_func._input_dict["x"].dtype
+        if enable_behavior:
+            assert builtin_to_string(param_type) == "uint8"
+        else:
+            assert builtin_to_string(param_type) == "fp32"
+
+        # Check the same parameter in the spec.
+        spec = mlmodel.get_spec()
+        main_inputs = spec.mlProgram.functions["main"].inputs
+        dtype = main_inputs[0].type.tensorType.dataType
+        if enable_behavior:
+            assert dtype == proto.MIL_pb2.DataType.UINT8
+        else:
+            assert dtype == proto.MIL_pb2.DataType.FLOAT32
+
+        # Make sure we can get preditions from the model
+        predictons = mlmodel.predict({"x": image})
+        assert predictons is not None and "y" in predictons and len(predictons) == 1
+
+        # Make sure predictions match PyTorch
+        predictons = np.array(predictons["y"])
+        torch_predictions = torch_model(torch.Tensor(x))
+        np.testing.assert_equal(torch_predictions.shape, predictons.shape)
+        np.testing.assert_allclose(torch_predictions, predictons)
+
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "enable_behavior",
+        [True, False],
+    )
+    def test_grayscale_use_uint8_with_tensor_output(enable_behavior):
+        if enable_behavior:
+            pytest.xfail(
+                "rdar://145013834 ([Bug] Grayscale input, with grayscale_use_uint8, and Tensor output fails)"
+            )
+
+        class MyModel(nn.Module):
+            def forward(self, x):
+                return torch.transpose(x, -2, -1)
+
+        shape = (256, 256)
+        x = np.random.randint(low=0, high=246, size=shape, dtype=np.uint8)
+        image = Image.fromarray(x, mode="L")
+        x = torch.Tensor(x)
+
+        torch_model = MyModel().eval()
+        torch_model = torch.jit.trace(torch_model, torch.Tensor(x))
+
+        input_type = ct.ImageType(
+            name="x",
+            shape=(1,1)+shape,
+            color_layout=ct.colorlayout.GRAYSCALE,
+            grayscale_use_uint8=enable_behavior,
+        )
+
+        mlmodel = ct.convert(
+            torch_model,
+            inputs=[input_type],
+            minimum_deployment_target=ct.target.iOS17,
+            outputs=[
+                ct.TensorType(name="y"),
+            ],
+        )
+        assert mlmodel is not None
+
+        # Make sure we can get preditions from the model
+        predictons = mlmodel.predict({"x": image})
+        assert predictons is not None and "y" in predictons and len(predictons) == 1
+
+
+    @staticmethod
+    def test_grayscale_use_uint8_negative_cases():
+        class MyModel(nn.Module):
+            def forward(self, x):
+                return torch.transpose(x, -2, -1)
+
+        shape = (256, 256)
+        x = np.random.randint(low=0, high=246, size=shape, dtype=np.uint8)
+        x = torch.Tensor(x)
+
+        torch_model = MyModel().eval()
+        torch_model = torch.jit.trace(torch_model, torch.Tensor(x))
+
+        input_type = ct.ImageType(
+            name="x",
+            shape=(1,1)+shape,
+            color_layout=ct.colorlayout.GRAYSCALE,
+            grayscale_use_uint8=True,
+        )
+
+        # iOS16 target and grayscale_use_uint8 enabled
+        with pytest.raises(ValueError, match="'grayscale_use_uint8'"):
+            mlmodel = ct.convert(
+                torch_model,
+                inputs=[input_type],
+                minimum_deployment_target=ct.target.iOS16,
+                outputs=[
+                    ct.ImageType(color_layout=ct.colorlayout.GRAYSCALE)
+                ],
+            )
+
+        # No target specified and grayscale_use_uint8 enabled
+        with pytest.raises(ValueError, match="'grayscale_use_uint8'"):
+            mlmodel = ct.convert(
+                torch_model,
+                inputs=[input_type],
+                minimum_deployment_target=None,
+                outputs=[
+                    ct.ImageType(color_layout=ct.colorlayout.GRAYSCALE)
+                ],
+            )
+
+        # target good, but grayscale_use_uint8 set on output
+        with pytest.raises(ValueError, match="can not be set on image output"):
+            mlmodel = ct.convert(
+                torch_model,
+                inputs=[input_type],
+                minimum_deployment_target=ct.target.iOS17,
+                outputs=[
+                    ct.ImageType(
+                        color_layout=ct.colorlayout.GRAYSCALE,
+                        grayscale_use_uint8=True,
+                    )
+                ],
+            )
 
 
 @pytest.fixture

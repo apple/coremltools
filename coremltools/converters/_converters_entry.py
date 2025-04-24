@@ -743,7 +743,7 @@ def _validate_outputs_argument(outputs):
             raise ValueError('"outputs" must be of type list')
         if len(outputs) == 0:
             return None, None
-        if not all(map(lambda t: isinstance(t, (ImageType, str, TensorType)), outputs)):
+        if not all(map(lambda t: ((isinstance(t, InputType) and t.can_be_output()) or isinstance(t, str)), outputs)):
             raise ValueError('Elements in "outputs" must be ct.TensorType or ct.ImageType or str')
 
         msg_inconsistent_types = 'all elements of "outputs" must either be of type str ' \
@@ -754,10 +754,10 @@ def _validate_outputs_argument(outputs):
                 raise ValueError(msg_inconsistent_types)
             return outputs, [TensorType(name=name) for name in outputs]
 
-        if isinstance(outputs[0], InputType):
-            if not all([isinstance(t, TensorType) or isinstance(t, ImageType) for t in outputs]):
+        if isinstance(outputs[0], InputType) and outputs[0].can_be_output():
+            if not all([(isinstance(t, InputType) and t.can_be_output()) for t in outputs]):
                 raise ValueError(msg_inconsistent_types)
-            if any([t.shape is not None for t in outputs]):
+            if any([(isinstance(t, TensorType) or isinstance(t, ImageType)) and t.shape is not None for t in outputs]):
                 msg = "The 'shape' argument must not be specified for the outputs, since it is " \
                       "automatically inferred from the input shapes and the ops in the model"
                 raise ValueError(msg)
@@ -1011,7 +1011,7 @@ def _determine_source(model, source,
             # validate that the outputs passed by the user are of type ImageType/TensorType
             if output_argument_as_specified_by_user is not None and not all(
                 [
-                    isinstance(t, TensorType) or isinstance(t, ImageType)
+                    (isinstance(t, InputType) and t.can_be_output())
                     for t in output_argument_as_specified_by_user
                 ]
             ):

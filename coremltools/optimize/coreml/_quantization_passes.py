@@ -99,8 +99,8 @@ class AbstractCompressionPass(AbstractQuantizationPass):
                 AvailableTarget.iOS18
             ):
                 raise ValueError(
-                    "Joint compression is only supported since iOS18. Please set the "
-                    "minimum deployment target to iOS18 if you want to use it."
+                    "Joint compression is only supported since iOS18. Please re-convert "
+                    "your model with minimum_deployment_target set to at least ct.target.iOS18."
                 )
 
             valid_consts = []
@@ -1019,11 +1019,20 @@ class palettize_weights(AbstractCompressionPass):
         return optimize_utils.lut_to_dense(params.indices, params.lut, params.vector_axis)
 
     def transform_op(self, op: Operation):
-        op_config = self.config._get_const_op_config(op)
+        op_config: Optional[OpPalettizerConfig] = self.config._get_const_op_config(op)
         if op_config is None:
             return
         if not self.need_compress_const(op, self.config._is_deprecated, op_config.weight_threshold):
             return
+        if not is_current_opset_version_compatible_with(AvailableTarget.iOS18):
+            err_msg = (
+                "The {} palettization is supported since iOS18. Please re-convert "
+                "your model with minimum_deployment_target set to at least ct.target.iOS18."
+            )
+            if op_config.granularity == CompressionGranularity.PER_GROUPED_CHANNEL:
+                raise ValueError(err_msg.format("per_grouped_channel"))
+            if op_config.cluster_dim > 1:
+                raise ValueError(err_msg.format("vector"))
 
         weight_to_compress = op.outputs[0].val
         restore_original_dtype = None
@@ -1369,6 +1378,15 @@ class linear_quantize_weights(AbstractCompressionPass):
             return
         if not self.need_compress_const(op, self.config._is_deprecated, op_config.weight_threshold):
             return
+        if not is_current_opset_version_compatible_with(AvailableTarget.iOS18):
+            err_msg = (
+                "The {} quantization is supported since iOS18. "
+                "Please re-convert your model with minimum_deployment_target set to at least ct.target.iOS18."
+            )
+            if op_config.granularity == CompressionGranularity.PER_BLOCK:
+                raise ValueError(err_msg.format("per_block"))
+            if op_config.dtype in {types.int4, types.uint4}:
+                raise ValueError(err_msg.format("4-bit"))
 
         weight_to_compress = op.outputs[0].val
 

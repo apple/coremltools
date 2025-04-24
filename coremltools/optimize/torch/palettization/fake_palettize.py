@@ -581,7 +581,9 @@ class FakePalettize(_FakeQuantize, _Partitioner):
             weights = weights.permute(self.cluster_permute)
         if self.enable_per_channel_scale:
             if not isinstance(self.per_channel_scaling_factor, _torch.Tensor):
-                self.per_channel_scaling_factor = _torch.zeros((weights.flatten(1).shape[0], 1))
+                self.per_channel_scaling_factor = _torch.zeros(
+                    weights.flatten(1).shape[0], 1, device=weights.device
+                )
             with _torch.no_grad():
                 if not self.per_channel_scaling_factor[0][0]:
                     permuted_weights_proj = weights.flatten(1)

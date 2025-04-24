@@ -76,6 +76,9 @@ class InputType:
             self.shape = None
         self.dtype = dtype
 
+    # If this type could be used as model outputs.
+    def can_be_output(self):
+        return True
 
 class ImageType(InputType):
     def __init__(
@@ -86,6 +89,7 @@ class ImageType(InputType):
         bias=None,
         color_layout=ColorLayout.RGB,
         channel_first=None,
+        grayscale_use_uint8=False,
     ):
         """
         Configuration class used for image inputs in Core ML.
@@ -121,6 +125,13 @@ class ImageType(InputType):
             Default format:
                 * For TensorFlow: channel last (``channel_first=False``).
                 * For PyTorch: channel first (``channel_first=True``).
+
+        grayscale_use_uint8: (bool)
+            * Only applicable for GRAYSCALE color layout.
+            * Defaults to ``False``, in which case fp32 will be used.
+            * Using uint8 requires a ``minimum_deployment_target`` of iOS17 or newer.
+            * Using uint8 restricts the number of avaliable MIL ops, which can cause
+              conversion to fail.
         """
         super(ImageType, self).__init__(name, shape)
         self.scale = scale
@@ -145,6 +156,14 @@ class ImageType(InputType):
         else:
             self.bias = bias
         self.channel_first = channel_first
+
+        self.grayscale_use_uint8 = False
+        if grayscale_use_uint8:
+            if(color_layout != ColorLayout.GRAYSCALE):
+                raise ValueError('"grayscale_use_uint8" can only be True when' \
+                                 '"color_layout" is "GRAYSCALE"')
+            self.grayscale_use_uint8 = grayscale_use_uint8
+
 
     def __repr__(self):
         return self.__str__()
@@ -268,7 +287,7 @@ class TensorType(InputType):
     def __str__(self):
         return 'TensorType(name={}, shape={}, dtype={})'.format(self.name,
                                                                 self.shape,
-                                                                self.dtype)
+                                                                types.builtin_to_string(self.dtype))
 
 class StateType(InputType):
     SUPPORTED_WRAPPER_TYPE = (
@@ -322,6 +341,10 @@ class StateType(InputType):
 
     def __str__(self):
         return f"StateType[{self.wrapped_type}]"
+
+    def can_be_output(self):
+        # StateType cannot be a model output.
+        return False
 
 class RangeDim:
     def __init__(

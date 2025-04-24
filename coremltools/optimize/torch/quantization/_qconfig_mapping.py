@@ -19,6 +19,9 @@ from coremltools.optimize.torch.quantization._backend_config import (
     get_supported_modules as _get_supported_modules,
 )
 from coremltools.optimize.torch.quantization._utils import get_quant_range as _get_quant_range
+from coremltools.optimize.torch.quantization.modules.learnable_fake_quantize import (
+    LearnableFakeQuantize as _LearnableFakeQuantize,
+)
 from coremltools.optimize.torch.quantization.modules.observers import NoopObserver as _NoopObserver
 from coremltools.optimize.torch.quantization.quantization_config import (
     LinearQuantizerConfig as _LinearQuantizerConfig,
@@ -47,10 +50,19 @@ class _QConfigMappingBuilder:
     _observer_cls: _Type = _ObserverType
 
     @classmethod
+    def _get_default_quantization_options(cls):
+        return _default_quantization_options
+
+    @classmethod
     def _get_fake_quantize_class(
         cls, quantization_config: _Optional[_ModuleLinearQuantizerConfig] = None
     ) -> _Type[_aoquant.FakeQuantizeBase]:
-        return _aoquant.FakeQuantize
+        algorithm = quantization_config.algorithm if quantization_config is not None else "vanilla"
+        if algorithm == "vanilla":
+            return _aoquant.FakeQuantize
+        else:
+            assert algorithm == "learnable"
+            return _LearnableFakeQuantize
 
     @classmethod
     def _create_fake_quantize_partial_from_kwargs(
@@ -72,7 +84,7 @@ class _QConfigMappingBuilder:
 
         if is_weight and weight_per_channel:
             fq_kwargs["ch_axis"] = (
-                ch_axis if ch_axis else _default_quantization_options["weight_ch_axis"]
+                ch_axis if ch_axis else cls._get_default_quantization_options()["weight_ch_axis"]
             )
 
         if quant_min is not None:
@@ -94,19 +106,19 @@ class _QConfigMappingBuilder:
         Returns default QConfig for a given quantization scheme
         """
         act_observer = cls._observer_cls.get_observer(
-            _default_quantization_options["observer"], is_per_channel=False
+            cls._get_default_quantization_options()["observer"], is_per_channel=False
         )
-        act_dtype = _default_quantization_options["activation_dtype"]
+        act_dtype = cls._get_default_quantization_options()["activation_dtype"]
         act_qscheme = _QuantizationScheme.get_qscheme(quantization_scheme, is_per_channel=False)
 
         weight_observer = cls._observer_cls.get_observer(
-            _default_quantization_options["observer"],
+            cls._get_default_quantization_options()["observer"],
             is_per_channel=_default_quantization_options["weight_per_channel"],
         )
-        weight_dtype = _default_quantization_options["weight_dtype"]
+        weight_dtype = cls._get_default_quantization_options()["weight_dtype"]
         weight_qscheme = _QuantizationScheme.get_qscheme(
             quantization_scheme,
-            is_per_channel=_default_quantization_options["weight_per_channel"],
+            is_per_channel=cls._get_default_quantization_options()["weight_per_channel"],
         )
 
         return _aoquant.QConfig(
@@ -123,7 +135,7 @@ class _QConfigMappingBuilder:
                 weight_observer,
                 weight_dtype,
                 weight_qscheme,
-                weight_per_channel=_default_quantization_options["weight_per_channel"],
+                weight_per_channel=cls._get_default_quantization_options()["weight_per_channel"],
                 quantization_config=quantization_config,
             ),
         )
@@ -150,7 +162,7 @@ class _QConfigMappingBuilder:
             if weight_dtype == _torch.float:
                 return qconfig
 
-            weight_per_channel = _default_quantization_options["weight_per_channel"]
+            weight_per_channel = cls._get_default_quantization_options()["weight_per_channel"]
             weight_observer = type(weight.activation_post_process)
 
             if mod_type == _torch.nn.Embedding:
@@ -277,9 +289,10 @@ class _QConfigMappingBuilder:
 
     def _get_supported_modules(self):
         supported_modules = list(set(_get_supported_modules()) - set(_fixed_qparams_modules))
-        # Add _FakeQuantize, NoopObserver to ensure all fused ops have same qconfig
+        # Add _FakeQuantize, _NoopObserver, _LearnableFakeQuantize to ensure all fused ops have same qconfig
         supported_modules.append(_aoquant.FakeQuantize)
         supported_modules.append(_NoopObserver)
+        supported_modules.append(_LearnableFakeQuantize)
         return supported_modules
 
     def get_default_qconfig_mapping(

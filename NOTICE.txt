@@ -47,7 +47,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-This project contains content in the files coremltools/optimize/torch/quantization/modules/conv_transpose.py and coremltools/optimize/torch/quantization/modules/conv_transpose_fused.py which are adapted from pytorch (https://github.com/pytorch/). The license for these follows:
+This project contains content in the files coremltools/optimize/torch/quantization/modules/conv_transpose.py, coremltools/optimize/torch/quantization/modules/conv_transpose_fused.py, coremltools/optimize/torch/quantization/modules/learnable_fake_quantize.py,
+coremltools/optimize/torch/modules/observers.py, coremltools/optimize/torch/_utils/torch_utils.py which are adapted from pytorch (https://github.com/pytorch/). The license for these follows:
 
 Copyright (c) 2016 Facebook, Inc (Adam Paszke)
 
@@ -79,3 +80,21 @@ INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
 CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
+
+This project contains content in the files coremltools/optimize/torch/modules/learnable_fake_quantize.py and coremltools/optimize/torch/modules/observers.py which are adapted from MQBench (https://github.com/ModelTC/MQBench)
+
+Apache License 2.0
+
+Copyright 2025 MQBench
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	 http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.

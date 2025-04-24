@@ -37,7 +37,16 @@ from coremltools.optimize.torch.quantization._utils import (
 from coremltools.optimize.torch.quantization._utils import (
     is_activation_post_process as _is_activation_post_process,
 )
+from coremltools.optimize.torch.quantization._utils import (
+    is_per_channel_quant as _is_per_channel_quant,
+)
 from coremltools.optimize.torch.quantization._utils import is_quantized as _is_quantized
+from coremltools.optimize.torch.quantization.modules.learnable_fake_quantize import (
+    LearnableFakeQuantize as _LearnableFakeQuantize,
+)
+from coremltools.optimize.torch.quantization.modules.observers import (
+    EMAMinMaxObserver as _EMAMinMaxObserver,
+)
 from coremltools.optimize.torch.quantization.modules.observers import NoopObserver as _NoopObserver
 from coremltools.optimize.torch.quantization.quantization_config import (
     QuantizationScheme as _QuantizationScheme,
@@ -136,6 +145,15 @@ _observer_type_to_param_names = {
         "quant_min",
         "quant_max",
     ],
+    _EMAMinMaxObserver: [
+        "dtype",
+        "qscheme",
+        "reduce_range",
+        "quant_min",
+        "quant_max",
+        "ch_axis",
+        "ema_ratio",
+    ],
 }
 
 
@@ -163,6 +181,12 @@ class QATConfigurationHandler:
         self._act_quant_groups = dict()
         self._modules_to_replace = _defaultdict(list)
         self._new_act_post_process = dict()
+
+    def _get_default_quantization_options(self):
+        return _default_quantization_options
+
+    def _get_observer_type_to_param_names(self):
+        return _observer_type_to_param_names
 
     def prepare(self, model: _nn.Module, example_inputs: _Tuple[_Any, ...]):
         """
@@ -203,6 +227,21 @@ class QATConfigurationHandler:
             self._device = _torch.device("cpu")
 
         for name, module in model.named_modules(remove_duplicate=True):
+            # Set channel axis and param shape for weight observers
+            if (
+                hasattr(module, "weight_fake_quant")
+                and module.weight_fake_quant is not None
+                and hasattr(module.weight_fake_quant, "qscheme")
+            ):
+                if _is_per_channel_quant(module.weight_fake_quant.qscheme):
+                    if hasattr(module.weight_fake_quant, "set_ch_axis"):
+                        weight_ch_axis = module.weight_fake_quant.ch_axis
+                        module.weight_fake_quant.set_ch_axis(weight_ch_axis)
+                    if hasattr(module.weight_fake_quant, "set_param_shape"):
+                        weight_shape = module.weight.shape
+                        module.weight_fake_quant.set_param_shape(weight_shape)
+
+            # Set device for weight and activation observers
             if (
                 hasattr(module, "weight_fake_quant")
                 and module.weight_fake_quant is not None
@@ -218,20 +257,30 @@ class QATConfigurationHandler:
         affine qscheme instead of symmetric.
         """
         activation_post_process = module.activation_post_process
-        observer_type = type(activation_post_process)
-        if observer_type not in _observer_type_to_param_names:
+        if type(activation_post_process) not in self._get_observer_type_to_param_names():
             raise ValueError(f"Found unrecognized observer type {type(activation_post_process)}.")
-        observer_param_names = _observer_type_to_param_names[observer_type]
+        observer_type = type(activation_post_process)
+        observer_param_names = self._get_observer_type_to_param_names()[observer_type]
         kwargs = {k: getattr(activation_post_process, k) for k in observer_param_names}
         if "qscheme" in kwargs:
             kwargs["qscheme"] = _torch.per_tensor_affine
 
-        if module.ch_axis != -1:
-            new_act_post_process = _aoquant.FakeQuantize(
-                observer=observer_type, ch_axis=module.ch_axis, **kwargs
-            )
+        if isinstance(module, _aoquant.FakeQuantize):
+            if module.ch_axis != -1:
+                new_act_post_process = _aoquant.FakeQuantize(
+                    observer=observer_type, ch_axis=module.ch_axis, **kwargs
+                )
+            else:
+                new_act_post_process = _aoquant.FakeQuantize(observer=observer_type, **kwargs)
         else:
-            new_act_post_process = _aoquant.FakeQuantize(observer=observer_type, **kwargs)
+            assert isinstance(module, _LearnableFakeQuantize)
+            new_act_post_process = _LearnableFakeQuantize(observer=observer_type, **kwargs)
+            if hasattr(module, "device"):
+                new_act_post_process.set_device(self._device)
+            if module.ch_axis != -1:
+                new_act_post_process.set_ch_axis(module.ch_axis)
+                new_act_post_process.set_param_shape(module.shape)
+
         return new_act_post_process
 
     def _replace_activation_quantizers(self, model: _fx.GraphModule) -> _fx.GraphModule:
@@ -467,5 +516,32 @@ class QATConfigurationHandler:
                         qscheme=_QuantizationScheme.get_qscheme(
                             self._quantization_scheme, is_per_channel=True
                         ),
-                        ch_axis=_default_quantization_options["weight_ch_axis"],
+                        ch_axis=self._get_default_quantization_options()["weight_ch_axis"],
                     )
+                elif (
+                    isinstance(layer, _torch.nn.Embedding)
+                    and hasattr(layer, "weight_fake_quant")
+                    and isinstance(layer.weight_fake_quant, _LearnableFakeQuantize)
+                ):
+                    weight_dtype = layer.weight_fake_quant.dtype
+                    weight_device = layer.weight_fake_quant.device
+                    # Get the actual shape of weights from the layer itself
+                    weight_shape = layer.weight.shape
+                    weight_ch_axis = layer.weight_fake_quant.ch_axis
+                    delattr(layer, "weight_fake_quant")
+
+                    observer_cls = type(layer.qconfig.weight().activation_post_process)
+
+                    layer.weight_fake_quant = _LearnableFakeQuantize(
+                        observer=observer_cls,
+                        dtype=weight_dtype,
+                        qscheme=_QuantizationScheme.get_qscheme(
+                            self._quantization_scheme, is_per_channel=True
+                        ),
+                    )
+
+                    layer.weight_fake_quant.set_device(weight_device)
+                    if weight_ch_axis != -1:
+                        layer.weight_fake_quant.set_ch_axis(weight_ch_axis)
+                        assert weight_shape is not None
+                        layer.weight_fake_quant.set_param_shape(weight_shape)

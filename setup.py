@@ -7,7 +7,9 @@
 
 import importlib.util
 import os
-from setuptools import setup, find_packages
+from sys import platform
+
+from setuptools import find_packages, setup
 
 # Get the coremltools version string
 coremltools_dir = os.path.join(os.path.dirname(__file__), "coremltools")
@@ -59,6 +61,18 @@ Use of this source code is governed by the
 that can be found in the LICENSE.txt file.
 """
 
+data_files = [
+    "_core.*.so",  # kmeans1d
+    "libcoremlpython.so",
+    "libmilstoragepython.so",
+    "libmodelpackage.so",
+    "LICENSE.txt",
+    "README.md",
+]
+
+if platform == "darwin":
+    data_files.append("modelrunner/**/*")
+
 setup(
     name="coremltools",
     version=__version__,
@@ -69,14 +83,7 @@ setup(
     url="https://github.com/apple/coremltools",
     packages=find_packages(),
     package_data={
-        "": [
-            "_core.*.so",  # kmeans1d
-            "libcoremlpython.so",
-            "libmilstoragepython.so",
-            "libmodelpackage.so",
-            "LICENSE.txt",
-            "README.md",
-        ]
+        "": data_files,
     },
     install_requires=[
         "numpy >= 1.14.5",

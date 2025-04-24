@@ -863,6 +863,30 @@ class TestLinAlgNorms(TorchBaseTest):
         )
 
 
+class TestaLinAlgVectorDot(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, dim",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [-2, -1, 0, 2, None],
+        ),
+    )
+    def test_vecdot(self, compute_unit, backend, frontend, dim):
+        model = ModuleWrapper(
+            function=torch.linalg.vecdot,
+            kwargs={"dim": dim} if dim is not None else {},
+        )
+        TorchBaseTest.run_compare_torch(
+            [(4, 3, 2), (4, 3, 2)],
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+
 class TestLinAlgMatrixNorms(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, shape, order, keepdim, dim",
@@ -1086,6 +1110,60 @@ class TestBatchNorm(TorchBaseTest):
                 converter_input_type=converter_input_type,
                 torch_export_dynamic_shapes=torch_export_dynamic_shapes,
             )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(
+            [ct.ComputeUnit.CPU_ONLY],
+            backends,
+            frontends,
+        ),
+    )
+    def test_batchnorm_fp16_weight_with_fp32_param(self, compute_unit, backend, frontend):
+        """
+        With `.half()`, torch will still leave batchnorm's params (such as eps) as fp32.
+        This test makes sure the fp16 weight works with those fp32 params during conversion.
+        """
+        class TestModel(nn.Module):
+            def __init__(self, embedding_size: int, hidden_layers_sizes: List[int]):
+                super(TestModel, self).__init__()
+
+                layers: List[nn.Module] = []
+                previous_size = embedding_size
+                for size in hidden_layers_sizes:
+                    layers.append(nn.Linear(previous_size, size))
+                    layers.append(nn.ReLU())
+                    layers.append(nn.BatchNorm1d(size))
+                    previous_size = size
+                layers.append(nn.Linear(previous_size, 1))
+                layers.append(nn.Sigmoid())
+
+                self.network = nn.Sequential(*layers)
+
+            def forward(self, x):
+                x = x.view(x.size(0), -1)
+                x = self.network(x)
+                return x
+
+        torch_model_fp32 = TestModel(
+            embedding_size=512,
+            hidden_layers_sizes=[1024, 256, 128, 64],
+        )
+        torch_model_fp32.eval()
+        torch_model_fp16 = torch_model_fp32.half()
+
+        example_input = torch.rand(1, 512).half()
+        expected_results = torch_model_fp16(example_input)
+        self.run_compare_torch(
+            example_input,
+            torch_model_fp16,
+            expected_results=expected_results,
+            input_as_shape=False,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            minimum_deployment_target=ct.target.iOS17,
+        )
 
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, rank, num_features, eps, training",
@@ -1759,6 +1837,78 @@ class TestDynamicConv(TorchBaseTest):
                 "compute_unit",
                 "backend",
                 "frontend",
+                "width",
+                "in_channels",
+                "out_channels",
+                "kernel_size",
+                "stride",
+                "padding",
+                "dilation",
+                "output_padding",
+            ]
+        ),
+        [
+            (compute_unit, backend, frontend, *param)
+            for compute_unit, backend, frontend, param in itertools.product(
+                compute_units,
+                backends,
+                frontends,
+                [
+                    (5, 3, 3, 1, 3, 1, 3, 0),
+                    (5, 3, 3, 1, 3, 1, 1, 2),
+                    (5, 3, 3, 1, 3, 2, 1, 1),
+                    (5, 3, 3, 1, 3, 2, 1, 3),
+                    (5, 3, 3, 1, 3, 3, 3, 3),
+                    (5, 3, 3, 1, 3, 1, 3, 1),
+                    (5, 3, 3, 1, 3, 2, 1, 2),
+                ],
+            )
+        ],
+    )
+    def test_convolution_transpose1d_output_padding(
+        self,
+        compute_unit,
+        backend,
+        frontend,
+        width,
+        in_channels,
+        out_channels,
+        kernel_size,
+        stride,
+        padding,
+        dilation,
+        output_padding,
+    ):
+
+        # Output padding must be less than either stride or dilation
+        # Skip testing invalid combinations
+        if isinstance(output_padding, int):
+            if output_padding >= stride and output_padding >= dilation:
+                return
+
+        model = nn.ConvTranspose1d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+            output_padding=output_padding,
+        )
+        self.run_compare_torch(
+            (1, in_channels, width),
+            model,
+            compute_unit=compute_unit,
+            backend=backend,
+            frontend=frontend,
+        )
+
+    @pytest.mark.parametrize(
+        ",".join(
+            [
+                "compute_unit",
+                "backend",
+                "frontend",
                 "height",
                 "width",
                 "in_channels",
@@ -1880,78 +2030,6 @@ class TestConvTranspose(TorchBaseTest):
             frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
-        )
-
-    @pytest.mark.parametrize(
-        ",".join(
-            [
-                "compute_unit",
-                "backend",
-                "frontend",
-                "width",
-                "in_channels",
-                "out_channels",
-                "kernel_size",
-                "stride",
-                "padding",
-                "dilation",
-                "output_padding",
-            ]
-        ),
-        [
-            (compute_unit, backend, frontend, *param)
-            for compute_unit, backend, frontend, param in itertools.product(
-                compute_units,
-                backends,
-                frontends,
-                [
-                    (5, 3, 3, 1, 3, 1, 3, 0),
-                    (5, 3, 3, 1, 3, 1, 1, 2),
-                    (5, 3, 3, 1, 3, 2, 1, 1),
-                    (5, 3, 3, 1, 3, 2, 1, 3),
-                    (5, 3, 3, 1, 3, 3, 3, 3),
-                    (5, 3, 3, 1, 3, 1, 3, 1),
-                    (5, 3, 3, 1, 3, 2, 1, 2),
-                ],
-            )
-        ],
-    )
-    def test_convolution_transpose1d_output_padding(
-        self,
-        compute_unit,
-        backend,
-        frontend,
-        width,
-        in_channels,
-        out_channels,
-        kernel_size,
-        stride,
-        padding,
-        dilation,
-        output_padding,
-    ):
-
-        # Output padding must be less than either stride or dilation
-        # Skip testing invalid combinations
-        if isinstance(output_padding, int):
-            if output_padding >= stride and output_padding >= dilation:
-                return
-
-        model = nn.ConvTranspose1d(
-            in_channels=in_channels,
-            out_channels=out_channels,
-            kernel_size=kernel_size,
-            stride=stride,
-            padding=padding,
-            dilation=dilation,
-            output_padding=output_padding,
-        )
-        self.run_compare_torch(
-            (1, in_channels, width),
-            model,
-            compute_unit=compute_unit,
-            backend=backend,
-            frontend=frontend,
         )
 
     @pytest.mark.parametrize(
@@ -8270,9 +8348,13 @@ class TestTopk(TorchBaseTest):
         prog = mlmodel[1]._mil_program
         topk_op = prog.find_ops(op_type="topk", exactly_one=True)[0]
         expected_topk_x_dtype = types.type_mapping.numpy_type_to_builtin_type(x_dtype)
-        if backend[1] == "fp16" and x_dtype == np.float32:
-            # For fp16 precision the fp32 input/output will be cast to fp16.
-            expected_topk_x_dtype = types.fp16
+        if backend[1] == "fp16":
+            if x_dtype == np.float32:
+                # For fp16 precision the fp32 input/output will be cast to fp16.
+                expected_topk_x_dtype = types.fp16
+            elif x_dtype == np.int32:
+                # For fp16 precision the int32 input/output will be cast to int16.
+                expected_topk_x_dtype = types.int16
         assert topk_op.x.dtype == expected_topk_x_dtype
 
 

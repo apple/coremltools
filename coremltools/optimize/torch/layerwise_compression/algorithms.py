@@ -95,6 +95,7 @@ class ModuleGPTQConfig(LayerwiseCompressionAlgorithmConfig):
     weight_dtype: _Union[str, _torch.dtype] = _field(
         default="uint8",
     )
+    weight_n_bits: int = _field(init=False)
     granularity: QuantizationGranularity = _field(
         default="per_channel",
         converter=QuantizationGranularity,
@@ -181,6 +182,7 @@ class ModuleSparseGPTConfig(LayerwiseCompressionAlgorithmConfig):
     weight_dtype: _Union[str, _torch.dtype] = _field(
         default="uint8",
     )
+    weight_n_bits: int = _field(init=False)
     quantization_granularity: QuantizationGranularity = _field(
         default="per_channel",
         converter=QuantizationGranularity,

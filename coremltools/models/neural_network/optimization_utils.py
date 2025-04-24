@@ -11,6 +11,19 @@ import numpy as _np
 from coremltools import _logger
 
 
+def _proto_float_to_np_array(input: "CoreML.Specification.WeightParams"):
+    """Convert input with float values stored in floatValue or float16Value to np array."""
+    if len(input.floatValue) > 0:
+        return _np.array(input.floatValue)
+    elif len(input.float16Value) > 0:
+        return _np.frombuffer(input.float16Value, dtype="float16")
+    else:
+        raise AssertionError(
+            "No values found in input. Please make sure either "
+            "`floatValue` or `float16Value` of the input is set."
+        )
+
+
 def _fuse_layer_with_scale_layer(layer_idx, scale_idx, layers):
     layer_type = layers[layer_idx].WhichOneof("layer")
     if layer_type == "convolution":
@@ -25,8 +38,8 @@ def _fuse_layer_with_scale_layer(layer_idx, scale_idx, layers):
     scale = layers[scale_idx].scale
 
     # Update weights
-    sw = _np.array(scale.scale.floatValue)
-    w = _np.array(layer.weights.floatValue)
+    sw = _proto_float_to_np_array(scale.scale)
+    w = _proto_float_to_np_array(layer.weights)
     w = w.reshape(layer.outputChannels, int(len(w) / layer.outputChannels))
     wp = w * sw[:, None]
     del layer.weights.floatValue[:]
@@ -34,12 +47,12 @@ def _fuse_layer_with_scale_layer(layer_idx, scale_idx, layers):
 
     # Update biases
     if scale.hasBias:
-        sb = _np.array(scale.bias.floatValue)
+        sb = _proto_float_to_np_array(scale.bias)
         if not layer.hasBias:
             layer.bias.floatValue.extend(sb)
             layer.hasBias = True
         else:
-            lb = _np.array(layer.bias.floatValue)
+            lb = _proto_float_to_np_array(layer.bias)
             bp = sw * lb + sb
             del layer.bias.floatValue[:]
             layer.bias.floatValue.extend(bp)
@@ -64,12 +77,12 @@ def _fuse_layer_with_bias_layer(layer_idx, bias_idx, layers):
 
     bias = layers[bias_idx].bias
 
-    bb = _np.array(bias.bias.floatValue)
+    bb = _proto_float_to_np_array(bias.bias)
     if not layer.hasBias:
         layer.bias.floatValue.extend(bb)
         layer.hasBias = True
     else:
-        lb = _np.array(layer.bias.floatValue)
+        lb = _proto_float_to_np_array(layer.bias)
         bp = lb + bb
         del layer.bias.floatValue[:]
         layer.bias.floatValue.extend(bp)
@@ -85,15 +98,15 @@ def _bn_scale_fusion(bn_idx, scale_idx, layers):
     bn = layers[bn_idx].batchnorm
     scale = layers[scale_idx].scale
 
-    gamma = _np.array(bn.gamma.floatValue)
-    beta = _np.array(bn.beta.floatValue)
-    sw = _np.array(scale.scale.floatValue)
+    gamma = _proto_float_to_np_array(bn.gamma)
+    beta = _proto_float_to_np_array(bn.beta)
+    sw = _proto_float_to_np_array(scale.scale)
 
     gamma = gamma * sw
     beta = beta * sw
 
     if scale.hasBias:
-        sb = _np.array(scale.bias.floatValue)
+        sb = _proto_float_to_np_array(scale.bias)
         beta = beta + sb
 
     del bn.gamma.floatValue[:]
@@ -113,14 +126,14 @@ def _conv_bn_fusion(conv_idx, bn_idx, layers):
     conv = layers[conv_idx].convolution
     bn = layers[bn_idx].batchnorm
 
-    mean = _np.array(bn.mean.floatValue)
-    variance = _np.array(bn.variance.floatValue) + bn.epsilon
-    gamma = _np.array(bn.gamma.floatValue)
-    beta = _np.array(bn.beta.floatValue)
-    w = _np.array(conv.weights.floatValue)
+    mean = _proto_float_to_np_array(bn.mean)
+    variance = _proto_float_to_np_array(bn.variance) + bn.epsilon
+    gamma = _proto_float_to_np_array(bn.gamma)
+    beta = _proto_float_to_np_array(bn.beta)
+    w = _proto_float_to_np_array(conv.weights)
 
     if conv.hasBias:
-        b = _np.array(conv.bias.floatValue)
+        b = _proto_float_to_np_array(conv.bias)
     else:
         b = _np.zeros(conv.outputChannels)
 

@@ -312,8 +312,6 @@ class TestTf1Inputs(_TestInputs):
                 UserWarning,
                 match="Some dimensions in the input shape are unknown, hence they are set to "
                 "flexible ranges with lower bound and default value = 1, and upper bound = 2. "
-                "To set different values for the default shape and upper bound, please use "
-                "the ct.RangeDim.*",
             ):
                 mlmodel = ct.convert(
                     graph,

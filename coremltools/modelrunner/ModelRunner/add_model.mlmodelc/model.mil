@@ -1,0 +1,7 @@
+program(1.0)
+[buildInfo = dict<tensor<string, []>, tensor<string, []>>({{"coremlc-component-MIL", "3402.3.2"}, {"coremlc-version", "3402.4.1"}, {"coremltools-component-torch", "2.5.1"}, {"coremltools-source-dialect", "TorchScript"}, {"coremltools-version", "8.1"}})]
+{
+    func main<ios16>(tensor<fp16, [1, 10]> x, tensor<fp16, [1, 10]> y) {
+            tensor<fp16, [1, 10]> var_3 = mul(x = x, y = y)[name = tensor<string, []>("op_3_cast_fp16")];
+        } -> (var_3);
+}

@@ -1,0 +1,25 @@
+{
+  "configurations" : [
+    {
+      "id" : "CC3B2D06-061B-409B-82EB-FFE407D0E9E3",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:ModelRunner.xcodeproj",
+        "identifier" : "83E0CF1E2D7DF092000081DB",
+        "name" : "ModelRunnerTests"
+      }
+    }
+  ],
+  "version" : 1
+}
