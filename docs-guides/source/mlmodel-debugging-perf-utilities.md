@@ -10,7 +10,7 @@
     single: Remote-Device
 ```
 
-# Debugging And Perf Utilities
+# Debugging And Performance Utilities
 
 These utilities help identify and resolve both numerical and performance issues in exported Core ML models. When a model produces unexpected outputs-such as NaNs, infinities, or results that differ from the source model or exhibits performance bottlenecks, these tools assist in isolating the problematic operations. Once identified, targeted fixes can be applied to address and correct these issues, improving both the accuracy and efficiency of the model.
 

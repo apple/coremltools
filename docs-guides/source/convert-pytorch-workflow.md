@@ -106,5 +106,5 @@ model_from_export.save("newmodel_from_export.mlpackage")
     - [Converting a torchvision Model from PyTorch](convert-a-torchvision-model-from-pytorch)
     - [Converting a PyTorch Segmentation Model](convert-a-pytorch-segmentation-model)
     - [Converting an Open Efficient Language Model](convert-openelm)
-- To learn how to debug and resolve numerical issues (such as NaNs, infinities, or inconsistent results) and performance problems, see [Debugging And Perf Utilities](mlmodel-debugging-perf-utilities.md).
+- To learn how to debug and resolve numerical issues (such as NaNs, infinities, or inconsistent results) and performance problems, see [Debugging And Performance Utilities](mlmodel-debugging-perf-utilities.md).
 ```
