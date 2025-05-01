@@ -507,6 +507,16 @@ void Model::setOptimizationHints(MLModelConfiguration *configuration, const py::
             configuration.optimizationHints.specializationStrategy = MLSpecializationStrategyFastPrediction;
         }
     }
+
+    if (optimizationHints.contains("allowLowPrecisionAccumulationOnGPU")) {
+        const std::string val = optimizationHints["allowLowPrecisionAccumulationOnGPU"].cast<std::string>();
+        if (val == "True") {
+            configuration.allowLowPrecisionAccumulationOnGPU = true;
+        } else {
+            assert(val == "False");
+            configuration.allowLowPrecisionAccumulationOnGPU = false;
+        }
+    }
 }
 #endif
 
