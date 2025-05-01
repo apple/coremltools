@@ -3,24 +3,18 @@
 This page offers frequently asked questions (FAQs):
 
 
-- [Core ML Tools FAQs](#core-ml-tools-faqs)
-  - [Core ML Tools Versions](#core-ml-tools-versions)
-    - [coremltools 7](#coremltools-7)
-    - [Previous releases](#previous-releases)
-      - [coremltools 6](#coremltools-6)
-      - [coremltools 5](#coremltools-5)
-    - [coremltools 4](#coremltools-4)
-  - [PyTorch Conversion](#pytorch-conversion)
-  - [Keras Conversion](#keras-conversion)
-  - [Fixing High Numerical Error](#fixing-high-numerical-error)
-  - [Image Preprocessing for Converting torchvision](#image-preprocessing-for-converting-torchvision)
-  - [Error in Declaring Network or Computing NN Outputs](#error-in-declaring-network-or-computing-nn-outputs)
-  - [Starting a Deep Learning Core ML Model](#starting-a-deep-learning-core-ml-model)
-  - [Handling an Unsupported Op](#handling-an-unsupported-op)
-  - [Choosing Custom Names for Input and Outputs](#choosing-custom-names-for-input-and-outputs)
-  - [Neural Engine With Flexible Input Shapes](#neural-engine-with-flexible-input-shapes)
-  - [Why `optimize.torch` is better than PyTorch's default quantization](#why-optimizetorch-is-better-than-pytorchs-default-quantization)
-  - [Use a compiled model for faster initialization](#use-a-compiled-model-for-faster-initialization)
+- [What are some major changes between versions of Core ML Tools?](#core-ml-tools-versions)
+- [How do I convert models from PyTorch?](#pytorch-conversion)
+- [How do I convert models from Keras?](#keras-conversion)
+- [How do I fix a Core ML model prediction that has a high numerical error compared to the source model?](#fixing-high-numerical-error)
+- [How do I handle image preprocessing parameters when converting torchvision models?](#image-preprocessing-for-converting-torchvision)
+- [How do I handle an "Error in declaring network" or an "Error computing NN outputs"?](#error-in-declaring-network-or-computing-nn-outputs)
+- [Are TensorFlow or PyTorch the only starting points to make a deep learning Core ML model?](#starting-a-deep-learning-core-ml-model)
+- [How do I handle the unsupported op error "convert function for op not implemented"?](#handling-an-unsupported-op)
+- [Can I choose custom names for the input and outputs of the model during conversion?](#choosing-custom-names-for-input-and-outputs)
+- [If I change my fixed-shape model to use flexible inputs, will it still run on the  Neural Engine?](#neural-engine-with-flexible-input-shapes)
+- [Why use `ct.optimize.torch` rather than PyTorch's default quantization?](#why-optimizetorch-is-better-than-pytorchs-default-quantization)
+- [My model's initialization in Python takes a long time. How can I speed it up?](#use-a-compiled-model-for-faster-initialization)
 
 ***
 
@@ -112,7 +106,7 @@ model = ct.convert(source_model, compute_precision=ct.precision.FLOAT32)
 
 For more information, see [Typed Execution](typed-execution).
 
-You can also refer to the [Debugging And Perf Utilities](mlmodel-debugging-perf-utilities.md) to identify operations that may be causing numerical inconsistencies between the source and the converted model.
+You can also refer to the [Debugging And Performance Utilities](mlmodel-debugging-perf-utilities.md) to identify operations that may be causing numerical inconsistencies between the source and the converted model.
 
 ## Image Preprocessing for Converting torchvision
 

@@ -58,7 +58,7 @@ validator = coremltools.models.ml_program.experimental.debugging_utils.MLModelVa
     compute_unit= coremltools.ComputeUnit.CPU_ONLY,
 )
 # Find the ops that are responsible for NaN output
-failing_ops = **await** validator.find_failing_ops_with_nan_output(
+failing_ops = await validator.find_failing_ops_with_nan_output(
     inputs={"input": np.array([1, 2, 3])} # Inputs that produce NaN output
 )
 
@@ -126,17 +126,15 @@ For example, if an exported Core ML model produces correct outputs when using `f
 import coremltools
 from coremltools import proto
 import numpy as np
+
 # Initialize MLModelComparator to compare reference and target models
 comparator = coremltools.models.ml_program.experimental.debugging_utils.MLModelComparator(
     reference_model=reference_model,  # Model with expected behavior
     target_model=target_model,        # Model to be debugged
 )
+
 # Define a custom comparison function to evaluate output discrepancies
-def compare_outputs(
-    op: proto.MIL_pb2.Operation, 
-    reference_output: np.array, 
-    target_output: np.array
-):
+def compare_outputs(operation, reference_output, target_output):
     # Compare outputs with a tolerance of 1e-1
     # Return True if outputs are close, False otherwise
     return np.allclose(reference_output, target_output, atol=1e-1)
@@ -146,6 +144,7 @@ failing_ops = await comparator.find_failing_ops(
     inputs={"input": np.array([1, 2, 3])},  # Sample input for comparison
     compare_outputs=compare_outputs         # Custom comparison function
 )
+
 print(failing_ops)
 ```
 
@@ -172,12 +171,15 @@ import numpy as np
 class Model(torch.nn.Module):
     def forward(self, x, y):
         return x + y
+
 # Create an instance of the model
 torch_model = Model()
+
 # Prepare example inputs for the model
 input1 = torch.full((1, 10), 1, dtype=torch.float)
 input2 = torch.full((1, 10), 2, dtype=torch.float)
 inputs = (input1, input2)
+
 # Initialize the TorchScriptMLModelComparator
 comparator = (
     coremltools.models.ml_program.experimental.torch.debugging_utils.TorchScriptMLModelComparator(
@@ -190,15 +192,18 @@ comparator = (
         ],
     )
 )
+
 # Define a custom comparison function
 def compare_outputs(module, reference_output, target_output):
     # Compare outputs with a tolerance of 0.1
-    return np.allclose(reference_output, target_output, atol=0.1)
+    return np.allclose(reference_output, target_output, atol=1e-1)
+
 # Use the comparator to find failing modules
 modules = await comparator.find_failing_modules(
     inputs=inputs,
     compare_outputs=compare_outputs
 )
+
 # Print the modules that failed the comparison
 print(modules)
 ```
@@ -221,13 +226,16 @@ import numpy as np
 class Model(torch.nn.Module):
     def forward(self, x, y):
         return x + y
+
 # Create an instance of the model
 torch_model = Model()
+
 # Prepare example inputs for the model
 input1 = torch.full((1, 10), 1, dtype=torch.float)
 input2 = torch.full((1, 10), 2, dtype=torch.float)
 inputs = (input1, input2)
 exported_program = torch.export.export(torch_model, inputs)
+
 # Initialize the TorchExportMLModelComparator
 comparator = (
     coremltools.models.ml_program.experimental.torch.debugging_utils.TorchExportMLModelComparator(
@@ -239,28 +247,27 @@ comparator = (
         ],
     )
 )
+
 # Define a custom comparison function
-def compare_outputs(module, reference_output, target_output):
+def compare_outputs(operation, reference_output, target_output):
     # Compare outputs with a tolerance of 0.1
-    return np.allclose(reference_output, target_output, atol=0.1)
+    return np.allclose(reference_output, target_output, atol=1e-1)
 
 # Use the comparator to find failing operations
-ops = await comparator.find_failing_ops(
+operations = await comparator.find_failing_ops(
     inputs=inputs,
     compare_outputs=compare_outputs
 )
+
 # Print the ops that failed the comparison
-print(ops)
+print(operations)
 ```
-
-
 
 ## MLModelBenchmarker
 
 `MLModelBenchmarker` is a utility for analyzing the performance of Core ML models. It measures key metrics such as model loading time, prediction latency, and the execution times of individual operations. 
 
 For example, to benchmark a model's load and prediction performance, you can use the following:
-
 
 ```python
 import coremltools
