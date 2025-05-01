@@ -14,6 +14,8 @@
 
 These utilities help identify and resolve both numerical and performance issues in exported Core ML models. When a model produces unexpected outputs-such as NaNs, infinities, or results that differ from the source model or exhibits performance bottlenecks, these tools assist in isolating the problematic operations. Once identified, targeted fixes can be applied to address and correct these issues, improving both the accuracy and efficiency of the model.
 
+These APIs are currently located under the experimental namespace, which means they may change or become incompatible with previous versions in future releases. They will remain in this namespace until they have been refined and are ready to be promoted to stable APIs.
+
 ## MLModelInspector
 
 `MLModelInspector` is a utility class that retrieves intermediate outputs from a Core ML model by modifying the model to expose specified internal operations as the model outputs. `MLModelInspector` can be used to debug a model and is utilized by both `MLModelComparator` and `MLModelValidator`. 
