@@ -276,7 +276,7 @@ import coremltools as ct
 # Path to the compiled ML Program model.
 compiled_model_path = "my_model.mlmodelc"
 # Load the compute plan of a model.
-compute_plan = ct.models.MLComputePlan.compute_plan.load_from_path(
+compute_plan = ct.models.compute_plan.MLComputePlan.load_from_path(
     path=compiled_model_path,
     compute_units=ct.ComputeUnits.ALL,
 )

@@ -92,3 +92,58 @@ compute\_device
 
 .. automodule:: coremltools.models.compute_device
    :members:
+
+
+experimental
+-------------------------------------------------
+
+torch
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+debugging_utils
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: coremltools.models.ml_program.experimental.torch.debugging_utils
+   :members:
+
+perf_utils
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: coremltools.models.ml_program.experimental.torch.perf_utils
+   :members:
+
+remote_device
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: coremltools.models.ml_program.experimental.remote_device
+   :members:
+
+debugging_utils
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: coremltools.models.ml_program.experimental.debugging_utils
+   :members:
+
+perf_utils
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: coremltools.models.ml_program.experimental.perf_utils
+   :members:
+
+async_wrapper
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: coremltools.models.ml_program.experimental.async_wrapper
+   :members:
+
+model_structure_path
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: coremltools.models.ml_program.experimental.model_structure_path
+   :members:
+
+compute_plan_utils
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: coremltools.models.ml_program.experimental.compute_plan_utils
+   :members:

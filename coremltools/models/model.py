@@ -1049,11 +1049,13 @@ class MLModel:
     def load_duration_in_nano_seconds(self) -> _Optional[int]:
         """
         Retrieves the duration of the model loading process in nanoseconds.
+        
         Notes
         -----
         Calculates the time elapsed during the model loading process, specifically
         measuring the execution time of ``[MLModel loadContentsOfURL:configuration:error:]`` method
         of the Core ML framework.
+        
         Returns
         -------
         Optional[int]:
@@ -1069,11 +1071,13 @@ class MLModel:
         Retrieves the duration of the last predict operation in nanoseconds.
         This method returns the time taken for the most recent prediction made by
         the model, measured in nanoseconds.
+        
         Notes
         -----
         Calculates the time elapsed during the model predict call, specifically
         measuring the execution time of ``[MLModel predictionFromFeatures:error:]``
-        or ``[MLModel predictionFromBatch:error:]` method of the Core ML framework.
+        or ``[MLModel predictionFromBatch:error:]`` method of the Core ML framework.
+        
         Returns
         -------
         Optional[int]:
