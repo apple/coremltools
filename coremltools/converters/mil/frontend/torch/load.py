@@ -11,7 +11,6 @@ from torch.jit._script import RecursiveScriptModule
 
 from coremltools import _logger as logger
 from coremltools._deps import _HAS_EXECUTORCH, _HAS_TORCH_EXPORT_API
-from coremltools.converters.mil.frontend.torch.converter import TorchConverter
 from coremltools.converters.mil.input_types import StateType, TensorType
 from coremltools.converters.mil.mil.program import Program
 

@@ -331,6 +331,7 @@ def _list_select(shape_var, index):
         res = mb.gather(x=shape_var, indices=index)
     return res
 
+
 def _is_const(var, optional=False):
     """
     Check if a var is a const.
@@ -350,6 +351,7 @@ def _is_const(var, optional=False):
             or var.val is not None
         )
     )
+
 
 def _create_linear_layer(x, w, bias):
     """
@@ -4682,7 +4684,6 @@ def _get_slice_params(context, data, inputs):
         end_mask[i] = True
 
     begin = _expand_list_to_rank_1(begin)
-    eng = _expand_list_to_rank_1(end)
     begin = mb.concat(values=begin, axis=0)
     end = mb.concat(values=end, axis=0)
 

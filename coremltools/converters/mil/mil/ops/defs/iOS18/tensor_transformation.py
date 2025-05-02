@@ -5,7 +5,7 @@
 
 import numpy as np
 
-from coremltools.converters.mil.mil import Operation, types
+from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.input_type import DefaultInputs, InputSpec, TensorInputType
 from coremltools.converters.mil.mil.operation import Operation
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op

@@ -234,8 +234,6 @@ class insert_suffix_quantize_dequantize_pair(AbstractGraphPass):
         if _child_op is None:
             return False
 
-        scale_dtype = np.float16 if last_op.outputs[0].dtype == types.fp16 else np.float32
-
         new_last_op = getattr(mb, last_op.op_type)
         kargs = {}
         for k, v in last_op.inputs.items():
