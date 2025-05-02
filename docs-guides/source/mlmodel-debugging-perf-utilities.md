@@ -24,12 +24,13 @@ For example, to retrieve output of a `convolution` operation identified by its o
 
 
 ```python
-import coremltools
+import coremltools as ct
+from coremltools.models.ml_program.experimental.debugging_utils import MLModelInspector
 
 # Initialize the MLModelInspector.
-inspector = coremltools.models.ml_program.experimental.debugging_utils.MLModelInspector(
+inspector = MLModelInspector(
     model=model, 
-    compute_units=coremltools.ComputeUnit.CPU_ONLY,
+    compute_units=ct.ComputeUnit.CPU_ONLY,
 )
 # Use the inspector to retrieve intermediate outputs from the model.
 # `inputs` specifies the input data for the model, and `output_names` lists the internal operations
@@ -50,12 +51,13 @@ For example, if an exported Core ML model produces NaN values as output, the `fi
 
 
 ```python
-import coremltools
+import coremltools as ct
+from coremltools.models.ml_program.experimental.debugging_utils import MLModelValidator
 
 # Initialize MLModelValidator
-validator = coremltools.models.ml_program.experimental.debugging_utils.MLModelValidator(
+validator = MLModelValidator(
     model = model,
-    compute_unit= coremltools.ComputeUnit.CPU_ONLY,
+    compute_unit = ct.ComputeUnit.CPU_ONLY,
 )
 # Find the ops that are responsible for NaN output
 failing_ops = await validator.find_failing_ops_with_nan_output(
@@ -69,12 +71,13 @@ If the exported Core ML model produces infinity values as outputs, the `find_fai
 
 
 ```python
-import coremltools
+import coremltools as ct
+from coremltools.models.ml_program.experimental.debugging_utils import MLModelValidator
 
 # Initialize MLModelValidator
-validator = coremltools.models.ml_program.experimental.debugging_utils.MLModelValidator(
+validator = MLModelValidator(
     model = model,
-    compute_unit= coremltools.ComputeUnit.CPU_ONLY,
+    compute_unit = ct.ComputeUnit.CPU_ONLY,
 )
 # Find the ops that are responsible for NaN output
 failing_ops = await validator.find_failing_ops_with_infinite_output(
@@ -87,14 +90,16 @@ print(failing_ops)
 `MLModelValidator` also supports passing a custom validation function, enabling more tailored debugging for specific use cases.
 
 ```python
-import coremltools
-from coremltools import proto
+import coremltools as ct
 import numpy as np
 
+from coremltools.models.ml_program.experimental.debugging_utils import MLModelValidator
+from coremltools import proto
+
 # Initialize MLModelValidator
-validator = coremltools.models.ml_program.experimental.debugging_utils.MLModelValidator(
+validator = MLModelValidator(
     model = model,
-    compute_unit= coremltools.ComputeUnit.CPU_ONLY,
+    compute_unit = ct.ComputeUnit.CPU_ONLY,
 )
 
 def validate_output(op: proto.MIL_pb2.Operation, value: np.array):
@@ -123,12 +128,13 @@ For example, if an exported Core ML model produces correct outputs when using `f
 
 
 ```python
-import coremltools
-from coremltools import proto
+import coremltools as ct
 import numpy as np
 
+from coremltools.models.ml_program.experimental.debugging_utils import MLModelComparator
+
 # Initialize MLModelComparator to compare reference and target models
-comparator = coremltools.models.ml_program.experimental.debugging_utils.MLModelComparator(
+comparator = MLModelComparator(
     reference_model=reference_model,  # Model with expected behavior
     target_model=target_model,        # Model to be debugged
 )
@@ -163,9 +169,11 @@ For example, to find the modules that produce inconsistent results, you can use 
 
 
 ```python
-import coremltools
-import torch
+import coremltools as ct
 import numpy as np
+import torch
+
+from coremltools.models.ml_program.experimental.torch.debugging_utils import TorchScriptMLModelComparator
 
 # Define a simple PyTorch model
 class Model(torch.nn.Module):
@@ -181,16 +189,15 @@ input2 = torch.full((1, 10), 2, dtype=torch.float)
 inputs = (input1, input2)
 
 # Initialize the TorchScriptMLModelComparator
-comparator = (
-    coremltools.models.ml_program.experimental.torch.debugging_utils.TorchScriptMLModelComparator(
-        model=torch_model,
-        example_inputs=inputs,  # Inputs used to trace the PyTorch model
-        inputs=[
-            # Define input tensor specifications for Core ML
-            coremltools.TensorType(name="x", shape=inputs[0].shape, dtype=np.float32),
-            coremltools.TensorType(name="y", shape=inputs[1].shape, dtype=np.float32),
-        ],
-    )
+comparator = TorchScriptMLModelComparator(
+    model=torch_model,
+    example_inputs=inputs,  # Inputs used to trace the PyTorch model
+    inputs=[
+        # Define input tensor specifications for Core ML
+        coremltools.TensorType(name="x", shape=inputs[0].shape, dtype=np.float32),
+        coremltools.TensorType(name="y", shape=inputs[1].shape, dtype=np.float32),
+    ],
+    compute_unit = ct.ComputeUnit.CPU_ONLY,
 )
 
 # Define a custom comparison function
@@ -218,9 +225,11 @@ For example, to find the modules that produce inconsistent results, you can use 
 
 
 ```python
-import coremltools
-import torch
+import coremltools as ct
 import numpy as np
+import torch
+
+from coremltools.models.ml_program.experimental.torch.debugging_utils import TorchExportMLModelComparator
 
 # Define a simple PyTorch model
 class Model(torch.nn.Module):
@@ -237,15 +246,14 @@ inputs = (input1, input2)
 exported_program = torch.export.export(torch_model, inputs)
 
 # Initialize the TorchExportMLModelComparator
-comparator = (
-    coremltools.models.ml_program.experimental.torch.debugging_utils.TorchExportMLModelComparator(
-        model=exported_program,
-        inputs=[
-            # Define input tensor specifications for Core ML
-            coremltools.TensorType(name="x", shape=inputs[0].shape, dtype=np.float32),
-            coremltools.TensorType(name="y", shape=inputs[1].shape, dtype=np.float32),
-        ],
-    )
+comparator = TorchExportMLModelComparator(
+    model=exported_program,
+    inputs=[
+        # Define input tensor specifications for Core ML
+        ct.TensorType(name="x", shape=inputs[0].shape, dtype=np.float32),
+        ct.TensorType(name="y", shape=inputs[1].shape, dtype=np.float32),
+    ],
+    compute_unit = ct.ComputeUnit.CPU_ONLY,
 )
 
 # Define a custom comparison function
@@ -270,10 +278,10 @@ print(operations)
 For example, to benchmark a model's load and prediction performance, you can use the following:
 
 ```python
-import coremltools
+from coremltools.models.ml_program.experimental.perf_utils import MLModelBenchmarker
 
 # Initialize the MLModelBenchmarker with the Core ML model
-benchmarker = coremltools.models.ml_program.experimental.perf_utils.MLModelBenchmarker(model=model)
+benchmarker = MLModelBenchmarker(model=model)
 # Benchmark the model's loading time over 5 iterations
 # This measures how long it takes to load the model.
 load_measurement = await benchmarker.benchmark_load(iterations=5)
@@ -290,8 +298,10 @@ print(predict_measurement.statistics.median)
 To evaluate the execution performance of operations, you can use the following:
 
 ```python
+from coremltools.models.ml_program.experimental.perf_utils import MLModelBenchmarker
+
 # Initialize the MLModelBenchmarker with the Core ML model
-benchmarker = coremltools.models.ml_program.experimental.perf_utils.MLModelBenchmarker(model=model)
+benchmarker = MLModelBenchmarker(model=model)
 # Benchmark operation execution times over 5 iterations with a warmup phase
 # The warmup ensures that any initialization overhead is excluded from the measurements.
 execution_time_measurements = benchmarker.benchmark_operation_execution(iterations=5, warmup=True)
@@ -311,9 +321,11 @@ For example, to benchmark the execution time of individual nodes in the PyTorch 
 
 
 ```python
-import coremltools
-import torch
+import coremltools as ct
 import numpy as np
+import torch
+
+from coremltools.models.ml_program.experimental.torch.perf_utils as TorchMLModelBenchmarker
 
 # Define a simple PyTorch model
 class Model(torch.nn.Module):
@@ -331,14 +343,14 @@ traced_model = torch.export.export(torch_model, (input1, input2))  # For PyTorch
 # traced_model = torch.jit.trace(torch_model, (input1, input2))   # For older versions of PyTorch
 
 # Initialize the TorchMLModelBenchmarker for benchmarking the Torch model
-benchmarker = coremltools.models.ml_program.experimental.torch.perf_utils.TorchMLModelBenchmarker(
+benchmarker = TorchMLModelBenchmarker(
     model=traced_model,
     inputs=[
-        coremltools.TensorType(name="x", shape=input1.shape, dtype=np.float16),  # Define input tensor x
-        coremltools.TensorType(name="y", shape=input2.shape, dtype=np.float16),  # Define input tensor y
+        ct.TensorType(name="x", shape=input1.shape, dtype=np.float16),  # Define input tensor x
+        ct.TensorType(name="y", shape=input2.shape, dtype=np.float16),  # Define input tensor y
     ],
-    minimum_deployment_target=coremltools.target.iOS16,  # Specify minimum deployment target (e.g., iOS16)
-    compute_units=coremltools.ComputeUnit.ALL,          # Use all available compute units (CPU/GPU/Neural Engine)
+    minimum_deployment_target=ct.target.iOS16,  # Specify minimum deployment target (e.g., iOS16)
+    compute_units=coremltools.ComputeUnit.ALL,  # Use all available compute units (CPU/GPU/Neural Engine)
 )
 
 # Benchmark node execution times in the model
@@ -361,6 +373,7 @@ from coremltools.models.ml_program.experimental.remote_device import (
     Device,
     DeviceType,
 )
+
 # Get a list of connected iPhone devices
 connected_devices = Device.get_connected_devices(device_type=DeviceType.IPHONE)
 # This will display information about each connected iPhone, which may include device name, os version, and other relevant details
@@ -377,6 +390,7 @@ credentials = AppSigningCredentials(
     bundle_identifier="com.example.modelrunnerd",  # Unique identifier for your app
     provisioning_profile_uuid=None  # UUID of provisioning profile (if applicable)
 )
+
 # Prepare the device for model debugging
 # This installs the application on the device
 prepared_device = await connected_device.prepare_for_model_debugging(credentials=credentials)
@@ -389,10 +403,11 @@ In this example, we use the `Apple Developer Team ID`. `Xcode` will automaticall
 You can now execute the model on the connected device.
 
 ```python
-from coremltools.models.ml_program.experimental.async_wrapper import MLModelAsyncWrapper
-import torch
 import coremltools as ct
 import numpy as np
+import torch
+
+from coremltools.models.ml_program.experimental.async_wrapper import MLModelAsyncWrapper
 
 # Define a simple PyTorch model
 class Model(torch.nn.Module):
@@ -439,8 +454,10 @@ For instance, `MLModelBenchmarker` can be used with a connected device to benchm
 
 
 ```python
+from coremltools.models.ml_program.experimental.perf_utils import MLModelBenchmarker
+
 # Initialize the MLModelBenchmarker with the Core ML model and the remote device.
-benchmarker = coremltools.models.ml_program.experimental.perf_utils.MLModelBenchmarker(model=model, device=prepared_device)
+benchmarker = MLModelBenchmarker(model=model, device=prepared_device)
 # Benchmark operation execution times over 5 iterations with a warmup phase
 # The warmup ensures that any initialization overhead is excluded from the measurements.
 execution_time_measurements = benchmarker.benchmark_operation_execution(iterations=5, warmup=True)
