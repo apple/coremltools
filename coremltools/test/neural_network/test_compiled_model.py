@@ -124,20 +124,29 @@ class TestCompiledModel:
 
     @pytest.mark.skipif(utils._macos_version() < (15, 0),
                         reason="optimization hints available only on macOS15+")
-    @pytest.mark.parametrize("reshapeFrequency, specializationStrategy",
+    @pytest.mark.parametrize("reshapeFrequency,"
+                             "specializationStrategy,"
+                             "allowLowPrecisionAccumulationOnGPU",
                              itertools.product(
                                  (ReshapeFrequency.Frequent, ReshapeFrequency.Infrequent, None),
                                  (SpecializationStrategy.FastPrediction, SpecializationStrategy.Default, None),
+                                 (True, False, None),
                              ))
-    def test_optimization_hints(self, reshapeFrequency, specializationStrategy):
+    def test_optimization_hints(
+            self, reshapeFrequency, specializationStrategy, allowLowPrecisionAccumulationOnGPU
+    ):
         optimization_hints={}
         if reshapeFrequency is not None:
             optimization_hints['reshapeFrequency'] = reshapeFrequency
         if specializationStrategy is not None:
             optimization_hints["specializationStrategy"] = specializationStrategy
+        if allowLowPrecisionAccumulationOnGPU is not None:
+            optimization_hints['allowLowPrecisionAccumulationOnGPU'] = allowLowPrecisionAccumulationOnGPU
         if len(optimization_hints) == 0:
             optimization_hints = None
 
         m = CompiledMLModel(self.compiled_model_path, optimization_hints=optimization_hints)
         assert isinstance(m, CompiledMLModel)
         assert(m.optimization_hints == optimization_hints)
+        y = m.predict({'x': 2})
+        assert y['y'] == 4.1

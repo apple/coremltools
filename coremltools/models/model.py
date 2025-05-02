@@ -129,8 +129,11 @@ def _verify_optimization_hint_input(optimization_hint_input: _Optional[dict] = N
         raise ValueError('Optimization hints are only available on macOS >= 15.0')
 
     for k in optimization_hint_input.keys():
-        if k not in ('reshapeFrequency', 'specializationStrategy'):
+        if k not in ('allowLowPrecisionAccumulationOnGPU', 'reshapeFrequency', 'specializationStrategy'):
             raise ValueError(f"Unrecognized key in optimization_hint dictionary: {k}")
+
+    if "allowLowPrecisionAccumulationOnGPU" in optimization_hint_input and not isinstance(optimization_hint_input["allowLowPrecisionAccumulationOnGPU"], bool):
+        raise TypeError('"allowLowPrecisionAccumulationOnGPU" value of "optimization_hint_input" dictionary must be of type bool')
 
     if "specializationStrategy" in optimization_hint_input and not isinstance(optimization_hint_input["specializationStrategy"], _SpecializationStrategy):
         raise TypeError('"specializationStrategy" value of "optimization_hint_input" dictionary must be of type coremltools.SpecializationStrategy')
@@ -175,7 +178,7 @@ class _FeatureDescription:
 
 
 class MLState:
-    def __init__(self, proxy):
+    def __init__(self, proxy) -> None:
         """
         Holds state for an MLModel.
 
@@ -196,7 +199,7 @@ class MLModelAsset:
     - From a compiled model directory: The directory should have a '.mlmodelc' extension.
     - From memory: Allows direct initialization using in-memory model data.
     """
-    def __init__(self, proxy):
+    def __init__(self, proxy) -> None:
         if _MLModelAssetProxy is None or not isinstance(proxy, _MLModelAssetProxy):
             raise TypeError("The proxy parameter must be of type _MLModelAssetProxy.")
         self.__proxy__ = proxy
@@ -316,7 +319,7 @@ class MLModel:
         weights_dir=None,
         function_name=None,
         optimization_hints: _Optional[dict] = None,
-    ):
+    ) -> None:
         """
         Construct an MLModel from an ``.mlmodel``.
 
@@ -377,8 +380,12 @@ class MLModel:
             If not provided, ``function_name`` will be set to the ``defaultFunctionName`` in the proto.
 
         optimization_hints : dict or None
-            Keys are the names of the optimization hint, either 'reshapeFrequency' or 'specializationStrategy'.
-            Values are enumeration values of type ``coremltools.ReshapeFrequency`` or ``coremltools.SpecializationStrategy``.
+            Keys are the names of the optimization hint: 'allowLowPrecisionAccumulationOnGPU', 'reshapeFrequency'
+                or 'specializationStrategy'.
+
+            - 'allowLowPrecisionAccumulationOnGPU' value must have ``bool`` type.
+            - 'reshapeFrequency' value must have ``coremltools.ReshapeFrequency`` type.
+            - 'specializationStrategy' must have``coremltools.SpecializationStrategy`` type.
 
         Notes
         -----
@@ -539,10 +546,14 @@ class MLModel:
                 return None, specification, None
 
             function_name = "" if self.function_name is None else self.function_name
+
+            optimization_hints_str_vals = {}
             if optimization_hints is not None:
-                optimization_hints_str_vals = {k: v.name for k, v in optimization_hints.items()}
-            else:
-                optimization_hints_str_vals = {}
+                for k, v in optimization_hints.items():
+                    if isinstance(v, bool):
+                        optimization_hints_str_vals[k] = str(v)
+                    else:
+                        optimization_hints_str_vals[k] = v.name
 
             try:
                 return (

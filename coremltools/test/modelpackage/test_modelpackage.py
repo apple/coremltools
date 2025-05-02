@@ -460,23 +460,33 @@ class TestMLModel:
 
     @pytest.mark.skipif(utils._macos_version() < (15, 0),
                         reason="optimization hints available only on macOS15+")
-    @pytest.mark.parametrize("reshapeFrequency, specializationStrategy",
+    @pytest.mark.parametrize("reshapeFrequency,"
+                             "specializationStrategy,"
+                             "allowLowPrecisionAccumulationOnGPU",
                              itertools.product(
                                  (ct.ReshapeFrequency.Frequent, ct.ReshapeFrequency.Infrequent, None),
                                  (ct.SpecializationStrategy.FastPrediction, ct.SpecializationStrategy.Default, None),
+                                 (True, False, None),
                              ))
-    def test_optimization_hints(self, reshapeFrequency, specializationStrategy):
+    def test_optimization_hints(
+            self, reshapeFrequency, specializationStrategy, allowLowPrecisionAccumulationOnGPU
+    ):
         optimization_hints={}
         if reshapeFrequency is not None:
             optimization_hints['reshapeFrequency'] = reshapeFrequency
         if specializationStrategy is not None:
             optimization_hints['specializationStrategy'] = specializationStrategy
+        if allowLowPrecisionAccumulationOnGPU is not None:
+            optimization_hints['allowLowPrecisionAccumulationOnGPU'] = allowLowPrecisionAccumulationOnGPU
         if len(optimization_hints) == 0:
             optimization_hints = None
 
         m = MLModel(self.spec, optimization_hints=optimization_hints)
         assert isinstance(m, MLModel)
         assert(m.optimization_hints == optimization_hints)
+        preds = m.predict({"feature_1": 1.0, "feature_2": 1.0})
+        assert preds is not None
+        assert preds["output"] == 3.1
 
 
     @pytest.mark.skipif(utils._macos_version() < (15, 0),
@@ -487,6 +497,9 @@ class TestMLModel:
 
         with pytest.raises(ValueError, match='Unrecognized key in optimization_hint dictionary: bad key'):
             MLModel(self.spec, optimization_hints={'bad key': ct.ReshapeFrequency.Frequent})
+
+        with pytest.raises(TypeError, match='"allowLowPrecisionAccumulationOnGPU" value of "optimization_hint_input" dictionary must be of type bool'):
+            MLModel(self.spec, optimization_hints={"allowLowPrecisionAccumulationOnGPU": 12})
 
         with pytest.raises(TypeError, match='"specializationStrategy" value of "optimization_hint_input" dictionary must be of type coremltools.SpecializationStrategy'):
             MLModel(self.spec, optimization_hints={"specializationStrategy": 12})

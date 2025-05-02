@@ -78,8 +78,12 @@ class CompiledMLModel:
                   not the GPU. Available only for macOS >= 13.0.
 
         optimization_hints : dict or None
-            Keys are the names of the optimization hint, either 'reshapeFrequency' or 'specializationStrategy'.
-            Values are enumeration values of type ``coremltools.ReshapeFrequency`` or ``coremltools.SpecializationStrategy``.
+            Keys are the names of the optimization hint: 'allowLowPrecisionAccumulationOnGPU', 'reshapeFrequency'
+                or 'specializationStrategy'.
+
+            - 'allowLowPrecisionAccumulationOnGPU' value must have ``bool`` type.
+            - 'reshapeFrequency' value must have ``coremltools.ReshapeFrequency`` type.
+            - 'specializationStrategy' must have``coremltools.SpecializationStrategy`` type.
 
         asset : MLModelAsset or None
             The model asset.
@@ -120,10 +124,14 @@ class CompiledMLModel:
 
         asset_proxy = asset.__proxy__ if asset is not None else None
 
+        optimization_hints_str_vals = {}
         if self.optimization_hints is not None:
-            optimization_hints_str_vals = {k: v.name for k, v in self.optimization_hints.items()}
-        else:
-            optimization_hints_str_vals = {}
+            for k, v in optimization_hints.items():
+                if isinstance(v, bool):
+                    optimization_hints_str_vals[k] = str(v)
+                else:
+                    optimization_hints_str_vals[k] = v.name
+
         self._proxy = _MLModelProxy(
             path, compute_units.name, function_name, optimization_hints_str_vals, asset_proxy
         )
