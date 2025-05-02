@@ -168,7 +168,7 @@ class MLModelAsyncWrapper(ABC):
         This static method constructs an ``MLModelAsyncWrapper`` object based on the provided
         model specification and additional parameters.
 
-        If the device parameter is``None``, the model is loaded on the local system. Otherwise, it
+        If the device parameter is ``None``, the model is loaded on the local system. Otherwise, it
         is loaded on the specified device.
 
         Parameters

@@ -85,5 +85,6 @@ This guide includes instructions and examples. For details about using the API c
    source/mlmodel-utilities.md
    source/model-prediction.md
    source/updatable-model-examples.rst
+   source/mlmodel-debugging-perf-utilities.md
 
 

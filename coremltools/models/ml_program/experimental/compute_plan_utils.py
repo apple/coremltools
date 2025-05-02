@@ -221,10 +221,7 @@ if _MLComputePlanProxy is not None:
 else:
     if _IS_MACOS:
         _logger.warning(
-            """
-            Failed to load '_MLComputePlanRemoteProxy'.
-            Remote device functionality for retrieving the compute plan is unavailable.
-            """
+            "Failed to load '_MLComputePlanRemoteProxy'. Remote device functionality for retrieving the compute plan is unavailable."
         )
     _MLComputePlanRemoteProxy = None
 
@@ -251,6 +248,7 @@ async def load_compute_plan_from_path_on_device(
     Examples
     --------
     .. sourcecode:: python
+
         # Retrieve a development device.
         devices = Device.get_connected_development_devices(device_type=DeviceType.IPHONE)
         device = devices[0]
@@ -273,7 +271,6 @@ async def load_compute_plan_from_path_on_device(
             )
             # Get the estimated cost of executing the operation.
             estimated_cost = compute_plan.get_estimated_cost_for_mlprogram_operation(operation)
-
     """
     if device is None:
         return MLComputePlan.load_from_path(

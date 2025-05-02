@@ -980,20 +980,21 @@ def inline_and_annotate_module(
     Inlines and annotates a TorchScript module.
 
     This function takes a TorchScript module and performs two operations:
-    1. Inlining: It inlines the module, which means it replaces calls to submodules
-       with the actual operations performed by those submodules.
-    2. Annotation: It adds annotations to the module, providing additional
-       information about the module's structure and operations.
+        1. Inlining: It inlines the module, which means it replaces calls to submodules
+        with the actual operations performed by those submodules.
+        
+        2. Annotation: It adds annotations to the module, providing additional
+        information about the module's structure and operations.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     model : ScriptModule
         The TorchScript module to be inlined and annotated. This should be an
         instance of ScriptModule, which is a subclass of torch.nn.Module
         that has been scripted using torch.jit.script().
 
-    Returns:
-    --------
+    Returns
+    -------
     TorchScriptModuleAnnotator
         An annotator object that contains the inlined and annotated version of
         the input module.
@@ -1047,6 +1048,7 @@ def _convert_and_retrieve_jit_module_mapping(
     Examples
     --------
     .. sourcecode:: python
+    
         (
             target_model,
             module_mapping,
@@ -1187,6 +1189,7 @@ def _convert_and_retrieve_exported_program_op_mapping(
     Examples
     --------
     .. sourcecode:: python
+    
         (
             target_model,
             op_mapping,
@@ -1367,6 +1370,7 @@ def convert_and_retrieve_op_mapping(
     Examples
     --------
     .. sourcecode:: python
+
         (
             target_model,
             mapping_info,
@@ -1805,6 +1809,7 @@ class TorchScriptMLModelComparator:
         Examples
         --------
         .. sourcecode:: python
+
             class Model(torch.nn.Module):
                 def forward(self, x, y):
                     return x + y
@@ -2238,6 +2243,7 @@ class TorchExportMLModelComparator:
         --------
 
         .. sourcecode:: python
+        
             class Model(torch.nn.Module):
                 def forward(self, x, y):
                     return x + y
