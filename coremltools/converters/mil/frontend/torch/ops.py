@@ -4684,6 +4684,7 @@ def _get_slice_params(context, data, inputs):
         end_mask[i] = True
 
     begin = _expand_list_to_rank_1(begin)
+    _expand_list_to_rank_1(end)
     begin = mb.concat(values=begin, axis=0)
     end = mb.concat(values=end, axis=0)
 
