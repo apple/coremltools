@@ -65,7 +65,7 @@ class elementwise_binary(Operation):
         """
         If one of the input is tensor, cast the result to tensor.
         """
-        to_cast = any([isinstance(x, np.ndarray) for x in [a, b]])
+        to_cast = any(isinstance(x, np.ndarray) for x in (a, b))
         result = self.get_operator()(a, b)
         return result if not to_cast else np.array(result)
 

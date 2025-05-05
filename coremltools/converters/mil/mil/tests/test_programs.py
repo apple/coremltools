@@ -241,13 +241,13 @@ class TestMILProgramVersionHandling:
         prog = get_simple_nested_block_program()
         main_func = prog.functions["main"]
         topk_ops = main_func.find_ops(op_type="topk")
-        assert all([topk.opset_version == ct.target.iOS13 for topk in topk_ops])
+        assert all(topk.opset_version == ct.target.iOS13 for topk in topk_ops)
 
         # pick up iOS16 version topk
         prog = get_simple_nested_block_program(opset_version=ct.target.iOS16)
         main_func = prog.functions["main"]
         topk_ops = main_func.find_ops(op_type="topk")
-        assert all([topk.opset_version == ct.target.iOS16 for topk in topk_ops])
+        assert all(topk.opset_version == ct.target.iOS16 for topk in topk_ops)
 
     @staticmethod
     def test_pymil_opset_version_inference():

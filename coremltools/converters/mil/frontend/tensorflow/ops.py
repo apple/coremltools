@@ -633,7 +633,7 @@ def ExtractImagePatches(context, node):
     padding = node.attr.get("padding")
     if x.rank != 4:
         raise ValueError("input for ExtractImagePatches should be a 4D tensor.")
-    if not all([rate == 1 for rate in rates]):
+    if not all(rate == 1 for rate in rates):
         raise NotImplementedError(
             "only rates with all 1s is implemented for ExtractImagePatches."
         )
@@ -3022,7 +3022,7 @@ def Pack(context, node):
         else:
             x = mb.expand_dims(x=values[0], axes=[axis], name=node.name)
     else:
-        if all([_is_scalar(input.sym_type) for input in values]):
+        if all(_is_scalar(input.sym_type) for input in values):
             x = mb.concat(values=values, axis=axis, name=node.name)
         else:
             x = mb.stack(values=values, axis=axis, name=node.name)

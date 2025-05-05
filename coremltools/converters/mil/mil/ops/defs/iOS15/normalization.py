@@ -283,7 +283,7 @@ class layer_norm(Operation):
 
         # check valid axes
         positive_axes = [axis + rank if axis < 0 else axis for axis in self.axes.val]
-        if not all([axis >= 0 and axis < rank for axis in positive_axes]):
+        if not all(axis >= 0 and axis < rank for axis in positive_axes):
             raise ValueError("axes must in the range of [-x.rank, x.rank-1].")
 
         # check shape of gamma and beta

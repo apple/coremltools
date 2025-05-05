@@ -197,7 +197,7 @@ class MLModelInspector:
             raise TypeError('The "function_name" parameter must be of type "str"')
 
         if optimization_hints is not None and not isinstance(optimization_hints, Mapping):
-            raise TypeError(f"The 'optimization_hints' must be of mapping type (e.g., dict)")
+            raise TypeError("The 'optimization_hints' must be of mapping type (e.g., dict)")
 
         if device is not None and not isinstance(device, Device):
             raise TypeError('The "device" parameter must be of type "Device"')

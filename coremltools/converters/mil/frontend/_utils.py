@@ -293,7 +293,7 @@ def build_einsum_mil(vars: List[Var], equation: str, name: str) -> Var:
         return b, a
 
     a_var, b_var = vars
-    is_dynamic = any([any_symbolic(var.shape) for var in vars])
+    is_dynamic = any(any_symbolic(var.shape) for var in vars)
     # list of equations supported for explicit mil translations
     vec_bnqd_bnkd_bnqk = (
         [0, 1, 2, 3],
@@ -436,10 +436,10 @@ def get_output_names(outputs) -> Optional[List[str]]:
 
     output_names = None
     if outputs is not None:
-        assert all([isinstance(t, InputType) for t in outputs]), \
+        assert all(isinstance(t, InputType) for t in outputs), \
             "outputs must be a list of ct.ImageType or ct.TensorType"
         output_names = [t.name for t in outputs]
-        if all([name is None for name in output_names]):
+        if all(name is None for name in output_names):
             output_names = None
     return output_names
 

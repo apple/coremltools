@@ -1021,7 +1021,7 @@ class TestPalettizeWeights:
         # converter should warn the user that one weight is not compressed
         mlmodel_palettized = palettize_weights(mlmodel, mode="unique")
         warning_msg = "Unique values in weight cannot be represented by 8 bits palettization."
-        assert any([warning_msg in rec.message for rec in caplog.records])
+        assert any(warning_msg in rec.message for rec in caplog.records)
 
         expected_ops = ['constexpr_lut_to_dense', 'cast', 'conv', 'conv', 'cast']
         assert get_op_types_in_program(mlmodel_palettized._mil_program) == expected_ops
@@ -1632,7 +1632,7 @@ class TestPalettizeWeights:
 
         # As the effective dim size (1) is not divisible by cluster_dim, the op won't be palettized.
         warning_msg = "The `cluster_dim` is invalid for .* Skipped this op."
-        assert any([re.match(warning_msg, rec.message) for rec in caplog.records])
+        assert any(re.match(warning_msg, rec.message) for rec in caplog.records)
         assert get_op_types_in_program(mlmodel._mil_program) == get_op_types_in_program(
             mlmodel_palettized._mil_program
         )
