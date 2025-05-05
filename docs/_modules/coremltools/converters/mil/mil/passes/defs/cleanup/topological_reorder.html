@@ -1,0 +1,299 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.converters.mil.mil.passes.defs.cleanup.topological_reorder &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+      <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters.mil.mil.passes.defs.cleanup.topological_reorder</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.converters.mil.mil.passes.defs.cleanup.topological_reorder</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright (c) 2023, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">mb</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractGraphPass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">block_context_manager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.pass_registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_pass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">CacheDoublyLinkedList</span>
+
+
+<div class="viewcode-block" id="topological_reorder">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.cleanup.topological_reorder">[docs]</a>
+<span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">topological_reorder</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Topologically re-orders the list of operations in a program by places each operation closer to its</span>
+<span class="sd">    first use, or at the end if it&#39;s not consumed by any other operation.</span>
+
+<span class="sd">    Currently, This pass re-orders only Transpose and Cast operations.</span>
+
+<span class="sd">    .. code-block::</span>
+
+<span class="sd">        # Example: input program</span>
+<span class="sd">        main(x: (2, 4, fp32)) {</span>
+<span class="sd">            x = mb.cast(x=x, dtype=&quot;fp16&quot;)</span>
+<span class="sd">            x1 = mb.square(x=x)</span>
+<span class="sd">            x1_t = mb.transpose(x=x1, perm=[1, 0])</span>
+<span class="sd">            x2 = mb.cast(x=x1_t, dtype=&quot;fp32&quot;)</span>
+<span class="sd">            x3 = mb.log(x=x)</span>
+<span class="sd">            x3_t = mb.transpose(x=x3, perm=[1, 0])</span>
+<span class="sd">            x4 = mb.cast(x=x3_t, dtype=&quot;fp32&quot;)</span>
+<span class="sd">            x5 = mb.relu(x=x)</span>
+<span class="sd">            x6 = mb.cast(x=x5, dtype=&quot;fp32&quot;)</span>
+<span class="sd">            x7 = mb.relu(x=x6)</span>
+<span class="sd">            x8 = mb.relu(x=x)</span>
+<span class="sd">        } -&gt; x2, x4, x7, x8</span>
+
+<span class="sd">        # After moving `cast` ops becomes</span>
+<span class="sd">        main(x: (2, 4, fp32)) {</span>
+<span class="sd">            x = mb.cast(x=x, dtype=&quot;fp16&quot;)</span>
+<span class="sd">            x1 = mb.square(x=x)</span>
+<span class="sd">            x1_t = mb.transpose(x=x1, perm=[1, 0])</span>
+<span class="sd">            x3 = mb.log(x=x)</span>
+<span class="sd">            x3_t = mb.transpose(x=x3, perm=[1, 0])</span>
+<span class="sd">            x5 = mb.relu(x=x)</span>
+<span class="sd">            x6 = mb.cast(x=x5, dtype=&quot;fp32&quot;)</span>
+<span class="sd">            x7 = mb.relu(x=x6)</span>
+<span class="sd">            x8 = mb.relu(x=x)</span>
+<span class="sd">            x4 = mb.cast(x=x3_t, dtype=&quot;fp32&quot;)</span>
+<span class="sd">            x2 = mb.cast(x=x1_t, dtype=&quot;fp32&quot;)</span>
+<span class="sd">        } -&gt; x2, x4, x7, x8</span>
+
+<span class="sd">        # After moving `transpose` ops becomes</span>
+<span class="sd">        main(x: (2, 4, fp32)) {</span>
+<span class="sd">            x = mb.cast(x=x, dtype=&quot;fp16&quot;)</span>
+<span class="sd">            x1 = mb.square(x=x)</span>
+<span class="sd">            x3 = mb.log(x=x)</span>
+<span class="sd">            x5 = mb.relu(x=x)</span>
+<span class="sd">            x6 = mb.cast(x=x5, dtype=&quot;fp32&quot;)</span>
+<span class="sd">            x7 = mb.relu(x=x6)</span>
+<span class="sd">            x8 = mb.relu(x=x)</span>
+<span class="sd">            x3_t = mb.transpose(x=x3, perm=[1, 0])</span>
+<span class="sd">            x4 = mb.cast(x=x3_t, dtype=&quot;fp32&quot;)</span>
+<span class="sd">            x1_t = mb.transpose(x=x1, perm=[1, 0])</span>
+<span class="sd">            x2 = mb.cast(x=x1_t, dtype=&quot;fp32&quot;)</span>
+<span class="sd">        } -&gt; x2, x4, x7, x8</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_move_operations_to_the_end_block</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;cast&quot;</span><span class="p">,</span> <span class="s2">&quot;transpose&quot;</span><span class="p">])</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@block_context_manager</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_move_operations_to_the_end_block</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">op_type_to_move</span><span class="p">):</span>
+        <span class="c1"># Moves ops with `op_type_to_move` in `block.operations` (list) to the end of the program.</span>
+        <span class="c1"># Note: ops with `op_type_to_move` and is dead code are moved toward end, which can be eliminated</span>
+        <span class="c1"># later with dead-code-elimination pass.</span>
+        <span class="c1">#</span>
+        <span class="c1"># Inputs:</span>
+        <span class="c1">#  - block (mil.Block): block to be modified in-place</span>
+        <span class="c1">#  - op_type_to_move (List[str])</span>
+        <span class="c1"># Returns:</span>
+        <span class="c1">#  - set[Var]: Set of vars consumed in block (or returned as block output)</span>
+
+        <span class="c1"># first_use maps var to (index, op) representing the first op in block.operation that consumes this var.</span>
+        <span class="n">block</span><span class="o">.</span><span class="n">operations</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">)</span>
+        <span class="n">first_use</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># var -&gt; op</span>
+        <span class="n">ops_to_remove</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># list of ops to be deleted at the end of pass</span>
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
+            <span class="n">current_op</span> <span class="o">=</span> <span class="n">op</span>
+
+            <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="ow">in</span> <span class="n">op_type_to_move</span><span class="p">:</span>
+                <span class="c1"># Mark op for deletion</span>
+                <span class="n">ops_to_remove</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+
+                <span class="c1"># Create list of operations consuming each output of current operation</span>
+                <span class="n">first_consumers</span> <span class="o">=</span> <span class="p">[</span><span class="n">first_use</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">first_use</span><span class="p">]</span>
+
+                <span class="n">before_op</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># None means adding at the end of block</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">first_consumers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="c1"># Current op should be moved right before this first consumer of one of it&#39;s output.</span>
+                    <span class="c1">#  1. Find indices for all the consumer ops of outputs</span>
+                    <span class="c1">#  2. Move current op right before first consumer i.e. smallest index in block.operations</span>
+                    <span class="n">first_use_indices</span> <span class="o">=</span> <span class="p">[</span>
+                        <span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">first_use_op</span><span class="p">)</span> <span class="k">for</span> <span class="n">first_use_op</span> <span class="ow">in</span> <span class="n">first_consumers</span>
+                    <span class="p">]</span>
+                    <span class="n">before_op</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">first_use_indices</span><span class="p">)]</span>
+
+                <span class="c1"># Create new copy of current operation</span>
+                <span class="n">new_var</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mb</span><span class="p">,</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span><span class="p">)(</span><span class="o">**</span><span class="n">op</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">before_op</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">new_var</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+                    <span class="n">new_var</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_var</span><span class="p">]</span>
+
+                <span class="c1"># the new var should have the same name as the old var</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">old_var</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">):</span>
+                    <span class="n">new_var</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">old_var</span><span class="o">.</span><span class="n">name</span>
+
+                <span class="c1"># Override current_op to be newly created op to ensure `first_use`</span>
+                <span class="c1"># points to newly created op instead of old one.</span>
+                <span class="n">current_op</span> <span class="o">=</span> <span class="n">new_var</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">op</span>
+
+                <span class="k">for</span> <span class="n">old_output_var</span><span class="p">,</span> <span class="n">new_output_var</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">,</span> <span class="n">new_var</span><span class="p">):</span>
+                    <span class="n">block</span><span class="o">.</span><span class="n">replace_uses_of_var_after_op</span><span class="p">(</span>
+                        <span class="n">anchor_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span> <span class="n">old_var</span><span class="o">=</span><span class="n">old_output_var</span><span class="p">,</span> <span class="n">new_var</span><span class="o">=</span><span class="n">new_output_var</span>
+                    <span class="p">)</span>
+
+            <span class="c1"># Collect input vars from sub-block if present</span>
+            <span class="n">relevant_inputs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">current_op</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+                <span class="n">relevant_inputs</span> <span class="o">|=</span> <span class="n">topological_reorder</span><span class="o">.</span><span class="n">_move_operations_to_the_end_block</span><span class="p">(</span>
+                    <span class="n">b</span><span class="p">,</span> <span class="n">op_type_to_move</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Collect vars from operation input</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">current_op</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+                    <span class="n">relevant_inputs</span> <span class="o">|=</span> <span class="nb">set</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="n">relevant_inputs</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+            <span class="c1"># Mark current op as first use for all the input vars</span>
+            <span class="c1">#  a) of it&#39;s sub-block</span>
+            <span class="c1">#  b) of current op</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">relevant_inputs</span><span class="p">:</span>
+                <span class="c1"># input is seen for the first time or</span>
+                <span class="c1"># current_op is first_use i.e. appears before earlier recorded first_use.</span>
+                <span class="c1"># Note: since ops are moved to the end, it&#39;s possible that an op is moved right after</span>
+                <span class="c1"># earlier recorded first_use and in such cases, first_use should not be modified.</span>
+                <span class="c1">#</span>
+                <span class="c1"># == Example ==</span>
+                <span class="c1">#     main( %x: (10, 20, fp32)(Tensor)) {</span>
+                <span class="c1">#      block0() {</span>
+                <span class="c1">#         %cast_0: (10, 20, fp16)(Tensor) = cast(x= %x, dtype = &quot;fp16&quot;, name = &quot;cast_0&quot;)</span>
+                <span class="c1">#         %cast_1: (10, 20, fp32)(Tensor) = cast(x= %cast_0, dtype = &quot;fp32&quot;, name = &quot;cast_1&quot;)</span>
+                <span class="c1">#         %transpose_0: (20, 10, fp16)(Tensor) = transpose(x= %cast_0, perm = [1, 0], name = &quot;transpose_0&quot;)</span>
+                <span class="c1">#         %transpose_1: (10, 20, fp16)(Tensor) = transpose(x= %transpose_0, perm = [1, 0], name = &quot;transpose_1&quot;)</span>
+                <span class="c1">#       } -&gt; (% cast_1, % transpose_1)</span>
+                <span class="c1">#     }</span>
+                <span class="c1"># In above example, `%cast_1` will be moved to the end of the block and first_use info for `%cast_0`</span>
+                <span class="c1"># should point to `%transpose_0` and not to `%cast_1`</span>
+                <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">first_use</span> <span class="ow">or</span> <span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="o">.</span><span class="n">index</span><span class="p">(</span>
+                    <span class="n">first_use</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+                <span class="p">)</span> <span class="o">&gt;</span> <span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">current_op</span><span class="p">):</span>
+                    <span class="n">first_use</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_op</span>
+
+        <span class="c1"># Remove ops that are reordered</span>
+        <span class="n">block</span><span class="o">.</span><span class="n">operations</span> <span class="o">=</span> <span class="n">CacheDoublyLinkedList</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">)</span>
+        <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">(</span><span class="n">ops_to_remove</span><span class="p">)</span>
+
+        <span class="c1"># Returns set of vars consumed in current block</span>
+        <span class="n">vars_consumed_in_block</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">first_use</span><span class="p">])</span>
+        <span class="n">vars_consumed_in_block</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">vars_consumed_in_block</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

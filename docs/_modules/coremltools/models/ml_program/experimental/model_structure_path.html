@@ -1,0 +1,545 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.models.ml_program.experimental.model_structure_path &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.models.ml_program.experimental.model_structure_path</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.models.ml_program.experimental.model_structure_path</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2025, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span> <span class="k">as</span> <span class="n">_Mapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span> <span class="k">as</span> <span class="n">_Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span> <span class="k">as</span> <span class="n">_dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span> <span class="k">as</span> <span class="n">_Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span> <span class="k">as</span> <span class="n">_Dict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span> <span class="k">as</span> <span class="n">_List</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span> <span class="k">as</span> <span class="n">_Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span> <span class="k">as</span> <span class="n">_Union</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">proto</span> <span class="k">as</span> <span class="n">_proto</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">...compute_plan</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">MLModelStructure</span><span class="p">,</span>
+    <span class="n">MLModelStructureNeuralNetwork</span><span class="p">,</span>
+    <span class="n">MLModelStructureNeuralNetworkLayer</span><span class="p">,</span>
+    <span class="n">MLModelStructureProgram</span><span class="p">,</span>
+    <span class="n">MLModelStructureProgramBlock</span><span class="p">,</span>
+    <span class="n">MLModelStructureProgramOperation</span><span class="p">,</span>
+<span class="p">)</span>
+
+<div class="viewcode-block" id="ModelStructurePath">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.model_structure_path.ModelStructurePath">[docs]</a>
+<span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ModelStructurePath</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class represents a hierarchical path within a model structure,</span>
+<span class="sd">    allowing for the representation of various components in a program,</span>
+<span class="sd">    neural network, or pipeline.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ModelStructurePath.Program">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.model_structure_path.ModelStructurePath.Program">[docs]</a>
+    <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Program</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Represents a program in the model structure.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ModelStructurePath.Program.Function">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.model_structure_path.ModelStructurePath.Program.Function">[docs]</a>
+        <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">class</span><span class="w"> </span><span class="nc">Function</span><span class="p">:</span>
+            <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+
+            <span class="nd">@staticmethod</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span>
+                <span class="nb">dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]</span>
+            <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="s2">&quot;ModelStructurePath.Program.Function&quot;</span><span class="p">]:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;programFunction&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">_Mapping</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="kc">None</span>
+
+                <span class="n">data</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="p">{})</span>
+                <span class="k">return</span> <span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Program</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
+
+            <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;programFunction&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">}}}</span></div>
+
+
+<div class="viewcode-block" id="ModelStructurePath.Program.Block">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.model_structure_path.ModelStructurePath.Program.Block">[docs]</a>
+        <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">class</span><span class="w"> </span><span class="nc">Block</span><span class="p">:</span>
+            <span class="n">index</span><span class="p">:</span> <span class="nb">int</span>
+
+            <span class="nd">@staticmethod</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span><span class="nb">dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="s2">&quot;ModelStructurePath.Program.Block&quot;</span><span class="p">]:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;programBlock&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">_Mapping</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="kc">None</span>
+
+                <span class="n">data</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="p">{})</span>
+                <span class="k">return</span> <span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Program</span><span class="o">.</span><span class="n">Block</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;index&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+
+            <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;programBlock&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">}}}</span></div>
+
+
+<div class="viewcode-block" id="ModelStructurePath.Program.Operation">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.model_structure_path.ModelStructurePath.Program.Operation">[docs]</a>
+        <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">class</span><span class="w"> </span><span class="nc">Operation</span><span class="p">:</span>
+            <span class="n">output_name</span><span class="p">:</span> <span class="nb">str</span>
+
+            <span class="nd">@staticmethod</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span><span class="nb">dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="s2">&quot;ModelStructurePath.Program.Block&quot;</span><span class="p">]:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;programOperation&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">_Mapping</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="kc">None</span>
+
+                <span class="n">data</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="p">{})</span>
+                <span class="n">output_name</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;outputName&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Program</span><span class="o">.</span><span class="n">Operation</span><span class="p">(</span><span class="n">output_name</span><span class="o">=</span><span class="n">output_name</span><span class="p">)</span>
+
+            <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;programOperation&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;outputName&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_name</span><span class="p">}}}</span></div>
+
+
+        <span class="nd">@staticmethod</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span><span class="nb">dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="s2">&quot;ModelStructurePath.Program.Block&quot;</span><span class="p">]:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;program&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">_Mapping</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">None</span>
+
+            <span class="k">return</span> <span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Program</span><span class="p">()</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;program&quot;</span><span class="p">:</span> <span class="p">{}}</span></div>
+
+
+<div class="viewcode-block" id="ModelStructurePath.NeuralNetwork">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.model_structure_path.ModelStructurePath.NeuralNetwork">[docs]</a>
+    <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">NeuralNetwork</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Represents a neural network in the model structure.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ModelStructurePath.NeuralNetwork.Layer">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.model_structure_path.ModelStructurePath.NeuralNetwork.Layer">[docs]</a>
+        <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">class</span><span class="w"> </span><span class="nc">Layer</span><span class="p">:</span>
+            <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+
+            <span class="nd">@staticmethod</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span>
+                <span class="nb">dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]</span>
+            <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="s2">&quot;ModelStructurePath.NeuralNetwork.Layer&quot;</span><span class="p">]:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;neuralNetworkLayer&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">_Mapping</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="kc">None</span>
+
+                <span class="n">data</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="p">{})</span>
+                <span class="k">return</span> <span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">NeuralNetwork</span><span class="o">.</span><span class="n">Layer</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
+
+            <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;neuralNetworkLayer&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">}}}</span></div>
+
+
+        <span class="nd">@staticmethod</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span><span class="nb">dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="s2">&quot;ModelStructurePath.NeuralNetwork&quot;</span><span class="p">]:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;neuralNetwork&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">_Mapping</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">None</span>
+
+            <span class="k">return</span> <span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">NeuralNetwork</span><span class="p">()</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;neuralNetwork&quot;</span><span class="p">:</span> <span class="p">{}}</span></div>
+
+
+<div class="viewcode-block" id="ModelStructurePath.Pipeline">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.model_structure_path.ModelStructurePath.Pipeline">[docs]</a>
+    <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Pipeline</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Represents a pipeline in the model structure.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ModelStructurePath.Pipeline.Model">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.model_structure_path.ModelStructurePath.Pipeline.Model">[docs]</a>
+        <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">:</span>
+            <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+
+            <span class="nd">@staticmethod</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span><span class="nb">dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="s2">&quot;ModelStructurePath.Pipeline.Model&quot;</span><span class="p">]:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;pipelineModel&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">_Mapping</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="kc">None</span>
+
+                <span class="n">data</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="p">{})</span>
+                <span class="k">return</span> <span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Pipeline</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
+
+            <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;pipelineModel&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">}}}</span></div>
+
+
+        <span class="nd">@staticmethod</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span><span class="nb">dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="s2">&quot;ModelStructurePath.Pipeline&quot;</span><span class="p">]:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;pipeline&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">_Mapping</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">None</span>
+
+            <span class="k">return</span> <span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Pipeline</span><span class="p">()</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;pipeline&quot;</span><span class="p">:</span> <span class="p">{}}</span></div>
+
+
+    <span class="n">Component</span> <span class="o">=</span> <span class="n">_Union</span><span class="p">[</span>
+        <span class="n">Program</span><span class="p">,</span>
+        <span class="n">Program</span><span class="o">.</span><span class="n">Function</span><span class="p">,</span>
+        <span class="n">Program</span><span class="o">.</span><span class="n">Block</span><span class="p">,</span>
+        <span class="n">Program</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span>
+        <span class="n">NeuralNetwork</span><span class="p">,</span>
+        <span class="n">NeuralNetwork</span><span class="o">.</span><span class="n">Layer</span><span class="p">,</span>
+        <span class="n">Pipeline</span><span class="p">,</span>
+        <span class="n">Pipeline</span><span class="o">.</span><span class="n">Model</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="n">components</span><span class="p">:</span> <span class="n">_Tuple</span><span class="p">[</span><span class="n">Component</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span><span class="nb">dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;ModelStructurePath&quot;</span><span class="p">:</span>
+        <span class="n">components</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;components&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">components</span><span class="p">,</span> <span class="n">_Sequence</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Expected &#39;components&#39; to be a sequence, but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">components</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">. &quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">component_types</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Program</span><span class="p">,</span>
+            <span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Program</span><span class="o">.</span><span class="n">Function</span><span class="p">,</span>
+            <span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Program</span><span class="o">.</span><span class="n">Block</span><span class="p">,</span>
+            <span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Program</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span>
+            <span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">NeuralNetwork</span><span class="p">,</span>
+            <span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">NeuralNetwork</span><span class="o">.</span><span class="n">Layer</span><span class="p">,</span>
+            <span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Pipeline</span><span class="p">,</span>
+            <span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Pipeline</span><span class="o">.</span><span class="n">Model</span><span class="p">,</span>
+        <span class="p">]</span>
+
+        <span class="n">parsed_components</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">components</span><span class="p">:</span>
+            <span class="n">parsed_component</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">component_type</span> <span class="ow">in</span> <span class="n">component_types</span><span class="p">:</span>
+                <span class="n">parsed_component</span> <span class="o">=</span> <span class="n">component_type</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="nb">dict</span><span class="o">=</span><span class="n">component</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">parsed_component</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">break</span>
+
+            <span class="k">if</span> <span class="n">parsed_component</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Failed to parse component: </span><span class="si">{</span><span class="n">component</span><span class="si">}</span><span class="s2">. &quot;</span>
+                    <span class="s2">&quot;The component does not match any known type in the ModelStructurePath.&quot;</span>
+                <span class="p">)</span>
+
+            <span class="n">parsed_components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parsed_component</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ModelStructurePath</span><span class="p">(</span><span class="n">components</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">parsed_components</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;components&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">component</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">]}</span></div>
+
+
+
+<span class="n">ModelStructureLayerOrOperation</span> <span class="o">=</span> <span class="n">_Union</span><span class="p">[</span>
+    <span class="n">MLModelStructureNeuralNetworkLayer</span><span class="p">,</span> <span class="n">MLModelStructureProgramOperation</span>
+<span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_map_program_structure_to_path</span><span class="p">(</span>
+    <span class="n">model_structure</span><span class="p">:</span> <span class="n">MLModelStructureProgram</span><span class="p">,</span>
+    <span class="n">components</span><span class="p">:</span> <span class="n">_List</span><span class="p">[</span><span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Component</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_List</span><span class="p">[</span><span class="n">_Tuple</span><span class="p">[</span><span class="n">ModelStructureLayerOrOperation</span><span class="p">,</span> <span class="n">ModelStructurePath</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_map_block_structure_to_path</span><span class="p">(</span>
+        <span class="n">block</span><span class="p">:</span> <span class="n">MLModelStructureProgramBlock</span><span class="p">,</span>
+        <span class="n">components</span><span class="p">:</span> <span class="n">_List</span><span class="p">[</span><span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Component</span><span class="p">],</span>
+        <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">block_component</span> <span class="o">=</span> <span class="n">components</span> <span class="o">+</span> <span class="p">[</span><span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Program</span><span class="o">.</span><span class="n">Block</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">operation</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">operation</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+                <span class="n">operation_component</span> <span class="o">=</span> <span class="n">block_component</span> <span class="o">+</span> <span class="p">[</span>
+                    <span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Program</span><span class="o">.</span><span class="n">Operation</span><span class="p">(</span><span class="n">output_name</span><span class="o">=</span><span class="n">output</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="p">]</span>
+                <span class="n">path</span> <span class="o">=</span> <span class="n">ModelStructurePath</span><span class="p">(</span><span class="n">components</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">operation_component</span><span class="p">))</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">operation</span><span class="p">,</span> <span class="n">path</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">operation_block</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">operation</span><span class="o">.</span><span class="n">blocks</span><span class="p">):</span>
+                    <span class="n">result</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                        <span class="n">_map_block_structure_to_path</span><span class="p">(</span>
+                            <span class="n">block</span><span class="o">=</span><span class="n">operation_block</span><span class="p">,</span>
+                            <span class="n">components</span><span class="o">=</span><span class="n">operation_component</span><span class="p">,</span>
+                            <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">program_component</span> <span class="o">=</span> <span class="n">components</span> <span class="o">+</span> <span class="p">[</span><span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Program</span><span class="p">()]</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">function</span> <span class="ow">in</span> <span class="n">model_structure</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">function_component</span> <span class="o">=</span> <span class="n">program_component</span> <span class="o">+</span> <span class="p">[</span><span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Program</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)]</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+            <span class="n">_map_block_structure_to_path</span><span class="p">(</span>
+                <span class="n">block</span><span class="o">=</span><span class="n">function</span><span class="o">.</span><span class="n">block</span><span class="p">,</span>
+                <span class="n">components</span><span class="o">=</span><span class="n">function_component</span><span class="p">,</span>
+                <span class="n">index</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_map_neural_network_structure_to_path</span><span class="p">(</span>
+    <span class="n">model_structure</span><span class="p">:</span> <span class="n">MLModelStructureNeuralNetwork</span><span class="p">,</span>
+    <span class="n">components</span><span class="p">:</span> <span class="n">_List</span><span class="p">[</span><span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Component</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_List</span><span class="p">[</span><span class="n">_Tuple</span><span class="p">[</span><span class="n">ModelStructureLayerOrOperation</span><span class="p">,</span> <span class="n">ModelStructurePath</span><span class="p">]]:</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">neural_network_component</span> <span class="o">=</span> <span class="n">components</span> <span class="o">+</span> <span class="p">[</span><span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">NeuralNetwork</span><span class="p">()]</span>
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">model_structure</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+        <span class="n">neural_network_layer_component</span> <span class="o">=</span> <span class="n">neural_network_component</span> <span class="o">+</span> <span class="p">[</span>
+            <span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">NeuralNetwork</span><span class="o">.</span><span class="n">Layer</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">ModelStructurePath</span><span class="p">(</span><span class="n">components</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">neural_network_layer_component</span><span class="p">))</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">layer</span><span class="p">,</span> <span class="n">path</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">map_model_structure_to_path</span><span class="p">(</span>
+    <span class="n">model_structure</span><span class="p">:</span> <span class="n">MLModelStructure</span><span class="p">,</span>
+    <span class="n">components</span><span class="p">:</span> <span class="n">_List</span><span class="p">[</span><span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Component</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_List</span><span class="p">[</span><span class="n">_Tuple</span><span class="p">[</span><span class="n">ModelStructureLayerOrOperation</span><span class="p">,</span> <span class="n">ModelStructurePath</span><span class="p">]]:</span>
+    <span class="k">if</span> <span class="n">model_structure</span><span class="o">.</span><span class="n">program</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_map_program_structure_to_path</span><span class="p">(</span>
+            <span class="n">model_structure</span><span class="o">=</span><span class="n">model_structure</span><span class="o">.</span><span class="n">program</span><span class="p">,</span>
+            <span class="n">components</span><span class="o">=</span><span class="n">components</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">model_structure</span><span class="o">.</span><span class="n">neuralnetwork</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_map_neural_network_structure_to_path</span><span class="p">(</span>
+            <span class="n">model_structure</span><span class="o">=</span><span class="n">model_structure</span><span class="o">.</span><span class="n">neuralnetwork</span><span class="p">,</span>
+            <span class="n">components</span><span class="o">=</span><span class="n">components</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">model_structure</span><span class="o">.</span><span class="n">pipeline</span><span class="p">:</span>
+        <span class="n">components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Pipeline</span><span class="p">())</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">submodel_name</span><span class="p">,</span> <span class="n">submodel</span> <span class="ow">in</span> <span class="n">model_structure</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">sub_models</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                <span class="n">map_model_structure_to_path</span><span class="p">(</span>
+                    <span class="n">model_structure</span><span class="o">=</span><span class="n">submodel</span><span class="p">,</span>
+                    <span class="n">components</span><span class="o">=</span><span class="n">components</span>
+                    <span class="o">+</span> <span class="p">[</span>
+                        <span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Pipeline</span><span class="p">(),</span>
+                        <span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Pipeline</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">submodel_name</span><span class="p">),</span>
+                    <span class="p">],</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">result</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid model structure: no recognized components found&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_map_program_spec_to_path</span><span class="p">(</span>
+    <span class="n">program_spec</span><span class="p">:</span> <span class="n">_proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Program</span><span class="p">,</span>
+    <span class="n">components</span><span class="p">:</span> <span class="n">_List</span><span class="p">[</span><span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Component</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_List</span><span class="p">[</span><span class="n">_Tuple</span><span class="p">[</span><span class="n">_proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span> <span class="n">ModelStructurePath</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_map_block_spec_to_path</span><span class="p">(</span>
+        <span class="n">block</span><span class="p">:</span> <span class="n">_proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Block</span><span class="p">,</span>
+        <span class="n">components</span><span class="p">:</span> <span class="n">_List</span><span class="p">[</span><span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Component</span><span class="p">],</span>
+        <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">block_component</span> <span class="o">=</span> <span class="n">components</span> <span class="o">+</span> <span class="p">[</span><span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Program</span><span class="o">.</span><span class="n">Block</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">operation</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">operation</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+                <span class="n">operation_component</span> <span class="o">=</span> <span class="n">block_component</span> <span class="o">+</span> <span class="p">[</span>
+                    <span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Program</span><span class="o">.</span><span class="n">Operation</span><span class="p">(</span><span class="n">output_name</span><span class="o">=</span><span class="n">output</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="p">]</span>
+                <span class="n">path</span> <span class="o">=</span> <span class="n">ModelStructurePath</span><span class="p">(</span><span class="n">components</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">operation_component</span><span class="p">))</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">operation</span><span class="p">,</span> <span class="n">path</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">operation_block</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">operation</span><span class="o">.</span><span class="n">blocks</span><span class="p">):</span>
+                    <span class="n">result</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                        <span class="n">_map_block_spec_to_path</span><span class="p">(</span>
+                            <span class="n">block</span><span class="o">=</span><span class="n">operation_block</span><span class="p">,</span>
+                            <span class="n">components</span><span class="o">=</span><span class="n">operation_component</span><span class="p">,</span>
+                            <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">program_component</span> <span class="o">=</span> <span class="n">components</span> <span class="o">+</span> <span class="p">[</span><span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Program</span><span class="p">()]</span>
+    <span class="k">for</span> <span class="n">function_name</span><span class="p">,</span> <span class="n">function_spec</span> <span class="ow">in</span> <span class="n">program_spec</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">block_spec</span> <span class="o">=</span> <span class="n">function_spec</span><span class="o">.</span><span class="n">block_specializations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">function_spec</span><span class="o">.</span><span class="n">opset</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">block_spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">function_component</span> <span class="o">=</span> <span class="n">program_component</span> <span class="o">+</span> <span class="p">[</span>
+            <span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Program</span><span class="o">.</span><span class="n">Function</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">function_name</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+            <span class="n">_map_block_spec_to_path</span><span class="p">(</span>
+                <span class="n">block</span><span class="o">=</span><span class="n">block_spec</span><span class="p">,</span>
+                <span class="n">components</span><span class="o">=</span><span class="n">function_component</span><span class="p">,</span>
+                <span class="n">index</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">map_model_spec_to_path</span><span class="p">(</span>
+    <span class="n">model_spec</span><span class="p">:</span> <span class="s2">&quot;_proto.Model_pb2.Model&quot;</span><span class="p">,</span>
+    <span class="n">components</span><span class="p">:</span> <span class="n">_List</span><span class="p">[</span><span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Component</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_List</span><span class="p">[</span><span class="n">_Tuple</span><span class="p">[</span><span class="n">_proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span> <span class="n">ModelStructurePath</span><span class="p">]]:</span>
+    <span class="n">spec_type</span> <span class="o">=</span> <span class="n">model_spec</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">spec_type</span> <span class="o">==</span> <span class="s2">&quot;mlProgram&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_map_program_spec_to_path</span><span class="p">(</span>
+            <span class="n">program_spec</span><span class="o">=</span><span class="n">model_spec</span><span class="o">.</span><span class="n">mlProgram</span><span class="p">,</span>
+            <span class="n">components</span><span class="o">=</span><span class="n">components</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">spec_type</span> <span class="o">==</span> <span class="s2">&quot;pipeline&quot;</span><span class="p">:</span>
+        <span class="n">components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Pipeline</span><span class="p">())</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">submodel_name</span><span class="p">,</span> <span class="n">submodel</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">model_spec</span><span class="o">.</span><span class="n">names</span><span class="o">.</span><span class="n">model_spec</span><span class="o">.</span><span class="n">models</span><span class="p">):</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                <span class="n">map_model_spec_to_path</span><span class="p">(</span>
+                    <span class="n">model_structure</span><span class="o">=</span><span class="n">submodel</span><span class="p">,</span>
+                    <span class="n">components</span><span class="o">=</span><span class="n">components</span>
+                    <span class="o">+</span> <span class="p">[</span>
+                        <span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Pipeline</span><span class="p">(),</span>
+                        <span class="n">ModelStructurePath</span><span class="o">.</span><span class="n">Pipeline</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">submodel_name</span><span class="p">),</span>
+                    <span class="p">],</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">result</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid model structure: no recognized components found&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

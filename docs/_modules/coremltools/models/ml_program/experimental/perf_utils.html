@@ -1,0 +1,625 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.models.ml_program.experimental.perf_utils &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.models.ml_program.experimental.perf_utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.models.ml_program.experimental.perf_utils</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2025, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">gc</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">string</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">ComputeUnit</span><span class="p">,</span> <span class="n">proto</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">...compute_plan</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLComputePlanDeviceUsage</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">...model</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.async_wrapper</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModelAsyncWrapper</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.model_structure_path</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ModelStructurePath</span><span class="p">,</span>
+    <span class="n">map_model_spec_to_path</span><span class="p">,</span>
+    <span class="n">map_model_structure_to_path</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.remote_device</span><span class="w"> </span><span class="kn">import</span> <span class="n">Device</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_convert_nanoseconds_to_milliseconds</span><span class="p">(</span><span class="n">nanoseconds</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">nanoseconds</span> <span class="o">/</span> <span class="mi">1000000</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_gen_random_multiarray_value</span><span class="p">(</span><span class="nb">type</span><span class="p">:</span> <span class="s2">&quot;proto.FeatureTypes_pb2.ArrayFeatureType&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+    <span class="n">data_types</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">proto</span><span class="o">.</span><span class="n">FeatureTypes_pb2</span><span class="o">.</span><span class="n">ArrayFeatureType</span><span class="o">.</span><span class="n">ArrayDataType</span><span class="o">.</span><span class="n">FLOAT32</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+        <span class="n">proto</span><span class="o">.</span><span class="n">FeatureTypes_pb2</span><span class="o">.</span><span class="n">ArrayFeatureType</span><span class="o">.</span><span class="n">ArrayDataType</span><span class="o">.</span><span class="n">FLOAT16</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">,</span>
+        <span class="n">proto</span><span class="o">.</span><span class="n">FeatureTypes_pb2</span><span class="o">.</span><span class="n">ArrayFeatureType</span><span class="o">.</span><span class="n">ArrayDataType</span><span class="o">.</span><span class="n">DOUBLE</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+        <span class="n">proto</span><span class="o">.</span><span class="n">FeatureTypes_pb2</span><span class="o">.</span><span class="n">ArrayFeatureType</span><span class="o">.</span><span class="n">ArrayDataType</span><span class="o">.</span><span class="n">INT32</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="n">np_data_type</span> <span class="o">=</span> <span class="n">data_types</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">type</span><span class="o">.</span><span class="n">dataType</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np_data_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">supported_types</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">data_types</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Unsupported data type: </span><span class="si">{</span><span class="nb">type</span><span class="o">.</span><span class="n">dataType</span><span class="si">}</span><span class="s2">. Supported types are: </span><span class="si">{</span><span class="n">supported_types</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">type</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np_data_type</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_gen_random_image_value</span><span class="p">(</span><span class="nb">type</span><span class="p">:</span> <span class="s2">&quot;proto.FeatureTypes_pb2.ImageFeatureType&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;The Python Imaging Library (PIL) is required but not installed. &quot;</span>
+            <span class="s2">&quot;Please install it by running &#39;pip install pillow&#39;.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">gen_random_pixel_value</span><span class="p">(</span>
+        <span class="n">colorSpace</span><span class="p">:</span> <span class="s2">&quot;proto.FeatureTypes_pb2.ImageFeatureType.ColorSpace&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">colorSpace</span> <span class="o">==</span> <span class="n">proto</span><span class="o">.</span><span class="n">FeatureTypes_pb2</span><span class="o">.</span><span class="n">ImageFeatureType</span><span class="o">.</span><span class="n">RGB</span>
+            <span class="ow">or</span> <span class="n">colorSpace</span> <span class="o">==</span> <span class="n">proto</span><span class="o">.</span><span class="n">FeatureTypes_pb2</span><span class="o">.</span><span class="n">ImageFeatureType</span><span class="o">.</span><span class="n">BGR</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">colorSpace</span> <span class="o">==</span> <span class="n">proto</span><span class="o">.</span><span class="n">FeatureTypes_pb2</span><span class="o">.</span><span class="n">ImageFeatureType</span><span class="o">.</span><span class="n">GRAYSCALE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">colorSpace</span> <span class="o">==</span> <span class="n">proto</span><span class="o">.</span><span class="n">FeatureTypes_pb2</span><span class="o">.</span><span class="n">ImageFeatureType</span><span class="o">.</span><span class="n">GRAYSCALE_FLOAT16</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported image color space=</span><span class="si">{</span><span class="n">colorSpace</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_image_type</span><span class="p">(</span>
+        <span class="n">colorSpace</span><span class="p">:</span> <span class="s2">&quot;proto.FeatureTypes_pb2.ImageFeatureType.ColorSpace&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">colorSpace</span> <span class="o">==</span> <span class="n">proto</span><span class="o">.</span><span class="n">FeatureTypes_pb2</span><span class="o">.</span><span class="n">ImageFeatureType</span><span class="o">.</span><span class="n">RGB</span>
+            <span class="ow">or</span> <span class="n">colorSpace</span> <span class="o">==</span> <span class="n">proto</span><span class="o">.</span><span class="n">FeatureTypes_pb2</span><span class="o">.</span><span class="n">ImageFeatureType</span><span class="o">.</span><span class="n">BGR</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;RGB&quot;</span>
+        <span class="k">elif</span> <span class="n">colorSpace</span> <span class="o">==</span> <span class="n">proto</span><span class="o">.</span><span class="n">FeatureTypes_pb2</span><span class="o">.</span><span class="n">ImageFeatureType</span><span class="o">.</span><span class="n">GRAYSCALE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;L&quot;</span>
+        <span class="k">elif</span> <span class="n">colorSpace</span> <span class="o">==</span> <span class="n">proto</span><span class="o">.</span><span class="n">FeatureTypes_pb2</span><span class="o">.</span><span class="n">ImageFeatureType</span><span class="o">.</span><span class="n">GRAYSCALE_FLOAT16</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;F&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported image color space: </span><span class="si">{</span><span class="n">colorSpace</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">colorSpace</span> <span class="o">=</span> <span class="nb">type</span><span class="o">.</span><span class="n">colorSpace</span>
+    <span class="c1"># Create a new image with the specified size</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">get_image_type</span><span class="p">(</span><span class="n">colorSpace</span><span class="o">=</span><span class="n">colorSpace</span><span class="p">),</span> <span class="p">(</span><span class="nb">type</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="nb">type</span><span class="o">.</span><span class="n">height</span><span class="p">))</span>
+
+    <span class="c1"># Get the pixel data</span>
+    <span class="n">pixels</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+
+    <span class="c1"># Fill the image with random BGR values</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">type</span><span class="o">.</span><span class="n">width</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">type</span><span class="o">.</span><span class="n">height</span><span class="p">):</span>
+            <span class="n">pixels</span><span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span> <span class="o">=</span> <span class="n">gen_random_pixel_value</span><span class="p">(</span><span class="n">colorSpace</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">image</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_gen_random_feature_value</span><span class="p">(</span>
+    <span class="nb">type</span><span class="p">:</span> <span class="s2">&quot;proto.FeatureTypes_pb2.FeatureType&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+    <span class="n">feature_type</span> <span class="o">=</span> <span class="nb">type</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">feature_type</span> <span class="o">==</span> <span class="s2">&quot;int64Type&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">feature_type</span> <span class="o">==</span> <span class="s2">&quot;doubleType&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+
+    <span class="k">elif</span> <span class="n">feature_type</span> <span class="o">==</span> <span class="s2">&quot;stringType&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">choices</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">ascii_letters</span> <span class="o">+</span> <span class="n">string</span><span class="o">.</span><span class="n">digits</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">10</span><span class="p">))</span>
+
+    <span class="k">elif</span> <span class="n">feature_type</span> <span class="o">==</span> <span class="s2">&quot;multiArrayType&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_gen_random_multiarray_value</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;imageType&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_gen_random_image_value</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">type</span><span class="o">.</span><span class="n">imageType</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported feature type: </span><span class="si">{</span><span class="nb">type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_gen_random_inputs</span><span class="p">(</span>
+    <span class="n">model_description</span><span class="p">:</span> <span class="s2">&quot;proto.Model_pb2.ModelDescription&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="nb">input</span> <span class="o">=</span> <span class="n">model_description</span><span class="o">.</span><span class="n">input</span>
+    <span class="k">for</span> <span class="n">feature_description</span> <span class="ow">in</span> <span class="nb">input</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">feature_description</span><span class="o">.</span><span class="n">name</span>
+        <span class="nb">type</span> <span class="o">=</span> <span class="n">feature_description</span><span class="o">.</span><span class="n">type</span>
+        <span class="n">result</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">_gen_random_feature_value</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">type</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<div class="viewcode-block" id="MLModelBenchmarker">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.perf_utils.MLModelBenchmarker">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MLModelBenchmarker</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class for benchmarking an MLModel.</span>
+
+<span class="sd">    This class provides functionality to measure and analyze the performance of an MLModel,</span>
+<span class="sd">    including loading time, prediction time, and individual operation execution times.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="MLModelBenchmarker.Statistics">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.perf_utils.MLModelBenchmarker.Statistics">[docs]</a>
+    <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Statistics</span><span class="p">:</span>
+        <span class="n">minimum</span><span class="p">:</span> <span class="nb">float</span>
+        <span class="n">maximum</span><span class="p">:</span> <span class="nb">float</span>
+        <span class="n">average</span><span class="p">:</span> <span class="nb">float</span>
+        <span class="n">std_dev</span><span class="p">:</span> <span class="nb">float</span>
+        <span class="n">median</span><span class="p">:</span> <span class="nb">float</span>
+
+        <span class="nd">@staticmethod</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">from_values</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;MLModelBenchmarker.Statistics&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+
+            <span class="n">minimum</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
+            <span class="n">maximum</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
+            <span class="n">average</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
+            <span class="n">std_dev</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
+            <span class="n">median</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
+
+            <span class="k">return</span> <span class="n">MLModelBenchmarker</span><span class="o">.</span><span class="n">Statistics</span><span class="p">(</span>
+                <span class="n">minimum</span><span class="o">=</span><span class="n">minimum</span><span class="p">,</span>
+                <span class="n">maximum</span><span class="o">=</span><span class="n">maximum</span><span class="p">,</span>
+                <span class="n">average</span><span class="o">=</span><span class="n">average</span><span class="p">,</span>
+                <span class="n">std_dev</span><span class="o">=</span><span class="n">std_dev</span><span class="p">,</span>
+                <span class="n">median</span><span class="o">=</span><span class="n">median</span><span class="p">,</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MLModelBenchmarker.Measurement">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.perf_utils.MLModelBenchmarker.Measurement">[docs]</a>
+    <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Measurement</span><span class="p">:</span>
+        <span class="n">statistics</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;MLModelBenchmarker.Statistics&quot;</span><span class="p">]</span>
+        <span class="n">samples</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+
+        <span class="nd">@staticmethod</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">from_samples</span><span class="p">(</span><span class="n">samples</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;MLModelBenchmarker.Measurement&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">MLModelBenchmarker</span><span class="o">.</span><span class="n">Measurement</span><span class="p">(</span>
+                <span class="n">statistics</span><span class="o">=</span><span class="n">MLModelBenchmarker</span><span class="o">.</span><span class="n">Statistics</span><span class="o">.</span><span class="n">from_values</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="n">samples</span><span class="p">),</span>
+                <span class="n">samples</span><span class="o">=</span><span class="n">samples</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">add_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;MLModelBenchmarker.Measurement&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">MLModelBenchmarker</span><span class="o">.</span><span class="n">Measurement</span><span class="o">.</span><span class="n">from_samples</span><span class="p">(</span><span class="n">samples</span><span class="o">=</span><span class="n">samples</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Number of samples must match existing samples. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Expected </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">)</span><span class="si">}</span><span class="s2">, but got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">MLModelBenchmarker</span><span class="o">.</span><span class="n">Measurement</span><span class="o">.</span><span class="n">from_samples</span><span class="p">(</span>
+                <span class="n">samples</span><span class="o">=</span><span class="p">[</span><span class="n">sample1</span> <span class="o">+</span> <span class="n">sample2</span> <span class="k">for</span> <span class="n">sample1</span><span class="p">,</span> <span class="n">sample2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">samples</span><span class="p">,</span> <span class="n">samples</span><span class="p">)]</span>
+            <span class="p">)</span>
+
+        <span class="nd">@property</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">sort_key</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">statistics</span><span class="o">.</span><span class="n">median</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MLModelBenchmarker.OperationExecutionInfo">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.perf_utils.MLModelBenchmarker.OperationExecutionInfo">[docs]</a>
+    <span class="nd">@dataclass</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">OperationExecutionInfo</span><span class="p">:</span>
+        <span class="n">spec</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span>
+        <span class="n">path</span><span class="p">:</span> <span class="n">ModelStructurePath</span>
+        <span class="n">compute_device_usage</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MLComputePlanDeviceUsage</span><span class="p">]</span>
+        <span class="n">measurement</span><span class="p">:</span> <span class="s2">&quot;MLModelBenchmarker.Measurement&quot;</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">MLModel</span><span class="p">,</span>
+        <span class="n">device</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Device</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_spec</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_model</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_units</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ComputeUnit</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">compute_unit</span>
+
+    <span class="nd">@compute_units</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_units</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">compute_units</span><span class="p">:</span> <span class="n">ComputeUnit</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">compute_unit</span> <span class="o">!=</span> <span class="n">compute_units</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span>
+                <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_spec</span><span class="p">,</span>
+                <span class="n">compute_units</span><span class="o">=</span><span class="n">compute_units</span><span class="p">,</span>
+                <span class="n">weights_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">weights_dir</span><span class="p">,</span>
+                <span class="n">function_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">function_name</span><span class="p">,</span>
+                <span class="n">optimization_hints</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">optimization_hints</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_model</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_create_loaded_model</span><span class="p">(</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">MLModel</span><span class="p">,</span>
+        <span class="n">device</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Device</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MLModelAsyncWrapper</span><span class="p">:</span>
+        <span class="n">model_wrapper</span> <span class="o">=</span> <span class="n">MLModelAsyncWrapper</span><span class="o">.</span><span class="n">from_spec_or_path</span><span class="p">(</span>
+            <span class="n">spec_or_path</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">get_spec</span><span class="p">(),</span>
+            <span class="n">weights_dir</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">weights_dir</span><span class="p">,</span>
+            <span class="n">compute_units</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">compute_unit</span><span class="p">,</span>
+            <span class="n">function_name</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">function_name</span><span class="p">,</span>
+            <span class="n">optimization_hints</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">optimization_hints</span><span class="p">,</span>
+            <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">await</span> <span class="n">model_wrapper</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">model_wrapper</span>
+
+<div class="viewcode-block" id="MLModelBenchmarker.benchmark_load">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.perf_utils.MLModelBenchmarker.benchmark_load">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">benchmark_load</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MLModelBenchmarker.Measurement&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Measures the loading time of the model.</span>
+
+<span class="sd">        This method creates and loads the model multiple times, measuring the duration</span>
+<span class="sd">        of each load operation. It then unloads the model and performs garbage collection</span>
+<span class="sd">        after each iteration to ensure consistent measurements.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        iterations: int</span>
+<span class="sd">                The number of times to load the model. Defaults to 1.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        MLModelBenchmarker.Measurement</span>
+<span class="sd">            A Measurement object containing statistics and samples of the load durations in milliseconds.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">iterations</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The number of iterations must be at least 1. Received: </span><span class="si">{iterations}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">load_durations</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">iterations</span><span class="p">):</span>
+            <span class="n">loaded_model</span> <span class="o">=</span> <span class="k">await</span> <span class="n">MLModelBenchmarker</span><span class="o">.</span><span class="n">_create_loaded_model</span><span class="p">(</span>
+                <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+                <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">load_duration</span> <span class="o">=</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">load_duration_in_nano_seconds</span>
+            <span class="k">if</span> <span class="n">load_duration</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Failed to retrieve model load duration. The model may not have been loaded properly or the timing information is unavailable.&quot;</span>
+                <span class="p">)</span>
+
+            <span class="n">load_durations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_convert_nanoseconds_to_milliseconds</span><span class="p">(</span><span class="n">load_duration</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_model</span> <span class="o">=</span> <span class="n">loaded_model</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">await</span> <span class="n">loaded_model</span><span class="o">.</span><span class="n">unload</span><span class="p">()</span>
+                <span class="k">del</span> <span class="n">loaded_model</span>
+                <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">MLModelBenchmarker</span><span class="o">.</span><span class="n">Measurement</span><span class="o">.</span><span class="n">from_samples</span><span class="p">(</span>
+            <span class="n">samples</span><span class="o">=</span><span class="n">load_durations</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_benchmark_model_predict</span><span class="p">(</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">MLModel</span><span class="p">,</span>
+        <span class="n">iterations</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="n">warmup</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MLModelBenchmarker.Measurement&quot;</span><span class="p">:</span>
+        <span class="n">predict_durations</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">model_state</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">iterations</span> <span class="o">=</span> <span class="n">iterations</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">warmup</span> <span class="k">else</span> <span class="n">iterations</span>
+        <span class="k">for</span> <span class="n">iteration</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">iterations</span><span class="p">):</span>
+            <span class="n">model_state</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">make_state_if_needed</span><span class="p">()</span>
+            <span class="n">_</span> <span class="o">=</span> <span class="k">await</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="n">model_state</span><span class="p">)</span>
+            <span class="n">predict_duration</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">last_predict_duration_in_nano_seconds</span>
+            <span class="k">if</span> <span class="n">predict_duration</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Failed to retrieve prediction duration, timing information is unavailable.&quot;</span>
+                <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">iteration</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">iteration</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">warmup</span><span class="p">:</span>
+                <span class="n">predict_durations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_convert_nanoseconds_to_milliseconds</span><span class="p">(</span><span class="n">predict_duration</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">MLModelBenchmarker</span><span class="o">.</span><span class="n">Measurement</span><span class="o">.</span><span class="n">from_samples</span><span class="p">(</span>
+            <span class="n">samples</span><span class="o">=</span><span class="n">predict_durations</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="MLModelBenchmarker.benchmark_predict">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.perf_utils.MLModelBenchmarker.benchmark_predict">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">benchmark_predict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MLModelBenchmarker.Measurement&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Measures the prediction time of the model.</span>
+
+<span class="sd">        This method loads the model, then runs predictions multiple times, measuring</span>
+<span class="sd">        the duration of each prediction. It supports an optional warmup iteration.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inputs : Optional[Dict[str, Any]]</span>
+<span class="sd">            The input data for the model prediction. If None, random input data will be generated.</span>
+
+<span class="sd">        iterations: int</span>
+<span class="sd">            The number of prediction iterations to run. Defaults to 1.</span>
+
+<span class="sd">        warmup: bool</span>
+<span class="sd">            Whether to perform a warmup iteration. Defaults to False.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        MLModelBenchmarker.Measurement</span>
+<span class="sd">            A Measurement object containing statistics and</span>
+<span class="sd">            samples of the prediction durations in milliseconds.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If the number of iterations is less than 1.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            This method is asynchronous and should be awaited when called.</span>
+<span class="sd">            The warmup iteration, if enabled, is not included in the returned measurements.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">iterations</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The number of iterations must be at least 1. Received: </span><span class="si">{iterations}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">loaded_model</span> <span class="o">=</span> <span class="k">await</span> <span class="n">MLModelBenchmarker</span><span class="o">.</span><span class="n">_create_loaded_model</span><span class="p">(</span>
+                <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+                <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_model</span> <span class="o">=</span> <span class="n">loaded_model</span>
+
+        <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="n">_gen_random_inputs</span><span class="p">(</span><span class="n">model_description</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_spec</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="k">await</span> <span class="n">MLModelBenchmarker</span><span class="o">.</span><span class="n">_benchmark_model_predict</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_loaded_model</span><span class="p">,</span>
+            <span class="n">iterations</span><span class="o">=</span><span class="n">iterations</span><span class="p">,</span>
+            <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
+            <span class="n">warmup</span><span class="o">=</span><span class="n">warmup</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MLModelBenchmarker.benchmark_operation_execution">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.perf_utils.MLModelBenchmarker.benchmark_operation_execution">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">benchmark_operation_execution</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">warmup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">OperationExecutionInfo</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Measures the execution time of individual operations in the model.</span>
+
+<span class="sd">        This method loads the model, runs predictions, and retrieves the execution time</span>
+<span class="sd">        of each operation within the model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inputs : Optional[Dict[str, Any]]</span>
+<span class="sd">            The input data for the model prediction. If None, random input data will be generated.</span>
+
+<span class="sd">        iterations: int</span>
+<span class="sd">            The number of prediction iterations to run. Defaults to 1.</span>
+
+<span class="sd">        warmup: bool</span>
+<span class="sd">            Whether to perform a warmup iteration. Defaults to False.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        List[OperationExecutionInfo]</span>
+<span class="sd">            A list of OperationExecutionInfo objects, each containing</span>
+<span class="sd">            details about an operation&#39;s execution, sorted by execution time in descending order.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        - The returned list is sorted by execution time, with the most time-consuming operations first.</span>
+<span class="sd">        - Execution times are estimated based on the overall prediction time and the model&#39;s compute plan.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">predict_measurement</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">benchmark_predict</span><span class="p">(</span>
+            <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
+            <span class="n">iterations</span><span class="o">=</span><span class="n">iterations</span><span class="p">,</span>
+            <span class="n">warmup</span><span class="o">=</span><span class="n">warmup</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">compute_plan</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_model</span><span class="o">.</span><span class="n">retrieve_compute_plan</span><span class="p">()</span>
+
+        <span class="n">path_to_op_spec_map</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">path</span><span class="p">:</span> <span class="n">spec</span> <span class="k">for</span> <span class="n">spec</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">map_model_spec_to_path</span><span class="p">(</span><span class="n">model_spec</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_spec</span><span class="p">)</span>
+        <span class="p">}</span>
+
+        <span class="n">path_to_op_structure_map</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">path</span><span class="p">:</span> <span class="n">structure</span>
+            <span class="k">for</span> <span class="n">structure</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">map_model_structure_to_path</span><span class="p">(</span>
+                <span class="n">model_structure</span><span class="o">=</span><span class="n">compute_plan</span><span class="o">.</span><span class="n">model_structure</span>
+            <span class="p">)</span>
+        <span class="p">}</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">op_structure</span> <span class="ow">in</span> <span class="n">path_to_op_structure_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">op_spec</span> <span class="o">=</span> <span class="n">path_to_op_spec_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">op_spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">compute_device_usage</span> <span class="o">=</span> <span class="n">compute_plan</span><span class="o">.</span><span class="n">get_compute_device_usage_for_mlprogram_operation</span><span class="p">(</span>
+                <span class="n">op_structure</span>
+            <span class="p">)</span>
+
+            <span class="n">estimated_cost</span> <span class="o">=</span> <span class="n">compute_plan</span><span class="o">.</span><span class="n">get_estimated_cost_for_mlprogram_operation</span><span class="p">(</span><span class="n">op_structure</span><span class="p">)</span>
+
+            <span class="n">durations</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="p">[</span><span class="n">sample</span> <span class="o">*</span> <span class="n">estimated_cost</span><span class="o">.</span><span class="n">weight</span> <span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">predict_measurement</span><span class="o">.</span><span class="n">samples</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">estimated_cost</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">)</span>
+
+            <span class="n">measurement</span> <span class="o">=</span> <span class="n">MLModelBenchmarker</span><span class="o">.</span><span class="n">Measurement</span><span class="o">.</span><span class="n">from_samples</span><span class="p">(</span>
+                <span class="n">samples</span><span class="o">=</span><span class="n">durations</span> <span class="k">if</span> <span class="n">durations</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[]</span>
+            <span class="p">)</span>
+
+            <span class="n">execution_info</span> <span class="o">=</span> <span class="n">MLModelBenchmarker</span><span class="o">.</span><span class="n">OperationExecutionInfo</span><span class="p">(</span>
+                <span class="n">spec</span><span class="o">=</span><span class="n">op_spec</span><span class="p">,</span>
+                <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+                <span class="n">compute_device_usage</span><span class="o">=</span><span class="n">compute_device_usage</span><span class="p">,</span>
+                <span class="n">measurement</span><span class="o">=</span><span class="n">measurement</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">execution_info</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">value</span><span class="p">:</span> <span class="n">value</span><span class="o">.</span><span class="n">measurement</span><span class="o">.</span><span class="n">sort_key</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

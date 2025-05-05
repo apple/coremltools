@@ -1,0 +1,781 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.converters.mil.input_types &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters.mil.input_types</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.converters.mil.input_types</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright (c) 2020, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">types</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.types.symbolic</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_symbolic</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ColorLayout</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">RGB</span> <span class="o">=</span> <span class="s2">&quot;RGB&quot;</span>
+    <span class="n">BGR</span> <span class="o">=</span> <span class="s2">&quot;BGR&quot;</span>
+    <span class="n">GRAYSCALE</span> <span class="o">=</span> <span class="s2">&quot;G&quot;</span>
+    <span class="n">GRAYSCALE_FLOAT16</span> <span class="o">=</span> <span class="s2">&quot;G_FLOAT16&quot;</span>
+
+
+<div class="viewcode-block" id="ClassifierConfig">
+<a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ClassifierConfig">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ClassifierConfig</span><span class="p">:</span>
+<div class="viewcode-block" id="ClassifierConfig.__init__">
+<a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ClassifierConfig.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">class_labels</span><span class="p">,</span>
+        <span class="n">predicted_feature_name</span><span class="o">=</span><span class="s2">&quot;classLabel&quot;</span><span class="p">,</span>
+        <span class="n">predicted_probabilities_output</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Configuration for classifier models.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        class_labels: str / list of int / list of str</span>
+<span class="sd">            * If a ``list`` is provided, the ``list`` maps the index of the output of a</span>
+<span class="sd">              neural network to labels in a classifier.</span>
+<span class="sd">            * If a ``str`` is provided, the ``str`` points to a file which maps the index</span>
+<span class="sd">              to labels in a classifier.</span>
+
+<span class="sd">        predicted_feature_name: str</span>
+<span class="sd">            Name of the output feature for the class labels exposed in the</span>
+<span class="sd">            Core ML neural network classifier. Default: ``&#39;classLabel&#39;``.</span>
+
+<span class="sd">        predicted_probabilities_output: str</span>
+<span class="sd">            * If provided, then this is the name of the neural network blob which</span>
+<span class="sd">              generates the probabilities for each class label (typically the output</span>
+<span class="sd">              of a softmax layer).</span>
+<span class="sd">            * If not provided, then the last output layer is assumed.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">class_labels</span> <span class="o">=</span> <span class="n">class_labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predicted_feature_name</span> <span class="o">=</span> <span class="n">predicted_feature_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predicted_probabilities_output</span> <span class="o">=</span> <span class="n">predicted_probabilities_output</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="InputType">
+<a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.InputType">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">InputType</span><span class="p">:</span>
+<div class="viewcode-block" id="InputType.__init__">
+<a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.InputType.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The input type for inputs fed into the model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name: (str)</span>
+<span class="sd">            The name of the input.</span>
+
+<span class="sd">        shape: list, tuple, Shape object, EnumeratedShapes object, or None</span>
+<span class="sd">            The shape(s) that are valid for this input.</span>
+<span class="sd">            If set to ``None``, the shape will be inferred from the model itself.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="k">if</span> <span class="n">shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">_get_shaping_class</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">dtype</span></div>
+
+
+    <span class="c1"># If this type could be used as model outputs.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">can_be_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="ImageType">
+<a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ImageType">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ImageType</span><span class="p">(</span><span class="n">InputType</span><span class="p">):</span>
+<div class="viewcode-block" id="ImageType.__init__">
+<a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ImageType.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">bias</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">color_layout</span><span class="o">=</span><span class="n">ColorLayout</span><span class="o">.</span><span class="n">RGB</span><span class="p">,</span>
+        <span class="n">channel_first</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">grayscale_use_uint8</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Configuration class used for image inputs in Core ML.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        scale: float or list of floats</span>
+<span class="sd">            The scaling factor for all values in the image channels.</span>
+
+<span class="sd">        bias: float or list of floats</span>
+<span class="sd">            * If ``color_layout`` is ``ct.colorlayout.GRAYSCALE`` or</span>
+<span class="sd">              ``ct.colorlayout.GRAYSCALE_FLOAT16``, bias would be a ``float``.</span>
+<span class="sd">            * If ``color_layout`` is ``ct.colorlayout.RGB`` or ``ct.colorlayout.BGR``,</span>
+<span class="sd">              bias would be a list of ``float``.</span>
+
+<span class="sd">        color_layout: string or enumeration of type ``ct.colorlayout``</span>
+<span class="sd">            Color layout of the image. Valid values are as follows:</span>
+
+<span class="sd">            Enumeration (recommended):</span>
+<span class="sd">                * ``ct.colorlayout.RGB``</span>
+<span class="sd">                * ``ct.colorlayout.BGR``</span>
+<span class="sd">                * ``ct.colorlayout.GRAYSCALE``</span>
+<span class="sd">                * ``ct.colorlayout.GRAYSCALE_FLOAT16``</span>
+
+<span class="sd">            String values (older way to specify):</span>
+<span class="sd">                * ``&#39;G&#39;``: Grayscale (maps to ``ct.colorlayout.GRAYSCALE``)</span>
+<span class="sd">                * ``&#39;RGB&#39;``: [Red, Green, Blue] (maps to ``ct.colorlayout.BGR``)</span>
+<span class="sd">                * ``&#39;BGR&#39;``: [Blue, Green, Red] (maps to ``ct.colorlayout.RGB``)</span>
+
+<span class="sd">        channel_first: (bool) or None</span>
+<span class="sd">            Set to ``True`` if input format is channel first.</span>
+
+<span class="sd">            Default format:</span>
+<span class="sd">                * For TensorFlow: channel last (``channel_first=False``).</span>
+<span class="sd">                * For PyTorch: channel first (``channel_first=True``).</span>
+
+<span class="sd">        grayscale_use_uint8: (bool)</span>
+<span class="sd">            * Only applicable for GRAYSCALE color layout.</span>
+<span class="sd">            * Defaults to ``False``, in which case fp32 will be used.</span>
+<span class="sd">            * Using uint8 requires a ``minimum_deployment_target`` of iOS17 or newer.</span>
+<span class="sd">            * Using uint8 restricts the number of avaliable MIL ops, which can cause</span>
+<span class="sd">              conversion to fail.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ImageType</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">scale</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;color_layout should be an enum of type ct.colorlayout, i.e. one of: &quot;</span> \
+              <span class="s2">&quot;{ct.colorlayout.RGB, ct.colorlayout.BGR, &quot;</span> \
+              <span class="s2">&quot;ct.colorlayout.GRAYSCALE, ct.colorlayout.GRAYSCALE_FLOAT16}&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">color_layout</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">color_layout</span><span class="p">,</span> <span class="n">ColorLayout</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">color_layout</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">color_layout</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;G&quot;</span><span class="p">,</span> <span class="s2">&quot;RGB&quot;</span><span class="p">,</span> <span class="s2">&quot;BGR&quot;</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">color_layout</span> <span class="o">=</span> <span class="n">ColorLayout</span><span class="p">(</span><span class="n">color_layout</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">color_layout</span> <span class="o">=</span> <span class="n">color_layout</span>
+        <span class="k">if</span> <span class="n">color_layout</span> <span class="o">==</span> <span class="n">ColorLayout</span><span class="o">.</span><span class="n">GRAYSCALE_FLOAT16</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span>
+        <span class="k">if</span> <span class="n">bias</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">color_layout</span> <span class="ow">in</span> <span class="p">(</span><span class="n">ColorLayout</span><span class="o">.</span><span class="n">GRAYSCALE</span><span class="p">,</span> <span class="n">ColorLayout</span><span class="o">.</span><span class="n">GRAYSCALE_FLOAT16</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="n">bias</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">channel_first</span> <span class="o">=</span> <span class="n">channel_first</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">grayscale_use_uint8</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">grayscale_use_uint8</span><span class="p">:</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">color_layout</span> <span class="o">!=</span> <span class="n">ColorLayout</span><span class="o">.</span><span class="n">GRAYSCALE</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;&quot;grayscale_use_uint8&quot; can only be True when&#39;</span> \
+                                 <span class="s1">&#39;&quot;color_layout&quot; is &quot;GRAYSCALE&quot;&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grayscale_use_uint8</span> <span class="o">=</span> <span class="n">grayscale_use_uint8</span></div>
+
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">str_repr</span> <span class="o">=</span> <span class="s1">&#39;ImageType(name=</span><span class="si">{}</span><span class="s1">, shape=</span><span class="si">{}</span><span class="s1">, scale=</span><span class="si">{}</span><span class="s1">, bias=</span><span class="si">{}</span><span class="s1">, &#39;</span> <span class="o">+</span>\
+                <span class="s1">&#39;color_layout=</span><span class="si">{}</span><span class="s1">, channel_first=</span><span class="si">{}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">str_repr</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">color_layout</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">channel_first</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="TensorType">
+<a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.TensorType">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TensorType</span><span class="p">(</span><span class="n">InputType</span><span class="p">):</span>
+<div class="viewcode-block" id="TensorType.__init__">
+<a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.TensorType.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">default_value</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Specify a (dense) tensor input.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name: str</span>
+<span class="sd">            Input name. Must match an input name in the model (usually the</span>
+<span class="sd">            Placeholder name for TensorFlow or the input name for PyTorch).</span>
+
+<span class="sd">            The ``name`` is required except for a TensorFlow model in which there is</span>
+<span class="sd">            exactly one input Placeholder.</span>
+
+<span class="sd">        shape: The shape of the input</span>
+<span class="sd">            - List of positive int or :py:class:`RangeDim`, or</span>
+<span class="sd">            - :py:class:`EnumeratedShapes`</span>
+
+<span class="sd">            For TensorFlow:</span>
+<span class="sd">               * The ``shape`` is optional. If omitted, the shape is inferred from</span>
+<span class="sd">                 TensorFlow graph&#39;s Placeholder shape.</span>
+
+<span class="sd">            For PyTorch:</span>
+<span class="sd">               * The ``shape`` is required.</span>
+
+<span class="sd">        dtype: np.generic or mil.type type</span>
+<span class="sd">            For example, ``np.int32`` or ``coremltools.converters.mil.mil.types.fp32``</span>
+
+<span class="sd">        default_value: np.ndarray</span>
+<span class="sd">            If provided, the input is considered optional. At runtime, if the</span>
+<span class="sd">            input is not provided, ``default_value`` is used.</span>
+
+<span class="sd">            Limitations:</span>
+<span class="sd">              *  If ``default_value`` is ``np.ndarray``, all</span>
+<span class="sd">                 elements are required to have the same value.</span>
+
+<span class="sd">              * The ``default_value`` may not be specified if ``shape`` is</span>
+<span class="sd">                :py:class:`EnumeratedShapes`.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        * ``ct.TensorType(name=&quot;input&quot;, shape=(1, 2, 3))`` implies ``dtype ==</span>
+<span class="sd">          np.float32``</span>
+
+<span class="sd">        * ``ct.TensorType(name=&quot;input&quot;, shape=(1, 2, 3), dtype=np.int32)``</span>
+
+<span class="sd">        * ``ct.TensorType(name=&quot;input&quot;, shape=(1, 2, 3),</span>
+<span class="sd">          dtype=ct.converters.mil.types.fp32)``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">TensorType</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">types</span><span class="o">.</span><span class="n">is_builtin</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">dtype</span>
+                <span class="k">if</span> <span class="n">dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span>
+                    <span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span>
+                    <span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span>
+                    <span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span>
+                    <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span>
+                    <span class="n">types</span><span class="o">.</span><span class="n">fp64</span><span class="p">,</span>
+                    <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
+                    <span class="n">types</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span>
+                    <span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">,</span>
+                <span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                        <span class="s2">&quot;dtype=</span><span class="si">{}</span><span class="s2"> is unsupported for inputs/outputs of the model&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+                    <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Assume dtype is numpy type</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">numpy_type_to_builtin_type</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;dtype=</span><span class="si">{}</span><span class="s2"> is unsupported&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span>
+                                 <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span>
+                                 <span class="nb">bool</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;dtype=</span><span class="si">{}</span><span class="s2"> is unsupported for inputs/outputs of the model&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">default_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">EnumeratedShapes</span><span class="p">):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;TensorType input </span><span class="si">{}</span><span class="s1"> has EnumeratedShapes and &#39;</span> <span class="o">+</span>\
+                    <span class="s1">&#39;may not be optional&#39;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">default_value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;TensorType </span><span class="si">{}</span><span class="s1"> default_value is not np.ndarray&#39;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+            <span class="n">default_fill_val</span> <span class="o">=</span> <span class="n">default_value</span><span class="o">.</span><span class="n">flatten</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">default_value</span> <span class="o">==</span> <span class="n">default_fill_val</span><span class="p">):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;TensorType </span><span class="si">{}</span><span class="s1"> default_value can only have &#39;</span> <span class="o">+</span>\
+                    <span class="s1">&#39;same entries&#39;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">has_symbolic</span> <span class="ow">and</span> <span class="nb">list</span><span class="p">(</span><span class="n">default_value</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">list</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">symbolic_shape</span>
+            <span class="p">):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;TensorType </span><span class="si">{}</span><span class="s2"> default_value shape </span><span class="si">{}</span><span class="s2"> != &quot;</span> <span class="o">+</span> <span class="s2">&quot;TensorType.shape </span><span class="si">{}</span><span class="s2">&quot;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">default_value</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">to_list</span><span class="p">()))</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="ow">and</span> <span class="n">types</span><span class="o">.</span><span class="n">numpy_type_to_builtin_type</span><span class="p">(</span><span class="n">default_value</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span>
+            <span class="p">):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;TensorType </span><span class="si">{}</span><span class="s2"> default_value dtype </span><span class="si">{}</span><span class="s2"> != &quot;</span> <span class="o">+</span> <span class="s2">&quot;TensorType.dtype </span><span class="si">{}</span><span class="s2">&quot;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">default_value</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">__type_info__</span><span class="p">()))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">numpy_type_to_builtin_type</span><span class="p">(</span><span class="n">default_value</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span> <span class="o">=</span> <span class="n">default_value</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;TensorType(name=</span><span class="si">{}</span><span class="s1">, shape=</span><span class="si">{}</span><span class="s1">, dtype=</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                                                                <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                                                                <span class="n">types</span><span class="o">.</span><span class="n">builtin_to_string</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="StateType">
+<a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.StateType">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">StateType</span><span class="p">(</span><span class="n">InputType</span><span class="p">):</span>
+    <span class="n">SUPPORTED_WRAPPER_TYPE</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">TensorType</span><span class="p">,</span>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="StateType.__init__">
+<a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.StateType.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">wrapped_type</span><span class="p">:</span> <span class="nb">type</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Specify a model state as a wrapper of a ``TensorType``.</span>
+<span class="sd">        For example, you can use the following code to create a</span>
+<span class="sd">        state type input that wraps a fp16 tensor with shape ``(2, 3)``::</span>
+
+<span class="sd">            ct.StateType(</span>
+<span class="sd">                wrapped_type=ct.TensorType(</span>
+<span class="sd">                    shape=(2, 3),</span>
+<span class="sd">                    dtype=np.float16</span>
+<span class="sd">                ),</span>
+<span class="sd">                name=&quot;state&quot;,</span>
+<span class="sd">            )</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        wrapped_type: coremltools.converters.mil.input_types.InputType</span>
+<span class="sd">            - The type wrapped in the state. </span>
+<span class="sd">            - Must be ``TensorType``.</span>
+<span class="sd">              Note that the ``name`` and ``default_value`` of the wrapped ``TensorType`` must not be provided.</span>
+
+<span class="sd">        name: str</span>
+<span class="sd">            The name of the state.</span>
+<span class="sd">            It must match the key of ``named_buffers()`` in the source TorchScript model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">wrapped_type</span><span class="p">,</span> <span class="n">StateType</span><span class="o">.</span><span class="n">SUPPORTED_WRAPPER_TYPE</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;StateType only supports </span><span class="si">{</span><span class="n">StateType</span><span class="o">.</span><span class="n">SUPPORTED_WRAPPER_TYPE</span><span class="si">}</span><span class="s2">. Got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">wrapped_type</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+        <span class="c1"># name and default_value cannot be set</span>
+        <span class="k">if</span> <span class="n">wrapped_type</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;name cannot be set in the state wrapped_type.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">wrapped_type</span><span class="o">.</span><span class="n">default_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;default_value cannot be set in the state wrapped_type.&quot;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">StateType</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">wrapped_type</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">wrapped_type</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wrapped_type</span> <span class="o">=</span> <span class="n">wrapped_type</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;StateType[</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">wrapped_type</span><span class="si">}</span><span class="s2">]&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">can_be_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># StateType cannot be a model output.</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="RangeDim">
+<a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.RangeDim">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RangeDim</span><span class="p">:</span>
+<div class="viewcode-block" id="RangeDim.__init__">
+<a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.RangeDim.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">lower_bound</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">upper_bound</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">default</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">symbol</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A class for providing a range of accepted shapes.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        lower_bound:</span>
+<span class="sd">            The minimum valid value for the shape.</span>
+
+<span class="sd">        upper_bound:</span>
+<span class="sd">            The maximum valid value for the shape.</span>
+
+<span class="sd">            Set to ``-1`` if there is no upper limit (only works if backend is set to &quot;neuralnetwork&quot;).</span>
+<span class="sd">            When backend is set to &quot;mlprogram&quot; during conversion, -1 is not allowed. A finite</span>
+<span class="sd">            positive upper bound must be provided.</span>
+
+<span class="sd">        default:</span>
+<span class="sd">            The default value that is used for initiating the model, and set in the input shape</span>
+<span class="sd">            field of the model file.</span>
+
+<span class="sd">            If set to ``None``, ``lower_bound`` would be used as default.</span>
+
+<span class="sd">        symbol:</span>
+<span class="sd">            Optional symbol name for the dim. Autogenerate a symbol name if not specified.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">symbol</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_new_symbol</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="n">get_new_symbol</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">Symbol</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="n">symbol</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lower_bound</span> <span class="o">=</span> <span class="n">lower_bound</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upper_bound</span> <span class="o">=</span> <span class="n">upper_bound</span>
+
+        <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">lower_bound</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">default</span> <span class="o">&lt;</span> <span class="n">lower_bound</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Default value </span><span class="si">{</span><span class="n">default</span><span class="si">}</span><span class="s2"> is less than minimum value (</span><span class="si">{</span><span class="n">lower_bound</span><span class="si">}</span><span class="s2">) for range&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="n">default</span> <span class="o">&gt;</span> <span class="n">upper_bound</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Default value </span><span class="si">{</span><span class="n">default</span><span class="si">}</span><span class="s2"> is greater than maximum value (</span><span class="si">{</span><span class="n">upper_bound</span><span class="si">}</span><span class="s2">) for range&quot;</span>
+                <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">default</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;RangeDim(lower_bound=</span><span class="si">{}</span><span class="s1">, upper_bound=</span><span class="si">{}</span><span class="s1">, default=</span><span class="si">{}</span><span class="s1">, symbol=&quot;</span><span class="si">{}</span><span class="s1">&quot;)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lower_bound</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper_bound</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">default</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="Shape">
+<a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.Shape">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Shape</span><span class="p">:</span>
+<div class="viewcode-block" id="Shape.__init__">
+<a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.Shape.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The basic shape class to be set in :py:class:`InputType`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        shape: list of (int), symbolic values, RangeDim object</span>
+<span class="sd">            The valid shape of the input.</span>
+
+<span class="sd">        default: tuple of int or None</span>
+<span class="sd">            The default shape that is used for initiating the model, and set in</span>
+<span class="sd">            the metadata of the model file.</span>
+
+<span class="sd">            If ``None``, then ``shape`` is used.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_new_symbol</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Shape should be list or tuple, got type </span><span class="si">{}</span><span class="s2"> instead&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">shape</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">symbolic_shape</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">shape</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">s</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Dimension cannot be None or -1. Use &#39;</span> <span class="o">+</span>\
+                        <span class="s1">&#39;ct.RangeDim for runtime determined dimension. &#39;</span> <span class="o">+</span>\
+                        <span class="s1">&#39;Dim </span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1"> &#39;</span> <span class="o">+</span>\
+                        <span class="s1">&#39;See https://coremltools.readme.io/docs/flexible-inputs&#39;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">RangeDim</span><span class="p">):</span>
+                <span class="n">sym</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">symbol</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">symbolic_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sym</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">generic</span><span class="p">,</span> <span class="nb">int</span><span class="p">))</span> <span class="ow">or</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">symbolic_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Unknown type </span><span class="si">{}</span><span class="s2"> to build symbolic shape.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+                <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">default</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Default shape should be list or tuple, got type </span><span class="si">{}</span><span class="s2"> instead&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="nb">type</span><span class="p">(</span><span class="n">default</span><span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">default</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+                    <span class="n">s</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">generic</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+                <span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s2">&quot;Default shape invalid, got error at index </span><span class="si">{}</span><span class="s2"> which is </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                            <span class="n">idx</span><span class="p">,</span> <span class="n">s</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">default</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">RangeDim</span><span class="p">):</span>
+                    <span class="n">default</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">default</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">s</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">s</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="n">default</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbolic_shape</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">default</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">default</span><span class="p">)</span></div>
+
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_symbolic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">is_symbolic</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbolic_shape</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">allow_symbolic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">allow_symbolic</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_symbolic</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbolic_shape</span></div>
+
+
+
+<div class="viewcode-block" id="EnumeratedShapes">
+<a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.EnumeratedShapes">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">EnumeratedShapes</span><span class="p">:</span>
+<div class="viewcode-block" id="EnumeratedShapes.__init__">
+<a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.EnumeratedShapes.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shapes</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A shape class for setting multiple valid shapes in InputType.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        shapes: list of Shape objects, or Shape-compatible lists</span>
+<span class="sd">            * The valid shapes of the inputs.</span>
+<span class="sd">            * If input provided is not a :py:class:`Shape` object,</span>
+<span class="sd">              but can be converted to a :py:class:`Shape`,</span>
+<span class="sd">              the :py:class:`Shape` object would be stored in ``shapes`` instead.</span>
+
+
+<span class="sd">        default: tuple of int or None</span>
+<span class="sd">            * The default shape that is used for initiating the model, and set in</span>
+<span class="sd">              the metadata of the model file.</span>
+<span class="sd">            * If ``None``, then the first element in ``shapes`` is used.</span>
+
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        .. sourcecode:: python</span>
+
+<span class="sd">            sample_shape = ct.EnumeratedShapes(</span>
+<span class="sd">                shapes=[(2, 4, 64, 64), (2, 4, 48, 48), (2, 4, 32, 32)], default=(2, 4, 64, 64)</span>
+<span class="sd">            )</span>
+
+<span class="sd">            my_core_ml_model = ct.convert(</span>
+<span class="sd">                my_model,</span>
+<span class="sd">                inputs=[ct.TensorType(name=&quot;sample&quot;, shape=sample_shape)],</span>
+<span class="sd">            )</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># lazy import to avoid circular import</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_new_symbol</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shapes</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;EnumeratedShapes should be list or tuple of shape, got type </span><span class="si">{}</span><span class="s2"> instead&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="nb">type</span><span class="p">(</span><span class="n">shapes</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">shapes</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;EnumeratedShapes should be take a list or tuple with len &gt;= 2, got </span><span class="si">{}</span><span class="s2"> instead&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="n">shapes</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">shapes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">shapes</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">Shape</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shapes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shapes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Shape</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">symbolic_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shapes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">symbolic_shape</span>
+        <span class="k">for</span> <span class="n">shape</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">shapes</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">shape</span><span class="o">.</span><span class="n">symbolic_shape</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbolic_shape</span><span class="p">[</span><span class="n">idx</span><span class="p">]):</span>
+                    <span class="k">continue</span>
+                <span class="k">elif</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">symbolic_shape</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span>
+                <span class="k">elif</span> <span class="n">s</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbolic_shape</span><span class="p">[</span><span class="n">idx</span><span class="p">]:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">symbolic_shape</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_new_symbol</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">default</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Default shape should be list or tuple, got type </span><span class="si">{}</span><span class="s2"> instead&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="nb">type</span><span class="p">(</span><span class="n">default</span><span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">default</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+                    <span class="n">s</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">generic</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+                <span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s2">&quot;Default shape invalid, got error at index </span><span class="si">{}</span><span class="s2"> which is </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                            <span class="n">idx</span><span class="p">,</span> <span class="n">s</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">default</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shapes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">default</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">default</span></div>
+
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;EnumeratedShapes(&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shapes</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;, default=&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_shaping_class</span><span class="p">(</span><span class="n">shape</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a Shape class or EnumeratedShapes class for `shape`</span>
+<span class="sd">        where `shape` could be lists/tuple/Shape/EnumeratedShapes/etc.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="p">(</span><span class="n">Shape</span><span class="p">,</span> <span class="n">EnumeratedShapes</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">shape</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">enum_shape</span> <span class="o">=</span> <span class="n">EnumeratedShapes</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">enum_shape</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">shape</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Can&#39;t convert to CoreML shaping class from </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">shape</span><span class="p">))</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

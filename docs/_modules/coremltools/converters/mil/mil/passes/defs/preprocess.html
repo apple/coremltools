@@ -1,0 +1,522 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.converters.mil.mil.passes.defs.preprocess &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+      <script src="../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters.mil.mil.passes.defs.preprocess</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.converters.mil.mil.passes.defs.preprocess</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright (c) 2023, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clausefrom</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">_logger</span> <span class="k">as</span> <span class="n">logger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">input_types</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">Block</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">mb</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">Program</span><span class="p">,</span> <span class="n">types</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractGraphPass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">block_context_manager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.pass_registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_pass</span>
+
+
+<div class="viewcode-block" id="image_input_preprocess">
+<a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.preprocess.image_input_preprocess">[docs]</a>
+<span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">image_input_preprocess</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plug in to ``transpose`` image input in NHWC format to NCHW format.</span>
+
+<span class="sd">    Follow these steps:</span>
+
+<span class="sd">    1. Check whether there are any inputs that the users specify as ImageType.</span>
+<span class="sd">    2. Check the channel&#39;s dimension for all inputs that are ImageType.</span>
+
+<span class="sd">        a) ``channel_first == True``</span>
+<span class="sd">           We do not modify this input, since ``channel_first`` is the intended</span>
+<span class="sd">           behaviour for feeding images for optimal performance.</span>
+<span class="sd">        b) ``channel_first == False``</span>
+<span class="sd">           We convert the input into a &quot;channel_first&quot; input, and plug in a</span>
+<span class="sd">           ``transpose`` for the input to maintain the remaining graph&#39;s dimensionality.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">f_name</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">f_name</span> <span class="o">==</span> <span class="s2">&quot;main&quot;</span><span class="p">:</span>
+                <span class="c1"># We need to make sure main exist and start here.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_image_input_preprocess</span><span class="p">(</span><span class="n">prog</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_image_input_preprocess</span><span class="p">(</span><span class="n">prog</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_transform_to_channel_first</span><span class="p">(</span><span class="n">shape</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="n">shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+                <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">+</span> <span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">+</span> <span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">main_input_types</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">input_types</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">input_type</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">main_input_types</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_type</span><span class="p">,</span> <span class="n">input_types</span><span class="o">.</span><span class="n">ImageType</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">input_type</span><span class="o">.</span><span class="n">channel_first</span><span class="p">:</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">input_type</span><span class="o">.</span><span class="n">name</span>
+                <span class="c1"># Build new ImageType to change data layout</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_type</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">input_types</span><span class="o">.</span><span class="n">Shape</span><span class="p">):</span>
+                    <span class="n">new_shape</span> <span class="o">=</span> <span class="n">_transform_to_channel_first</span><span class="p">(</span><span class="n">input_type</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                    <span class="n">new_default</span> <span class="o">=</span> <span class="n">_transform_to_channel_first</span><span class="p">(</span><span class="n">input_type</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">default</span><span class="p">)</span>
+                    <span class="n">shape_type</span> <span class="o">=</span> <span class="n">input_types</span><span class="o">.</span><span class="n">Shape</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">new_shape</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">new_default</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_type</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">input_types</span><span class="o">.</span><span class="n">EnumeratedShapes</span><span class="p">):</span>
+                    <span class="n">shape_list</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">for</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">input_type</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">shapes</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">input_types</span><span class="o">.</span><span class="n">Shape</span><span class="p">):</span>
+                            <span class="n">shape_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_transform_to_channel_first</span><span class="p">(</span><span class="n">shape</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">shape_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_transform_to_channel_first</span><span class="p">(</span><span class="n">shape</span><span class="p">))</span>
+                    <span class="n">shape_type</span> <span class="o">=</span> <span class="n">input_types</span><span class="o">.</span><span class="n">EnumeratedShapes</span><span class="p">(</span>
+                        <span class="n">shapes</span><span class="o">=</span><span class="n">shape_list</span><span class="p">,</span>
+                        <span class="n">default</span><span class="o">=</span><span class="n">_transform_to_channel_first</span><span class="p">(</span><span class="n">input_type</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">default</span><span class="p">),</span>
+                    <span class="p">)</span>
+                <span class="n">new_image_type</span> <span class="o">=</span> <span class="n">input_types</span><span class="o">.</span><span class="n">ImageType</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                    <span class="n">shape</span><span class="o">=</span><span class="n">shape_type</span><span class="p">,</span>
+                    <span class="n">bias</span><span class="o">=</span><span class="n">input_type</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span>
+                    <span class="n">scale</span><span class="o">=</span><span class="n">input_type</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span>
+                    <span class="n">color_layout</span><span class="o">=</span><span class="n">input_type</span><span class="o">.</span><span class="n">color_layout</span><span class="p">,</span>
+                    <span class="n">channel_first</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">main_input_types</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_image_type</span>
+
+                <span class="c1"># Reconstruct Placeholder of Function inputs.</span>
+                <span class="n">placeholder_op</span> <span class="o">=</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">placeholder_inputs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+                <span class="n">old_var</span> <span class="o">=</span> <span class="n">placeholder_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">nchw_shape</span> <span class="o">=</span> <span class="n">_transform_to_channel_first</span><span class="p">(</span><span class="n">placeholder_op</span><span class="o">.</span><span class="n">sym_shape</span><span class="p">)</span>
+                <span class="n">placeholder_op</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+                    <span class="n">nchw_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">placeholder_op</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">placeholder_op</span><span class="o">.</span><span class="n">name</span>
+                <span class="p">)</span>
+
+                <span class="c1"># Update Function input var</span>
+                <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">_input_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">placeholder_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="c1"># Add transpose into graph (Transpose from NCHW back to NHWC)</span>
+                <span class="n">curr_block</span> <span class="o">=</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">]</span>
+                <span class="n">curr_var</span> <span class="o">=</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+
+                <span class="n">perm</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">curr_var</span><span class="o">.</span><span class="n">rank</span><span class="p">))</span>
+                <span class="n">perm</span> <span class="o">=</span> <span class="n">perm</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">perm</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="n">perm</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">perm</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">]]</span>
+                <span class="k">with</span> <span class="n">curr_block</span><span class="p">:</span>
+                    <span class="n">new_input</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span>
+                        <span class="n">x</span><span class="o">=</span><span class="n">curr_var</span><span class="p">,</span>
+                        <span class="n">perm</span><span class="o">=</span><span class="n">perm</span><span class="p">,</span>
+                        <span class="n">before_op</span><span class="o">=</span><span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">operations</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                        <span class="n">name</span><span class="o">=</span><span class="n">curr_var</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;__transpose_from_nchw__&quot;</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="n">curr_block</span><span class="o">.</span><span class="n">replace_uses_of_var_after_op</span><span class="p">(</span>
+                    <span class="n">anchor_op</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">old_var</span><span class="o">=</span><span class="n">old_var</span><span class="p">,</span> <span class="n">new_var</span><span class="o">=</span><span class="n">new_input</span>
+                <span class="p">)</span>
+        <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">input_types</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">main_input_types</span><span class="p">)</span></div>
+
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">NameSanitizer</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># to hold all names encountered,</span>
+        <span class="c1"># to make sure that all new names are unique</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span> <span class="k">if</span> <span class="n">prefix</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">prefix</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_replace_invalid_char_with_underscore</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;[^a-zA-Z0-9_]&quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">sanitize_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">allow_prefix_underscore</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sanitize the input string and return it back.</span>
+<span class="sd">        Input string should be of the format: [a-zA-Z_][a-zA-Z0-9_]*</span>
+
+<span class="sd">        If it is not, then it is sanitized in the following manner:</span>
+<span class="sd">        - first, any character that is not [a-zA-Z0-9_] is replaced with &quot;_&quot;</span>
+<span class="sd">        - if the starting character is not [a-zA-Z_], it is prefixed with self.prefix</span>
+<span class="sd">        - the resulting string must be unique. If it has been encountered before,</span>
+<span class="sd">          it is appended by &quot;_0&quot; or &quot;_1&quot; and so on, until it becomes unique.</span>
+
+<span class="sd">        :name: str</span>
+<span class="sd">            current name</span>
+
+<span class="sd">        :return: str</span>
+<span class="sd">            updated name. Returns the same string, if sanitization not required.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># replace any character that is not [a-zA-Z0-9_] with an underscore</span>
+        <span class="n">new_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace_invalid_char_with_underscore</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="c1"># now check if the name starts with anything but [A-Za-z_]</span>
+        <span class="c1"># if so, then add the prefix</span>
+        <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s2">&quot;[^a-zA-Z_]&quot;</span><span class="p">,</span> <span class="n">new_name</span><span class="p">):</span>
+            <span class="n">new_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">+</span> <span class="n">new_name</span>
+
+        <span class="n">reserved_names</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;any&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;bool&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;program&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;func&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;tensor&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;list&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;dict&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;tuple&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;true&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;false&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;bf16&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;fp16&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;fp32&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;fp64&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;int8&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;int16&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;int32&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;int64&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;uint8&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;uint16&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;uint32&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;uint64&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;state&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="n">new_name</span> <span class="ow">in</span> <span class="n">reserved_names</span><span class="p">:</span>
+            <span class="n">new_name</span> <span class="o">+=</span> <span class="s2">&quot;_workaround&quot;</span>
+
+        <span class="c1"># if the name start with _, we append &quot;var&quot; in front of it</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">allow_prefix_underscore</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">new_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">):</span>
+                <span class="n">new_name</span> <span class="o">=</span> <span class="s2">&quot;var&quot;</span> <span class="o">+</span> <span class="n">new_name</span>
+
+        <span class="k">if</span> <span class="n">new_name</span> <span class="o">==</span> <span class="n">name</span><span class="p">:</span>
+            <span class="c1"># return if nothing has changed</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">all_names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># name has changed</span>
+            <span class="c1"># make sure it is unique, then return</span>
+            <span class="k">if</span> <span class="n">new_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_names</span><span class="p">:</span>
+                <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">new_name</span> <span class="o">+=</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+                <span class="k">while</span> <span class="n">new_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_names</span><span class="p">:</span>
+                    <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">new_name</span> <span class="o">+=</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+            <span class="c1"># now we have a unique name</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">all_names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_name</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">new_name</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sanitize_block</span><span class="p">(</span>
+        <span class="n">block</span><span class="p">,</span>
+        <span class="n">sanitizer_vars</span><span class="p">,</span>
+        <span class="n">sanitizer_ops</span><span class="p">,</span>
+        <span class="n">main_input_types</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">sanitize_model_inputs_outputs_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sanitize the vars and op names inside the block to adhere to the format [a-zA-Z_][a-zA-Z0-9_]*</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">sanitize_model_inputs_outputs_only</span><span class="p">:</span>
+            <span class="n">NameSanitizer</span><span class="o">.</span><span class="n">_sanitize_block_input_vars</span><span class="p">(</span>
+                <span class="n">block</span><span class="p">,</span> <span class="n">sanitizer_vars</span><span class="p">,</span> <span class="n">main_input_types</span><span class="p">,</span> <span class="n">sanitize_main_input_only</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+            <span class="n">NameSanitizer</span><span class="o">.</span><span class="n">_sanitize_main_outputs_only</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">sanitizer_vars</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">NameSanitizer</span><span class="o">.</span><span class="n">_sanitize_block_input_vars</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">sanitizer_vars</span><span class="p">,</span> <span class="n">main_input_types</span><span class="p">)</span>
+            <span class="n">NameSanitizer</span><span class="o">.</span><span class="n">_sanitize_output_vars_and_nested_blocks</span><span class="p">(</span>
+                <span class="n">block</span><span class="p">,</span> <span class="n">sanitizer_vars</span><span class="p">,</span> <span class="n">sanitizer_ops</span>
+            <span class="p">)</span>
+            <span class="n">NameSanitizer</span><span class="o">.</span><span class="n">_sanitize_op_names</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">sanitizer_ops</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sanitize_block_input_vars</span><span class="p">(</span>
+        <span class="n">block</span><span class="p">,</span> <span class="n">sanitizer_vars</span><span class="p">,</span> <span class="n">main_input_types</span><span class="p">,</span> <span class="n">sanitize_main_input_only</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">):</span>
+
+        <span class="c1"># iterate over all the block input vars and sanitize the names</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">Function</span><span class="p">):</span>
+            <span class="c1"># this is the &quot;main&quot; block</span>
+            <span class="c1"># block.inputs is a dict from input names to input vars</span>
+            <span class="c1"># iterate over the input vars of the main program and sanitize their names</span>
+            <span class="n">new_input_dict</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+            <span class="n">input_name_updated</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">input_name</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Main block&#39;s input name, &#39;</span><span class="si">{}</span><span class="s2">&#39;, is different from its corresponding var&#39;s name, &#39;</span><span class="si">{}</span><span class="s2">&#39;.&quot;</span>
+                <span class="k">assert</span> <span class="n">input_name</span> <span class="o">==</span> <span class="n">var</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">input_name</span><span class="p">,</span> <span class="n">var</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">new_name</span> <span class="o">=</span> <span class="n">sanitizer_vars</span><span class="o">.</span><span class="n">sanitize_name</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">new_input_dict</span><span class="p">[</span><span class="n">new_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">var</span>
+                <span class="k">if</span> <span class="n">new_name</span> <span class="o">!=</span> <span class="n">var</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Input, &#39;</span><span class="si">{}</span><span class="s2">&#39;, of the source model, has been renamed to &#39;</span><span class="si">{}</span><span class="s2">&#39; in the Core ML model.&quot;</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">new_name</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">placeholder_inputs</span><span class="p">:</span>
+                        <span class="n">block</span><span class="o">.</span><span class="n">placeholder_inputs</span><span class="p">[</span><span class="n">new_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">placeholder_inputs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                        <span class="n">block</span><span class="o">.</span><span class="n">placeholder_inputs</span><span class="p">[</span><span class="n">new_name</span><span class="p">]</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="n">new_name</span><span class="p">)</span>
+                    <span class="n">var</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="n">new_name</span><span class="p">)</span>
+                    <span class="n">input_name_updated</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">if</span> <span class="n">main_input_types</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="c1"># update prog&#39;s main_input_types, since we are updating the name of a model input here</span>
+                        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">main_input_types</span><span class="p">)):</span>
+                            <span class="k">if</span> <span class="n">main_input_types</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">input_name</span><span class="p">:</span>
+                                <span class="n">main_input_types</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">new_name</span>
+                                <span class="k">break</span>
+            <span class="k">if</span> <span class="n">input_name_updated</span><span class="p">:</span>
+                <span class="n">block</span><span class="o">.</span><span class="n">_input_dict</span> <span class="o">=</span> <span class="n">new_input_dict</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">sanitize_main_input_only</span><span class="p">:</span>
+            <span class="c1"># in this case block is not the &quot;main&quot; function</span>
+            <span class="c1"># in this case block.inputs is a list of input vars of the block</span>
+            <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">inputs</span><span class="p">:</span>
+                <span class="n">new_name</span> <span class="o">=</span> <span class="n">sanitizer_vars</span><span class="o">.</span><span class="n">sanitize_name</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">new_name</span> <span class="o">!=</span> <span class="n">var</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+                    <span class="n">var</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="n">new_name</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sanitize_var_names</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">sanitizer_vars</span><span class="p">,</span> <span class="n">emit_warning</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">new_name</span> <span class="o">=</span> <span class="n">sanitizer_vars</span><span class="o">.</span><span class="n">sanitize_name</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">new_name</span> <span class="o">!=</span> <span class="n">var</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">emit_warning</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Output, &#39;</span><span class="si">{}</span><span class="s2">&#39;, of the source model, has been renamed to &#39;</span><span class="si">{}</span><span class="s2">&#39; in the Core ML model.&quot;</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">new_name</span><span class="p">))</span>
+            <span class="n">var</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="n">new_name</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sanitize_op_names</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">sanitizer_ops</span><span class="p">):</span>
+        <span class="c1"># iterate over all the ops and sanitize the op names</span>
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">op</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">sanitizer_ops</span><span class="o">.</span><span class="n">sanitize_name</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sanitize_output_vars_and_nested_blocks</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">sanitizer_vars</span><span class="p">,</span> <span class="n">sanitizer_ops</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+                <span class="n">NameSanitizer</span><span class="o">.</span><span class="n">sanitize_block</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">sanitizer_vars</span><span class="p">,</span> <span class="n">sanitizer_ops</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">Function</span><span class="p">)</span> <span class="ow">and</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+                    <span class="n">NameSanitizer</span><span class="o">.</span><span class="n">_sanitize_var_names</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">sanitizer_vars</span><span class="p">,</span> <span class="n">emit_warning</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">NameSanitizer</span><span class="o">.</span><span class="n">_sanitize_var_names</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">sanitizer_vars</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sanitize_main_outputs_only</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">sanitizer_vars</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">Function</span><span class="p">)</span> <span class="ow">and</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+                    <span class="n">NameSanitizer</span><span class="o">.</span><span class="n">_sanitize_var_names</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">sanitizer_vars</span><span class="p">,</span> <span class="n">emit_warning</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="sanitize_input_output_names">
+<a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.preprocess.sanitize_input_output_names">[docs]</a>
+<span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">sanitize_input_output_names</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sanitize the names of model input and output vars to make sure</span>
+<span class="sd">    that they are of the format as described in the NameSanitizer class; that is,</span>
+<span class="sd">    of the format ``[a-zA-Z_][a-zA-Z0-9_]*``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+        <span class="n">sanitizer_vars</span> <span class="o">=</span> <span class="n">NameSanitizer</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;var_&quot;</span><span class="p">)</span>
+        <span class="n">sanitizer_ops</span> <span class="o">=</span> <span class="n">NameSanitizer</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;op_&quot;</span><span class="p">)</span>
+
+        <span class="c1"># sanitize the input/output of the main block</span>
+        <span class="c1"># TODO: rdar://126498947 ([Infra] Investigate the name sanitizer on multifunction model)</span>
+        <span class="k">if</span> <span class="s2">&quot;main&quot;</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">:</span>
+            <span class="n">NameSanitizer</span><span class="o">.</span><span class="n">sanitize_block</span><span class="p">(</span>
+                <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">],</span>
+                <span class="n">sanitizer_vars</span><span class="p">,</span>
+                <span class="n">sanitizer_ops</span><span class="p">,</span>
+                <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">input_types</span><span class="p">,</span>
+                <span class="n">sanitize_model_inputs_outputs_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span></div>
+
+
+
+<span class="c1"># TODO: rdar://122845072 ([Infra] Refactor the transform_function_signatures, adjust_io_to_supported_types and update_output_dtypes using a shared graph pass)</span>
+<div class="viewcode-block" id="update_output_dtypes">
+<a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.preprocess.update_output_dtypes">[docs]</a>
+<span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">update_output_dtypes</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Update the dtypes of output vars of each function block to match the dtypes</span>
+<span class="sd">    provided in ``function.output_types``. The output types for the main function</span>
+<span class="sd">    is populated by the ``outputs`` argument provided by the user in the ``coremltools.convert()`` API.</span>
+<span class="sd">    This graph pass assumes that the list of outputs in ``function.output_types`` (if not ``None``),</span>
+<span class="sd">    are in the same order as the output vars.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@block_context_manager</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">adjust_function_output_types</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Function</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adjust output dtypes for a pymil function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">user_provided_output_types</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">output_types</span>
+        <span class="n">output_vars</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">outputs</span>
+        <span class="n">input_vars</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">user_provided_output_types</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">user_provided_output_types</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">output_vars</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">user_provided_output_types</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;Number of outputs provided by the user, which is </span><span class="si">{}</span><span class="s2">, &quot;</span>
+                <span class="s2">&quot;does not match the number of outputs generated by the model, which is </span><span class="si">{}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">user_provided_output_types</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">output_vars</span><span class="p">)))</span>
+
+        <span class="n">new_outputs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">output_type</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">user_provided_output_types</span><span class="p">):</span>
+            <span class="n">required_output_dtype</span> <span class="o">=</span> <span class="n">output_type</span><span class="o">.</span><span class="n">dtype</span>
+            <span class="n">output_var</span> <span class="o">=</span> <span class="n">output_vars</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">required_output_dtype</span> <span class="ow">is</span> <span class="kc">None</span>
+                <span class="ow">or</span> <span class="ow">not</span> <span class="p">(</span>
+                    <span class="n">types</span><span class="o">.</span><span class="n">is_tensor</span><span class="p">(</span><span class="n">output_var</span><span class="o">.</span><span class="n">sym_type</span><span class="p">)</span> <span class="ow">or</span> <span class="n">types</span><span class="o">.</span><span class="n">is_scalar</span><span class="p">(</span><span class="n">output_var</span><span class="o">.</span><span class="n">sym_type</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="ow">or</span> <span class="n">required_output_dtype</span> <span class="o">==</span> <span class="n">output_var</span><span class="o">.</span><span class="n">dtype</span>
+            <span class="p">):</span>
+                <span class="c1"># no need to update the output var&#39;s dtype in this case</span>
+                <span class="n">new_outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output_var</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">output_var</span> <span class="ow">in</span> <span class="n">input_vars</span><span class="p">:</span>
+                <span class="c1"># Here is this rare special case, that the program input is also an output</span>
+                <span class="c1"># For this case, we don&#39;t do anything, and throw a warning message</span>
+                <span class="n">new_outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output_var</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Output var &#39;</span><span class="si">{</span><span class="n">output_var</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; is also an input var, hence the &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;dtype cannot be changed: output var &#39;</span><span class="si">{</span><span class="n">output_var</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; remains &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;dtype </span><span class="si">{</span><span class="n">types</span><span class="o">.</span><span class="n">builtin_to_string</span><span class="p">(</span><span class="n">output_var</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">output_var_name</span> <span class="o">=</span> <span class="n">output_var</span><span class="o">.</span><span class="n">name</span>
+                <span class="n">output_var</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span>
+                    <span class="n">output_var_name</span> <span class="o">+</span> <span class="s2">&quot;_type_&quot;</span> <span class="o">+</span> <span class="n">types</span><span class="o">.</span><span class="n">builtin_to_string</span><span class="p">(</span><span class="n">output_var</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">new_output_var</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span>
+                    <span class="n">x</span><span class="o">=</span><span class="n">output_var</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">builtin_to_string</span><span class="p">(</span><span class="n">required_output_dtype</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">new_output_var</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="n">output_var_name</span><span class="p">)</span>
+                <span class="n">Block</span><span class="o">.</span><span class="n">_copy_scope_info</span><span class="p">(</span><span class="n">output_var</span><span class="p">,</span> <span class="n">new_output_var</span><span class="p">)</span>
+                <span class="n">new_outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_output_var</span><span class="p">)</span>
+
+        <span class="n">func</span><span class="o">.</span><span class="n">set_outputs</span><span class="p">(</span><span class="n">new_outputs</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">:</span> <span class="n">Program</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">func</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">adjust_function_output_types</span><span class="p">(</span><span class="n">func</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

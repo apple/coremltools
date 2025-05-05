@@ -16,32 +16,29 @@
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
-  <!-- 
-    this give us a css class that will be invisible only if js is disabled 
-  -->
-  <noscript>
-    <style>
-      .pst-js-only { display: none !important; }
-
-    </style>
-  </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css?v=27a1495e" />
   
-  <!-- So that users can add custom icons -->
-  <script src="../_static/scripts/fontawesome.js?digest=26a4bc78f4c0ddb94549"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=c1ce5b23"></script>
+    <script src="../_static/documentation_options.js?v=6ab2ec1d"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +51,6 @@
     <link rel="prev" title="Model Input and Output Types" href="model-input-and-output-types.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="" />
   </head>
   
   
@@ -70,8 +66,19 @@
     <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
-  <dialog id="pst-search-dialog">
-    
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
 <form class="bd-search d-flex align-items-center"
       action="../search.html"
       method="get">
@@ -79,6 +86,7 @@
   <input type="search"
          class="form-control"
          name="q"
+         id="search-input"
          placeholder="Search..."
          aria-label="Search..."
          autocomplete="off"
@@ -86,8 +94,8 @@
          autocapitalize="off"
          spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form>
-  </dialog>
+</form></div>
+  </div>
 
   <div class="pst-async-banner-revealer d-none">
   <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
@@ -103,8 +111,7 @@
       
       
       
-      <dialog id="pst-primary-sidebar-modal"></dialog>
-      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+      <div class="bd-sidebar-primary bd-sidebar">
         
 
   
@@ -134,11 +141,15 @@
 </a></div>
         <div class="sidebar-primary-item">
 
-<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
- <i class="fa-solid fa-magnifying-glass"></i>
- <span class="search-button__default-text">Search</span>
- <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-</button></div>
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">API Reference</span></p>
@@ -255,6 +266,7 @@
 <li class="toctree-l2"><a class="reference internal" href="updatable-nearest-neighbor-classifier.html">Nearest Neighbor Classifier</a></li>
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="mlmodel-debugging-perf-utilities.html">Debugging And Performance Utilities</a></li>
 </ul>
 
     </div>
@@ -377,16 +389,24 @@
 
 
 
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button>
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
 
 
-<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
-</button>
+  </button>
+`);
+</script>
 <button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <span class="fa-solid fa-list"></span>
 </button>
@@ -452,15 +472,15 @@
 <section id="use-an-mlmultiarray">
 <h2>Use an MLMultiArray<a class="headerlink" href="#use-an-mlmultiarray" title="Link to this heading">#</a></h2>
 <p>When using <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a>, if you include the model only, <em>without</em> an <code class="docutils literal notranslate"><span class="pre">inputs</span></code> parameter, you get by default a Core ML model with the an input of type <code class="docutils literal notranslate"><span class="pre">MLMultiArray</span></code>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
 <span class="c1"># Convert to Core ML with an MLMultiArray as input.</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">tf_model</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>This example also excludes the <code class="docutils literal notranslate"><span class="pre">outputs</span></code> parameter, so the Core ML model by default uses the <code class="docutils literal notranslate"><span class="pre">MLMultiArray</span></code> type for output as well.</p>
 <p>The following sample code shows how you can use <code class="docutils literal notranslate"><span class="pre">convert()</span></code> to convert a TensorFlow 2 model to Core ML neural network with an input of type <a class="reference external" href="https://developer.apple.com/documentation/coreml/mlmultiarray"><code class="docutils literal notranslate"><span class="pre">MLMultiArray</span></code></a>. You can then use a <a class="reference external" href="https://numpy.org/">NumPy</a> array as input for making a prediction:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
-<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span> <span class="c1"># TF 2.2.0</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span> <span class="c1"># TF 2.2.0</span>
 
 <span class="c1"># Load MobileNetV2.</span>
 <span class="n">keras_model</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">applications</span><span class="o">.</span><span class="n">MobileNetV2</span><span class="p">()</span>
@@ -470,7 +490,7 @@
 <span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">keras_model</span><span class="p">)</span>
 
 <span class="c1"># In Python, provide a NumPy array as input for prediction.</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
 
 <span class="c1"># Make a prediction using Core ML.</span>
@@ -492,7 +512,7 @@
 <section id="imagetype-for-input">
 <h3>ImageType for Input<a class="headerlink" href="#imagetype-for-input" title="Link to this heading">#</a></h3>
 <p>To use an <code class="docutils literal notranslate"><span class="pre">ImageType</span></code> for input, include the <code class="docutils literal notranslate"><span class="pre">inputs</span></code> parameter with <code class="docutils literal notranslate"><span class="pre">convert()</span></code>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
 <span class="c1"># Convert to Core ML with an ImageType as input.</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">tf_model</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">()])</span>
 </pre></div>
@@ -504,10 +524,10 @@
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">MLMultiArray</span></code> and <code class="docutils literal notranslate"><span class="pre">ImageType</span></code> differ in their interfaces to the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.model.MLModel.predict"><code class="docutils literal notranslate"><span class="pre">predict()</span></code></a> method in Core ML Tools, and differ when running on the device using the Core ML <a class="reference external" href="https://developer.apple.com/documentation/coreml/mlmodel/2880280-prediction"><code class="docutils literal notranslate"><span class="pre">prediction()</span></code></a> API. For details about predictions, see <a class="reference internal" href="model-prediction.html"><span class="doc std std-doc">Model Prediction</span></a>.</p>
 <p>The following example uses an <code class="docutils literal notranslate"><span class="pre">ImageType</span></code> for a neural network model input, and makes a prediction. For this example, the type of input for an image must be a <a class="reference external" href="https://en.wikipedia.org/wiki/Python_Imaging_Library">PIL image</a> to invoke a prediction in Python:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
 
 <span class="c1"># Load MobileNetV2.</span>
-<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
 <span class="n">keras_model</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">applications</span><span class="o">.</span><span class="n">MobileNetV2</span><span class="p">()</span>
 <span class="n">input_name</span> <span class="o">=</span> <span class="n">keras_model</span><span class="o">.</span><span class="n">input_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
@@ -515,7 +535,7 @@
 <span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">keras_model</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">()])</span>
 
 <span class="c1"># Use PIL to load and resize the image to expected size.</span>
-<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
 <span class="n">example_image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;daisy.jpg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">resize</span><span class="p">((</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">))</span>
 
 <span class="c1"># Make a prediction using Core ML.</span>
@@ -532,13 +552,13 @@
 <section id="imagetype-for-output">
 <h3>ImageType for Output<a class="headerlink" href="#imagetype-for-output" title="Link to this heading">#</a></h3>
 <p>To use an <code class="docutils literal notranslate"><span class="pre">ImageType</span></code> for output, include the <code class="docutils literal notranslate"><span class="pre">outputs</span></code> parameter with <code class="docutils literal notranslate"><span class="pre">convert()</span></code>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">tf_model</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">()],</span>
                                       <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">()])</span>
 </pre></div>
 </div>
 <p>For example, the following enables image inputs <em>and</em> outputs to convert a PyTorch model (<code class="docutils literal notranslate"><span class="pre">torch_model</span></code>) that accepts RGB images with the shape <code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">3,</span> <span class="pre">H,</span> <span class="pre">W)</span></code>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
 <span class="c1"># H: image height, W: image width</span>
 <span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">torch_model</span><span class="p">,</span>
                      <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">W</span><span class="p">),</span>
@@ -555,19 +575,19 @@
 <section id="import-statements">
 <h4>Import Statements<a class="headerlink" href="#import-statements" title="Link to this heading">#</a></h4>
 <p>The example uses PyTorch (<code class="docutils literal notranslate"><span class="pre">torch</span></code>) and <a class="reference external" href="https://en.wikipedia.org/wiki/Python_Imaging_Library">PIL</a> for Python image support. Import the following:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
-<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
-<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">display</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span>
 </pre></div>
 </div>
 </section>
 <section id="image-filter-model">
 <h4>Image Filter Model<a class="headerlink" href="#image-filter-model" title="Link to this heading">#</a></h4>
 <p>For this example, create a simple image “blanching” filter model that whitens an image by adding 100 to each pixel value:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ImageFilteringModel</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">ImageFilteringModel</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">100</span>
 </pre></div>
 </div>
@@ -647,7 +667,7 @@
 <p>Starting in iOS 16 and macOS 13, you can use OneComponent16Half Grayscale images and float 16 <a class="reference external" href="https://developer.apple.com/documentation/coreml/mlmultiarray">multiarrays</a> for model inputs and outputs. Using <code class="docutils literal notranslate"><span class="pre">GRAYSCALE_FLOAT16</span></code> for input or output is available only if the <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target</span></code> is specified as <code class="docutils literal notranslate"><span class="pre">iOS16</span></code> or <code class="docutils literal notranslate"><span class="pre">macOS</span> <span class="pre">13</span></code>.</p>
 </div>
 <p>The following example shows how you can specify the <code class="docutils literal notranslate"><span class="pre">inputs</span></code> and <code class="docutils literal notranslate"><span class="pre">outputs</span></code> arguments with <code class="docutils literal notranslate"><span class="pre">colorlayout</span></code> to set <code class="docutils literal notranslate"><span class="pre">GRAYSCALE_FLOAT16</span></code> images for both input and output:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
 <span class="c1"># float 16 input and output of type grayscale images</span>
 <span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
     <span class="n">source_model</span><span class="p">,</span>
@@ -658,7 +678,7 @@
 </pre></div>
 </div>
 <p>By using the <code class="docutils literal notranslate"><span class="pre">dtype</span></code> argument in a <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#tensortype"><code class="docutils literal notranslate"><span class="pre">TensorType</span></code></a>, you can control the type of the  <code class="docutils literal notranslate"><span class="pre">MLMultiArray</span></code> for both inputs and outputs. For example, to specify <code class="docutils literal notranslate"><span class="pre">np.float16</span></code>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
 <span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">keras_model</span><span class="p">,</span>
                      <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">)],</span>
                      <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">)],</span>
@@ -694,8 +714,8 @@ y_blue_channel = x_blue_channel * scale + blue_bias
 <h3>Preprocessing for TensorFlow<a class="headerlink" href="#preprocessing-for-tensorflow" title="Link to this heading">#</a></h3>
 <p>TensorFlow models differ in how they manage image inputs. You need to examine the model to determine if preprocessing is required for the converted model. Please refer to the training recipe for the model that you are converting, and apply the scale and bias during conversion if required.</p>
 <p>For example, the TensorFlow MobileNet model shown in the <a class="reference internal" href="introductory-quickstart.html"><span class="doc std std-doc">Quickstart Example</span></a> expects the input image to be normalized with the interval <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>. When converting it, use a scale of <code class="docutils literal notranslate"><span class="pre">1/127.5</span></code> and bias of <code class="docutils literal notranslate"><span class="pre">-1</span></code>. You can add <code class="docutils literal notranslate"><span class="pre">scale</span></code> and <code class="docutils literal notranslate"><span class="pre">bias</span></code> preprocessing parameters during the initialization of an <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#imagetype"><code class="docutils literal notranslate"><span class="pre">ImageType</span></code></a>, such as when using <code class="docutils literal notranslate"><span class="pre">convert()</span></code>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
-<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span> <span class="c1"># TF 1.15</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span> <span class="c1"># TF 1.15</span>
 
 <span class="n">keras_model</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">applications</span><span class="o">.</span><span class="n">MobileNet</span><span class="p">()</span>
 
@@ -741,7 +761,7 @@ y_blue_channel = x_blue_channel / (0.225*255)   - 0.406/(0.225)
 </pre></div>
 </div>
 <p>The <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ImageType"><code class="docutils literal notranslate"><span class="pre">ImageType</span></code></a> input type lets you specify the <code class="docutils literal notranslate"><span class="pre">scale</span></code> and <code class="docutils literal notranslate"><span class="pre">bias</span></code> parameters. The scale is applied to the image first, and then the bias is added. Before converting, specify the <code class="docutils literal notranslate"><span class="pre">ImageType</span></code> as follows:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
 <span class="c1"># Set the image scale and bias for input image preprocessing</span>
 <span class="n">scale</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mf">0.226</span><span class="o">*</span><span class="mf">255.0</span><span class="p">)</span>
 <span class="n">bias</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span> <span class="mf">0.485</span><span class="o">/</span><span class="p">(</span><span class="mf">0.229</span><span class="p">)</span> <span class="p">,</span> <span class="o">-</span> <span class="mf">0.456</span><span class="o">/</span><span class="p">(</span><span class="mf">0.224</span><span class="p">),</span> <span class="o">-</span> <span class="mf">0.406</span><span class="o">/</span><span class="p">(</span><span class="mf">0.225</span><span class="p">)]</span>
@@ -799,8 +819,7 @@ y_blue_channel = x_blue_channel / (0.225*255)   - 0.406/(0.225)
             
             
               
-                <dialog id="pst-secondary-sidebar-modal"></dialog>
-                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
   <div class="sidebar-secondary-item">
@@ -854,7 +873,7 @@ By Apple
 
   <p class="copyright">
     
-      © Copyright 2023, Apple Inc.
+      © Copyright 2024, Apple Inc.
       <br/>
     
   </p>
@@ -878,8 +897,8 @@ By Apple
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549"></script>
-<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549"></script>
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
 
   <footer class="bd-footer">
   </footer>

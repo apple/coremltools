@@ -1,0 +1,312 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+      <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright (c) 2022, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clausefrom coremltools.converters.mil.mil import types</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">types</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.input_type</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">InputSpec</span><span class="p">,</span>
+                                                       <span class="n">TensorInputType</span><span class="p">,</span>
+                                                       <span class="n">TupleInputType</span><span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.operation</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operation</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_op</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.ops.defs.iOS16</span><span class="w"> </span><span class="kn">import</span> <span class="n">_IOS16_TARGET</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.types.symbolic</span><span class="w"> </span><span class="kn">import</span> <span class="n">any_symbolic</span>
+
+
+<div class="viewcode-block" id="reshape_like">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation.reshape_like">[docs]</a>
+<span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS16_TARGET</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">reshape_like</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reshape a tensor to an output shape specified by some or all dimensions of a tuple of reference tensors ``ref_tensors``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;\\*?, T&gt; (Required)</span>
+<span class="sd">        * The input tensor to be reshaped.</span>
+
+<span class="sd">    ref_tensors: Tuple[tensor&lt;\\*?, R&gt;] (Required)</span>
+<span class="sd">        * A tuple of tensors that define the output shape.</span>
+
+<span class="sd">    begins: Tuple[const&lt;int32&gt;] (Required)</span>
+<span class="sd">        * A tuple of integers specifying the begin index into the shape vector of the corresponding ``ref_tensor``.</span>
+
+<span class="sd">    ends: Tuple[const&lt;int32&gt;] (Required)</span>
+<span class="sd">        * A tuple of integers specifying the end index into the shape vector of the corresponding ``ref_tensor``.</span>
+
+<span class="sd">    end_masks: Tuple[const&lt;bool&gt;] (Required)</span>
+<span class="sd">        * If ``True``, select all axes from the begin index until the end of the corresponding ``ref_tensor``, as in</span>
+<span class="sd">          ``ref_tensors[i].shape[begins[i]:]``.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The output shape is computed as follows:</span>
+
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        output_shape = []</span>
+<span class="sd">        num_of_refs = len(begins)</span>
+<span class="sd">        for i in range(num_of_refs):</span>
+<span class="sd">            if end_masks[i]:</span>
+<span class="sd">                output_shape.append(ref_tensor_i.shape[begins[i]:])</span>
+<span class="sd">            else:</span>
+<span class="sd">                output_shape.append(ref_tensor_i.shape[begins[i]:ends[i]])</span>
+<span class="sd">        output_shape = np.concat(output_shape, axis=0)</span>
+
+<span class="sd">    The following is an example:</span>
+
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        ref_tensors=[tensor[2, 3, 4], tensor[1, 5, 6]]</span>
+<span class="sd">        begins=[0, 1]</span>
+<span class="sd">        ends=[2, 0]</span>
+<span class="sd">        end_masks=[False, True]</span>
+
+<span class="sd">    The output shape would be ``(2, 3, 5, 6)``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;</span>
+<span class="sd">        * Same type as input tensor ``x``.</span>
+<span class="sd">        * Output shape is computed by ``ref_tensors``, ``begins``, ``ends``, and ``end_masks``.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, i32, bool</span>
+<span class="sd">    R: fp16, fp32, i32, bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span> 
+        <span class="n">ref_tensors</span><span class="o">=</span><span class="n">TupleInputType</span><span class="p">(),</span>
+        <span class="n">begins</span><span class="o">=</span><span class="n">TupleInputType</span><span class="p">(),</span>
+        <span class="n">ends</span><span class="o">=</span><span class="n">TupleInputType</span><span class="p">(),</span>
+        <span class="n">end_masks</span><span class="o">=</span><span class="n">TupleInputType</span><span class="p">(),</span>
+    <span class="p">)</span>
+    
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_is_const_tuple_with_scalar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">expected_type</span><span class="p">,</span> <span class="n">param_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This utility function checks the param is a Tuple of scalar with expected data type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">expected_type</span> <span class="ow">or</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">():</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;In op reshape_like </span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2"> must be a Tuple of scalar </span><span class="si">{}</span><span class="s2">. Got a </span><span class="si">{}</span><span class="s2"> tensor with shape </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> 
+                    <span class="n">param_name</span><span class="p">,</span>
+                    <span class="n">expected_type</span><span class="o">.</span><span class="n">__type_info__</span><span class="p">(),</span>
+                    <span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">__type_info__</span><span class="p">(),</span>
+                    <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>          
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Validation the inputs</span>
+        <span class="n">ref_number</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_tensors</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">begins</span><span class="p">)</span> <span class="o">!=</span> <span class="n">ref_number</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ends</span><span class="p">)</span> <span class="o">!=</span> <span class="n">ref_number</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">end_masks</span><span class="p">)</span> <span class="o">!=</span> <span class="n">ref_number</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">&quot;Op reshape_like </span><span class="si">{}</span><span class="s2">&#39;s ref_tensors, begins, ends and end_masks must have exactly the same length. &quot;</span>
+                    <span class="s2">&quot;Got </span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2"> and </span><span class="si">{}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">ref_number</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">begins</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ends</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">end_masks</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_is_const_tuple_with_scalar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">begins</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="s2">&quot;begins&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_is_const_tuple_with_scalar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ends</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="s2">&quot;ends&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_is_const_tuple_with_scalar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">end_masks</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">,</span> <span class="s2">&quot;end_masks&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Compute the output shape</span>
+        <span class="n">out_shape</span> <span class="o">=</span> <span class="p">()</span>
+        <span class="k">for</span> <span class="n">ref_tensor</span><span class="p">,</span> <span class="n">begin</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">end_mask</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref_tensors</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">begins</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ends</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_masks</span><span class="p">):</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="n">ref_tensor</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">begin</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">end_mask</span> <span class="o">=</span> <span class="n">begin</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">end</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">end_mask</span><span class="o">.</span><span class="n">val</span>
+            <span class="n">ref_shape</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="n">begin</span><span class="p">:</span><span class="n">end</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">end_mask</span> <span class="k">else</span> <span class="n">shape</span><span class="p">[</span><span class="n">begin</span><span class="p">:]</span>
+            <span class="n">out_shape</span> <span class="o">+=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">ref_shape</span><span class="p">)</span>
+            
+        <span class="c1"># Output shape must be known at compile time</span>
+        <span class="k">if</span> <span class="n">any_symbolic</span><span class="p">(</span><span class="n">out_shape</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Output shape of a reshape_like op </span><span class="si">{}</span><span class="s2"> must not be symbolic. Got </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">out_shape</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            
+        <span class="c1"># Output shape must be consistent with the input shape</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">any_symbolic</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">out_shape</span><span class="p">):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;At reshape_like op </span><span class="si">{}</span><span class="s2">, input shape </span><span class="si">{}</span><span class="s2"> not consistent with the output shape </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                    <span class="n">out_shape</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">out_shape</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="pixel_unshuffle">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation.pixel_unshuffle">[docs]</a>
+<span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS16_TARGET</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">pixel_unshuffle</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rearrange elements in a tensor from spatial dimensions into depth (channel).</span>
+<span class="sd">    It is basically the inverse operation of :py:class:`~.iOS15.tensor_transformation.pixel_shuffle`.</span>
+<span class="sd">    Equivalent to `PyTorch PixelUnshuffle &lt;https://pytorch.org/docs/stable/generated/torch.nn.PixelUnshuffle.html#pixelunshuffle&gt;`_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;[n, C, H / f , W / f], T&gt; (Required)</span>
+<span class="sd">        * Input tensor of rank ``4``.</span>
+
+<span class="sd">    downscale_factor: const&lt;i32&gt;</span>
+<span class="sd">        * Factor to decrease spatial resolution by.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;[n, C * f^2, H, W], T&gt;</span>
+<span class="sd">        * In which ``f`` is the downscale factor.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    `torch.nn.PixelUnshuffle &lt;https://pytorch.org/docs/stable/generated/torch.nn.PixelUnshuffle.html&gt;`_</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">downscale_factor</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">uint32</span><span class="p">),</span>
+    <span class="p">)</span>
+    
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">x_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">downscale_factor</span><span class="o">.</span><span class="n">val</span>
+        <span class="n">ret_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">c</span> <span class="o">*</span> <span class="n">f</span> <span class="o">*</span> <span class="n">f</span><span class="p">,</span> <span class="n">h</span> <span class="o">/</span> <span class="n">f</span><span class="p">,</span> <span class="n">w</span> <span class="o">/</span> <span class="n">f</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">x_type</span><span class="p">,</span> <span class="n">ret_shape</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
