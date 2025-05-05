@@ -16,32 +16,29 @@
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
-  <!-- 
-    this give us a css class that will be invisible only if js is disabled 
-  -->
-  <noscript>
-    <style>
-      .pst-js-only { display: none !important; }
-
-    </style>
-  </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css?v=27a1495e" />
   
-  <!-- So that users can add custom icons -->
-  <script src="../_static/scripts/fontawesome.js?digest=26a4bc78f4c0ddb94549"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=c1ce5b23"></script>
+    <script src="../_static/documentation_options.js?v=6ab2ec1d"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +51,6 @@
     <link rel="prev" title="Conversion" href="opt-conversion.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="" />
   </head>
   
   
@@ -70,8 +66,19 @@
     <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
-  <dialog id="pst-search-dialog">
-    
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
 <form class="bd-search d-flex align-items-center"
       action="../search.html"
       method="get">
@@ -79,6 +86,7 @@
   <input type="search"
          class="form-control"
          name="q"
+         id="search-input"
          placeholder="Search..."
          aria-label="Search..."
          autocomplete="off"
@@ -86,8 +94,8 @@
          autocapitalize="off"
          spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form>
-  </dialog>
+</form></div>
+  </div>
 
   <div class="pst-async-banner-revealer d-none">
   <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
@@ -103,8 +111,7 @@
       
       
       
-      <dialog id="pst-primary-sidebar-modal"></dialog>
-      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+      <div class="bd-sidebar-primary bd-sidebar">
         
 
   
@@ -134,11 +141,15 @@
 </a></div>
         <div class="sidebar-primary-item">
 
-<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
- <i class="fa-solid fa-magnifying-glass"></i>
- <span class="search-button__default-text">Search</span>
- <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-</button></div>
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">API Reference</span></p>
@@ -255,6 +266,7 @@
 <li class="toctree-l2"><a class="reference internal" href="updatable-nearest-neighbor-classifier.html">Nearest Neighbor Classifier</a></li>
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="mlmodel-debugging-perf-utilities.html">Debugging And Performance Utilities</a></li>
 </ul>
 
     </div>
@@ -377,16 +389,24 @@
 
 
 
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button>
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
 
 
-<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
-</button>
+  </button>
+`);
+</script>
 <button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <span class="fa-solid fa-list"></span>
 </button>
@@ -443,7 +463,7 @@ All the APIs available within <code class="docutils literal notranslate"><span c
 <p><em>Quantization</em> refers to the process of reducing the number of bits that represent a number. The lower the number of bits, more the chances of degrading the model accuracy. The loss in accuracy varies with the model.</p>
 <p>By default, the Core ML Tools converter produces a model with weights in floating-point 32 bit (float 32) precision. The weights can be quantized to 16 bits, 8 bits, 7 bits, and so on down to 1 bit. The intermediate tensors are kept in float precision (float 32 or float 16 depending on <a class="reference internal" href="typed-execution.html"><span class="doc std std-doc">execution unit</span></a>), while the weights are dequantized at runtime to match the precision of the intermediate tensors. Quantizing from float 32 to float 16 provides up to 2x savings in storage and generally does not affect the model’s accuracy.</p>
 <p>The <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.quantize_weights"><code class="docutils literal notranslate"><span class="pre">quantize_weights</span></code></a> function handles all quantization modes and options:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.models.neural_network</span> <span class="kn">import</span> <span class="n">quantization_utils</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.neural_network</span><span class="w"> </span><span class="kn">import</span> <span class="n">quantization_utils</span>
 
 <span class="c1"># allowed values of nbits = 16, 8, 7, 6, ...., 1</span>
 <span class="n">quantized_model</span> <span class="o">=</span> <span class="n">quantization_utils</span><span class="o">.</span><span class="n">quantize_weights</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">nbits</span><span class="p">)</span>
@@ -453,8 +473,8 @@ All the APIs available within <code class="docutils literal notranslate"><span c
 <section id="quantize-to-float-16-weights">
 <h2>Quantize to Float 16 Weights<a class="headerlink" href="#quantize-to-float-16-weights" title="Link to this heading">#</a></h2>
 <p>Quantizing to float 16, which reduces by half the model’s disk size, is the safest quantization option since it generally does not affect the model’s accuracy:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
-<span class="kn">from</span> <span class="nn">coremltools.models.neural_network</span> <span class="kn">import</span> <span class="n">quantization_utils</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.neural_network</span><span class="w"> </span><span class="kn">import</span> <span class="n">quantization_utils</span>
 
 <span class="c1"># load full precision model</span>
 <span class="n">model_fp32</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s1">&#39;model.mlmodel&#39;</span><span class="p">)</span>
@@ -502,7 +522,7 @@ All the APIs available within <code class="docutils literal notranslate"><span c
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example: 8-bit symmetric linear quantization skipping bias,</span>
 <span class="c1"># batchnorm, depthwise-convolution, and convolution layers</span>
 <span class="c1"># with less than 4 channels or 4096 elements</span>
-<span class="kn">from</span> <span class="nn">coremltools.models.neural_network.quantization_utils</span> <span class="kn">import</span> <span class="n">AdvancedQuantizedLayerSelector</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.neural_network.quantization_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">AdvancedQuantizedLayerSelector</span>
 
 <span class="n">selector</span> <span class="o">=</span> <span class="n">AdvancedQuantizedLayerSelector</span><span class="p">(</span>
     <span class="n">skip_layer_types</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;batchnorm&#39;</span><span class="p">,</span> <span class="s1">&#39;bias&#39;</span><span class="p">,</span> <span class="s1">&#39;depthwiseConv&#39;</span><span class="p">],</span>
@@ -519,15 +539,15 @@ All the APIs available within <code class="docutils literal notranslate"><span c
 <p>For a list of all the layer types in the Core ML neural network model, see the <a class="reference external" href="https://apple.github.io/coremltools/mlmodel/Format/NeuralNetwork.html#neuralnetworklayer"><code class="docutils literal notranslate"><span class="pre">NeuralNetworkLayer</span></code></a> section in the Core ML Format reference for <a class="reference external" href="https://apple.github.io/coremltools/mlmodel/Format/NeuralNetwork.html">NeuralNetwork</a>.</p>
 <p>For finer control, you can write a custom rule to skip (or not skip) quantizing a layer by extending the <code class="docutils literal notranslate"><span class="pre">QuantizedLayerSelector</span></code> class:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example : 8-bit linear quantization skipping the layer with name &#39;dense_2&#39;</span>
-<span class="kn">from</span> <span class="nn">coremltools.models.neural_network.quantization_utils</span> <span class="kn">import</span> <span class="n">QuantizedLayerSelector</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.neural_network.quantization_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">QuantizedLayerSelector</span>
 
 
-<span class="k">class</span> <span class="nc">MyLayerSelector</span><span class="p">(</span><span class="n">QuantizedLayerSelector</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MyLayerSelector</span><span class="p">(</span><span class="n">QuantizedLayerSelector</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">MyLayerSelector</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">do_quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">do_quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">MyLayerSelector</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">do_quantize</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">ret</span> <span class="ow">or</span> <span class="n">layer</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;dense_2&#39;</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">True</span>
@@ -582,8 +602,7 @@ All the APIs available within <code class="docutils literal notranslate"><span c
             
             
               
-                <dialog id="pst-secondary-sidebar-modal"></dialog>
-                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
   <div class="sidebar-secondary-item">
@@ -623,7 +642,7 @@ By Apple
 
   <p class="copyright">
     
-      © Copyright 2023, Apple Inc.
+      © Copyright 2024, Apple Inc.
       <br/>
     
   </p>
@@ -647,8 +666,8 @@ By Apple
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549"></script>
-<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549"></script>
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
 
   <footer class="bd-footer">
   </footer>

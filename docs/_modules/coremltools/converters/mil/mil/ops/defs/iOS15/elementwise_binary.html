@@ -1,0 +1,803 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+      <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright (c) 2020, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">operator</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">InputSpec</span><span class="p">,</span>
+    <span class="n">Operation</span><span class="p">,</span>
+    <span class="n">TensorInputType</span><span class="p">,</span>
+    <span class="n">precondition</span><span class="p">,</span>
+    <span class="n">types</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.operation</span><span class="w"> </span><span class="kn">import</span> <span class="n">VALUE</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_op</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.ops.defs._utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">infer_type_with_broadcast</span><span class="p">,</span>
+    <span class="n">promoted_primitive_type</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">elementwise_binary</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Elementwise Binary Op Superclass</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">y</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">typea</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_type</span>
+        <span class="n">typeb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">sym_type</span>
+        <span class="n">primitive_type</span> <span class="o">=</span> <span class="n">promoted_primitive_type</span><span class="p">(</span><span class="n">typea</span><span class="p">,</span> <span class="n">typeb</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">primitive_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Incompatible primitive types in broadcast operation&quot;</span><span class="p">)</span>
+        <span class="n">primitive_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dtype</span><span class="p">(</span><span class="n">primitive_type</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">infer_type_with_broadcast</span><span class="p">(</span><span class="n">typea</span><span class="p">,</span> <span class="n">typeb</span><span class="p">,</span> <span class="n">primitive_type</span><span class="p">)</span>
+
+    <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cast_check_value_inferene</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        All subclasses have to implement this.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">promoted_dtype</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Override if output primitive type is different from input types</span>
+<span class="sd">        (e.g., less, greater)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">promoted_dtype</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_cast_check_value_inferene</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        If one of the input is tensor, cast the result to tensor.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">to_cast</span> <span class="o">=</span> <span class="nb">any</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">]])</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_operator</span><span class="p">()(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">to_cast</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">elementwise_binary_logical</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Elementwise Binary Logical Op Superclass</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">y</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">,),</span>
+    <span class="p">}</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Elementwise Binary Op Implementation(s)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="add">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.add">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">add</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return ``x + y`` element-wise with</span>
+<span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: &lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
+
+<span class="sd">    y: &lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    &lt;\\*, T&gt;</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, i32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">operator</span><span class="o">.</span><span class="n">add</span></div>
+
+
+
+<div class="viewcode-block" id="equal">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.equal">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">equal</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the truth value of ``x == y`` element-wise with</span>
+<span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_</span>
+<span class="sd">    (``1`` for true, ``0`` for false in numeric domain).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: &lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
+
+<span class="sd">    y: &lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    &lt;\\*, bool&gt;</span>
+<span class="sd">        * A boolean tensor with the same shape as the inputs.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, i32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">equal</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">promoted_dtype</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">bool</span></div>
+
+
+
+<div class="viewcode-block" id="floor_div">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.floor_div">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">floor_div</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return ``x / y`` element-wise with</span>
+<span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_,</span>
+<span class="sd">    rounded towards negative infinity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
+
+<span class="sd">    y: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;\\*, T&gt;</span>
+<span class="sd">        * A tensor of the same type and shape as the inputs.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, i32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">operator</span><span class="o">.</span><span class="n">floordiv</span></div>
+
+
+
+<div class="viewcode-block" id="greater">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.greater">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">greater</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the truth value of ``x &gt; y`` element-wise with</span>
+<span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_</span>
+<span class="sd">    (``1`` for true, ``0`` for false in numeric domain).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
+
+<span class="sd">    y: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;\\*, bool&gt;</span>
+<span class="sd">        * A boolean tensor with the same shape as the inputs.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, i32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">operator</span><span class="o">.</span><span class="n">gt</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">promoted_dtype</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">bool</span></div>
+
+
+
+<div class="viewcode-block" id="greater_equal">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.greater_equal">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">greater_equal</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the truth value of ``x &gt;= y`` element-wise with</span>
+<span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_</span>
+<span class="sd">    (``1`` for true, ``0`` for false in numeric domain).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
+
+<span class="sd">    y: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;\\*?, bool&gt;</span>
+<span class="sd">        * A boolean tensor with the same shape as the inputs.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, i32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">operator</span><span class="o">.</span><span class="n">ge</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">promoted_dtype</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">bool</span></div>
+
+
+
+<div class="viewcode-block" id="less">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.less">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">less</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the truth value of ``x &lt; y`` element-wise with</span>
+<span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_</span>
+<span class="sd">    (``1`` for true, ``0`` for false in numeric domain).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
+
+<span class="sd">    y: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;\\*?, bool&gt;</span>
+<span class="sd">        * A boolean tensor with the same shape as the inputs.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, i32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">operator</span><span class="o">.</span><span class="n">lt</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">promoted_dtype</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">bool</span></div>
+
+
+
+<div class="viewcode-block" id="less_equal">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.less_equal">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">less_equal</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the truth value of ``x &lt;= y`` element-wise with</span>
+<span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_</span>
+<span class="sd">    (``1`` for true, ``0`` for false in numeric domain).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
+
+<span class="sd">    y: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;\\*?, bool&gt;</span>
+<span class="sd">        * A boolean tensor with the same shape as the inputs.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, i32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">operator</span><span class="o">.</span><span class="n">le</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">promoted_dtype</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">bool</span></div>
+
+
+
+<div class="viewcode-block" id="logical_and">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.logical_and">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">logical_and</span><span class="p">(</span><span class="n">elementwise_binary_logical</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the truth value of ``x AND y`` element-wise with</span>
+<span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
+
+<span class="sd">    y: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;\\*?, bool&gt;</span>
+<span class="sd">        * A boolean tensor with the same shape as the inputs.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: bool</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">promoted_dtype</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">bool</span></div>
+
+
+
+<div class="viewcode-block" id="logical_or">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.logical_or">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">logical_or</span><span class="p">(</span><span class="n">elementwise_binary_logical</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the truth value of ``x OR y`` element-wise with</span>
+<span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
+
+<span class="sd">    y: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;\\*?, bool&gt;</span>
+<span class="sd">        * A boolean tensor with the same shape as the inputs.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: bool</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">promoted_dtype</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">bool</span></div>
+
+
+
+<div class="viewcode-block" id="logical_xor">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.logical_xor">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">logical_xor</span><span class="p">(</span><span class="n">elementwise_binary_logical</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the truth value of ``x XOR y`` element-wise with</span>
+<span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
+
+<span class="sd">    y: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;\\*?, bool&gt;</span>
+<span class="sd">        * A boolean tensor with the same shape as the inputs.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: bool</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_xor</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">promoted_dtype</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">bool</span></div>
+
+
+
+<div class="viewcode-block" id="maximum">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.maximum">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">maximum</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return ``x &gt; y ? x : y`` element-wise with</span>
+<span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
+
+<span class="sd">    y: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;</span>
+<span class="sd">        * A tensor with the broadcasted shape from inputs, and type is derived from inputs.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, i32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span></div>
+
+
+
+<div class="viewcode-block" id="minimum">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.minimum">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">minimum</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return ``x &gt; y ? y : x`` element-wise with</span>
+<span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
+
+<span class="sd">    y: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;</span>
+<span class="sd">        * A tensor with the broadcasted shape from inputs, and type is derived from inputs.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, i32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span></div>
+
+
+
+<div class="viewcode-block" id="mod">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.mod">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">mod</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return ``x % y`` element-wise with</span>
+<span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
+
+<span class="sd">    y: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;</span>
+<span class="sd">        * A tensor with the broadcasted shape from inputs, and type is derived from inputs.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, i32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">operator</span><span class="o">.</span><span class="n">mod</span></div>
+
+
+
+<div class="viewcode-block" id="mul">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.mul">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">mul</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return ``x * y`` element-wise with</span>
+<span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
+
+<span class="sd">    y: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;</span>
+<span class="sd">        * A tensor with the broadcasted shape from inputs, and type is derived from inputs.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, i32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">operator</span><span class="o">.</span><span class="n">mul</span></div>
+
+
+
+<div class="viewcode-block" id="not_equal">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.not_equal">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">not_equal</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the truth value of ``x != y`` element-wise with</span>
+<span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_</span>
+<span class="sd">    (``1`` for true, ``0`` for false in numeric domain).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
+
+<span class="sd">    y: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;\\*?, bool&gt;</span>
+<span class="sd">        * A boolean tensor with the broadcasted shape from inputs.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, i32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">operator</span><span class="o">.</span><span class="n">ne</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">promoted_dtype</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">bool</span></div>
+
+
+
+<div class="viewcode-block" id="real_div">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.real_div">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">real_div</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return ``x / y`` element-wise with</span>
+<span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
+
+<span class="sd">    y: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;</span>
+<span class="sd">        * A tensor with the broadcasted shape from inputs, and type is derived from inputs.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, i32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">operator</span><span class="o">.</span><span class="n">truediv</span></div>
+
+
+
+<div class="viewcode-block" id="pow">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.pow">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">pow</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return ``x ^ y`` element-wise with</span>
+<span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
+
+<span class="sd">    y: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;</span>
+<span class="sd">        * A tensor with the broadcasted shape from inputs, and type is derived from inputs.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, i32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">operator</span><span class="o">.</span><span class="n">pow</span></div>
+
+
+
+<div class="viewcode-block" id="sub">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.sub">[docs]</a>
+<span class="nd">@register_op</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">sub</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return ``x - y`` element-wise with</span>
+<span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
+
+<span class="sd">    y: tensor&lt;\\*, T&gt; (Required)</span>
+<span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;</span>
+<span class="sd">        * A tensor with the broadcasted shape from inputs, and type is derived from inputs.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, i32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">operator</span><span class="o">.</span><span class="n">sub</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

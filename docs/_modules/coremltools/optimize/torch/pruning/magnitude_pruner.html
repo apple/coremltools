@@ -1,0 +1,689 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.optimize.torch.pruning.magnitude_pruner &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.optimize.torch.pruning.magnitude_pruner</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.optimize.torch.pruning.magnitude_pruner</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright (c) 2024, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_copy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span> <span class="k">as</span> <span class="n">_OrderedDict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span> <span class="k">as</span> <span class="n">_Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span> <span class="k">as</span> <span class="n">_Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span> <span class="k">as</span> <span class="n">_Dict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NewType</span> <span class="k">as</span> <span class="n">_NewType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span> <span class="k">as</span> <span class="n">_Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span> <span class="k">as</span> <span class="n">_Union</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">attrs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_attrs</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">cattrs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_cattrs</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">attr</span><span class="w"> </span><span class="kn">import</span> <span class="n">define</span> <span class="k">as</span> <span class="n">_define</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">attr</span><span class="w"> </span><span class="kn">import</span> <span class="n">field</span> <span class="k">as</span> <span class="n">_field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">attrs</span><span class="w"> </span><span class="kn">import</span> <span class="n">validators</span> <span class="k">as</span> <span class="n">_validators</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch._typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParamsDict</span> <span class="k">as</span> <span class="n">_ParamsDict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch._utils.optimizer_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_ConfigToOptimizerRegistry</span><span class="p">,</span>
+    <span class="n">_ModuleToOptConfigRegistry</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.optimization_config</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ModuleOptimizationConfig</span> <span class="k">as</span> <span class="n">_ModuleOptimizationConfig</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.optimization_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationConfig</span> <span class="k">as</span> <span class="n">_OptimizationConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.optimization_config</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_structure_from_dict_hook_factory</span><span class="p">,</span>
+    <span class="n">_validate_module_type_keys_factory</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.pruning._base_pruner</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BasePrunerWithPruningMethod</span> <span class="k">as</span> <span class="n">_BasePrunerWithPruningMethod</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.pruning._base_pruner</span><span class="w"> </span><span class="kn">import</span> <span class="n">_allowed_granularity_values</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.pruning._base_pruning_method</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ScheduledBaseDynamicPruningMethod</span> <span class="k">as</span> <span class="n">_ScheduledBaseDynamicPruningMethod</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.pruning._utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">magnitude_ranked_mask</span> <span class="k">as</span> <span class="n">_magnitude_ranked_mask</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.pruning._utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">n_m_mask</span> <span class="k">as</span> <span class="n">_n_m_mask</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.pruning.pruning_scheduler</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ConstantSparsityScheduler</span> <span class="k">as</span> <span class="n">_ConstantSparsityScheduler</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.pruning.pruning_scheduler</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">PruningScheduler</span> <span class="k">as</span> <span class="n">_PruningScheduler</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.pruning.pruning_scheduler</span><span class="w"> </span><span class="kn">import</span> <span class="n">_PruningSchedulerType</span>
+
+<span class="n">_logger</span> <span class="o">=</span> <span class="n">_logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="n">_SUPPORTED_MODULES</span> <span class="o">=</span> <span class="p">(</span><span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv1d</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv3d</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ModuleMagnitudePrunerConfig">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig">[docs]</a>
+<span class="nd">@_define</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ModuleMagnitudePrunerConfig</span><span class="p">(</span><span class="n">_ModuleOptimizationConfig</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Configuration class for specifying global and module level pruning options for magnitude pruning</span>
+<span class="sd">    algorithm implemented in :py:class:`MagnitudePruner`.</span>
+
+<span class="sd">    This class supports four different modes of sparsity:</span>
+
+<span class="sd">    1. **Unstructured sparsity**: This is the default sparsity mode used by :py:class:`MagnitudePruner`.</span>
+<span class="sd">    It is activated when ``block_size = 1``, ``n_m_ratio = None`` and ``granularity = per_scalar``.</span>
+<span class="sd">    In this mode, the ``n`` weights with the lowest absolute values are set to 0,</span>
+<span class="sd">    where ``n = floor(size_of_weight_tensor * target_sparsity)``.</span>
+<span class="sd">    For example, given the following:</span>
+
+<span class="sd">       * ``weight = [0.3, -0.2, -0.01, 0.05]``</span>
+<span class="sd">       * ``target_sparsity = 0.75``</span>
+
+<span class="sd">    The pruned weight would be ``[0.3, 0, 0, 0]``</span>
+
+<span class="sd">    2.  **Block structured sparsity**: This mode is activated when ``block_size &gt; 1`` and ``n_m_ratio = None``.</span>
+<span class="sd">    In this mode, the weight matrix is first reshaped to a rank 2 matrix by folding all dimensions ``&gt;= 1``</span>
+<span class="sd">    into a single dimension. Then, blocks of size ``block_size`` along the ``0-th`` dimension,</span>
+<span class="sd">    which have the lowest ``L2`` norm, are set to 0. The number of blocks which are zeroed out is</span>
+<span class="sd">    determined by the ``target_sparsity`` parameter. The blocks are chosen in a non-overlapping fashion.</span>
+
+<span class="sd">    For example:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            # Given a 4 x 2 weight with the following value, and block_size = 2.</span>
+<span class="sd">            [</span>
+<span class="sd">                [1, 3],</span>
+<span class="sd">                [-6, -7],</span>
+<span class="sd">                [0, 3],</span>
+<span class="sd">                [-9, 2],</span>
+<span class="sd">            ]</span>
+
+<span class="sd">            # L2 norm  is computed along the 0-th dimension for blocks of size 2:</span>
+<span class="sd">            [</span>
+<span class="sd">                [6.08, 7.62],</span>
+<span class="sd">                [9.00, 3.61],</span>
+<span class="sd">            ]</span>
+
+<span class="sd">            # Then the smallest values are picked to prune. So if target_sparsity = 0.5,</span>
+<span class="sd">            # then the blocks that will be pruned will be with ones with L2 norm values</span>
+<span class="sd">            # of 6.08 and 3.61. And hence, the elements in the first and third</span>
+<span class="sd">            # block are pruned. The final pruned tensor is:</span>
+<span class="sd">            [</span>
+<span class="sd">                [0, 3],</span>
+<span class="sd">                [0, -7],</span>
+<span class="sd">                [0, 0],</span>
+<span class="sd">                [-9, 0],</span>
+<span class="sd">            ]</span>
+
+<span class="sd">    3. **n:m structured sparsity**: This mode is activated when ``n_m_ratio != None``. Similar to</span>
+<span class="sd">    block structured sparsity, in this mode, the weight matrix is reshaped to a rank 2 matrix.</span>
+<span class="sd">    Then, out of non-overlapping blocks of size ``m`` along the ``0-th`` or ``1-st`` dimension, the ``n``</span>
+<span class="sd">    elements with the smallest absolute value are set to 0. The dimension along which the blocks</span>
+<span class="sd">    are chosen is controlled by the ``dim`` parameter and it defaults to ``1``. For linear layers,</span>
+<span class="sd">    ``dim = 1`` and ratios where ``m`` is a factor of 16 (e.g. ``3:4``, ``7:8`` etc.) are recommended</span>
+<span class="sd">    to get latency gains for models executing specifically on the CPU.</span>
+
+<span class="sd">    For example:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            # Given a 4 x 4 weight of</span>
+<span class="sd">            [</span>
+<span class="sd">                [3, 4, 7, 6],</span>
+<span class="sd">                [1, 8, -3, -8],</span>
+<span class="sd">                [-2, -3, -4, 0],</span>
+<span class="sd">                [5, 4, -3, -2],</span>
+<span class="sd">            ]</span>
+
+<span class="sd">            # For n_m_ratio = (1, 2) with dim = 1 (default), the resulting pruned weight is</span>
+<span class="sd">            [</span>
+<span class="sd">                [0, 4, 7, 0],</span>
+<span class="sd">                [0, 8, 0, -8],</span>
+<span class="sd">                [0, -3, -4, 0],</span>
+<span class="sd">                [5, 0, -3, 0],</span>
+<span class="sd">            ]</span>
+
+<span class="sd">    4. **General structured sparsity**: This mode is activated when ``granularity`` is set to</span>
+<span class="sd">    one of ``per_channel`` or ``per_kernel``. It only applies to weights of ``rank &gt;= 3``.</span>
+<span class="sd">    For example, a rank 4 weight matrix of shape ``[C_o x C_i x H x W]`` can be thought</span>
+<span class="sd">    of as ``C_o`` matrices of shape ``[C_i x H X W]`` or ``C_o*C_i`` matrices of size ``[H x W]``.</span>
+<span class="sd">    ``per_channel`` granularity sets some of the ``[C_i x H X W]`` matrices to 0 whereas</span>
+<span class="sd">    ``per_kernel`` granularity sets some of the ``[H x W]`` matrices to 0.</span>
+
+<span class="sd">    When granularity is ``per_channel``, the weight matrix is reshaped to a rank 2 matrix,</span>
+<span class="sd">    where all dimensions ``&gt;= 1`` are folded into a single dimension. Then ``L2`` norm is</span>
+<span class="sd">    computed for all rows and the weights corresponding to ``n`` smallest ``L2`` norm rows</span>
+<span class="sd">    are set to 0 to achieve ``target_sparsity``.</span>
+
+<span class="sd">    For example:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">            # Given a 2 x 2 x 1 x 2 weight, granularity = per_channel,</span>
+<span class="sd">            [</span>
+<span class="sd">                [</span>
+<span class="sd">                    [[2, -1]],</span>
+<span class="sd">                    [[-3, 2]],</span>
+<span class="sd">                ],</span>
+<span class="sd">                [</span>
+<span class="sd">                    [[5, -2]],</span>
+<span class="sd">                    [[-1, -3]],</span>
+<span class="sd">                ],</span>
+<span class="sd">            ]</span>
+
+<span class="sd">            # It is first reshaped to shape 2 x 4, i.e.:</span>
+<span class="sd">            [</span>
+<span class="sd">                [2, -1, -3, 2],</span>
+<span class="sd">                [5, -2, -1, -3],</span>
+<span class="sd">            ]</span>
+
+<span class="sd">            # Then L2 norm is computed for each row of the matrix:</span>
+<span class="sd">            [4.2426, 6.2450]</span>
+
+<span class="sd">            # Finally, to achieve target sparsity = 0.5, since the first element is</span>
+<span class="sd">            # smaller, the corresponding row is set to 0, resulting in the pruned weight:</span>
+<span class="sd">            [</span>
+<span class="sd">                [</span>
+<span class="sd">                    [[0, 0]],</span>
+<span class="sd">                    [[0, 0]],</span>
+<span class="sd">                ],</span>
+<span class="sd">                [</span>
+<span class="sd">                    [[5, -2]],</span>
+<span class="sd">                    [[-1, -3]],</span>
+<span class="sd">                ],</span>
+<span class="sd">            ]</span>
+
+<span class="sd">    When granularity is ``per_kernel``, the weight matrix is reshaped to a rank 3 matrix,</span>
+<span class="sd">    where all dimensions ``&gt;= 2`` are folded into a single dimension. Then ``L2`` norm is</span>
+<span class="sd">    computed for all vectors along the last dimension, ``dim = 2`` and the weights corresponding</span>
+<span class="sd">    to the ``n`` smallest ``L2`` norm vectors are set to 0 to achieve ``target_sparsity``.</span>
+
+<span class="sd">    For the same example as before, setting granularity ``per_kernel`` will achieve:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">            # The original 2 x 2 x 1 x 2 weight matrix is reshaped into shape 2 x 2 x 2, i.e.:</span>
+<span class="sd">            [</span>
+<span class="sd">                [[2, -1], [-3, 2]],</span>
+<span class="sd">                [[5, -2], [-1, -3]],</span>
+<span class="sd">            ]</span>
+
+<span class="sd">            # Then L2 norm is computed for each of the 4 vectors of size 2, [2, -1], [-3, 2], etc.:</span>
+<span class="sd">            [</span>
+<span class="sd">                [2.2361, 3.6056],</span>
+<span class="sd">                [5.3852, 3.1623],</span>
+<span class="sd">            ]</span>
+
+<span class="sd">            # Finally, to achieve target sparsity = 0.5, since the first and last elements are</span>
+<span class="sd">            # smallest, the corresponding row in the weights is set to 0,</span>
+<span class="sd">            # resulting in the pruned weight:</span>
+<span class="sd">            [</span>
+<span class="sd">                [</span>
+<span class="sd">                    [[0, 0]],</span>
+<span class="sd">                    [[-3, 2]],</span>
+<span class="sd">                ],</span>
+<span class="sd">                [</span>
+<span class="sd">                    [[5, -2]],</span>
+<span class="sd">                    [[0, 0]],</span>
+<span class="sd">                ],</span>
+<span class="sd">            ]</span>
+
+
+<span class="sd">    Args:</span>
+<span class="sd">        scheduler (:py:class:`PruningScheduler`): A pruning scheduler which specifies how the</span>
+<span class="sd">            sparsity should be changed over the course of the training. Defaults to constant</span>
+<span class="sd">            sparsity scheduler which sets the  sparsity to ``target_sparsity`` at step ``0``.</span>
+<span class="sd">        initial_sparsity (:obj:`float`): Desired fraction of zeroes at the beginning of the</span>
+<span class="sd">            training process. Defaults to ``0.0``.</span>
+<span class="sd">        target_sparsity (:obj:`float`): Desired fraction of zeroes at the end of the</span>
+<span class="sd">            training process. Defaults to ``0.5``.</span>
+<span class="sd">        granularity (:obj:`str`): Specifies the granularity at which the pruning mask will be</span>
+<span class="sd">            computed. Can be one of ``per_channel``, ``per_kernel`` or ``per_scalar``.</span>
+<span class="sd">            Defaults to ``per_scalar``.</span>
+<span class="sd">        block_size (:obj:`int`): Block size for inducing block sparsity within the mask. This</span>
+<span class="sd">            is applied on the output channel dimension of the parameter (the ``0`` -th dimension).</span>
+<span class="sd">            Having larger block size may be beneficial for latency compared to smaller block sizes,</span>
+<span class="sd">            for models running on certain compute units such as the neural engine.</span>
+<span class="sd">            ``block_size`` must be greater than ``1`` to enable block sparsity, and must be at most half</span>
+<span class="sd">            the number of output channels. When the number of output channels is not divisible by the block size,</span>
+<span class="sd">            the weight matrix is padded with zeros to compute the pruning mask and then un-padded to the original size.</span>
+<span class="sd">            Defaults to ``1``.</span>
+<span class="sd">        n_m_ratio (:obj:`tuple` of :obj:`int`): A tuple of two integers which specify how ``n:m`` pruning should be</span>
+<span class="sd">            applied. In ``n:m`` pruning, out of every ``m`` elements,</span>
+<span class="sd">            ``n`` with lowest magnitude are set to zero. When ``n_m_ratio`` is not ``None``, ``block_size``,</span>
+<span class="sd">            ``granularity``, and ``initial_sparsity`` should be ``1``, ``per_scalar``, and ``0.0`` respectively.</span>
+<span class="sd">            The value of ``target_sparsity`` is ignored and the actual target sparsity is determined by the</span>
+<span class="sd">            ``n:m`` ratio. For more information, see `Learning N:M Fine-Grained Structured Sparse Neural Networks From Scratch</span>
+<span class="sd">            &lt;https://arxiv.org/abs/2102.04010&gt;`_. Defaults to ``None``, which means ``n:m`` sparsity is not used.</span>
+<span class="sd">        dim (:obj:`int`): Dimension along which blocks of ``m`` elements are chosen when applying ``n:m`` sparsity. This</span>
+<span class="sd">            parameter is only used when ``n_m_ratio`` is not ``None``. Defaults to ``1``.</span>
+<span class="sd">        param_name (:obj:`str`): The name of the parameter to be pruned. Defaults to ``weight``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">scheduler</span><span class="p">:</span> <span class="n">_PruningSchedulerType</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">_ConstantSparsityScheduler</span><span class="p">(</span><span class="n">begin_step</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="n">_PruningScheduler</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">initial_sparsity</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">float</span><span class="p">))</span>
+    <span class="n">target_sparsity</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">float</span><span class="p">))</span>
+    <span class="n">granularity</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;per_scalar&quot;</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="p">[</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">str</span><span class="p">),</span> <span class="n">_validators</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">_allowed_granularity_values</span><span class="p">)],</span>
+    <span class="p">)</span>
+    <span class="n">block_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
+    <span class="n">n_m_ratio</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_attrs</span><span class="o">.</span><span class="n">validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span>
+            <span class="n">_validators</span><span class="o">.</span><span class="n">deep_iterable</span><span class="p">(</span>
+                <span class="n">member_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span>
+                <span class="n">iterable_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">((</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)),</span>
+            <span class="p">)</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
+    <span class="n">param_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">str</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_m_ratio</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_m_ratio</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+            <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;n_m_ratio must be a tuple of 2 integers, received: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_m_ratio</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_m_ratio</span>
+            <span class="k">assert</span> <span class="n">m</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Received n_m_ratio (n, m): </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_m_ratio</span><span class="si">}</span><span class="s2">. m must be greater than 0.&quot;</span>
+            <span class="k">assert</span> <span class="n">n</span> <span class="o">&lt;=</span> <span class="n">m</span><span class="p">,</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Received n_m_ratio (n, m): </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_m_ratio</span><span class="si">}</span><span class="s2">. The number of zero in a block (n) &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;must be less than or equal to the block size (m).&quot;</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_size</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Received block_size = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">block_size</span><span class="si">}</span><span class="s2"> and n_m_ratio = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_m_ratio</span><span class="si">}</span><span class="s2">. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;These two modes are mutually exclusive. When n_m_ratio != None, &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;the only allowed value of block_size is 1. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;n_m_ratio should be equal to None for block_size &gt; 1.&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">granularity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">granularity</span> <span class="o">!=</span> <span class="s2">&quot;per_scalar&quot;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Received granularity = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">granularity</span><span class="si">}</span><span class="s2"> and n_m_ratio = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_m_ratio</span><span class="si">}</span><span class="s2">. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;When n_m_ratio != None, the only allowed value of granularity is &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;per_scalar.&quot;</span>
+                <span class="p">)</span></div>
+
+
+
+<span class="n">_ModuleTypeConfigType</span> <span class="o">=</span> <span class="n">_NewType</span><span class="p">(</span>
+    <span class="s2">&quot;ModuleTypeConfigType&quot;</span><span class="p">,</span>
+    <span class="n">_Dict</span><span class="p">[</span><span class="n">_Union</span><span class="p">[</span><span class="n">_Callable</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">ModuleMagnitudePrunerConfig</span><span class="p">]],</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="MagnitudePrunerConfig">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePrunerConfig">[docs]</a>
+<span class="nd">@_ModuleToOptConfigRegistry</span><span class="o">.</span><span class="n">register_module_cfg</span><span class="p">(</span><span class="n">ModuleMagnitudePrunerConfig</span><span class="p">)</span>
+<span class="nd">@_define</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MagnitudePrunerConfig</span><span class="p">(</span><span class="n">_OptimizationConfig</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Configuration class for specifying how different submodules in a model are pruned by :py:class:`MagnitudePruner`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        global_config (:py:class:`ModuleMagnitudePrunerConfig`): Config to be applied globally</span>
+<span class="sd">            to all supported modules. Missing values are chosen from the default config.</span>
+<span class="sd">        module_type_configs (:obj:`dict` of :obj:`str` to :py:class:`ModuleMagnitudePrunerConfig`): Module</span>
+<span class="sd">            type level configs applied to a specific module class, such as :py:class:`torch.nn.Linear`.</span>
+<span class="sd">            The keys can be either strings or module classes. If ``module_type_config`` is set to ``None``</span>
+<span class="sd">            for a module type, it wouldn&#39;t get pruned.</span>
+<span class="sd">        module_name_configs (:obj:`dict` of :obj:`str` to :py:class:`ModuleMagnitudePrunerConfig`): Module level</span>
+<span class="sd">            configs applied to specific modules. The name of the module must be a fully qualified name that can</span>
+<span class="sd">            be used to fetch it from the top level module using the ``module.get_submodule(target)`` method. If</span>
+<span class="sd">            ``module_name_config`` is set to ``None`` for a module, it wouldn&#39;t get pruned.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">global_config</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">ModuleMagnitudePrunerConfig</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="n">ModuleMagnitudePrunerConfig</span><span class="p">)),</span>
+    <span class="p">)</span>
+    <span class="n">module_type_configs</span><span class="p">:</span> <span class="n">_ModuleTypeConfigType</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">factory</span><span class="o">=</span><span class="n">_OrderedDict</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">deep_mapping</span><span class="p">(</span>
+            <span class="n">key_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">and_</span><span class="p">(</span>
+                <span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">((</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Callable</span><span class="p">)),</span>
+                <span class="n">_validate_module_type_keys_factory</span><span class="p">(</span><span class="n">_SUPPORTED_MODULES</span><span class="p">),</span>
+            <span class="p">),</span>
+            <span class="n">value_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span>
+                <span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="n">ModuleMagnitudePrunerConfig</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">mapping_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">dict</span><span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">module_name_configs</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">ModuleMagnitudePrunerConfig</span><span class="p">]]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">factory</span><span class="o">=</span><span class="n">_OrderedDict</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">deep_mapping</span><span class="p">(</span>
+            <span class="n">key_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">str</span><span class="p">),</span>
+            <span class="n">value_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span>
+                <span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="n">ModuleMagnitudePrunerConfig</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">mapping_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">dict</span><span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">global_config</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_type_configs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_name_configs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">global_config</span> <span class="o">=</span> <span class="n">ModuleMagnitudePrunerConfig</span><span class="p">()</span>
+
+<div class="viewcode-block" id="MagnitudePrunerConfig.from_dict">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePrunerConfig.from_dict">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;MagnitudePrunerConfig&quot;</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">config_dict</span><span class="p">)</span>
+        <span class="n">converter</span> <span class="o">=</span> <span class="n">_cattrs</span><span class="o">.</span><span class="n">Converter</span><span class="p">(</span><span class="n">forbid_extra_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">converter</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span>
+            <span class="n">_ModuleTypeConfigType</span><span class="p">,</span>
+            <span class="n">_structure_from_dict_hook_factory</span><span class="p">(</span><span class="n">ModuleMagnitudePrunerConfig</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">converter</span><span class="o">.</span><span class="n">structure_attrs_fromdict</span><span class="p">(</span><span class="n">config_dict</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_MagnitudePruningMethod</span><span class="p">(</span><span class="n">_ScheduledBaseDynamicPruningMethod</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Magnitude-based static mask pruning method as described in</span>
+<span class="sd">    `To prune, or not to prune: exploring the efficacy of  pruning for model</span>
+<span class="sd">    compression &lt;https://arxiv.org/pdf/1710.01878.pdf&gt;`_</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_tensor_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">scheduled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">amount</span><span class="p">:</span> <span class="nb">float</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">amount</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">block_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">granularity</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">n_m_ratio</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">dim</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_ParamsDict</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">scheduled_value</span><span class="o">=</span><span class="n">amount</span><span class="p">,</span> <span class="n">scheduled_value_name</span><span class="o">=</span><span class="s2">&quot;amount&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block_size</span> <span class="o">=</span> <span class="n">block_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">granularity</span> <span class="o">=</span> <span class="n">granularity</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_m_ratio</span> <span class="o">=</span> <span class="n">n_m_ratio</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="n">dim</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">default_mask</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_m_ratio</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">block_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_m_ratio</span>
+            <span class="n">num_zeros</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">amount</span> <span class="o">*</span> <span class="n">block_size</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">num_zeros</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># when number of zeros is &lt; 0, we increase sparsity gradually</span>
+                <span class="k">return</span> <span class="n">_magnitude_ranked_mask</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">amount</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">granularity</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">_n_m_mask</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="p">(</span><span class="n">num_zeros</span><span class="p">,</span> <span class="n">block_size</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_magnitude_ranked_mask</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">amount</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">granularity</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+
+
+<span class="nd">@_define</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_MagnitudePrunerInfo</span><span class="p">:</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">ModuleMagnitudePrunerConfig</span>
+    <span class="n">module</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span>
+    <span class="n">sparsity_level</span><span class="p">:</span> <span class="nb">float</span>
+
+
+<div class="viewcode-block" id="MagnitudePruner">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePruner">[docs]</a>
+<span class="nd">@_ConfigToOptimizerRegistry</span><span class="o">.</span><span class="n">register_config</span><span class="p">(</span><span class="n">MagnitudePrunerConfig</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MagnitudePruner</span><span class="p">(</span><span class="n">_BasePrunerWithPruningMethod</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A pruning algorithm based on `To prune, or not to prune: exploring the efficacy of</span>
+<span class="sd">    pruning for model compression &lt;https://arxiv.org/pdf/1710.01878.pdf&gt;`_. It extends the idea in the paper</span>
+<span class="sd">    to different kinds of structured sparsity modes, in addition to unstructured sparsity. In order to</span>
+<span class="sd">    achieve the desired sparsity, this algorithm sorts a module&#39;s weight matrix by the magnitude of</span>
+<span class="sd">    its elements, and sets all elements less than a threshold to zero.</span>
+
+<span class="sd">    Four different modes of sparsity are supported, encompassing both structured and unstructured</span>
+<span class="sd">    sparsity. For details on how to select these different sparsity modes, please see</span>
+<span class="sd">    :py:class:`ModuleMagnitudePrunerConfig`.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                import torch</span>
+<span class="sd">                from collections import OrderedDict</span>
+<span class="sd">                from coremltools.optimize.torch.pruning import MagnitudePruner, MagnitudePrunerConfig</span>
+
+<span class="sd">                # define model and loss function</span>
+<span class="sd">                model = torch.nn.Sequential(</span>
+<span class="sd">                    OrderedDict(</span>
+<span class="sd">                        [</span>
+<span class="sd">                            (&quot;conv1&quot;, torch.nn.Conv2d(3, 32, 3, padding=&quot;same&quot;)),</span>
+<span class="sd">                            (&quot;conv2&quot;, torch.nn.Conv2d(32, 32, 3, padding=&quot;same&quot;)),</span>
+<span class="sd">                        ]</span>
+<span class="sd">                    )</span>
+<span class="sd">                )</span>
+<span class="sd">                loss_fn = define_loss()  # define the loss function</span>
+
+<span class="sd">                # initialize pruner and configure it</span>
+<span class="sd">                # we only prune the fisrt conv layer</span>
+<span class="sd">                config = MagnitudePrunerConfig.from_dict(</span>
+<span class="sd">                    {</span>
+<span class="sd">                        &quot;module_name_configs&quot;: {</span>
+<span class="sd">                            &quot;conv1&quot;: {</span>
+<span class="sd">                                &quot;scheduler&quot;: {&quot;update_steps&quot;: [3, 5, 7]},</span>
+<span class="sd">                                &quot;target_sparsity&quot;: 0.75,</span>
+<span class="sd">                                &quot;granularity&quot;: &quot;per_channel&quot;,</span>
+<span class="sd">                            },</span>
+<span class="sd">                        }</span>
+<span class="sd">                    }</span>
+<span class="sd">                )</span>
+
+<span class="sd">                pruner = MagnitudePruner(model, config)</span>
+
+<span class="sd">                # insert pruning layers in the model</span>
+<span class="sd">                model = pruner.prepare()</span>
+
+<span class="sd">                for inputs, labels in data:</span>
+<span class="sd">                    output = model(inputs)</span>
+<span class="sd">                    loss = loss_fn(output, labels)</span>
+<span class="sd">                    loss.backward()</span>
+<span class="sd">                    optimizer.step()</span>
+<span class="sd">                    pruner.step()</span>
+
+<span class="sd">                # commit pruning masks to model parameters</span>
+<span class="sd">                pruner.finalize(inplace=True)</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (:py:class:`torch.nn.Module`): Model on which the pruner will act.</span>
+<span class="sd">        config (:py:class:`MagnitudePrunerConfig`): Config which specifies how</span>
+<span class="sd">            different submodules in the model will be configured for pruning.</span>
+<span class="sd">            Default config is used when passed as ``None``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_supported_modules</span><span class="p">:</span> <span class="n">_Tuple</span> <span class="o">=</span> <span class="n">_SUPPORTED_MODULES</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">MagnitudePrunerConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">MagnitudePrunerConfig</span><span class="p">()</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">config</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MagnitudePruner.prepare">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePruner.prepare">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_prepared</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Model has already been prepared for pruning. This API call &quot;</span>
+                <span class="s2">&quot;will be a no-op.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="n">inplace</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">submodule</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">named_modules</span><span class="p">(</span><span class="n">remove_duplicate</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="n">submod_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">get_module_config</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">submodule</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">submodule</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_supported_modules</span><span class="p">)</span> <span class="ow">and</span> <span class="n">submod_config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">submod_config</span> <span class="o">=</span> <span class="n">_copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">submod_config</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">submod_config</span><span class="o">.</span><span class="n">n_m_ratio</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">num_zeros</span><span class="p">,</span> <span class="n">block_size</span> <span class="o">=</span> <span class="n">submod_config</span><span class="o">.</span><span class="n">n_m_ratio</span>
+                    <span class="c1"># Add target sparsity to make scheduler work</span>
+                    <span class="n">submod_config</span><span class="o">.</span><span class="n">target_sparsity</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">num_zeros</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">block_size</span><span class="p">)</span>
+                <span class="n">_MagnitudePruningMethod</span><span class="o">.</span><span class="n">from_module_and_params</span><span class="p">(</span>
+                    <span class="n">submodule</span><span class="p">,</span>
+                    <span class="n">param_name</span><span class="o">=</span><span class="n">submod_config</span><span class="o">.</span><span class="n">param_name</span><span class="p">,</span>
+                    <span class="n">amount</span><span class="o">=</span><span class="n">submod_config</span><span class="o">.</span><span class="n">initial_sparsity</span><span class="p">,</span>
+                    <span class="n">block_size</span><span class="o">=</span><span class="n">submod_config</span><span class="o">.</span><span class="n">block_size</span><span class="p">,</span>
+                    <span class="n">granularity</span><span class="o">=</span><span class="n">submod_config</span><span class="o">.</span><span class="n">granularity</span><span class="p">,</span>
+                    <span class="n">n_m_ratio</span><span class="o">=</span><span class="n">submod_config</span><span class="o">.</span><span class="n">n_m_ratio</span><span class="p">,</span>
+                    <span class="n">dim</span><span class="o">=</span><span class="n">submod_config</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_pruner_info</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">_MagnitudePrunerInfo</span><span class="p">(</span>
+                    <span class="n">config</span><span class="o">=</span><span class="n">submod_config</span><span class="p">,</span>
+                    <span class="n">module</span><span class="o">=</span><span class="n">submodule</span><span class="p">,</span>
+                    <span class="n">sparsity_level</span><span class="o">=</span><span class="n">submod_config</span><span class="o">.</span><span class="n">initial_sparsity</span><span class="p">,</span>
+                <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span></div>
+
+
+<div class="viewcode-block" id="MagnitudePruner.step">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePruner.step">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_prepared</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Model has not been prepared for pruning. This API call &quot;</span>
+                <span class="s2">&quot;will be a no-op. prepare method must be called before &quot;</span>
+                <span class="s2">&quot;a call to the step method.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_step_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">pruner_info</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pruner_info</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">pruner_info</span><span class="o">.</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;pruning_method&quot;</span><span class="p">):</span>
+                <span class="n">sparsity_level</span> <span class="o">=</span> <span class="n">pruner_info</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">compute_sparsity</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_step_count</span><span class="p">,</span>
+                    <span class="n">prev_sparsity</span><span class="o">=</span><span class="n">pruner_info</span><span class="o">.</span><span class="n">sparsity_level</span><span class="p">,</span>
+                    <span class="n">config</span><span class="o">=</span><span class="n">pruner_info</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">sparsity_level</span> <span class="o">!=</span> <span class="n">pruner_info</span><span class="o">.</span><span class="n">sparsity_level</span><span class="p">:</span>
+                    <span class="n">pruner_info</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">pruning_method</span><span class="o">.</span><span class="n">update_mask</span><span class="p">(</span>
+                        <span class="n">pruner_info</span><span class="o">.</span><span class="n">module</span><span class="p">,</span> <span class="n">sparsity_level</span>
+                    <span class="p">)</span>
+                <span class="n">pruner_info</span><span class="o">.</span><span class="n">sparsity_level</span> <span class="o">=</span> <span class="n">sparsity_level</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,682 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.models.ml_program.experimental.compute_plan_utils &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.models.ml_program.experimental.compute_plan_utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.models.ml_program.experimental.compute_plan_utils</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2025, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">ComputeUnit</span><span class="p">,</span> <span class="n">_logger</span><span class="p">,</span> <span class="n">proto</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools._deps</span><span class="w"> </span><span class="kn">import</span> <span class="n">_IS_MACOS</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">...compute_device</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">MLComputeDevice</span><span class="p">,</span>
+    <span class="n">MLCPUComputeDevice</span><span class="p">,</span>
+    <span class="n">MLGPUComputeDevice</span><span class="p">,</span>
+    <span class="n">MLNeuralEngineComputeDevice</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">...compute_plan</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">MLComputePlan</span><span class="p">,</span>
+    <span class="n">MLComputePlanCost</span><span class="p">,</span>
+    <span class="n">MLComputePlanDeviceUsage</span><span class="p">,</span>
+    <span class="n">MLModelStructure</span><span class="p">,</span>
+    <span class="n">MLModelStructureNeuralNetworkLayer</span><span class="p">,</span>
+    <span class="n">MLModelStructureProgramOperation</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">...model</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.model_structure_path</span><span class="w"> </span><span class="kn">import</span> <span class="n">map_model_spec_to_path</span><span class="p">,</span> <span class="n">map_model_structure_to_path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.remote_device</span><span class="w"> </span><span class="kn">import</span> <span class="n">ComputePlan</span><span class="p">,</span> <span class="n">Device</span><span class="p">,</span> <span class="n">_RemoteMLModelService</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.libcoremlpython</span><span class="w"> </span><span class="kn">import</span> <span class="n">_MLComputePlanProxy</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">_IS_MACOS</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to load _MLComputePlanProxy: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">_MLComputePlanProxy</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.libcoremlpython</span><span class="w"> </span><span class="kn">import</span> <span class="n">_MLCPUComputeDeviceProxy</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">_IS_MACOS</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to load _MLCPUComputeDeviceProxy: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">_MLCPUComputeDeviceProxy</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.libcoremlpython</span><span class="w"> </span><span class="kn">import</span> <span class="n">_MLGPUComputeDeviceProxy</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">_IS_MACOS</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to load _MLGPUComputeDeviceProxy: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">_MLGPUComputeDeviceProxy</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.libcoremlpython</span><span class="w"> </span><span class="kn">import</span> <span class="n">_MLNeuralEngineComputeDeviceProxy</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">_IS_MACOS</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to load _MLNeuralEngineComputeDeviceProxy: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">_MLNeuralEngineComputeDeviceProxy</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="k">if</span> <span class="n">_MLCPUComputeDeviceProxy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">_MLCPUComputeDeviceRemoteProxy</span><span class="p">(</span><span class="n">_MLCPUComputeDeviceProxy</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">device</span><span class="p">:</span> <span class="n">Device</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="n">_MLCPUComputeDeviceProxy</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
+
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">_IS_MACOS</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;Failed to load &#39;_MLCPUComputeDeviceRemoteProxy&#39;. Remote device functionality for retrieving the compute plan is unavailable.&quot;</span>
+        <span class="p">)</span>
+    <span class="n">_MLCPUComputeDeviceRemoteProxy</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="k">if</span> <span class="n">_MLGPUComputeDeviceProxy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">_MLGPUComputeDeviceRemoteProxy</span><span class="p">(</span><span class="n">_MLGPUComputeDeviceProxy</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">device</span><span class="p">:</span> <span class="n">Device</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="n">_MLGPUComputeDeviceProxy</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
+
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">_IS_MACOS</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;Failed to load &#39;_MLGPUComputeDeviceRemoteProxy&#39;. Remote device functionality for retrieving the compute plan is unavailable.&quot;</span>
+        <span class="p">)</span>
+    <span class="n">_MLGPUComputeDeviceRemoteProxy</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="k">if</span> <span class="n">_MLNeuralEngineComputeDeviceProxy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">_MLNeuralEngineComputeDeviceRemoteProxy</span><span class="p">(</span><span class="n">_MLNeuralEngineComputeDeviceProxy</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">total_core_count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+            <span class="n">device</span><span class="p">:</span> <span class="n">Device</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="n">_MLNeuralEngineComputeDeviceProxy</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_total_core_count</span> <span class="o">=</span> <span class="n">total_core_count</span>
+
+        <span class="nd">@property</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">total_core_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_core_count</span>
+
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">_IS_MACOS</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;Failed to load &#39;_MLNeuralEngineComputeDeviceRemoteProxy&#39;. Remote device functionality for retrieving the compute plan is unavailable.&quot;</span>
+        <span class="p">)</span>
+    <span class="n">_MLNeuralEngineComputeDeviceRemoteProxy</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="k">if</span> <span class="n">_MLComputePlanProxy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">_MLComputePlanRemoteProxy</span><span class="p">(</span><span class="n">_MLComputePlanProxy</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">device</span><span class="p">:</span> <span class="n">Device</span><span class="p">,</span>
+            <span class="n">compute_plan</span><span class="p">:</span> <span class="n">ComputePlan</span><span class="p">,</span>
+            <span class="n">model_structure</span><span class="p">:</span> <span class="n">MLModelStructure</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="n">_MLComputePlanProxy</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_plan</span> <span class="o">=</span> <span class="n">compute_plan</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_model_structure</span> <span class="o">=</span> <span class="n">model_structure</span>
+            <span class="n">structure_and_paths</span> <span class="o">=</span> <span class="n">map_model_structure_to_path</span><span class="p">(</span>
+                <span class="n">model_structure</span><span class="o">=</span><span class="n">model_structure</span><span class="p">,</span>
+                <span class="n">components</span><span class="o">=</span><span class="p">[],</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_model_path_map</span> <span class="o">=</span> <span class="p">{</span><span class="nb">id</span><span class="p">(</span><span class="n">structure</span><span class="p">):</span> <span class="n">path</span> <span class="k">for</span> <span class="n">structure</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">structure_and_paths</span><span class="p">}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_compute_devices</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="nd">@property</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">model_structure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_structure</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_get_compute_plan_info</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">identifier</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ComputePlan</span><span class="o">.</span><span class="n">OperationOrLayerInfo</span><span class="p">]:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_path_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_plan</span><span class="o">.</span><span class="n">infos</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_to_compute_device_usage</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">device_usage</span><span class="p">:</span> <span class="n">ComputePlan</span><span class="o">.</span><span class="n">DeviceUsage</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MLComputePlanDeviceUsage</span><span class="p">:</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">_to_compute_device</span><span class="p">(</span>
+                <span class="n">compute_plan_device</span><span class="p">:</span> <span class="n">ComputePlan</span><span class="o">.</span><span class="n">Device</span><span class="p">,</span>
+            <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MLComputeDevice</span><span class="p">:</span>
+                <span class="n">compute_device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_devices</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">compute_plan_device</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">compute_device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">compute_plan_device</span><span class="p">,</span> <span class="n">ComputePlan</span><span class="o">.</span><span class="n">CPUDevice</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_compute_devices</span><span class="p">[</span><span class="n">compute_plan_device</span><span class="p">]</span> <span class="o">=</span> <span class="n">MLCPUComputeDevice</span><span class="p">(</span>
+                            <span class="n">proxy</span><span class="o">=</span><span class="n">_MLCPUComputeDeviceRemoteProxy</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+                        <span class="p">)</span>
+                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">compute_plan_device</span><span class="p">,</span> <span class="n">ComputePlan</span><span class="o">.</span><span class="n">GPUDevice</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_compute_devices</span><span class="p">[</span><span class="n">compute_plan_device</span><span class="p">]</span> <span class="o">=</span> <span class="n">MLGPUComputeDevice</span><span class="p">(</span>
+                            <span class="n">proxy</span><span class="o">=</span><span class="n">_MLGPUComputeDeviceRemoteProxy</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+                        <span class="p">)</span>
+                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">compute_plan_device</span><span class="p">,</span> <span class="n">ComputePlan</span><span class="o">.</span><span class="n">NeuralEngineDevice</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_compute_devices</span><span class="p">[</span><span class="n">compute_plan_device</span><span class="p">]</span> <span class="o">=</span> <span class="n">MLNeuralEngineComputeDevice</span><span class="p">(</span>
+                            <span class="n">proxy</span><span class="o">=</span><span class="n">_MLNeuralEngineComputeDeviceRemoteProxy</span><span class="p">(</span>
+                                <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+                                <span class="n">total_core_count</span><span class="o">=</span><span class="n">compute_plan_device</span><span class="o">.</span><span class="n">total_core_count</span><span class="p">,</span>
+                            <span class="p">)</span>
+                        <span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown compute device=</span><span class="si">{</span><span class="n">compute_plan_device</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_devices</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">compute_plan_device</span><span class="p">)</span>
+
+            <span class="n">preferred_compute_device</span> <span class="o">=</span> <span class="n">_to_compute_device</span><span class="p">(</span><span class="n">device_usage</span><span class="o">.</span><span class="n">preferred</span><span class="p">)</span>
+            <span class="n">supported_compute_devices</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">_to_compute_device</span><span class="p">(</span><span class="n">compute_plan_device</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">compute_plan_device</span> <span class="ow">in</span> <span class="n">device_usage</span><span class="o">.</span><span class="n">supported</span>
+            <span class="p">]</span>
+            <span class="k">return</span> <span class="n">MLComputePlanDeviceUsage</span><span class="p">(</span>
+                <span class="n">preferred_compute_device</span><span class="o">=</span><span class="n">preferred_compute_device</span><span class="p">,</span>
+                <span class="n">supported_compute_devices</span><span class="o">=</span><span class="n">supported_compute_devices</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">get_compute_device_usage_for_mlprogram_operation</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">operation</span><span class="p">:</span> <span class="n">MLModelStructureProgramOperation</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MLComputePlanDeviceUsage</span><span class="p">]:</span>
+            <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_compute_plan_info</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="n">operation</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_compute_device_usage</span><span class="p">(</span><span class="n">device_usage</span><span class="o">=</span><span class="n">info</span><span class="o">.</span><span class="n">device_usage</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">get_compute_device_usage_for_neuralnetwork_layer</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">layer</span><span class="p">:</span> <span class="n">MLModelStructureNeuralNetworkLayer</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MLComputePlanDeviceUsage</span><span class="p">]:</span>
+            <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_compute_plan_info</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="n">layer</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_compute_device_usage</span><span class="p">(</span><span class="n">device_usage</span><span class="o">=</span><span class="n">info</span><span class="o">.</span><span class="n">device_usage</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">get_estimated_cost_for_mlprogram_operation</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">operation</span><span class="p">:</span> <span class="n">MLModelStructureProgramOperation</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MLComputePlanCost</span><span class="p">]:</span>
+            <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_compute_plan_info</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="n">operation</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">info</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">info</span><span class="o">.</span><span class="n">estimated_cost</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+
+            <span class="k">return</span> <span class="n">MLComputePlanCost</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="n">info</span><span class="o">.</span><span class="n">estimated_cost</span><span class="p">)</span>
+
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">_IS_MACOS</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;Failed to load &#39;_MLComputePlanRemoteProxy&#39;. Remote device functionality for retrieving the compute plan is unavailable.&quot;</span>
+        <span class="p">)</span>
+    <span class="n">_MLComputePlanRemoteProxy</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="load_compute_plan_from_path_on_device">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.compute_plan.load_compute_plan_from_path_on_device">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">load_compute_plan_from_path_on_device</span><span class="p">(</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">compute_units</span><span class="p">:</span> <span class="n">ComputeUnit</span> <span class="o">=</span> <span class="n">ComputeUnit</span><span class="o">.</span><span class="n">ALL</span><span class="p">,</span>
+    <span class="n">device</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Device</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MLComputePlan</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Loads the compute plan of a compiled model on a remote or local device.</span>
+
+<span class="sd">    The path must be the location of the ``mlmodelc`` directory.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    path : str</span>
+<span class="sd">        The path to the compiled model.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    The plan for executing the model.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        # Retrieve a development device.</span>
+<span class="sd">        devices = Device.get_connected_development_devices(device_type=DeviceType.IPHONE)</span>
+<span class="sd">        device = devices[0]</span>
+<span class="sd">        # Prepare device for model debugging.</span>
+<span class="sd">        device = await device.prepare_for_model_debugging()</span>
+<span class="sd">        compute_plan = await coremltools.models.ml_program.experimental.compute_plan_utils.load_compute_plan_from_path_on_device(</span>
+<span class="sd">            path=model.get_compiled_path(),</span>
+<span class="sd">            device=device,</span>
+<span class="sd">        )</span>
+
+<span class="sd">        if compute_plan.model_structure.program is None:</span>
+<span class="sd">            raise ValueError(&quot;Unexpected model type.&quot;)</span>
+
+<span class="sd">        program = compute_plan.model_structure.program</span>
+<span class="sd">        mainFunction = program.functions[&quot;main&quot;]</span>
+<span class="sd">        for operation in mainFunction.block.operations:</span>
+<span class="sd">            # Get the compute device usage for the operation.</span>
+<span class="sd">            compute_device_usage = (</span>
+<span class="sd">                compute_plan.get_compute_device_usage_for_mlprogram_operation(operation)</span>
+<span class="sd">            )</span>
+<span class="sd">            # Get the estimated cost of executing the operation.</span>
+<span class="sd">            estimated_cost = compute_plan.get_estimated_cost_for_mlprogram_operation(operation)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">MLComputePlan</span><span class="o">.</span><span class="n">load_from_path</span><span class="p">(</span>
+            <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+            <span class="n">compute_units</span><span class="o">=</span><span class="n">compute_units</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_MLComputePlanRemoteProxy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Remote device functionality for retrieving the compute plan is unavailable.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">service</span> <span class="o">=</span> <span class="k">await</span> <span class="n">_RemoteMLModelService</span><span class="o">.</span><span class="n">load_on_device</span><span class="p">(</span>
+            <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+            <span class="n">compiled_model_path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+            <span class="n">compute_units</span><span class="o">=</span><span class="n">compute_units</span><span class="p">,</span>
+            <span class="n">function_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">compute_plan</span> <span class="o">=</span> <span class="k">await</span> <span class="n">service</span><span class="o">.</span><span class="n">retrieve_compute_plan</span><span class="p">()</span>
+        <span class="n">model_structure</span> <span class="o">=</span> <span class="n">MLModelStructure</span><span class="o">.</span><span class="n">load_from_path</span><span class="p">(</span>
+            <span class="n">compiled_model_path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">remote_proxy</span> <span class="o">=</span> <span class="n">_MLComputePlanRemoteProxy</span><span class="p">(</span>
+            <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+            <span class="n">compute_plan</span><span class="o">=</span><span class="n">compute_plan</span><span class="p">,</span>
+            <span class="n">model_structure</span><span class="o">=</span><span class="n">model_structure</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">MLComputePlan</span><span class="p">(</span><span class="n">proxy</span><span class="o">=</span><span class="n">remote_proxy</span><span class="p">)</span></div>
+
+
+
+<span class="n">MLComputePlan</span><span class="o">.</span><span class="n">load_from_path_on_device</span> <span class="o">=</span> <span class="n">load_compute_plan_from_path_on_device</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_list_proto_value</span><span class="p">(</span><span class="n">elements</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Value</span><span class="p">:</span>
+    <span class="n">list_type</span> <span class="o">=</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">ListType</span><span class="p">()</span>
+    <span class="n">list_type</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">tensorType</span><span class="o">.</span><span class="n">dataType</span> <span class="o">=</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">DataType</span><span class="o">.</span><span class="n">STRING</span>
+    <span class="n">dimension</span> <span class="o">=</span> <span class="n">list_type</span><span class="o">.</span><span class="n">length</span>
+    <span class="n">dimension</span><span class="o">.</span><span class="n">constant</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span>
+
+    <span class="n">str_type</span> <span class="o">=</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">ValueType</span><span class="p">()</span>
+    <span class="n">str_type</span><span class="o">.</span><span class="n">tensorType</span><span class="o">.</span><span class="n">dataType</span> <span class="o">=</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">DataType</span><span class="o">.</span><span class="n">STRING</span>
+
+    <span class="n">value</span> <span class="o">=</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Value</span><span class="p">()</span>
+    <span class="n">value</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">listType</span><span class="o">.</span><span class="n">CopyFrom</span><span class="p">(</span><span class="n">list_type</span><span class="p">)</span>
+    <span class="n">list_value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">immediateValue</span><span class="o">.</span><span class="n">list</span>
+    <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">elements</span><span class="p">:</span>
+        <span class="n">element_value</span> <span class="o">=</span> <span class="n">list_value</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
+        <span class="n">element_value</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">CopyFrom</span><span class="p">(</span><span class="n">str_type</span><span class="p">)</span>
+        <span class="n">element_value</span><span class="o">.</span><span class="n">immediateValue</span><span class="o">.</span><span class="n">tensor</span><span class="o">.</span><span class="n">strings</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">value</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">set_intended_backends_attr</span><span class="p">(</span>
+    <span class="n">op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span>
+    <span class="n">backend_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+<span class="p">):</span>
+    <span class="k">if</span> <span class="n">backend_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">op</span><span class="o">.</span><span class="n">attributes</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;IntendedBackend&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">backed_attr</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">&quot;IntendedBackend&quot;</span><span class="p">]</span>
+        <span class="n">backed_attr</span><span class="o">.</span><span class="n">CopyFrom</span><span class="p">(</span><span class="n">_create_list_proto_value</span><span class="p">(</span><span class="n">elements</span><span class="o">=</span><span class="n">backend_names</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="set_intended_backends">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.compute_plan.set_intended_backends">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">set_intended_backends</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">MLModel</span><span class="p">,</span>
+    <span class="n">backend_assignment_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MLModel</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assigns intended backends to operations in the given model.</span>
+
+<span class="sd">    This function creates a new MLModel with updated backend assignments for each operation.</span>
+<span class="sd">    It traverses the entire model structure, applying the provided backend assignment function</span>
+<span class="sd">    to determine the intended backends for each operation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    model : MLModel</span>
+<span class="sd">        The input model to be processed.</span>
+
+<span class="sd">    backend_assignment_fn : Callable[[proto.MIL_pb2.Operation], Optional[List[str]]]</span>
+<span class="sd">        A function that takes an operation and returns a list of intended backend names.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    MLModel</span>
+<span class="sd">        A new model instance with updated backend assignments.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">clone_spec</span><span class="p">(</span>
+        <span class="n">spec</span><span class="p">:</span> <span class="s2">&quot;proto.Model_pb2.Model&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;proto.Model_pb2.Model&quot;</span><span class="p">:</span>
+        <span class="n">spec_class</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="vm">__class__</span>
+        <span class="n">new_spec</span> <span class="o">=</span> <span class="n">spec_class</span><span class="p">()</span>
+        <span class="n">new_spec</span><span class="o">.</span><span class="n">CopyFrom</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_spec</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_block_intended_backends</span><span class="p">(</span>
+        <span class="n">block_spec</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Block</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">operation_spec</span> <span class="ow">in</span> <span class="n">block_spec</span><span class="o">.</span><span class="n">operations</span><span class="p">:</span>
+            <span class="n">backend_names</span> <span class="o">=</span> <span class="n">backend_assignment_fn</span><span class="p">(</span><span class="n">operation_spec</span><span class="p">)</span>
+            <span class="n">set_intended_backends_attr</span><span class="p">(</span>
+                <span class="n">op</span><span class="o">=</span><span class="n">operation_spec</span><span class="p">,</span>
+                <span class="n">backend_names</span><span class="o">=</span><span class="n">backend_names</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">operation_block_spec</span> <span class="ow">in</span> <span class="n">operation_spec</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+                <span class="n">set_block_intended_backends</span><span class="p">(</span><span class="n">block_spec</span><span class="o">=</span><span class="n">operation_block_spec</span><span class="p">)</span>
+
+    <span class="n">model_spec</span> <span class="o">=</span> <span class="n">clone_spec</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">get_spec</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="n">model_spec</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;mlProgram&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;set_intended_backends only supports ML Program.&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">function_spec</span> <span class="ow">in</span> <span class="n">model_spec</span><span class="o">.</span><span class="n">mlProgram</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">block_spec</span> <span class="o">=</span> <span class="n">function_spec</span><span class="o">.</span><span class="n">block_specializations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">function_spec</span><span class="o">.</span><span class="n">opset</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">block_spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid spec, missing block specialization for opset : </span><span class="si">{</span><span class="n">function_spec</span><span class="o">.</span><span class="n">opset</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">set_block_intended_backends</span><span class="p">(</span><span class="n">block_spec</span><span class="o">=</span><span class="n">block_spec</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">MLModel</span><span class="p">(</span>
+        <span class="n">model</span><span class="o">=</span><span class="n">model_spec</span><span class="p">,</span>
+        <span class="n">weights_dir</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">weights_dir</span><span class="p">,</span>
+        <span class="n">function_name</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">function_name</span><span class="p">,</span>
+        <span class="n">compute_units</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">compute_unit</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_backend_names</span><span class="p">(</span>
+    <span class="n">compute_device</span><span class="p">:</span> <span class="n">MLComputeDevice</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">compute_device</span><span class="p">,</span> <span class="n">MLGPUComputeDevice</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;mps_graph&quot;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">compute_device</span><span class="p">,</span> <span class="n">MLNeuralEngineComputeDevice</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;ane&quot;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">compute_device</span><span class="p">,</span> <span class="n">MLCPUComputeDevice</span><span class="p">):</span>
+        <span class="c1"># The same is set by the Core ML framework.</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;bnns&quot;</span><span class="p">,</span> <span class="s2">&quot;classic_cpu&quot;</span><span class="p">,</span> <span class="s2">&quot;e5_minimal_cpu&quot;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown compute device = </span><span class="si">{</span><span class="n">compute_device</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_assign_ids_to_program_operations</span><span class="p">(</span>
+    <span class="n">program_spec</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Program</span><span class="p">,</span>
+    <span class="n">id_generator</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">],</span> <span class="nb">str</span><span class="p">],</span>
+    <span class="n">attr_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">assign_ids_to_block_operations</span><span class="p">(</span>
+        <span class="n">block_spec</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Block</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">operation_spec</span> <span class="ow">in</span> <span class="n">block_spec</span><span class="o">.</span><span class="n">operations</span><span class="p">:</span>
+            <span class="n">attr</span> <span class="o">=</span> <span class="n">operation_spec</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="n">attr_name</span><span class="p">]</span>
+            <span class="n">attr</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">tensorType</span><span class="o">.</span><span class="n">dataType</span> <span class="o">=</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">DataType</span><span class="o">.</span><span class="n">STRING</span>
+            <span class="n">attr</span><span class="o">.</span><span class="n">immediateValue</span><span class="o">.</span><span class="n">tensor</span><span class="o">.</span><span class="n">strings</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">id_generator</span><span class="p">(</span><span class="n">operation_spec</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">operation_block_spec</span> <span class="ow">in</span> <span class="n">operation_spec</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+                <span class="n">assign_ids_to_block_operations</span><span class="p">(</span><span class="n">block_spec</span><span class="o">=</span><span class="n">operation_block_spec</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">function_spec</span> <span class="ow">in</span> <span class="n">program_spec</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">block_spec</span> <span class="o">=</span> <span class="n">function_spec</span><span class="o">.</span><span class="n">block_specializations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">function_spec</span><span class="o">.</span><span class="n">opset</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">block_spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid spec, missing block specialization for opset : </span><span class="si">{</span><span class="n">function_spec</span><span class="o">.</span><span class="n">opset</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">assign_ids_to_block_operations</span><span class="p">(</span><span class="n">block_spec</span><span class="o">=</span><span class="n">block_spec</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="apply_compute_plan">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.compute_plan.apply_compute_plan">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">apply_compute_plan</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">MLModel</span><span class="p">,</span>
+    <span class="n">compute_plan</span><span class="p">:</span> <span class="n">MLComputePlan</span><span class="p">,</span>
+    <span class="n">backend_assignment_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
+        <span class="n">Callable</span><span class="p">[[</span><span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MLComputePlanDeviceUsage</span><span class="p">]],</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MLModel</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function takes an MLModel and sets the intended backend attribute</span>
+<span class="sd">    of each operation in the model as determined by the model&#39;s compute plan.</span>
+
+<span class="sd">    It updates the &#39;IntendedBackend&#39; attribute of each operation,</span>
+<span class="sd">    ensuring the same dispatch even if the model is modified.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    -----------</span>
+<span class="sd">    model : MLModel</span>
+<span class="sd">        The model to which the compute plan will be applied.</span>
+
+<span class="sd">    compute_plan : Optional[MLComputePlan]</span>
+<span class="sd">        The model&#39;s compute plan.</span>
+
+<span class="sd">    backend_assignment_fn : Callable</span>
+<span class="sd">        A function that determines the intended backends for each operation.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    --------</span>
+<span class="sd">    MLModel</span>
+<span class="sd">        The modified model after applying the backend assignments.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">debug_id</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">debug_id_attr_name</span> <span class="o">=</span> <span class="s2">&quot;debug_id&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_debug_id</span><span class="p">(</span><span class="n">op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="n">attr</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="n">debug_id_attr_name</span><span class="p">]</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">immediateValue</span><span class="o">.</span><span class="n">tensor</span><span class="o">.</span><span class="n">strings</span><span class="o">.</span><span class="n">values</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Debug ID attribute &#39;</span><span class="si">{</span><span class="n">debug_id_attr_name</span><span class="si">}</span><span class="s2">&#39; not found in operation: </span><span class="si">{</span><span class="n">op</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">id_generator</span><span class="p">(</span><span class="n">op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">nonlocal</span> <span class="n">debug_id</span>
+        <span class="n">debug_id</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">debug_id</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">backend_assignment_using_preferred_compute_device</span><span class="p">(</span>
+        <span class="n">op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span> <span class="n">compute_device_usage</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MLComputePlanDeviceUsage</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+        <span class="k">if</span> <span class="n">compute_device_usage</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">preferred_compute_device</span> <span class="o">=</span> <span class="n">compute_device_usage</span><span class="o">.</span><span class="n">preferred_compute_device</span>
+        <span class="k">return</span> <span class="n">_get_backend_names</span><span class="p">(</span><span class="n">compute_device</span><span class="o">=</span><span class="n">preferred_compute_device</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">backend_assignment_fn</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">backend_assignment_fn</span> <span class="o">=</span> <span class="n">backend_assignment_using_preferred_compute_device</span>
+
+    <span class="n">model_spec</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">model_spec</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;mlProgram&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The apply_compute_plan only supports ML Program.&quot;</span><span class="p">)</span>
+
+    <span class="n">_assign_ids_to_program_operations</span><span class="p">(</span>
+        <span class="n">program_spec</span><span class="o">=</span><span class="n">model_spec</span><span class="o">.</span><span class="n">mlProgram</span><span class="p">,</span>
+        <span class="n">id_generator</span><span class="o">=</span><span class="n">id_generator</span><span class="p">,</span>
+        <span class="n">attr_name</span><span class="o">=</span><span class="n">debug_id_attr_name</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span>
+        <span class="n">model</span><span class="o">=</span><span class="n">model_spec</span><span class="p">,</span>
+        <span class="n">weights_dir</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">weights_dir</span><span class="p">,</span>
+        <span class="n">function_name</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">function_name</span><span class="p">,</span>
+        <span class="n">compute_units</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">compute_unit</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">values</span> <span class="o">=</span> <span class="n">map_model_spec_to_path</span><span class="p">(</span>
+        <span class="n">model_spec</span><span class="o">=</span><span class="n">model_spec</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">debug_id_to_path_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">get_debug_id</span><span class="p">(</span><span class="n">op_spec</span><span class="p">):</span> <span class="n">path</span> <span class="k">for</span> <span class="n">op_spec</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">values</span><span class="p">}</span>
+
+    <span class="n">values</span> <span class="o">=</span> <span class="n">map_model_structure_to_path</span><span class="p">(</span>
+        <span class="n">model_structure</span><span class="o">=</span><span class="n">compute_plan</span><span class="o">.</span><span class="n">model_structure</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">path_to_structure_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">path</span><span class="p">:</span> <span class="n">structure</span> <span class="k">for</span> <span class="n">structure</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">values</span><span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_intended_backends_for_op</span><span class="p">(</span>
+        <span class="n">op_spec</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">debug_id_to_path_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">get_debug_id</span><span class="p">(</span><span class="n">op_spec</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">op_structure</span> <span class="o">=</span> <span class="n">path_to_structure_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">compute_device_usage</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">op_structure</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">compute_device_usage</span> <span class="o">=</span> <span class="n">compute_plan</span><span class="o">.</span><span class="n">get_compute_device_usage_for_mlprogram_operation</span><span class="p">(</span>
+                <span class="n">op_structure</span>
+            <span class="p">)</span>
+
+        <span class="n">backend_names</span> <span class="o">=</span> <span class="n">backend_assignment_fn</span><span class="p">(</span><span class="n">op_spec</span><span class="p">,</span> <span class="n">compute_device_usage</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">backend_names</span>
+
+    <span class="k">return</span> <span class="n">set_intended_backends</span><span class="p">(</span>
+        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+        <span class="n">backend_assignment_fn</span><span class="o">=</span><span class="n">set_intended_backends_for_op</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,609 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.models.ml_program.experimental.async_wrapper &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.models.ml_program.experimental.async_wrapper</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.models.ml_program.experimental.async_wrapper</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2025, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">atexit</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">ComputeUnit</span><span class="p">,</span> <span class="n">proto</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools._deps</span><span class="w"> </span><span class="kn">import</span> <span class="n">_HAS_TORCH</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">...compute_plan</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLComputePlan</span><span class="p">,</span> <span class="n">MLModelStructure</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">...model</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModel</span><span class="p">,</span> <span class="n">MLState</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">...utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">compile_model</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.remote_device</span><span class="w"> </span><span class="kn">import</span> <span class="n">Device</span><span class="p">,</span> <span class="n">_RemoteMLModelService</span>
+
+<span class="k">if</span> <span class="n">_HAS_TORCH</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span>
+
+<div class="viewcode-block" id="MLModelAsyncWrapper">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.async_wrapper.MLModelAsyncWrapper">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MLModelAsyncWrapper</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_check</span><span class="p">(</span>
+        <span class="n">spec_or_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;proto.Model_pb2.Model&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">weights_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">compute_units</span><span class="p">:</span> <span class="n">ComputeUnit</span><span class="p">,</span>
+        <span class="n">function_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">optimization_hints</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec_or_path</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">spec_or_path</span><span class="p">,</span> <span class="n">proto</span><span class="o">.</span><span class="n">Model_pb2</span><span class="o">.</span><span class="n">Model</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s1">&#39;The &quot;spec_or_path&quot; parameter must be of type &quot;str&quot; or &quot;proto.Model_pb2.Model&quot;&#39;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">weights_dir</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;The &quot;weights_dir&quot; parameter must be of type &quot;str&quot;&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">compute_units</span><span class="p">,</span> <span class="n">ComputeUnit</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;The &quot;compute_units&quot; parameter must be of type &quot;ComputeUnit&quot;&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">function_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">function_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;The &quot;function_name&quot; parameter must be of type &quot;str&quot;&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">optimization_hints</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optimization_hints</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;The &#39;optimization_hints&#39; must be of mapping type (e.g., dict)&quot;</span><span class="p">)</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An abstract base class for asynchronous wrappers of ``MLModel``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">spec_or_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;proto.Model_pb2.Model&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">weights_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">compute_units</span><span class="p">:</span> <span class="n">ComputeUnit</span> <span class="o">=</span> <span class="n">ComputeUnit</span><span class="o">.</span><span class="n">ALL</span><span class="p">,</span>
+        <span class="n">function_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">optimization_hints</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">MLModelAsyncWrapper</span><span class="o">.</span><span class="n">init_check</span><span class="p">(</span>
+            <span class="n">spec_or_path</span><span class="o">=</span><span class="n">spec_or_path</span><span class="p">,</span>
+            <span class="n">weights_dir</span><span class="o">=</span><span class="n">weights_dir</span><span class="p">,</span>
+            <span class="n">compute_units</span><span class="o">=</span><span class="n">compute_units</span><span class="p">,</span>
+            <span class="n">function_name</span><span class="o">=</span><span class="n">function_name</span><span class="p">,</span>
+            <span class="n">optimization_hints</span><span class="o">=</span><span class="n">optimization_hints</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec_or_path</span> <span class="o">=</span> <span class="n">spec_or_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights_dir</span> <span class="o">=</span> <span class="n">weights_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compute_units</span> <span class="o">=</span> <span class="n">compute_units</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">function_name</span> <span class="o">=</span> <span class="n">function_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimization_hints</span> <span class="o">=</span> <span class="n">optimization_hints</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_temp_asset_path</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="MLModelAsyncWrapper.load">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.async_wrapper.MLModelAsyncWrapper.load">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Asynchronously loads the ``MLModel``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="MLModelAsyncWrapper.unload">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.async_wrapper.MLModelAsyncWrapper.unload">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Asynchronously unloads the ``MLModel``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="MLModelAsyncWrapper.predict">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.async_wrapper.MLModelAsyncWrapper.predict">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MLState</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Asynchronously performs predictions using the loaded ``MLModel``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">temp_asset_path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_temp_asset_path</span>
+
+    <span class="nd">@temp_asset_path</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">temp_asset_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_temp_asset_path</span> <span class="o">!=</span> <span class="n">value</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_temp_asset_path</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="n">atexit</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">MLModelAsyncWrapper</span><span class="o">.</span><span class="n">_remove_directory</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">make_state_if_needed</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;MLState&quot;</span><span class="p">]:</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="MLModelAsyncWrapper.retrieve_compute_plan">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.async_wrapper.MLModelAsyncWrapper.retrieve_compute_plan">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">retrieve_compute_plan</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MLComputePlan</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Asynchronously retrieves the compute plan for the loaded ``MLModel``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_duration_in_nano_seconds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieves the duration of the model loading process in nanoseconds.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">last_predict_duration_in_nano_seconds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieves the duration of the last predict operation in nanoseconds.</span>
+<span class="sd">        This method returns the time taken for the most recent prediction made by</span>
+<span class="sd">        the model, measured in nanoseconds.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_remove_directory</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">cleanup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">MLModelAsyncWrapper</span><span class="o">.</span><span class="n">_remove_directory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_asset_path</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cleanup</span><span class="p">()</span>
+
+<div class="viewcode-block" id="MLModelAsyncWrapper.from_spec_or_path">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.async_wrapper.MLModelAsyncWrapper.from_spec_or_path">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_spec_or_path</span><span class="p">(</span>
+        <span class="n">spec_or_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;proto.Model_pb2.Model&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">weights_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">compute_units</span><span class="p">:</span> <span class="n">ComputeUnit</span> <span class="o">=</span> <span class="n">ComputeUnit</span><span class="o">.</span><span class="n">ALL</span><span class="p">,</span>
+        <span class="n">function_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">optimization_hints</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">device</span><span class="p">:</span> <span class="n">Device</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MLModelAsyncWrapper&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates an MLModelAsyncWrapper instance from a model specification or model path.</span>
+
+<span class="sd">        This static method constructs an ``MLModelAsyncWrapper`` object based on the provided</span>
+<span class="sd">        model specification and additional parameters.</span>
+
+<span class="sd">        If the device parameter is ``None``, the model is loaded on the local system. Otherwise, it</span>
+<span class="sd">        is loaded on the specified device.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        spec_or_path : Union[&quot;proto.Model_pb2.Model&quot;, str]</span>
+<span class="sd">            Either a protobuf specification of the model (``proto.Model_pb2.Model``) or a string</span>
+<span class="sd">            representing the file path to the model (``mlpackage``).</span>
+
+<span class="sd">        weights_dir: str</span>
+<span class="sd">            The model weights directory.</span>
+
+<span class="sd">        function_name : Optional[str]</span>
+<span class="sd">            The function name. Defaults to the model&#39;s function name.</span>
+
+<span class="sd">        compute_units : coremltools.ComputeUnit:</span>
+<span class="sd">            The compute units to use. Defaults to the model&#39;s compute unit.</span>
+
+<span class="sd">        optimization_hints : Optional[Dict[str, Any]]</span>
+<span class="sd">            Keys are the names of the optimization hint, either &#39;reshapeFrequency&#39; or &#39;specializationStrategy&#39;.</span>
+<span class="sd">            Values are enumeration values of type ``coremltools.ReshapeFrequency`` or ``coremltools.SpecializationStrategy``.</span>
+
+<span class="sd">        device: Device</span>
+<span class="sd">            The device on which the model will execute.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        MLModelAsyncWrapper</span>
+<span class="sd">            An instance of MLModelAsyncWrapper.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">LocalMLModelAsyncWrapper</span><span class="p">(</span>
+                <span class="n">spec_or_path</span><span class="o">=</span><span class="n">spec_or_path</span><span class="p">,</span>
+                <span class="n">weights_dir</span><span class="o">=</span><span class="n">weights_dir</span><span class="p">,</span>
+                <span class="n">compute_units</span><span class="o">=</span><span class="n">compute_units</span><span class="p">,</span>
+                <span class="n">function_name</span><span class="o">=</span><span class="n">function_name</span><span class="p">,</span>
+                <span class="n">optimization_hints</span><span class="o">=</span><span class="n">optimization_hints</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">RemoteMLModelAsyncWrapper</span><span class="p">(</span>
+                <span class="n">spec_or_path</span><span class="o">=</span><span class="n">spec_or_path</span><span class="p">,</span>
+                <span class="n">weights_dir</span><span class="o">=</span><span class="n">weights_dir</span><span class="p">,</span>
+                <span class="n">compute_units</span><span class="o">=</span><span class="n">compute_units</span><span class="p">,</span>
+                <span class="n">function_name</span><span class="o">=</span><span class="n">function_name</span><span class="p">,</span>
+                <span class="n">optimization_hints</span><span class="o">=</span><span class="n">optimization_hints</span><span class="p">,</span>
+                <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+            <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LocalMLModelAsyncWrapper">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.async_wrapper.LocalMLModelAsyncWrapper">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LocalMLModelAsyncWrapper</span><span class="p">(</span><span class="n">MLModelAsyncWrapper</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">spec_or_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;proto.Model_pb2.Model&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">weights_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">compute_units</span><span class="p">:</span> <span class="n">ComputeUnit</span> <span class="o">=</span> <span class="n">ComputeUnit</span><span class="o">.</span><span class="n">ALL</span><span class="p">,</span>
+        <span class="n">function_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">optimization_hints</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">spec_or_path</span><span class="o">=</span><span class="n">spec_or_path</span><span class="p">,</span>
+            <span class="n">weights_dir</span><span class="o">=</span><span class="n">weights_dir</span><span class="p">,</span>
+            <span class="n">compute_units</span><span class="o">=</span><span class="n">compute_units</span><span class="p">,</span>
+            <span class="n">function_name</span><span class="o">=</span><span class="n">function_name</span><span class="p">,</span>
+            <span class="n">optimization_hints</span><span class="o">=</span><span class="n">optimization_hints</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="LocalMLModelAsyncWrapper.load">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.async_wrapper.LocalMLModelAsyncWrapper.load">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_or_path</span><span class="p">,</span>
+            <span class="n">weights_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">weights_dir</span><span class="p">,</span>
+            <span class="n">compute_units</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">compute_units</span><span class="p">,</span>
+            <span class="n">function_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">function_name</span><span class="p">,</span>
+            <span class="n">optimization_hints</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">optimization_hints</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">model</span><span class="o">.</span><span class="n">__proxy__</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Failed to load model&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temp_asset_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">package_path</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">make_state_if_needed</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;MLState&quot;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">_is_stateful</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">make_state</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="LocalMLModelAsyncWrapper.predict">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.async_wrapper.LocalMLModelAsyncWrapper.predict">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MLState</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LocalMLModelAsyncWrapper.retrieve_compute_plan">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.async_wrapper.LocalMLModelAsyncWrapper.retrieve_compute_plan">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">retrieve_compute_plan</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MLComputePlan</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+
+        <span class="n">compile_model_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">get_compiled_model_path</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">compile_model_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">MLComputePlan</span><span class="o">.</span><span class="n">load_from_path</span><span class="p">(</span>
+                <span class="n">path</span><span class="o">=</span><span class="n">compile_model_path</span><span class="p">,</span>
+                <span class="n">compute_units</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">compute_unit</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">temp_dir</span><span class="p">:</span>
+            <span class="n">model_package_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">package_path</span>
+            <span class="k">if</span> <span class="n">model_package_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">model_package_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">((</span><span class="n">Path</span><span class="p">(</span><span class="n">temp_dir</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;model.mlpackage&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">())</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">model_package_path</span><span class="p">)</span>
+
+            <span class="n">compiled_model_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">((</span><span class="n">Path</span><span class="p">(</span><span class="n">temp_dir</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;model.mlmodelc&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">())</span>
+            <span class="n">compile_model</span><span class="p">(</span>
+                <span class="n">model</span><span class="o">=</span><span class="n">model_package_path</span><span class="p">,</span>
+                <span class="n">destination_path</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">compiled_model_path</span><span class="o">.</span><span class="n">resolve</span><span class="p">()),</span>
+            <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">MLComputePlan</span><span class="o">.</span><span class="n">load_from_path</span><span class="p">(</span>
+                <span class="n">path</span><span class="o">=</span><span class="n">compile_model_path</span><span class="p">,</span>
+                <span class="n">compute_units</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">compute_unit</span><span class="p">,</span>
+            <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="LocalMLModelAsyncWrapper.unload">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.async_wrapper.LocalMLModelAsyncWrapper.unload">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_duration_in_nano_seconds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">load_duration_in_nano_seconds</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">last_predict_duration_in_nano_seconds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">last_predict_duration_in_nano_seconds</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="RemoteMLModelAsyncWrapper">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.async_wrapper.RemoteMLModelAsyncWrapper">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RemoteMLModelAsyncWrapper</span><span class="p">(</span><span class="n">MLModelAsyncWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A concrete implementation of the ``MLModelAsyncWrapper`` for a remote ``MLModel``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">spec_or_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;proto.Model_pb2.Model&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">weights_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">device</span><span class="p">:</span> <span class="n">Device</span><span class="p">,</span>
+        <span class="n">compute_units</span><span class="p">:</span> <span class="n">ComputeUnit</span> <span class="o">=</span> <span class="n">ComputeUnit</span><span class="o">.</span><span class="n">ALL</span><span class="p">,</span>
+        <span class="n">function_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">optimization_hints</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">Device</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;The &#39;device&#39; must be of Device type&quot;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">spec_or_path</span><span class="o">=</span><span class="n">spec_or_path</span><span class="p">,</span>
+            <span class="n">weights_dir</span><span class="o">=</span><span class="n">weights_dir</span><span class="p">,</span>
+            <span class="n">compute_units</span><span class="o">=</span><span class="n">compute_units</span><span class="p">,</span>
+            <span class="n">function_name</span><span class="o">=</span><span class="n">function_name</span><span class="p">,</span>
+            <span class="n">optimization_hints</span><span class="o">=</span><span class="n">optimization_hints</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_remote_service</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_compiled_model_path</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="RemoteMLModelAsyncWrapper.load">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.async_wrapper.RemoteMLModelAsyncWrapper.load">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">working_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temp_asset_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">working_directory</span><span class="o">.</span><span class="n">resolve</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_or_path</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">model_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec_or_path</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span>
+                <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_or_path</span><span class="p">,</span>
+                <span class="n">weights_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">weights_dir</span><span class="p">,</span>
+                <span class="n">compute_units</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">compute_units</span><span class="p">,</span>
+                <span class="n">function_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">function_name</span><span class="p">,</span>
+                <span class="n">optimization_hints</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">optimization_hints</span><span class="p">,</span>
+                <span class="n">skip_model_load</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">model_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">((</span><span class="n">working_directory</span> <span class="o">/</span> <span class="s2">&quot;model.mlpackage&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">())</span>
+            <span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
+
+        <span class="n">compiled_model_path</span> <span class="o">=</span> <span class="n">working_directory</span> <span class="o">/</span> <span class="s2">&quot;model.mlmodelc&quot;</span>
+        <span class="n">compile_model</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">model_path</span><span class="p">,</span>
+            <span class="n">destination_path</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">compiled_model_path</span><span class="o">.</span><span class="n">resolve</span><span class="p">()),</span>
+        <span class="p">)</span>
+
+        <span class="n">remote_service</span> <span class="o">=</span> <span class="k">await</span> <span class="n">_RemoteMLModelService</span><span class="o">.</span><span class="n">load_on_device</span><span class="p">(</span>
+            <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+            <span class="n">compiled_model_path</span><span class="o">=</span><span class="n">compiled_model_path</span><span class="p">,</span>
+            <span class="n">compute_units</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">compute_units</span><span class="p">,</span>
+            <span class="n">function_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">function_name</span><span class="p">,</span>
+            <span class="n">optimization_hints</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">optimization_hints</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_compiled_model_path</span> <span class="o">=</span> <span class="n">compiled_model_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_remote_service</span> <span class="o">=</span> <span class="n">remote_service</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">make_state_if_needed</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MLState</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="RemoteMLModelAsyncWrapper.predict">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.async_wrapper.RemoteMLModelAsyncWrapper.predict">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MLState</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">]:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">convert_to_np_array</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">input</span>
+            <span class="k">elif</span> <span class="n">_HAS_TORCH</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">Tensor</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">input</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remote_service</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remote_service</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+            <span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">convert_to_np_array</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">inputs</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RemoteMLModelAsyncWrapper.retrieve_compute_plan">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.async_wrapper.RemoteMLModelAsyncWrapper.retrieve_compute_plan">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">retrieve_compute_plan</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MLComputePlan</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">.compute_plan_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">_MLComputePlanRemoteProxy</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">error_message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Error importing _MLComputePlanRemoteProxy: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Remote device functionality for retrieving the compute plan is unavailable. </span><span class="si">{</span><span class="n">error_message</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remote_service</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+
+        <span class="n">compute_plan</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remote_service</span><span class="o">.</span><span class="n">retrieve_compute_plan</span><span class="p">()</span>
+        <span class="n">model_structure</span> <span class="o">=</span> <span class="n">MLModelStructure</span><span class="o">.</span><span class="n">load_from_path</span><span class="p">(</span>
+            <span class="n">compiled_model_path</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_compiled_model_path</span><span class="o">.</span><span class="n">resolve</span><span class="p">()),</span>
+        <span class="p">)</span>
+
+        <span class="n">remote_proxy</span> <span class="o">=</span> <span class="n">_MLComputePlanRemoteProxy</span><span class="p">(</span>
+            <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+            <span class="n">compute_plan</span><span class="o">=</span><span class="n">compute_plan</span><span class="p">,</span>
+            <span class="n">model_structure</span><span class="o">=</span><span class="n">model_structure</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">MLComputePlan</span><span class="p">(</span><span class="n">proxy</span><span class="o">=</span><span class="n">remote_proxy</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RemoteMLModelAsyncWrapper.unload">
+<a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.async_wrapper.RemoteMLModelAsyncWrapper.unload">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remote_service</span><span class="o">.</span><span class="n">unload</span><span class="p">()</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_duration_in_nano_seconds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_remote_service</span><span class="o">.</span><span class="n">load_duration_in_nano_seconds</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remote_service</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">last_predict_duration_in_nano_seconds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_remote_service</span><span class="o">.</span><span class="n">last_predict_duration_in_nano_seconds</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remote_service</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

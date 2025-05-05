@@ -1,0 +1,955 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Debugging And Performance Utilities &#8212; Guide to Core ML Tools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css?v=27a1495e" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=6ab2ec1d"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'source/mlmodel-debugging-perf-utilities';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Nearest Neighbor Classifier" href="updatable-nearest-neighbor-classifier.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Guide to Core ML Tools</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/index.html">coremltools API Reference</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="overview-coremltools.html">What Is Core ML Tools?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installing-coremltools.html">Installing Core ML Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introductory-quickstart.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="new-features.html">New Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faqs.html">Core ML Tools FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools-examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-to-contribute.html">Contributing</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="target-conversion-formats.html">Source and Conversion Formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="load-and-convert-model.html">Load and Convert Model Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-to-ml-program.html">Convert Models to ML Programs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-to-neural-network.html">Convert Models to Neural Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="comparing-ml-programs-and-neural-networks.html">Comparing ML Programs and Neural Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="typed-execution.html">Typed Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="typed-execution-example.html">Typed Execution Workflow Example</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-tensorflow.html">Converting from TensorFlow</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="tensorflow-1-workflow.html">TensorFlow 1 Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-image-classifier.html">Converting a TensorFlow 1 Image Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-deepspeech-model.html">Converting a TensorFlow 1 DeepSpeech Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tensorflow-2.html">TensorFlow 2 Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-tensorflow-2-bert-transformer-models.html">Converting TensorFlow 2 BERT Transformer Models</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="convert-pytorch-workflow.html">PyTorch Conversion Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-tracing.html">Model Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-exporting.html">Model Exporting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html">Converting a torchvision Model from PyTorch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-pytorch-segmentation-model.html">Converting a PyTorch Segmentation Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-openelm.html">Converting an Open Efficient Language Model</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="new-conversion-options.html">New Conversion Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-input-and-output-types.html">Model Input and Output Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="image-inputs.html">Image Input and Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stateful-models.html">Stateful Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="classifiers.html">Classifiers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flexible-inputs.html">Flexible Input Shapes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="composite-operators.html">Composite Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom-operators.html">Custom Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph-passes-intro.html">Graph Passes</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="model-intermediate-language.html">Model Intermediate Language</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Optimization</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="opt-overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="opt-whats-new.html">What’s New</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-overview-examples.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="opt-resnet.html">Optimizing ResNet50 Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-opt1_3.html">Optimizing OPT Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-stable-diffusion.html">Optimizing StableDiffusion Model</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="opt-workflow.html">Optimization Workflow</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-palettization.html">Palettization</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="opt-palettization-overview.html">Palettization Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-palettization-perf.html">Performance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-palettization-algos.html">Palettization Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-palettization-api.html">API Overview</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-quantization.html">Linear Quantization</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="opt-quantization-overview.html">Quantization Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-quantization-perf.html">Performance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-quantization-algos.html">Quantization Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-quantization-api.html">API Overview</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-pruning.html">Pruning</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="opt-pruning-overview.html">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-pruning-perf.html">Performance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-pruning-algos.html">Pruning Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-pruning-api.html">API Overview</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="opt-joint-compression.html">Combining Compression Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="opt-conversion.html">Conversion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quantization-neural-network.html">Compressing Neural Network Weights</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Other Converters</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="libsvm-conversion.html">LibSVM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sci-kit-learn-conversion.html">Scikit-learn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="xgboost-conversion.html">XGBoost</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">MLModel</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="mlmodel.html">MLModel Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multifunction-models.html">Multifunction Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="xcode-model-preview-types.html">Xcode Model Preview Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mlmodel-utilities.html">MLModel Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model-prediction.html">Model Prediction</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="updatable-model-examples.html">Updatable Models</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="updatable-neural-network-classifier-on-mnist-dataset.html">Neural Network Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="updatable-tiny-drawing-classifier-pipeline-model.html">Pipeline Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="updatable-nearest-neighbor-classifier.html">Nearest Neighbor Classifier</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Debugging And Performance Utilities</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/apple/coremltools" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/source/mlmodel-debugging-perf-utilities.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Debugging And Performance Utilities</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mlmodelinspector">MLModelInspector</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mlmodelvalidator">MLModelValidator</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mlmodelcomparator">MLModelComparator</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#torchscriptmlmodelcomparator">TorchScriptMLModelComparator</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#torchexportmlmodelcomparator">TorchExportMLModelComparator</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mlmodelbenchmarker">MLModelBenchmarker</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#torchmlmodelbenchmarker">TorchMLModelBenchmarker</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#remote-device">Remote-Device</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="debugging-and-performance-utilities">
+<span id="index-0"></span><h1>Debugging And Performance Utilities<a class="headerlink" href="#debugging-and-performance-utilities" title="Link to this heading">#</a></h1>
+<p>These utilities help identify and resolve both numerical and performance issues in exported Core ML models. When a model produces unexpected outputs-such as NaNs, infinities, or results that differ from the source model or exhibits performance bottlenecks, these tools assist in isolating the problematic operations. Once identified, targeted fixes can be applied to address and correct these issues, improving both the accuracy and efficiency of the model.</p>
+<p>These APIs are currently located under the experimental namespace, which means they may change or become incompatible with previous versions in future releases. They will remain in this namespace until they have been refined and are ready to be promoted to stable APIs.</p>
+<section id="mlmodelinspector">
+<h2>MLModelInspector<a class="headerlink" href="#mlmodelinspector" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">MLModelInspector</span></code> is a utility class that retrieves intermediate outputs from a Core ML model by modifying the model to expose specified internal operations as the model outputs. <code class="docutils literal notranslate"><span class="pre">MLModelInspector</span></code> can be used to debug a model and is utilized by both <code class="docutils literal notranslate"><span class="pre">MLModelComparator</span></code> and <code class="docutils literal notranslate"><span class="pre">MLModelValidator</span></code>.</p>
+<p>For example, to retrieve output of a <code class="docutils literal notranslate"><span class="pre">convolution</span></code> operation identified by its output name <code class="docutils literal notranslate"><span class="pre">var_1</span></code>, you can use the following:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.ml_program.experimental.debugging_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModelInspector</span>
+
+<span class="c1"># Initialize the MLModelInspector.</span>
+<span class="n">inspector</span> <span class="o">=</span> <span class="n">MLModelInspector</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> 
+    <span class="n">compute_units</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="c1"># Use the inspector to retrieve intermediate outputs from the model.</span>
+<span class="c1"># `inputs` specifies the input data for the model, and `output_names` lists the internal operations</span>
+<span class="c1"># (e.g., variables) whose outputs you want to inspect.</span>
+<span class="n">outputs</span> <span class="o">=</span> <span class="k">await</span> <span class="n">inspector</span><span class="o">.</span><span class="n">retrieve_outputs</span><span class="p">(</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])},</span>  <span class="c1"># Input data for the model</span>
+    <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;var_1&quot;</span><span class="p">],</span>                 <span class="c1"># Name of the intermediate variable to retrieve</span>
+<span class="p">)</span>
+<span class="c1"># Print the retrieved output for the specified internal operation (&quot;var_1&quot;).</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;var_1&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<section id="mlmodelvalidator">
+<h2>MLModelValidator<a class="headerlink" href="#mlmodelvalidator" title="Link to this heading">#</a></h2>
+<p>If an exported Core ML model produces unexpected outputs, such as infinities or NaNs, the <code class="docutils literal notranslate"><span class="pre">MLModelValidator</span></code> can assist in identifying and isolating the problematic operations within the ML program.</p>
+<p>For example, if an exported Core ML model produces NaN values as output, the <code class="docutils literal notranslate"><span class="pre">find_failing_ops_with_nan_output</span></code> method can be used to identify the specific operations responsible for generating NaNs in the model’s output.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.ml_program.experimental.debugging_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModelValidator</span>
+
+<span class="c1"># Initialize MLModelValidator</span>
+<span class="n">validator</span> <span class="o">=</span> <span class="n">MLModelValidator</span><span class="p">(</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="p">,</span>
+    <span class="n">compute_unit</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="c1"># Find the ops that are responsible for NaN output</span>
+<span class="n">failing_ops</span> <span class="o">=</span> <span class="k">await</span> <span class="n">validator</span><span class="o">.</span><span class="n">find_failing_ops_with_nan_output</span><span class="p">(</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])}</span> <span class="c1"># Inputs that produce NaN output</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">failing_ops</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If the exported Core ML model produces infinity values as outputs, the <code class="docutils literal notranslate"><span class="pre">find_failing_ops_with_infinite_output</span></code> method can be used to identify the specific operations responsible for generating infinities in the model’s output.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.ml_program.experimental.debugging_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModelValidator</span>
+
+<span class="c1"># Initialize MLModelValidator</span>
+<span class="n">validator</span> <span class="o">=</span> <span class="n">MLModelValidator</span><span class="p">(</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="p">,</span>
+    <span class="n">compute_unit</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="c1"># Find the ops that are responsible for NaN output</span>
+<span class="n">failing_ops</span> <span class="o">=</span> <span class="k">await</span> <span class="n">validator</span><span class="o">.</span><span class="n">find_failing_ops_with_infinite_output</span><span class="p">(</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])}</span> <span class="c1"># Inputs that produce infinities in the output</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">failing_ops</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">MLModelValidator</span></code> also supports passing a custom validation function, enabling more tailored debugging for specific use cases.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.ml_program.experimental.debugging_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModelValidator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">proto</span>
+
+<span class="c1"># Initialize MLModelValidator</span>
+<span class="n">validator</span> <span class="o">=</span> <span class="n">MLModelValidator</span><span class="p">(</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="p">,</span>
+    <span class="n">compute_unit</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_output</span><span class="p">(</span><span class="n">op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">):</span>
+    <span class="c1"># Check if the output is zero</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">value</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># Find the ops that are responsible for unexpected output</span>
+<span class="n">failing_ops</span> <span class="o">=</span> <span class="k">await</span> <span class="n">validator</span><span class="o">.</span><span class="n">find_failing_ops</span><span class="p">(</span>
+    <span class="n">validate_output</span><span class="o">=</span><span class="n">validatate_output</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])}</span> <span class="c1"># Inputs that produce infinities in the output</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">failing_ops</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>After identifying the problematic operations, the issue may stem from either division by zero or numerical overflow. For division by zero, the source model can be updated to address the problem directly. In cases of overflow, employing higher precision for the affected operations is often sufficient to resolve the issue.</p>
+<p>Note: The process of identifying failing operations may be time-consuming, as the duration depends on the model’s complexity.</p>
+</section>
+<section id="mlmodelcomparator">
+<h2>MLModelComparator<a class="headerlink" href="#mlmodelcomparator" title="Link to this heading">#</a></h2>
+<p>MLModelComparator is a utility designed to compare reference and target models derived from the same source model. It is particularly useful in scenarios where an exported Core ML model produces unexpected outputs on specific compute units or when using a particular precision (such as float16). By comparing the outputs of a reference model and a target model, MLModelComparator helps identify the operations responsible for these discrepancies.</p>
+<p>For example, if an exported Core ML model produces correct outputs when using <code class="docutils literal notranslate"><span class="pre">float32</span></code> precision but generates unexpected outputs with <code class="docutils literal notranslate"><span class="pre">float16</span></code> precision, you can use <code class="docutils literal notranslate"><span class="pre">MLModelComparator</span></code> to identify the operations responsible for the discrepancies.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.ml_program.experimental.debugging_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModelComparator</span>
+
+<span class="c1"># Initialize MLModelComparator to compare reference and target models</span>
+<span class="n">comparator</span> <span class="o">=</span> <span class="n">MLModelComparator</span><span class="p">(</span>
+    <span class="n">reference_model</span><span class="o">=</span><span class="n">reference_model</span><span class="p">,</span>  <span class="c1"># Model with expected behavior</span>
+    <span class="n">target_model</span><span class="o">=</span><span class="n">target_model</span><span class="p">,</span>        <span class="c1"># Model to be debugged</span>
+<span class="p">)</span>
+
+<span class="c1"># Define a custom comparison function to evaluate output discrepancies</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compare_outputs</span><span class="p">(</span><span class="n">operation</span><span class="p">,</span> <span class="n">reference_output</span><span class="p">,</span> <span class="n">target_output</span><span class="p">):</span>
+    <span class="c1"># Compare outputs with a tolerance of 1e-1</span>
+    <span class="c1"># Return True if outputs are close, False otherwise</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">reference_output</span><span class="p">,</span> <span class="n">target_output</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-1</span><span class="p">)</span>
+
+<span class="c1"># Identify operations causing discrepancies between models</span>
+<span class="n">failing_ops</span> <span class="o">=</span> <span class="k">await</span> <span class="n">comparator</span><span class="o">.</span><span class="n">find_failing_ops</span><span class="p">(</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])},</span>  <span class="c1"># Sample input for comparison</span>
+    <span class="n">compare_outputs</span><span class="o">=</span><span class="n">compare_outputs</span>         <span class="c1"># Custom comparison function</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">failing_ops</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>After identifying the problematic operations, the issue might be related to the precision of those operations. In such cases, you can resolve the problem by using higher precision (e.g., float32) for the operations when exporting the model.</p>
+<p>Note: The process of identifying failing operations may be time-consuming, as the duration depends on the model’s complexity.</p>
+</section>
+<section id="torchscriptmlmodelcomparator">
+<h2>TorchScriptMLModelComparator<a class="headerlink" href="#torchscriptmlmodelcomparator" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">TorchScriptMLModelComparator</span></code> is a utility designed to compare the outputs of a torch module and its corresponding exported Core ML model.  It utilizes <code class="docutils literal notranslate"><span class="pre">torch.jit.trace</span></code> to convert the PyTorch model into a TorchScript representation, which is then converted into a Core ML model. This utility is useful for debugging cases where inconsistent outputs occur during the conversion process from PyTorch to Core ML using TorchScript. It helps to identify specific PyTorch modules that produce inconsistent results between the original torch model and the converted Core ML model.</p>
+<p>Before employing this utility, first verify if the <code class="docutils literal notranslate"><span class="pre">float32</span></code> precision model produces consistent results. If it does, it’s preferable to use <code class="docutils literal notranslate"><span class="pre">MLModelComparator</span></code> with the <code class="docutils literal notranslate"><span class="pre">float32</span></code> model as the reference and the problematic model as the target. <code class="docutils literal notranslate"><span class="pre">TorchScriptMLModelComparator</span></code> operates at the module level, which may require additional steps to pinpoint specific problematic operations.</p>
+<p>For example, to find the modules that produce inconsistent results, you can use the following:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.ml_program.experimental.torch.debugging_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">TorchScriptMLModelComparator</span>
+
+<span class="c1"># Define a simple PyTorch model</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
+
+<span class="c1"># Create an instance of the model</span>
+<span class="n">torch_model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">()</span>
+
+<span class="c1"># Prepare example inputs for the model</span>
+<span class="n">input1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+<span class="n">input2</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+<span class="n">inputs</span> <span class="o">=</span> <span class="p">(</span><span class="n">input1</span><span class="p">,</span> <span class="n">input2</span><span class="p">)</span>
+
+<span class="c1"># Initialize the TorchScriptMLModelComparator</span>
+<span class="n">comparator</span> <span class="o">=</span> <span class="n">TorchScriptMLModelComparator</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">torch_model</span><span class="p">,</span>
+    <span class="n">example_inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>  <span class="c1"># Inputs used to trace the PyTorch model</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span>
+        <span class="c1"># Define input tensor specifications for Core ML</span>
+        <span class="n">coremltools</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+        <span class="n">coremltools</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">inputs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+    <span class="p">],</span>
+    <span class="n">compute_unit</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Define a custom comparison function</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compare_outputs</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">reference_output</span><span class="p">,</span> <span class="n">target_output</span><span class="p">):</span>
+    <span class="c1"># Compare outputs with a tolerance of 0.1</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">reference_output</span><span class="p">,</span> <span class="n">target_output</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-1</span><span class="p">)</span>
+
+<span class="c1"># Use the comparator to find failing modules</span>
+<span class="n">modules</span> <span class="o">=</span> <span class="k">await</span> <span class="n">comparator</span><span class="o">.</span><span class="n">find_failing_modules</span><span class="p">(</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
+    <span class="n">compare_outputs</span><span class="o">=</span><span class="n">compare_outputs</span>
+<span class="p">)</span>
+
+<span class="c1"># Print the modules that failed the comparison</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">modules</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="torchexportmlmodelcomparator">
+<h2>TorchExportMLModelComparator<a class="headerlink" href="#torchexportmlmodelcomparator" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">TorchExportMLModelComparator</span></code> is a utility designed to compare the outputs of a torch module and its corresponding exported Core ML model.  It utilizes <code class="docutils literal notranslate"><span class="pre">torch.export.export</span></code> to convert the PyTorch model into an <code class="docutils literal notranslate"><span class="pre">ExportedProgram</span></code> , which is then converted into a Core ML model. This utility is useful for debugging cases where inconsistent outputs occur during the conversion process from PyTorch to Core ML using <code class="docutils literal notranslate"><span class="pre">torch.export.export</span></code>. It helps to identify specific PyTorch operations that produce inconsistent results between the original torch model and the converted Core ML model.</p>
+<p>Before employing this utility, first verify if the <code class="docutils literal notranslate"><span class="pre">float32</span></code> precision model produces consistent results. If it does, it’s preferable to use <code class="docutils literal notranslate"><span class="pre">MLModelComparator</span></code> with the <code class="docutils literal notranslate"><span class="pre">float32</span></code> model as the reference and the problematic model as the target.</p>
+<p>For example, to find the modules that produce inconsistent results, you can use the following:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.ml_program.experimental.torch.debugging_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">TorchExportMLModelComparator</span>
+
+<span class="c1"># Define a simple PyTorch model</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
+
+<span class="c1"># Create an instance of the model</span>
+<span class="n">torch_model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">()</span>
+
+<span class="c1"># Prepare example inputs for the model</span>
+<span class="n">input1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+<span class="n">input2</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+<span class="n">inputs</span> <span class="o">=</span> <span class="p">(</span><span class="n">input1</span><span class="p">,</span> <span class="n">input2</span><span class="p">)</span>
+<span class="n">exported_program</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">export</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">torch_model</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
+
+<span class="c1"># Initialize the TorchExportMLModelComparator</span>
+<span class="n">comparator</span> <span class="o">=</span> <span class="n">TorchExportMLModelComparator</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">exported_program</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span>
+        <span class="c1"># Define input tensor specifications for Core ML</span>
+        <span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+        <span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">inputs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+    <span class="p">],</span>
+    <span class="n">compute_unit</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Define a custom comparison function</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compare_outputs</span><span class="p">(</span><span class="n">operation</span><span class="p">,</span> <span class="n">reference_output</span><span class="p">,</span> <span class="n">target_output</span><span class="p">):</span>
+    <span class="c1"># Compare outputs with a tolerance of 0.1</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">reference_output</span><span class="p">,</span> <span class="n">target_output</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-1</span><span class="p">)</span>
+
+<span class="c1"># Use the comparator to find failing operations</span>
+<span class="n">operations</span> <span class="o">=</span> <span class="k">await</span> <span class="n">comparator</span><span class="o">.</span><span class="n">find_failing_ops</span><span class="p">(</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
+    <span class="n">compare_outputs</span><span class="o">=</span><span class="n">compare_outputs</span>
+<span class="p">)</span>
+
+<span class="c1"># Print the ops that failed the comparison</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">operations</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="mlmodelbenchmarker">
+<h2>MLModelBenchmarker<a class="headerlink" href="#mlmodelbenchmarker" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">MLModelBenchmarker</span></code> is a utility for analyzing the performance of Core ML models. It measures key metrics such as model loading time, prediction latency, and the execution times of individual operations.</p>
+<p>For example, to benchmark a model’s load and prediction performance, you can use the following:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.ml_program.experimental.perf_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModelBenchmarker</span>
+
+<span class="c1"># Initialize the MLModelBenchmarker with the Core ML model</span>
+<span class="n">benchmarker</span> <span class="o">=</span> <span class="n">MLModelBenchmarker</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+<span class="c1"># Benchmark the model&#39;s loading time over 5 iterations</span>
+<span class="c1"># This measures how long it takes to load the model.</span>
+<span class="n">load_measurement</span> <span class="o">=</span> <span class="k">await</span> <span class="n">benchmarker</span><span class="o">.</span><span class="n">benchmark_load</span><span class="p">(</span><span class="n">iterations</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="c1"># Print the median loading time from the benchmark results</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">load_measurement</span><span class="o">.</span><span class="n">statistics</span><span class="o">.</span><span class="n">median</span><span class="p">)</span>
+
+<span class="c1"># Benchmark the model&#39;s prediction time over 5 iterations with a warmup phase</span>
+<span class="c1"># The warmup ensures that any initialization overhead is excluded from the measurements.</span>
+<span class="n">predict_measurement</span> <span class="o">=</span> <span class="k">await</span> <span class="n">benchmarker</span><span class="o">.</span><span class="n">benchmark_predict</span><span class="p">(</span><span class="n">iterations</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">warmup</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># Print the median prediction time from the benchmark results</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">predict_measurement</span><span class="o">.</span><span class="n">statistics</span><span class="o">.</span><span class="n">median</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To evaluate the execution performance of operations, you can use the following:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.ml_program.experimental.perf_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModelBenchmarker</span>
+
+<span class="c1"># Initialize the MLModelBenchmarker with the Core ML model</span>
+<span class="n">benchmarker</span> <span class="o">=</span> <span class="n">MLModelBenchmarker</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+<span class="c1"># Benchmark operation execution times over 5 iterations with a warmup phase</span>
+<span class="c1"># The warmup ensures that any initialization overhead is excluded from the measurements.</span>
+<span class="n">execution_time_measurements</span> <span class="o">=</span> <span class="n">benchmarker</span><span class="o">.</span><span class="n">benchmark_operation_execution</span><span class="p">(</span><span class="n">iterations</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">warmup</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># Print the median execution time of the most time-consuming operation</span>
+<span class="c1"># The operations are sorted in descending order of execution time.</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Median execution time of the slowest operation: </span><span class="si">{</span><span class="n">execution_time_measurements</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">statistics</span><span class="o">.</span><span class="n">median</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note: <code class="docutils literal notranslate"><span class="pre">MLModelBenchmarker</span></code> utilizes the model’s compute plan to estimate the execution time of individual operations within the model.</p>
+</section>
+<section id="torchmlmodelbenchmarker">
+<h2>TorchMLModelBenchmarker<a class="headerlink" href="#torchmlmodelbenchmarker" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">TorchMLModelBenchmarker</span></code> is a specialized benchmarking tool designed for PyTorch models. It extends the capabilities of <code class="docutils literal notranslate"><span class="pre">MLModelBenchmarker</span></code> to offer tailored performance analysis for PyTorch models. While retaining all the functionality of its parent class, <code class="docutils literal notranslate"><span class="pre">TorchMLModelBenchmarker</span></code> introduces additional methods to estimate execution times for individual torch nodes and modules.</p>
+<p>For example, to benchmark the execution time of individual nodes in the PyTorch model, you can use the following:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.ml_program.experimental.torch.perf_utils</span> <span class="k">as</span> <span class="n">TorchMLModelBenchmarker</span>
+
+<span class="c1"># Define a simple PyTorch model</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="c1"># Perform addition and subtraction on inputs x and y</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span>
+<span class="c1"># Create an instance of the PyTorch model</span>
+<span class="n">torch_model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">()</span>
+<span class="c1"># Prepare example inputs for the model</span>
+<span class="n">input1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>  <span class="c1"># Tensor filled with ones</span>
+<span class="n">input2</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>  <span class="c1"># Tensor filled with twos</span>
+
+<span class="c1"># Export the PyTorch model using torch.export or torch.jit.trace</span>
+<span class="n">traced_model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">export</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">torch_model</span><span class="p">,</span> <span class="p">(</span><span class="n">input1</span><span class="p">,</span> <span class="n">input2</span><span class="p">))</span>  <span class="c1"># For PyTorch &gt;= 2.0</span>
+<span class="c1"># traced_model = torch.jit.trace(torch_model, (input1, input2))   # For older versions of PyTorch</span>
+
+<span class="c1"># Initialize the TorchMLModelBenchmarker for benchmarking the Torch model</span>
+<span class="n">benchmarker</span> <span class="o">=</span> <span class="n">TorchMLModelBenchmarker</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">traced_model</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">input1</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">),</span>  <span class="c1"># Define input tensor x</span>
+        <span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">input2</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">),</span>  <span class="c1"># Define input tensor y</span>
+    <span class="p">],</span>
+    <span class="n">minimum_deployment_target</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS16</span><span class="p">,</span>  <span class="c1"># Specify minimum deployment target (e.g., iOS16)</span>
+    <span class="n">compute_units</span><span class="o">=</span><span class="n">coremltools</span><span class="o">.</span><span class="n">ComputeUnit</span><span class="o">.</span><span class="n">ALL</span><span class="p">,</span>  <span class="c1"># Use all available compute units (CPU/GPU/Neural Engine)</span>
+<span class="p">)</span>
+
+<span class="c1"># Benchmark node execution times in the model</span>
+<span class="c1"># Perform 5 iterations with a warmup phase for stable measurements</span>
+<span class="n">node_execution_times</span> <span class="o">=</span> <span class="k">await</span> <span class="n">benchmarker</span><span class="o">.</span><span class="n">benchmark_node_execution</span><span class="p">(</span><span class="n">iterations</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">warmup</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># Print the median execution time of the slowest PyTorch operation</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Median execution time of the slowest operation: </span><span class="si">{</span><span class="n">node_execution_times</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">measurement</span><span class="o">.</span><span class="n">statistics</span><span class="o">.</span><span class="n">median</span><span class="si">}</span><span class="s2"> ms&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="remote-device">
+<h2>Remote-Device<a class="headerlink" href="#remote-device" title="Link to this heading">#</a></h2>
+<p>Remote-Device is a utility that allows you to run and analyze Core ML models on connected devices, offering tools for debugging and benchmarking issues specific to those devices. It utilizes <code class="docutils literal notranslate"><span class="pre">devicectl</span></code> to establish communication with the connected device, facilitating the deployment and execution of Core ML models. To leverage this utility, you must have Xcode and Xcode Command Line installed on your local system and have a development device.</p>
+<p>Make sure that the development device is connected and is unlocked. Running the following command will output the list of connected iPhone devices.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.ml_program.experimental.remote_device</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">AppSigningCredentials</span><span class="p">,</span> 
+    <span class="n">Device</span><span class="p">,</span>
+    <span class="n">DeviceType</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Get a list of connected iPhone devices</span>
+<span class="n">connected_devices</span> <span class="o">=</span> <span class="n">Device</span><span class="o">.</span><span class="n">get_connected_devices</span><span class="p">(</span><span class="n">device_type</span><span class="o">=</span><span class="n">DeviceType</span><span class="o">.</span><span class="n">IPHONE</span><span class="p">)</span>
+<span class="c1"># This will display information about each connected iPhone, which may include device name, os version, and other relevant details</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">connected_devices</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The connected device should appear in the displayed information. The next step involves installing an application that coremltools uses to load and execute Core ML models on the device.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">connected_device</span> <span class="o">=</span> <span class="n">connected_devices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="c1"># Define the app signing credentials</span>
+<span class="n">credentials</span> <span class="o">=</span> <span class="n">AppSigningCredentials</span><span class="p">(</span>
+    <span class="n">development_team</span><span class="o">=</span><span class="s2">&quot;&lt;TEAM-ID&gt;&quot;</span><span class="p">,</span>  <span class="c1"># Your Apple Developer Team ID</span>
+    <span class="n">bundle_identifier</span><span class="o">=</span><span class="s2">&quot;com.example.modelrunnerd&quot;</span><span class="p">,</span>  <span class="c1"># Unique identifier for your app</span>
+    <span class="n">provisioning_profile_uuid</span><span class="o">=</span><span class="kc">None</span>  <span class="c1"># UUID of provisioning profile (if applicable)</span>
+<span class="p">)</span>
+
+<span class="c1"># Prepare the device for model debugging</span>
+<span class="c1"># This installs the application on the device</span>
+<span class="n">prepared_device</span> <span class="o">=</span> <span class="k">await</span> <span class="n">connected_device</span><span class="o">.</span><span class="n">prepare_for_model_debugging</span><span class="p">(</span><span class="n">credentials</span><span class="o">=</span><span class="n">credentials</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this example, we use the <code class="docutils literal notranslate"><span class="pre">Apple</span> <span class="pre">Developer</span> <span class="pre">Team</span> <span class="pre">ID</span></code>. <code class="docutils literal notranslate"><span class="pre">Xcode</span></code> will automatically create and manage a team provisioning profile associated with the specified Team ID. However, if you have a specific provisioning profile UUID, you can use it instead. Ensure that the <code class="docutils literal notranslate"><span class="pre">bundle_identifier</span></code> matches the one defined in the provisioning profile to avoid any conflicts.</p>
+<p><code class="docutils literal notranslate"><span class="pre">prepare_for_model_debugging</span></code> builds and installs the <code class="docutils literal notranslate"><span class="pre">ModelRunner</span></code> application on the device. The initial launch may take some time, but subsequent launches should be significantly faster. Once <code class="docutils literal notranslate"><span class="pre">prepare_for_model_debugging</span></code> completes, the <code class="docutils literal notranslate"><span class="pre">ModelRunner</span></code> application will be launched on the connected device.</p>
+<p>You can now execute the model on the connected device.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.ml_program.experimental.async_wrapper</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModelAsyncWrapper</span>
+
+<span class="c1"># Define a simple PyTorch model</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="c1"># Perform element-wise addition and subtraction on inputs x and y</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span>
+ 
+<span class="c1"># Create example input tensors for the model</span>
+<span class="n">input1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>  <span class="c1"># Random tensor with shape (1, 100)</span>
+<span class="n">input2</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>  <span class="c1"># Random tensor with shape (1, 100)</span>
+<span class="c1"># Instantiate the PyTorch model and set it to evaluation mode</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="c1"># Trace the PyTorch model to create a TorchScript representation</span>
+<span class="n">traced_model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="p">(</span><span class="n">input1</span><span class="p">,</span> <span class="n">input2</span><span class="p">))</span>
+<span class="c1"># Convert the TorchScript model to a Core ML model</span>
+<span class="n">ml_model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
+    <span class="n">traced_model</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">input1</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">),</span>  <span class="c1"># Define input tensor x</span>
+        <span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">input2</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">),</span>  <span class="c1"># Define input tensor y</span>
+    <span class="p">],</span>
+    <span class="n">minimum_deployment_target</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS17</span><span class="p">,</span> <span class="c1"># Specify the minimum deployment target (iOS 17)</span>
+    <span class="n">compute_units</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">ComputeUnit</span><span class="o">.</span><span class="n">ALL</span><span class="p">,</span>          <span class="c1"># Use all available compute units (CPU/GPU/Neural Engine)</span>
+<span class="p">)</span>
+
+<span class="c1"># Wrap the Core ML model for remote execution on a connected device</span>
+<span class="n">remote_model</span> <span class="o">=</span> <span class="n">MLModelAsyncWrapper</span><span class="o">.</span><span class="n">from_spec_or_path</span><span class="p">(</span>
+    <span class="n">spec_or_path</span><span class="o">=</span><span class="n">ml_model</span><span class="o">.</span><span class="n">get_spec</span><span class="p">(),</span>  <span class="c1"># Provide the Core ML model specification</span>
+    <span class="n">weights_dir</span><span class="o">=</span><span class="n">ml_model</span><span class="o">.</span><span class="n">weights_dir</span><span class="p">,</span>  <span class="c1"># Specify the directory containing model weights</span>
+    <span class="n">device</span><span class="o">=</span><span class="n">prepared_device</span>             <span class="c1"># Target device for remote execution</span>
+<span class="p">)</span>
+
+<span class="c1"># Prepare example inputs for prediction</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">)</span>  <span class="c1"># Input tensor x filled with ones</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="mf">2.0</span><span class="p">)</span>  <span class="c1"># Input tensor y filled with twos</span>
+<span class="c1"># Perform prediction on the remote device and print the results</span>
+<span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">remote_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">y</span><span class="p">}))</span>
+</pre></div>
+</div>
+<p>The remote device can also be utilized with other tools, such as <code class="docutils literal notranslate"><span class="pre">MLModelBenchmarker</span></code>, <code class="docutils literal notranslate"><span class="pre">TorchMLModelBenchmarker</span></code>, <code class="docutils literal notranslate"><span class="pre">MLModelInspector</span></code>, <code class="docutils literal notranslate"><span class="pre">MLModelValidator</span></code>, and <code class="docutils literal notranslate"><span class="pre">MLModelComparator</span></code>, to perform benchmarking and debugging on the remote device.</p>
+<p>For instance, <code class="docutils literal notranslate"><span class="pre">MLModelBenchmarker</span></code> can be used with a connected device to benchmark the model’s performance directly on the device.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.ml_program.experimental.perf_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModelBenchmarker</span>
+
+<span class="c1"># Initialize the MLModelBenchmarker with the Core ML model and the remote device.</span>
+<span class="n">benchmarker</span> <span class="o">=</span> <span class="n">MLModelBenchmarker</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">prepared_device</span><span class="p">)</span>
+<span class="c1"># Benchmark operation execution times over 5 iterations with a warmup phase</span>
+<span class="c1"># The warmup ensures that any initialization overhead is excluded from the measurements.</span>
+<span class="n">execution_time_measurements</span> <span class="o">=</span> <span class="n">benchmarker</span><span class="o">.</span><span class="n">benchmark_operation_execution</span><span class="p">(</span><span class="n">iterations</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">warmup</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># Print the median execution time of the most time-consuming operation</span>
+<span class="c1"># The operations are sorted in descending order of execution time.</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Median execution time of the slowest operation: </span><span class="si">{</span><span class="n">execution_time_measurements</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">statistics</span><span class="o">.</span><span class="n">median</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="updatable-nearest-neighbor-classifier.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Nearest Neighbor Classifier</p>
+      </div>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mlmodelinspector">MLModelInspector</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mlmodelvalidator">MLModelValidator</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mlmodelcomparator">MLModelComparator</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#torchscriptmlmodelcomparator">TorchScriptMLModelComparator</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#torchexportmlmodelcomparator">TorchExportMLModelComparator</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mlmodelbenchmarker">MLModelBenchmarker</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#torchmlmodelbenchmarker">TorchMLModelBenchmarker</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#remote-device">Remote-Device</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Apple
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, Apple Inc.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

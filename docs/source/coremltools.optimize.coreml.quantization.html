@@ -1,0 +1,416 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quantization &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Utilities" href="coremltools.optimize.coreml.utilities.html" />
+    <link rel="prev" title="Pruning" href="coremltools.optimize.coreml.pruning.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="coremltools.optimize.html">Optimizers</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="coremltools.optimize.html#pytorch">PyTorch</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="coremltools.optimize.html#core-ml">Core ML</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.coreml.palettization.html">Palettization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.coreml.pruning.html">Pruning</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Quantization</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.optimize.coreml.linear_quantize_weights"><code class="docutils literal notranslate"><span class="pre">linear_quantize_weights()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.optimize.coreml.experimental.linear_quantize_activations"><code class="docutils literal notranslate"><span class="pre">linear_quantize_activations()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.optimize.coreml.OpLinearQuantizerConfig"><code class="docutils literal notranslate"><span class="pre">OpLinearQuantizerConfig</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.coreml.utilities.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="coremltools.optimize.html">Optimizers</a></li>
+      <li class="breadcrumb-item active">Quantization</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/source/coremltools.optimize.coreml.quantization.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-coremltools.optimize.coreml">
+<span id="quantization"></span><h1>Quantization<a class="headerlink" href="#module-coremltools.optimize.coreml" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="coremltools.optimize.coreml.linear_quantize_weights">
+<span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">linear_quantize_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_post_training_quantization.html#linear_quantize_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.linear_quantize_weights" title="Link to this definition"></a></dt>
+<dd><p>Utility function to convert a float precision MLModel of type <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>, which uses
+float-precision weights, into a compressed MLModel that uses n-bit weights (currently only
+support n=4 and n=8). This is achieved by converting the float weight values that are stored in
+the <code class="docutils literal notranslate"><span class="pre">const</span></code> op into the <code class="docutils literal notranslate"><span class="pre">constexpr_affine_dequantize</span></code> or <code class="docutils literal notranslate"><span class="pre">constexpr_blockwise_shift_scale</span></code>
+op (based on model’s minimum deployment target).</p>
+<p>This function uses linear quantization on the float weights, providing up to 4x (for 4-bit)
+savings in storage compared to float 16, or up to 4x savings compared to float 32.
+All computation at runtime uses float precision; the precision of the intermediate
+tensors and the compute precision of the ops are not altered.</p>
+<p>For each weight, this utility function converts the weight into the int4/8 or uint4/8 type using
+either <cite>linear interpolation</cite> (<code class="docutils literal notranslate"><span class="pre">&quot;linear&quot;</span></code> mode) or <cite>linear symmetric interpolation</cite>
+(<code class="docutils literal notranslate"><span class="pre">&quot;linear_symmetric&quot;</span></code> mode, the default).</p>
+<p><strong>Linear interpolation</strong></p>
+<p>The following description uses 8-bit quantization to illustrate, and 4-bit is similar to it.</p>
+<p>Linear interpolation (<code class="docutils literal notranslate"><span class="pre">&quot;linear&quot;</span></code> mode) maps the min/max of the float
+range to the 8-bit integer range <code class="docutils literal notranslate"><span class="pre">[low,</span> <span class="pre">high]</span></code> using a zero point (also called quantization bias, or
+offset) and a scale factor. For the int8 quantization, <code class="docutils literal notranslate"><span class="pre">[low,</span> <span class="pre">high]</span> <span class="pre">=</span> <span class="pre">[-128,</span> <span class="pre">127]</span></code>, while uint8
+quantization uses range <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">255]</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;linear&quot;</span></code> mode uses the quantization formula:</p>
+<div class="math notranslate nohighlight">
+\[w_r = s * (w_q - z)\]</div>
+<p>Where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(w_r\)</span> and  <span class="math notranslate nohighlight">\(s\)</span> are of type float.</p></li>
+<li><p><span class="math notranslate nohighlight">\(w_r`\)</span> represents the float precision weight.</p></li>
+<li><p><span class="math notranslate nohighlight">\(s\)</span> represents the scale.</p></li>
+<li><p><span class="math notranslate nohighlight">\(w_q\)</span> and <span class="math notranslate nohighlight">\(z\)</span> are of type 8-bit integer.</p></li>
+<li><p><span class="math notranslate nohighlight">\(w_q\)</span> represents quantized weight.</p></li>
+<li><p><span class="math notranslate nohighlight">\(z\)</span> represents the zero point.</p></li>
+</ul>
+</div></blockquote>
+<p>Quantized weights are computed as follows:</p>
+<div class="math notranslate nohighlight">
+\[w_q = cast\_to\_8\_bit\_integer(w_r / s + cast\_to\_float(z))\]</div>
+<p>Note: <span class="math notranslate nohighlight">\(cast\_to\_8\_bit\_integer\)</span> is the process of clipping the input to range <code class="docutils literal notranslate"><span class="pre">[low,</span> <span class="pre">high]</span></code> followed by rounding and casting to 8-bit integer.</p>
+<p>In <code class="docutils literal notranslate"><span class="pre">&quot;linear&quot;</span></code> mode, <code class="docutils literal notranslate"><span class="pre">s,</span> <span class="pre">z</span></code> are computed by mapping the original float range
+<code class="docutils literal notranslate"><span class="pre">[A,</span> <span class="pre">B]</span></code> into the 8-bit integer range <code class="docutils literal notranslate"><span class="pre">[-128,</span> <span class="pre">127]</span></code> or <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">255]</span></code>. That is, you are solving the
+following linear equations:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">B</span> <span class="pre">=</span> <span class="pre">s</span> <span class="pre">*</span> <span class="pre">(high</span> <span class="pre">-</span> <span class="pre">z)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">=</span> <span class="pre">s</span> <span class="pre">*</span> <span class="pre">(low</span> <span class="pre">-</span> <span class="pre">z)</span></code></p></li>
+</ul>
+</div></blockquote>
+<p>The equations result in the following:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">s</span> <span class="pre">=</span> <span class="pre">(B</span> <span class="pre">-</span> <span class="pre">A)</span> <span class="pre">/</span> <span class="pre">(high</span> <span class="pre">-</span> <span class="pre">low)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">z</span> <span class="pre">=</span> <span class="pre">cast_to_8_bit_integer((low</span> <span class="pre">*</span> <span class="pre">B</span> <span class="pre">-</span> <span class="pre">high</span> <span class="pre">*</span> <span class="pre">A)</span> <span class="pre">/</span> <span class="pre">(B</span> <span class="pre">-</span> <span class="pre">A))</span></code></p></li>
+</ul>
+</div></blockquote>
+<p>When the rank of weight <code class="docutils literal notranslate"><span class="pre">w</span></code> is 1, then <code class="docutils literal notranslate"><span class="pre">s</span></code> and <code class="docutils literal notranslate"><span class="pre">z</span></code> are both scalars. When the
+rank of the weight is greater than 1, then <code class="docutils literal notranslate"><span class="pre">s</span></code> and <code class="docutils literal notranslate"><span class="pre">z</span></code> are both vectors. In that
+case, scales are computed per <cite>channel</cite>, in which <cite>channel</cite> is the output dimension,
+which corresponds to the first dimension for ops such as <code class="docutils literal notranslate"><span class="pre">conv</span></code> and <code class="docutils literal notranslate"><span class="pre">linear</span></code>, and
+the second dimension for the <code class="docutils literal notranslate"><span class="pre">conv_transpose</span></code> op.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">&quot;linear&quot;</span></code> mode, <span class="math notranslate nohighlight">\(A = min(w_r)\)</span>, <span class="math notranslate nohighlight">\(B = max(w_r)\)</span>.</p>
+<p><strong>Linear symmetric interpolation</strong></p>
+<p>With linear symmetric interpolation (<code class="docutils literal notranslate"><span class="pre">&quot;linear_symmetric&quot;</span></code> mode, the default), rather than
+mapping the exact min/max of the float range to the quantized range, the function
+chooses the maximum absolute value between the min/max, which results in a
+floating-point range that is symmetric with respect to zero. This also makes the resulting zero
+point <code class="docutils literal notranslate"><span class="pre">0</span></code> for int8 weight and <code class="docutils literal notranslate"><span class="pre">127</span></code> for uint8 weight.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">&quot;linear_symmetric&quot;</span></code> mode:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(A = -R\)</span> and <span class="math notranslate nohighlight">\(B = R\)</span>, where <span class="math notranslate nohighlight">\(R = max(abs(w_r))\)</span>.</p></li>
+<li><p>This function maps to the range of <code class="docutils literal notranslate"><span class="pre">[-127,</span> <span class="pre">127]</span></code> for int8 weight and <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">254]</span></code> for uint8 weight.</p></li>
+<li><p>The result is <code class="docutils literal notranslate"><span class="pre">s=(B-A)/254</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">s=2R/254</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">s=R/127</span></code>.</p></li>
+<li><dl class="simple">
+<dt>Solving for <code class="docutils literal notranslate"><span class="pre">z</span></code>:</dt><dd><ul>
+<li><p>int8:  <code class="docutils literal notranslate"><span class="pre">z</span> <span class="pre">=</span> <span class="pre">(-127</span> <span class="pre">*</span> <span class="pre">R</span> <span class="pre">+</span> <span class="pre">127</span> <span class="pre">*</span> <span class="pre">R)/2R</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">z=0</span></code>.</p></li>
+<li><p>uint8: <code class="docutils literal notranslate"><span class="pre">z</span> <span class="pre">=</span> <span class="pre">(0</span> <span class="pre">*</span> <span class="pre">R</span> <span class="pre">+</span> <span class="pre">254</span> <span class="pre">*</span> <span class="pre">R)/2R</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">z=127</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>mlmodel: MLModel</strong></dt><dd><p>Model to be quantized. This MLModel should be of type <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>.</p>
+</dd>
+<dt><strong>config: OptimizationConfig</strong></dt><dd><p>An <a class="reference internal" href="coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.OptimizationConfig" title="coremltools.optimize.coreml.OptimizationConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationConfig</span></code></a> object that specifies the parameters for weight quantization.</p>
+</dd>
+<dt><strong>joint_compression: bool</strong></dt><dd><p>Specification of whether or not to further compress the already-compressed input MLModel to a
+jointly compressed MLModel. See the <cite>blockwise_palettize_weights</cite> graph pass for information
+about which compression schemas could be further jointly palettized.</p>
+<p>Take “palettize + quantize” as an example of joint compression, where the input MLModel is already
+palettized, and the palettization’s lookup table will be further quantized. In such an example,
+the weight values are represented by <code class="docutils literal notranslate"><span class="pre">constexpr_blockwise_shift_scale</span></code> + <code class="docutils literal notranslate"><span class="pre">constexpr_lut_to_dense</span></code> ops:
+lut(int8) -&gt; constexpr_blockwise_shift_scale -&gt; lut(fp16) -&gt; constexpr_lut_to_dense -&gt; dense(fp16)</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>model: MLModel</dt><dd><p>The quantized MLModel instance.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">coremltools.optimize</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cto</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">)</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OptimizationConfig</span><span class="p">(</span>
+    <span class="n">global_config</span><span class="o">=</span><span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OpLinearQuantizerConfig</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;linear_symmetric&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">compressed_model</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">linear_quantize_weights</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="coremltools.optimize.coreml.experimental.linear_quantize_activations">
+<span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.experimental.</span></span><span class="sig-name descname"><span class="pre">linear_quantize_activations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mlmodel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="coremltools.models.html#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.OptimizationConfig" title="coremltools.optimize.coreml._config.OptimizationConfig"><span class="pre">OptimizationConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_op_group_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/experimental/_post_training_quantization.html#linear_quantize_activations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.experimental.linear_quantize_activations" title="Link to this definition"></a></dt>
+<dd><p>Utility function to convert a float precision MLModel of type <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>, which uses
+float-precision activations, into a compressed MLModel that uses n-bit activations. Currently, only n=8
+is suppported.</p>
+<p>This is achieved by feeding real sample data into the input MLModel, calibrating the resulting float activation values,
+converting the calibrated values into <code class="docutils literal notranslate"><span class="pre">quantize</span></code> and <code class="docutils literal notranslate"><span class="pre">dequantize</span></code> op pairs, and inserting those
+op pairs into the new MLModel instance where activations get quantized.</p>
+<p>Use this function with <code class="docutils literal notranslate"><span class="pre">linear_quantize_weights</span></code> for 8-bit activation and 8-bit weight linear quantization.
+It’s also compatible for use with other weight compression methods.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mlmodel: MLModel</strong></dt><dd><p>Model to be quantized. This MLModel should be of type <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>.</p>
+</dd>
+<dt><strong>config: OptimizationConfig</strong></dt><dd><p>An <code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationConfig</span></code> object that specifies the parameters for activation quantization.</p>
+</dd>
+<dt><strong>sample_data: List</strong></dt><dd><p>Data used to characterize statistics of the activation values of the original float precision model.
+Expects a list of sample input dictionaries, which should have the same format as the data used in <cite>.predict</cite>
+method for the mlmodel. More specifically, the input name need to be specified in the data, unless it’s a single
+input model where the name will be auto inferred.</p>
+</dd>
+<dt><strong>calibration_op_group_size: int</strong></dt><dd><p>While running inference during calibration, only have <cite>calibration_op_group_size</cite> of intermediate outputs
+appended to outputs at a time. If the model is very large, it could lead to the temperary model having
+thousands of outputs, which may lead to model hanging forever during model loading. To work around this
+issue, intermediate outputs are grouped into smaller groups, where each time a temperary model will only
+have <cite>calibration_op_group_size</cite> outputs. By default (op_group_size = -1), op_group_size is equal to the
+number of valid intermediate ops.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>model: MLModel</dt><dd><p>The activation quantized MLModel instance.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">coremltools.optimize</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cto</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">)</span>
+<span class="n">activation_config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OptimizationConfig</span><span class="p">(</span>
+    <span class="n">global_config</span><span class="o">=</span><span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OpLinearQuantizerConfig</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;linear_symmetric&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">compressed_model_a8</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">linear_quantize_activations</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span> <span class="n">activation_config</span><span class="p">,</span> <span class="n">sample_data</span>
+<span class="p">)</span>
+
+<span class="c1"># (Optional) It&#39;s recommended to use with linear_quantize_weights.</span>
+<span class="n">weight_config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OptimizationConfig</span><span class="p">(</span>
+    <span class="n">global_config</span><span class="o">=</span><span class="n">cto</span><span class="o">.</span><span class="n">OpLinearQuantizerConfig</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;linear_symmetric&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">compressed_model_w8a8</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">linear_quantize_weights</span><span class="p">(</span><span class="n">compressed_model_a8</span><span class="p">,</span> <span class="n">weight_config</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.optimize.coreml.OpLinearQuantizerConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">OpLinearQuantizerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'linear_symmetric'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">type</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'coremltools.converters.mil.mil.types.type_int.make_int.&lt;locals&gt;.int'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">granularity:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~coremltools.optimize.coreml._config.CompressionGranularity</span> <span class="pre">=</span> <span class="pre">CompressionGranularity.PER_CHANNEL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_size:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">~typing.List[int]</span> <span class="pre">|</span> <span class="pre">~typing.Tuple[int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">...]</span> <span class="pre">=</span> <span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_threshold:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">2048</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_config.html#OpLinearQuantizerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.OpLinearQuantizerConfig" title="Link to this definition"></a></dt>
+<dd><dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>mode: str</strong></dt><dd><p>Mode for linear quantization:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;linear_symmetric&quot;</span></code> (default): Input data are quantized in the range
+<code class="docutils literal notranslate"><span class="pre">[-R,</span> <span class="pre">R]</span></code>, where <span class="math notranslate nohighlight">\(R = max(abs(w_r))\)</span>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;linear&quot;</span></code>: Input data are quantized in the range
+<span class="math notranslate nohighlight">\([min(w_r), max(w_r)]\)</span>.</p></li>
+</ul>
+</dd>
+<dt><strong>dtype: str or np.generic or mil.type</strong></dt><dd><p>Determines the quantized data type (int8/uint8/int4/uint4).</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>The allowed values are:</dt><dd><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">np.int8</span></code> (the default)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">np.uint8</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.converters.mil.mil.types.int8</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.converters.mil.mil.types.uint8</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.converters.mil.mil.types.int4</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.converters.mil.mil.types.uint4</span></code></p></li>
+<li><p>strings to specify dtype such as “int4”, “uint4”, etc</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt><strong>granularity: str</strong></dt><dd><p>Granularity for quantization.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;per_tensor&quot;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;per_channel&quot;</span></code> (default)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;per_block&quot;</span></code></p></li>
+</ul>
+</dd>
+<dt><strong>block_size: int or List/Tuple of int</strong></dt><dd><ul class="simple">
+<li><p>Only effective when granularity is set to “per_block”.</p></li>
+<li><p>Determines size of the block, where all elements in a block share the same scale and zero_point.</p></li>
+<li><p>If it’s int, the block size on each axis is auto determined for best performance. More specifially,
+the block will have <code class="docutils literal notranslate"><span class="pre">block_size</span></code> on input axis and <code class="docutils literal notranslate"><span class="pre">1</span></code> on output axis, where input/output
+axis is auto picked based on op type.
+For example, if weight has shape [Cout, Cin], the block will have shape [1, block_size];
+If the weight has shape [C_out, C_in, KH, KW], the block will has shape [1, block_size, KH, KW].</p></li>
+<li><p>If it’s a tuple of int, it must have the same rank as the weight, which specify the block size on each axis.</p></li>
+<li><p>The value 0 means block size equal to dim size at the corresponding axis.</p></li>
+<li><p>If the dim size on any axis is not divisible by the corresponding block size, the op will be skipped.</p></li>
+</ul>
+<p>The tuple input of <code class="docutils literal notranslate"><span class="pre">block_size</span></code> provides users fully control about the block.
+Here are some examples about how different granularities could be achieved:</p>
+<p>Given the weight of a 2D Conv which has shape [C_out, C_in, KH, KW]:
+<a href="#id1"><span class="problematic" id="id2">|------------------------|</span></a>————————–<a href="#id3"><span class="problematic" id="id4">|---------------------------|</span></a>—————————-|
+|      Granularity       | output_channel_block_size| input_channel_block_size  | Weight Shape of Each Block |
+<a href="#id5"><span class="problematic" id="id6">|------------------------|</span></a>————————–<a href="#id7"><span class="problematic" id="id8">|---------------------------|</span></a>—————————-|
+| Per Tensor             | 0                        | 0                         | [C_out, C_in, KH, KW]      |
+| Per Input Channel      | 0                        | 1                         | [C_out, 1, KH, KW]         |
+| Per Output Channel     | 1                        | 0                         | [1, C_in, KH, KW]          |
+| Per Block              | 1                        | 32                        | [1, 32, KH, KW]            |
+<a href="#id9"><span class="problematic" id="id10">|------------------------|</span></a>————————–<a href="#id11"><span class="problematic" id="id12">|---------------------------|</span></a>—————————-|</p>
+<p>Given the weight of a linear layer which has shape [C_out, C_in]:
+<a href="#id13"><span class="problematic" id="id14">|------------------------|</span></a>————————–<a href="#id15"><span class="problematic" id="id16">|---------------------------|</span></a>—————————-|
+|      Granularity       | output_channel_block_size| input_channel_block_size  | Weight Shape of Each Block |
+<a href="#id17"><span class="problematic" id="id18">|------------------------|</span></a>————————–<a href="#id19"><span class="problematic" id="id20">|---------------------------|</span></a>—————————-|
+| Per Tensor             | 0                        | 0                         | [C_out, C_in]              |
+| Per Input Channel      | 0                        | 1                         | [C_out, 1]                 |
+| Per Output Channel     | 1                        | 0                         | [1, C_in]                  |
+| Per Block              | 1                        | 32                        | [1, 32]                    |
+<a href="#id21"><span class="problematic" id="id22">|------------------------|</span></a>————————–<a href="#id23"><span class="problematic" id="id24">|---------------------------|</span></a>—————————-|</p>
+<p>Given the weight of matmul’s y (transpose_y=False)  which has shape […, C_in, C_out]:
+<a href="#id25"><span class="problematic" id="id26">|------------------------|</span></a>————————–<a href="#id27"><span class="problematic" id="id28">|---------------------------|</span></a>—————————-|
+|      Granularity       | output_channel_block_size| input_channel_block_size  | Weight Shape of Each Block |
+<a href="#id29"><span class="problematic" id="id30">|------------------------|</span></a>————————–<a href="#id31"><span class="problematic" id="id32">|---------------------------|</span></a>—————————-|
+| Per Tensor             | 0                        | 0                         | […, C_in, C_out]         |
+| Per Input Channel      | 0                        | 1                         | […, 1, C_out]            |
+| Per Output Channel     | 1                        | 0                         | […, C_in, 1]             |
+| Per Block              | 1                        | 32                        | […, 32, 1]               |
+<a href="#id33"><span class="problematic" id="id34">|------------------------|</span></a>————————–<a href="#id35"><span class="problematic" id="id36">|---------------------------|</span></a>—————————-|</p>
+</dd>
+<dt><strong>weight_threshold: int</strong></dt><dd><p>The size threshold, above which weights are pruned.
+That is, a weight tensor is pruned only if its total number of elements are greater than <code class="docutils literal notranslate"><span class="pre">weight_threshold</span></code>.
+Default to 2048.</p>
+<p>For example, if <code class="docutils literal notranslate"><span class="pre">weight_threshold</span> <span class="pre">=</span> <span class="pre">1024</span></code> and a weight tensor is of shape <code class="docutils literal notranslate"><span class="pre">[10,</span> <span class="pre">20,</span> <span class="pre">1,</span> <span class="pre">1]</span></code>, hence <code class="docutils literal notranslate"><span class="pre">200</span></code>
+elements, it will not be pruned.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="coremltools.optimize.coreml.pruning.html" class="btn btn-neutral float-left" title="Pruning" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="coremltools.optimize.coreml.utilities.html" class="btn btn-neutral float-right" title="Utilities" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -16,32 +16,29 @@
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
-  <!-- 
-    this give us a css class that will be invisible only if js is disabled 
-  -->
-  <noscript>
-    <style>
-      .pst-js-only { display: none !important; }
-
-    </style>
-  </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=26a4bc78f4c0ddb94549" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css?v=27a1495e" />
   
-  <!-- So that users can add custom icons -->
-  <script src="../_static/scripts/fontawesome.js?digest=26a4bc78f4c0ddb94549"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549" />
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=c1ce5b23"></script>
+    <script src="../_static/documentation_options.js?v=6ab2ec1d"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -54,7 +51,6 @@
     <link rel="prev" title="Xcode Model Preview Types" href="xcode-model-preview-types.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="" />
   </head>
   
   
@@ -70,8 +66,19 @@
     <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
-  <dialog id="pst-search-dialog">
-    
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
 <form class="bd-search d-flex align-items-center"
       action="../search.html"
       method="get">
@@ -79,6 +86,7 @@
   <input type="search"
          class="form-control"
          name="q"
+         id="search-input"
          placeholder="Search..."
          aria-label="Search..."
          autocomplete="off"
@@ -86,8 +94,8 @@
          autocapitalize="off"
          spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form>
-  </dialog>
+</form></div>
+  </div>
 
   <div class="pst-async-banner-revealer d-none">
   <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
@@ -103,8 +111,7 @@
       
       
       
-      <dialog id="pst-primary-sidebar-modal"></dialog>
-      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+      <div class="bd-sidebar-primary bd-sidebar">
         
 
   
@@ -134,11 +141,15 @@
 </a></div>
         <div class="sidebar-primary-item">
 
-<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
- <i class="fa-solid fa-magnifying-glass"></i>
- <span class="search-button__default-text">Search</span>
- <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-</button></div>
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">API Reference</span></p>
@@ -255,6 +266,7 @@
 <li class="toctree-l2"><a class="reference internal" href="updatable-nearest-neighbor-classifier.html">Nearest Neighbor Classifier</a></li>
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="mlmodel-debugging-perf-utilities.html">Debugging And Performance Utilities</a></li>
 </ul>
 
     </div>
@@ -377,16 +389,24 @@
 
 
 
-<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
-  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
-  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
-  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
-</button>
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
 
 
-<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
-</button>
+  </button>
+`);
+</script>
 <button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <span class="fa-solid fa-list"></span>
 </button>
@@ -420,6 +440,8 @@
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bisect-model">Bisect Model</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#change-model-tensor-input-output-types">Change Model Tensor Input/Output Types</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compute-plan">Compute Plan</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#in-memory-model">In-memory Model</a></li>
 </ul>
             </nav>
         </div>
@@ -437,7 +459,7 @@
 <section id="rename-a-feature">
 <h2>Rename a Feature<a class="headerlink" href="#rename-a-feature" title="Link to this heading">#</a></h2>
 <p>A <em>feature</em> in this case refers to a model input or a model output. You can rename a feature in the specification using the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.utils.rename_feature"><code class="docutils literal notranslate"><span class="pre">rename_feature()</span></code></a> method. For example:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
 
 <span class="c1"># Get the protobuf spec</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s1">&#39;MyModel.mlpackage&#39;</span><span class="p">)</span>
@@ -454,7 +476,7 @@
 </pre></div>
 </div>
 <p>To get the names of the inputs and outputs of the model:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
 
 <span class="c1"># Get the protobuf spec</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s1">&#39;MyModel.mlmodel&#39;</span><span class="p">)</span>
@@ -471,7 +493,7 @@
 <section id="convert-all-double-multi-array-feature-descriptions-to-float">
 <h2>Convert All Double Multi-array Feature Descriptions to Float<a class="headerlink" href="#convert-all-double-multi-array-feature-descriptions-to-float" title="Link to this heading">#</a></h2>
 <p>You can convert all <code class="docutils literal notranslate"><span class="pre">double</span></code> multi-array feature descriptions (input, output, and training input) to float multi-arrays using the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.utils.convert_double_to_float_multiarray_type"><code class="docutils literal notranslate"><span class="pre">convert_double_to_float_multiarray_type()</span></code></a> method. For example:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
 
 <span class="c1"># Get the protobuf spec</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s1">&#39;MyModel.mlmodel&#39;</span><span class="p">)</span>
@@ -486,7 +508,7 @@
 <h2>Evaluate Classifier, Regressor, and Transformer Models<a class="headerlink" href="#evaluate-classifier-regressor-and-transformer-models" title="Link to this heading">#</a></h2>
 <p>To test the correctness of a conversion, you can use use evaluation methods to compare predictions to the original framework. Use this type of evaluation for models that don’t deal with probabilities.</p>
 <p>For example, you can evaluate a Core ML classifier model and compare it against predictions from the original framework using the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.utils.evaluate_classifier"><code class="docutils literal notranslate"><span class="pre">evaluate_classifier()</span></code></a> method, as shown in the following code snippet:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
 
 <span class="c1"># Evaluate a classifier specification for testing.</span>
 <span class="n">metrics</span> <span class="o">=</span>  <span class="n">ct</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">evaluate_classifier</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> 
@@ -498,7 +520,7 @@
 </pre></div>
 </div>
 <p>To evaluate a regressor model, use the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.utils.evaluate_regressor"><code class="docutils literal notranslate"><span class="pre">evaluate_regressor()</span></code></a> method:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">//</span> <span class="n">Evaluate</span> <span class="n">a</span> <span class="n">CoreML</span> <span class="n">regression</span> <span class="n">model</span> <span class="ow">and</span> <span class="n">compare</span> <span class="n">against</span> <span class="n">predictions</span> <span class="kn">from</span> <span class="nn">the</span> <span class="n">original</span> <span class="n">framework</span> <span class="p">(</span><span class="k">for</span> <span class="n">testing</span> <span class="n">correctness</span> <span class="n">of</span> <span class="n">conversion</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">//</span> <span class="n">Evaluate</span> <span class="n">a</span> <span class="n">CoreML</span> <span class="n">regression</span> <span class="n">model</span> <span class="ow">and</span> <span class="n">compare</span> <span class="n">against</span> <span class="n">predictions</span> <span class="kn">from</span><span class="w"> </span><span class="nn">the</span> <span class="n">original</span> <span class="n">framework</span> <span class="p">(</span><span class="k">for</span> <span class="n">testing</span> <span class="n">correctness</span> <span class="n">of</span> <span class="n">conversion</span><span class="p">)</span>
 
 <span class="n">metrics</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">evaluate_regressor</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="s1">&#39;data_and_predictions.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;target&#39;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
@@ -531,10 +553,10 @@ optimization of the model via the <code class="docutils literal notranslate"><sp
 <h3>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h3>
 <p>The following code loads the <code class="docutils literal notranslate"><span class="pre">SegmentationModel_with_metadata.mlpackage</span></code> saved in <a class="reference internal" href="convert-a-pytorch-segmentation-model.html#open-the-model-in-xcode"><span class="std std-ref">Converting a PyTorch Segmentation Model</span></a>. It uses <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.get_weights_metadata"><code class="docutils literal notranslate"><span class="pre">get_weights_metadata()</span></code></a>, which specifies the size threshold (<code class="docutils literal notranslate"><span class="pre">2048</span></code>) in the <code class="docutils literal notranslate"><span class="pre">weight_threshold</span></code> parameter. A weight tensor is included in the resulting dictionary only if its total number of elements are greater than <code class="docutils literal notranslate"><span class="pre">weight_threshold</span></code>.</p>
 <p>The example also shows how to get the name of the last weight in the model. The code palettizes all ops except the last weight, which is a common practical scenario when the last layer is more sensitive and should be skipped from quantization:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools.optimize</span> <span class="k">as</span> <span class="nn">cto</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools.optimize</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cto</span>
 
-<span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">MLModel</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.coreml</span> <span class="kn">import</span> <span class="n">get_weights_metadata</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.coreml</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_weights_metadata</span>
 
 <span class="n">mlmodel</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_with_metadata.mlpackage&quot;</span><span class="p">)</span>
 <span class="n">weight_metadata_dict</span> <span class="o">=</span> <span class="n">get_weights_metadata</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">weight_threshold</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
@@ -579,7 +601,7 @@ optimization of the model via the <code class="docutils literal notranslate"><sp
 <p>In certain scenarios, you may want to break a large Core ML model into two smaller models. For instance, if you are deploying a model to run on neural engine on an iPhone, it cannot be larger than 1 GB. If you are working with, say, <a class="reference external" href="https://github.com/apple/ml-stable-diffusion">Stable Diffusion</a> 1.5 model which is 1.72 GB large (Float 16 precision), then it needs to be broken up into two chunks, each less than 1 GB. The utility <code class="docutils literal notranslate"><span class="pre">ct.models.utils.bisect_model</span></code> will allow you to do exactly that. When using this API, you can also opt-in to package the two chunks of the model into a pipeline model, so that its still a single mlpackage file, with the two models arranged in a sequential manner.</p>
 <p>The example below shows how to bisect a model, test the accuracy, and save them on disk.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
-<span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
 
 <span class="n">model_path</span> <span class="o">=</span> <span class="s2">&quot;my_model.mlpackage&quot;</span>
 <span class="n">output_dir</span> <span class="o">=</span> <span class="s2">&quot;./output/&quot;</span>
@@ -614,9 +636,9 @@ optimization of the model via the <code class="docutils literal notranslate"><sp
 <p>Consider a scenario when we have a Core ML model with an fp32 multiarray output, but we need to use a Core ML API that
 requires fp16 multiarrays instead. We can now easily change the model output types from fp32 to fp16 (and vice versa).</p>
 <p>An example how to update the output data types:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.models.model</span> <span class="kn">import</span> <span class="n">MLModel</span>
-<span class="kn">from</span> <span class="nn">coremltools.utils</span> <span class="kn">import</span> <span class="n">change_array_output_type</span>
-<span class="kn">from</span> <span class="nn">coremltools.proto.FeatureTypes_pb2</span> <span class="kn">import</span> <span class="n">ArrayFeatureType</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">change_input_output_tensor_type</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.proto.FeatureTypes_pb2</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArrayFeatureType</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">)</span>
 <span class="n">updated_model</span> <span class="o">=</span> <span class="n">change_input_output_tensor_type</span><span class="p">(</span>
@@ -628,9 +650,9 @@ requires fp16 multiarrays instead. We can now easily change the model output typ
 </pre></div>
 </div>
 <p>Another example is showing how to update data types of all the function inputs:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.models.model</span> <span class="kn">import</span> <span class="n">MLModel</span>
-<span class="kn">from</span> <span class="nn">coremltools.utils</span> <span class="kn">import</span> <span class="n">change_array_output_type</span>
-<span class="kn">from</span> <span class="nn">coremltools.proto.FeatureTypes_pb2</span> <span class="kn">import</span> <span class="n">ArrayFeatureType</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">change_input_output_tensor_type</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.proto.FeatureTypes_pb2</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArrayFeatureType</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">)</span>
 <span class="n">updated_model</span> <span class="o">=</span> <span class="n">change_input_output_tensor_type</span><span class="p">(</span>
@@ -655,6 +677,83 @@ requires fp16 multiarrays instead. We can now easily change the model output typ
 <li><p>an empty list means nothing will be modified (default for <code class="docutils literal notranslate"><span class="pre">input_names</span></code>)</p></li>
 <li><p>a list containing <code class="docutils literal notranslate"><span class="pre">&quot;*&quot;</span></code> string means all relevant inputs/outputs will be modified (those that will match the <code class="docutils literal notranslate"><span class="pre">from_type</span></code> type)</p></li>
 </ul>
+</section>
+<section id="compute-plan">
+<h2>Compute Plan<a class="headerlink" href="#compute-plan" title="Link to this heading">#</a></h2>
+<p>In certain situations, you may want to evaluate the computational needs of a Core ML model before deploying it.
+The <code class="docutils literal notranslate"><span class="pre">MLComputePlan</span></code> class is designed for this purpose, allowing you to get insights into the resources and costs
+associated with using the model.</p>
+<p>Here’s what you can do with <code class="docutils literal notranslate"><span class="pre">MLComputePlan</span></code>:</p>
+<ul class="simple">
+<li><p>Model Structure: Examine the model structure.</p></li>
+<li><p>Compute Device Usage: Get insights into the compute devices that would be used for executing an ML Program operation/ NeuralNetwork layer.</p></li>
+<li><p>Estimated Cost: Get the estimated cost of executing an ML Program operation.</p></li>
+</ul>
+<p>An example on how to use <code class="docutils literal notranslate"><span class="pre">MLComputePlan</span></code> to get the estimated cost and compute device usages for the operations in an ML Program:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
+<span class="c1"># Path to the compiled ML Program model.</span>
+<span class="n">compiled_model_path</span> <span class="o">=</span> <span class="s2">&quot;my_model.mlmodelc&quot;</span>
+<span class="c1"># Load the compute plan of a model.</span>
+<span class="n">compute_plan</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">compute_plan</span><span class="o">.</span><span class="n">MLComputePlan</span><span class="o">.</span><span class="n">load_from_path</span><span class="p">(</span>
+    <span class="n">path</span><span class="o">=</span><span class="n">compiled_model_path</span><span class="p">,</span>
+    <span class="n">compute_units</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">ComputeUnits</span><span class="o">.</span><span class="n">ALL</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="c1"># Get the model structure.</span>
+<span class="n">program</span> <span class="o">=</span> <span class="n">compute_plan</span><span class="o">.</span><span class="n">model_structure</span><span class="o">.</span><span class="n">program</span>
+<span class="n">mainFunction</span> <span class="o">=</span> <span class="n">program</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">operation</span> <span class="ow">in</span> <span class="n">mainFunction</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">:</span>
+    <span class="c1"># Get the compute device usage for the operation.</span>
+    <span class="n">compute_device_usage</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">compute_plan</span><span class="o">.</span><span class="n">get_compute_device_usage_for_mlprogram_operation</span><span class="p">(</span><span class="n">operation</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="c1"># Get the estimated cost of executing the operation.</span>
+    <span class="n">estimated_cost</span> <span class="o">=</span> <span class="n">compute_plan</span><span class="o">.</span><span class="n">get_estimated_cost_for_mlprogram_operation</span><span class="p">(</span><span class="n">operation</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="in-memory-model">
+<h2>In-memory Model<a class="headerlink" href="#in-memory-model" title="Link to this heading">#</a></h2>
+<p>If you are using an in-memory model in your application, you can easily test the workflow with <code class="docutils literal notranslate"><span class="pre">MLModelAsset</span></code>. The <code class="docutils literal notranslate"><span class="pre">MLModelAsset</span></code> class includes
+the <code class="docutils literal notranslate"><span class="pre">MLModelAsset.from_memory</span></code> API, which enables you to load a model directly from the model’s in-memory specification data. Once loaded, you
+can use the model to make predictions.</p>
+<p>An example on how to use <code class="docutils literal notranslate"><span class="pre">MLModelAsset</span></code> to load an <code class="docutils literal notranslate"><span class="pre">MLCompiledModel</span></code> from in-memory specification data:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
+<span class="c1"># Path to the model.</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model.model&quot;</span><span class="p">)</span>
+<span class="n">model_spec</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
+<span class="n">spec_data</span> <span class="o">=</span> <span class="n">model_spec</span><span class="o">.</span><span class="n">SerializeToString</span><span class="p">()</span>
+<span class="n">asset</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">MLModelAsset</span><span class="o">.</span><span class="n">from_memory</span><span class="p">(</span><span class="n">spec_data</span><span class="o">=</span><span class="n">spec_data</span><span class="p">)</span>
+<span class="n">compiled_model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">CompiledMLModel</span><span class="o">.</span><span class="n">from_asset</span><span class="p">(</span><span class="n">asset</span><span class="o">=</span><span class="n">asset</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">compiled_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">]),</span>
+        <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">2.0</span><span class="p">]),</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Another example on how to use <code class="docutils literal notranslate"><span class="pre">MLModelAsset</span></code> to load a MLCompiledModel from in-memory specification data where the specification has external blob file references :</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
+<span class="c1"># Path to the model.</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">)</span>
+<span class="n">weight_file_path</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">weights_dir</span> <span class="o">+</span> <span class="s2">&quot;/weight.bin&quot;</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">weight_file_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+    <span class="n">weights_data</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="n">model_spec</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
+    <span class="n">spec_data</span> <span class="o">=</span> <span class="n">model_spec</span><span class="o">.</span><span class="n">SerializeToString</span><span class="p">()</span>
+    <span class="c1"># Provide the weights data as `blob_mapping`.</span>
+    <span class="n">asset</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">MLModelAsset</span><span class="o">.</span><span class="n">from_memory</span><span class="p">(</span>
+        <span class="n">spec_data</span><span class="o">=</span><span class="n">spec_data</span><span class="p">,</span> <span class="n">blob_mapping</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;weights/weight.bin&quot;</span><span class="p">:</span> <span class="n">weights_data</span><span class="p">}</span>
+    <span class="p">)</span>
+    <span class="n">compiled_model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">CompiledMLModel</span><span class="o">.</span><span class="n">from_asset</span><span class="p">(</span><span class="n">asset</span><span class="o">=</span><span class="n">asset</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">compiled_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+      <span class="p">{</span>
+          <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">]),</span>
+          <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">2.0</span><span class="p">]),</span>
+      <span class="p">}</span>
+    <span class="p">)</span>    
+</pre></div>
+</div>
 </section>
 </section>
 
@@ -694,8 +793,7 @@ requires fp16 multiarrays instead. We can now easily change the model output typ
             
             
               
-                <dialog id="pst-secondary-sidebar-modal"></dialog>
-                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
   <div class="sidebar-secondary-item">
@@ -714,6 +812,8 @@ requires fp16 multiarrays instead. We can now easily change the model output typ
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bisect-model">Bisect Model</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#change-model-tensor-input-output-types">Change Model Tensor Input/Output Types</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compute-plan">Compute Plan</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#in-memory-model">In-memory Model</a></li>
 </ul>
   </nav></div>
 
@@ -738,7 +838,7 @@ By Apple
 
   <p class="copyright">
     
-      © Copyright 2023, Apple Inc.
+      © Copyright 2024, Apple Inc.
       <br/>
     
   </p>
@@ -762,8 +862,8 @@ By Apple
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../_static/scripts/bootstrap.js?digest=26a4bc78f4c0ddb94549"></script>
-<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=26a4bc78f4c0ddb94549"></script>
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
 
   <footer class="bd-footer">
   </footer>

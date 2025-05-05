@@ -106,6 +106,8 @@ model = ct.convert(source_model, compute_precision=ct.precision.FLOAT32)
 
 For more information, see [Typed Execution](typed-execution).
 
+You can also refer to the [Debugging And Performance Utilities](mlmodel-debugging-perf-utilities.md) to identify operations that may be causing numerical inconsistencies between the source and the converted model.
+
 ## Image Preprocessing for Converting torchvision
 
 Preprocessing parameters differ between [torchvision](https://pytorch.org/vision/stable/index.html) and Core ML Tools but can be easily translated, as described in [Add Image Preprocessing Options](image-inputs.md#add-image-preprocessing-options). For example, you can set the scale and bias for an [`ImageType`](https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ImageType), which corresponds to the torchvision parameters: 
