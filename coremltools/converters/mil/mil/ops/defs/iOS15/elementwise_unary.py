@@ -446,7 +446,7 @@ class inverse(Operation):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.array(np.reciprocal(self.x.val + self.epsilon.val), copy=False)
+        return np.asarray(np.reciprocal(self.x.val + self.epsilon.val))
 
 
 @register_op
