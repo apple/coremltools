@@ -327,7 +327,7 @@ import coremltools as ct
 import numpy as np
 import torch
 
-from coremltools.models.ml_program.experimental.torch.perf_utils as TorchMLModelBenchmarker
+from coremltools.models.ml_program.experimental.torch.perf_utils import TorchMLModelBenchmarker
 
 # Define a simple PyTorch model
 class Model(torch.nn.Module):
