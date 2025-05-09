@@ -16,27 +16,30 @@
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-  
-  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
-
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css?v=27a1495e" />
   
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
-  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../_static/documentation_options.js?v=6ab2ec1d"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
@@ -51,6 +54,7 @@
     <link rel="prev" title="Flexible Input Shapes" href="flexible-inputs.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
   </head>
   
   
@@ -66,19 +70,8 @@
     <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
-  <input type="checkbox"
-          class="sidebar-toggle"
-          id="pst-primary-sidebar-checkbox"/>
-  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
-  
-  <input type="checkbox"
-          class="sidebar-toggle"
-          id="pst-secondary-sidebar-checkbox"/>
-  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
-  
-  <div class="search-button__wrapper">
-    <div class="search-button__overlay"></div>
-    <div class="search-button__search-container">
+  <dialog id="pst-search-dialog">
+    
 <form class="bd-search d-flex align-items-center"
       action="../search.html"
       method="get">
@@ -86,7 +79,6 @@
   <input type="search"
          class="form-control"
          name="q"
-         id="search-input"
          placeholder="Search..."
          aria-label="Search..."
          autocomplete="off"
@@ -94,8 +86,8 @@
          autocapitalize="off"
          spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form></div>
-  </div>
+</form>
+  </dialog>
 
   <div class="pst-async-banner-revealer d-none">
   <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
@@ -111,7 +103,8 @@
       
       
       
-      <div class="bd-sidebar-primary bd-sidebar">
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
   
@@ -141,15 +134,11 @@
 </a></div>
         <div class="sidebar-primary-item">
 
- <script>
- document.write(`
-   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span class="search-button__default-text">Search</span>
-    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-   </button>
- `);
- </script></div>
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">API Reference</span></p>
@@ -275,9 +264,14 @@
   
   
   <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
   </div>
-  
-  <div id="rtd-footer-container"></div>
 
 
       </div>
@@ -389,24 +383,16 @@
 
 
 
-<script>
-document.write(`
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
-  </button>
-`);
-</script>
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
 
 
-<script>
-document.write(`
-  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
-  </button>
-`);
-</script>
+</button>
 <button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <span class="fa-solid fa-list"></span>
 </button>
@@ -458,21 +444,21 @@ document.write(`
 <h2>Import and Convert the Pre-trained Model<a class="headerlink" href="#import-and-convert-the-pre-trained-model" title="Link to this heading">#</a></h2>
 <ol class="arabic">
 <li><p>Add the import statement and load the pre-trained model:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">transformers</span><span class="w"> </span><span class="kn">import</span> <span class="n">TFT5Model</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers</span> <span class="kn">import</span> <span class="n">TFT5Model</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">TFT5Model</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s1">&#39;t5-small&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </li>
 <li><p>The returned object is an instance of a <code class="docutils literal notranslate"><span class="pre">tf.keras</span></code> model, which you can pass directly into the coremltools converter:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
 
 <span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 </pre></div>
 </div>
 </li>
 <li><p>To simulate a scenario in which coremltools lacks support for an operation, disable the <code class="docutils literal notranslate"><span class="pre">Einsum</span></code> operation needed to convert the model:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.frontend.tensorflow.tf_op_registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">_TF_OPS_REGISTRY</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend.tensorflow.tf_op_registry</span> <span class="kn">import</span> <span class="n">_TF_OPS_REGISTRY</span>
 
 <span class="k">del</span> <span class="n">_TF_OPS_REGISTRY</span><span class="p">[</span><span class="s2">&quot;Einsum&quot;</span><span class="p">]</span>
 </pre></div>
@@ -499,15 +485,15 @@ document.write(`
 <p>You can decompose this operation with existing MIL operators. In fact, MIL supports this operation directly. To write a composite for this operation, follow these steps:</p>
 <ol class="arabic">
 <li><p>Import MIL builder and a decorator:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">mb</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.converters.mil</span> <span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">mb</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_tf_op</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil</span> <span class="kn">import</span> <span class="n">register_tf_op</span>
 </pre></div>
 </div>
 </li>
 <li><p>Define a function with the same name as the TensorFlow operation. For this example, this is <code class="docutils literal notranslate"><span class="pre">Einsum</span></code>. To define the function, grab inputs and define a <code class="docutils literal notranslate"><span class="pre">matmul</span></code> operation using the MIL builder:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@register_tf_op</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">Einsum</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">Einsum</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
 
 	<span class="k">assert</span> <span class="n">node</span><span class="o">.</span><span class="n">attr</span><span class="p">[</span><span class="s1">&#39;equation&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;bnqd,bnkd-&gt;bnqk&#39;</span>
 
@@ -538,16 +524,16 @@ document.write(`
 <p>For PyTorch, use the following import statement:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># example pytorch composite op</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.frontend.torch.torch_op_registry</span><span class="w"> </span><span class="kn">import</span> 
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend.torch.torch_op_registry</span> <span class="kn">import</span> 
      <span class="n">_TORCH_OPS_REGISTRY</span><span class="p">,</span> <span class="n">register_torch_op</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.frontend.torch.ops</span><span class="w"> </span><span class="kn">import</span> <span class="n">_get_inputs</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">mb</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend.torch.ops</span> <span class="kn">import</span> <span class="n">_get_inputs</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil</span> <span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">mb</span>
 
   
 <span class="k">del</span> <span class="n">_TORCH_OPS_REGISTRY</span><span class="p">[</span><span class="s2">&quot;selu&quot;</span><span class="p">]</span> <span class="c1"># only required if over-writing an existing translation</span>
   
 <span class="nd">@register_torch_op</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">selu</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">selu</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">_get_inputs</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">expected</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">elu</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">1.6732632423543772</span><span class="p">)</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">1.0507009873554805</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
@@ -599,7 +585,8 @@ document.write(`
             
             
               
-                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
   <div class="sidebar-secondary-item">
@@ -660,8 +647,8 @@ By Apple
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
 
   <footer class="bd-footer">
   </footer>

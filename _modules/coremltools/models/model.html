@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.models.model &mdash; coremltools API Reference 8.0b1 documentation</title>
+  <title>coremltools.models.model &mdash; coremltools API Reference 8.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
@@ -20,7 +20,7 @@
   
         <script src="../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../_static/documentation_options.js?v=8cc1add8"></script>
         <script src="../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
@@ -40,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                8.0b1
+                8.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -105,28 +105,27 @@
 <span class="kn">import</span> <span class="nn">tempfile</span> <span class="k">as</span> <span class="nn">_tempfile</span>
 <span class="kn">import</span> <span class="nn">warnings</span> <span class="k">as</span> <span class="nn">_warnings</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span> <span class="k">as</span> <span class="n">_deepcopy</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span> <span class="k">as</span> <span class="n">_Dict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span> <span class="k">as</span> <span class="n">_List</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_np</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_numpy</span>
 
-<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span><span class="p">,</span>
-    <span class="n">_logger</span> <span class="k">as</span> <span class="n">logger</span><span class="p">,</span>
-    <span class="n">proto</span> <span class="k">as</span> <span class="n">_proto</span><span class="p">,</span>
-    <span class="n">SpecializationStrategy</span> <span class="k">as</span> <span class="n">_SpecializationStrategy</span><span class="p">,</span>
-    <span class="n">ReshapeFrequency</span> <span class="k">as</span> <span class="n">_ReshapeFrequency</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">ReshapeFrequency</span> <span class="k">as</span> <span class="n">_ReshapeFrequency</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">SpecializationStrategy</span> <span class="k">as</span> <span class="n">_SpecializationStrategy</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_logger</span> <span class="k">as</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">proto</span> <span class="k">as</span> <span class="n">_proto</span>
 <span class="kn">from</span> <span class="nn">coremltools._deps</span> <span class="kn">import</span> <span class="n">_HAS_TF_1</span><span class="p">,</span> <span class="n">_HAS_TF_2</span><span class="p">,</span> <span class="n">_HAS_TORCH</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.program</span> <span class="kn">import</span> <span class="n">Program</span> <span class="k">as</span> <span class="n">_Program</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.scope</span> <span class="kn">import</span> <span class="n">ScopeSource</span> <span class="k">as</span> <span class="n">_ScopeSource</span>
 
 <span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_MLMODEL_EXTENSION</span><span class="p">,</span>
-    <span class="n">_MLPACKAGE_AUTHOR_NAME</span><span class="p">,</span>
     <span class="n">_MLPACKAGE_EXTENSION</span><span class="p">,</span>
-    <span class="n">_MODEL_FILE_NAME</span><span class="p">,</span>
     <span class="n">_create_mlpackage</span><span class="p">,</span>
+    <span class="n">_get_model_spec_path</span><span class="p">,</span>
     <span class="n">_has_custom_layer</span><span class="p">,</span>
     <span class="n">_is_macos</span><span class="p">,</span>
     <span class="n">_macos_version</span><span class="p">,</span>
@@ -152,6 +151,13 @@
 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to load _MLModelProxy: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">_MLModelProxy</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">..libcoremlpython</span> <span class="kn">import</span> <span class="n">_MLModelAssetProxy</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to load _MLModelAssetProxy: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">_MLModelAssetProxy</span> <span class="o">=</span> <span class="kc">None</span>
 
 <span class="n">_HAS_PIL</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="k">try</span><span class="p">:</span>
@@ -202,6 +208,8 @@
 <span class="n">_METADATA_SOURCE</span> <span class="o">=</span> <span class="s2">&quot;com.github.apple.coremltools.source&quot;</span>
 <span class="n">_METADATA_SOURCE_DIALECT</span> <span class="o">=</span> <span class="s2">&quot;com.github.apple.coremltools.source_dialect&quot;</span>
 
+<span class="kn">from</span> <span class="nn">.compute_device</span> <span class="kn">import</span> <span class="n">MLComputeDevice</span> <span class="k">as</span> <span class="n">_MLComputeDevice</span>
+
 
 <span class="k">def</span> <span class="nf">_verify_optimization_hint_input</span><span class="p">(</span><span class="n">optimization_hint_input</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -216,8 +224,11 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Optimization hints are only available on macOS &gt;= 15.0&#39;</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">optimization_hint_input</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;reshapeFrequency&#39;</span><span class="p">,</span> <span class="s1">&#39;specializationStrategy&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;allowLowPrecisionAccumulationOnGPU&#39;</span><span class="p">,</span> <span class="s1">&#39;reshapeFrequency&#39;</span><span class="p">,</span> <span class="s1">&#39;specializationStrategy&#39;</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unrecognized key in optimization_hint dictionary: </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s2">&quot;allowLowPrecisionAccumulationOnGPU&quot;</span> <span class="ow">in</span> <span class="n">optimization_hint_input</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optimization_hint_input</span><span class="p">[</span><span class="s2">&quot;allowLowPrecisionAccumulationOnGPU&quot;</span><span class="p">],</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;&quot;allowLowPrecisionAccumulationOnGPU&quot; value of &quot;optimization_hint_input&quot; dictionary must be of type bool&#39;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="s2">&quot;specializationStrategy&quot;</span> <span class="ow">in</span> <span class="n">optimization_hint_input</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optimization_hint_input</span><span class="p">[</span><span class="s2">&quot;specializationStrategy&quot;</span><span class="p">],</span> <span class="n">_SpecializationStrategy</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;&quot;specializationStrategy&quot; value of &quot;optimization_hint_input&quot; dictionary must be of type coremltools.SpecializationStrategy&#39;</span><span class="p">)</span>
@@ -262,7 +273,7 @@
 
 
 <span class="k">class</span> <span class="nc">MLState</span><span class="p">:</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proxy</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proxy</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Holds state for an MLModel.</span>
 
@@ -273,6 +284,72 @@
 <span class="sd">        ct.MLModel.predict</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span> <span class="o">=</span> <span class="n">proxy</span>
+
+
+<div class="viewcode-block" id="MLModelAsset">
+<a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModelAsset">[docs]</a>
+<span class="k">class</span> <span class="nc">MLModelAsset</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class representing a compiled model asset.</span>
+
+<span class="sd">    It supports two initialization methods:</span>
+<span class="sd">    - From a compiled model directory: The directory should have a &#39;.mlmodelc&#39; extension.</span>
+<span class="sd">    - From memory: Allows direct initialization using in-memory model data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proxy</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_MLModelAssetProxy</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">proxy</span><span class="p">,</span> <span class="n">_MLModelAssetProxy</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;The proxy parameter must be of type _MLModelAssetProxy.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span> <span class="o">=</span> <span class="n">proxy</span>
+
+<div class="viewcode-block" id="MLModelAsset.from_path">
+<a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModelAsset.from_path">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_path</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">compiled_model_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MLModelAsset&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create an MLModelAsset instance from a compiled model path.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        compiled_model_path : str</span>
+<span class="sd">            The file path to the compiled model.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        MLModelAsset</span>
+<span class="sd">            An instance of MLModelAsset created from the specified path.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_MLModelProxy</span><span class="o">.</span><span class="n">create_model_asset_from_path</span><span class="p">(</span><span class="n">compiled_model_path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MLModelAsset.from_memory">
+<a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModelAsset.from_memory">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_memory</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">spec_data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span>
+        <span class="n">blob_mapping</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]</span> <span class="o">=</span> <span class="p">{},</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MLModelAsset&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create an MLModelAsset instance from in-memory data.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        spec_data : bytes</span>
+<span class="sd">            The specification data of the model.</span>
+
+<span class="sd">        blob_mapping : Dict[str, bytes])</span>
+<span class="sd">            A dictionary with blob path as the key and blob data as the value.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        MLModelAsset</span>
+<span class="sd">            An instance of MLModelAsset created from the provided memory data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_MLModelProxy</span><span class="o">.</span><span class="n">create_model_asset_from_memory</span><span class="p">(</span><span class="n">spec_data</span><span class="p">,</span> <span class="n">blob_mapping</span><span class="p">)</span></div>
+</div>
 
 
 <div class="viewcode-block" id="MLModel">
@@ -350,7 +427,7 @@
         <span class="n">weights_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">function_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">optimization_hints</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Construct an MLModel from an ``.mlmodel``.</span>
 
@@ -411,8 +488,12 @@
 <span class="sd">            If not provided, ``function_name`` will be set to the ``defaultFunctionName`` in the proto.</span>
 
 <span class="sd">        optimization_hints : dict or None</span>
-<span class="sd">            Keys are the names of the optimization hint, either &#39;reshapeFrequency&#39; or &#39;specializationStrategy&#39;.</span>
-<span class="sd">            Values are enumeration values of type ``coremltools.ReshapeFrequency`` or ``coremltools.SpecializationStrategy``.</span>
+<span class="sd">            Keys are the names of the optimization hint: &#39;allowLowPrecisionAccumulationOnGPU&#39;, &#39;reshapeFrequency&#39;</span>
+<span class="sd">                or &#39;specializationStrategy&#39;.</span>
+
+<span class="sd">            - &#39;allowLowPrecisionAccumulationOnGPU&#39; value must have ``bool`` type.</span>
+<span class="sd">            - &#39;reshapeFrequency&#39; value must have ``coremltools.ReshapeFrequency`` type.</span>
+<span class="sd">            - &#39;specializationStrategy&#39; must have``coremltools.SpecializationStrategy`` type.</span>
 
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
@@ -516,7 +597,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">package_path</span> <span class="o">=</span> <span class="n">filename</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_weights_dir</span> <span class="o">=</span> <span class="n">_try_get_weights_dir_path</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">filename</span> <span class="o">=</span> <span class="n">_tempfile</span><span class="o">.</span><span class="n">mktemp</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="n">_MLMODEL_EXTENSION</span><span class="p">)</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="n">_tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="n">_MLMODEL_EXTENSION</span><span class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
                 <span class="n">_save_spec</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_framework_error</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_proxy_and_spec</span><span class="p">(</span>
@@ -574,14 +655,24 @@
                 <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">specification</span><span class="p">,</span> <span class="kc">None</span>
 
             <span class="n">function_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">function_name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">function_name</span>
+
+            <span class="n">optimization_hints_str_vals</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">if</span> <span class="n">optimization_hints</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">optimization_hints_str_vals</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">optimization_hints</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">optimization_hints_str_vals</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">optimization_hints</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+                        <span class="n">optimization_hints_str_vals</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">optimization_hints_str_vals</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">name</span>
 
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">return</span> <span class="p">(</span>
-                    <span class="n">_MLModelProxy</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">compute_units</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">function_name</span><span class="p">,</span> <span class="n">optimization_hints_str_vals</span><span class="p">),</span>
+                    <span class="n">_MLModelProxy</span><span class="p">(</span>
+                        <span class="n">filename</span><span class="p">,</span>
+                        <span class="n">compute_units</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                        <span class="n">function_name</span><span class="p">,</span>
+                        <span class="n">optimization_hints_str_vals</span><span class="p">,</span>
+                        <span class="kc">None</span><span class="p">,</span>
+                    <span class="p">),</span>
                     <span class="n">specification</span><span class="p">,</span>
                     <span class="kc">None</span><span class="p">,</span>
                 <span class="p">)</span>
@@ -712,9 +803,7 @@
                     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">saved_debug_handle_to_ops_mapping_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">debug_handle_to_ops_mapping_as_json</span><span class="p">)</span>
 
-            <span class="n">saved_spec_path</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                <span class="n">save_path</span><span class="p">,</span> <span class="s2">&quot;Data&quot;</span><span class="p">,</span> <span class="n">_MLPACKAGE_AUTHOR_NAME</span><span class="p">,</span> <span class="n">_MODEL_FILE_NAME</span>
-            <span class="p">)</span>
+            <span class="n">saved_spec_path</span> <span class="o">=</span> <span class="n">_get_model_spec_path</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
             <span class="n">_save_spec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="p">,</span> <span class="n">saved_spec_path</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">_save_spec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="p">,</span> <span class="n">save_path</span><span class="p">)</span></div>
@@ -731,6 +820,9 @@
 <span class="sd">        the compiled model to persist, you need to make a copy.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;This model was not loaded or compiled with the Core ML Framework.&quot;</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span><span class="o">.</span><span class="n">get_compiled_model_path</span><span class="p">()</span></div>
 
 
@@ -849,7 +941,9 @@
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_check_predict_data</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">data</span><span class="se">\&quot;</span><span class="s2"> parameter must be either a dict or list of dict.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;&quot;data&quot; parameter must be either a dict or list of dict, but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="si">}</span><span class="s1">.&#39;</span>
+            <span class="p">)</span>
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">data</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">data</span><span class="se">\&quot;</span><span class="s2"> list must contain only dictionaries&quot;</span><span class="p">)</span>
 
@@ -882,7 +976,9 @@
     <span class="k">def</span> <span class="nf">_is_multifunction</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">functions</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
 
-    <span class="k">def</span> <span class="nf">_get_function_description</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_proto</span><span class="o">.</span><span class="n">Model_pb2</span><span class="o">.</span><span class="n">FunctionDescription</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_get_function_description</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">function_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;_proto.Model_pb2.FunctionDescription&quot;</span><span class="p">:</span>
         <span class="n">f</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">function_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">functions</span><span class="p">))</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -918,6 +1014,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_macos</span><span class="p">()</span> <span class="ow">or</span> <span class="n">_macos_version</span><span class="p">()</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;State functionality is only supported on macOS 15+&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;This model was not loaded with the Core ML Framework. Cannot get state.&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">MLState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span><span class="o">.</span><span class="n">newState</span><span class="p">())</span></div>
 
@@ -1057,7 +1155,75 @@
         <span class="k">for</span> <span class="n">given_input_name</span><span class="p">,</span> <span class="n">given_input</span> <span class="ow">in</span> <span class="n">input_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">given_input_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">model_input_to_types</span><span class="p">:</span>
                 <span class="k">continue</span>
-            <span class="n">input_dict</span><span class="p">[</span><span class="n">given_input_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="n">given_input</span><span class="p">)</span></div>
+            <span class="n">input_dict</span><span class="p">[</span><span class="n">given_input_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="n">given_input</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MLModel.get_available_compute_devices">
+<a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel.get_available_compute_devices">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_available_compute_devices</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_List</span><span class="p">[</span><span class="n">_MLComputeDevice</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The list of available compute devices for CoreML.</span>
+
+<span class="sd">        Use the method to get the list of compute devices that MLModel&#39;s predict method can use.</span>
+
+<span class="sd">        Some compute devices on the hardware are exclusive to the domain ML frameworks such as Vision and SoundAnalysis and</span>
+<span class="sd">        not available to Core ML framework. See also ``MLComputeDevice.get_all_compute_devices()``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The list of compute devices MLModel&#39;s predict method can use.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        .. sourcecode:: python</span>
+
+<span class="sd">            compute_devices = coremltools.MLModel.get_available_compute_devices()</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_MLModelProxy</span><span class="o">.</span><span class="n">get_available_compute_devices</span><span class="p">()</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">load_duration_in_nano_seconds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieves the duration of the model loading process in nanoseconds.</span>
+<span class="sd">        </span>
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Calculates the time elapsed during the model loading process, specifically</span>
+<span class="sd">        measuring the execution time of ``[MLModel loadContentsOfURL:configuration:error:]`` method</span>
+<span class="sd">        of the Core ML framework.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Optional[int]:</span>
+<span class="sd">            The duration of the model loading process in nanoseconds.</span>
+<span class="sd">            Returns None if duration is not available.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span><span class="o">.</span><span class="n">get_load_duration_in_nano_seconds</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">last_predict_duration_in_nano_seconds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieves the duration of the last predict operation in nanoseconds.</span>
+<span class="sd">        This method returns the time taken for the most recent prediction made by</span>
+<span class="sd">        the model, measured in nanoseconds.</span>
+<span class="sd">        </span>
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Calculates the time elapsed during the model predict call, specifically</span>
+<span class="sd">        measuring the execution time of ``[MLModel predictionFromFeatures:error:]``</span>
+<span class="sd">        or ``[MLModel predictionFromBatch:error:]`` method of the Core ML framework.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Optional[int]:</span>
+<span class="sd">            The duration of the last prediction operation in nanoseconds.</span>
+<span class="sd">            Returns None if no prediction has been made yet.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span><span class="o">.</span><span class="n">get_last_predict_duration_in_nano_seconds</span><span class="p">()</span></div>
 
 </pre></div>
 
@@ -1068,7 +1234,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

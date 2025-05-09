@@ -1,13 +1,11 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops &mdash; coremltools API Reference 8.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/theme.css?v=e59714d7" />
+  <title>coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops &mdash; coremltools API Reference 8.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -16,11 +14,15 @@
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-      <script src="../../../../../../../_static/jquery.js?v=5d32c60e"></script>
-      <script src="../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
-      <script src="../../../../../../../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+  <!--[if lt IE 9]>
+    <script src="../../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../../_static/documentation_options.js?v=8cc1add8"></script>
+        <script src="../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../../../search.html" /> 
@@ -37,6 +39,9 @@
           <a href="../../../../../../../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
+              <div class="version">
+                8.3
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -93,33 +98,33 @@
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Tuple</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">_logger</span> <span class="k">as</span> <span class="n">logger</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">Block</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">mb</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">Operation</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractGraphPass</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">_check_child_op_type</span><span class="p">,</span> <span class="n">block_context_manager</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.pass_registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_pass</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.types.symbolic</span><span class="w"> </span><span class="kn">import</span> <span class="n">any_symbolic</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.types.type_mapping</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_logger</span> <span class="k">as</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Block</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">mb</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">Operation</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span> <span class="kn">import</span> <span class="n">AbstractGraphPass</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.helper</span> <span class="kn">import</span> <span class="n">_check_child_op_type</span><span class="p">,</span> <span class="n">block_context_manager</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.pass_registry</span> <span class="kn">import</span> <span class="n">register_pass</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.symbolic</span> <span class="kn">import</span> <span class="n">any_symbolic</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.type_mapping</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">RangeTuple</span><span class="p">,</span>
     <span class="n">builtin_to_range</span><span class="p">,</span>
     <span class="n">builtin_to_resolution</span><span class="p">,</span>
     <span class="n">string_to_builtin</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.var</span><span class="w"> </span><span class="kn">import</span> <span class="n">Var</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.var</span> <span class="kn">import</span> <span class="n">Var</span>
 
 
 <div class="viewcode-block" id="merge_consecutive_paddings">
 <a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.merge_consecutive_paddings">[docs]</a>
 <span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">merge_consecutive_paddings</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">merge_consecutive_paddings</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Identify two consecutive ``pad`` layers which could be merged into a single ``pad`` layer.</span>
 
@@ -137,13 +142,13 @@
 <span class="sd">        input(1, 2, 6, 8) ------&gt; pad([1, 1, 1, 1], mode=&#39;reflect) ---&gt; out(1, 2, 8, 10)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="n">block_changed</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">while</span> <span class="n">block_changed</span><span class="p">:</span>
                 <span class="n">block_changed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_merge_padding_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_match_pattern</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">,</span> <span class="n">padding_op</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_match_pattern</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">,</span> <span class="n">padding_op</span><span class="p">):</span>
 
         <span class="k">if</span> <span class="n">padding_op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">!=</span> <span class="s2">&quot;pad&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
@@ -178,7 +183,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace_ops</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">padding_op</span><span class="p">,</span> <span class="n">child_padding_op</span><span class="p">,</span> <span class="n">final_pad</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_replace_ops</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">padding_op</span><span class="p">,</span> <span class="n">child_padding_op</span><span class="p">,</span> <span class="n">final_pad</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_replace_ops</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">padding_op</span><span class="p">,</span> <span class="n">child_padding_op</span><span class="p">,</span> <span class="n">final_pad</span><span class="p">):</span>
         <span class="n">mode</span> <span class="o">=</span> <span class="n">padding_op</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;mode&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">val</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span>
             <span class="n">x</span><span class="o">=</span><span class="n">padding_op</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">],</span>
@@ -194,7 +199,7 @@
         <span class="k">return</span> <span class="kc">True</span>
 
     <span class="nd">@block_context_manager</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_merge_padding_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_merge_padding_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
         <span class="n">fusion_happens</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -208,7 +213,7 @@
 <div class="viewcode-block" id="merge_consecutive_transposes">
 <a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.merge_consecutive_transposes">[docs]</a>
 <span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">merge_consecutive_transposes</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">merge_consecutive_transposes</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Identify consecutive &#39;transpose&#39; layers which could be merged into a single &#39;transpose&#39; layer.</span>
 
@@ -221,11 +226,11 @@
 <span class="sd">        input ------&gt; transpose ---&gt; out</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_merge_transposes_in_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_match_and_replace_pattern</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">,</span> <span class="n">transpose_op</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_match_and_replace_pattern</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">,</span> <span class="n">transpose_op</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">transpose_op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;transpose&quot;</span> <span class="ow">and</span> <span class="n">_check_child_op_type</span><span class="p">(</span><span class="n">transpose_op</span><span class="p">,</span> <span class="s2">&quot;transpose&quot;</span><span class="p">)):</span>
             <span class="k">return</span> <span class="kc">False</span>
         <span class="k">if</span> <span class="n">transpose_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
@@ -235,7 +240,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace_ops</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">transpose_op</span><span class="p">,</span> <span class="n">child_transpose_op</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_replace_ops</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">transpose_op</span><span class="p">,</span> <span class="n">child_transpose_op</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_replace_ops</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">transpose_op</span><span class="p">,</span> <span class="n">child_transpose_op</span><span class="p">):</span>
         <span class="n">perm</span> <span class="o">=</span> <span class="n">transpose_op</span><span class="o">.</span><span class="n">perm</span><span class="o">.</span><span class="n">val</span>
         <span class="n">new_perm</span> <span class="o">=</span> <span class="p">[</span><span class="n">perm</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">child_transpose_op</span><span class="o">.</span><span class="n">perm</span><span class="o">.</span><span class="n">val</span><span class="p">]</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">transpose_op</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">perm</span><span class="o">=</span><span class="n">new_perm</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">transpose_op</span><span class="p">)</span>
@@ -249,8 +254,8 @@
         <span class="k">return</span> <span class="kc">False</span>
 
     <span class="nd">@block_context_manager</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_merge_transposes_in_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
-        <span class="k">def</span><span class="w"> </span><span class="nf">help_merge_transpose_ops</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_merge_transposes_in_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">help_merge_transpose_ops</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
             <span class="n">fusion_happens</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -268,7 +273,7 @@
 <div class="viewcode-block" id="merge_consecutive_relus">
 <a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.merge_consecutive_relus">[docs]</a>
 <span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">merge_consecutive_relus</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">merge_consecutive_relus</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Identify consecutive ``relu`` layers which could be merged into a single ``relu`` layer.</span>
 
@@ -281,11 +286,11 @@
 <span class="sd">        input ------&gt; relu ---&gt; out</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_merge_relus_in_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_match_and_replace_pattern</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">,</span> <span class="n">relu_op</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_match_and_replace_pattern</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">,</span> <span class="n">relu_op</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">relu_op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;relu&quot;</span> <span class="ow">and</span> <span class="n">_check_child_op_type</span><span class="p">(</span><span class="n">relu_op</span><span class="p">,</span> <span class="s2">&quot;relu&quot;</span><span class="p">)):</span>
             <span class="k">return</span> <span class="kc">False</span>
 
@@ -293,7 +298,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replace_ops</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">relu_op</span><span class="p">,</span> <span class="n">child_relu_op</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_replace_ops</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">relu_op</span><span class="p">,</span> <span class="n">child_relu_op</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_replace_ops</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">relu_op</span><span class="p">,</span> <span class="n">child_relu_op</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">relu_op</span><span class="o">.</span><span class="n">enclosing_block</span><span class="o">.</span><span class="n">try_replace_uses_of_var_after_op</span><span class="p">(</span>
             <span class="n">anchor_op</span><span class="o">=</span><span class="n">child_relu_op</span><span class="p">,</span> <span class="n">old_var</span><span class="o">=</span><span class="n">child_relu_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">new_var</span><span class="o">=</span><span class="n">relu_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="p">):</span>
@@ -302,8 +307,8 @@
         <span class="k">return</span> <span class="kc">False</span>
 
     <span class="nd">@block_context_manager</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_merge_relus_in_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
-        <span class="k">def</span><span class="w"> </span><span class="nf">help_merge_relu_ops</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_merge_relus_in_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">help_merge_relu_ops</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
             <span class="n">fusion_happens</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -321,7 +326,7 @@
 <div class="viewcode-block" id="merge_consecutive_reshapes">
 <a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.merge_consecutive_reshapes">[docs]</a>
 <span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">merge_consecutive_reshapes</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">merge_consecutive_reshapes</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Identify consecutive ``reshape`` ops which could be merged into a single ``reshape``.</span>
 
@@ -336,12 +341,12 @@
 
     <span class="c1"># TODO (rdar://105227587): merge a tree of consecutive reshapes</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_merge_consecutive_reshapes_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_match_pattern</span><span class="p">(</span><span class="n">reshape_op</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_match_pattern</span><span class="p">(</span><span class="n">reshape_op</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Given a ``reshape`` op,</span>
 <span class="sd">        consider it as the head of a sequence of ``reshape`` ops, and</span>
@@ -369,9 +374,9 @@
         <span class="k">return</span> <span class="n">res</span>
 
     <span class="nd">@block_context_manager</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_merge_consecutive_reshapes_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_merge_consecutive_reshapes_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
         <span class="nd">@block_context_manager</span>
-        <span class="k">def</span><span class="w"> </span><span class="nf">help_merge_consecutive_reshapes_block</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">help_merge_consecutive_reshapes_block</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
             <span class="n">fusion_happens</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -411,8 +416,8 @@
             <span class="n">block_changed</span> <span class="o">=</span> <span class="n">help_merge_consecutive_reshapes_block</span><span class="p">(</span><span class="n">block</span><span class="p">)</span></div>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">CastOptimizationNode</span><span class="p">:</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op_type</span><span class="p">,</span> <span class="n">match_criterion</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">CastOptimizationNode</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op_type</span><span class="p">,</span> <span class="n">match_criterion</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -443,7 +448,7 @@
 <div class="viewcode-block" id="cast_optimization">
 <a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.cast_optimization">[docs]</a>
 <span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">cast_optimization</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">cast_optimization</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This optimization pass performs the following:</span>
 
@@ -511,12 +516,12 @@
 
     <span class="n">_num_of_visited_ops</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Testing purpose, making sure the algorithm performs in O(N)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_num_of_visited_ops</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_fuse_or_cancel_consecutive_casts_block_wrapper</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_propagate_range_resolution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_dtype</span><span class="p">:</span> <span class="nb">type</span><span class="p">,</span> <span class="n">dtype_chain</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="nf">_propagate_range_resolution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_dtype</span><span class="p">:</span> <span class="nb">type</span><span class="p">,</span> <span class="n">dtype_chain</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">]):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Given an input type ``in_dtype``, and a chain of casting, return the resulting output data range and resolution.</span>
 
@@ -539,7 +544,7 @@
             <span class="n">cur_resolution</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">cur_resolution</span><span class="p">,</span> <span class="n">tmp_resolution</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">cur_range</span><span class="p">,</span> <span class="n">cur_resolution</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_is_cast_ops_fusable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cast_1</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">cast_2</span><span class="p">:</span> <span class="n">Operation</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_is_cast_ops_fusable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cast_1</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">cast_2</span><span class="p">:</span> <span class="n">Operation</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check if two cast ops can be fused by verifying the consistency between the range and resolution before and after fusion.</span>
 
@@ -569,7 +574,7 @@
 
         <span class="k">return</span> <span class="n">out_range</span> <span class="o">==</span> <span class="n">ref_range</span> <span class="ow">and</span> <span class="n">out_resolution</span> <span class="o">==</span> <span class="n">ref_resolution</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_dup_if_affect_io</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_var</span><span class="p">:</span> <span class="n">Var</span><span class="p">,</span> <span class="n">old_var</span><span class="p">:</span> <span class="n">Var</span><span class="p">,</span> <span class="n">before_op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_dup_if_affect_io</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_var</span><span class="p">:</span> <span class="n">Var</span><span class="p">,</span> <span class="n">old_var</span><span class="p">:</span> <span class="n">Var</span><span class="p">,</span> <span class="n">before_op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        We cannot replace old_var with new_var, if:</span>
 <span class="sd">        1. old_var is a function output</span>
@@ -589,7 +594,7 @@
             <span class="k">return</span> <span class="n">mb</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">new_var</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">before_op</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">new_var</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_fuse_cast_ops</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cast_ops</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Operation</span><span class="p">],</span> <span class="n">reuse_input_var</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_fuse_cast_ops</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cast_ops</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Operation</span><span class="p">],</span> <span class="n">reuse_input_var</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Fuse the pattern of:</span>
 <span class="sd">            input -&gt; cast_1(dtype=dtype_1) -&gt; cast_2(dtype=dtype_2) -&gt; out</span>
@@ -628,7 +633,7 @@
 
         <span class="n">ops_to_remove</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">enclosing_block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">(</span><span class="n">ops_to_remove</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_try_to_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root_op</span><span class="p">,</span> <span class="n">cast_ops_across_blocks</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_try_to_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root_op</span><span class="p">,</span> <span class="n">cast_ops_across_blocks</span><span class="p">):</span>
         <span class="n">block</span> <span class="o">=</span> <span class="n">root_op</span><span class="o">.</span><span class="n">enclosing_block</span>
         <span class="k">if</span> <span class="n">block</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
@@ -672,12 +677,12 @@
         <span class="k">return</span> <span class="n">fusion_happens</span>
 
     <span class="nd">@block_context_manager</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_fuse_casts_ops_across_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">,</span> <span class="n">ops_to_fused</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Operation</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="nf">_fuse_casts_ops_across_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">,</span> <span class="n">ops_to_fused</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Operation</span><span class="p">]):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_fuse_cast_ops</span><span class="p">(</span><span class="n">ops_to_fused</span><span class="p">)</span>
 
     <span class="nd">@block_context_manager</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_fuse_or_cancel_consecutive_casts_block_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
-        <span class="k">def</span><span class="w"> </span><span class="nf">_fuse_or_cancel_consecutive_casts_block</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">cast_ops_across_blocks</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_fuse_or_cancel_consecutive_casts_block_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">_fuse_or_cancel_consecutive_casts_block</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">cast_ops_across_blocks</span><span class="p">):</span>
             <span class="c1"># We first make sure all the inner blocks are optimized</span>
             <span class="c1"># It is important to do it seperately in the very beginning, to ensure the last step of optimization cast ops across the block boundary is correct.</span>
             <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">:</span>
@@ -711,7 +716,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_fuse_casts_ops_across_blocks</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">v</span><span class="p">))</span></div>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">TransformAxisUpdateOps</span><span class="p">:</span>
+<span class="k">class</span> <span class="nc">TransformAxisUpdateOps</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Parent class for every axis update op&#39;s class</span>
 
@@ -736,12 +741,12 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">transpose_axes</span><span class="p">,</span> <span class="n">var_to_hypothetical_value_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">transpose_axes</span><span class="p">,</span> <span class="n">var_to_hypothetical_value_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">op</span> <span class="o">=</span> <span class="n">op</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">transpose_axes</span> <span class="o">=</span> <span class="n">transpose_axes</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">var_to_hypothetical_value_dict</span> <span class="o">=</span> <span class="n">var_to_hypothetical_value_dict</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">can_transpose_pass</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">can_transpose_pass</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Each &quot;axis&quot; op must determine whether it can act like a unary op</span>
 <span class="sd">        and allow the transpose to pass through.</span>
@@ -751,7 +756,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;This function must be implemented by each op&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A method that updates some attribute of the axis op,</span>
 <span class="sd">        based on the transpose axes value.</span>
@@ -772,7 +777,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;This function must be implemented by each op&quot;</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_find_transpose_compliment</span><span class="p">(</span><span class="n">perm</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_find_transpose_compliment</span><span class="p">(</span><span class="n">perm</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        return the permutation value that when applied will reverse the</span>
 <span class="sd">        effect of the given permutation.</span>
@@ -788,7 +793,7 @@
         <span class="k">return</span> <span class="n">perm_inverse</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">_HypotheticalValue</span><span class="p">:</span>
+<span class="k">class</span> <span class="nc">_HypotheticalValue</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A hypothetical value that simply wraps a Var. Actual Var it wraps doesn&#39;t really matter, as</span>
 <span class="sd">    its mainly for debugging.</span>
@@ -796,17 +801,17 @@
 <span class="sd">    non-&quot;_LazyTransposeHypotheticalValue&quot; type.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">var</span>  <span class="c1"># type : Var</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">_LazyTransposeHypotheticalValue</span><span class="p">:</span>
+<span class="k">class</span> <span class="nc">_LazyTransposeHypotheticalValue</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A hypothetical value that represents a transpose op on top of a hypothetical value, or a</span>
 <span class="sd">    collection of transpose_ops, which have the same &quot;perm&quot; parameter.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hypothetical_value</span><span class="p">,</span> <span class="n">transpose_ops</span><span class="p">,</span> <span class="n">perm</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hypothetical_value</span><span class="p">,</span> <span class="n">transpose_ops</span><span class="p">,</span> <span class="n">perm</span><span class="p">):</span>
         <span class="c1"># Input hypothetical value to the transpose op.</span>
         <span class="c1"># When there are multiple transpose ops, this is the incoming hypothetical value to any one of those</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wrapped_hypothetical_value</span> <span class="o">=</span> <span class="n">hypothetical_value</span>  <span class="c1"># type : _HypotheticalValue</span>
@@ -831,7 +836,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">transpose_ops</span> <span class="o">=</span> <span class="n">transpose_ops</span>  <span class="c1"># type : Set(op)</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">_TransposeOptimization</span><span class="p">:</span>
+<span class="k">class</span> <span class="nc">_TransposeOptimization</span><span class="p">:</span>
     <span class="n">_DEBUG</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># Set to true to plot the block before and after the transformation.</span>
 
     <span class="c1"># Dictionary from axis update op to its class</span>
@@ -889,7 +894,7 @@
         <span class="s2">&quot;thresholded_relu&quot;</span><span class="p">,</span>
     <span class="p">}</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">block</span> <span class="o">=</span> <span class="n">block</span>
 
         <span class="c1"># for each var in the block, this dictionary stores the hypothetical value that is assigned to it during</span>
@@ -930,7 +935,7 @@
         <span class="c1"># We modify the graph temporarily for outputs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_output_sinks</span><span class="p">()</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_add_output_sinks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_add_output_sinks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># We add an identity sink for all outputs.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">old_output_vars</span> <span class="o">=</span> <span class="p">{</span><span class="n">var</span><span class="p">:</span> <span class="n">var</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">outputs</span><span class="p">}</span>
         <span class="n">new_outputs</span> <span class="o">=</span> <span class="p">[]</span>
@@ -945,7 +950,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">output_sink_ops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">out_sink</span><span class="o">.</span><span class="n">op</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">set_outputs</span><span class="p">(</span><span class="n">new_outputs</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_visit_unary_like_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">input_var</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_visit_unary_like_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">input_var</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="c1"># pass the input var&#39;s hypothetical_value to the output var&#39;s, since shape invariant ops do</span>
         <span class="c1"># not modify the incoming hypothetical_value</span>
 
@@ -960,7 +965,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">var_to_hypothetical_value</span><span class="p">[</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_to_hypothetical_value</span><span class="p">[</span><span class="n">input_var</span><span class="p">]</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_visit_materialize_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_visit_materialize_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
         <span class="c1"># this is the catch all category of ops</span>
         <span class="c1"># these are the &quot;not-lazy-transpose-pass-through&quot; kind of ops</span>
         <span class="c1"># output hypothetical_value is same as the vars</span>
@@ -978,7 +983,7 @@
                 <span class="k">for</span> <span class="n">transpose_op</span> <span class="ow">in</span> <span class="n">all_lazy_transpose_ops</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">transpose_op_to_materialize_ops</span><span class="p">[</span><span class="n">transpose_op</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">op</span><span class="p">,</span> <span class="n">input_var</span><span class="p">))</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_visit_axis_update_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_visit_axis_update_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check:</span>
 <span class="sd">        - at least one of the non-constant inputs to this op is of type _LazyTransposeHypotheticalValue</span>
@@ -1039,7 +1044,7 @@
             <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_do_transposes_cancel</span><span class="p">(</span><span class="n">perm1</span><span class="p">,</span> <span class="n">perm2</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_do_transposes_cancel</span><span class="p">(</span><span class="n">perm1</span><span class="p">,</span> <span class="n">perm2</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">perm1</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">perm2</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span>
         <span class="n">x</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">perm1</span><span class="p">)))</span>
@@ -1049,7 +1054,7 @@
             <span class="k">return</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="kc">False</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_visit_transpose_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_visit_transpose_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
         <span class="n">input_var</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;perm&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_visit_materialize_op</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
@@ -1100,7 +1105,7 @@
             <span class="c1"># this is same as a materialize op then</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_visit_materialize_op</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_visit_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_visit_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
 
         <span class="n">input_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_input_vars</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">input_vars</span><span class="p">:</span>
@@ -1123,7 +1128,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_visit_materialize_op</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">block_traversal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">block_traversal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
         <span class="c1"># Since the ops are already organized in a topological manner,</span>
         <span class="c1"># simply iterate through all the ops</span>
@@ -1131,7 +1136,7 @@
         <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_visit_op</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_verify_cancellable_transposes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_verify_cancellable_transposes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
         <span class="c1"># invert &quot;transpose_op_to_cancel_ops&quot;</span>
         <span class="n">transpose_cancel_ops_to_starting_transpose_set</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="nb">set</span><span class="p">())</span>
@@ -1226,7 +1231,7 @@
         <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">starting_ops_to_remove</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">transpose_op_to_cancel_ops</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_remove_transpose_ops</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">starting_transpose_op</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_remove_transpose_ops</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">starting_transpose_op</span><span class="p">):</span>
 
         <span class="n">perm</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">starting_transpose_op</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;perm&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
         <span class="n">starting_transpose_op_out_var</span> <span class="o">=</span> <span class="n">starting_transpose_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -1337,7 +1342,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">(</span><span class="n">to_be_removed_ops</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">apply_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">apply_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Take in the data collected during graph traversal</span>
 <span class="sd">        and transform the graph by cancelling out transpose ops that can be removed.</span>
@@ -1345,7 +1350,7 @@
 
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Block before optimize transpose transform:</span><span class="se">\n</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="p">))</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DEBUG</span><span class="p">:</span>
-            <span class="kn">import</span><span class="w"> </span><span class="nn">graphviz</span>
+            <span class="kn">import</span> <span class="nn">graphviz</span>
 
             <span class="n">graphviz</span><span class="o">.</span><span class="n">Source</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">get_dot_string</span><span class="p">(</span>
@@ -1384,13 +1389,13 @@
             <span class="n">op</span><span class="o">.</span><span class="n">type_value_inference</span><span class="p">(</span><span class="n">overwrite_output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">register_axis_update_op</span><span class="p">(</span><span class="n">ops</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="nf">register_axis_update_op</span><span class="p">(</span><span class="n">ops</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param ops: Ops that will be registered. For example: the class &quot;_TransformReduceMean&quot; can</span>
 <span class="sd">        be used to register ops including &quot;reduce_prod&quot;, &quot;reduce_sum&quot; etc.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">class_wrapper</span><span class="p">(</span><span class="n">op_update_cls</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">class_wrapper</span><span class="p">(</span><span class="n">op_update_cls</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">op_type</span> <span class="ow">in</span> <span class="n">ops</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">op_type</span> <span class="ow">in</span> <span class="n">_TransposeOptimization</span><span class="o">.</span><span class="n">_AXIS_UPDATE_OPS</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -1402,7 +1407,7 @@
         <span class="k">return</span> <span class="n">class_wrapper</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_input_vars</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">only_nonconst_vars</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Var</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">_get_input_vars</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">only_nonconst_vars</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Var</span><span class="p">]:</span>
         <span class="n">input_vars</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">Var</span><span class="p">):</span>
@@ -1430,12 +1435,12 @@
 
 
 <span class="nd">@_TransposeOptimization</span><span class="o">.</span><span class="n">register_axis_update_op</span><span class="p">(</span><span class="n">ops</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;concat&quot;</span><span class="p">])</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">_TransformConcat</span><span class="p">(</span><span class="n">TransformAxisUpdateOps</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">_TransformConcat</span><span class="p">(</span><span class="n">TransformAxisUpdateOps</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">_TransformConcat</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">axis_var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;axis&quot;</span><span class="p">]</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">can_transpose_pass</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">can_transpose_pass</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Check that all non const inputs are of type _LazyTransposeHypotheticalValue.</span>
         <span class="c1"># That they have the same perm value has already been checked before.</span>
         <span class="n">input_vars</span> <span class="o">=</span> <span class="n">_TransposeOptimization</span><span class="o">.</span><span class="n">_get_input_vars</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">only_nonconst_vars</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1447,7 +1452,7 @@
             <span class="k">return</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="kc">False</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">new_axis_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transpose_axes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">axis_var</span><span class="o">.</span><span class="n">val</span><span class="p">]</span>
 
         <span class="c1"># to be used, if there is a constant inputs to the concat op</span>
@@ -1465,7 +1470,7 @@
             <span class="n">no_check_var_types</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_update_const_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_update_const_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">transpose_perm_for_const</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transpose_axes</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">axis</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transpose_axes</span><span class="p">):</span>
             <span class="n">transpose_perm_for_const</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
@@ -1489,26 +1494,26 @@
 
 
 <span class="nd">@_TransposeOptimization</span><span class="o">.</span><span class="n">register_axis_update_op</span><span class="p">(</span><span class="n">ops</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;split&quot;</span><span class="p">])</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">_TransformSplit</span><span class="p">(</span><span class="n">_TransformConcat</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">_TransformSplit</span><span class="p">(</span><span class="n">_TransformConcat</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">_TransformSplit</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="c1"># The split op is handled the same as the concat op, except it does not need</span>
     <span class="c1"># to transform const inputs</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_update_const_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_update_const_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">pass</span>
 
 
 <span class="nd">@_TransposeOptimization</span><span class="o">.</span><span class="n">register_axis_update_op</span><span class="p">(</span><span class="n">ops</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;pad&quot;</span><span class="p">])</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">_TransformPad</span><span class="p">(</span><span class="n">TransformAxisUpdateOps</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">_TransformPad</span><span class="p">(</span><span class="n">TransformAxisUpdateOps</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">_TransformPad</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pad_var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;pad&quot;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pad_op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_var</span><span class="o">.</span><span class="n">op</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">mode</span><span class="o">.</span><span class="n">val</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pad_amounts_new</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_new_pad_values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_compute_new_pad_values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">pad_amounts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pad_var</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
         <span class="n">rank_diff</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transpose_axes</span><span class="p">)</span> <span class="o">-</span> <span class="n">pad_amounts</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pad_amounts_new</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">pad_amounts</span><span class="p">)</span>
@@ -1530,7 +1535,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">pad_amounts_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_amounts_new</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
         <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">can_transpose_pass</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">can_transpose_pass</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="p">(</span>
             <span class="nb">len</span><span class="p">(</span><span class="n">_TransposeOptimization</span><span class="o">.</span><span class="n">_get_input_vars</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">only_nonconst_vars</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">1</span>
             <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">!=</span> <span class="s2">&quot;const&quot;</span>
@@ -1546,7 +1551,7 @@
             <span class="k">return</span> <span class="kc">False</span>
         <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_compute_new_pad_values</span><span class="p">()</span>
         <span class="c1"># insert a new constant for pad val, JUST before the op</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span><span class="p">:</span>
@@ -1574,20 +1579,20 @@
         <span class="s2">&quot;reduce_sum_square&quot;</span><span class="p">,</span>
     <span class="p">]</span>
 <span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">_TransformReduceMean</span><span class="p">(</span><span class="n">TransformAxisUpdateOps</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">_TransformReduceMean</span><span class="p">(</span><span class="n">TransformAxisUpdateOps</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">_TransformReduceMean</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">axes_var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;axes&quot;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">axes_op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes_var</span><span class="o">.</span><span class="n">op</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">can_transpose_pass</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">can_transpose_pass</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># allow transpose to push through it only if keep_dims are True since that doesn&#39;t change the rank</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;keep_dims&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">val</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes_op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;const&quot;</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="kc">False</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># update axis of the op</span>
         <span class="n">old_axes_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes_var</span><span class="o">.</span><span class="n">val</span>
         <span class="n">new_axes_val</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">old_axes_val</span><span class="p">)</span>
@@ -1610,8 +1615,8 @@
 <span class="nd">@_TransposeOptimization</span><span class="o">.</span><span class="n">register_axis_update_op</span><span class="p">(</span>
     <span class="n">ops</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;add&quot;</span><span class="p">,</span> <span class="s2">&quot;mul&quot;</span><span class="p">,</span> <span class="s2">&quot;sub&quot;</span><span class="p">,</span> <span class="s2">&quot;real_div&quot;</span><span class="p">,</span> <span class="s2">&quot;maximum&quot;</span><span class="p">,</span> <span class="s2">&quot;minimum&quot;</span><span class="p">]</span>
 <span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">_TransformAdd</span><span class="p">(</span><span class="n">TransformAxisUpdateOps</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">_TransformAdd</span><span class="p">(</span><span class="n">TransformAxisUpdateOps</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">_TransformAdd</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="c1"># self.tranpose_input: this is the input coming from an upstream transpose op. If both inputs are</span>
         <span class="c1">#                      connected to an upstream transpose, this will be set to one of those</span>
@@ -1637,7 +1642,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">tranpose_input</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">other_input</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">can_transpose_pass</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">can_transpose_pass</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">         Return True if the one of the following is true:</span>
 <span class="sd">         - (scenario 1) both inputs are of type _LazyTransposeHypotheticalValue, with the same perm value</span>
@@ -1732,7 +1737,7 @@
                     <span class="k">return</span> <span class="kc">False</span>
             <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># ----------------------</span>
         <span class="c1"># update for scenario 1</span>
         <span class="c1"># ----------------------</span>
@@ -1792,7 +1797,7 @@
 <div class="viewcode-block" id="reduce_transposes">
 <a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.reduce_transposes">[docs]</a>
 <span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">reduce_transposes</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">reduce_transposes</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Reduce transposes when it is applicable. For example:</span>
 
@@ -1906,12 +1911,12 @@
 <span class="sd">    with transpose nodes highlighted.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_reduce_transposes_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_reduce_transposes_block</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_reduce_transposes_block</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Only apply the optimization if the block is flat,</span>
 <span class="sd">        i.e, it does not contain any op which contains a sub-block.</span>
@@ -1939,7 +1944,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

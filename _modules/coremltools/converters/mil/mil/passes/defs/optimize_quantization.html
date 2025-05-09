@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.passes.defs.optimize_quantization &mdash; coremltools API Reference 8.0b1 documentation</title>
+  <title>coremltools.converters.mil.mil.passes.defs.optimize_quantization &mdash; coremltools API Reference 8.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/graphviz.css?v=fd3f3429" />
@@ -20,7 +20,7 @@
   
         <script src="../../../../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../../../_static/documentation_options.js?v=8cc1add8"></script>
         <script src="../../../../../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../../_static/js/theme.js"></script>
@@ -40,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                8.0b1
+                8.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../search.html" method="get">
@@ -114,6 +114,7 @@
     <span class="n">block_context_manager</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.pass_registry</span> <span class="kn">import</span> <span class="n">register_pass</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize</span> <span class="kn">import</span> <span class="n">_utils</span> <span class="k">as</span> <span class="n">optimize_utils</span>
 
 
 <div class="viewcode-block" id="merge_affine_dequantize_with_consecutive_ops">
@@ -1152,9 +1153,6 @@
             <span class="n">apply_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_reorder_lut_per_channel_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">,</span> <span class="n">lut_op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">):</span>
-        <span class="c1"># Lazy import to avoid circular import error.</span>
-        <span class="kn">from</span> <span class="nn">coremltools.optimize.coreml</span> <span class="kn">import</span> <span class="n">_utils</span> <span class="k">as</span> <span class="n">optimize_utils</span>
-
         <span class="c1"># The original order is lut_op -&gt; scale_op -&gt; output_op.</span>
         <span class="n">scale_op</span> <span class="o">=</span> <span class="n">lut_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
@@ -1250,16 +1248,25 @@
 
     <span class="n">_DEQUANT_FIRST</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># First dequantize and then depalettize (use pattern 1).</span>
 
-    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
-        <span class="n">wrong_order_op1</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;constexpr_lut_to_dense&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DEQUANT_FIRST</span> <span class="k">else</span> <span class="s2">&quot;constexpr_blockwise_shift_scale&quot;</span>
-        <span class="p">)</span>
-        <span class="n">wrong_order_op2</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;constexpr_blockwise_shift_scale&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DEQUANT_FIRST</span> <span class="k">else</span> <span class="s2">&quot;constexpr_lut_to_dense&quot;</span>
-        <span class="p">)</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_order_to_reverse</span><span class="p">(</span><span class="n">expect_dequant_first</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the wrong order pattern which will be canonicalized.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">expect_dequant_first</span><span class="p">:</span>
+            <span class="c1"># The LUT -&gt; shift_scale op pattern will be reversed.</span>
+            <span class="n">wrong_order_op1</span> <span class="o">=</span> <span class="s2">&quot;constexpr_lut_to_dense&quot;</span>
+            <span class="n">wrong_order_op2</span> <span class="o">=</span> <span class="s2">&quot;constexpr_blockwise_shift_scale&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># The shift_scale -&gt; LUT op pattern will be reversed.</span>
+            <span class="n">wrong_order_op1</span> <span class="o">=</span> <span class="s2">&quot;constexpr_blockwise_shift_scale&quot;</span>
+            <span class="n">wrong_order_op2</span> <span class="o">=</span> <span class="s2">&quot;constexpr_lut_to_dense&quot;</span>
 
+        <span class="k">return</span> <span class="n">wrong_order_op1</span><span class="p">,</span> <span class="n">wrong_order_op2</span>
+
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
         <span class="nd">@block_context_manager</span>
         <span class="k">def</span> <span class="nf">apply_block</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">):</span>
+            <span class="n">wrong_order_op1</span><span class="p">,</span> <span class="n">wrong_order_op2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_order_to_reverse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_DEQUANT_FIRST</span><span class="p">)</span>
+
             <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
                     <span class="n">apply_block</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
@@ -1273,7 +1280,7 @@
     <span class="k">def</span> <span class="nf">_reorder_quant_lut</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">,</span> <span class="n">old_op1</span><span class="p">:</span> <span class="n">Operation</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Original order is op1 -&gt; op2 -&gt; output_op, and after reorder it becomes op2 -&gt; op1 -&gt; output_op.</span>
-<span class="sd">        Here op1 and op2 corresponds to either lut op or quant op, depending on `_DEQUANT_FIRST`.</span>
+<span class="sd">        Here op1 and op2 corresponds to either lut op or quant op, depending on the desired order.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">old_op2</span> <span class="o">=</span> <span class="n">old_op1</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="c1"># If the old op has some meaningful info in the name (such as &quot;conv1.weight&quot;), we need to keep it.</span>
@@ -1354,7 +1361,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

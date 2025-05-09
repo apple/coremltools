@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.models.nearest_neighbors.builder &mdash; coremltools API Reference 8.0b1 documentation</title>
+  <title>coremltools.models.nearest_neighbors.builder &mdash; coremltools API Reference 8.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=fd3f3429" />
@@ -20,7 +20,7 @@
   
         <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../_static/documentation_options.js?v=8cc1add8"></script>
         <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
@@ -40,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                8.0b1
+                8.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
@@ -101,8 +101,8 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_np</span>
 
 <span class="kn">import</span> <span class="nn">coremltools</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">proto</span>
 
-<span class="kn">from</span> <span class="nn">...proto</span> <span class="kn">import</span> <span class="n">FeatureTypes_pb2</span>
 <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">datatypes</span>
 
 
@@ -130,7 +130,7 @@
 
 <span class="sd">        # save the spec by the builder</span>
 <span class="sd">        &gt;&gt;&gt; save_spec(builder.spec, &#39;knnclassifier.mlmodel&#39;)</span>
-<span class="sd">        </span>
+
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -166,36 +166,36 @@
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a KNearestNeighborsClassifierBuilder object.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        input_name</span>
-<span class="sd">        	Name of the model input.</span>
-<span class="sd">        </span>
+<span class="sd">                Name of the model input.</span>
+
 <span class="sd">        output_name</span>
-<span class="sd">        	Name of the output.</span>
-<span class="sd">        </span>
+<span class="sd">                Name of the output.</span>
+
 <span class="sd">        number_of_dimensions</span>
-<span class="sd">        	Number of dimensions of the input data.</span>
-<span class="sd">        </span>
+<span class="sd">                Number of dimensions of the input data.</span>
+
 <span class="sd">        default_class_label</span>
-<span class="sd">        	The default class label to use for predictions. Must be either an</span>
-<span class="sd">        	int64 or a string.</span>
-<span class="sd">        </span>
+<span class="sd">                The default class label to use for predictions. Must be either an</span>
+<span class="sd">                int64 or a string.</span>
+
 <span class="sd">        number_of_neighbors</span>
-<span class="sd">        	Number of neighbors to use for predictions. Default = 5 with allowed values</span>
-<span class="sd">        	between 1-1000.</span>
-<span class="sd">        </span>
+<span class="sd">                Number of neighbors to use for predictions. Default = 5 with allowed values</span>
+<span class="sd">                between 1-1000.</span>
+
 <span class="sd">        weighting_scheme</span>
-<span class="sd">        	Weight function used in prediction. One of ``&#39;uniform&#39;`` (default) or</span>
-<span class="sd">        	``&#39;inverse_distance&#39;``.</span>
-<span class="sd">        </span>
+<span class="sd">                Weight function used in prediction. One of ``&#39;uniform&#39;`` (default) or</span>
+<span class="sd">                ``&#39;inverse_distance&#39;``.</span>
+
 <span class="sd">        index_type</span>
-<span class="sd">        	Algorithm to compute nearest neighbors. One of ``&#39;linear&#39;`` (default), or</span>
-<span class="sd">        	``&#39;kd_tree&#39;``.</span>
-<span class="sd">        </span>
+<span class="sd">                Algorithm to compute nearest neighbors. One of ``&#39;linear&#39;`` (default), or</span>
+<span class="sd">                ``&#39;kd_tree&#39;``.</span>
+
 <span class="sd">        leaf_size</span>
-<span class="sd">        	Leaf size for the kd-tree. Ignored if index type is ``&#39;linear&#39;``. Default = 30.</span>
+<span class="sd">                Leaf size for the kd-tree. Ignored if index type is ``&#39;linear&#39;``. Default = 30.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">spec</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">proto</span><span class="o">.</span><span class="n">Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">specificationVersion</span> <span class="o">=</span> <span class="p">(</span>
@@ -214,9 +214,9 @@
         <span class="n">input_type</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_PARAMETER_KEY_INPUT_TYPE</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_PARAMETER_DEFAULT_INPUT_TYPE</span>
         <span class="p">)</span>
-        <span class="n">input_feature_type</span> <span class="o">=</span> <span class="n">FeatureTypes_pb2</span><span class="o">.</span><span class="n">ArrayFeatureType</span><span class="o">.</span><span class="n">FLOAT32</span>
+        <span class="n">input_feature_type</span> <span class="o">=</span> <span class="n">proto</span><span class="o">.</span><span class="n">FeatureTypes_pb2</span><span class="o">.</span><span class="n">ArrayFeatureType</span><span class="o">.</span><span class="n">FLOAT32</span>
         <span class="k">if</span> <span class="n">input_type</span> <span class="o">==</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Double</span><span class="p">:</span>
-            <span class="n">input_feature_type</span> <span class="o">=</span> <span class="n">FeatureTypes_pb2</span><span class="o">.</span><span class="n">ArrayFeatureType</span><span class="o">.</span><span class="n">DOUBLE</span>
+            <span class="n">input_feature_type</span> <span class="o">=</span> <span class="n">proto</span><span class="o">.</span><span class="n">FeatureTypes_pb2</span><span class="o">.</span><span class="n">ArrayFeatureType</span><span class="o">.</span><span class="n">DOUBLE</span>
 
         <span class="n">input_feature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
         <span class="n">input_feature</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">input_name</span>
@@ -292,7 +292,7 @@
     <span class="k">def</span> <span class="nf">author</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the author for the KNearestNeighborsClassifier model.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        The author</span>
@@ -303,12 +303,12 @@
     <span class="k">def</span> <span class="nf">author</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">author</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add an author for the KNearestNeighborsClassifier model.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        author</span>
-<span class="sd">        	The author.</span>
-<span class="sd">        </span>
+<span class="sd">                The author.</span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        None</span>
@@ -326,7 +326,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">license</span>
 
-    <span class="nd">@author</span><span class="o">.</span><span class="n">setter</span>
+    <span class="nd">@license</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">license</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">license</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a license for the KNearestNeighborsClassifier model.</span>
@@ -334,8 +334,8 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        license</span>
-<span class="sd">        	The license.</span>
-<span class="sd">        	</span>
+<span class="sd">                The license.</span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        None</span>
@@ -346,7 +346,7 @@
     <span class="k">def</span> <span class="nf">description</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the description for the KNearestNeighborsClassifier model.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        The description.</span>
@@ -361,8 +361,8 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        description</span>
-<span class="sd">        	The description</span>
-<span class="sd">        </span>
+<span class="sd">                The description</span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        None</span>
@@ -373,7 +373,7 @@
     <span class="k">def</span> <span class="nf">is_updatable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check if the KNearestNeighborsClassifier is updatable.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Is updatable.</span>
@@ -384,11 +384,11 @@
     <span class="k">def</span> <span class="nf">is_updatable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_updatable</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the KNearestNeighborsClassifier to be updatable.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        is_updatable</span>
-<span class="sd">        	Boolean</span>
+<span class="sd">                Boolean</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -400,7 +400,7 @@
     <span class="k">def</span> <span class="nf">weighting_scheme</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the weighting scheme for the KNearestNeighborsClassifier model.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        The weighting scheme.</span>
@@ -411,12 +411,12 @@
     <span class="k">def</span> <span class="nf">weighting_scheme</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">weighting_scheme</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the weighting scheme for the KNearestNeighborsClassifier model.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        weighting_scheme</span>
-<span class="sd">        	One of [ ``&#39;uniform&#39;``, ``&#39;inverse_distance&#39;`` ].</span>
-<span class="sd">        </span>
+<span class="sd">                One of [ ``&#39;uniform&#39;``, ``&#39;inverse_distance&#39;`` ].</span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        None</span>
@@ -439,7 +439,7 @@
     <span class="k">def</span> <span class="nf">index_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the index type for the KNearestNeighborsClassifier model.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        The index type.</span>
@@ -451,15 +451,15 @@
     <span class="k">def</span> <span class="nf">set_index_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index_type</span><span class="p">,</span> <span class="n">leaf_size</span><span class="o">=</span><span class="mi">30</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the index type for the KNearestNeighborsClassifier model.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        index_type</span>
-<span class="sd">        	One of [ ``&#39;linear&#39;``, ``&#39;kd_tree&#39;`` ].</span>
-<span class="sd">        </span>
+<span class="sd">                One of [ ``&#39;linear&#39;``, ``&#39;kd_tree&#39;`` ].</span>
+
 <span class="sd">        leaf_size</span>
-<span class="sd">        	For kd_tree indexes, the leaf size to use (default = 30).</span>
-<span class="sd">        </span>
+<span class="sd">                For kd_tree indexes, the leaf size to use (default = 30).</span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        None</span>
@@ -487,7 +487,7 @@
     <span class="k">def</span> <span class="nf">leaf_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the leaf size for the KNearestNeighborsClassifier.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        The leaf size.</span>
@@ -500,12 +500,12 @@
     <span class="k">def</span> <span class="nf">leaf_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">leaf_size</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the leaf size for a KNearestNeighborsClassifier model. Only for kd-tree indexes.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        leaf_size</span>
-<span class="sd">        	The leaf size.</span>
-<span class="sd">        </span>
+<span class="sd">                The leaf size.</span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        None</span>
@@ -521,7 +521,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the number of dimensions of the input data for the</span>
 <span class="sd">        KNearestNeighborsClassifier model.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Number of dimensions.</span>
@@ -534,7 +534,7 @@
     <span class="k">def</span> <span class="nf">number_of_neighbors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the number of neighbors value for the KNearestNeighborsClassifier model.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        The number of neighbors default value.</span>
@@ -548,15 +548,15 @@
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the numberOfNeighbors parameter for the KNearestNeighborsClassifier model.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        allowed_range</span>
-<span class="sd">        	Tuple of (``min_value``, ``max_value``) defining the range of allowed values.</span>
-<span class="sd">        </span>
+<span class="sd">                Tuple of (``min_value``, ``max_value``) defining the range of allowed values.</span>
+
 <span class="sd">        allowed_values</span>
-<span class="sd">        	Set of allowed values for the number of neighbors.</span>
-<span class="sd">    	</span>
+<span class="sd">                Set of allowed values for the number of neighbors.</span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        None</span>
@@ -632,7 +632,7 @@
     <span class="k">def</span> <span class="nf">number_of_neighbors_allowed_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the range of allowed values for the numberOfNeighbors parameter.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Tuple of (``min_value``, ``max_value``) or ``None`` if the range hasn&#39;t been set.</span>
@@ -650,7 +650,7 @@
     <span class="k">def</span> <span class="nf">number_of_neighbors_allowed_set</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the set of allowed values for the numberOfNeighbors parameter.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Set of allowed values or ``None`` if the set of allowed values hasn&#39;t been</span>
@@ -672,15 +672,15 @@
     <span class="k">def</span> <span class="nf">add_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_points</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add some samples to the KNearestNeighborsClassifier model.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        data_points</span>
-<span class="sd">        	List of input data points.</span>
-<span class="sd">        </span>
+<span class="sd">                List of input data points.</span>
+
 <span class="sd">        labels</span>
-<span class="sd">        	List of corresponding labels.</span>
-<span class="sd">        </span>
+<span class="sd">                List of corresponding labels.</span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        None</span>
@@ -725,15 +725,15 @@
     <span class="k">def</span> <span class="nf">_validate_label_types</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Ensure the label types matched the expected types.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        spec</span>
-<span class="sd">        	The spec.</span>
-<span class="sd">        </span>
+<span class="sd">                The spec.</span>
+
 <span class="sd">        labels</span>
-<span class="sd">        	The list of labels.</span>
-<span class="sd">        </span>
+<span class="sd">                The list of labels.</span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        None, throws a TypeError if not expected.</span>
@@ -750,12 +750,12 @@
     <span class="k">def</span> <span class="nf">_is_valid_text_type</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Checks if the object is a valid text type.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        obj</span>
-<span class="sd">        	The object to check.</span>
-<span class="sd">        </span>
+<span class="sd">                The object to check.</span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        True if a valid text type, False otherwise.</span>
@@ -766,12 +766,12 @@
     <span class="k">def</span> <span class="nf">_is_valid_number_type</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Checks if the object is a valid number type.</span>
-<span class="sd">        </span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        obj</span>
-<span class="sd">        	The object to check.</span>
-<span class="sd">        </span>
+<span class="sd">                The object to check.</span>
+
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        True if a valid number type, False otherwise.</span>
@@ -787,7 +787,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

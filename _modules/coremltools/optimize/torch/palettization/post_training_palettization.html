@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.optimize.torch.palettization.post_training_palettization &mdash; coremltools API Reference 8.0b1 documentation</title>
+  <title>coremltools.optimize.torch.palettization.post_training_palettization &mdash; coremltools API Reference 8.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
@@ -20,7 +20,7 @@
   
         <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../_static/documentation_options.js?v=8cc1add8"></script>
         <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../_static/js/theme.js"></script>
@@ -40,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                8.0b1
+                8.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
@@ -120,6 +120,10 @@
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.k_means</span> <span class="kn">import</span> <span class="n">ParallelKMeans</span> <span class="k">as</span> <span class="n">_ParallelKMeans</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.k_means</span> <span class="kn">import</span> <span class="n">SequentialKMeans</span> <span class="k">as</span> <span class="n">_SequentialKMeans</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.optimizer_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_ConfigToOptimizerRegistry</span><span class="p">,</span>
+    <span class="n">_ModuleToOptConfigRegistry</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.report_utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">compute_post_training_report</span> <span class="k">as</span> <span class="n">_compute_post_training_report</span><span class="p">,</span>
 <span class="p">)</span>
@@ -173,6 +177,12 @@
 <span class="sd">            using the same 2-D centroid. The length of each entry in the lookup tables is equal to ``cluster_dim``.</span>
 <span class="sd">        enable_per_channel_scale (:obj:`bool`): When set to ``True``, weights are normalized along the output channels</span>
 <span class="sd">            using per-channel scales before being palettized. This is not supported with ``cluster_dim &gt; 1``.</span>
+<span class="sd">        enable_fast_kmeans_mode (:obj:`bool`): When turned on, will round the weights before clustering if data is in fp16 range.</span>
+<span class="sd">            If weight dtype is fp32, weights are cast to fp16 and then rounded. This is not supported with ``cluster_dim &gt; 1``.</span>
+<span class="sd">            Defaults to True.</span>
+<span class="sd">        rounding_precision (:obj:`int`): The number of decimal places to set for rounding, when `enable_fast_kmeans_mode` is enabled.</span>
+<span class="sd">            Choose a lower precision for faster processing, at the cost of coarser approximation. Defaults to 4.</span>
+
 
 <span class="sd">    This class supports two different configurations to structure the palettization:</span>
 
@@ -180,7 +190,7 @@
 <span class="sd">    table. The ``granularity`` is set to ``per_tensor``, and ``group_size`` is ``None``.</span>
 
 <span class="sd">    2. **Per-grouped-channel palettization**: In this configuration, the number of channels ``group_size`` along</span>
-<span class="sd">    ``channel_axis`` share the same lookup table. For example, for a weight matrix of shape ``(16, 25)``, if we provide </span>
+<span class="sd">    ``channel_axis`` share the same lookup table. For example, for a weight matrix of shape ``(16, 25)``, if we provide</span>
 <span class="sd">    ``group_size = 8``, the shape of the lookup table would be ``(2, 2^n_bits)``.</span>
 
 <span class="sd">    .. note::</span>
@@ -218,6 +228,12 @@
     <span class="n">enable_per_channel_scale</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">bool</span><span class="p">))</span>
     <span class="p">)</span>
+    <span class="n">enable_fast_kmeans_mode</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">bool</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="n">rounding_precision</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
+    <span class="p">)</span>
 
     <span class="nd">@group_size</span><span class="o">.</span><span class="n">validator</span>
     <span class="k">def</span> <span class="nf">per_grouped_channel_granularity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
@@ -243,9 +259,9 @@
     <span class="n">_Dict</span><span class="p">[</span><span class="n">_Union</span><span class="p">[</span><span class="n">_Callable</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">ModulePostTrainingPalettizerConfig</span><span class="p">]],</span>
 <span class="p">)</span>
 
-
 <div class="viewcode-block" id="PostTrainingPalettizerConfig">
 <a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.PostTrainingPalettizerConfig">[docs]</a>
+<span class="nd">@_ModuleToOptConfigRegistry</span><span class="o">.</span><span class="n">register_module_cfg</span><span class="p">(</span><span class="n">ModulePostTrainingPalettizerConfig</span><span class="p">)</span>
 <span class="nd">@_define</span>
 <span class="k">class</span> <span class="nc">PostTrainingPalettizerConfig</span><span class="p">(</span><span class="n">_OptimizationConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -314,6 +330,7 @@
 
 <div class="viewcode-block" id="PostTrainingPalettizer">
 <a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.PostTrainingPalettizer">[docs]</a>
+<span class="nd">@_ConfigToOptimizerRegistry</span><span class="o">.</span><span class="n">register_config</span><span class="p">(</span><span class="n">PostTrainingPalettizerConfig</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">PostTrainingPalettizer</span><span class="p">(</span><span class="n">_BasePostTrainingModelOptimizer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform post-training palettization on a torch model. Post palettization, all the weights in supported</span>
@@ -367,9 +384,12 @@
     <span class="k">def</span> <span class="nf">compress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_kmeans_workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The compress method performs a `k-means` operation on all supported modules.</span>
+
 <span class="sd">        Args:</span>
 <span class="sd">            num_kmeans_workers (:obj:`int`): Number of worker processes used for</span>
-<span class="sd">                performing post-training palettization. Defaults to ``1``.</span>
+<span class="sd">                performing post-training palettization. It is recommended to use more than one worker</span>
+<span class="sd">                process to parallelize the clustering, especially when multiple CPUs are available.</span>
+<span class="sd">                Defaults to ``1``.</span>
 <span class="sd">            inplace (:obj:`bool`): If ``True``, model transformations are carried out in-place and</span>
 <span class="sd">                the original module is mutated, otherwise a copy of the model is mutated and returned.</span>
 <span class="sd">                Defaults to ``False``.</span>
@@ -408,6 +428,8 @@
                     <span class="n">block_size</span><span class="o">=</span><span class="n">updated_config</span><span class="o">.</span><span class="n">group_size</span><span class="p">,</span>
                     <span class="n">cluster_dim</span><span class="o">=</span><span class="n">updated_config</span><span class="o">.</span><span class="n">cluster_dim</span><span class="p">,</span>
                     <span class="n">enable_per_channel_scale</span><span class="o">=</span><span class="n">updated_config</span><span class="o">.</span><span class="n">enable_per_channel_scale</span><span class="p">,</span>
+                    <span class="n">enable_fast_kmeans_mode</span><span class="o">=</span><span class="n">updated_config</span><span class="o">.</span><span class="n">enable_fast_kmeans_mode</span><span class="p">,</span>
+                    <span class="n">rounding_precision</span><span class="o">=</span><span class="n">updated_config</span><span class="o">.</span><span class="n">rounding_precision</span><span class="p">,</span>
                 <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">num_kmeans_workers</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -433,7 +455,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

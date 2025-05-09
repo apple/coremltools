@@ -1,13 +1,11 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../../../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.ops.defs.iOS18.compression &mdash; coremltools API Reference 8.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=e59714d7" />
+  <title>coremltools.converters.mil.mil.ops.defs.iOS18.compression &mdash; coremltools API Reference 8.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -16,11 +14,15 @@
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-      <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
-      <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
-      <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+  <!--[if lt IE 9]>
+    <script src="../../../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../../../_static/documentation_options.js?v=8cc1add8"></script>
+        <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../../../../search.html" /> 
@@ -37,6 +39,9 @@
           <a href="../../../../../../../../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
+              <div class="version">
+                8.3
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -93,27 +98,27 @@
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">types</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.input_type</span><span class="w"> </span><span class="kn">import</span> <span class="n">InputSpec</span><span class="p">,</span> <span class="n">TensorInputType</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.operation</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operation</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_op</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">types</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="n">InputSpec</span><span class="p">,</span> <span class="n">TensorInputType</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="n">Operation</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">constexpr_cast</span> <span class="k">as</span> <span class="n">_constexpr_cast_iOS16</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.ops.defs.iOS18</span><span class="w"> </span><span class="kn">import</span> <span class="n">_IOS18_TARGET</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.var</span><span class="w"> </span><span class="kn">import</span> <span class="n">Var</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">_utils</span> <span class="k">as</span> <span class="n">optimize_utils</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs.iOS18</span> <span class="kn">import</span> <span class="n">_IOS18_TARGET</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.var</span> <span class="kn">import</span> <span class="n">Var</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize</span> <span class="kn">import</span> <span class="n">_utils</span> <span class="k">as</span> <span class="n">optimize_utils</span>
 
 
 <div class="viewcode-block" id="constexpr_blockwise_shift_scale">
 <a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS18.compression.constexpr_blockwise_shift_scale">[docs]</a>
 <span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS18_TARGET</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">constexpr_blockwise_shift_scale</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">constexpr_blockwise_shift_scale</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A compile-time operation that returns a constant output value upon dequantizing its constant inputs.</span>
 
@@ -176,7 +181,7 @@
     <span class="p">}</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_shift_scale_inputs</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_validate_shift_scale_inputs</span><span class="p">(</span>
         <span class="n">data_shape</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">data_dtype</span><span class="p">:</span> <span class="n">types</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="n">Var</span><span class="p">,</span> <span class="n">offset</span><span class="p">:</span> <span class="n">Var</span>
     <span class="p">):</span>
         <span class="n">data_rank</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_shape</span><span class="p">)</span>
@@ -209,14 +214,14 @@
                     <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">types</span><span class="o">.</span><span class="n">builtin_to_string</span><span class="p">(</span><span class="n">data_dtype</span><span class="p">)</span><span class="si">}</span><span class="s2">).&quot;</span>
                 <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_validate_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_shift_scale_inputs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_inputs</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">materialized_val_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">materialized_val_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">val</span>
         <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span>
         <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">op_type</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;constexpr_&quot;</span><span class="p">):</span>
@@ -231,7 +236,7 @@
         <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">decompress</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">decompress</span><span class="p">(</span>
         <span class="n">data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
         <span class="n">scale</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
         <span class="n">offset</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
@@ -260,7 +265,7 @@
 <div class="viewcode-block" id="constexpr_lut_to_dense">
 <a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS18.compression.constexpr_lut_to_dense">[docs]</a>
 <span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS18_TARGET</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">constexpr_lut_to_dense</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">constexpr_lut_to_dense</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A compile-time operation that returns a constant output value upon dequantizing its constant inputs.</span>
 
@@ -394,7 +399,7 @@
     <span class="p">}</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_lut_inputs</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_validate_lut_inputs</span><span class="p">(</span>
         <span class="n">indices_shape</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">indices_dtype</span><span class="p">:</span> <span class="n">types</span><span class="p">,</span> <span class="n">lut_shape</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">vector_axis</span><span class="p">:</span> <span class="n">Var</span>
     <span class="p">):</span>
         <span class="n">indices_rank</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices_shape</span><span class="p">)</span>
@@ -449,12 +454,12 @@
                     <span class="s2">&quot;&#39;vector_axis&#39; need to be provided.&quot;</span>
                 <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_validate_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_lut_inputs</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lut</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector_axis</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_inputs</span><span class="p">()</span>
         <span class="n">output_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="o">.</span><span class="n">shape</span>
         <span class="n">vector_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lut</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
@@ -464,7 +469,7 @@
             <span class="n">output_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lut</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">output_shape</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">materialized_val_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">materialized_val_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="o">.</span><span class="n">val</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">lut</span><span class="o">.</span><span class="n">val</span><span class="p">,</span>
@@ -472,7 +477,7 @@
         <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">decompress</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">decompress</span><span class="p">(</span>
         <span class="n">indices</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
         <span class="n">lut</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
         <span class="n">vector_axis</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">generic</span><span class="p">],</span>
@@ -484,7 +489,7 @@
 <div class="viewcode-block" id="constexpr_sparse_to_dense">
 <a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS18.compression.constexpr_sparse_to_dense">[docs]</a>
 <span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS18_TARGET</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">constexpr_sparse_to_dense</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">constexpr_sparse_to_dense</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A compile-time operation that returns a constant output value upon de-sparsification of its constant inputs.</span>
 
@@ -520,13 +525,13 @@
     <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">int4</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint4</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">)}</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">decompress</span><span class="p">(</span><span class="n">nonzero_data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">decompress</span><span class="p">(</span><span class="n">nonzero_data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="n">decompressed_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">nonzero_data</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
         <span class="n">decompressed_val</span><span class="p">[</span><span class="n">mask</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">nonzero_data</span>
         <span class="k">return</span> <span class="n">decompressed_val</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_sparse_inputs</span><span class="p">(</span><span class="n">nonzero_data</span><span class="p">:</span> <span class="n">Var</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n">Var</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_validate_sparse_inputs</span><span class="p">(</span><span class="n">nonzero_data</span><span class="p">:</span> <span class="n">Var</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n">Var</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">nonzero_data</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Parameter nonzero_data needs to have rank 1, but got </span><span class="si">{</span><span class="n">nonzero_data</span><span class="o">.</span><span class="n">rank</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -536,11 +541,11 @@
                 <span class="s2">&quot;Number of 1s in mask not match number of elements in parameter nonzero_data&quot;</span>
             <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_sparse_inputs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nonzero_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nonzero_data</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">materialized_val_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">materialized_val_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">nonzero_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonzero_data</span><span class="o">.</span><span class="n">val</span>
         <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">val</span>
         <span class="k">if</span> <span class="n">nonzero_data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonzero_data</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">op_type</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;constexpr_&quot;</span><span class="p">):</span>
@@ -559,7 +564,7 @@
 <div class="viewcode-block" id="constexpr_lut_to_sparse">
 <a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS18.compression.constexpr_lut_to_sparse">[docs]</a>
 <span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS18_TARGET</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">constexpr_lut_to_sparse</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">constexpr_lut_to_sparse</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A compile-time operation that returns a constant output value upon de-palettizing its constant inputs.</span>
 
@@ -682,7 +687,7 @@
         <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
     <span class="p">}</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_validate_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">constexpr_sparse_to_dense</span><span class="o">.</span><span class="n">_validate_sparse_inputs</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">indices_nonzero_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices_mask</span>
         <span class="p">)</span>
@@ -693,7 +698,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">vector_axis</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_inputs</span><span class="p">()</span>
         <span class="n">output_mask_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices_mask</span><span class="o">.</span><span class="n">shape</span>
         <span class="n">output_nonzero_data_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices_nonzero_data</span><span class="o">.</span><span class="n">shape</span>
@@ -711,7 +716,7 @@
         <span class="k">return</span> <span class="n">output_mask_type</span><span class="p">,</span> <span class="n">output_nonzero_data_type</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">decompress</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">decompress</span><span class="p">(</span>
         <span class="n">indices_mask</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
         <span class="n">indices_nonzero_data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
         <span class="n">lut</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -727,7 +732,7 @@
 
         <span class="k">return</span> <span class="n">output_mask</span><span class="p">,</span> <span class="n">output_nonzero_data</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">materialized_val_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">materialized_val_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">vector_axis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector_axis</span><span class="o">.</span><span class="n">val</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">vector_axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">indices_mask</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices_nonzero_data</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lut</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">vector_axis</span>
@@ -738,7 +743,7 @@
 <div class="viewcode-block" id="constexpr_sparse_blockwise_shift_scale">
 <a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS18.compression.constexpr_sparse_blockwise_shift_scale">[docs]</a>
 <span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS18_TARGET</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">constexpr_sparse_blockwise_shift_scale</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">constexpr_sparse_blockwise_shift_scale</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A compile-time operation that returns a constant output value upon de-quantize (shift-scale) its</span>
 <span class="sd">    constant inputs.</span>
@@ -818,13 +823,13 @@
         <span class="s2">&quot;OffsetT&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">int4</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint4</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
     <span class="p">}</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_validate_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">constexpr_sparse_to_dense</span><span class="o">.</span><span class="n">_validate_sparse_inputs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nonzero_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_mask</span><span class="p">)</span>
         <span class="n">constexpr_blockwise_shift_scale</span><span class="o">.</span><span class="n">_validate_shift_scale_inputs</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">data_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonzero_data</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_inputs</span><span class="p">()</span>
         <span class="n">output_mask_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_mask</span><span class="o">.</span><span class="n">shape</span>
         <span class="n">output_nonzero_data_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonzero_data</span><span class="o">.</span><span class="n">shape</span>
@@ -833,7 +838,7 @@
         <span class="k">return</span> <span class="n">output_mask_type</span><span class="p">,</span> <span class="n">output_nonzero_data_type</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">decompress</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">decompress</span><span class="p">(</span>
         <span class="n">data_mask</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
         <span class="n">nonzero_data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
         <span class="n">scale</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -844,7 +849,7 @@
         <span class="n">output_nonzero_data</span> <span class="o">=</span> <span class="n">dequantized_data</span><span class="p">[</span><span class="n">data_mask</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">data_mask</span><span class="p">,</span> <span class="n">output_nonzero_data</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">materialized_val_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">materialized_val_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="o">.</span><span class="n">val</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_mask</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonzero_data</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span></div>
 
@@ -853,7 +858,7 @@
 <div class="viewcode-block" id="constexpr_cast">
 <a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS18.compression.constexpr_cast">[docs]</a>
 <span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS18_TARGET</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">constexpr_cast</span><span class="p">(</span><span class="n">_constexpr_cast_iOS16</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">constexpr_cast</span><span class="p">(</span><span class="n">_constexpr_cast_iOS16</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A compile-time operation that returns a constant output value upon casting its constant input.</span>
 
@@ -875,7 +880,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

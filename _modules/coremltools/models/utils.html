@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.models.utils &mdash; coremltools API Reference 8.0b1 documentation</title>
+  <title>coremltools.models.utils &mdash; coremltools API Reference 8.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
@@ -20,7 +20,7 @@
   
         <script src="../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../_static/documentation_options.js?v=8cc1add8"></script>
         <script src="../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
@@ -40,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                8.0b1
+                8.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -101,7 +101,6 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Utilities for the entire package.</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span> <span class="k">as</span> <span class="n">_OrderedDict</span>
 <span class="kn">import</span> <span class="nn">copy</span> <span class="k">as</span> <span class="nn">_copy</span>
 <span class="kn">import</span> <span class="nn">gc</span> <span class="k">as</span> <span class="nn">_gc</span>
 <span class="kn">import</span> <span class="nn">math</span> <span class="k">as</span> <span class="nn">_math</span>
@@ -111,23 +110,27 @@
 <span class="kn">import</span> <span class="nn">sys</span> <span class="k">as</span> <span class="nn">_sys</span>
 <span class="kn">import</span> <span class="nn">tempfile</span> <span class="k">as</span> <span class="nn">_tempfile</span>
 <span class="kn">import</span> <span class="nn">warnings</span> <span class="k">as</span> <span class="nn">_warnings</span>
-<span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Iterable</span> <span class="k">as</span> <span class="n">_Iterable</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span> <span class="k">as</span> <span class="n">_OrderedDict</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span> <span class="k">as</span> <span class="n">_deepcopy</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">lru_cache</span> <span class="k">as</span> <span class="n">_lru_cache</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span> <span class="k">as</span> <span class="n">_Callable</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span> <span class="k">as</span> <span class="n">_Dict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterable</span> <span class="k">as</span> <span class="n">_Iterable</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span> <span class="k">as</span> <span class="n">_List</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span> <span class="k">as</span> <span class="n">_Tuple</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Type</span> <span class="k">as</span> <span class="n">_Type</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span> <span class="k">as</span> <span class="n">_Union</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_np</span>
 
 <span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">_ct</span>
-<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_logger</span>
 <span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_SPECIFICATION_VERSION_IOS_16</span><span class="p">,</span> <span class="n">_SPECIFICATION_VERSION_IOS_18</span>
 <span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_logger</span>
 <span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">proto</span> <span class="k">as</span> <span class="n">_proto</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil</span> <span class="kn">import</span> <span class="n">mil</span> <span class="k">as</span> <span class="n">_mil</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.converter</span> <span class="kn">import</span> <span class="n">mil_convert</span> <span class="k">as</span> <span class="n">_mil_convert</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend.milproto</span> <span class="kn">import</span> <span class="n">load</span> <span class="k">as</span> <span class="n">_milproto_to_pymil</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">_mb</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Program</span> <span class="k">as</span> <span class="n">_Program</span>
@@ -136,7 +139,9 @@
     <span class="n">WeightRandomizer</span> <span class="k">as</span> <span class="n">_WeightRandomizer</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span> <span class="kn">import</span> <span class="n">AbstractGraphPass</span> <span class="k">as</span> <span class="n">_AbstractGraphPass</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.helper</span> <span class="kn">import</span> <span class="n">block_context_manager</span> <span class="k">as</span> <span class="n">_block_context_manager</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.helper</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">block_context_manager</span> <span class="k">as</span> <span class="n">_block_context_manager</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.pass_pipeline</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">PassPipelineManager</span> <span class="k">as</span> <span class="n">_PassPipelineManager</span><span class="p">,</span>
 <span class="p">)</span>
@@ -179,7 +184,7 @@
 
 
 <span class="k">def</span> <span class="nf">_create_mlpackage</span><span class="p">(</span>
-    <span class="n">proto_spec</span><span class="p">:</span> <span class="n">_proto</span><span class="o">.</span><span class="n">Model_pb2</span><span class="p">,</span>
+    <span class="n">proto_spec</span><span class="p">:</span> <span class="s2">&quot;_proto.Model_pb2&quot;</span><span class="p">,</span>
     <span class="n">weights_dir</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">package_path</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -237,6 +242,16 @@
         <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">package_path</span>
+
+
+<span class="k">def</span> <span class="nf">_get_model_spec_path</span><span class="p">(</span><span class="n">save_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets the filepath to save a protobuf model if it&#39;s within a `mlpackage`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="s2">&quot;Data&quot;</span><span class="p">,</span> <span class="n">_MLPACKAGE_AUTHOR_NAME</span><span class="p">,</span> <span class="n">_MODEL_FILE_NAME</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="save_spec">
@@ -320,7 +335,7 @@
 
 <div class="viewcode-block" id="load_spec">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.load_spec">[docs]</a>
-<span class="k">def</span> <span class="nf">load_spec</span><span class="p">(</span><span class="n">model_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_proto</span><span class="o">.</span><span class="n">Model_pb2</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">load_spec</span><span class="p">(</span><span class="n">model_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;_proto.Model_pb2&quot;</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Load a protobuf model specification from file (``mlmodel``) or directory (``mlpackage``).</span>
 
@@ -434,12 +449,9 @@
     <span class="k">del</span> <span class="n">wp</span><span class="o">.</span><span class="n">floatValue</span><span class="p">[:]</span>
 
 <span class="k">def</span> <span class="nf">_convert_neural_network_spec_weights_to_fp16</span><span class="p">(</span><span class="n">fp_spec</span><span class="p">):</span>
-    <span class="kn">from</span> <span class="nn">.neural_network.quantization_utils</span> <span class="kn">import</span> <span class="p">(</span>
-        <span class="n">_QUANTIZATION_MODE_LINEAR_QUANTIZATION</span><span class="p">,</span>
-        <span class="n">_quantize_spec_weights</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">.neural_network.quantization_utils</span> <span class="kn">import</span> <span class="n">_quantize_spec_weights</span>
 
-    <span class="n">qspec</span> <span class="o">=</span> <span class="n">_quantize_spec_weights</span><span class="p">(</span><span class="n">fp_spec</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="n">_QUANTIZATION_MODE_LINEAR_QUANTIZATION</span><span class="p">)</span>
+    <span class="n">qspec</span> <span class="o">=</span> <span class="n">_quantize_spec_weights</span><span class="p">(</span><span class="n">fp_spec</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_QUANTIZATION_MODE_LINEAR_QUANTIZATION</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">qspec</span>
 
 
@@ -470,12 +482,10 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility to get the model and the data.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">MLModel</span>
-
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">MLModel</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">spec</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">MLModel</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">compute_units</span><span class="o">=</span><span class="n">compute_units</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">compute_units</span><span class="o">=</span><span class="n">compute_units</span><span class="p">)</span>
 
 <div class="viewcode-block" id="evaluate_regressor">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.evaluate_regressor">[docs]</a>
@@ -1152,16 +1162,17 @@
 
 <div class="viewcode-block" id="compile_model">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.compile_model">[docs]</a>
-<span class="k">def</span> <span class="nf">compile_model</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">_proto</span><span class="o">.</span><span class="n">Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">,</span> <span class="n">destination_path</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">compile_model</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">_Union</span><span class="p">[</span><span class="s2">&quot;_proto.Model_pb2.Model&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+    <span class="n">destination_path</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Compiles a Core ML model spec.</span>
+<span class="sd">    Compiles a Core ML model.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    model: Model_pb2</span>
-<span class="sd">        Spec/protobuf to compile.</span>
-
-<span class="sd">        Note: an ``mlprogam`` which uses a blob file is not supported.</span>
+<span class="sd">    model: Model_pb2 | str</span>
+<span class="sd">        Either a Core ML model specification (protobuf object) or a path to a saved model (.mlmodel or .mlpackage) file.</span>
 
 <span class="sd">    destination_path: str</span>
 <span class="sd">        Path where the compiled model will be saved.</span>
@@ -1205,6 +1216,10 @@
 <span class="sd">    --------</span>
 <span class="sd">    coremltools.models.CompiledMLModel</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">is_valid_model_file</span><span class="p">(</span><span class="n">source_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">extension</span> <span class="o">=</span> <span class="n">source_path</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">extension</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.mlpackage&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">extension</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.mlmodel&quot;</span><span class="p">)</span>
+
     <span class="c1"># Check environment</span>
     <span class="k">if</span> <span class="n">_macos_version</span><span class="p">()</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">13</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Compiling a Core ML models is only support on macOS 10.13 or higher.&quot;</span><span class="p">)</span>
@@ -1213,30 +1228,47 @@
     <span class="k">except</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unable to compile any Core ML models.&quot;</span><span class="p">)</span>
 
+    <span class="n">source_model_path</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="c1"># Check model parameter</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;To get a compiled model from a saved MLModel, first load the model, &quot;</span>
-                        <span class="s2">&quot; then call </span><span class="se">\&quot;</span><span class="s2">get_compiled_model_path</span><span class="se">\&quot;</span><span class="s2">.&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;This model has already been compiled. Call </span><span class="se">\&quot;</span><span class="s2">get_compiled_model_path</span><span class="se">\&quot;</span><span class="s2">&quot;</span>
-                        <span class="s2">&quot; to get the compiled model.&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">_proto</span><span class="o">.</span><span class="n">Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Unrecognized input for </span><span class="se">\&quot;</span><span class="s2">model</span><span class="se">\&quot;</span><span class="s2"> parameter. It should be a spec.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_valid_model_file</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+            <span class="n">source_model_path</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid model file path: &#39;</span><span class="si">{</span><span class="n">model</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
+                <span class="s2">&quot;Expected a file with .mlpackage or .model extension. &quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">source_model_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s1">&#39;This model has already been compiled. Call &quot;get_compiled_model_path&quot;&#39;</span>
+                <span class="s2">&quot; to get the compiled model.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">_proto</span><span class="o">.</span><span class="n">Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s1">&#39;Unrecognized input for &quot;model&quot; parameter. It should be a spec or model file path.&#39;</span>
+            <span class="p">)</span>
 
     <span class="c1"># Check file extension of destination_path parameter</span>
     <span class="k">if</span> <span class="n">destination_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">destination_path</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.mlmodelc&quot;</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">destination_path</span><span class="se">\&quot;</span><span class="s2"> parameter must have </span><span class="se">\&quot;</span><span class="s2">.mlmodelc</span><span class="se">\&quot;</span><span class="s2"> file extension.&quot;</span><span class="p">)</span>
 
     <span class="c1"># Compile model</span>
-    <span class="k">with</span> <span class="n">_tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">save_dir</span><span class="p">:</span>
-        <span class="n">spec_file_path</span> <span class="o">=</span> <span class="n">save_dir</span> <span class="o">+</span> <span class="s1">&#39;/spec.mlmodel&#39;</span>
-        <span class="n">save_spec</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">spec_file_path</span><span class="p">)</span>
-        <span class="n">original_compiled_model_path</span> <span class="o">=</span>  <span class="n">_MLModelProxy</span><span class="o">.</span><span class="n">compileModel</span><span class="p">(</span><span class="n">spec_file_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">source_model_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">_tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">save_dir</span><span class="p">:</span>
+            <span class="n">spec_file_path</span> <span class="o">=</span> <span class="n">save_dir</span> <span class="o">+</span> <span class="s2">&quot;/spec.mlmodel&quot;</span>
+            <span class="n">save_spec</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">spec_file_path</span><span class="p">)</span>
+            <span class="n">original_compiled_model_path</span> <span class="o">=</span> <span class="n">_MLModelProxy</span><span class="o">.</span><span class="n">compileModel</span><span class="p">(</span><span class="n">spec_file_path</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">original_compiled_model_path</span> <span class="o">=</span> <span class="n">_MLModelProxy</span><span class="o">.</span><span class="n">compileModel</span><span class="p">(</span><span class="n">source_model_path</span><span class="p">)</span>
 
     <span class="c1"># Move the compiled model if needed</span>
     <span class="k">if</span> <span class="n">destination_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">original_compiled_model_path</span>
     <span class="n">_shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">original_compiled_model_path</span><span class="p">,</span> <span class="n">destination_path</span><span class="p">)</span>
+
     <span class="k">return</span> <span class="n">destination_path</span></div>
 
 
@@ -1435,15 +1467,12 @@
 
 <span class="k">def</span> <span class="nf">_apply_graph_pass</span><span class="p">(</span>
     <span class="n">mlmodel</span><span class="p">:</span> <span class="s2">&quot;_ct.models.MLModel&quot;</span><span class="p">,</span>
-    <span class="n">graph_pass</span><span class="p">:</span> <span class="n">_AbstractGraphPass</span><span class="p">,</span>
+    <span class="n">graph_pass</span><span class="p">:</span> <span class="n">_Union</span><span class="p">[</span><span class="n">_AbstractGraphPass</span><span class="p">,</span> <span class="n">_Iterable</span><span class="p">[</span><span class="n">_AbstractGraphPass</span><span class="p">]],</span>
     <span class="n">spec_version</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_SPECIFICATION_VERSION_IOS_16</span><span class="p">,</span>
     <span class="n">skip_model_load</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">pymil_load_func</span><span class="p">:</span> <span class="n">_Callable</span> <span class="o">=</span> <span class="n">_milproto_to_pymil</span><span class="o">.</span><span class="n">load</span><span class="p">,</span>
     <span class="n">return_pymil_prog</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Union</span><span class="p">[</span><span class="s2">&quot;_ct.models.MLModel&quot;</span><span class="p">,</span> <span class="n">_Program</span><span class="p">]:</span>
-    <span class="c1"># We do the lazy import to prevent circular import</span>
-    <span class="kn">from</span> <span class="nn">coremltools.converters.mil.converter</span> <span class="kn">import</span> <span class="n">mil_convert</span> <span class="k">as</span> <span class="n">_mil_convert</span>
-
     <span class="k">if</span> <span class="n">skip_model_load</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># Determine if skip the model load by the original mlmodel.</span>
         <span class="n">skip_model_load</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">__proxy__</span> <span class="ow">is</span> <span class="kc">None</span>
@@ -1454,11 +1483,15 @@
     <span class="n">specification_version</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">model_spec</span><span class="o">.</span><span class="n">specificationVersion</span><span class="p">,</span> <span class="n">spec_version</span><span class="p">)</span>
     <span class="n">prog</span> <span class="o">=</span> <span class="n">_convert_model_spec_to_pymil_prog</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">specification_version</span><span class="p">,</span> <span class="n">pymil_load_func</span><span class="p">)</span>
 
-    <span class="c1"># Apply graph pass.</span>
-    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
-        <span class="n">graph_pass</span><span class="p">,</span> <span class="n">_AbstractGraphPass</span>
-    <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;graph pass must be an AbstractGraphPass instance, but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">graph_pass</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-    <span class="n">graph_pass</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">prog</span><span class="p">)</span>
+    <span class="c1"># Apply graph pass(es).</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">graph_pass</span><span class="p">,</span> <span class="n">_AbstractGraphPass</span><span class="p">):</span>
+        <span class="n">graph_pass</span> <span class="o">=</span> <span class="p">[</span><span class="n">graph_pass</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">cur_graph_pass</span> <span class="ow">in</span> <span class="n">graph_pass</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cur_graph_pass</span><span class="p">,</span> <span class="n">_AbstractGraphPass</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
+                <span class="s2">&quot;graph pass must be an AbstractGraphPass instance, &quot;</span> <span class="sa">f</span><span class="s2">&quot;but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">graph_pass</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="n">cur_graph_pass</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">prog</span><span class="p">)</span>
 
     <span class="c1"># An early return can prevent running all other optimization paths triggered by _mil_convert.</span>
     <span class="k">if</span> <span class="n">return_pymil_prog</span><span class="p">:</span>
@@ -1605,7 +1638,7 @@
         <span class="bp">self</span><span class="p">,</span> <span class="n">model_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">src_function_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">target_function_name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Insert a ``src_function_name`` function from ``model_path`` as the </span>
+<span class="sd">        Insert a ``src_function_name`` function from ``model_path`` as the</span>
 <span class="sd">        ``target_function_name`` function in the multifunction descriptor.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_modelpath_to_cache</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
@@ -1689,11 +1722,8 @@
 <span class="sd">    MultiFunctionDescriptor</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># We do the lazy import to prevent circular import</span>
-    <span class="kn">from</span> <span class="nn">coremltools.converters.mil.converter</span> <span class="kn">import</span> <span class="n">mil_convert</span> <span class="k">as</span> <span class="n">_mil_convert</span>
-
     <span class="k">def</span> <span class="nf">get_function_spec</span><span class="p">(</span>
-        <span class="n">spec</span><span class="p">:</span> <span class="n">_proto</span><span class="o">.</span><span class="n">Model_pb2</span><span class="p">,</span> <span class="n">func_name</span><span class="p">:</span> <span class="nb">str</span>
+        <span class="n">spec</span><span class="p">:</span> <span class="s2">&quot;_proto.Model_pb2&quot;</span><span class="p">,</span> <span class="n">func_name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_proto</span><span class="o">.</span><span class="n">Model_pb2</span><span class="o">.</span><span class="n">FunctionDescription</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Utils to construct a FunctionDescription from the source spec.</span>
@@ -1793,6 +1823,7 @@
         <span class="n">defaultFunctionName</span><span class="o">=</span><span class="n">default_function_name</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">multifunction_prog</span><span class="o">.</span><span class="n">skip_all_passes</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">multifunction_prog</span><span class="o">.</span><span class="n">export_as_multifunction</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">mlmodel</span> <span class="o">=</span> <span class="n">_mil_convert</span><span class="p">(</span>
         <span class="n">multifunction_prog</span><span class="p">,</span>
         <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;mlprogram&quot;</span><span class="p">,</span>
@@ -1800,7 +1831,6 @@
         <span class="n">specification_version</span><span class="o">=</span><span class="n">spec_version</span><span class="p">,</span>
         <span class="n">compute_units</span><span class="o">=</span><span class="n">_ct</span><span class="o">.</span><span class="n">ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">,</span>
         <span class="n">model_description</span><span class="o">=</span><span class="n">model_description</span><span class="p">,</span>
-        <span class="n">export_multi_functions</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">skip_model_load</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">mlmodel</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">destination_path</span><span class="p">)</span></div>
@@ -1879,9 +1909,6 @@
 <span class="sd">    coremltools.converters.mil.mil.passes.defs.experiment.materialize_symbolic_shape_program</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># We do the lazy import to prevent circular import</span>
-    <span class="kn">from</span> <span class="nn">coremltools.converters.mil.converter</span> <span class="kn">import</span> <span class="n">mil_convert</span> <span class="k">as</span> <span class="n">_mil_convert</span>
-
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dynamic_shape_mlmodel</span><span class="p">,</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="s2">&quot;Dynamic shape mlmodel must be type of ct.models.MLModel, &quot;</span>
@@ -1915,30 +1942,27 @@
     <span class="p">)</span>
     <span class="n">_PassPipelineManager</span><span class="o">.</span><span class="n">apply_pipeline</span><span class="p">(</span><span class="n">dynamic_shape_prog</span><span class="p">,</span> <span class="n">pass_pipeline</span><span class="p">)</span>
 
-    <span class="c1"># Weights are duplicated in each materialized new function</span>
-    <span class="c1"># By default, graph pass const_deduplication will not deduplicate across functions,</span>
-    <span class="c1"># so we need to call it explicitly here</span>
-    <span class="n">const_deduplication_pass</span> <span class="o">=</span> <span class="n">_PASS_REGISTRY</span><span class="p">[</span><span class="s2">&quot;common::const_deduplication&quot;</span><span class="p">]</span>
-    <span class="n">const_deduplication_pass</span><span class="o">.</span><span class="n">_deduplicate_const_across_functions</span><span class="p">(</span><span class="n">dynamic_shape_prog</span><span class="p">)</span>
-
-    <span class="n">export_multi_functions</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="c1"># If source function is the only function in source model,</span>
     <span class="c1"># and source function is replaced with materialization,</span>
     <span class="c1"># and materialization does not create other functions,</span>
+    <span class="c1"># and source function name is &quot;main&quot;,</span>
     <span class="c1"># then we will end up with a unifunction model</span>
     <span class="c1"># Core ML distinguishs &quot;unifunction model&quot; and &quot;multifunction model with only 1 function&quot;</span>
     <span class="k">if</span> <span class="p">(</span>
         <span class="nb">len</span><span class="p">(</span><span class="n">dynamic_shape_prog</span><span class="o">.</span><span class="n">functions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
         <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">function_name_to_materialization_map</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
         <span class="ow">and</span> <span class="n">source_function_name</span> <span class="ow">in</span> <span class="n">function_name_to_materialization_map</span>
+        <span class="ow">and</span> <span class="n">source_function_name</span> <span class="o">==</span> <span class="s2">&quot;main&quot;</span>
     <span class="p">):</span>
-        <span class="n">export_multi_functions</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">dynamic_shape_prog</span><span class="o">.</span><span class="n">export_as_multifunction</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dynamic_shape_prog</span><span class="o">.</span><span class="n">export_as_multifunction</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="c1"># Multifunciton is added in iOS 18, so</span>
     <span class="c1"># * if export multifunction, then specification version has to be iOS 18+</span>
     <span class="c1"># * else, specification version can be the same as original version</span>
     <span class="n">specification_version</span> <span class="o">=</span> <span class="n">dynamic_shape_mlmodel</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">specificationVersion</span>
-    <span class="k">if</span> <span class="n">export_multi_functions</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">dynamic_shape_prog</span><span class="o">.</span><span class="n">export_as_multifunction</span><span class="p">:</span>
         <span class="n">specification_version</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">_ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS18</span><span class="p">,</span> <span class="n">specification_version</span><span class="p">)</span>
 
     <span class="n">dynamic_shape_prog</span><span class="o">.</span><span class="n">skip_all_passes</span> <span class="o">=</span> <span class="kc">True</span>
@@ -1948,7 +1972,6 @@
         <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;mlprogram&quot;</span><span class="p">,</span>
         <span class="n">specification_version</span><span class="o">=</span><span class="n">specification_version</span><span class="p">,</span>
         <span class="n">compute_units</span><span class="o">=</span><span class="n">_ct</span><span class="o">.</span><span class="n">ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">,</span>
-        <span class="n">export_multi_functions</span><span class="o">=</span><span class="n">export_multi_functions</span><span class="p">,</span>
         <span class="n">skip_model_load</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">materialized_mlmodel</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">destination_path</span><span class="p">)</span></div>
@@ -2058,10 +2081,6 @@
 <span class="sd">            merge_chunks_to_pipeline=True,</span>
 <span class="sd">        )</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># We do the lazy import to prevent circular import</span>
-    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">MLModel</span>
-    <span class="kn">from</span> <span class="nn">coremltools.converters.mil.converter</span> <span class="kn">import</span> <span class="n">mil_convert</span> <span class="k">as</span> <span class="n">_mil_convert</span>
-
     <span class="k">def</span> <span class="nf">get_pymil_prog_and_spec_from_model</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
 
         <span class="c1"># get the model spec and weight directory</span>
@@ -2081,14 +2100,14 @@
         <span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="s2">&quot;main&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;bisect_model&#39; only support model with a single &#39;main&#39; function.&quot;</span><span class="p">)</span>
-        
+
         <span class="n">func</span> <span class="o">=</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">]</span>
         <span class="n">func</span><span class="o">.</span><span class="n">operations</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">operations</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">prog</span><span class="p">,</span> <span class="n">spec</span>
 
     <span class="c1"># check the input type of model</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">MLModel</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">)):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;model&#39; must be type of [str, MLModel]. Got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
 
     <span class="c1"># The below implementation assumes that the model is single function, with a &quot;main&quot; function.</span>
@@ -2203,8 +2222,10 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Verifies the end-to-end output correctness of full (original) model versus chunked models&quot;&quot;&quot;</span>
     <span class="c1"># lazy import avoids circular error</span>
-    <span class="kn">from</span> <span class="nn">coremltools.converters.mil.testing_utils</span> <span class="kn">import</span> <span class="n">random_gen_input_feature_type</span> <span class="k">as</span> <span class="n">random_gen_input_feature_type</span>
     <span class="kn">from</span> <span class="nn">coremltools.converters.mil.testing_utils</span> <span class="kn">import</span> <span class="n">compute_snr_and_psnr</span>
+    <span class="kn">from</span> <span class="nn">coremltools.converters.mil.testing_utils</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">random_gen_input_feature_type</span> <span class="k">as</span> <span class="n">random_gen_input_feature_type</span><span class="p">,</span>
+    <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">report_correctness</span><span class="p">(</span><span class="n">original_outputs</span><span class="p">:</span> <span class="n">_np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">final_outputs</span><span class="p">:</span> <span class="n">_np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">log_prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Report PSNR values across two compatible tensors.</span>
@@ -2229,7 +2250,7 @@
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">final_psnr</span>
 
-    
+
     <span class="c1"># Generate inputs for first chunk and full model</span>
     <span class="n">input_dict</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">input_desc</span> <span class="ow">in</span> <span class="n">full_model</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">input</span><span class="p">:</span>
@@ -2404,6 +2425,215 @@
     <span class="k">return</span> <span class="n">prog</span>
 
 
+<div class="viewcode-block" id="change_input_output_tensor_type">
+<a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.change_input_output_tensor_type">[docs]</a>
+<span class="k">def</span> <span class="nf">change_input_output_tensor_type</span><span class="p">(</span>
+    <span class="n">ml_model</span><span class="p">:</span> <span class="s2">&quot;_ct.models.MLModel&quot;</span><span class="p">,</span>
+    <span class="n">from_type</span><span class="p">:</span> <span class="s2">&quot;_proto.FeatureTypes_pb2.ArrayFeatureType&quot;</span><span class="p">,</span>
+    <span class="n">to_type</span><span class="p">:</span> <span class="s2">&quot;_proto.FeatureTypes_pb2.ArrayFeatureType&quot;</span><span class="p">,</span>
+    <span class="n">function_names</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">input_names</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">output_names</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;_ct.models.model.MLModel&quot;</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Change the tensor data types of Core ML model inputs / outputs. Supported types are FLOAT16, FLOAT32.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ml_model: MLModel</span>
+<span class="sd">        A Core ML model that needs to change its input/output type.</span>
+<span class="sd">        Note:</span>
+<span class="sd">        - the original model is not modified, the model with updated types is returned as a new instance.</span>
+<span class="sd">        - only an mlProgram is supported (not pipelines, not neural networks).</span>
+
+<span class="sd">    from_type:</span>
+<span class="sd">        The type that should be changed from.</span>
+
+<span class="sd">    to_type:</span>
+<span class="sd">        The type that will be used instead of all the `from_type` type.</span>
+
+<span class="sd">    function_names:</span>
+<span class="sd">        Optional list of function names where the input/output needs to be changed. If not specified, only the &quot;main&quot;</span>
+<span class="sd">        function will be updated.</span>
+
+<span class="sd">    input_names:</span>
+<span class="sd">        Optional list of input names that should be updated (by default none of the inputs will be updated).</span>
+
+<span class="sd">    output_names:</span>
+<span class="sd">        Optional list of output names that should be updated (by default all the outputs that match the `from_type`</span>
+<span class="sd">        type will be updated).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        from coremltools.models.model import MLModel</span>
+<span class="sd">        from coremltools.utils import change_input_output_tensor_type</span>
+<span class="sd">        from coremltools.proto.FeatureTypes_pb2 import ArrayFeatureType</span>
+
+<span class="sd">        model = MLModel(&quot;my_model.mlpackage&quot;)</span>
+<span class="sd">        updated_model = change_input_output_tensor_type(</span>
+<span class="sd">            ml_model=model,</span>
+<span class="sd">            from_type=ArrayFeatureType.FLOAT32,</span>
+<span class="sd">            to_type=ArrayFeatureType.FLOAT16,</span>
+<span class="sd">        )</span>
+<span class="sd">        updated_model.save(&quot;my_updated_model.mlpackage&quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">SUPPORTED_TYPES</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">_proto</span><span class="o">.</span><span class="n">FeatureTypes_pb2</span><span class="o">.</span><span class="n">ArrayFeatureType</span><span class="o">.</span><span class="n">FLOAT16</span><span class="p">,</span>
+        <span class="n">_proto</span><span class="o">.</span><span class="n">FeatureTypes_pb2</span><span class="o">.</span><span class="n">ArrayFeatureType</span><span class="o">.</span><span class="n">FLOAT32</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_model_spec</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;_proto.Model_pb2.Model&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;input model must be of type ct.models.MLModel, actual type is </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+        <span class="n">model_spec</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
+
+        <span class="n">model_type</span> <span class="o">=</span> <span class="n">model_spec</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">model_type</span> <span class="o">!=</span> <span class="s2">&quot;mlProgram&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;input model must be an mlProgram, actual model type is </span><span class="si">{</span><span class="n">model_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">model_spec</span>
+
+    <span class="k">def</span> <span class="nf">_get_dtype</span><span class="p">(</span>
+        <span class="n">feature_type</span><span class="p">:</span> <span class="s2">&quot;_proto.FeatureTypes_pb2.ArrayFeatureType&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Type</span><span class="p">[</span><span class="n">_mil</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">double</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">feature_type</span> <span class="o">==</span> <span class="n">_proto</span><span class="o">.</span><span class="n">FeatureTypes_pb2</span><span class="o">.</span><span class="n">ArrayFeatureType</span><span class="o">.</span><span class="n">FLOAT16</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_mil</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span>
+        <span class="k">if</span> <span class="n">feature_type</span> <span class="o">==</span> <span class="n">_proto</span><span class="o">.</span><span class="n">FeatureTypes_pb2</span><span class="o">.</span><span class="n">ArrayFeatureType</span><span class="o">.</span><span class="n">FLOAT32</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_mil</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">fp32</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;invalid feature type: </span><span class="si">{</span><span class="n">feature_type</span><span class="si">}</span><span class="s2">, supported only FLOAT16, FLOAT32&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_sanitize_names</span><span class="p">(</span><span class="n">names</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">desc_list</span><span class="p">:</span> <span class="n">_Iterable</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="n">_List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">_List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">names</span> <span class="o">=</span> <span class="n">default</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">desc_list</span> <span class="k">if</span> <span class="s2">&quot;*&quot;</span> <span class="ow">in</span> <span class="n">names</span> <span class="ow">or</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_eligible_feature_desc</span><span class="p">(</span>
+        <span class="n">feature_desc</span><span class="p">:</span> <span class="s2">&quot;_proto.Model_pb2.FeatureDescription&quot;</span><span class="p">,</span>
+        <span class="n">names</span><span class="p">:</span> <span class="n">_List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">data_type</span><span class="p">:</span> <span class="n">_proto</span><span class="o">.</span><span class="n">FeatureTypes_pb2</span><span class="o">.</span><span class="n">ArrayFeatureType</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">feature_desc</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ignoring feature </span><span class="si">{</span><span class="n">feature_desc</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> as it&#39;s not in the list of required names </span><span class="si">{</span><span class="n">names</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">feature_type</span> <span class="o">=</span> <span class="n">feature_desc</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">feature_type</span> <span class="o">!=</span> <span class="s2">&quot;multiArrayType&quot;</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ignoring output </span><span class="si">{</span><span class="n">feature_desc</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (type: </span><span class="si">{</span><span class="n">feature_type</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">feature_data_type</span> <span class="o">=</span> <span class="n">feature_desc</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="o">.</span><span class="n">dataType</span>
+        <span class="k">if</span> <span class="n">feature_data_type</span> <span class="o">!=</span> <span class="n">data_type</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ignoring output tensor </span><span class="si">{</span><span class="n">feature_desc</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (data type: </span><span class="si">{</span><span class="n">feature_data_type</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">_get_input_vars</span><span class="p">(</span><span class="n">var_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Iterable</span><span class="p">[</span><span class="n">_Tuple</span><span class="p">[</span><span class="n">_Optional</span><span class="p">[</span><span class="n">_mil</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">Function</span><span class="p">],</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_mil</span><span class="o">.</span><span class="n">Var</span><span class="p">]]]:</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">function_names</span><span class="p">:</span>
+            <span class="n">func</span> <span class="o">=</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="n">var</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">func</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="n">var_name</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">var</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">func</span><span class="o">.</span><span class="n">opset_version</span> <span class="o">&lt;</span> <span class="n">_ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS16</span><span class="p">:</span>
+                    <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;upgrading opset_version for function </span><span class="si">{</span><span class="n">func</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> to iOS16&quot;</span><span class="p">)</span>
+                    <span class="n">func</span><span class="o">.</span><span class="n">opset_version</span> <span class="o">=</span> <span class="n">_ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS16</span>
+                <span class="k">yield</span> <span class="n">func</span><span class="p">,</span> <span class="n">var</span>
+
+    <span class="k">def</span> <span class="nf">_get_output_vars</span><span class="p">(</span><span class="n">var_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Iterable</span><span class="p">[</span><span class="n">_Tuple</span><span class="p">[</span><span class="n">_Optional</span><span class="p">[</span><span class="n">_mil</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">Function</span><span class="p">],</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_mil</span><span class="o">.</span><span class="n">Var</span><span class="p">]]]:</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">function_names</span><span class="p">:</span>
+            <span class="n">func</span> <span class="o">=</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="n">var</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">func</span><span class="o">.</span><span class="n">outputs</span> <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">var_name</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">var</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">func</span><span class="o">.</span><span class="n">opset_version</span> <span class="o">&lt;</span> <span class="n">_ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS16</span><span class="p">:</span>
+                    <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;upgrading opset_version for function </span><span class="si">{</span><span class="n">func</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> to iOS16&quot;</span><span class="p">)</span>
+                    <span class="n">func</span><span class="o">.</span><span class="n">opset_version</span> <span class="o">=</span> <span class="n">_ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS16</span>
+                <span class="k">yield</span> <span class="n">func</span><span class="p">,</span> <span class="n">var</span>
+
+    <span class="k">def</span> <span class="nf">_cast_input_type</span><span class="p">(</span>
+        <span class="n">feature_desc</span><span class="p">:</span> <span class="s2">&quot;_proto.Model_pb2.FeatureDescription&quot;</span><span class="p">,</span>
+        <span class="n">feature_var</span><span class="p">:</span> <span class="n">_mil</span><span class="o">.</span><span class="n">Var</span><span class="p">,</span>
+        <span class="n">first_operation</span><span class="p">:</span> <span class="n">_mil</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">first_operation</span><span class="o">.</span><span class="n">enclosing_block</span><span class="p">:</span>
+            <span class="n">from_dtype_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;fp</span><span class="si">{</span><span class="n">from_dtype</span><span class="o">.</span><span class="n">get_bitwidth</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">var_name</span> <span class="o">=</span> <span class="n">feature_desc</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;_to_</span><span class="si">{</span><span class="n">from_dtype_str</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">_mb</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">feature_var</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">from_dtype_str</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">var_name</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">first_operation</span><span class="p">)</span>
+            <span class="n">x</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span><span class="o">.</span><span class="n">replace_uses_of_var_after_op</span><span class="p">(</span>
+                <span class="n">anchor_op</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">op</span><span class="p">,</span>
+                <span class="n">old_var</span><span class="o">=</span><span class="n">feature_var</span><span class="p">,</span>
+                <span class="n">new_var</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">feature_desc</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="o">.</span><span class="n">dataType</span> <span class="o">=</span> <span class="n">to_type</span>
+            <span class="n">feature_var</span><span class="o">.</span><span class="n">_sym_type</span> <span class="o">=</span> <span class="n">_mil</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">to_dtype</span><span class="p">,</span> <span class="n">feature_var</span><span class="o">.</span><span class="n">sym_type</span><span class="o">.</span><span class="n">get_shape</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">_cast_output_type</span><span class="p">(</span>
+        <span class="n">feature_desc</span><span class="p">:</span> <span class="s2">&quot;_proto.Model_pb2.FeatureDescription&quot;</span><span class="p">,</span> <span class="n">feature_var</span><span class="p">:</span> <span class="n">_mil</span><span class="o">.</span><span class="n">Var</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">feature_var</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span><span class="p">:</span>
+            <span class="n">to_dtype_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;fp</span><span class="si">{</span><span class="n">to_dtype</span><span class="o">.</span><span class="n">get_bitwidth</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">var_name</span> <span class="o">=</span> <span class="n">feature_desc</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;_to_</span><span class="si">{</span><span class="n">to_dtype_str</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">_mb</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">feature_var</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">to_dtype_str</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">var_name</span><span class="p">)</span>
+            <span class="n">x</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span><span class="o">.</span><span class="n">replace_uses_of_var_after_op</span><span class="p">(</span>
+                <span class="n">anchor_op</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">op</span><span class="p">,</span>
+                <span class="n">old_var</span><span class="o">=</span><span class="n">feature_var</span><span class="p">,</span>
+                <span class="n">new_var</span><span class="o">=</span><span class="n">x</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">x</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">var_name</span>
+            <span class="n">feature_desc</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">var_name</span>
+            <span class="n">feature_desc</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="o">.</span><span class="n">dataType</span> <span class="o">=</span> <span class="n">to_type</span>
+
+    <span class="n">ml_model_spec</span> <span class="o">=</span> <span class="n">_get_model_spec</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">ml_model</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">from_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SUPPORTED_TYPES</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;not supported from_type: must be an ArrayFeatureType of </span><span class="si">{</span><span class="n">SUPPORTED_TYPES</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">to_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SUPPORTED_TYPES</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;not supported to_type: must be an ArrayFeatureType of </span><span class="si">{</span><span class="n">SUPPORTED_TYPES</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">from_type</span> <span class="o">==</span> <span class="n">to_type</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_deepcopy</span><span class="p">(</span><span class="n">ml_model</span><span class="p">)</span>
+
+    <span class="n">from_dtype</span> <span class="o">=</span> <span class="n">_get_dtype</span><span class="p">(</span><span class="n">feature_type</span><span class="o">=</span><span class="n">from_type</span><span class="p">)</span>
+    <span class="n">to_dtype</span> <span class="o">=</span> <span class="n">_get_dtype</span><span class="p">(</span><span class="n">feature_type</span><span class="o">=</span><span class="n">to_type</span><span class="p">)</span>
+
+    <span class="n">input_names</span> <span class="o">=</span> <span class="n">_sanitize_names</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="n">input_names</span><span class="p">,</span> <span class="n">desc_list</span><span class="o">=</span><span class="n">ml_model_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="p">[])</span>
+    <span class="n">output_names</span> <span class="o">=</span> <span class="n">_sanitize_names</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="n">output_names</span><span class="p">,</span> <span class="n">desc_list</span><span class="o">=</span><span class="n">ml_model_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">output</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;*&quot;</span><span class="p">])</span>
+
+    <span class="n">prog</span> <span class="o">=</span> <span class="n">_milproto_to_pymil</span><span class="o">.</span><span class="n">load</span><span class="p">(</span>
+        <span class="n">model_spec</span><span class="o">=</span><span class="n">ml_model_spec</span><span class="p">,</span>
+        <span class="n">specification_version</span><span class="o">=</span><span class="n">ml_model_spec</span><span class="o">.</span><span class="n">specificationVersion</span><span class="p">,</span>
+        <span class="n">file_weights_dir</span><span class="o">=</span><span class="n">ml_model</span><span class="o">.</span><span class="n">weights_dir</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">function_names</span><span class="p">:</span>
+        <span class="n">function_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">]</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;functions: </span><span class="si">{</span><span class="n">function_names</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">func_name</span> <span class="ow">in</span> <span class="n">function_names</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">func_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;function &#39;</span><span class="si">{</span><span class="n">func_name</span><span class="si">}</span><span class="s2">&#39; not defined in the model&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">desc_input</span> <span class="ow">in</span> <span class="n">ml_model_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">input</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_eligible_feature_desc</span><span class="p">(</span><span class="n">feature_desc</span><span class="o">=</span><span class="n">desc_input</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="n">input_names</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="n">from_type</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="k">for</span> <span class="n">function</span><span class="p">,</span> <span class="n">input_var</span> <span class="ow">in</span> <span class="n">_get_input_vars</span><span class="p">(</span><span class="n">var_name</span><span class="o">=</span><span class="n">desc_input</span><span class="o">.</span><span class="n">name</span><span class="p">):</span>
+            <span class="n">_cast_input_type</span><span class="p">(</span><span class="n">feature_desc</span><span class="o">=</span><span class="n">desc_input</span><span class="p">,</span> <span class="n">feature_var</span><span class="o">=</span><span class="n">input_var</span><span class="p">,</span> <span class="n">first_operation</span><span class="o">=</span><span class="n">function</span><span class="o">.</span><span class="n">operations</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">desc_output</span> <span class="ow">in</span> <span class="n">ml_model_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">output</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_eligible_feature_desc</span><span class="p">(</span><span class="n">feature_desc</span><span class="o">=</span><span class="n">desc_output</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="n">output_names</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="n">from_type</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="k">for</span> <span class="n">function</span><span class="p">,</span> <span class="n">output_var</span> <span class="ow">in</span> <span class="n">_get_output_vars</span><span class="p">(</span><span class="n">var_name</span><span class="o">=</span><span class="n">desc_output</span><span class="o">.</span><span class="n">name</span><span class="p">):</span>
+            <span class="n">_cast_output_type</span><span class="p">(</span><span class="n">feature_desc</span><span class="o">=</span><span class="n">desc_output</span><span class="p">,</span> <span class="n">feature_var</span><span class="o">=</span><span class="n">output_var</span><span class="p">)</span>
+
+    <span class="n">model_opset_version</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">function</span><span class="o">.</span><span class="n">opset_version</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">function</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">_mil_convert</span><span class="p">(</span>
+        <span class="n">prog</span><span class="p">,</span>
+        <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;mlprogram&quot;</span><span class="p">,</span>
+        <span class="n">convert_from</span><span class="o">=</span><span class="s2">&quot;milinternal&quot;</span><span class="p">,</span>
+        <span class="n">specification_version</span><span class="o">=</span><span class="n">model_opset_version</span><span class="p">,</span>
+        <span class="n">compute_units</span><span class="o">=</span><span class="n">ml_model</span><span class="o">.</span><span class="n">compute_unit</span><span class="p">,</span>
+        <span class="n">model_description</span><span class="o">=</span><span class="n">ml_model_spec</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
 </pre></div>
 
            </div>
@@ -2413,7 +2643,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

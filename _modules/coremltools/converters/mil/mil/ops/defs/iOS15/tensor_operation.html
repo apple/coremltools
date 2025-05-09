@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation &mdash; coremltools API Reference 8.0b1 documentation</title>
+  <title>coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation &mdash; coremltools API Reference 8.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css?v=fd3f3429" />
@@ -20,7 +20,7 @@
   
         <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../../../../_static/documentation_options.js?v=8cc1add8"></script>
         <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../../../_static/js/theme.js"></script>
@@ -40,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                8.0b1
+                8.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
@@ -138,7 +138,7 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    x: tensor&lt;\*?, T&gt; (Required)</span>
+<span class="sd">    x: tensor&lt;\\*?, T&gt; (Required)</span>
 <span class="sd">        * Input tensor.</span>
 <span class="sd">    lower: const&lt;i32&gt; (Optional)</span>
 <span class="sd">        * Number of lower / below sub-diagonals to keep. If negative, keep entire</span>
@@ -151,7 +151,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*?, T&gt;</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;</span>
 <span class="sd">        * Same type and shape as the input tensor.</span>
 
 <span class="sd">    Attributes</span>
@@ -201,7 +201,7 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    x: tensor&lt;\*?, T&gt; (Required)</span>
+<span class="sd">    x: tensor&lt;\\*?, T&gt; (Required)</span>
 <span class="sd">        * Input tensor.</span>
 <span class="sd">    axis: const&lt;i32&gt; (Optional)</span>
 <span class="sd">        * Defaults to ``0``.</span>
@@ -218,7 +218,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*?, T&gt;</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;</span>
 <span class="sd">        * Same type and shape as the input tensor.</span>
 
 <span class="sd">    Attributes</span>
@@ -289,7 +289,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*?, T&gt;</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;</span>
 <span class="sd">        * Tensor with shape determined by the input shape.</span>
 
 <span class="sd">    Attributes</span>
@@ -419,7 +419,7 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    x: tensor&lt;\*?, T&gt; (Required)</span>
+<span class="sd">    x: tensor&lt;\\*?, T&gt; (Required)</span>
 <span class="sd">        * Tensor, values selected at indices where its values is not equal to ``0``.</span>
 
 <span class="sd">    Returns</span>
@@ -481,7 +481,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*?,T&gt;</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;</span>
 <span class="sd">        * A tensor that contains one-hot vectors.</span>
 
 <span class="sd">    Attributes</span>
@@ -554,9 +554,9 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 
-<span class="sd">    x: tensor&lt;[\*D_in], T&gt;  (Required)</span>
+<span class="sd">    x: tensor&lt;[\\*D_in], T&gt;  (Required)</span>
 
-<span class="sd">    pad: tensor&lt;[2\*N], i32&gt; (Required)</span>
+<span class="sd">    pad: tensor&lt;[2\\*N], i32&gt; (Required)</span>
 <span class="sd">        ``N &lt;= D_in``. Last ``N`` dimensions of ``x`` are padded as follows:</span>
 
 <span class="sd">        * For each dimension ``i`` of ``x`` if ``i &gt;= D_in - N``:</span>
@@ -581,7 +581,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*D_out],T&gt;</span>
+<span class="sd">    tensor&lt;[\\*D_out], T&gt;</span>
 <span class="sd">        * Tensor with same type as the input.</span>
 
 <span class="sd">    Attributes</span>
@@ -756,14 +756,14 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    x: tensor&lt;\*?, T&gt; (Required)</span>
+<span class="sd">    x: tensor&lt;\\*?, T&gt; (Required)</span>
 <span class="sd">        * Input tensor.</span>
 <span class="sd">    reps: tensor&lt;[rank(x)], i32&gt; (Required)</span>
 <span class="sd">        * A 1-D tensor with length ``rank(x)``, which indicates the number to replicate the input along each dimension.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*?, T&gt;:</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;:</span>
 <span class="sd">        * An n-D tensor with same type as the input.</span>
 
 <span class="sd">    Attributes</span>
@@ -836,7 +836,7 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    x: &lt;\*?, T&gt; (Required)</span>
+<span class="sd">    x: &lt;\\*?, T&gt; (Required)</span>
 <span class="sd">        * Input tensor.</span>
 <span class="sd">    * axis: const&lt;i32&gt; (Optional)</span>
 <span class="sd">        * Defaults to ``-1`` (the last dimension).</span>
@@ -847,7 +847,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*?, int32&gt;</span>
+<span class="sd">    tensor&lt;\\*?, int32&gt;</span>
 <span class="sd">        * Tensor containing the indices of the sorted values</span>
 
 <span class="sd">    Attributes</span>
@@ -893,7 +893,7 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    x: &lt;\*?, T&gt; (Required)</span>
+<span class="sd">    x: &lt;\\*?, T&gt; (Required)</span>
 <span class="sd">        * Input tensor.</span>
 <span class="sd">    k: const&lt;i32&gt; (Optional)</span>
 <span class="sd">        * Defaults to ``1``.</span>
@@ -907,9 +907,9 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*?, T&gt;</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;</span>
 <span class="sd">        * Values of top/bottom ``k`` elements.</span>
-<span class="sd">    tensor&lt;\*?, int32&gt;</span>
+<span class="sd">    tensor&lt;\\*?, int32&gt;</span>
 <span class="sd">        * Indices of the top/bottom ``k`` elements along axis.</span>
 
 <span class="sd">    Attributes</span>
@@ -1227,7 +1227,7 @@
             <span class="n">symbolic_tensor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">symbolic_tensor</span><span class="p">),</span> <span class="n">shape</span><span class="p">)</span>
             <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">symbolic_tensor</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">values</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">values</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">or</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">():</span>
@@ -1246,7 +1246,7 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    x: &lt;\*?,T&gt;  (Required)</span>
+<span class="sd">    x: &lt;\\*?, T&gt;  (Required)</span>
 <span class="sd">        * The tensor to split.</span>
 <span class="sd">        * The tensors may be variadic, but the number of tensors must be determined</span>
 <span class="sd">          at compile time (i.e. a tuple).</span>
@@ -1274,7 +1274,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    Tuple[tensor&lt;\*?, T&gt;]</span>
+<span class="sd">    Tuple[tensor&lt;\\*?, T&gt;]</span>
 <span class="sd">        * Where the length of the tuple is the number of splits (determined</span>
 <span class="sd">          from ``num_splits`` or ``split_sizes``).</span>
 
@@ -1416,8 +1416,9 @@
         <span class="c1"># compare all shape</span>
         <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">is_compatible_symbolic_vector</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">t_shape</span><span class="p">):</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Component tensor </span><span class="si">{}</span><span class="s2"> has shape </span><span class="si">{}</span><span class="s2">, others have </span><span class="si">{}</span><span class="s2">&quot;</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">t_shape</span><span class="p">))</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Component tensor </span><span class="si">{</span><span class="n">t</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> has shape </span><span class="si">{</span><span class="n">t</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, others have </span><span class="si">{</span><span class="n">t_shape</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
 
         <span class="c1"># Validate values share the same data type</span>
         <span class="n">dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span>
@@ -1442,13 +1443,13 @@
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span> <span class="o">|</span> <span class="n">SYMBOL</span> <span class="o">|</span> <span class="n">NONE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
-        <span class="n">is_all_rank_zero</span> <span class="o">=</span> <span class="nb">all</span><span class="p">([</span><span class="n">v</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">])</span>
+        <span class="n">is_all_rank_zero</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
         <span class="n">values</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">v</span><span class="o">.</span><span class="n">sym_val</span> <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">sym_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">get_new_symbol</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span>
         <span class="p">]</span>
 
-        <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="n">is_symbolic</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">])</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_all_rank_zero</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">is_symbolic</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_all_rank_zero</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
 
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span><span class="p">)</span></div>
@@ -1466,12 +1467,12 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    x: tensor&lt;\*?, T&gt; (Required)</span>
+<span class="sd">    x: tensor&lt;\\*?, T&gt; (Required)</span>
 <span class="sd">        * Input tensor.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*?, T&gt;</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;</span>
 <span class="sd">        * Same type and shape as the input tensor.</span>
 
 <span class="sd">    Attributes</span>
@@ -1497,7 +1498,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

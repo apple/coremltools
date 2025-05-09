@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.optimize.coreml._post_training_quantization &mdash; coremltools API Reference 8.0b1 documentation</title>
+  <title>coremltools.optimize.coreml._post_training_quantization &mdash; coremltools API Reference 8.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=fd3f3429" />
@@ -20,7 +20,7 @@
   
         <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../_static/documentation_options.js?v=8cc1add8"></script>
         <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
@@ -40,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                8.0b1
+                8.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
@@ -105,6 +105,7 @@
 <span class="kn">from</span> <span class="nn">attrs</span> <span class="kn">import</span> <span class="n">define</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">validators</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
 
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_SPECIFICATION_VERSION_IOS_17</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend.milproto</span> <span class="kn">import</span> <span class="n">load</span> <span class="k">as</span> <span class="n">_milproto_to_pymil</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span> <span class="kn">import</span> <span class="n">PassOption</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.pass_registry</span> <span class="kn">import</span> <span class="n">PASS_REGISTRY</span>
@@ -112,9 +113,9 @@
 <span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">utils</span> <span class="k">as</span> <span class="n">_model_utils</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.coreml</span> <span class="kn">import</span> <span class="n">OptimizationConfig</span> <span class="k">as</span> <span class="n">_OptimizationConfig</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.coreml._config</span> <span class="kn">import</span> <span class="n">_MetaDataDict</span>
-
-<span class="kn">from</span> <span class="nn">._quantization_passes</span> <span class="kn">import</span> <span class="n">WeightDecompressor</span> <span class="k">as</span> <span class="n">_WeightDecompressor</span>
-
+<span class="kn">from</span> <span class="nn">coremltools.optimize.coreml.experimental._post_training_quantization</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_get_activation_calibration_stats</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">_is_valid_const</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">weight_threshold</span><span class="p">):</span>
     <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">val</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;=</span> <span class="n">weight_threshold</span>
@@ -150,7 +151,7 @@
 <a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.quantization.html#coremltools.optimize.coreml.linear_quantize_weights">[docs]</a>
 <span class="nd">@_multifunction_unsupported</span>
 <span class="k">def</span> <span class="nf">linear_quantize_weights</span><span class="p">(</span>
-    <span class="n">mlmodel</span><span class="p">:</span> <span class="n">_model</span><span class="o">.</span><span class="n">MLModel</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">_OptimizationConfig</span><span class="p">,</span> <span class="n">joint_compression</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">mlmodel</span><span class="p">:</span> <span class="s2">&quot;_model.MLModel&quot;</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">_OptimizationConfig</span><span class="p">,</span> <span class="n">joint_compression</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility function to convert a float precision MLModel of type ``mlprogram``, which uses</span>
@@ -194,9 +195,9 @@
 <span class="sd">    Quantized weights are computed as follows:</span>
 
 <span class="sd">    .. math::</span>
-<span class="sd">       w_q = cast\_to\_8\_bit\_integer(w_r / s + cast\_to\_float(z))</span>
+<span class="sd">       w_q = cast\\_to\\_8\\_bit\\_integer(w_r / s + cast\\_to\\_float(z))</span>
 
-<span class="sd">    Note: :math:`cast\_to\_8\_bit\_integer` is the process of clipping the input to range ``[low, high]`` followed by rounding and casting to 8-bit integer.</span>
+<span class="sd">    Note: :math:`cast\\_to\\_8\\_bit\\_integer` is the process of clipping the input to range ``[low, high]`` followed by rounding and casting to 8-bit integer.</span>
 
 <span class="sd">    In ``&quot;linear&quot;`` mode, ``s, z`` are computed by mapping the original float range</span>
 <span class="sd">    ``[A, B]`` into the 8-bit integer range ``[-128, 127]`` or ``[0, 255]``. That is, you are solving the</span>
@@ -245,11 +246,11 @@
 
 <span class="sd">    joint_compression: bool</span>
 <span class="sd">        Specification of whether or not to further compress the already-compressed input MLModel to a</span>
-<span class="sd">        jointly compressed MLModel. See the `blockwise_palettize_weights` graph pass for information </span>
+<span class="sd">        jointly compressed MLModel. See the `blockwise_palettize_weights` graph pass for information</span>
 <span class="sd">        about which compression schemas could be further jointly palettized.</span>
 
-<span class="sd">        Take &quot;palettize + quantize&quot; as an example of joint compression, where the input MLModel is already </span>
-<span class="sd">        palettized, and the palettization&#39;s lookup table will be further quantized. In such an example, </span>
+<span class="sd">        Take &quot;palettize + quantize&quot; as an example of joint compression, where the input MLModel is already</span>
+<span class="sd">        palettized, and the palettization&#39;s lookup table will be further quantized. In such an example,</span>
 <span class="sd">        the weight values are represented by ``constexpr_blockwise_shift_scale`` + ``constexpr_lut_to_dense`` ops:</span>
 <span class="sd">        lut(int8) -&gt; constexpr_blockwise_shift_scale -&gt; lut(fp16) -&gt; constexpr_lut_to_dense -&gt; dense(fp16)</span>
 
@@ -285,7 +286,7 @@
 <a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.palettize_weights">[docs]</a>
 <span class="nd">@_multifunction_unsupported</span>
 <span class="k">def</span> <span class="nf">palettize_weights</span><span class="p">(</span>
-    <span class="n">mlmodel</span><span class="p">:</span> <span class="n">_model</span><span class="o">.</span><span class="n">MLModel</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">_OptimizationConfig</span><span class="p">,</span> <span class="n">joint_compression</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">mlmodel</span><span class="p">:</span> <span class="s2">&quot;_model.MLModel&quot;</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">_OptimizationConfig</span><span class="p">,</span> <span class="n">joint_compression</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility function to convert a float precision MLModel of type ``mlprogram`` to a</span>
@@ -332,10 +333,10 @@
 
 <span class="sd">    joint_compression: bool</span>
 <span class="sd">        Specification of whether or not to further compress the already-compressed input MLModel to a</span>
-<span class="sd">        jointly compressed MLModel. See the `channelwise_palettize_weights` graph pass for information </span>
+<span class="sd">        jointly compressed MLModel. See the `channelwise_palettize_weights` graph pass for information</span>
 <span class="sd">        about which compression schemas could be further jointly palettized.</span>
 
-<span class="sd">        Take &quot;prune + palettize&quot; as an example of joint compression, where the input MLModel is already </span>
+<span class="sd">        Take &quot;prune + palettize&quot; as an example of joint compression, where the input MLModel is already</span>
 <span class="sd">        pruned, and the non-zero entries will be further palettized. In such an example, the weight values are</span>
 <span class="sd">        represented by ``constexpr_lut_to_sparse`` + ``constexpr_sparse_to_dense`` ops:</span>
 <span class="sd">        ``lut(sparse)`` -&gt; ``constexpr_lut_to_sparse`` -&gt; ``weight(sparse)`` -&gt; ``constexpr_sparse_to_dense`` -&gt; ``weight(dense)``</span>
@@ -371,7 +372,7 @@
 <a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.pruning.html#coremltools.optimize.coreml.prune_weights">[docs]</a>
 <span class="nd">@_multifunction_unsupported</span>
 <span class="k">def</span> <span class="nf">prune_weights</span><span class="p">(</span>
-    <span class="n">mlmodel</span><span class="p">:</span> <span class="n">_model</span><span class="o">.</span><span class="n">MLModel</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">_OptimizationConfig</span><span class="p">,</span> <span class="n">joint_compression</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">mlmodel</span><span class="p">:</span> <span class="s2">&quot;_model.MLModel&quot;</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">_OptimizationConfig</span><span class="p">,</span> <span class="n">joint_compression</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility function to convert a float precision MLModel of type ``mlprogram`` to a</span>
@@ -407,10 +408,10 @@
 
 <span class="sd">    joint_compression: bool</span>
 <span class="sd">        Specification of whether or not to further prune the already-compressed input MLModel to a</span>
-<span class="sd">        jointly compressed MLModel. See the `prune_weights` graph pass for information </span>
+<span class="sd">        jointly compressed MLModel. See the `prune_weights` graph pass for information</span>
 <span class="sd">        about which compression schemas could be further pruned.</span>
 
-<span class="sd">        Take &quot;quantize + prune&quot; as an example of joint compression, where the input MLModel is already </span>
+<span class="sd">        Take &quot;quantize + prune&quot; as an example of joint compression, where the input MLModel is already</span>
 <span class="sd">        quantized, and it will be further pruned. In such an example, the weight values are</span>
 <span class="sd">        represented by ``constexpr_sparse_blockwise_shift_scale`` + ``constexpr_sparse_to_dense`` ops:</span>
 <span class="sd">        quantized(sparse) -&gt; constexpr_sparse_blockwise_shift_scale -&gt; weight(sparse) -&gt; constexpr_sparse_to_dense -&gt; weight(dense)</span>
@@ -445,7 +446,7 @@
 <div class="viewcode-block" id="decompress_weights">
 <a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.decompress_weights">[docs]</a>
 <span class="nd">@_multifunction_unsupported</span>
-<span class="k">def</span> <span class="nf">decompress_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">:</span> <span class="n">_model</span><span class="o">.</span><span class="n">MLModel</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">decompress_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">:</span> <span class="s2">&quot;_model.MLModel&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility function to convert weights that are sparse or palettized or affine quantized, back to the float format.</span>
 <span class="sd">    That is, convert any of the following three ops to ``mb.const``:</span>
@@ -474,8 +475,9 @@
 <span class="sd">        decompressed_model = ct.optimize.coreml.decompress_weights(model)</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">._quantization_passes</span> <span class="kn">import</span> <span class="n">WeightDecompressor</span>
 
-    <span class="n">weight_decompressor</span> <span class="o">=</span> <span class="n">_WeightDecompressor</span><span class="p">(</span><span class="n">op_selector</span><span class="o">=</span><span class="k">lambda</span> <span class="n">op</span><span class="p">:</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">weight_decompressor</span> <span class="o">=</span> <span class="n">WeightDecompressor</span><span class="p">(</span><span class="n">op_selector</span><span class="o">=</span><span class="k">lambda</span> <span class="n">op</span><span class="p">:</span> <span class="kc">True</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">_model_utils</span><span class="o">.</span><span class="n">_apply_graph_pass</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">weight_decompressor</span><span class="p">)</span></div>
 
 
@@ -483,7 +485,7 @@
 <div class="viewcode-block" id="get_weights_metadata">
 <a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.get_weights_metadata">[docs]</a>
 <span class="nd">@_multifunction_unsupported</span>
-<span class="k">def</span> <span class="nf">get_weights_metadata</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">:</span> <span class="n">_model</span><span class="o">.</span><span class="n">MLModel</span><span class="p">,</span> <span class="n">weight_threshold</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2048</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_weights_metadata</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">:</span> <span class="s2">&quot;_model.MLModel&quot;</span><span class="p">,</span> <span class="n">weight_threshold</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2048</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility function to get the weights metadata as a dictionary, which maps the weight&#39;s name to its corresponding CoreMLWeightMetaData.</span>
 
@@ -624,6 +626,121 @@
 
 
 
+<span class="k">def</span> <span class="nf">linear_quantize_activations</span><span class="p">(</span>
+    <span class="n">mlmodel</span><span class="p">:</span> <span class="s2">&quot;_model.MLModel&quot;</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">_OptimizationConfig</span><span class="p">,</span>
+    <span class="n">sample_data</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span>
+    <span class="n">calibration_op_group_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Utility function to convert a float precision MLModel of type ``mlprogram``, which uses</span>
+<span class="sd">    float-precision activations, into a compressed MLModel that uses n-bit activations. Currently, only n=8</span>
+<span class="sd">    is suppported.</span>
+
+<span class="sd">    This is achieved by feeding real sample data into the input MLModel, calibrating the resulting float activation values,</span>
+<span class="sd">    converting the calibrated values into ``quantize`` and ``dequantize`` op pairs, and inserting those</span>
+<span class="sd">    op pairs into the new MLModel instance where activations get quantized.</span>
+
+<span class="sd">    Use this function with ``linear_quantize_weights`` for 8-bit activation and 8-bit weight linear quantization.</span>
+<span class="sd">    It&#39;s also compatible for use with other weight compression methods.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mlmodel: MLModel</span>
+<span class="sd">        Model to be quantized. This MLModel should be of type ``mlprogram``.</span>
+
+<span class="sd">    config: OptimizationConfig</span>
+<span class="sd">        An :py:class:`OptimizationConfig` object that specifies the parameters for activation quantization.</span>
+
+<span class="sd">    sample_data: List</span>
+<span class="sd">        Data used to characterize statistics of the activation values of the original float precision model.</span>
+<span class="sd">        Expects a list of sample input dictionaries, which should have the same format as the data used in `.predict`</span>
+<span class="sd">        method for the mlmodel. More specifically, the input name need to be specified in the data, unless it&#39;s a single</span>
+<span class="sd">        input model where the name will be auto inferred.</span>
+
+<span class="sd">    calibration_op_group_size: int</span>
+<span class="sd">        While running inference during calibration, only have `calibration_op_group_size` of intermediate outputs</span>
+<span class="sd">        appended to outputs at a time. If the model is very large, it could lead to the temperary model having</span>
+<span class="sd">        thousands of outputs, which may lead to model hanging forever during model loading. To work around this</span>
+<span class="sd">        issue, intermediate outputs are grouped into smaller groups, where each time a temperary model will only</span>
+<span class="sd">        have `calibration_op_group_size` outputs. By default (op_group_size = -1), op_group_size is equal to the</span>
+<span class="sd">        number of valid intermediate ops.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    model: MLModel</span>
+<span class="sd">        The activation quantized MLModel instance.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        import coremltools as ct</span>
+<span class="sd">        import coremltools.optimize as cto</span>
+
+<span class="sd">        model = ct.coreml.models.MLModel(&quot;my_model.mlpackage&quot;)</span>
+<span class="sd">        activation_config = cto.coreml.OptimizationConfig(</span>
+<span class="sd">            global_config=cto.coreml.OpLinearQuantizerConfig(mode=&quot;linear_symmetric&quot;)</span>
+<span class="sd">        )</span>
+<span class="sd">        compressed_model_a8 = cto.coreml.linear_quantize_activations(</span>
+<span class="sd">            model, activation_config, sample_data</span>
+<span class="sd">        )</span>
+
+<span class="sd">        # (Optional) It&#39;s recommended to use with linear_quantize_weights.</span>
+<span class="sd">        weight_config = cto.coreml.OptimizationConfig(</span>
+<span class="sd">            global_config=cto.OpLinearQuantizerConfig(mode=&quot;linear_symmetric&quot;)</span>
+<span class="sd">        )</span>
+<span class="sd">        compressed_model_w8a8 = cto.linear_quantize_weights(compressed_model_a8, weight_config)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Validate Sample data. If the sample data name is not provided, try to infer it.</span>
+    <span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">sample_data</span><span class="p">:</span>
+        <span class="k">if</span> <span class="kc">None</span> <span class="ow">in</span> <span class="n">sample</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">input_spec</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">input</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_spec</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;When the model has multiple inputs, please provide the name for each data in `sample_data`&quot;</span>
+                <span class="p">)</span>
+            <span class="n">inferred_input_name</span> <span class="o">=</span> <span class="n">input_spec</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">sample</span><span class="p">[</span><span class="n">inferred_input_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">sample</span><span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+            <span class="k">del</span> <span class="n">sample</span><span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+
+    <span class="n">graph_passes</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Insert prefix quantize/dequantize pairs to valid patterns.</span>
+    <span class="n">insert_prefix_quantize_dequantize_pair</span> <span class="o">=</span> <span class="n">PASS_REGISTRY</span><span class="p">[</span>
+        <span class="s2">&quot;compression::insert_prefix_quantize_dequantize_pair&quot;</span>
+    <span class="p">]</span>
+    <span class="n">insert_prefix_quantize_dequantize_pair</span><span class="o">.</span><span class="n">set_options</span><span class="p">([</span><span class="n">PassOption</span><span class="p">(</span><span class="s2">&quot;config&quot;</span><span class="p">,</span> <span class="n">config</span><span class="p">)])</span>
+    <span class="n">activation_stats</span> <span class="o">=</span> <span class="n">_get_activation_calibration_stats</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">sample_data</span><span class="p">)</span>
+    <span class="n">insert_prefix_quantize_dequantize_pair</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">PassOption</span><span class="p">(</span><span class="s2">&quot;activation_stats&quot;</span><span class="p">,</span> <span class="n">activation_stats</span><span class="p">)]</span>
+    <span class="p">)</span>
+    <span class="n">graph_passes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">insert_prefix_quantize_dequantize_pair</span><span class="p">)</span>
+
+    <span class="c1"># Insert suffix quantize/dequantize pairs to valid patterns.</span>
+    <span class="n">insert_suffix_quantize_dequantize_pair</span> <span class="o">=</span> <span class="n">PASS_REGISTRY</span><span class="p">[</span>
+        <span class="s2">&quot;compression::insert_suffix_quantize_dequantize_pair&quot;</span>
+    <span class="p">]</span>
+    <span class="n">insert_suffix_quantize_dequantize_pair</span><span class="o">.</span><span class="n">set_options</span><span class="p">([</span><span class="n">PassOption</span><span class="p">(</span><span class="s2">&quot;config&quot;</span><span class="p">,</span> <span class="n">config</span><span class="p">)])</span>
+    <span class="n">insert_suffix_quantize_dequantize_pair</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">PassOption</span><span class="p">(</span><span class="s2">&quot;activation_stats&quot;</span><span class="p">,</span> <span class="n">activation_stats</span><span class="p">)]</span>
+    <span class="p">)</span>
+    <span class="n">graph_passes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">insert_suffix_quantize_dequantize_pair</span><span class="p">)</span>
+
+    <span class="c1"># Re-use exsiting path to dedup quantize/dequantize operations.</span>
+    <span class="n">graph_passes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">PASS_REGISTRY</span><span class="p">[</span><span class="s2">&quot;common::dequantize_quantize_pair_elimination&quot;</span><span class="p">])</span>
+
+    <span class="n">mlmodel_activation_quantized</span> <span class="o">=</span> <span class="n">_model_utils</span><span class="o">.</span><span class="n">_apply_graph_pass</span><span class="p">(</span>
+        <span class="n">mlmodel</span><span class="p">,</span>
+        <span class="n">graph_passes</span><span class="p">,</span>
+        <span class="n">spec_version</span><span class="o">=</span><span class="n">_SPECIFICATION_VERSION_IOS_17</span><span class="p">,</span>
+        <span class="n">pymil_load_func</span><span class="o">=</span><span class="n">_milproto_to_pymil</span><span class="o">.</span><span class="n">load</span><span class="p">,</span>
+        <span class="n">skip_model_load</span><span class="o">=</span><span class="n">mlmodel</span><span class="o">.</span><span class="n">__proxy__</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">mlmodel_activation_quantized</span>
+
+
 <div class="viewcode-block" id="CoreMLOpMetaData">
 <a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.CoreMLOpMetaData">[docs]</a>
 <span class="nd">@define</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -760,7 +877,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

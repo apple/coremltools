@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.optimize.torch.palettization.palettization_config &mdash; coremltools API Reference 8.0b1 documentation</title>
+  <title>coremltools.optimize.torch.palettization.palettization_config &mdash; coremltools API Reference 8.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
@@ -20,7 +20,7 @@
   
         <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../_static/documentation_options.js?v=8cc1add8"></script>
         <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../_static/js/theme.js"></script>
@@ -40,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                8.0b1
+                8.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
@@ -114,6 +114,7 @@
 <span class="kn">from</span> <span class="nn">attr</span> <span class="kn">import</span> <span class="n">field</span> <span class="k">as</span> <span class="n">_field</span>
 <span class="kn">from</span> <span class="nn">attrs</span> <span class="kn">import</span> <span class="n">validators</span> <span class="k">as</span> <span class="n">_validators</span>
 
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.optimizer_utils</span> <span class="kn">import</span> <span class="n">_ModuleToOptConfigRegistry</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">maybe_convert_str_to_dtype</span> <span class="k">as</span> <span class="n">_maybe_convert_str_to_dtype</span><span class="p">,</span>
 <span class="p">)</span>
@@ -125,6 +126,9 @@
     <span class="n">PalettizationGranularity</span><span class="p">,</span>
     <span class="n">_deprecated_field</span><span class="p">,</span>
     <span class="n">_validate_module_type_keys_factory</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.palettization._supported_modules</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DKMPalettizerModulesRegistry</span> <span class="k">as</span> <span class="n">_DKMPalettizerModulesRegistry</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="c1"># Default advanced options for palettization</span>
@@ -150,7 +154,7 @@
     <span class="s2">&quot;per_channel_scaling_factor_scheme&quot;</span><span class="p">:</span> <span class="s2">&quot;min_max&quot;</span><span class="p">,</span>
     <span class="s2">&quot;percentage_palett_enable&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
     <span class="s2">&quot;kmeans_batch_threshold&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
-    <span class="s2">&quot;kmeans_n_init&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="s2">&quot;kmeans_n_init&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
     <span class="s2">&quot;zero_threshold&quot;</span><span class="p">:</span> <span class="mf">1e-7</span><span class="p">,</span>
     <span class="s2">&quot;kmeans_error_bnd&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
     <span class="s2">&quot;channel_axis&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
@@ -307,7 +311,7 @@
 
 <span class="sd">    2. **Per-grouped-channel palettization**: In this configuration, ``group_size`` number of channels along</span>
 <span class="sd">    ``channel_axis`` share the same lookup table. For example, for a weight matrix of shape ``(16, 25)``, if we provide</span>
-<span class="sd">     ``group_size = 8``, the shape of the lookup table would be ``(2, 2^n_bits)``.</span>
+<span class="sd">    ``group_size = 8``, the shape of the lookup table would be ``(2, 2^n_bits)``.</span>
 
 <span class="sd">    .. note::</span>
 <span class="sd">        Grouping is currently only supported along the output channel axis.</span>
@@ -530,6 +534,7 @@
 
 <div class="viewcode-block" id="DKMPalettizerConfig">
 <a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizerConfig">[docs]</a>
+<span class="nd">@_ModuleToOptConfigRegistry</span><span class="o">.</span><span class="n">register_module_cfg</span><span class="p">(</span><span class="n">ModuleDKMPalettizerConfig</span><span class="p">)</span>
 <span class="nd">@_define</span>
 <span class="k">class</span> <span class="nc">DKMPalettizerConfig</span><span class="p">(</span><span class="n">_OptimizationConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -575,7 +580,9 @@
         <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">deep_mapping</span><span class="p">(</span>
             <span class="n">key_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">and_</span><span class="p">(</span>
                 <span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">((</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Callable</span><span class="p">)),</span>
-                <span class="n">_validate_module_type_keys_factory</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">DEFAULT_PALETTIZATION_SCHEME</span><span class="o">.</span><span class="n">keys</span><span class="p">())),</span>
+                <span class="n">_validate_module_type_keys_factory</span><span class="p">(</span>
+                    <span class="nb">list</span><span class="p">(</span><span class="n">_DKMPalettizerModulesRegistry</span><span class="o">.</span><span class="n">get_supported_modules</span><span class="p">())</span>
+                <span class="p">),</span>
             <span class="p">),</span>
             <span class="n">value_validator</span><span class="o">=</span><span class="n">_validate_dkm_config_type</span><span class="p">,</span>
             <span class="n">mapping_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">dict</span><span class="p">),</span>
@@ -648,7 +655,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

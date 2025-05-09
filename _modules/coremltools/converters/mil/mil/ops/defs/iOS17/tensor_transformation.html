@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation &mdash; coremltools API Reference 8.0b1 documentation</title>
+  <title>coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation &mdash; coremltools API Reference 8.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css?v=fd3f3429" />
@@ -20,7 +20,7 @@
   
         <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../../../../_static/documentation_options.js?v=8cc1add8"></script>
         <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../../../_static/js/theme.js"></script>
@@ -40,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                8.0b1
+                8.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
@@ -163,7 +163,7 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    x: tensor&lt;\*?, T&gt; (Required)</span>
+<span class="sd">    x: tensor&lt;\\*?, T&gt; (Required)</span>
 
 <span class="sd">        * An ``n-D`` tensor or a scalar.</span>
 <span class="sd">        * If ``x`` has a fixed rank (and possibly contains symbolic dimension),</span>
@@ -187,7 +187,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*?, T&gt;</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;</span>
 <span class="sd">        * Tensor with shape determined by the input shape.</span>
 
 <span class="sd">    Attributes</span>
@@ -249,10 +249,10 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    x: tensor&lt;\*?, T&gt; (Required)</span>
+<span class="sd">    x: tensor&lt;\\*?, T&gt; (Required)</span>
 <span class="sd">        * The input tensor to be reshaped.</span>
 
-<span class="sd">    ref_tensors: Tuple[tensor&lt;\*?, R&gt;] (Required)</span>
+<span class="sd">    ref_tensors: Tuple[tensor&lt;\\*?, R&gt;] (Required)</span>
 <span class="sd">        * A tuple of tensors that define the output shape.</span>
 
 <span class="sd">    begins: Tuple[const&lt;int32&gt;] (Required)</span>
@@ -267,7 +267,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*?, T&gt;</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;</span>
 <span class="sd">        * Same type as input tensor ``x``.</span>
 <span class="sd">        * Output shape is computed by ``ref_tensors``, ``begins``, ``ends``, and ``end_masks``.</span>
 
@@ -312,7 +312,7 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    x: tensor&lt;\*?, T&gt; (Required)</span>
+<span class="sd">    x: tensor&lt;\\*?, T&gt; (Required)</span>
 <span class="sd">        * Scalar or tensor.</span>
 <span class="sd">    axes: const tensor&lt;[K], int32&gt; Required</span>
 <span class="sd">        * ``K`` is the number of dimensions expanded.</span>
@@ -322,7 +322,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*(rank(x)+K), T&gt;</span>
+<span class="sd">    tensor&lt;\\*(rank(x)+K), T&gt;</span>
 <span class="sd">        * Same type as the input ``x`` with rank ``rank(x)+K``.</span>
 
 <span class="sd">    Attributes</span>
@@ -362,7 +362,7 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    x: tensor&lt;\*?,T&gt; (Required)</span>
+<span class="sd">    x: tensor&lt;\\*?, T&gt; (Required)</span>
 <span class="sd">        * Must be at least 1-D.</span>
 <span class="sd">    axes: const&lt;K,int32&gt; (Optional)</span>
 <span class="sd">        * Axes to squeeze out.</span>
@@ -370,7 +370,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*(rank(x)-K),T&gt;</span>
+<span class="sd">    tensor&lt;\\*(rank(x)-K), T&gt;</span>
 <span class="sd">        * Tensor with same type as input ``x`` and rank ``rank(x)-K``.</span>
 
 <span class="sd">    Attributes</span>
@@ -410,7 +410,7 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    x: tensor&lt;\*?, T&gt; (Required)</span>
+<span class="sd">    x: tensor&lt;\\*?, T&gt; (Required)</span>
 <span class="sd">        * Input tensor.</span>
 
 <span class="sd">    axes: const&lt;D, int32&gt; (Optional)</span>
@@ -419,7 +419,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*?, T&gt;</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;</span>
 <span class="sd">        * Same type and shape as the input tensor.</span>
 
 <span class="sd">    Attributes</span>
@@ -464,7 +464,7 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    x: tensor&lt;\*?, T&gt; (Required)</span>
+<span class="sd">    x: tensor&lt;\\*?, T&gt; (Required)</span>
 <span class="sd">        * Input tensor.</span>
 <span class="sd">    lengths: tensor&lt;L, U&gt; (Required)</span>
 <span class="sd">        * 1-dimensional tensor of length ``x.shape[batch_axis]`` specifying the length</span>
@@ -479,7 +479,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*?, T&gt;</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;</span>
 <span class="sd">        * Same type and shape as the input tensor.</span>
 
 <span class="sd">    Attributes</span>
@@ -524,7 +524,7 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    x: tensor&lt;[\*d0, d_axis, *dn], T&gt;</span>
+<span class="sd">    x: tensor&lt;[\\*d0, d_axis, *dn], T&gt;</span>
 <span class="sd">        * Input tensor.</span>
 
 <span class="sd">    axis: const&lt;int32&gt;</span>
@@ -539,7 +539,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*d0, d_axis - size // stride + 1, size, \*dn], T&gt;</span>
+<span class="sd">    tensor&lt;[\\*d0, d_axis - size // stride + 1, size, \\*dn], T&gt;</span>
 <span class="sd">        * The output will be a tensor of rank ``N+1`` where ``N`` is the input tensor</span>
 <span class="sd">          rank.</span>
 
@@ -582,14 +582,14 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    x: tensor&lt;\*?, T&gt; (Required)</span>
+<span class="sd">    x: tensor&lt;\\*?, T&gt; (Required)</span>
 <span class="sd">        * Must be at least 1-D. ``x`` may have a symbolic shape.</span>
 <span class="sd">    perm: const&lt;[rank(x)], i32&gt; (Required)</span>
 <span class="sd">        * Permutation order. -rank(x) &lt;= perm[I] &lt; rank(x) for all perm entries.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*?,T&gt;</span>
+<span class="sd">    tensor&lt;\\*?,T&gt;</span>
 <span class="sd">        * Tensor with same rank and type as ``x``.</span>
 
 <span class="sd">    Attributes</span>
@@ -654,7 +654,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*?, T&gt;</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;</span>
 <span class="sd">        - Scalar or tensor.</span>
 
 <span class="sd">    Attributes</span>
@@ -713,7 +713,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*?, T&gt;</span>
+<span class="sd">    tensor&lt;\\*?, T&gt;</span>
 <span class="sd">        * Scalar or tensor.</span>
 
 <span class="sd">    Attributes</span>
@@ -751,7 +751,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

@@ -1,13 +1,11 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../../../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.passes.defs.cleanup.remove_redundant_ops &mdash; coremltools API Reference 8.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=e59714d7" />
+  <title>coremltools.converters.mil.mil.passes.defs.cleanup.remove_redundant_ops &mdash; coremltools API Reference 8.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -16,11 +14,15 @@
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-      <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
-      <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
-      <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+  <!--[if lt IE 9]>
+    <script src="../../../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../../../_static/documentation_options.js?v=8cc1add8"></script>
+        <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../../../../search.html" /> 
@@ -37,6 +39,9 @@
           <a href="../../../../../../../../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
+              <div class="version">
+                8.3
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -93,21 +98,21 @@
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">collections</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">Block</span><span class="p">,</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">Var</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractGraphPass</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">block_context_manager</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.pass_registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_pass</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Block</span><span class="p">,</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">Var</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span> <span class="kn">import</span> <span class="n">AbstractGraphPass</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.helper</span> <span class="kn">import</span> <span class="n">block_context_manager</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.pass_registry</span> <span class="kn">import</span> <span class="n">register_pass</span>
 
 
 <div class="viewcode-block" id="remove_redundant_ops">
 <a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.cleanup.remove_redundant_ops">[docs]</a>
 <span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">remove_redundant_ops</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">remove_redundant_ops</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    If there are multiple ops with &quot;identical&quot; inputs, then they are redundant and all but one of them can be removed.</span>
 <span class="sd">    This pass checks and removes such ops.</span>
@@ -147,19 +152,19 @@
 
     <span class="n">_NON_REDUNDANT_OPS</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">()</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_num_of_visited_ops</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="p">(</span>
             <span class="mi">0</span>  <span class="c1"># Testing purpose, making sure the algorithm performs in O(N)</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_ops_order</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Block</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Operation</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_num_of_visited_ops</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_remove_redundant_ops_in_block_wrapper</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_is_op_eligible_to_be_removed</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_is_op_eligible_to_be_removed</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
         <span class="k">if</span> <span class="p">(</span>
             <span class="nb">len</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span>
             <span class="ow">or</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">)</span>
@@ -169,7 +174,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_candidate_ops_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prospective_ops_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Operation</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Operation</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">_get_candidate_ops_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prospective_ops_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Operation</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Operation</span><span class="p">]:</span>
         <span class="n">od</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">()</span>
         <span class="n">enclosing_blocks</span> <span class="o">=</span> <span class="p">[</span><span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">prospective_ops_list</span><span class="p">]</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">enclosing_blocks</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># all candidate ops must belong to the same block</span>
@@ -182,7 +187,7 @@
         <span class="c1"># topologically sorted</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">od</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_candidate_ops_lists_from_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="n">Var</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Operation</span><span class="p">]]:</span>
+    <span class="k">def</span> <span class="nf">_get_candidate_ops_lists_from_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="n">Var</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Operation</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a list of lists.</span>
 <span class="sd">        Each element is a list of a subset of the child ops of var, which satisfies the following conditions:</span>
@@ -209,7 +214,7 @@
         <span class="k">return</span> <span class="n">candidate_ops_lists</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_are_ops_identical</span><span class="p">(</span><span class="n">op1</span><span class="p">,</span> <span class="n">op2</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_are_ops_identical</span><span class="p">(</span><span class="n">op1</span><span class="p">,</span> <span class="n">op2</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return True, if all inputs of op1 and op2 are identical.</span>
 <span class="sd">        non-constant inputs must refer to the same object.</span>
@@ -219,7 +224,7 @@
 <span class="sd">        can compare the pointers.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">_are_values_identical</span><span class="p">(</span><span class="n">val1</span><span class="p">,</span> <span class="n">val2</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">_are_values_identical</span><span class="p">(</span><span class="n">val1</span><span class="p">,</span> <span class="n">val2</span><span class="p">):</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
                 <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">val1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">val2</span><span class="p">))</span>
             <span class="k">if</span> <span class="n">val1</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">val2</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
@@ -228,7 +233,7 @@
                 <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">val1</span><span class="p">,</span> <span class="n">val2</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">_are_vars_identical</span><span class="p">(</span><span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">_are_vars_identical</span><span class="p">(</span><span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">var1</span> <span class="ow">is</span> <span class="n">var2</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">True</span>
             <span class="k">if</span> <span class="n">var1</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">var2</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -272,7 +277,7 @@
         <span class="k">return</span> <span class="kc">True</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_try_to_remove_ops</span><span class="p">(</span><span class="n">candidate_ops_list</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_try_to_remove_ops</span><span class="p">(</span><span class="n">candidate_ops_list</span><span class="p">):</span>
         <span class="c1"># candidate_ops_list contains ops in topological order.</span>
         <span class="c1"># All the ops in candidate_ops_list will be compared to the first op, and removed if identical to it.</span>
         <span class="c1"># Removing ops later in the topological order is much easier, as their output vars</span>
@@ -316,7 +321,7 @@
         <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">(</span><span class="n">ops_removed</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_try_to_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_var</span><span class="p">:</span> <span class="n">Var</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_try_to_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_var</span><span class="p">:</span> <span class="n">Var</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        scan the children ops to parent_var, to find and remove identical ops, if any.</span>
 <span class="sd">        Returns True, if successful in finding such redundant ops.</span>
@@ -334,8 +339,8 @@
         <span class="k">return</span> <span class="n">block_changed</span>
 
     <span class="nd">@block_context_manager</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_remove_redundant_ops_in_block_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
-        <span class="k">def</span><span class="w"> </span><span class="nf">_cache_topological_order_of_ops_in_block</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_remove_redundant_ops_in_block_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">_cache_topological_order_of_ops_in_block</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ops_order</span><span class="p">:</span>
                 <span class="k">return</span>
 
@@ -345,7 +350,7 @@
                     <span class="n">_cache_topological_order_of_ops_in_block</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_ops_order</span><span class="p">[</span><span class="n">block</span><span class="p">][</span><span class="n">op</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">_remove_redundant_ops_in_block</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">_remove_redundant_ops_in_block</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
             <span class="c1"># cache the topological order of the ops,</span>
             <span class="c1"># so that we would not to query the index every single time.</span>
             <span class="c1"># Note that, the transformation in this particular graph pass</span>
@@ -402,7 +407,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

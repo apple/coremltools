@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.optimize.torch.quantization.quantizer &mdash; coremltools API Reference 8.0b1 documentation</title>
+  <title>coremltools.optimize.torch.quantization.quantizer &mdash; coremltools API Reference 8.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
@@ -20,7 +20,7 @@
   
         <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../_static/documentation_options.js?v=8cc1add8"></script>
         <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../_static/js/theme.js"></script>
@@ -40,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                8.0b1
+                8.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
@@ -112,10 +112,14 @@
 <span class="kn">from</span> <span class="nn">torch.ao.quantization.quantize_fx</span> <span class="kn">import</span> <span class="n">convert_to_reference_fx</span> <span class="k">as</span> <span class="n">_convert_to_reference_fx</span>
 
 <span class="kn">import</span> <span class="nn">coremltools.optimize.torch.quantization.modules.qat_modules</span> <span class="k">as</span> <span class="nn">_qat</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.joint_compression_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">is_pruner_prepared</span> <span class="k">as</span> <span class="n">_is_pruner_prepared</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.math_utils</span> <span class="kn">import</span> <span class="n">rmse_error</span> <span class="k">as</span> <span class="n">_rmse_error</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.metadata_utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">register_metadata_version</span> <span class="k">as</span> <span class="n">_register_metadata_version</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.optimizer_utils</span> <span class="kn">import</span> <span class="n">_ConfigToOptimizerRegistry</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="n">get_eval_model</span> <span class="k">as</span> <span class="n">_get_eval_model</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch.base_model_optimizer</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">BaseTrainingTimeModelOptimizer</span> <span class="k">as</span> <span class="n">_BaseTrainingTimeModelOptimizer</span><span class="p">,</span>
@@ -134,12 +138,18 @@
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch.quantization._utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">is_per_channel_quant</span> <span class="k">as</span> <span class="n">_is_per_channel_quant</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.quantization._utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">is_pytorch_defined_observer</span> <span class="k">as</span> <span class="n">_is_pytorch_defined_observer</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch.quantization._utils</span> <span class="kn">import</span> <span class="n">is_symmetric_quant</span> <span class="k">as</span> <span class="n">_is_symmetric_quant</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch.quantization._utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">pre_apply_weight_quant</span> <span class="k">as</span> <span class="n">_pre_apply_weight_quant</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch.quantization._utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">register_compression_metadata</span> <span class="k">as</span> <span class="n">_register_compression_metadata</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.quantization.modules.learnable_fake_quantize</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">LearnableFakeQuantize</span> <span class="k">as</span> <span class="n">_LearnableFakeQuantize</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch.quantization.quantization_config</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">LinearQuantizerConfig</span> <span class="k">as</span> <span class="n">_LinearQuantizerConfig</span><span class="p">,</span>
@@ -157,6 +167,7 @@
 
 <div class="viewcode-block" id="LinearQuantizer">
 <a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer">[docs]</a>
+<span class="nd">@_ConfigToOptimizerRegistry</span><span class="o">.</span><span class="n">register_config</span><span class="p">(</span><span class="n">_LinearQuantizerConfig</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">LinearQuantizer</span><span class="p">(</span><span class="n">Quantizer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform quantization aware training (QAT) of models. This algorithm simulates the effects of</span>
@@ -228,6 +239,7 @@
     <span class="n">_supported_modules</span><span class="p">:</span> <span class="n">_Tuple</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_get_supported_modules</span><span class="p">())</span>
     <span class="n">_qconfig_mapping_builder_cls</span><span class="p">:</span> <span class="n">_Type</span> <span class="o">=</span> <span class="n">_QConfigMappingBuilder</span>
     <span class="n">_qat_configuration_handler_cls</span><span class="p">:</span> <span class="n">_Type</span> <span class="o">=</span> <span class="n">_QATConfigurationHandler</span>
+    <span class="n">_observer_sync</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_LinearQuantizerConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="n">config</span> <span class="o">=</span> <span class="n">_LinearQuantizerConfig</span><span class="p">()</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">config</span>
@@ -254,6 +266,42 @@
                 <span class="k">return</span> <span class="n">config</span>
         <span class="k">return</span> <span class="n">_ModuleLinearQuantizerConfig</span><span class="p">()</span>
 
+    <span class="k">def</span> <span class="nf">_get_torch_ao_prepared_model</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">example_inputs</span><span class="p">:</span> <span class="n">_Tuple</span><span class="p">[</span><span class="n">_Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Helper method to prepare quantized model :</span>
+<span class="sd">        Prepares the model for quantization aware training by inserting</span>
+<span class="sd">            :py:class:`torch.ao.quantization.FakeQuantize` layers in the model in appropriate places.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_prepared</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Model has already been prepared for QAT. This API call &quot;</span> <span class="s2">&quot;will be a no-op.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span>
+
+        <span class="k">if</span> <span class="n">_is_pruner_prepared</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Model has been prepared for pruning. When running joint compression, &quot;</span>
+                <span class="s2">&quot;first prepare quantizer/palettizer and then pruner, to ensure insertion of &quot;</span>
+                <span class="s2">&quot;fake quantization layers does not remove pruning forward hooks.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_model_for_compression</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="n">inplace</span><span class="p">)</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+        <span class="n">prepare_custom_config</span> <span class="o">=</span> <span class="n">_PrepareCustomConfig</span><span class="p">()</span><span class="o">.</span><span class="n">set_non_traceable_module_names</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">non_traceable_module_names</span>
+        <span class="p">)</span>
+        <span class="n">prepare_custom_config</span> <span class="o">=</span> <span class="n">prepare_custom_config</span><span class="o">.</span><span class="n">set_preserved_attributes</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">preserved_attributes</span>
+        <span class="p">)</span>
+        <span class="n">qat_handler</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qat_configuration_handler_cls</span><span class="p">(</span>
+            <span class="n">prepare_custom_config</span><span class="o">=</span><span class="n">prepare_custom_config</span><span class="p">,</span>
+            <span class="n">qconfig_mapping</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_qconfig_mapping</span><span class="p">,</span>
+            <span class="n">backend_config</span><span class="o">=</span><span class="n">_get_backend_config</span><span class="p">(),</span>
+            <span class="n">quantization_scheme</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_quantization_scheme</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">qat_handler</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">example_inputs</span><span class="p">)</span>
+
 <div class="viewcode-block" id="LinearQuantizer.prepare">
 <a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer.prepare">[docs]</a>
     <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">example_inputs</span><span class="p">:</span> <span class="n">_Tuple</span><span class="p">[</span><span class="n">_Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
@@ -275,27 +323,8 @@
 <span class="sd">            to update your model first before using :py:class:`LinearQuantizer` algorithm.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_prepared</span><span class="p">:</span>
-            <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s2">&quot;Model has already been prepared for QAT. This API call &quot;</span>
-                <span class="s2">&quot;will be a no-op.&quot;</span>
-            <span class="p">)</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span>
-        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_model_for_compression</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="n">inplace</span><span class="p">)</span>
-        <span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
-        <span class="n">prepare_custom_config</span> <span class="o">=</span> <span class="n">_PrepareCustomConfig</span><span class="p">()</span><span class="o">.</span><span class="n">set_non_traceable_module_names</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">non_traceable_module_names</span>
-        <span class="p">)</span>
-        <span class="n">prepare_custom_config</span> <span class="o">=</span> <span class="n">prepare_custom_config</span><span class="o">.</span><span class="n">set_preserved_attributes</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">preserved_attributes</span>
-        <span class="p">)</span>
-        <span class="n">qat_handler</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qat_configuration_handler_cls</span><span class="p">(</span>
-            <span class="n">prepare_custom_config</span><span class="o">=</span><span class="n">prepare_custom_config</span><span class="p">,</span>
-            <span class="n">qconfig_mapping</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_qconfig_mapping</span><span class="p">,</span>
-            <span class="n">backend_config</span><span class="o">=</span><span class="n">_get_backend_config</span><span class="p">(),</span>
-            <span class="n">quantization_scheme</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_quantization_scheme</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">prepared_model</span> <span class="o">=</span> <span class="n">qat_handler</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">example_inputs</span><span class="p">)</span>
+
+        <span class="n">prepared_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_torch_ao_prepared_model</span><span class="p">(</span><span class="n">example_inputs</span><span class="p">,</span> <span class="n">inplace</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_milestones</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">prepared_model</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">_aoquant</span><span class="o">.</span><span class="n">disable_observer</span><span class="p">)</span>
             <span class="n">prepared_model</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">_aoquant</span><span class="o">.</span><span class="n">disable_fake_quant</span><span class="p">)</span>
@@ -395,6 +424,47 @@
         <span class="k">return</span> <span class="n">finalized_model</span></div>
 
 
+    <span class="k">def</span> <span class="nf">_set_observer_sync</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">to_sync</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_prepared</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_observer_sync</span> <span class="o">!=</span> <span class="n">to_sync</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_observer_sync</span> <span class="o">=</span> <span class="n">to_sync</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">module</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">named_modules</span><span class="p">(</span><span class="n">remove_duplicate</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;weight_fake_quant&quot;</span><span class="p">)</span>
+                    <span class="ow">and</span> <span class="n">module</span><span class="o">.</span><span class="n">weight_fake_quant</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                    <span class="ow">and</span> <span class="n">module</span><span class="o">.</span><span class="n">weight_fake_quant</span><span class="o">.</span><span class="n">activation_post_process</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                    <span class="ow">and</span> <span class="ow">not</span> <span class="n">_is_pytorch_defined_observer</span><span class="p">(</span>
+                        <span class="n">module</span><span class="o">.</span><span class="n">weight_fake_quant</span><span class="o">.</span><span class="n">activation_post_process</span>
+                    <span class="p">)</span>
+                <span class="p">):</span>
+                    <span class="n">module</span><span class="o">.</span><span class="n">weight_fake_quant</span><span class="o">.</span><span class="n">activation_post_process</span><span class="o">.</span><span class="n">synchronize</span> <span class="o">=</span> <span class="n">to_sync</span>
+                <span class="k">elif</span> <span class="p">(</span>
+                    <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.weight_fake_quant&quot;</span><span class="p">)</span>
+                    <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="p">(</span><span class="n">_aoquant</span><span class="o">.</span><span class="n">FakeQuantize</span><span class="p">,</span> <span class="n">_LearnableFakeQuantize</span><span class="p">))</span>
+                    <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;activation_post_process&quot;</span><span class="p">)</span>
+                    <span class="ow">and</span> <span class="n">module</span><span class="o">.</span><span class="n">activation_post_process</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                    <span class="ow">and</span> <span class="ow">not</span> <span class="n">_is_pytorch_defined_observer</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">activation_post_process</span><span class="p">)</span>
+                <span class="p">):</span>
+                    <span class="n">module</span><span class="o">.</span><span class="n">activation_post_process</span><span class="o">.</span><span class="n">synchronize</span> <span class="o">=</span> <span class="n">to_sync</span>
+
+    <span class="k">def</span> <span class="nf">enable_observer_sync</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Enable custom observer synchronization of quantization parameters</span>
+<span class="sd">        when training on multiple GPUs.</span>
+<span class="sd">        By default, the custom observers will always synchronize when training on multiple GPUs.</span>
+<span class="sd">        This should be used to re-enable synchronization for training after disabling it (if needed).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_observer_sync</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">disable_observer_sync</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Disable custom observer synchronization of quantization parameters</span>
+<span class="sd">        when training on multiple GPUs.</span>
+<span class="sd">        This should be used in between interleaved training and validation when the validation is performed</span>
+<span class="sd">        on only one GPU and observation is not disabled (technically an error).</span>
+<span class="sd">        This should also be used when finalizing the quantized model on only one GPU to avoid deadlock.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_observer_sync</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
 <div class="viewcode-block" id="LinearQuantizer.report">
 <a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer.report">[docs]</a>
     <span class="k">def</span> <span class="nf">report</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Report</span><span class="p">:</span>
@@ -404,14 +474,13 @@
 <span class="sd">        value is a dictionary containing the statistics such as scale, zero point,</span>
 <span class="sd">        number of parameters, and so on.</span>
 
-<span class="sd">        Note that error will be nan and #params will be -1 for activations.</span>
+<span class="sd">        Note that error will be NaN and #params will be -1 for activations.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">report</span> <span class="o">=</span> <span class="n">_Report</span><span class="p">()</span>
         <span class="k">with</span> <span class="n">_get_eval_model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">)</span> <span class="k">as</span> <span class="n">model</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">_torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
                 <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">named_modules</span><span class="p">(</span><span class="n">remove_duplicate</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-
                     <span class="k">if</span> <span class="p">(</span>
                         <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;weight_fake_quant&quot;</span><span class="p">)</span>
                         <span class="ow">and</span> <span class="n">module</span><span class="o">.</span><span class="n">weight_fake_quant</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
@@ -421,6 +490,13 @@
                         <span class="n">module_summary</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;weight&quot;</span>
 
                         <span class="n">module_summary</span><span class="p">[</span><span class="s2">&quot;device&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">device</span>
+
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">weight_fake_quant</span><span class="p">,</span> <span class="n">_aoquant</span><span class="o">.</span><span class="n">FakeQuantize</span><span class="p">):</span>
+                            <span class="n">algorithm</span> <span class="o">=</span> <span class="s2">&quot;vanilla&quot;</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">weight_fake_quant</span><span class="p">,</span> <span class="n">_LearnableFakeQuantize</span><span class="p">)</span>
+                            <span class="n">algorithm</span> <span class="o">=</span> <span class="s2">&quot;learnable&quot;</span>
+                        <span class="n">module_summary</span><span class="p">[</span><span class="s2">&quot;algorithm&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">algorithm</span>
 
                         <span class="n">qscheme</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">weight_fake_quant</span><span class="o">.</span><span class="n">qscheme</span>
                         <span class="n">module_summary</span><span class="p">[</span><span class="s2">&quot;qscheme&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
@@ -442,7 +518,7 @@
 
                     <span class="k">elif</span> <span class="p">(</span>
                         <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.weight_fake_quant&quot;</span><span class="p">)</span>
-                        <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">_aoquant</span><span class="o">.</span><span class="n">FakeQuantize</span><span class="p">)</span>
+                        <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="p">(</span><span class="n">_aoquant</span><span class="o">.</span><span class="n">FakeQuantize</span><span class="p">,</span> <span class="n">_LearnableFakeQuantize</span><span class="p">))</span>
                         <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;activation_post_process&quot;</span><span class="p">)</span>
                         <span class="ow">and</span> <span class="n">module</span><span class="o">.</span><span class="n">activation_post_process</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
                     <span class="p">):</span>
@@ -452,6 +528,13 @@
 
                         <span class="n">scale</span><span class="p">,</span> <span class="n">zp</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">activation_post_process</span><span class="o">.</span><span class="n">calculate_qparams</span><span class="p">()</span>
                         <span class="n">module_summary</span><span class="p">[</span><span class="s2">&quot;device&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">scale</span><span class="o">.</span><span class="n">device</span>
+
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">_aoquant</span><span class="o">.</span><span class="n">FakeQuantize</span><span class="p">):</span>
+                            <span class="n">algorithm</span> <span class="o">=</span> <span class="s2">&quot;vanilla&quot;</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">_LearnableFakeQuantize</span><span class="p">)</span>
+                            <span class="n">algorithm</span> <span class="o">=</span> <span class="s2">&quot;learnable&quot;</span>
+                        <span class="n">module_summary</span><span class="p">[</span><span class="s2">&quot;algorithm&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">algorithm</span>
 
                         <span class="n">qscheme</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">qscheme</span>
                         <span class="n">module_summary</span><span class="p">[</span><span class="s2">&quot;qscheme&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
@@ -478,7 +561,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

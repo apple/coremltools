@@ -1,13 +1,11 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.models.model &mdash; coremltools API Reference 8.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+  <title>coremltools.models.model &mdash; coremltools API Reference 8.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -16,11 +14,15 @@
       <link rel="stylesheet" type="text/css" href="../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
-      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=1f41a3ab"></script>
-      <script src="../../../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=8cc1add8"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -37,6 +39,9 @@
           <a href="../../../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
+              <div class="version">
+                8.3
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -93,30 +98,30 @@
 <span class="c1"># Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">atexit</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_atexit</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">os</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_os</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_shutil</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_tempfile</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_warnings</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span> <span class="k">as</span> <span class="n">_deepcopy</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span> <span class="k">as</span> <span class="n">_Dict</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span> <span class="k">as</span> <span class="n">_List</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
+<span class="kn">import</span> <span class="nn">atexit</span> <span class="k">as</span> <span class="nn">_atexit</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">os</span> <span class="k">as</span> <span class="nn">_os</span>
+<span class="kn">import</span> <span class="nn">shutil</span> <span class="k">as</span> <span class="nn">_shutil</span>
+<span class="kn">import</span> <span class="nn">tempfile</span> <span class="k">as</span> <span class="nn">_tempfile</span>
+<span class="kn">import</span> <span class="nn">warnings</span> <span class="k">as</span> <span class="nn">_warnings</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span> <span class="k">as</span> <span class="n">_deepcopy</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span> <span class="k">as</span> <span class="n">_Dict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span> <span class="k">as</span> <span class="n">_List</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_np</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_numpy</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_np</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_numpy</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReshapeFrequency</span> <span class="k">as</span> <span class="n">_ReshapeFrequency</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">SpecializationStrategy</span> <span class="k">as</span> <span class="n">_SpecializationStrategy</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">_logger</span> <span class="k">as</span> <span class="n">logger</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">proto</span> <span class="k">as</span> <span class="n">_proto</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools._deps</span><span class="w"> </span><span class="kn">import</span> <span class="n">_HAS_TF_1</span><span class="p">,</span> <span class="n">_HAS_TF_2</span><span class="p">,</span> <span class="n">_HAS_TORCH</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.program</span><span class="w"> </span><span class="kn">import</span> <span class="n">Program</span> <span class="k">as</span> <span class="n">_Program</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.scope</span><span class="w"> </span><span class="kn">import</span> <span class="n">ScopeSource</span> <span class="k">as</span> <span class="n">_ScopeSource</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">ReshapeFrequency</span> <span class="k">as</span> <span class="n">_ReshapeFrequency</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">SpecializationStrategy</span> <span class="k">as</span> <span class="n">_SpecializationStrategy</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_logger</span> <span class="k">as</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">proto</span> <span class="k">as</span> <span class="n">_proto</span>
+<span class="kn">from</span> <span class="nn">coremltools._deps</span> <span class="kn">import</span> <span class="n">_HAS_TF_1</span><span class="p">,</span> <span class="n">_HAS_TF_2</span><span class="p">,</span> <span class="n">_HAS_TORCH</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.program</span> <span class="kn">import</span> <span class="n">Program</span> <span class="k">as</span> <span class="n">_Program</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.scope</span> <span class="kn">import</span> <span class="n">ScopeSource</span> <span class="k">as</span> <span class="n">_ScopeSource</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_MLMODEL_EXTENSION</span><span class="p">,</span>
     <span class="n">_MLPACKAGE_EXTENSION</span><span class="p">,</span>
     <span class="n">_create_mlpackage</span><span class="p">,</span>
@@ -126,37 +131,37 @@
     <span class="n">_macos_version</span><span class="p">,</span>
     <span class="n">_try_get_weights_dir_path</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_spec</span> <span class="k">as</span> <span class="n">_load_spec</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">save_spec</span> <span class="k">as</span> <span class="n">_save_spec</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">load_spec</span> <span class="k">as</span> <span class="n">_load_spec</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">save_spec</span> <span class="k">as</span> <span class="n">_save_spec</span>
 
 <span class="k">if</span> <span class="n">_HAS_TORCH</span><span class="p">:</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_torch</span>
+    <span class="kn">import</span> <span class="nn">torch</span> <span class="k">as</span> <span class="nn">_torch</span>
 
 <span class="k">if</span> <span class="n">_HAS_TF_1</span> <span class="ow">or</span> <span class="n">_HAS_TF_2</span><span class="p">:</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_tf</span>
+    <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">_tf</span>
 
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">..libmodelpackage</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelPackage</span> <span class="k">as</span> <span class="n">_ModelPackage</span>
+    <span class="kn">from</span> <span class="nn">..libmodelpackage</span> <span class="kn">import</span> <span class="n">ModelPackage</span> <span class="k">as</span> <span class="n">_ModelPackage</span>
 <span class="k">except</span><span class="p">:</span>
     <span class="n">_ModelPackage</span> <span class="o">=</span> <span class="kc">None</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">..libcoremlpython</span><span class="w"> </span><span class="kn">import</span> <span class="n">_MLModelProxy</span>
+    <span class="kn">from</span> <span class="nn">..libcoremlpython</span> <span class="kn">import</span> <span class="n">_MLModelProxy</span>
 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to load _MLModelProxy: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">_MLModelProxy</span> <span class="o">=</span> <span class="kc">None</span>
 
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">..libcoremlpython</span><span class="w"> </span><span class="kn">import</span> <span class="n">_MLModelAssetProxy</span>
+    <span class="kn">from</span> <span class="nn">..libcoremlpython</span> <span class="kn">import</span> <span class="n">_MLModelAssetProxy</span>
 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to load _MLModelAssetProxy: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">_MLModelAssetProxy</span> <span class="o">=</span> <span class="kc">None</span>
 
 <span class="n">_HAS_PIL</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span> <span class="k">as</span> <span class="n">_PIL_IMAGE</span>
+    <span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span> <span class="k">as</span> <span class="n">_PIL_IMAGE</span>
 <span class="k">except</span><span class="p">:</span>
     <span class="n">_HAS_PIL</span> <span class="o">=</span> <span class="kc">False</span>
 
@@ -203,10 +208,10 @@
 <span class="n">_METADATA_SOURCE</span> <span class="o">=</span> <span class="s2">&quot;com.github.apple.coremltools.source&quot;</span>
 <span class="n">_METADATA_SOURCE_DIALECT</span> <span class="o">=</span> <span class="s2">&quot;com.github.apple.coremltools.source_dialect&quot;</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">.compute_device</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLComputeDevice</span> <span class="k">as</span> <span class="n">_MLComputeDevice</span>
+<span class="kn">from</span> <span class="nn">.compute_device</span> <span class="kn">import</span> <span class="n">MLComputeDevice</span> <span class="k">as</span> <span class="n">_MLComputeDevice</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_verify_optimization_hint_input</span><span class="p">(</span><span class="n">optimization_hint_input</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_verify_optimization_hint_input</span><span class="p">(</span><span class="n">optimization_hint_input</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Throws an exception if ``optimization_hint_input`` is not valid.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -233,42 +238,42 @@
 
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">_FeatureDescription</span><span class="p">:</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fd_spec</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">_FeatureDescription</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fd_spec</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_fd_spec</span> <span class="o">=</span> <span class="n">fd_spec</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;Features(</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fd_spec</span><span class="p">))</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fd_spec</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fd_spec</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">shortDescription</span>
         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;No feature with name </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">key</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fd_spec</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="kc">False</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fd_spec</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">shortDescription</span> <span class="o">=</span> <span class="n">value</span>
                 <span class="k">return</span>
         <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;No feature with name </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="n">key</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fd_spec</span><span class="p">:</span>
             <span class="k">yield</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">MLState</span><span class="p">:</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proxy</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">class</span> <span class="nc">MLState</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proxy</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Holds state for an MLModel.</span>
 
@@ -283,7 +288,7 @@
 
 <div class="viewcode-block" id="MLModelAsset">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModelAsset">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">MLModelAsset</span><span class="p">:</span>
+<span class="k">class</span> <span class="nc">MLModelAsset</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class representing a compiled model asset.</span>
 
@@ -291,7 +296,7 @@
 <span class="sd">    - From a compiled model directory: The directory should have a &#39;.mlmodelc&#39; extension.</span>
 <span class="sd">    - From memory: Allows direct initialization using in-memory model data.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proxy</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proxy</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">_MLModelAssetProxy</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">proxy</span><span class="p">,</span> <span class="n">_MLModelAssetProxy</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;The proxy parameter must be of type _MLModelAssetProxy.&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span> <span class="o">=</span> <span class="n">proxy</span>
@@ -299,7 +304,7 @@
 <div class="viewcode-block" id="MLModelAsset.from_path">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModelAsset.from_path">[docs]</a>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">from_path</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">from_path</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">compiled_model_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MLModelAsset&quot;</span><span class="p">:</span>
@@ -322,7 +327,7 @@
 <div class="viewcode-block" id="MLModelAsset.from_memory">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModelAsset.from_memory">[docs]</a>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">from_memory</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">from_memory</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">spec_data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span>
         <span class="n">blob_mapping</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]</span> <span class="o">=</span> <span class="p">{},</span>
@@ -349,7 +354,7 @@
 
 <div class="viewcode-block" id="MLModel">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">MLModel</span><span class="p">:</span>
+<span class="k">class</span> <span class="nc">MLModel</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This class defines the minimal interface to a Core ML object in Python.</span>
 
@@ -412,7 +417,7 @@
 
 <div class="viewcode-block" id="MLModel.__init__">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel.__init__">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model</span><span class="p">,</span>
         <span class="n">is_temp_package</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -512,11 +517,11 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">cleanup</span><span class="p">(</span><span class="n">package_path</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">cleanup</span><span class="p">(</span><span class="n">package_path</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">package_path</span><span class="p">):</span>
                 <span class="n">_shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">package_path</span><span class="p">)</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">does_model_contain_mlprogram</span><span class="p">(</span><span class="n">model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">does_model_contain_mlprogram</span><span class="p">(</span><span class="n">model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">            Is this an mlprogram or is it a pipeline with at least one mlprogram?</span>
 <span class="sd">            &quot;&quot;&quot;</span>
@@ -630,7 +635,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_model_input_names_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">i</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">input</span><span class="p">])</span></div>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_proxy_and_spec</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_get_proxy_and_spec</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">compute_units</span><span class="p">:</span> <span class="n">_ComputeUnit</span><span class="p">,</span>
@@ -684,62 +689,62 @@
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">short_description</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">short_description</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">shortDescription</span>
 
     <span class="nd">@short_description</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">short_description</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">short_description</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">short_description</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">short_description</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">shortDescription</span> <span class="o">=</span> <span class="n">short_description</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">input_description</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">input_description</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_description</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">output_description</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">output_description</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_description</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">user_defined_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">user_defined_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">userDefined</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">author</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">author</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">author</span>
 
     <span class="nd">@author</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">author</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">author</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">author</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">author</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">author</span> <span class="o">=</span> <span class="n">author</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">license</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">license</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">license</span>
 
     <span class="nd">@license</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">license</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">license</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">license</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">license</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">license</span> <span class="o">=</span> <span class="n">license</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">versionString</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">weights_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">weights_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weights_dir</span>
 
     <span class="nd">@version</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">version_string</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">version_string</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">versionString</span> <span class="o">=</span> <span class="n">version_string</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
 
 <div class="viewcode-block" id="MLModel.save">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel.save">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Save the model to an ``.mlmodel`` format. For an MIL program, the ``save_path`` is</span>
 <span class="sd">        a package directory containing the ``mlmodel`` and weights.</span>
@@ -807,7 +812,7 @@
 
 <div class="viewcode-block" id="MLModel.get_compiled_model_path">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel.get_compiled_model_path">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_compiled_model_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_compiled_model_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the path for the underlying compiled ML Model.</span>
 
@@ -824,7 +829,7 @@
 
 <div class="viewcode-block" id="MLModel.get_spec">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel.get_spec">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a deep copy of the protobuf specification of the model.</span>
 
@@ -846,7 +851,7 @@
 
 <div class="viewcode-block" id="MLModel.predict">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel.predict">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">MLState</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">MLState</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return predictions for the model.</span>
 
@@ -884,7 +889,7 @@
 <span class="sd">            batch_predictions = model.predict(data)</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">def</span><span class="w"> </span><span class="nf">verify_and_convert_input_dict</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">verify_and_convert_input_dict</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_verify_input_dict</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_convert_tensor_to_numpy</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
             <span class="c1"># TODO: remove the following call when this is fixed: rdar://92239209</span>
@@ -934,7 +939,7 @@
 
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_check_predict_data</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_check_predict_data</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s1">&#39;&quot;data&quot; parameter must be either a dict or list of dict, but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="si">}</span><span class="s1">.&#39;</span>
@@ -944,7 +949,7 @@
 
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_predictions</span><span class="p">(</span><span class="n">proxy</span><span class="p">,</span> <span class="n">preprocess_method</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_predictions</span><span class="p">(</span><span class="n">proxy</span><span class="p">,</span> <span class="n">preprocess_method</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="nb">dict</span><span class="p">:</span>
             <span class="n">preprocess_method</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
             <span class="n">state</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">state</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">state</span><span class="o">.</span><span class="n">__proxy__</span>
@@ -956,7 +961,7 @@
                 <span class="n">preprocess_method</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">proxy</span><span class="o">.</span><span class="n">batchPredict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_is_stateful</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_is_stateful</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="n">model_desc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span>
 
         <span class="c1"># For a single function model, we check if len(state) &gt; 0</span>
@@ -968,10 +973,10 @@
         <span class="n">f</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">function_name</span><span class="p">,</span> <span class="n">model_desc</span><span class="o">.</span><span class="n">functions</span><span class="p">))</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">state</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_is_multifunction</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_is_multifunction</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">functions</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_function_description</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_get_function_description</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">function_name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;_proto.Model_pb2.FunctionDescription&quot;</span><span class="p">:</span>
         <span class="n">f</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">function_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">functions</span><span class="p">))</span>
@@ -985,7 +990,7 @@
 
 <div class="viewcode-block" id="MLModel.make_state">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel.make_state">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">make_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MLState</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">make_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MLState</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns a new state object, which can be passed to the ``predict`` method.</span>
 
@@ -1016,7 +1021,7 @@
 
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_input_has_infinite_upper_bound</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_input_has_infinite_upper_bound</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if any input has infinite upper bound (-1).&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">input_spec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_description</span><span class="o">.</span><span class="n">_fd_spec</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">size_range</span> <span class="ow">in</span> <span class="n">input_spec</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="o">.</span><span class="n">shapeRange</span><span class="o">.</span><span class="n">sizeRanges</span><span class="p">:</span>
@@ -1024,7 +1029,7 @@
                     <span class="k">return</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="kc">False</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_set_build_info_mil_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metadata</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_set_build_info_mil_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metadata</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s1">&#39;Type&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;mlProgram&quot;</span><span class="p">:</span>
             <span class="c1"># No MIL attributes to set</span>
             <span class="k">return</span>
@@ -1051,7 +1056,7 @@
             <span class="n">build_info_dict</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key_pair</span><span class="p">)</span>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_mil_internal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_mil_internal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a deep copy of the MIL program object, if available.</span>
 <span class="sd">        It&#39;s available whenever an MLModel object is constructed using</span>
@@ -1071,7 +1076,7 @@
         <span class="k">return</span> <span class="n">_deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mil_program</span><span class="p">)</span>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_verify_input_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dict</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_verify_input_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dict</span><span class="p">):</span>
         <span class="c1"># Check if the input name given by the user is valid.</span>
         <span class="c1"># Although this is checked during prediction inside CoreML Framework,</span>
         <span class="c1"># we still check it here to return early and</span>
@@ -1082,7 +1087,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_verify_pil_image_modes</span><span class="p">(</span><span class="n">input_dict</span><span class="p">)</span>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_verify_pil_image_modes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dict</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_verify_pil_image_modes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dict</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">_HAS_PIL</span><span class="p">:</span>
             <span class="k">return</span>
         <span class="k">for</span> <span class="n">input_desc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">input</span><span class="p">:</span>
@@ -1114,7 +1119,7 @@
                         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">input_desc</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_verify_input_name_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dict</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_verify_input_name_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dict</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">given_input</span> <span class="ow">in</span> <span class="n">input_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">given_input</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_input_names_set</span><span class="p">:</span>
                 <span class="n">err_msg</span> <span class="o">=</span> <span class="s2">&quot;Provided key </span><span class="se">\&quot;</span><span class="si">{}</span><span class="se">\&quot;</span><span class="s2">, in the input dict, &quot;</span> \
@@ -1123,13 +1128,13 @@
 
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_update_float16_multiarray_input_to_float32</span><span class="p">(</span><span class="n">input_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_update_float16_multiarray_input_to_float32</span><span class="p">(</span><span class="n">input_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">input_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">_np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">v</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">_np</span><span class="o">.</span><span class="n">float16</span><span class="p">:</span>
                 <span class="n">input_data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">_np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_convert_tensor_to_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dict</span><span class="p">):</span>
-        <span class="k">def</span><span class="w"> </span><span class="nf">convert</span><span class="p">(</span><span class="n">given_input</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_convert_tensor_to_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dict</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="n">given_input</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">given_input</span><span class="p">,</span> <span class="n">_numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
                 <span class="n">sanitized_input</span> <span class="o">=</span> <span class="n">given_input</span>
             <span class="k">elif</span> <span class="n">_HAS_TORCH</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">given_input</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
@@ -1155,7 +1160,7 @@
 <div class="viewcode-block" id="MLModel.get_available_compute_devices">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel.get_available_compute_devices">[docs]</a>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_available_compute_devices</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_List</span><span class="p">[</span><span class="n">_MLComputeDevice</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">get_available_compute_devices</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_List</span><span class="p">[</span><span class="n">_MLComputeDevice</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The list of available compute devices for CoreML.</span>
 
@@ -1179,7 +1184,7 @@
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">load_duration_in_nano_seconds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">load_duration_in_nano_seconds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Retrieves the duration of the model loading process in nanoseconds.</span>
 <span class="sd">        </span>
@@ -1199,7 +1204,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span><span class="o">.</span><span class="n">get_load_duration_in_nano_seconds</span><span class="p">()</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">last_predict_duration_in_nano_seconds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">last_predict_duration_in_nano_seconds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Retrieves the duration of the last predict operation in nanoseconds.</span>
 <span class="sd">        This method returns the time taken for the most recent prediction made by</span>
@@ -1229,7 +1234,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

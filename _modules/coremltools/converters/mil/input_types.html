@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.input_types &mdash; coremltools API Reference 8.0b1 documentation</title>
+  <title>coremltools.converters.mil.input_types &mdash; coremltools API Reference 8.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=fd3f3429" />
@@ -20,7 +20,7 @@
   
         <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../_static/documentation_options.js?v=8cc1add8"></script>
         <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
@@ -40,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                8.0b1
+                8.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
@@ -180,8 +180,11 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">dtype</span></div>
-</div>
 
+
+    <span class="c1"># If this type could be used as model outputs.</span>
+    <span class="k">def</span> <span class="nf">can_be_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
 
 
 <div class="viewcode-block" id="ImageType">
@@ -197,6 +200,7 @@
         <span class="n">bias</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">color_layout</span><span class="o">=</span><span class="n">ColorLayout</span><span class="o">.</span><span class="n">RGB</span><span class="p">,</span>
         <span class="n">channel_first</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">grayscale_use_uint8</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Configuration class used for image inputs in Core ML.</span>
@@ -232,6 +236,13 @@
 <span class="sd">            Default format:</span>
 <span class="sd">                * For TensorFlow: channel last (``channel_first=False``).</span>
 <span class="sd">                * For PyTorch: channel first (``channel_first=True``).</span>
+
+<span class="sd">        grayscale_use_uint8: (bool)</span>
+<span class="sd">            * Only applicable for GRAYSCALE color layout.</span>
+<span class="sd">            * Defaults to ``False``, in which case fp32 will be used.</span>
+<span class="sd">            * Using uint8 requires a ``minimum_deployment_target`` of iOS17 or newer.</span>
+<span class="sd">            * Using uint8 restricts the number of avaliable MIL ops, which can cause</span>
+<span class="sd">              conversion to fail.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">ImageType</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">scale</span>
@@ -255,7 +266,15 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="n">bias</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">channel_first</span> <span class="o">=</span> <span class="n">channel_first</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">channel_first</span> <span class="o">=</span> <span class="n">channel_first</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">grayscale_use_uint8</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">grayscale_use_uint8</span><span class="p">:</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">color_layout</span> <span class="o">!=</span> <span class="n">ColorLayout</span><span class="o">.</span><span class="n">GRAYSCALE</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;&quot;grayscale_use_uint8&quot; can only be True when&#39;</span> \
+                                 <span class="s1">&#39;&quot;color_layout&quot; is &quot;GRAYSCALE&quot;&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grayscale_use_uint8</span> <span class="o">=</span> <span class="n">grayscale_use_uint8</span></div>
+
 
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -386,7 +405,7 @@
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;TensorType(name=</span><span class="si">{}</span><span class="s1">, shape=</span><span class="si">{}</span><span class="s1">, dtype=</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
                                                                 <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
-                                                                <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span></div>
+                                                                <span class="n">types</span><span class="o">.</span><span class="n">builtin_to_string</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="StateType">
@@ -445,7 +464,11 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;StateType[</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">wrapped_type</span><span class="si">}</span><span class="s2">]&quot;</span></div>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;StateType[</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">wrapped_type</span><span class="si">}</span><span class="s2">]&quot;</span>
+
+    <span class="k">def</span> <span class="nf">can_be_output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># StateType cannot be a model output.</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
 
 
 <div class="viewcode-block" id="RangeDim">
@@ -740,7 +763,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

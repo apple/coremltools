@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.passes.defs.symbol_transform &mdash; coremltools API Reference 8.0b1 documentation</title>
+  <title>coremltools.converters.mil.mil.passes.defs.symbol_transform &mdash; coremltools API Reference 8.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/graphviz.css?v=fd3f3429" />
@@ -20,7 +20,7 @@
   
         <script src="../../../../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../../../_static/documentation_options.js?v=8cc1add8"></script>
         <script src="../../../../../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../../_static/js/theme.js"></script>
@@ -40,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                8.0b1
+                8.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../search.html" method="get">
@@ -350,6 +350,8 @@
             <span class="ow">and</span> <span class="n">source_const_var</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">weight_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="p">):</span>
             <span class="n">target_const_var</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">weight_key</span> <span class="o">=</span> <span class="n">source_const_var</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">weight_key</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">source_const_var</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="s2">&quot;weight_id&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">source_const_var</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">weight_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">target_const_var</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">weight_id</span> <span class="o">=</span> <span class="n">source_const_var</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">weight_id</span>
         <span class="k">return</span> <span class="n">target_const_var</span>
 
     <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">:</span> <span class="n">Program</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -400,6 +402,12 @@
                                     <span class="k">assert</span> <span class="p">(</span>
                                         <span class="n">source_input_var</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;const&quot;</span>
                                     <span class="p">),</span> <span class="s2">&quot;Only const may be absent from context&quot;</span>
+                                    <span class="c1"># The consts across function should share the same file value while lowering into milproto,</span>
+                                    <span class="c1"># so we assign the weight_id, if not presented.</span>
+                                    <span class="k">if</span> <span class="n">source_input_var</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">weight_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                                        <span class="n">source_input_var</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">weight_id</span> <span class="o">=</span> <span class="p">(</span>
+                                            <span class="sa">f</span><span class="s2">&quot;const_</span><span class="si">{</span><span class="n">source_input_var</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_weight_id&quot;</span>
+                                        <span class="p">)</span>
                                     <span class="n">context</span><span class="p">[</span><span class="n">source_input_var</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_copy_construct_const_var</span><span class="p">(</span>
                                         <span class="n">source_input_var</span>
                                     <span class="p">)</span>
@@ -427,19 +435,7 @@
                     <span class="p">]</span>
                 <span class="p">)</span>
 
-                <span class="n">prog</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">target_function_name</span><span class="p">,</span> <span class="n">target_function</span><span class="p">)</span>
-
-        <span class="c1"># For some reason, if we run const_deduplication._deduplicate_const_across_functions here,</span>
-        <span class="c1"># the populated `const.weight_id` will get lost if we run pass pipeline afterwards,</span>
-        <span class="c1"># so we have no choice but to let user manually deduplicate after all passes are done</span>
-        <span class="c1"># TODO (rdar://131680531): Investigate why it happens &amp; whether we can change this behavior</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-            <span class="s2">&quot;(If you are using ct.utils.materialize_dynamic_shape_mlmodel, &quot;</span>
-            <span class="s2">&quot;you are safe to ignore this warning message) &quot;</span>
-            <span class="s2">&quot;Weights are duplicated in each materialized new function, &quot;</span>
-            <span class="s2">&quot;so you may want to run const_deduplication._deduplicate_const_across_functions &quot;</span>
-            <span class="s2">&quot;on your pymil program before serialization to milproto&quot;</span>
-        <span class="p">)</span></div>
+                <span class="n">prog</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">target_function_name</span><span class="p">,</span> <span class="n">target_function</span><span class="p">)</span></div>
 
 </pre></div>
 
@@ -450,7 +446,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

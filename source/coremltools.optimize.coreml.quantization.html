@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quantization &mdash; coremltools API Reference 8.0b1 documentation</title>
+  <title>Quantization &mdash; coremltools API Reference 8.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
@@ -21,7 +21,7 @@
   
         <script src="../_static/jquery.js?v=5d32c60e"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../_static/documentation_options.js?v=8cc1add8"></script>
         <script src="../_static/doctools.js?v=9a2dae69"></script>
         <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -44,7 +44,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                8.0b1
+                8.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -236,7 +236,7 @@ lut(int8) -&gt; constexpr_blockwise_shift_scale -&gt; lut(fp16) -&gt; constexpr_
 
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.optimize.coreml.experimental.linear_quantize_activations">
-<span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.experimental.</span></span><span class="sig-name descname"><span class="pre">linear_quantize_activations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mlmodel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="coremltools.models.html#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.OptimizationConfig" title="coremltools.optimize.coreml._config.OptimizationConfig"><span class="pre">OptimizationConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/experimental/_post_training_quantization.html#linear_quantize_activations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.experimental.linear_quantize_activations" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.experimental.</span></span><span class="sig-name descname"><span class="pre">linear_quantize_activations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mlmodel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="coremltools.models.html#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.OptimizationConfig" title="coremltools.optimize.coreml._config.OptimizationConfig"><span class="pre">OptimizationConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_op_group_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/experimental/_post_training_quantization.html#linear_quantize_activations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.experimental.linear_quantize_activations" title="Link to this definition"></a></dt>
 <dd><p>Utility function to convert a float precision MLModel of type <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>, which uses
 float-precision activations, into a compressed MLModel that uses n-bit activations. Currently, only n=8
 is suppported.</p>
@@ -257,6 +257,13 @@ Expects a list of sample input dictionaries, which should have the same format a
 method for the mlmodel. More specifically, the input name need to be specified in the data, unless it’s a single
 input model where the name will be auto inferred.</p>
 </dd>
+<dt><strong>calibration_op_group_size: int</strong></dt><dd><p>While running inference during calibration, only have <cite>calibration_op_group_size</cite> of intermediate outputs
+appended to outputs at a time. If the model is very large, it could lead to the temperary model having
+thousands of outputs, which may lead to model hanging forever during model loading. To work around this
+issue, intermediate outputs are grouped into smaller groups, where each time a temperary model will only
+have <cite>calibration_op_group_size</cite> outputs. By default (op_group_size = -1), op_group_size is equal to the
+number of valid intermediate ops.</p>
+</dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -272,11 +279,9 @@ input model where the name will be auto inferred.</p>
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">)</span>
 <span class="n">activation_config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OptimizationConfig</span><span class="p">(</span>
-    <span class="n">global_config</span><span class="o">=</span><span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">OpActivationLinearQuantizerConfig</span><span class="p">(</span>
-        <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;linear_symmetric&quot;</span>
-    <span class="p">)</span>
+    <span class="n">global_config</span><span class="o">=</span><span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OpLinearQuantizerConfig</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;linear_symmetric&quot;</span><span class="p">)</span>
 <span class="p">)</span>
-<span class="n">compressed_model_a8</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">experimental</span><span class="o">.</span><span class="n">linear_quantize_activations</span><span class="p">(</span>
+<span class="n">compressed_model_a8</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">linear_quantize_activations</span><span class="p">(</span>
     <span class="n">model</span><span class="p">,</span> <span class="n">activation_config</span><span class="p">,</span> <span class="n">sample_data</span>
 <span class="p">)</span>
 
@@ -393,7 +398,7 @@ elements, it will not be pruned.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
