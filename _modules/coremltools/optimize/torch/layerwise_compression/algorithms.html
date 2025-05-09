@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.optimize.torch.layerwise_compression.algorithms &mdash; coremltools API Reference 8.0b1 documentation</title>
+  <title>coremltools.optimize.torch.layerwise_compression.algorithms &mdash; coremltools API Reference 8.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
@@ -20,7 +20,7 @@
   
         <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../_static/documentation_options.js?v=8cc1add8"></script>
         <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../_static/js/theme.js"></script>
@@ -40,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                8.0b1
+                8.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
@@ -172,7 +172,7 @@
 <span class="sd">            weights are quantized with zero point as zero. When it is set to ``QuantizationScheme.affine``, zero point</span>
 <span class="sd">            can be set anywhere in the range of values allowed for the quantized weight.</span>
 <span class="sd">            Defaults to ``QuantizationScheme.symmetric``.</span>
-<span class="sd">        block_size (:obj:`int`): When ``block_size`` is specified, ``block_size`` number of values will share the same quantization </span>
+<span class="sd">        block_size (:obj:`int`): When ``block_size`` is specified, ``block_size`` number of values will share the same quantization</span>
 <span class="sd">            parameters of scale, as well as the same zero point when applicable, across the input channel axis. Defaults to ``None``.</span>
 <span class="sd">        enable_normal_float (:obj:`bool`): When ``True``, normal float format is used for quantization. It&#39;s</span>
 <span class="sd">            only supported when ``weight_dtype`` is equal to ``int3`` and ``int4``. Defaults to ``False``.</span>
@@ -192,6 +192,7 @@
     <span class="n">weight_dtype</span><span class="p">:</span> <span class="n">_Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">&quot;uint8&quot;</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="n">weight_n_bits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">granularity</span><span class="p">:</span> <span class="n">QuantizationGranularity</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">&quot;per_channel&quot;</span><span class="p">,</span>
         <span class="n">converter</span><span class="o">=</span><span class="n">QuantizationGranularity</span><span class="p">,</span>
@@ -281,6 +282,7 @@
     <span class="n">weight_dtype</span><span class="p">:</span> <span class="n">_Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">&quot;uint8&quot;</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="n">weight_n_bits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">quantization_granularity</span><span class="p">:</span> <span class="n">QuantizationGranularity</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">&quot;per_channel&quot;</span><span class="p">,</span>
         <span class="n">converter</span><span class="o">=</span><span class="n">QuantizationGranularity</span><span class="p">,</span>
@@ -300,9 +302,9 @@
     <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">weight_n_bits</span> <span class="o">=</span> <span class="n">_get_n_bits_from_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span> <span class="o">=</span> <span class="n">_maybe_convert_str_to_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">_torch</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">float32</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">_torch</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">float16</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">float32</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;weight_dtype must be one of (torch.uint8, torch.float32) not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;weight_dtype must be one of (torch.uint8, torch.float16, torch.float32) not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
 
     <span class="nd">@classmethod</span>
@@ -635,7 +637,7 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A post-training compression algorithm based on the paper</span>
 <span class="sd">    `SparseGPT: Massive Language Models Can be Accurately Pruned in One-Shot</span>
-<span class="sd">    &lt;https://arxiv.org/pdf/2301.00774.pdf&gt;`_</span>
+<span class="sd">    &lt;https://arxiv.org/pdf/2301.00774.pdf&gt;`_.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        layer (:obj:`torch.nn.Module`): Module to be compressed.</span>
@@ -677,7 +679,9 @@
         <span class="n">weight</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layer</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layer</span><span class="p">,</span> <span class="n">_nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">):</span>
             <span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">weight_dtype</span> <span class="ow">in</span> <span class="p">[</span><span class="n">_torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">float16</span><span class="p">]:</span>
+            <span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">weight_dtype</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantizer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantizer</span><span class="o">.</span><span class="n">ready</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_quantizer</span><span class="o">.</span><span class="n">find_params</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -686,6 +690,7 @@
         <span class="n">tick</span> <span class="o">=</span> <span class="n">_time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 
         <span class="n">hessian</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hessian</span>
+
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hessian</span>
         <span class="n">dead</span> <span class="o">=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">hessian</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
         <span class="n">hessian</span><span class="p">[</span><span class="n">dead</span><span class="p">,</span> <span class="n">dead</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
@@ -700,6 +705,10 @@
         <span class="n">hessian</span> <span class="o">=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">cholesky_inverse</span><span class="p">(</span><span class="n">hessian</span><span class="p">)</span>
         <span class="n">hessian</span> <span class="o">=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">hessian</span><span class="p">,</span> <span class="n">upper</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">hessian_inverse</span> <span class="o">=</span> <span class="n">hessian</span>
+
+        <span class="c1"># Hessian computation happens in float32, and _torch.linalg.cholesky does not support float16, so we cast here</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">weight_dtype</span> <span class="ow">in</span> <span class="p">[</span><span class="n">_torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">float16</span><span class="p">]:</span>
+            <span class="n">hessian_inverse</span> <span class="o">=</span> <span class="n">hessian_inverse</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">weight_dtype</span><span class="p">)</span>
 
         <span class="n">mask</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -821,7 +830,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

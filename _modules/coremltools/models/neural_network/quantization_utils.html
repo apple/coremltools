@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.models.neural_network.quantization_utils &mdash; coremltools API Reference 8.0b1 documentation</title>
+  <title>coremltools.models.neural_network.quantization_utils &mdash; coremltools API Reference 8.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=fd3f3429" />
@@ -20,7 +20,7 @@
   
         <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../_static/documentation_options.js?v=8cc1add8"></script>
         <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
@@ -40,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                8.0b1
+                8.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
@@ -108,19 +108,10 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_np</span>
 
-<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
+<span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">_ct</span>
 <span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_logger</span>
 <span class="kn">from</span> <span class="nn">coremltools._deps</span> <span class="kn">import</span> <span class="n">_HAS_KMEANS1D</span><span class="p">,</span> <span class="n">_kmeans1d</span>
-<span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">_QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE</span><span class="p">,</span>
-    <span class="n">_QUANTIZATION_MODE_DEQUANTIZE</span><span class="p">,</span>
-    <span class="n">_QUANTIZATION_MODE_LINEAR_QUANTIZATION</span><span class="p">,</span>
-    <span class="n">_QUANTIZATION_MODE_LINEAR_SYMMETRIC</span><span class="p">,</span>
-    <span class="n">_QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS</span><span class="p">,</span>
-    <span class="n">_QUANTIZATION_MODE_LOOKUP_TABLE_LINEAR</span><span class="p">,</span>
-    <span class="n">_SUPPORTED_QUANTIZATION_MODES</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">MLModel</span> <span class="k">as</span> <span class="n">_MLModel</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize</span> <span class="kn">import</span> <span class="n">_utils</span> <span class="k">as</span> <span class="n">_optimize_utils</span>
 
 <span class="kn">from</span> <span class="nn">...</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_MINIMUM_FP16_SPEC_VERSION</span><span class="p">,</span>
@@ -508,10 +499,7 @@
     <span class="n">lut_len</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">nbits</span>
 
     <span class="k">if</span> <span class="n">cluster_dim</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="c1"># Import here to avoid circular import.</span>
-        <span class="kn">from</span> <span class="nn">coremltools.optimize.coreml</span> <span class="kn">import</span> <span class="n">_utils</span> <span class="k">as</span> <span class="n">optimize_utils</span>
-
-        <span class="n">weight</span> <span class="o">=</span> <span class="n">optimize_utils</span><span class="o">.</span><span class="n">reshape_weight_for_vector_lut</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="n">cluster_dim</span><span class="p">,</span> <span class="n">vector_axis</span><span class="p">)</span>
+        <span class="n">weight</span> <span class="o">=</span> <span class="n">_optimize_utils</span><span class="o">.</span><span class="n">reshape_weight_for_vector_lut</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="n">cluster_dim</span><span class="p">,</span> <span class="n">vector_axis</span><span class="p">)</span>
 
     <span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">cluster_dim</span><span class="p">)</span>
     <span class="n">lut</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">lut_len</span><span class="p">,</span> <span class="n">cluster_dim</span><span class="p">))</span>
@@ -653,15 +641,15 @@
 
     <span class="c1"># Linear Quantization</span>
     <span class="k">if</span> <span class="n">qm</span> <span class="ow">in</span> <span class="p">[</span>
-        <span class="n">_QUANTIZATION_MODE_LINEAR_QUANTIZATION</span><span class="p">,</span>
-        <span class="n">_QUANTIZATION_MODE_LINEAR_SYMMETRIC</span><span class="p">,</span>
+        <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_QUANTIZATION_MODE_LINEAR_QUANTIZATION</span><span class="p">,</span>
+        <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_QUANTIZATION_MODE_LINEAR_SYMMETRIC</span><span class="p">,</span>
     <span class="p">]:</span>
-        <span class="n">symmetric</span> <span class="o">=</span> <span class="n">qm</span> <span class="o">==</span> <span class="n">_QUANTIZATION_MODE_LINEAR_SYMMETRIC</span>
+        <span class="n">symmetric</span> <span class="o">=</span> <span class="n">qm</span> <span class="o">==</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_QUANTIZATION_MODE_LINEAR_SYMMETRIC</span>
         <span class="n">qw</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">bias</span> <span class="o">=</span> <span class="n">_quantize_channelwise_linear</span><span class="p">(</span><span class="n">wp</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">symmetric</span><span class="p">)</span>
     <span class="c1"># Lookup tables</span>
-    <span class="k">elif</span> <span class="n">qm</span> <span class="o">==</span> <span class="n">_QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">qm</span> <span class="o">==</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS</span><span class="p">:</span>
         <span class="n">lut</span><span class="p">,</span> <span class="n">qw</span> <span class="o">=</span> <span class="n">_get_kmeans_lookup_table_and_weight</span><span class="p">(</span><span class="n">nbits</span><span class="p">,</span> <span class="n">wp</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">qm</span> <span class="o">==</span> <span class="n">_QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">qm</span> <span class="o">==</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE</span><span class="p">:</span>
         <span class="k">if</span> <span class="s2">&quot;lut_function&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
                 <span class="s2">&quot;Custom lookup table quantization mode &quot;</span>
@@ -678,7 +666,7 @@
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
                 <span class="s2">&quot;</span><span class="si">{}</span><span class="se">\n</span><span class="s2">Call to Lookup Table function failed&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
             <span class="p">)</span>
-    <span class="k">elif</span> <span class="n">qm</span> <span class="o">==</span> <span class="n">_QUANTIZATION_MODE_LOOKUP_TABLE_LINEAR</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">qm</span> <span class="o">==</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_QUANTIZATION_MODE_LOOKUP_TABLE_LINEAR</span><span class="p">:</span>
         <span class="n">lut</span><span class="p">,</span> <span class="n">qw</span> <span class="o">=</span> <span class="n">_get_linear_lookup_table_and_weight</span><span class="p">(</span><span class="n">nbits</span><span class="p">,</span> <span class="n">wp</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Quantization method &quot;</span><span class="si">{}</span><span class="s1">&quot; not supported&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">qm</span><span class="p">))</span>
@@ -706,7 +694,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># De-quantization</span>
-    <span class="k">if</span> <span class="n">qm</span> <span class="o">==</span> <span class="n">_QUANTIZATION_MODE_DEQUANTIZE</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">qm</span> <span class="o">==</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_QUANTIZATION_MODE_DEQUANTIZE</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_dequantize_wp</span><span class="p">(</span><span class="n">wp</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
 
     <span class="c1"># If the float32 field is empty do nothing and return</span>
@@ -720,7 +708,7 @@
     <span class="k">if</span> <span class="n">nbits</span> <span class="o">&gt;</span> <span class="mi">8</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Only 8-bit and lower quantization is supported&quot;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">qm</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SUPPORTED_QUANTIZATION_MODES</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">qm</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_SUPPORTED_QUANTIZATION_MODES</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Quantization mode </span><span class="si">{}</span><span class="s2"> not supported&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">qm</span><span class="p">))</span>
 
     <span class="c1"># axis parameter check</span>
@@ -738,7 +726,10 @@
     <span class="n">num_channels</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">qm</span>
-        <span class="ow">in</span> <span class="p">[</span><span class="n">_QUANTIZATION_MODE_LINEAR_QUANTIZATION</span><span class="p">,</span> <span class="n">_QUANTIZATION_MODE_LINEAR_SYMMETRIC</span><span class="p">]</span>
+        <span class="ow">in</span> <span class="p">[</span>
+            <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_QUANTIZATION_MODE_LINEAR_QUANTIZATION</span><span class="p">,</span>
+            <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_QUANTIZATION_MODE_LINEAR_SYMMETRIC</span><span class="p">,</span>
+        <span class="p">]</span>
         <span class="k">else</span> <span class="mi">1</span>
     <span class="p">)</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">wp</span><span class="o">.</span><span class="n">floatValue</span><span class="p">)</span> <span class="o">%</span> <span class="n">num_channels</span><span class="p">:</span>
@@ -753,8 +744,8 @@
     <span class="n">scale</span><span class="p">,</span> <span class="n">bias</span><span class="p">,</span> <span class="n">lut</span><span class="p">,</span> <span class="n">uint8_weights</span> <span class="o">=</span> <span class="n">_quantize_wp</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">qm</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="n">uint8_weights</span> <span class="o">=</span> <span class="n">uint8_weights</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">qm</span> <span class="ow">in</span> <span class="p">[</span>
-        <span class="n">_QUANTIZATION_MODE_LINEAR_QUANTIZATION</span><span class="p">,</span>
-        <span class="n">_QUANTIZATION_MODE_LINEAR_SYMMETRIC</span><span class="p">,</span>
+        <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_QUANTIZATION_MODE_LINEAR_QUANTIZATION</span><span class="p">,</span>
+        <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_QUANTIZATION_MODE_LINEAR_SYMMETRIC</span><span class="p">,</span>
     <span class="p">]:</span>
         <span class="n">qparams</span><span class="o">.</span><span class="n">linearQuantization</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
         <span class="n">qparams</span><span class="o">.</span><span class="n">linearQuantization</span><span class="o">.</span><span class="n">bias</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">bias</span><span class="p">)</span>
@@ -855,7 +846,7 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Dequantize weights in NeuralNetwork type mlmodel specifications.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_quantize_nn_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">_QUANTIZATION_MODE_DEQUANTIZE</span><span class="p">)</span>
+    <span class="n">_quantize_nn_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_QUANTIZATION_MODE_DEQUANTIZE</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_quantize_nn_spec</span><span class="p">(</span><span class="n">nn_spec</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">qm</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -864,10 +855,10 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">selector</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;selector&quot;</span><span class="p">,</span> <span class="n">QuantizedLayerSelector</span><span class="p">())</span>
 
-    <span class="k">if</span> <span class="n">qm</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SUPPORTED_QUANTIZATION_MODES</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">qm</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_SUPPORTED_QUANTIZATION_MODES</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Quantization mode </span><span class="si">{}</span><span class="s2"> not supported&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">qm</span><span class="p">))</span>
 
-    <span class="k">if</span> <span class="n">qm</span> <span class="o">!=</span> <span class="n">_QUANTIZATION_MODE_DEQUANTIZE</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">qm</span> <span class="o">!=</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_QUANTIZATION_MODE_DEQUANTIZE</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">nbits</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Missing argument &quot;nbits&quot;&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">nbits</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">nbits</span> <span class="o">&lt;=</span> <span class="mi">8</span> <span class="ow">or</span> <span class="n">nbits</span> <span class="o">==</span> <span class="mi">16</span><span class="p">):</span>
@@ -875,13 +866,13 @@
                 <span class="s2">&quot;Only half precision (16-bit), 1 to 8-bit &quot;</span> <span class="s2">&quot;quantization is supported&quot;</span>
             <span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">qm</span> <span class="o">==</span> <span class="n">_QUANTIZATION_MODE_LINEAR_SYMMETRIC</span> <span class="ow">and</span> <span class="n">nbits</span> <span class="o">!=</span> <span class="mi">8</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">qm</span> <span class="o">==</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_QUANTIZATION_MODE_LINEAR_SYMMETRIC</span> <span class="ow">and</span> <span class="n">nbits</span> <span class="o">!=</span> <span class="mi">8</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Symmetric quantization is only applicable for 8 bit&quot;</span> <span class="s2">&quot;linear&quot;</span><span class="p">)</span>
 
     <span class="n">layers</span> <span class="o">=</span> <span class="n">nn_spec</span><span class="o">.</span><span class="n">layers</span>
 
     <span class="c1"># Perform optimization step</span>
-    <span class="k">if</span> <span class="n">nbits</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">nbits</span> <span class="o">&lt;</span> <span class="mi">16</span> <span class="ow">and</span> <span class="n">qm</span> <span class="o">!=</span> <span class="n">_QUANTIZATION_MODE_DEQUANTIZE</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">nbits</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">nbits</span> <span class="o">&lt;</span> <span class="mi">16</span> <span class="ow">and</span> <span class="n">qm</span> <span class="o">!=</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_QUANTIZATION_MODE_DEQUANTIZE</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Optimizing Neural Network before Quantization:&quot;</span><span class="p">)</span>
         <span class="n">_optimize_nn</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Finished optimizing network. Quantizing neural network..&quot;</span><span class="p">)</span>
@@ -1465,7 +1456,7 @@
             <span class="p">)</span>
         <span class="p">)</span>
 
-    <span class="n">qmodel</span> <span class="o">=</span> <span class="n">_get_model</span><span class="p">(</span><span class="n">qspec</span><span class="p">,</span> <span class="n">compute_units</span><span class="o">=</span><span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">)</span>
+    <span class="n">qmodel</span> <span class="o">=</span> <span class="n">_get_model</span><span class="p">(</span><span class="n">qspec</span><span class="p">,</span> <span class="n">compute_units</span><span class="o">=</span><span class="n">_ct</span><span class="o">.</span><span class="n">ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">)</span>
     <span class="n">model_metrics</span> <span class="o">=</span> <span class="n">ModelMetrics</span><span class="p">(</span><span class="n">qspec</span><span class="p">)</span>
 
     <span class="n">input_name</span> <span class="o">=</span> <span class="n">qspec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
@@ -1481,8 +1472,8 @@
 
     <span class="n">analyzed</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">tried</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">if</span> <span class="n">fpmodel</span><span class="o">.</span><span class="n">compute_unit</span> <span class="o">!=</span> <span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">:</span>
-        <span class="n">fpmodel</span> <span class="o">=</span> <span class="n">_MLModel</span><span class="p">(</span><span class="n">fpmodel</span><span class="o">.</span><span class="n">get_spec</span><span class="p">(),</span> <span class="n">compute_units</span><span class="o">=</span><span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fpmodel</span><span class="o">.</span><span class="n">compute_unit</span> <span class="o">!=</span> <span class="n">_ct</span><span class="o">.</span><span class="n">ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">:</span>
+        <span class="n">fpmodel</span> <span class="o">=</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="n">fpmodel</span><span class="o">.</span><span class="n">get_spec</span><span class="p">(),</span> <span class="n">compute_units</span><span class="o">=</span><span class="n">_ct</span><span class="o">.</span><span class="n">ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">test_image_paths</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="nb">input</span> <span class="o">=</span> <span class="p">{</span><span class="n">input_name</span><span class="p">:</span> <span class="n">_load_and_resize_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">input_size</span><span class="p">)}</span>
@@ -1517,8 +1508,8 @@
 
     <span class="n">analyzed</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">tried</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">fpmodel</span> <span class="o">=</span> <span class="n">_MLModel</span><span class="p">(</span><span class="n">fpmodel</span><span class="o">.</span><span class="n">get_spec</span><span class="p">(),</span> <span class="n">compute_units</span><span class="o">=</span><span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">)</span>
-    <span class="n">qmodel</span> <span class="o">=</span>  <span class="n">_MLModel</span><span class="p">(</span><span class="n">qmodel</span><span class="o">.</span><span class="n">get_spec</span><span class="p">(),</span> <span class="n">compute_units</span><span class="o">=</span><span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">)</span>
+    <span class="n">fpmodel</span> <span class="o">=</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="n">fpmodel</span><span class="o">.</span><span class="n">get_spec</span><span class="p">(),</span> <span class="n">compute_units</span><span class="o">=</span><span class="n">_ct</span><span class="o">.</span><span class="n">ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">)</span>
+    <span class="n">qmodel</span> <span class="o">=</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="n">qmodel</span><span class="o">.</span><span class="n">get_spec</span><span class="p">(),</span> <span class="n">compute_units</span><span class="o">=</span><span class="n">_ct</span><span class="o">.</span><span class="n">ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">sample_data</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">fp_pred</span> <span class="o">=</span> <span class="n">fpmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
@@ -1642,7 +1633,7 @@
         <span class="n">spec</span> <span class="o">=</span> <span class="n">_quantize_spec_weights</span><span class="p">(</span>
             <span class="n">spec</span><span class="p">,</span>
             <span class="n">nbits</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">quantization_mode</span><span class="o">=</span><span class="n">_QUANTIZATION_MODE_DEQUANTIZE</span><span class="p">,</span>
+            <span class="n">quantization_mode</span><span class="o">=</span><span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_QUANTIZATION_MODE_DEQUANTIZE</span><span class="p">,</span>
             <span class="n">selector</span><span class="o">=</span><span class="n">selector</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -1777,7 +1768,7 @@
 <span class="sd">    kwargs: keyword arguments</span>
 <span class="sd">            *lut_function* : (``callable function``)</span>
 <span class="sd">                A callable function provided when quantization mode is set to</span>
-<span class="sd">                ``_QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE``. See ``quantization_mode``</span>
+<span class="sd">                ``_ct.models._QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE``. See ``quantization_mode``</span>
 <span class="sd">                for more details.</span>
 <span class="sd">            *selector*: QuantizedLayerSelector</span>
 <span class="sd">                A QuanatizedLayerSelector object that can be derived to provide</span>
@@ -1801,13 +1792,13 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">qmode_mapping</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;linear&quot;</span><span class="p">:</span> <span class="n">_QUANTIZATION_MODE_LINEAR_QUANTIZATION</span><span class="p">,</span>
-        <span class="s2">&quot;kmeans&quot;</span><span class="p">:</span> <span class="n">_QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS</span><span class="p">,</span>
-        <span class="s2">&quot;kmeans_lut&quot;</span><span class="p">:</span> <span class="n">_QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS</span><span class="p">,</span>
-        <span class="s2">&quot;linear_lut&quot;</span><span class="p">:</span> <span class="n">_QUANTIZATION_MODE_LOOKUP_TABLE_LINEAR</span><span class="p">,</span>
-        <span class="s2">&quot;custom_lut&quot;</span><span class="p">:</span> <span class="n">_QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE</span><span class="p">,</span>
-        <span class="s2">&quot;dequantization&quot;</span><span class="p">:</span> <span class="n">_QUANTIZATION_MODE_DEQUANTIZE</span><span class="p">,</span>
-        <span class="s2">&quot;linear_symmetric&quot;</span><span class="p">:</span> <span class="n">_QUANTIZATION_MODE_LINEAR_SYMMETRIC</span><span class="p">,</span>
+        <span class="s2">&quot;linear&quot;</span><span class="p">:</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_QUANTIZATION_MODE_LINEAR_QUANTIZATION</span><span class="p">,</span>
+        <span class="s2">&quot;kmeans&quot;</span><span class="p">:</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS</span><span class="p">,</span>
+        <span class="s2">&quot;kmeans_lut&quot;</span><span class="p">:</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS</span><span class="p">,</span>
+        <span class="s2">&quot;linear_lut&quot;</span><span class="p">:</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_QUANTIZATION_MODE_LOOKUP_TABLE_LINEAR</span><span class="p">,</span>
+        <span class="s2">&quot;custom_lut&quot;</span><span class="p">:</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE</span><span class="p">,</span>
+        <span class="s2">&quot;dequantization&quot;</span><span class="p">:</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_QUANTIZATION_MODE_DEQUANTIZE</span><span class="p">,</span>
+        <span class="s2">&quot;linear_symmetric&quot;</span><span class="p">:</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_QUANTIZATION_MODE_LINEAR_SYMMETRIC</span><span class="p">,</span>
     <span class="p">}</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">qmode</span> <span class="o">=</span> <span class="n">qmode_mapping</span><span class="p">[</span><span class="n">quantization_mode</span><span class="p">]</span>
@@ -1841,7 +1832,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

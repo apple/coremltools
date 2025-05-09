@@ -1,13 +1,11 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../../../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.ops.defs.iOS15.conv &mdash; coremltools API Reference 8.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=e59714d7" />
+  <title>coremltools.converters.mil.mil.ops.defs.iOS15.conv &mdash; coremltools API Reference 8.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -16,11 +14,15 @@
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-      <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
-      <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
-      <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+  <!--[if lt IE 9]>
+    <script src="../../../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../../../_static/documentation_options.js?v=8cc1add8"></script>
+        <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../../../../search.html" /> 
@@ -37,6 +39,9 @@
           <a href="../../../../../../../../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
+              <div class="version">
+                8.3
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -93,22 +98,22 @@
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">types</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.block</span><span class="w"> </span><span class="kn">import</span> <span class="n">curr_opset_version</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.input_type</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">DefaultInputs</span><span class="p">,</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">types</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.block</span> <span class="kn">import</span> <span class="n">curr_opset_version</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="p">(</span><span class="n">DefaultInputs</span><span class="p">,</span>
                                                        <span class="n">InputSpec</span><span class="p">,</span>
                                                        <span class="n">TensorInputType</span><span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_op</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.ops.defs._utils</span><span class="w"> </span><span class="kn">import</span> \
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._utils</span> <span class="kn">import</span> \
     <span class="n">spatial_dimensions_out_shape</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.ops.defs.iOS15</span><span class="w"> </span><span class="kn">import</span> <span class="n">_IOS15_TARGET</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.types.symbolic</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_symbolic</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs.iOS15</span> <span class="kn">import</span> <span class="n">_IOS15_TARGET</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.symbolic</span> <span class="kn">import</span> <span class="n">is_symbolic</span>
 
 
 <div class="viewcode-block" id="conv">
 <a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.conv.conv">[docs]</a>
 <span class="nd">@register_op</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">conv</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">conv</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform convolution over input. Supports 1-D, 2-D, and 3-D convolution.</span>
 
@@ -231,7 +236,7 @@
         <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
     <span class="p">}</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">num_spatial_dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">-</span> <span class="mi">2</span>
         <span class="k">return</span> <span class="n">DefaultInputs</span><span class="p">(</span>
             <span class="n">bias</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -242,7 +247,7 @@
             <span class="n">groups</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">inshape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span>
         <span class="n">f_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">shape</span>
         <span class="n">kernel_shape</span> <span class="o">=</span> <span class="n">f_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
@@ -274,7 +279,7 @@
         <span class="n">custom_pad</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_type</span><span class="o">.</span><span class="n">val</span> <span class="o">!=</span> <span class="s1">&#39;custom&#39;</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span><span class="o">.</span><span class="n">val</span>
 
         <span class="n">is_weight_dynamic</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">is_descendant_of_const</span>
-        <span class="k">if</span> <span class="n">is_weight_dynamic</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">([</span><span class="kc">True</span> <span class="k">if</span> <span class="n">d</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">False</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dilations</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="n">is_weight_dynamic</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="kc">True</span> <span class="k">if</span> <span class="n">d</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">False</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dilations</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Convolution with dynamic weights does not support dilations!&quot;</span><span class="p">)</span>
 
         <span class="n">N</span> <span class="o">=</span> <span class="n">inshape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -294,7 +299,7 @@
 
 
 <span class="nd">@register_op</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">conv_quantized</span><span class="p">(</span><span class="n">conv</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">conv_quantized</span><span class="p">(</span><span class="n">conv</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Note: This is experimental and may change in the future.</span>
 <span class="sd">    Supports weight quantization for parameters while performing convolution over input.</span>
@@ -348,7 +353,7 @@
         <span class="s2">&quot;U&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">,),</span>
     <span class="p">}</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">default_inputs</span><span class="p">()</span> <span class="o">+</span> \
             <span class="n">DefaultInputs</span><span class="p">(</span>
                 <span class="n">nbits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
@@ -357,7 +362,7 @@
 <div class="viewcode-block" id="conv_transpose">
 <a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.conv.conv_transpose">[docs]</a>
 <span class="nd">@register_op</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">conv_transpose</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">conv_transpose</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform transposed convolution (also known as deconvolution and fractionally</span>
 <span class="sd">    stride convolution) over input. ``conv_transpose`` can also be used to compute</span>
@@ -454,7 +459,7 @@
         <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
     <span class="p">}</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">num_spatial_dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">-</span> <span class="mi">2</span>
         <span class="k">return</span> <span class="n">DefaultInputs</span><span class="p">(</span>
             <span class="n">bias</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -466,7 +471,7 @@
             <span class="n">groups</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Input shape is [n, C_in, spatial_dims]</span>
         <span class="n">in_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span>
         <span class="c1"># Weight shape is [C_in, C_out/group, spatial_dims]</span>
@@ -534,7 +539,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

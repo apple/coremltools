@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.ops.defs.iOS15.linear &mdash; coremltools API Reference 8.0b1 documentation</title>
+  <title>coremltools.converters.mil.mil.ops.defs.iOS15.linear &mdash; coremltools API Reference 8.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css?v=fd3f3429" />
@@ -20,7 +20,7 @@
   
         <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../../../../_static/documentation_options.js?v=8cc1add8"></script>
         <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../../../_static/js/theme.js"></script>
@@ -40,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                8.0b1
+                8.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
@@ -126,7 +126,7 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    x: tensor&lt;[\*D,D_in], T&gt; (Required)</span>
+<span class="sd">    x: tensor&lt;[\\*D, D_in], T&gt; (Required)</span>
 <span class="sd">        * ``1 &lt;= rank &lt;= 3``.</span>
 <span class="sd">        * ``0 &lt;= rank(*D) &lt;= 2``.</span>
 <span class="sd">    weight: const tensor&lt;[D_out,D_in], T&gt; (Required)</span>
@@ -135,7 +135,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*D,D_out], T&gt;</span>
+<span class="sd">    tensor&lt;[\\*D, D_out], T&gt;</span>
 <span class="sd">        * Same rank as the input ``x``.</span>
 
 <span class="sd">    Attributes</span>
@@ -244,9 +244,9 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    x: tensor&lt;[\*,K1], T&gt; (Required)</span>
+<span class="sd">     x: tensor&lt;[\\*, K1], T&gt; (Required)</span>
 <span class="sd">        * ``x`` must be 1-D or higher.</span>
-<span class="sd">    y: tensor&lt;[\*,K2], T&gt; (Required)</span>
+<span class="sd">    y: tensor&lt;[\\*, K2], T&gt; (Required)</span>
 <span class="sd">        * ``y`` must be 1-D or higher.</span>
 <span class="sd">    transpose_x: const bool (Optional)</span>
 <span class="sd">        * Default to ``False``.</span>
@@ -259,7 +259,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*, T&gt;</span>
+<span class="sd">    tensor&lt;\\*, T&gt;</span>
 <span class="sd">        * Scalar or tensor output.</span>
 
 <span class="sd">    Attributes</span>
@@ -369,7 +369,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*D, C, H, W2], T&gt;</span>
+<span class="sd">    tensor&lt;[\\*D, C, H, W2], T&gt;</span>
 <span class="sd">        * Same ranks as the inputs.</span>
 
 <span class="sd">    Attributes</span>
@@ -458,7 +458,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

@@ -1,13 +1,11 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters._converters_entry &mdash; coremltools API Reference 8.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+  <title>coremltools.converters._converters_entry &mdash; coremltools API Reference 8.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -16,11 +14,15 @@
       <link rel="stylesheet" type="text/css" href="../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
-      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=1f41a3ab"></script>
-      <script src="../../../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=8cc1add8"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -37,6 +39,9 @@
           <a href="../../../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
+              <div class="version">
+                8.3
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -93,26 +98,26 @@
 <span class="c1"># Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">collections</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">gc</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">gc</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_MILPROGRAM</span><span class="p">,</span>
     <span class="n">_LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_NEURALNETWORK</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">__version__</span> <span class="k">as</span> <span class="n">_ct_version</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">_logger</span> <span class="k">as</span> <span class="n">logger</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools._deps</span><span class="w"> </span><span class="kn">import</span> <span class="n">_HAS_TF_1</span><span class="p">,</span> <span class="n">_HAS_TF_2</span><span class="p">,</span> <span class="n">_HAS_TORCH</span><span class="p">,</span> <span class="n">_HAS_TORCH_EXPORT_API</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters._profile_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">_profile</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil._deployment_compatibility</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">__version__</span> <span class="k">as</span> <span class="n">_ct_version</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_logger</span> <span class="k">as</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">coremltools._deps</span> <span class="kn">import</span> <span class="n">_HAS_TF_1</span><span class="p">,</span> <span class="n">_HAS_TF_2</span><span class="p">,</span> <span class="n">_HAS_TORCH</span><span class="p">,</span> <span class="n">_HAS_TORCH_EXPORT_API</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters._profile_utils</span> <span class="kn">import</span> <span class="n">_profile</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil._deployment_compatibility</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">AvailableTarget</span><span class="p">,</span>
     <span class="n">check_deployment_compatibility</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.converter</span><span class="w"> </span><span class="kn">import</span> <span class="n">mil_convert</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.input_types</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.converter</span> <span class="kn">import</span> <span class="n">mil_convert</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.input_types</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">ClassifierConfig</span><span class="p">,</span>
     <span class="n">EnumeratedShapes</span><span class="p">,</span>
     <span class="n">ImageType</span><span class="p">,</span>
@@ -122,37 +127,37 @@
     <span class="n">StateType</span><span class="p">,</span>
     <span class="n">TensorType</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">Program</span><span class="p">,</span> <span class="n">types</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.defs.quantization</span><span class="w"> </span><span class="kn">import</span> <span class="n">ComputePrecision</span> <span class="k">as</span> <span class="n">precision</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.defs.quantization</span><span class="w"> </span><span class="kn">import</span> <span class="n">FP16ComputePrecision</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span><span class="w"> </span><span class="kn">import</span> <span class="n">PassOption</span> <span class="k">as</span> <span class="n">_PassOption</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.pass_pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">PassPipeline</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">_METADATA_SOURCE</span><span class="p">,</span> <span class="n">_METADATA_SOURCE_DIALECT</span><span class="p">,</span> <span class="n">_METADATA_VERSION</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">_MLPACKAGE_EXTENSION</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Program</span><span class="p">,</span> <span class="n">types</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.defs.quantization</span> <span class="kn">import</span> <span class="n">ComputePrecision</span> <span class="k">as</span> <span class="n">precision</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.defs.quantization</span> <span class="kn">import</span> <span class="n">FP16ComputePrecision</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span> <span class="kn">import</span> <span class="n">PassOption</span> <span class="k">as</span> <span class="n">_PassOption</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.pass_pipeline</span> <span class="kn">import</span> <span class="n">PassPipeline</span>
+<span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">_METADATA_SOURCE</span><span class="p">,</span> <span class="n">_METADATA_SOURCE_DIALECT</span><span class="p">,</span> <span class="n">_METADATA_VERSION</span>
+<span class="kn">from</span> <span class="nn">coremltools.models.utils</span> <span class="kn">import</span> <span class="n">_MLPACKAGE_EXTENSION</span>
 
 <span class="k">if</span> <span class="n">_HAS_TF_1</span><span class="p">:</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+    <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
-    <span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.frontend.tensorflow.load</span><span class="w"> </span><span class="kn">import</span> <span class="n">TF1Loader</span>
+    <span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend.tensorflow.load</span> <span class="kn">import</span> <span class="n">TF1Loader</span>
 <span class="k">if</span> <span class="n">_HAS_TF_2</span><span class="p">:</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
+    <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
-    <span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.frontend.tensorflow2.load</span><span class="w"> </span><span class="kn">import</span> <span class="n">TF2Loader</span>
+    <span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend.tensorflow2.load</span> <span class="kn">import</span> <span class="n">TF2Loader</span>
 
 <span class="k">if</span> <span class="n">_HAS_TORCH</span><span class="p">:</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+    <span class="kn">import</span> <span class="nn">torch</span>
 
-    <span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.frontend.torch.load</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_torch_model</span>
+    <span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend.torch.load</span> <span class="kn">import</span> <span class="n">is_torch_model</span>
 
     <span class="k">if</span> <span class="n">_HAS_TORCH_EXPORT_API</span><span class="p">:</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">torch.export</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExportedProgram</span>
+        <span class="kn">from</span> <span class="nn">torch.export</span> <span class="kn">import</span> <span class="n">ExportedProgram</span>
 
 
 
 <div class="viewcode-block" id="convert">
 <a class="viewcode-back" href="../../../source/coremltools.converters.convert.html#coremltools.converters._converters_entry.convert">[docs]</a>
 <span class="nd">@_profile</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">convert</span><span class="p">(</span>
+<span class="k">def</span> <span class="nf">convert</span><span class="p">(</span>
     <span class="n">model</span><span class="p">,</span>
     <span class="n">source</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
     <span class="n">inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -765,7 +770,7 @@
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_need_fp16_cast_pass</span><span class="p">(</span>
+<span class="k">def</span> <span class="nf">_need_fp16_cast_pass</span><span class="p">(</span>
     <span class="n">compute_precision</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">precision</span><span class="p">,</span> <span class="n">FP16ComputePrecision</span><span class="p">]],</span> <span class="n">convert_to</span><span class="p">:</span> <span class="n">Text</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">convert_to</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;mlprogram&quot;</span><span class="p">,</span> <span class="s2">&quot;neuralnetwork&quot;</span><span class="p">,</span> <span class="s2">&quot;milinternal&quot;</span><span class="p">,</span> <span class="s2">&quot;milpython&quot;</span><span class="p">):</span>
@@ -783,7 +788,7 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid value of the argument &#39;compute_precision&#39;: </span><span class="si">{</span><span class="n">compute_precision</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_set_default_specification_version</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AvailableTarget</span><span class="p">]:</span>
+<span class="k">def</span> <span class="nf">_set_default_specification_version</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AvailableTarget</span><span class="p">]:</span>
     <span class="k">if</span> <span class="n">target</span> <span class="o">==</span> <span class="s2">&quot;neuralnetwork&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_NEURALNETWORK</span>
     <span class="k">elif</span> <span class="n">target</span> <span class="o">==</span> <span class="s2">&quot;mlprogram&quot;</span><span class="p">:</span>
@@ -794,7 +799,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Backend converter </span><span class="si">{}</span><span class="s2"> not implemented&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">target</span><span class="p">))</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_check_deployment_target</span><span class="p">(</span><span class="n">minimum_deployment_target</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_check_deployment_target</span><span class="p">(</span><span class="n">minimum_deployment_target</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">minimum_deployment_target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
         <span class="n">minimum_deployment_target</span><span class="p">,</span> <span class="n">AvailableTarget</span>
     <span class="p">):</span>
@@ -806,7 +811,7 @@
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">minimum_deployment_target</span><span class="p">))</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_verify_inputs_doesnot_contains_states</span><span class="p">(</span>
+<span class="k">def</span> <span class="nf">_verify_inputs_doesnot_contains_states</span><span class="p">(</span>
     <span class="n">inputs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">InputType</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -820,7 +825,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;inputs&#39; cannot contain an instance of StateType.&quot;</span><span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_validate_outputs_argument</span><span class="p">(</span><span class="n">outputs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_validate_outputs_argument</span><span class="p">(</span><span class="n">outputs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    - validate properties that the &quot;outputs&quot; argument must satisfy, for instance, it should either be a list</span>
 <span class="sd">      of ct.ImageType/ct.TensorType or a list of strings, etc.</span>
@@ -843,14 +848,14 @@
                                  <span class="s1">&#39;or of types ct.ImageType/ct.TensorType&#39;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
             <span class="c1"># if one of the elements is a string, all elements must be strings</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg_inconsistent_types</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">outputs</span><span class="p">,</span> <span class="p">[</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">InputType</span><span class="p">)</span> <span class="ow">and</span> <span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">can_be_output</span><span class="p">():</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">InputType</span><span class="p">)</span> <span class="ow">and</span> <span class="n">t</span><span class="o">.</span><span class="n">can_be_output</span><span class="p">())</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">((</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">InputType</span><span class="p">)</span> <span class="ow">and</span> <span class="n">t</span><span class="o">.</span><span class="n">can_be_output</span><span class="p">())</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg_inconsistent_types</span><span class="p">)</span>
-            <span class="k">if</span> <span class="nb">any</span><span class="p">([(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">TensorType</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">ImageType</span><span class="p">))</span> <span class="ow">and</span> <span class="n">t</span><span class="o">.</span><span class="n">shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">((</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">TensorType</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">ImageType</span><span class="p">))</span> <span class="ow">and</span> <span class="n">t</span><span class="o">.</span><span class="n">shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">):</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;The &#39;shape&#39; argument must not be specified for the outputs, since it is &quot;</span> \
                       <span class="s2">&quot;automatically inferred from the input shapes and the ops in the model&quot;</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -870,9 +875,9 @@
             <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">]</span>
             <span class="c1"># verify that either all of the entries in output_names is &quot;None&quot; or none of them is &quot;None&quot;</span>
             <span class="n">msg_consistent_names</span> <span class="o">=</span> <span class="s1">&#39;Either none or all the outputs must have the &quot;name&quot; argument specified&#39;</span>
-            <span class="k">if</span> <span class="n">output_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">output_names</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="n">output_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">output_names</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg_consistent_names</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">output_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">output_names</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="n">output_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">output_names</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg_consistent_names</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">output_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">output_names</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">output_names</span><span class="p">):</span>
@@ -883,7 +888,7 @@
                 <span class="k">return</span> <span class="n">output_names</span><span class="p">,</span> <span class="n">outputs</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_validate_conversion_arguments</span><span class="p">(</span>
+<span class="k">def</span> <span class="nf">_validate_conversion_arguments</span><span class="p">(</span>
     <span class="n">model</span><span class="p">,</span>
     <span class="n">exact_source</span><span class="p">,</span>
     <span class="n">exact_target</span><span class="p">,</span>
@@ -899,7 +904,7 @@
 <span class="sd">    `exact_source` (which cannot be `auto`) and `exact_target`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">raise_if_duplicated</span><span class="p">(</span><span class="n">input_list</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">raise_if_duplicated</span><span class="p">(</span><span class="n">input_list</span><span class="p">):</span>
         <span class="c1"># Detect duplicated inputs</span>
         <span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">input_list</span> <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
         <span class="n">dups</span> <span class="o">=</span> <span class="p">[</span>
@@ -910,7 +915,7 @@
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dups</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Duplicated inputs: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dups</span><span class="p">))</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_flatten_list</span><span class="p">(</span><span class="n">_inputs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_flatten_list</span><span class="p">(</span><span class="n">_inputs</span><span class="p">):</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">_input</span> <span class="ow">in</span> <span class="n">_inputs</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_input</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
@@ -1007,7 +1012,7 @@
         <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">raise_if_duplicated</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">_input</span><span class="p">,</span> <span class="n">InputType</span><span class="p">)</span> <span class="k">for</span> <span class="n">_input</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">_input</span><span class="p">,</span> <span class="n">InputType</span><span class="p">)</span> <span class="k">for</span> <span class="n">_input</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input should be a list of TensorType or ImageType&quot;</span><span class="p">)</span>
 
     <span class="k">elif</span> <span class="n">exact_source</span> <span class="o">==</span> <span class="s2">&quot;pytorch&quot;</span><span class="p">:</span>
@@ -1045,7 +1050,7 @@
             <span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_determine_source_dialect</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">exact_source</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_determine_source_dialect</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">exact_source</span><span class="p">):</span>
 
     <span class="n">source_dialect</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">exact_source</span> <span class="o">==</span> <span class="s2">&quot;pytorch&quot;</span><span class="p">:</span>
@@ -1058,7 +1063,7 @@
     <span class="k">return</span> <span class="n">source_dialect</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_determine_source</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span>
+<span class="k">def</span> <span class="nf">_determine_source</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span>
                       <span class="n">output_names</span><span class="p">,</span>
                       <span class="n">outputs_as_tensor_or_image_types</span><span class="p">,</span>
                       <span class="n">output_argument_as_specified_by_user</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -1129,7 +1134,7 @@
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_determine_target</span><span class="p">(</span><span class="n">convert_to</span><span class="p">,</span> <span class="n">minimum_deployment_target</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_determine_target</span><span class="p">(</span><span class="n">convert_to</span><span class="p">,</span> <span class="n">minimum_deployment_target</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Infer the precise backend target, which could be one of ``milinternal``, ``neuralnetwork`` or ``mlprogram``</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1167,7 +1172,7 @@
             <span class="k">return</span> <span class="s2">&quot;mlprogram&quot;</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_get_metadata_from_mlmodel</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_get_metadata_from_mlmodel</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">):</span>
     <span class="c1"># Copy from source mlmodel if metadata info exists</span>
     <span class="n">src_pkg_version</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="n">_METADATA_SOURCE</span><span class="p">]</span>
     <span class="n">coremltools_version</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="n">_METADATA_VERSION</span><span class="p">]</span>
@@ -1200,7 +1205,7 @@
     <span class="k">return</span> <span class="n">build_info</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_record_build_metadata</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">exact_source</span><span class="p">,</span> <span class="n">source_dialect</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_record_build_metadata</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">exact_source</span><span class="p">,</span> <span class="n">source_dialect</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="c1"># recording metadata: coremltools version, source framework and version</span>
     <span class="k">if</span> <span class="n">exact_source</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;tensorflow&quot;</span><span class="p">,</span> <span class="s2">&quot;tensorflow2&quot;</span><span class="p">}</span> <span class="ow">and</span> <span class="p">(</span><span class="n">_HAS_TF_1</span> <span class="ow">or</span> <span class="n">_HAS_TF_2</span><span class="p">):</span>
         <span class="n">src_pkg_version</span> <span class="o">=</span> <span class="s2">&quot;tensorflow==</span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span>
@@ -1231,7 +1236,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

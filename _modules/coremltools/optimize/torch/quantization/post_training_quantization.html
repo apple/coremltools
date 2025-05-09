@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.optimize.torch.quantization.post_training_quantization &mdash; coremltools API Reference 8.0b1 documentation</title>
+  <title>coremltools.optimize.torch.quantization.post_training_quantization &mdash; coremltools API Reference 8.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
@@ -20,7 +20,7 @@
   
         <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../_static/documentation_options.js?v=8cc1add8"></script>
         <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../_static/js/theme.js"></script>
@@ -40,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                8.0b1
+                8.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
@@ -118,10 +118,13 @@
 <span class="kn">from</span> <span class="nn">attr</span> <span class="kn">import</span> <span class="n">field</span> <span class="k">as</span> <span class="n">_field</span>
 <span class="kn">from</span> <span class="nn">attrs</span> <span class="kn">import</span> <span class="n">validators</span> <span class="k">as</span> <span class="n">_validators</span>
 
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs.iOS18</span> <span class="kn">import</span> <span class="n">constexpr_blockwise_shift_scale</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.coreml._utils</span> <span class="kn">import</span> <span class="n">compute_qparams</span> <span class="k">as</span> <span class="n">_ct_compute_qparams</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize</span> <span class="kn">import</span> <span class="n">_utils</span> <span class="k">as</span> <span class="n">optimize_utils</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.metadata_utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">CompressionMetadata</span> <span class="k">as</span> <span class="n">_CompressionMetadata</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.optimizer_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_ConfigToOptimizerRegistry</span><span class="p">,</span>
+    <span class="n">_ModuleToOptConfigRegistry</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.report_utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">compute_post_training_report</span> <span class="k">as</span> <span class="n">_compute_post_training_report</span><span class="p">,</span>
@@ -130,6 +133,7 @@
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">get_n_bits_from_dtype</span> <span class="k">as</span> <span class="n">_get_n_bits_from_dtype</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="n">is_signed_dtype</span> <span class="k">as</span> <span class="n">_is_signed_dtype</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">maybe_convert_str_to_dtype</span> <span class="k">as</span> <span class="n">_maybe_convert_str_to_dtype</span><span class="p">,</span>
 <span class="p">)</span>
@@ -162,6 +166,20 @@
 
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">_logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
+<span class="n">_SUPPORTED_WEIGHT_DTYPE</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;int8&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;uint8&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;int4&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;uint4&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;fp8_e4m3&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;fp8_e5m2&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;float32&quot;</span><span class="p">,</span>
+    <span class="n">_torch</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span>
+    <span class="n">_torch</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span>
+    <span class="n">_torch</span><span class="o">.</span><span class="n">float8_e4m3fn</span><span class="p">,</span>
+    <span class="n">_torch</span><span class="o">.</span><span class="n">float8_e5m2</span><span class="p">,</span>
+    <span class="n">_torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+<span class="p">]</span>
 
 <div class="viewcode-block" id="ModulePostTrainingQuantizerConfig">
 <a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.ModulePostTrainingQuantizerConfig">[docs]</a>
@@ -198,16 +216,16 @@
 <span class="sd">    all values in the tensor will share a single scale and, if applicable, a single zero point. The ``granularity`` argument is set</span>
 <span class="sd">    to ``per_tensor``.</span>
 
-<span class="sd">    3. **Per-block quantization**: This configuration is used to structure the tensor for blockwise quantization. The ``granularity`` </span>
+<span class="sd">    3. **Per-block quantization**: This configuration is used to structure the tensor for blockwise quantization. The ``granularity``</span>
 <span class="sd">    is set to ``per_block``, and the ``block_size`` argument has to be specified. The ``block_size`` argument can either be of type</span>
 <span class="sd">    ``int`` or ``tuple``:</span>
-<span class="sd">        * int: In this configuration, each row along the output channel axis will have its own quantization parameters, similar to the ``per_channel`` configuration.</span>
-<span class="sd">               Additionally, ``block_size`` number of values will share the same quantization parameters along the input channel axis.</span>
-<span class="sd">               For example, for a weight matrix of shape ``(10, 10)``, if we provide ``block_size = 2``, the shape of the quantization</span>
-<span class="sd">               parameters would be ``(10, 5)``.</span>
+<span class="sd">        * int: In this configuration, each row along the output channel axis will have its own quantization parameters,</span>
+<span class="sd">            similar to the ``per_channel`` configuration. Additionally, ``block_size`` number of values will share the same</span>
+<span class="sd">            quantization parameters along the input channel axis. For example, for a weight matrix of shape ``(10, 10)``,</span>
+<span class="sd">            if we provide ``block_size = 2``, the shape of the quantization parameters would be ``(10, 5)``.</span>
 <span class="sd">        * tuple: For a more advanced configuration, users can provide an arbitrary n-dimensional block to share the quantization parameters.</span>
-<span class="sd">                 This is specified in the form of a tuple, where each value corresponds to the block size for the respective axis of the</span>
-<span class="sd">                 weight matrix. The length of the provided tuple should be at most the number of dimensions of the weight matrix.</span>
+<span class="sd">            This is specified in the form of a tuple, where each value corresponds to the block size for the respective axis of the</span>
+<span class="sd">            weight matrix. The length of the provided tuple should be at most the number of dimensions of the weight matrix.</span>
 
 <span class="sd">    .. note::</span>
 <span class="sd">        When performing 4-bit quantization, ``weight_dtype`` is set to :py:class:`torch.int8` for ``int4`` or</span>
@@ -217,12 +235,8 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">weight_dtype</span><span class="p">:</span> <span class="n">_Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="n">_default_ptq_options</span><span class="p">[</span><span class="s2">&quot;weight_dtype&quot;</span><span class="p">],</span>
-        <span class="n">converter</span><span class="o">=</span><span class="n">_maybe_convert_str_to_dtype</span><span class="p">,</span>
-        <span class="n">validator</span><span class="o">=</span><span class="p">[</span>
-            <span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span>
-            <span class="n">_validators</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span><span class="n">_torch</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">float32</span><span class="p">]),</span>
-        <span class="p">],</span>
     <span class="p">)</span>
+    <span class="n">weight_n_bits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">granularity</span><span class="p">:</span> <span class="n">QuantizationGranularity</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="n">_default_ptq_options</span><span class="p">[</span><span class="s2">&quot;granularity&quot;</span><span class="p">],</span>
         <span class="n">converter</span><span class="o">=</span><span class="n">QuantizationGranularity</span><span class="p">,</span>
@@ -245,7 +259,12 @@
     <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SUPPORTED_WEIGHT_DTYPE</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;weight_dtype must be one of </span><span class="si">{</span><span class="n">_SUPPORTED_WEIGHT_DTYPE</span><span class="si">}</span><span class="s2"> not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">weight_n_bits</span> <span class="o">=</span> <span class="n">_get_n_bits_from_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span> <span class="o">=</span> <span class="n">_maybe_convert_str_to_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span><span class="p">)</span>
 
     <span class="nd">@block_size</span><span class="o">.</span><span class="n">validator</span>
     <span class="k">def</span> <span class="nf">per_block_granularity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
@@ -277,6 +296,7 @@
 
 <div class="viewcode-block" id="PostTrainingQuantizerConfig">
 <a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.PostTrainingQuantizerConfig">[docs]</a>
+<span class="nd">@_ModuleToOptConfigRegistry</span><span class="o">.</span><span class="n">register_module_cfg</span><span class="p">(</span><span class="n">ModulePostTrainingQuantizerConfig</span><span class="p">)</span>
 <span class="nd">@_define</span>
 <span class="k">class</span> <span class="nc">PostTrainingQuantizerConfig</span><span class="p">(</span><span class="n">_OptimizationConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -350,6 +370,7 @@
 
 <div class="viewcode-block" id="PostTrainingQuantizer">
 <a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.PostTrainingQuantizer">[docs]</a>
+<span class="nd">@_ConfigToOptimizerRegistry</span><span class="o">.</span><span class="n">register_config</span><span class="p">(</span><span class="n">PostTrainingQuantizerConfig</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">PostTrainingQuantizer</span><span class="p">(</span><span class="n">_BasePostTrainingModelOptimizer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform post-training quantization on a torch model. After quantization, weights of all</span>
@@ -359,7 +380,7 @@
 <span class="sd">    .. note::</span>
 <span class="sd">        After quantization, the weight values stored will still remain in full precision, so</span>
 <span class="sd">        the PyTorch model size will not be reduced. To see the reduction in model size, please convert</span>
-<span class="sd">        the model using ``coremltools.convert(...)``, which will produce a model intermediate language </span>
+<span class="sd">        the model using ``coremltools.convert(...)``, which will produce a model intermediate language</span>
 <span class="sd">        (MIL) model containing the compressed weights.</span>
 
 <span class="sd">        Example:</span>
@@ -384,7 +405,7 @@
 <span class="sd">                )</span>
 
 <span class="sd">                # initialize the quantizer</span>
-<span class="sd">                config = PostTrainingQuantizerConfig.from_dict(</span>
+<span class="sd">                config = PostTrainingquantizerConfig.from_dict(</span>
 <span class="sd">                    {</span>
 <span class="sd">                        &quot;global_config&quot;: {</span>
 <span class="sd">                            &quot;weight_dtype&quot;: &quot;int8&quot;,</span>
@@ -448,13 +469,13 @@
 <span class="sd">        Compute quantization parameters</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">ret</span> <span class="o">=</span> <span class="n">_ct_compute_qparams</span><span class="p">(</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">optimize_utils</span><span class="o">.</span><span class="n">compute_qparams</span><span class="p">(</span>
             <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span>
             <span class="n">nbits</span><span class="o">=</span><span class="n">nbits</span><span class="p">,</span>
             <span class="n">quantization_mode</span><span class="o">=</span><span class="n">quantization_mode</span><span class="p">,</span>
-            <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>  <span class="c1"># Unused parameter in coremltools</span>
             <span class="n">block_sizes</span><span class="o">=</span><span class="n">block_sizes</span><span class="p">,</span>
-            <span class="n">signed</span><span class="o">=</span><span class="n">signed</span><span class="p">,</span>  <span class="c1"># Always used signed dtype range</span>
+            <span class="n">signed</span><span class="o">=</span><span class="n">signed</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">ret</span>
@@ -470,7 +491,7 @@
 <span class="sd">        De-quantize weights</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">dequantized_weight</span> <span class="o">=</span> <span class="n">constexpr_blockwise_shift_scale</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span>
+        <span class="n">dequantized_weight</span> <span class="o">=</span> <span class="n">optimize_utils</span><span class="o">.</span><span class="n">dequantize_by_scale_and_zp</span><span class="p">(</span>
             <span class="n">quantized_weight</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">zero_point</span>
         <span class="p">)</span>
 
@@ -551,9 +572,9 @@
             <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span>
             <span class="n">nbits</span><span class="o">=</span><span class="n">submod_config</span><span class="o">.</span><span class="n">weight_n_bits</span><span class="p">,</span>
             <span class="n">quantization_mode</span><span class="o">=</span><span class="n">quantization_mode</span><span class="p">,</span>
-            <span class="n">dtype</span><span class="o">=</span><span class="n">weight</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">submod_config</span><span class="o">.</span><span class="n">weight_dtype</span><span class="p">,</span>
             <span class="n">block_sizes</span><span class="o">=</span><span class="n">block_sizes</span><span class="p">,</span>
-            <span class="n">signed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">signed</span><span class="o">=</span><span class="n">_is_signed_dtype</span><span class="p">(</span><span class="n">submod_config</span><span class="o">.</span><span class="n">weight_dtype</span><span class="p">),</span>
         <span class="p">)</span>  <span class="c1"># Always used signed dtype range</span>
 
         <span class="k">if</span> <span class="n">ret</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -583,7 +604,9 @@
         <span class="n">metadata</span><span class="o">.</span><span class="n">compression_type</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;quantization&quot;</span><span class="p">]</span>
         <span class="n">metadata</span><span class="o">.</span><span class="n">quantization_n_bits</span> <span class="o">=</span> <span class="n">submod_config</span><span class="o">.</span><span class="n">weight_n_bits</span>
         <span class="n">metadata</span><span class="o">.</span><span class="n">quantization_scale</span> <span class="o">=</span> <span class="n">scale</span>
-        <span class="k">if</span> <span class="n">submod_config</span><span class="o">.</span><span class="n">quantization_scheme</span> <span class="o">==</span> <span class="n">_QuantizationScheme</span><span class="o">.</span><span class="n">affine</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">submod_config</span><span class="o">.</span><span class="n">quantization_scheme</span> <span class="o">==</span> <span class="n">_QuantizationScheme</span><span class="o">.</span><span class="n">affine</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">_is_signed_dtype</span><span class="p">(</span>
+            <span class="n">submod_config</span><span class="o">.</span><span class="n">weight_dtype</span>
+        <span class="p">):</span>
             <span class="k">assert</span> <span class="n">zero_point</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
             <span class="n">metadata</span><span class="o">.</span><span class="n">zero_point</span> <span class="o">=</span> <span class="n">zero_point</span>
 
@@ -656,7 +679,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

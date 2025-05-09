@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.optimize.torch.palettization.palettizer &mdash; coremltools API Reference 8.0b1 documentation</title>
+  <title>coremltools.optimize.torch.palettization.palettizer &mdash; coremltools API Reference 8.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
@@ -20,7 +20,7 @@
   
         <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../_static/documentation_options.js?v=8cc1add8"></script>
         <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../_static/js/theme.js"></script>
@@ -40,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                8.0b1
+                8.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
@@ -107,11 +107,18 @@
 <span class="kn">from</span> <span class="nn">torch.ao.quantization</span> <span class="kn">import</span> <span class="n">FakeQuantize</span> <span class="k">as</span> <span class="n">_FakeQuantize</span>
 
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch._typing</span> <span class="kn">import</span> <span class="n">ParamsDict</span> <span class="k">as</span> <span class="n">_ParamsDict</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.joint_compression_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">is_pruner_prepared</span> <span class="k">as</span> <span class="n">_is_pruner_prepared</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.math_utils</span> <span class="kn">import</span> <span class="n">rmse_error</span> <span class="k">as</span> <span class="n">_rmse_error</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.metadata_utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">register_metadata_version</span> <span class="k">as</span> <span class="n">_register_metadata_version</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.optimizer_utils</span> <span class="kn">import</span> <span class="n">_ConfigToOptimizerRegistry</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="n">get_eval_model</span> <span class="k">as</span> <span class="n">_get_eval_model</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">normalize_fsdp_module_name</span> <span class="k">as</span> <span class="n">_normalize_fsdp_module_name</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.validation_utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">validate_param_config</span> <span class="k">as</span> <span class="n">_validate_param_config</span><span class="p">,</span>
 <span class="p">)</span>
@@ -120,13 +127,10 @@
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch.base_model_optimizer</span> <span class="kn">import</span> <span class="n">_Report</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch.palettization._custom_conversion</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">PALETTIZATION_CONVERT_DICT</span> <span class="k">as</span> <span class="n">_PALETTIZATION_CONVERT_DICT</span><span class="p">,</span>
+    <span class="n">get_conversion_custom_config_dict</span> <span class="k">as</span> <span class="n">_get_conversion_custom_config_dict</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch.palettization._supported_modules</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">_get_palettization_qat_mappings</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.palettization._supported_modules</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">get_palettizable_parameters</span> <span class="k">as</span> <span class="n">_get_palettizable_parameters</span><span class="p">,</span>
+    <span class="n">DKMPalettizerModulesRegistry</span> <span class="k">as</span> <span class="n">_DKMPalettizerModulesRegistry</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch.palettization.fake_palettize</span> <span class="kn">import</span> <span class="n">FakePalettize</span> <span class="k">as</span> <span class="n">_FakePalettize</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch.palettization.palettization_config</span> <span class="kn">import</span> <span class="p">(</span>
@@ -149,8 +153,23 @@
     <span class="k">pass</span>
 
 
+<span class="k">class</span> <span class="nc">_PalettizerLUTObserver</span><span class="p">(</span><span class="n">_torch</span><span class="o">.</span><span class="n">quantization</span><span class="o">.</span><span class="n">MovingAveragePerChannelMinMaxObserver</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Subclassing _torch.quantization.MovingAveragePerChannelMinMaxObserver to add reset_parameters method</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">reset_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        FSDP expects reset_parameters method to initialize parameters/buffers in submodules</span>
+<span class="sd">        Initializing buffers used by the MovingAveragePerChannelMinMaxObserver</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_val</span> <span class="o">=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_val</span> <span class="o">=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eps</span> <span class="o">=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">_torch</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">_torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span><span class="p">])</span>
+
+
 <div class="viewcode-block" id="DKMPalettizer">
 <a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizer">[docs]</a>
+<span class="nd">@_ConfigToOptimizerRegistry</span><span class="o">.</span><span class="n">register_config</span><span class="p">(</span><span class="n">_DKMPalettizerConfig</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">DKMPalettizer</span><span class="p">(</span><span class="n">Palettizer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A palettization algorithm based on `&quot;DKM: Differentiable K-Means Clustering Layer for Neural Network</span>
@@ -201,7 +220,8 @@
         <span class="n">config</span> <span class="o">=</span> <span class="n">_DKMPalettizerConfig</span><span class="p">()</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">config</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_milestones</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_supported_modules</span> <span class="o">=</span> <span class="n">_get_palettization_qat_mappings</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_palettization_module_mapping</span> <span class="o">=</span> <span class="n">_DKMPalettizerModulesRegistry</span><span class="o">.</span><span class="n">REGISTRY</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_supported_modules</span> <span class="o">=</span> <span class="n">_DKMPalettizerModulesRegistry</span><span class="o">.</span><span class="n">get_supported_modules</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_palettize_supported_modules</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -209,36 +229,45 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">submodule</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">named_modules</span><span class="p">(</span><span class="n">remove_duplicate</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
             <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">get_module_config</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">submodule</span><span class="p">)</span>
-            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">submodule</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_supported_modules</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">submodule</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_supported_modules</span><span class="p">):</span>
+                <span class="n">palettizer_module</span> <span class="o">=</span> <span class="n">_DKMPalettizerModulesRegistry</span><span class="o">.</span><span class="n">get_palettizer_module</span><span class="p">(</span><span class="n">submodule</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">palettizer_module</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">submod_configs</span> <span class="o">=</span> <span class="n">config</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">config</span><span class="p">]</span>
                     <span class="k">for</span> <span class="n">submod_config</span> <span class="ow">in</span> <span class="n">submod_configs</span><span class="p">:</span>
                         <span class="k">if</span> <span class="nb">all</span><span class="p">(</span>
                             <span class="n">param</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">submod_config</span><span class="o">.</span><span class="n">weight_threshold</span>
-                            <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">_get_palettizable_parameters</span><span class="p">(</span><span class="n">submodule</span><span class="p">)</span>
+                            <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">palettizer_module</span><span class="o">.</span><span class="n">get_palettizable_parameters</span><span class="p">(</span><span class="n">submodule</span><span class="p">)</span>
                         <span class="p">):</span>
                             <span class="n">module_level_advanced_options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_module_level_advanced_options</span><span class="p">(</span>
                                 <span class="n">submodule</span><span class="p">,</span> <span class="n">submod_config</span>
                             <span class="p">)</span>
+                            <span class="n">default_config</span> <span class="o">=</span> <span class="n">_DEFAULT_PALETTIZATION_SCHEME</span><span class="p">[</span><span class="n">_nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">]</span>
                             <span class="n">n_bits</span> <span class="o">=</span> <span class="p">(</span>
                                 <span class="n">submod_config</span><span class="o">.</span><span class="n">n_bits</span>
                                 <span class="k">if</span> <span class="n">submod_config</span><span class="o">.</span><span class="n">n_bits</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                                <span class="k">else</span> <span class="n">_DEFAULT_PALETTIZATION_SCHEME</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">submodule</span><span class="p">)][</span><span class="s2">&quot;n_bits&quot;</span><span class="p">]</span>
+                                <span class="k">else</span> <span class="n">_DEFAULT_PALETTIZATION_SCHEME</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                                    <span class="nb">type</span><span class="p">(</span><span class="n">submodule</span><span class="p">),</span> <span class="n">default_config</span>
+                                <span class="p">)[</span><span class="s2">&quot;n_bits&quot;</span><span class="p">]</span>
                             <span class="p">)</span>
                             <span class="n">cluster_dim</span> <span class="o">=</span> <span class="p">(</span>
                                 <span class="n">submod_config</span><span class="o">.</span><span class="n">cluster_dim</span>
                                 <span class="k">if</span> <span class="n">submod_config</span><span class="o">.</span><span class="n">cluster_dim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                                <span class="k">else</span> <span class="n">_DEFAULT_PALETTIZATION_SCHEME</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">submodule</span><span class="p">)][</span><span class="s2">&quot;cluster_dim&quot;</span><span class="p">]</span>
+                                <span class="k">else</span> <span class="n">_DEFAULT_PALETTIZATION_SCHEME</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                                    <span class="nb">type</span><span class="p">(</span><span class="n">submodule</span><span class="p">),</span> <span class="n">default_config</span>
+                                <span class="p">)[</span><span class="s2">&quot;cluster_dim&quot;</span><span class="p">]</span>
                             <span class="p">)</span>
                             <span class="n">enable_per_channel_scale</span> <span class="o">=</span> <span class="p">(</span>
                                 <span class="n">submod_config</span><span class="o">.</span><span class="n">enable_per_channel_scale</span>
                                 <span class="k">if</span> <span class="n">submod_config</span><span class="o">.</span><span class="n">enable_per_channel_scale</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                                <span class="k">else</span> <span class="n">_DEFAULT_PALETTIZATION_SCHEME</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">submodule</span><span class="p">)][</span>
-                                    <span class="s2">&quot;enable_per_channel_scale&quot;</span>
-                                <span class="p">]</span>
+                                <span class="k">else</span> <span class="n">_DEFAULT_PALETTIZATION_SCHEME</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                                    <span class="nb">type</span><span class="p">(</span><span class="n">submodule</span><span class="p">),</span> <span class="n">default_config</span>
+                                <span class="p">)[</span><span class="s2">&quot;enable_per_channel_scale&quot;</span><span class="p">]</span>
                             <span class="p">)</span>
                             <span class="n">updated_config</span> <span class="o">=</span> <span class="kc">None</span>
-                            <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="n">param_name</span> <span class="ow">in</span> <span class="n">_get_palettizable_parameters</span><span class="p">(</span><span class="n">submodule</span><span class="p">):</span>
+                            <span class="k">for</span> <span class="p">(</span>
+                                <span class="n">param</span><span class="p">,</span>
+                                <span class="n">param_name</span><span class="p">,</span>
+                            <span class="p">)</span> <span class="ow">in</span> <span class="n">palettizer_module</span><span class="o">.</span><span class="n">get_palettizable_parameters</span><span class="p">(</span><span class="n">submodule</span><span class="p">):</span>
                                 <span class="n">updated_config</span> <span class="o">=</span> <span class="n">_validate_param_config</span><span class="p">(</span>
                                     <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">param_name</span><span class="p">,</span>
                                     <span class="n">param</span><span class="p">,</span>
@@ -255,7 +284,7 @@
                             <span class="k">if</span> <span class="ow">not</span> <span class="n">updated_config</span><span class="p">:</span>
                                 <span class="k">continue</span>
 
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_palettize_module</span><span class="p">(</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_attach_qconfig</span><span class="p">(</span>
                                 <span class="n">submodule</span><span class="p">,</span>
                                 <span class="n">n_bits</span><span class="p">,</span>
                                 <span class="n">cluster_dim</span><span class="p">,</span>
@@ -271,7 +300,7 @@
                             <span class="bp">self</span><span class="o">.</span><span class="n">_milestones</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">updated_config</span><span class="o">.</span><span class="n">milestone</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_palettize_module</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_attach_qconfig</span><span class="p">(</span>
         <span class="n">module</span><span class="p">:</span> <span class="n">_nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
         <span class="n">n_bits</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">cluster_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -285,11 +314,11 @@
         <span class="n">advanced_options</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Method to palettize a module.</span>
+<span class="sd">        Attach :py:class:`QConfig` to a module so that it can be palettized.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">fq_activation</span> <span class="o">=</span> <span class="n">_nn</span><span class="o">.</span><span class="n">Identity</span>
         <span class="n">fq_weight</span> <span class="o">=</span> <span class="n">_FakePalettize</span><span class="o">.</span><span class="n">with_args</span><span class="p">(</span>
-            <span class="n">observer</span><span class="o">=</span><span class="n">_torch</span><span class="o">.</span><span class="n">quantization</span><span class="o">.</span><span class="n">MovingAveragePerChannelMinMaxObserver</span><span class="o">.</span><span class="n">with_args</span><span class="p">(</span>
+            <span class="n">observer</span><span class="o">=</span><span class="n">_PalettizerLUTObserver</span><span class="o">.</span><span class="n">with_args</span><span class="p">(</span>
                 <span class="n">quant_min</span><span class="o">=</span><span class="n">quant_min</span><span class="p">,</span> <span class="n">quant_max</span><span class="o">=</span><span class="n">quant_max</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span>
             <span class="p">),</span>
             <span class="n">n_bits</span><span class="o">=</span><span class="n">n_bits</span><span class="p">,</span>
@@ -303,7 +332,7 @@
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">quantize_activations</span><span class="p">:</span>
             <span class="n">fq_activation</span> <span class="o">=</span> <span class="n">_FakeQuantize</span><span class="o">.</span><span class="n">with_args</span><span class="p">(</span>
-                <span class="n">observer</span><span class="o">=</span><span class="n">_torch</span><span class="o">.</span><span class="n">quantization</span><span class="o">.</span><span class="n">MovingAveragePerChannelMinMaxObserver</span><span class="o">.</span><span class="n">with_args</span><span class="p">(</span>
+                <span class="n">observer</span><span class="o">=</span><span class="n">_PalettizerLUTObserver</span><span class="o">.</span><span class="n">with_args</span><span class="p">(</span>
                     <span class="n">quant_min</span><span class="o">=</span><span class="n">quant_min</span><span class="p">,</span> <span class="n">quant_max</span><span class="o">=</span><span class="n">quant_max</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span>
                 <span class="p">),</span>
                 <span class="n">quant_min</span><span class="o">=</span><span class="n">quant_min</span><span class="p">,</span>
@@ -317,13 +346,17 @@
         <span class="n">module</span><span class="p">:</span> <span class="n">_nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">module_level_config</span><span class="p">:</span> <span class="n">_ModuleDKMPalettizerConfig</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_ParamsDict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns advanced_options for a module. First checks whether the user specified something for those options in the</span>
-<span class="sd">        palettization_config. If not, uses the options from the DEFAULT_PALETTIZATION_SCHEME of that module type.</span>
-<span class="sd">        Returns false otherwise.</span>
+<span class="sd">        Returns advanced_options for a module. First checks whether the user specified something for</span>
+<span class="sd">        those options in the palettization_config. If not, uses the options from the</span>
+<span class="sd">        DEFAULT_PALETTIZATION_SCHEME of that module type.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">module_level_advanced_options</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">_DEFAULT_PALETTIZATION_ADVANCED_OPTIONS</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;cluster_permute&quot;</span> <span class="ow">and</span> <span class="n">module_level_config</span><span class="o">.</span><span class="n">lut_dtype</span> <span class="o">==</span> <span class="s2">&quot;oc_last&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;cluster_permute&quot;</span>
+                <span class="ow">and</span> <span class="n">module_level_config</span><span class="o">.</span><span class="n">cluster_dtype</span> <span class="o">==</span> <span class="s2">&quot;oc_last&quot;</span>
+                <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;weight&quot;</span><span class="p">)</span>
+            <span class="p">):</span>
                 <span class="n">cluster_permute</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">dim</span><span class="p">()))</span>
                 <span class="n">cluster_permute</span> <span class="o">=</span> <span class="n">cluster_permute</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> <span class="n">cluster_permute</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span>
                 <span class="n">module_level_advanced_options</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">cluster_permute</span>
@@ -342,15 +375,26 @@
 <span class="sd">            inplace (:obj:`bool`): If ``True``, model transformations are carried out in-place and</span>
 <span class="sd">                the original module is mutated, otherwise a copy of the model is mutated and returned.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">_is_pruner_prepared</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">&quot;Model has been prepared for pruning. When running joint compression, &quot;</span>
+                <span class="s2">&quot;first prepare quantizer/palettizer and then pruner, to ensure insertion of &quot;</span>
+                <span class="s2">&quot;fake quantization layers does not remove pruning forward hooks.&quot;</span>
+            <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_model_for_compression</span><span class="p">(</span><span class="n">inplace</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_palettize_supported_modules</span><span class="p">()</span>
-        <span class="n">qat_mappings</span> <span class="o">=</span> <span class="n">_get_palettization_qat_mappings</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">quantization</span><span class="o">.</span><span class="n">prepare_qat</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span> <span class="n">mapping</span><span class="o">=</span><span class="n">qat_mappings</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span> <span class="n">mapping</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_palettization_module_mapping</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span>
         <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_default_enable_fake_palett</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span></div>
 
+
+    <span class="k">def</span> <span class="nf">_default_enable_fake_palett</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">module</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">named_modules</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_milestones</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_milestones</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_enable_fake_palett_impl</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 
 <div class="viewcode-block" id="DKMPalettizer.finalize">
 <a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizer.finalize">[docs]</a>
@@ -372,7 +416,9 @@
         <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 
         <span class="n">finalized_model</span> <span class="o">=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">quantization</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
-            <span class="n">model</span><span class="p">,</span> <span class="n">convert_custom_config_dict</span><span class="o">=</span><span class="n">_PALETTIZATION_CONVERT_DICT</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="n">inplace</span>
+            <span class="n">model</span><span class="p">,</span>
+            <span class="n">convert_custom_config_dict</span><span class="o">=</span><span class="n">_get_conversion_custom_config_dict</span><span class="p">(),</span>
+            <span class="n">inplace</span><span class="o">=</span><span class="n">inplace</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -389,11 +435,14 @@
 <span class="sd">        is called is equal to ``milestone``, palettization is enabled.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">module</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">named_modules</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_milestones</span><span class="p">:</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_step_count</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_milestones</span><span class="p">[</span><span class="n">name</span><span class="p">]:</span>
+            <span class="c1"># FSDP flattens model parameters leading to change in module names</span>
+            <span class="c1"># _normalize_fsdp_module_name function call to get original module name</span>
+            <span class="n">normalized_name</span> <span class="o">=</span> <span class="n">_normalize_fsdp_module_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">normalized_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_milestones</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_step_count</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_milestones</span><span class="p">[</span><span class="n">normalized_name</span><span class="p">]:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_enable_fake_palett_impl</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_init_prune_threshold_and_module_wise_target_sparsity</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_step_count</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_milestones</span><span class="p">[</span><span class="n">name</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_step_count</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_milestones</span><span class="p">[</span><span class="n">normalized_name</span><span class="p">]:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_update_prune_threshold</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_step_count</span> <span class="o">+=</span> <span class="mi">1</span></div>
 
@@ -487,7 +536,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

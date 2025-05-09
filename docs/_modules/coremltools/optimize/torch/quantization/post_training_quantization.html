@@ -1,13 +1,11 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.optimize.torch.quantization.post_training_quantization &mdash; coremltools API Reference 8.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
+  <title>coremltools.optimize.torch.quantization.post_training_quantization &mdash; coremltools API Reference 8.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -16,11 +14,15 @@
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
-      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
-      <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../_static/documentation_options.js?v=8cc1add8"></script>
+        <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" /> 
@@ -37,6 +39,9 @@
           <a href="../../../../../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
+              <div class="version">
+                8.3
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -93,64 +98,64 @@
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_logging</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span> <span class="k">as</span> <span class="n">_OrderedDict</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span> <span class="k">as</span> <span class="n">_Any</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span> <span class="k">as</span> <span class="n">_Callable</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span> <span class="k">as</span> <span class="n">_Dict</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span> <span class="k">as</span> <span class="n">_List</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NewType</span> <span class="k">as</span> <span class="n">_NewType</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span> <span class="k">as</span> <span class="n">_Tuple</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Type</span> <span class="k">as</span> <span class="n">_Type</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span> <span class="k">as</span> <span class="n">_Union</span>
+<span class="kn">import</span> <span class="nn">logging</span> <span class="k">as</span> <span class="nn">_logging</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span> <span class="k">as</span> <span class="n">_OrderedDict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span> <span class="k">as</span> <span class="n">_Any</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span> <span class="k">as</span> <span class="n">_Callable</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span> <span class="k">as</span> <span class="n">_Dict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span> <span class="k">as</span> <span class="n">_List</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">NewType</span> <span class="k">as</span> <span class="n">_NewType</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span> <span class="k">as</span> <span class="n">_Tuple</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Type</span> <span class="k">as</span> <span class="n">_Type</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span> <span class="k">as</span> <span class="n">_Union</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">cattrs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_cattrs</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_np</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_torch</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_nn</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">attr</span><span class="w"> </span><span class="kn">import</span> <span class="n">define</span> <span class="k">as</span> <span class="n">_define</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">attr</span><span class="w"> </span><span class="kn">import</span> <span class="n">field</span> <span class="k">as</span> <span class="n">_field</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">attrs</span><span class="w"> </span><span class="kn">import</span> <span class="n">validators</span> <span class="k">as</span> <span class="n">_validators</span>
+<span class="kn">import</span> <span class="nn">cattrs</span> <span class="k">as</span> <span class="nn">_cattrs</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_np</span>
+<span class="kn">import</span> <span class="nn">torch</span> <span class="k">as</span> <span class="nn">_torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">_nn</span>
+<span class="kn">from</span> <span class="nn">attr</span> <span class="kn">import</span> <span class="n">define</span> <span class="k">as</span> <span class="n">_define</span>
+<span class="kn">from</span> <span class="nn">attr</span> <span class="kn">import</span> <span class="n">field</span> <span class="k">as</span> <span class="n">_field</span>
+<span class="kn">from</span> <span class="nn">attrs</span> <span class="kn">import</span> <span class="n">validators</span> <span class="k">as</span> <span class="n">_validators</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">_utils</span> <span class="k">as</span> <span class="n">optimize_utils</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch._utils.metadata_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize</span> <span class="kn">import</span> <span class="n">_utils</span> <span class="k">as</span> <span class="n">optimize_utils</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.metadata_utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">CompressionMetadata</span> <span class="k">as</span> <span class="n">_CompressionMetadata</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch._utils.optimizer_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.optimizer_utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_ConfigToOptimizerRegistry</span><span class="p">,</span>
     <span class="n">_ModuleToOptConfigRegistry</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch._utils.report_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.report_utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">compute_post_training_report</span> <span class="k">as</span> <span class="n">_compute_post_training_report</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch._utils.torch_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_atomic_layers</span> <span class="k">as</span> <span class="n">_get_atomic_layers</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch._utils.torch_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="n">get_atomic_layers</span> <span class="k">as</span> <span class="n">_get_atomic_layers</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">get_n_bits_from_dtype</span> <span class="k">as</span> <span class="n">_get_n_bits_from_dtype</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch._utils.torch_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_signed_dtype</span> <span class="k">as</span> <span class="n">_is_signed_dtype</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch._utils.torch_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="n">is_signed_dtype</span> <span class="k">as</span> <span class="n">_is_signed_dtype</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">maybe_convert_str_to_dtype</span> <span class="k">as</span> <span class="n">_maybe_convert_str_to_dtype</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch._utils.torch_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">maybe_convert_str_to_mod_type</span> <span class="k">as</span> <span class="n">_maybe_convert_str_to_mod_type</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch._utils.validation_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.validation_utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">validate_param_config</span> <span class="k">as</span> <span class="n">_validate_param_config</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.base_model_optimizer</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.base_model_optimizer</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">BasePostTrainingModelOptimizer</span> <span class="k">as</span> <span class="n">_BasePostTrainingModelOptimizer</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.base_model_optimizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">_Report</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.optimization_config</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.base_model_optimizer</span> <span class="kn">import</span> <span class="n">_Report</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.optimization_config</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">ModuleOptimizationConfig</span> <span class="k">as</span> <span class="n">_ModuleOptimizationConfig</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.optimization_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizationConfig</span> <span class="k">as</span> <span class="n">_OptimizationConfig</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.optimization_config</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.optimization_config</span> <span class="kn">import</span> <span class="n">OptimizationConfig</span> <span class="k">as</span> <span class="n">_OptimizationConfig</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.optimization_config</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">QuantizationGranularity</span><span class="p">,</span>
     <span class="n">_structure_from_dict_hook_factory</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.quantization</span><span class="w"> </span><span class="kn">import</span> <span class="n">QuantizationScheme</span> <span class="k">as</span> <span class="n">_QuantizationScheme</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.quantization</span> <span class="kn">import</span> <span class="n">QuantizationScheme</span> <span class="k">as</span> <span class="n">_QuantizationScheme</span>
 
 <span class="n">_default_ptq_options</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;weight_dtype&quot;</span><span class="p">:</span> <span class="s2">&quot;int8&quot;</span><span class="p">,</span>
@@ -179,7 +184,7 @@
 <div class="viewcode-block" id="ModulePostTrainingQuantizerConfig">
 <a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.ModulePostTrainingQuantizerConfig">[docs]</a>
 <span class="nd">@_define</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">ModulePostTrainingQuantizerConfig</span><span class="p">(</span><span class="n">_ModuleOptimizationConfig</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">ModulePostTrainingQuantizerConfig</span><span class="p">(</span><span class="n">_ModuleOptimizationConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Configuration class for specifying global and module-level quantizer options for</span>
 <span class="sd">    :py:class:`PostTrainingQuantizer` algorithm.</span>
@@ -253,7 +258,7 @@
         <span class="p">),</span>
     <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SUPPORTED_WEIGHT_DTYPE</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;weight_dtype must be one of </span><span class="si">{</span><span class="n">_SUPPORTED_WEIGHT_DTYPE</span><span class="si">}</span><span class="s2"> not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -262,7 +267,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span> <span class="o">=</span> <span class="n">_maybe_convert_str_to_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span><span class="p">)</span>
 
     <span class="nd">@block_size</span><span class="o">.</span><span class="n">validator</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">per_block_granularity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">per_block_granularity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">granularity</span> <span class="o">==</span> <span class="n">QuantizationGranularity</span><span class="o">.</span><span class="n">per_block</span><span class="p">:</span>
             <span class="k">assert</span> <span class="p">(</span>
                 <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
@@ -273,7 +278,7 @@
             <span class="p">),</span> <span class="s2">&quot;block_size can&#39;t be specified along with per_tensor or per_channel granularity.&quot;</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">):</span>
         <span class="n">converter</span> <span class="o">=</span> <span class="n">_cattrs</span><span class="o">.</span><span class="n">Converter</span><span class="p">(</span><span class="n">forbid_extra_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">converter</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span>
             <span class="n">_Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">],</span>
@@ -293,7 +298,7 @@
 <a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.PostTrainingQuantizerConfig">[docs]</a>
 <span class="nd">@_ModuleToOptConfigRegistry</span><span class="o">.</span><span class="n">register_module_cfg</span><span class="p">(</span><span class="n">ModulePostTrainingQuantizerConfig</span><span class="p">)</span>
 <span class="nd">@_define</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">PostTrainingQuantizerConfig</span><span class="p">(</span><span class="n">_OptimizationConfig</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">PostTrainingQuantizerConfig</span><span class="p">(</span><span class="n">_OptimizationConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Configuration class for specifying how different submodules of a model</span>
 <span class="sd">    should be post-training quantized by :py:class:`PostTrainingQuantizer`.</span>
@@ -334,7 +339,7 @@
         <span class="p">),</span>
     <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">global_config</span> <span class="ow">is</span> <span class="kc">None</span>
             <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_type_configs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
@@ -348,7 +353,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_same_params</span><span class="p">([</span><span class="s2">&quot;quantization_scheme&quot;</span><span class="p">])</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;PostTrainingQuantizerConfig&quot;</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;PostTrainingQuantizerConfig&quot;</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">config_dict</span><span class="p">)</span>
         <span class="n">converter</span> <span class="o">=</span> <span class="n">_cattrs</span><span class="o">.</span><span class="n">Converter</span><span class="p">(</span><span class="n">forbid_extra_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">converter</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span>
@@ -366,7 +371,7 @@
 <div class="viewcode-block" id="PostTrainingQuantizer">
 <a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.PostTrainingQuantizer">[docs]</a>
 <span class="nd">@_ConfigToOptimizerRegistry</span><span class="o">.</span><span class="n">register_config</span><span class="p">(</span><span class="n">PostTrainingQuantizerConfig</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">PostTrainingQuantizer</span><span class="p">(</span><span class="n">_BasePostTrainingModelOptimizer</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">PostTrainingQuantizer</span><span class="p">(</span><span class="n">_BasePostTrainingModelOptimizer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform post-training quantization on a torch model. After quantization, weights of all</span>
 <span class="sd">    submodules selected for quantization contain full precision values obtained by quantizing</span>
@@ -428,7 +433,7 @@
         <span class="n">_nn</span><span class="o">.</span><span class="n">MultiheadAttention</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_quantization_mode</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_get_quantization_mode</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">weight_dtype</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">quantization_scheme</span><span class="p">:</span> <span class="n">_QuantizationScheme</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -447,11 +452,11 @@
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">quantization_mode</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">PostTrainingQuantizerConfig</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">PostTrainingQuantizerConfig</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="n">config</span> <span class="o">=</span> <span class="n">PostTrainingQuantizerConfig</span><span class="p">()</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">config</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_quantization_params</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_compute_quantization_params</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">weight</span><span class="p">:</span> <span class="n">_np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
         <span class="n">nbits</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -475,7 +480,7 @@
 
         <span class="k">return</span> <span class="n">ret</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_dequantize_weight</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_dequantize_weight</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">quantized_weight</span><span class="p">:</span> <span class="n">_np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
         <span class="n">scale</span><span class="p">:</span> <span class="n">_np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
@@ -493,7 +498,7 @@
         <span class="k">return</span> <span class="n">dequantized_weight</span>
 
     <span class="nd">@_torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_quantize_weight</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_quantize_weight</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">submod_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">submodule</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
@@ -593,7 +598,7 @@
         <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_compression_metadata</span><span class="p">(</span><span class="n">param_name</span><span class="p">,</span> <span class="n">submod_config</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">zp</span><span class="p">)</span>
         <span class="n">metadata</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">submodule</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_compression_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">submod_config</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">zero_point</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_compression_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">submod_config</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">zero_point</span><span class="p">):</span>
         <span class="n">metadata</span> <span class="o">=</span> <span class="n">_CompressionMetadata</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span>
 
         <span class="n">metadata</span><span class="o">.</span><span class="n">compression_type</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;quantization&quot;</span><span class="p">]</span>
@@ -607,7 +612,7 @@
 
         <span class="k">return</span> <span class="n">metadata</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">compress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">compress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compress the supported layers in the module by quantizing each weight value of the layer.</span>
 
@@ -658,7 +663,7 @@
                     <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">report</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Report</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">report</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Report</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_compute_post_training_report</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_uncompressed_model</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span>
@@ -674,7 +679,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

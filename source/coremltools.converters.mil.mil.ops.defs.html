@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MIL Ops &mdash; coremltools API Reference 8.0b1 documentation</title>
+  <title>MIL Ops &mdash; coremltools API Reference 8.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
@@ -21,7 +21,7 @@
   
         <script src="../_static/jquery.js?v=5d32c60e"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../_static/documentation_options.js?v=8cc1add8"></script>
         <script src="../_static/doctools.js?v=9a2dae69"></script>
         <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -44,7 +44,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                8.0b1
+                8.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -2236,7 +2236,7 @@ info, which may cause backend errors. Remedy this with SSA passes.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>ls: List[*] (Required)</strong></dt><dd></dd>
-<dt><strong>indices: &lt;K,i32&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>indices: &lt;K, i32&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Gather from indices, whose element must be in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">ls.length)</span></code> at runtime.</p></li>
 </ul>
 </dd>
@@ -2249,7 +2249,7 @@ info, which may cause backend errors. Remedy this with SSA passes.</p></li>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>&lt;*K,T&gt;</dt><dd><ul class="simple">
+<dt>&lt;*K, T&gt;</dt><dd><ul class="simple">
 <li><p>Selected tensors packed into a <code class="docutils literal notranslate"><span class="pre">len(ls.elem_shape)+1</span></code> rank tensor.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">K[0]</span> <span class="pre">==</span> <span class="pre">len(indices)</span></code>.</p></li>
 </ul>
@@ -2600,11 +2600,11 @@ loading into MIL, the following transformation is done:</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: &lt;*,T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>x: &lt;*, T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Shape must be compatible with <code class="docutils literal notranslate"><span class="pre">y</span></code> in broadcast.</p></li>
 </ul>
 </dd>
-<dt><strong>y: &lt;*,T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>y: &lt;*, T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Shape must be compatible with <code class="docutils literal notranslate"><span class="pre">x</span></code> in broadcast.</p></li>
 </ul>
 </dd>
@@ -2617,7 +2617,7 @@ loading into MIL, the following transformation is done:</p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>&lt;*,T&gt;</dt><dd></dd>
+<dt>&lt;*, T&gt;</dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -2632,11 +2632,11 @@ loading into MIL, the following transformation is done:</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: &lt;*,T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>x: &lt;*, T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Shape must be compatible with <code class="docutils literal notranslate"><span class="pre">y</span></code> in broadcast.</p></li>
 </ul>
 </dd>
-<dt><strong>y: &lt;*,T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>y: &lt;*, T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Shape must be compatible with <code class="docutils literal notranslate"><span class="pre">x</span></code> in broadcast.</p></li>
 </ul>
 </dd>
@@ -5081,7 +5081,7 @@ compile time.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: tensor&lt;[*D,D_in], T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>x: tensor&lt;[*D, D_in], T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">&lt;=</span> <span class="pre">rank</span> <span class="pre">&lt;=</span> <span class="pre">3</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;=</span> <span class="pre">rank(*D)</span> <span class="pre">&lt;=</span> <span class="pre">2</span></code>.</p></li>
 </ul>
@@ -5100,7 +5100,7 @@ compile time.</p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>tensor&lt;[*D,D_out], T&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*D, D_out], T&gt;</dt><dd><ul class="simple">
 <li><p>Same rank as the input <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -5157,11 +5157,11 @@ For example:</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: tensor&lt;[*,K1], T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>x: tensor&lt;[*, K1], T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">x</span></code> must be 1-D or higher.</p></li>
 </ul>
 </dd>
-<dt><strong>y: tensor&lt;[*,K2], T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>y: tensor&lt;[*, K2], T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">y</span></code> must be 1-D or higher.</p></li>
 </ul>
 </dd>
@@ -5600,7 +5600,7 @@ is that input/output can have different dtypes from other parameters.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: tensor&lt;[n,C_in,*D_in], T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>x: tensor&lt;[n,C_in, *D_in], T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">&lt;=</span> <span class="pre">rank</span> <span class="pre">&lt;=</span> <span class="pre">5</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">D_in</span></code> are spatial dimensions, <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">&lt;=</span> <span class="pre">len(D_in)</span> <span class="pre">&lt;=</span> <span class="pre">3</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">C_in</span></code> is the number of input channels or depth dimensions.</p></li>
@@ -5661,7 +5661,7 @@ when computing the average over the kernel window.</p></li>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
-<dt>tensor&lt;[n, C_out,*D_out], T&gt;</dt><dd><ul>
+<dt>tensor&lt;[n, C_out, *D_out], T&gt;</dt><dd><ul>
 <li><p>Same rank as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">C_out</span></code> is the number of output channels or depth dimensions.</p></li>
 <li><dl>
@@ -5990,7 +5990,7 @@ distribution.</p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>&lt;*, T&gt;</dt><dd><ul class="simple">
+<dt>&lt;\*, T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the given target output shape filled with random values.</p></li>
 </ul>
 </dd>
@@ -6083,7 +6083,7 @@ distribution.</p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>&lt;*, T&gt;</dt><dd><ul class="simple">
+<dt>&lt;\*, T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the given target output shape filled with random values.</p></li>
 </ul>
 </dd>
@@ -6139,7 +6139,7 @@ the results are officially undefined and may eventually raise an error.</p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>&lt;*, T&gt;</dt><dd><ul class="simple">
+<dt>&lt;\*, T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the given target output shape filled with random values.</p></li>
 </ul>
 </dd>
@@ -6529,9 +6529,10 @@ adding the support for fp16.</p>
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS18.recurrent.gru">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS18.recurrent.</span></span><span class="sig-name descname"><span class="pre">gru</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS18/recurrent.html#gru"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS18.recurrent.gru" title="Link to this definition"></a></dt>
 <dd><p>Gated Recurrent Unit (GRU)</p>
-<p>The only difference between this version and the iOS 17 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.recurrent.gru" title="coremltools.converters.mil.mil.ops.defs.iOS17.recurrent.gru"><code class="xref py py-class docutils literal notranslate"><span class="pre">gru</span></code></a> is
-the reset_after parameter. This parameter is optional and defaults to False. When True, the
-reset gate is applied before the elementwise matrix multiplication.</p>
+<p>Two new parameters have been added to the iOS 17 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.recurrent.gru" title="coremltools.converters.mil.mil.ops.defs.iOS17.recurrent.gru"><code class="xref py py-class docutils literal notranslate"><span class="pre">gru</span></code></a>.</p>
+<p><cite>reset_after</cite> - this parameter is optional and defaults to False. When True, the reset
+gate is applied before the elementwise matrix multiplication.</p>
+<p><cite>input_bias</cite> - const&lt;3*H, T&gt; (Optional) [Default all 0s].</p>
 </dd></dl>
 
 </section>
@@ -6545,7 +6546,7 @@ In case of ties, the identity of the return value is not guaranteed.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: &lt;*,T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>x: &lt;*, T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Must be 1-dimensional or higher.</p></li>
 </ul>
 </dd>
@@ -6583,7 +6584,7 @@ In case of ties, the identity of the return value is not guaranteed.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: &lt;*,T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>x: &lt;*, T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Must be 1-dimensional or higher.</p></li>
 </ul>
 </dd>
@@ -6620,11 +6621,11 @@ in <code class="docutils literal notranslate"><span class="pre">axis</span></cod
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: &lt;*,T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>x: &lt;*, T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Must be 1-dimensional or higher.</p></li>
 </ul>
 </dd>
-<dt><strong>axes: const&lt;K,i32&gt; (Optional, default=”None”, reduce on all axes.)</strong></dt><dd><ul class="simple">
+<dt><strong>axes: const&lt;K, i32&gt; (Optional, default=”None”, reduce on all axes.)</strong></dt><dd><ul class="simple">
 <li><p>The dimensions to reduce.</p></li>
 </ul>
 </dd>
@@ -6642,7 +6643,7 @@ otherwise retain reduced axes with length <code class="docutils literal notransl
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>&lt;*,T&gt;</dt><dd><ul class="simple">
+<dt>&lt;*, T&gt;</dt><dd><ul class="simple">
 <li><p>Scalar or tensor: The reduced tensor.</p></li>
 </ul>
 </dd>
@@ -6660,11 +6661,11 @@ otherwise retain reduced axes with length <code class="docutils literal notransl
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: &lt;*,T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>x: &lt;*, T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Must be 1-dimensional or higher.</p></li>
 </ul>
 </dd>
-<dt><strong>axes: const&lt;K,i32&gt; (Optional, default=”None”, reduce on all axes.)</strong></dt><dd><ul class="simple">
+<dt><strong>axes: const&lt;K, i32&gt; (Optional, default=”None”, reduce on all axes.)</strong></dt><dd><ul class="simple">
 <li><p>The dimensions to reduce.</p></li>
 </ul>
 </dd>
@@ -6682,7 +6683,7 @@ otherwise retain reduced axes with length <code class="docutils literal notransl
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>&lt;*,T&gt;</dt><dd><ul class="simple">
+<dt>&lt;*, T&gt;</dt><dd><ul class="simple">
 <li><p>Scalar or tensor: The reduced tensor.</p></li>
 </ul>
 </dd>
@@ -6699,11 +6700,11 @@ of the input tensor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: &lt;*,T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>x: &lt;*, T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Must be 1-dimensional or higher.</p></li>
 </ul>
 </dd>
-<dt><strong>axes: const&lt;K,i32&gt; (Optional, default=”None”, reduce on all axes.)</strong></dt><dd><ul class="simple">
+<dt><strong>axes: const&lt;K, i32&gt; (Optional, default=”None”, reduce on all axes.)</strong></dt><dd><ul class="simple">
 <li><p>The dimensions to reduce.</p></li>
 </ul>
 </dd>
@@ -6721,7 +6722,7 @@ otherwise retain reduced axes with length <code class="docutils literal notransl
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>&lt;*,T&gt;</dt><dd><ul class="simple">
+<dt>&lt;*, T&gt;</dt><dd><ul class="simple">
 <li><p>Scalar or tensor: The reduced tensor.</p></li>
 </ul>
 </dd>
@@ -6741,7 +6742,7 @@ taking the <code class="docutils literal notranslate"><span class="pre">log</spa
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: &lt;*,T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>x: &lt;*, T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Must be 1-dimensional or higher.</p></li>
 </ul>
 </dd>
@@ -6763,7 +6764,7 @@ otherwise retain reduced axes with length <code class="docutils literal notransl
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>&lt;*,T&gt;</dt><dd><ul class="simple">
+<dt>&lt;*, T&gt;</dt><dd><ul class="simple">
 <li><p>Scalar or tensor: The reduced tensor.</p></li>
 </ul>
 </dd>
@@ -6781,7 +6782,7 @@ otherwise retain reduced axes with length <code class="docutils literal notransl
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: &lt;*,T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>x: &lt;*, T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Must be 1-dimensional or higher.</p></li>
 </ul>
 </dd>
@@ -6803,7 +6804,7 @@ otherwise retain reduced axes with length <code class="docutils literal notransl
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>&lt;*,T&gt;</dt><dd><ul class="simple">
+<dt>&lt;*, T&gt;</dt><dd><ul class="simple">
 <li><p>Scalar or tensor: The reduced tensor.</p></li>
 </ul>
 </dd>
@@ -6819,7 +6820,7 @@ otherwise retain reduced axes with length <code class="docutils literal notransl
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: &lt;*,T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>x: &lt;*, T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Must be 1-dimensional or higher.</p></li>
 </ul>
 </dd>
@@ -6841,7 +6842,7 @@ otherwise retain reduced axes with length <code class="docutils literal notransl
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>&lt;*,T&gt;</dt><dd><ul class="simple">
+<dt>&lt;*, T&gt;</dt><dd><ul class="simple">
 <li><p>Scalar or tensor: The reduced tensor.</p></li>
 </ul>
 </dd>
@@ -6897,7 +6898,7 @@ otherwise retain reduced axes with length <code class="docutils literal notransl
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: &lt;*,T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>x: &lt;*, T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Must be 1-dimensional or higher.</p></li>
 </ul>
 </dd>
@@ -6919,7 +6920,7 @@ otherwise retain reduced axes with length <code class="docutils literal notransl
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>&lt;*,T&gt;</dt><dd><ul class="simple">
+<dt>&lt;*, T&gt;</dt><dd><ul class="simple">
 <li><p>Scalar or tensor: The reduced tensor.</p></li>
 </ul>
 </dd>
@@ -6935,7 +6936,7 @@ otherwise retain reduced axes with length <code class="docutils literal notransl
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: &lt;*,T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>x: &lt;*, T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Must be 1-dimensional or higher.</p></li>
 </ul>
 </dd>
@@ -6957,7 +6958,7 @@ otherwise retain reduced axes with length <code class="docutils literal notransl
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>&lt;*,T&gt;</dt><dd><ul class="simple">
+<dt>&lt;*, T&gt;</dt><dd><ul class="simple">
 <li><p>Scalar or tensor: The reduced tensor.</p></li>
 </ul>
 </dd>
@@ -6973,7 +6974,7 @@ otherwise retain reduced axes with length <code class="docutils literal notransl
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: &lt;*,T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>x: &lt;*, T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Must be 1-dimensional or higher.</p></li>
 </ul>
 </dd>
@@ -6995,7 +6996,7 @@ otherwise retain reduced axes with length <code class="docutils literal notransl
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>&lt;*,T&gt;</dt><dd><ul class="simple">
+<dt>&lt;*, T&gt;</dt><dd><ul class="simple">
 <li><p>Scalar or tensor: The reduced tensor.</p></li>
 </ul>
 </dd>
@@ -7022,7 +7023,7 @@ In case of ties, the identity of the return value is not guaranteed.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: &lt;*,T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>x: &lt;*, T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Must be 1-dimensional or higher.</p></li>
 </ul>
 </dd>
@@ -7073,7 +7074,7 @@ In case of ties, the identity of the return value is not guaranteed.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: &lt;*,T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>x: &lt;*, T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Must be 1-dimensional or higher.</p></li>
 </ul>
 </dd>
@@ -7313,7 +7314,7 @@ by operation <code class="docutils literal notranslate"><span class="pre">mode</
 indices = [1, 0]
 updates = [[5, 6, 7], [8, 9, 10]]
 axis = 0
-mode = “update”</p>
+mode = “add”</p>
 </dd>
 <dt><strong>produces:</strong></dt><dd><p>[[9, 11, 13], [9, 11, 13]]</p>
 </dd>
@@ -8370,7 +8371,7 @@ while other locations take the <code class="docutils literal notranslate"><span 
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>tensor&lt;*?,T&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;*?, T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor that contains one-hot vectors.</p></li>
 </ul>
 </dd>
@@ -8425,7 +8426,7 @@ that is, <code class="docutils literal notranslate"><span class="pre">N</span> <
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>tensor&lt;[*D_out],T&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*D_out], T&gt;</dt><dd><ul class="simple">
 <li><p>Tensor with same type as the input.</p></li>
 </ul>
 </dd>
@@ -8508,7 +8509,7 @@ that is, <code class="docutils literal notranslate"><span class="pre">N</span> <
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
-<dt><strong>x: &lt;*?,T&gt;  (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>x: &lt;*?, T&gt;  (Required)</strong></dt><dd><ul class="simple">
 <li><p>The tensor to split.</p></li>
 <li><p>The tensors may be variadic, but the number of tensors must be determined
 at compile time (i.e. a tuple).</p></li>
@@ -9427,7 +9428,7 @@ by spatial dimensions <code class="docutils literal notranslate"><span class="pr
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: tensor&lt;*?,T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>x: tensor&lt;*?, T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Must be at least 1-D.</p></li>
 </ul>
 </dd>
@@ -9448,7 +9449,7 @@ shape (2, 3, 4) and axes is [0, 1], the output will be a tensor with shape (2, 3
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>tensor&lt;*(rank(x)-K),T&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;*(rank(x)-K), T&gt;</dt><dd><ul class="simple">
 <li><p>Tensor with same type as input <code class="docutils literal notranslate"><span class="pre">x</span></code> and rank <code class="docutils literal notranslate"><span class="pre">rank(x)-K</span></code>.</p></li>
 </ul>
 </dd>
@@ -9481,7 +9482,7 @@ shape (2, 3, 4) and axes is [0, 1], the output will be a tensor with shape (2, 3
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>tensor&lt;*?,T&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;*?, T&gt;</dt><dd><ul class="simple">
 <li><p>Tensor with same rank and type as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -10007,7 +10008,7 @@ is that input <code class="docutils literal notranslate"><span class="pre">x</sp
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: tensor&lt;*?,T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>x: tensor&lt;*?, T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Must be at least 1-D.</p></li>
 </ul>
 </dd>
@@ -10025,7 +10026,7 @@ is that input <code class="docutils literal notranslate"><span class="pre">x</sp
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt>tensor&lt;*(rank(x)-K),T&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;*(rank(x)-K), T&gt;</dt><dd><ul class="simple">
 <li><p>Tensor with same type as input <code class="docutils literal notranslate"><span class="pre">x</span></code> and rank <code class="docutils literal notranslate"><span class="pre">rank(x)-K</span></code>.</p></li>
 </ul>
 </dd>
@@ -10209,7 +10210,7 @@ Mask shape must be broadcastable to <code class="docutils literal notranslate"><
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

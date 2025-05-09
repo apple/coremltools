@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.ops.defs.iOS17.quantization_ops &mdash; coremltools API Reference 8.0b1 documentation</title>
+  <title>coremltools.converters.mil.mil.ops.defs.iOS17.quantization_ops &mdash; coremltools API Reference 8.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css?v=fd3f3429" />
@@ -20,7 +20,7 @@
   
         <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../../../../_static/documentation_options.js?v=8cc1add8"></script>
         <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../../../_static/js/theme.js"></script>
@@ -40,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                8.0b1
+                8.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
@@ -98,26 +98,16 @@
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">types</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Var</span><span class="p">,</span> <span class="n">types</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="n">InputSpec</span><span class="p">,</span> <span class="n">TensorInputType</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="n">VALUE</span><span class="p">,</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">precondition</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs.iOS17</span> <span class="kn">import</span> <span class="n">_IOS17_TARGET</span>
-
-
-<span class="k">def</span> <span class="nf">_rank_promoted_to_same_as_data</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Reshapes `param` to be the same shape as `data`.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">axis</span> <span class="o">=</span> <span class="n">axis</span> <span class="k">if</span> <span class="n">axis</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">axis</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">))</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">axes</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span> <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">axis</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">axes</span><span class="p">))</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize</span> <span class="kn">import</span> <span class="n">_utils</span> <span class="k">as</span> <span class="n">optimize_utils</span>
 
 
 <span class="k">def</span> <span class="nf">_check_scale_zp_shapes</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">zero_point</span><span class="p">,</span> <span class="n">axis</span><span class="p">):</span>
@@ -153,6 +143,22 @@
             <span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Params scale &amp; zero_point should both be scalars or vectors&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_prepare_scale_and_zero_point</span><span class="p">(</span>
+    <span class="n">input_data</span><span class="p">:</span> <span class="n">Var</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="n">Var</span><span class="p">,</span> <span class="n">zero_point</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Var</span><span class="p">],</span> <span class="n">axis</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Var</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
+    <span class="n">input_data</span> <span class="o">=</span> <span class="n">input_data</span><span class="o">.</span><span class="n">val</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="n">scale</span><span class="o">.</span><span class="n">val</span>
+    <span class="k">if</span> <span class="n">zero_point</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">zero_point</span> <span class="o">=</span> <span class="n">zero_point</span><span class="o">.</span><span class="n">val</span>
+    <span class="k">if</span> <span class="n">axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">axis</span> <span class="o">=</span> <span class="n">axis</span><span class="o">.</span><span class="n">val</span>
+
+    <span class="n">scale</span> <span class="o">=</span> <span class="n">optimize_utils</span><span class="o">.</span><span class="n">promote_rank_to_same_as_data</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="n">input_data</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">zero_point</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">zero_point</span> <span class="o">=</span> <span class="n">optimize_utils</span><span class="o">.</span><span class="n">promote_rank_to_same_as_data</span><span class="p">(</span><span class="n">zero_point</span><span class="p">,</span> <span class="n">input_data</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">scale</span><span class="p">,</span> <span class="n">zero_point</span>
 
 
 <div class="viewcode-block" id="quantize">
@@ -221,7 +227,7 @@
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">out_dtype</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">string_to_builtin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dtype</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">out_dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">}:</span>
+        <span class="k">if</span> <span class="n">out_dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">type_domains</span><span class="p">[</span><span class="s2">&quot;DstT&quot;</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s1">&#39;&quot;quantize&quot; op: unrecognized output dtype &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dtype</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
             <span class="p">)</span>
@@ -234,29 +240,21 @@
                     <span class="p">)</span>
                 <span class="p">)</span>
 
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;quantize op: scale cannot be 0&quot;</span><span class="p">)</span>
+
         <span class="n">_check_scale_zp_shapes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero_point</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">out_dtype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">original_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">val</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero_point</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">zero_point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero_point</span><span class="o">.</span><span class="n">val</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">zero_point</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_dtype</span><span class="o">.</span><span class="n">val</span> <span class="o">==</span> <span class="s2">&quot;int8&quot;</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-        <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span>
-        <span class="n">axis</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">axis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span>
-        <span class="n">dtype_info</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="n">zero_point</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-
-        <span class="n">sc</span> <span class="o">=</span> <span class="n">_rank_promoted_to_same_as_data</span><span class="p">(</span><span class="n">original_data</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">scale</span><span class="p">)</span>
-        <span class="n">zp</span> <span class="o">=</span> <span class="n">_rank_promoted_to_same_as_data</span><span class="p">(</span><span class="n">original_data</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">zero_point</span><span class="p">)</span>
-        <span class="n">val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">original_data</span> <span class="o">/</span> <span class="n">sc</span><span class="p">)</span> <span class="o">+</span> <span class="n">zp</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">dtype_info</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="n">dtype_info</span><span class="o">.</span><span class="n">max</span>
+        <span class="n">scale</span><span class="p">,</span> <span class="n">zero_point</span> <span class="o">=</span> <span class="n">_prepare_scale_and_zero_point</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero_point</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="n">val</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">zero_point</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">optimize_utils</span><span class="o">.</span><span class="n">quantize_by_scale_and_zp</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">zero_point</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">string_to_builtin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dtype</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+        <span class="p">)</span></div>
 
 
 
@@ -339,20 +337,10 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">can_materialize_val</span><span class="p">():</span>
             <span class="k">return</span> <span class="kc">None</span>
 
-        <span class="n">quantized_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">val</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero_point</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">zero_point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero_point</span><span class="o">.</span><span class="n">val</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">zero_point</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">types</span><span class="o">.</span><span class="n">int8</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-        <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span>
-        <span class="n">axis</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">axis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span>
-
-        <span class="n">sc</span> <span class="o">=</span> <span class="n">_rank_promoted_to_same_as_data</span><span class="p">(</span><span class="n">quantized_data</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">scale</span><span class="p">)</span>
-        <span class="n">zp</span> <span class="o">=</span> <span class="n">_rank_promoted_to_same_as_data</span><span class="p">(</span><span class="n">quantized_data</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">zero_point</span><span class="p">)</span>
-        <span class="n">val</span> <span class="o">=</span> <span class="n">sc</span> <span class="o">*</span> <span class="p">(</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">-</span> <span class="n">zp</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">val</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">scale</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span></div>
+        <span class="n">scale</span><span class="p">,</span> <span class="n">zero_point</span> <span class="o">=</span> <span class="n">_prepare_scale_and_zero_point</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero_point</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">optimize_utils</span><span class="o">.</span><span class="n">dequantize_by_scale_and_zp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">zero_point</span><span class="p">)</span></div>
 
 </pre></div>
 
@@ -363,7 +351,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

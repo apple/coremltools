@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation &mdash; coremltools API Reference 8.0b1 documentation</title>
+  <title>coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation &mdash; coremltools API Reference 8.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/graphviz.css?v=fd3f3429" />
@@ -20,7 +20,7 @@
   
         <script src="../../../../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../../../_static/documentation_options.js?v=8cc1add8"></script>
         <script src="../../../../../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../../_static/js/theme.js"></script>
@@ -40,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                8.0b1
+                8.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../search.html" method="get">
@@ -101,8 +101,10 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil._deployment_compatibility</span> <span class="kn">import</span> <span class="n">AvailableTarget</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend._utils</span> <span class="kn">import</span> <span class="n">value_at</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend</span> <span class="kn">import</span> <span class="n">_utils</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Block</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">mb</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">Program</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.block</span> <span class="kn">import</span> <span class="n">is_current_opset_version_compatible_with</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span> <span class="kn">import</span> <span class="n">AbstractGraphPass</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.helper</span> <span class="kn">import</span> <span class="p">(</span>
@@ -744,7 +746,9 @@
                 <span class="n">a</span><span class="o">=</span><span class="n">root_var</span><span class="p">,</span>
                 <span class="n">b</span><span class="o">=</span><span class="n">mb</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
                     <span class="n">x</span><span class="o">=</span><span class="n">root_var</span><span class="p">,</span>
-                    <span class="n">y</span><span class="o">=</span><span class="n">value_at</span><span class="p">(</span><span class="n">mb</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">W_var</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">matmul_op</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">matmul_op</span><span class="p">),</span>
+                    <span class="n">y</span><span class="o">=</span><span class="n">_utils</span><span class="o">.</span><span class="n">pymil_value_at</span><span class="p">(</span>
+                        <span class="n">mb</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">W_var</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">matmul_op</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">matmul_op</span>
+                    <span class="p">),</span>
                     <span class="n">before_op</span><span class="o">=</span><span class="n">matmul_op</span><span class="p">,</span>
                 <span class="p">),</span>
                 <span class="n">before_op</span><span class="o">=</span><span class="n">matmul_op</span><span class="p">,</span>
@@ -949,6 +953,20 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_match_pattern</span><span class="p">(</span><span class="n">concat_op</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
+
+        <span class="k">def</span> <span class="nf">resolve_end_mask</span><span class="p">(</span><span class="n">slice_op</span><span class="p">):</span>
+            <span class="c1"># Helper function to resolve the end_mask attribute of the slice op if it is not present</span>
+            <span class="k">if</span> <span class="s2">&quot;end_mask&quot;</span> <span class="ow">in</span> <span class="n">slice_op</span><span class="o">.</span><span class="n">inputs</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">slice_op</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;end_mask&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">val</span>
+
+            <span class="k">if</span> <span class="n">slice_op</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;end&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+
+            <span class="n">infered_mask</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">end_idx</span><span class="p">,</span> <span class="n">axis_dim</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">slice_op</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;end&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">slice_op</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+                <span class="n">infered_mask</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">end_idx</span> <span class="o">==</span> <span class="n">axis_dim</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">infered_mask</span>
+
         <span class="k">if</span> <span class="n">concat_op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">!=</span> <span class="s2">&quot;concat&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
 
@@ -990,14 +1008,10 @@
                 <span class="k">return</span> <span class="kc">False</span>
 
             <span class="k">if</span> <span class="n">end_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">end_mask</span> <span class="o">=</span> <span class="n">slice_op</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;end_mask&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">val</span>
+                <span class="n">end_mask</span> <span class="o">=</span> <span class="n">resolve_end_mask</span><span class="p">(</span><span class="n">slice_op</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">end_mask</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="kc">False</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">end_mask</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">False</span>
                 <span class="n">axis</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">end_mask</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">end_mask</span><span class="p">))</span>
-
-            <span class="k">if</span> <span class="n">end_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">return</span> <span class="kc">False</span>
-
-            <span class="k">if</span> <span class="n">axis</span> <span class="o">!=</span> <span class="nb">list</span><span class="p">(</span><span class="n">end_mask</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">end_mask</span><span class="p">)):</span>
-                <span class="k">return</span> <span class="kc">False</span>
 
             <span class="c1"># Check that we&#39;re only taking a slice of size 1</span>
             <span class="n">end</span> <span class="o">=</span> <span class="n">slice_op</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;end&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">val</span>
@@ -1044,6 +1058,120 @@
         <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_match_pattern</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span></div>
 
+
+
+<span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">fuse_stack_split</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Detect the pattern ``inputs -&gt; stack -&gt; split -&gt; squeeze`` and fuse them into an ``identity`` if the pattern</span>
+<span class="sd">    cancel out each out.</span>
+<span class="sd">    Note that, the ``identity`` can be further removed by ``noop_elimination``.</span>
+
+<span class="sd">    .. code-block::</span>
+
+<span class="sd">        Input:</span>
+<span class="sd">            %4 = stack([%1, %2, %3], axis=0)</span>
+<span class="sd">            %5, %6, %7 = split(%4, axis=0)</span>
+<span class="sd">            %8 = squeeze(%5, axes=[0])</span>
+<span class="sd">            %9 = squeeze(%6, axes=[0])</span>
+<span class="sd">            %10 = squeeze(%7, axes=[0])</span>
+
+<span class="sd">        Output:</span>
+<span class="sd">            %8 = identity(%1)</span>
+<span class="sd">            %9 = identity(%2)</span>
+<span class="sd">            %10 = identity(%3)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">:</span> <span class="n">Program</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fuse_stack_split_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_try_to_transform</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">,</span> <span class="n">stack_op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">_convert_axis_to_positive</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">rank</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">axis</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">axis</span> <span class="o">+</span> <span class="n">rank</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">return</span> <span class="n">axis</span>
+
+        <span class="k">def</span> <span class="nf">_try_fuse_a_branch</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">split_op</span><span class="p">):</span>
+            <span class="n">ops_to_remove</span> <span class="o">=</span> <span class="p">[</span><span class="n">split_op</span><span class="p">]</span>
+
+            <span class="c1"># check if the split op have the correct config</span>
+            <span class="k">if</span> <span class="n">_convert_axis_to_positive</span><span class="p">(</span><span class="n">split_op</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">rank</span><span class="p">)</span> <span class="o">!=</span> <span class="n">axis</span><span class="p">:</span>
+                <span class="k">return</span>
+
+            <span class="n">split_sizes</span> <span class="o">=</span> <span class="n">split_op</span><span class="o">.</span><span class="n">split_sizes</span>
+            <span class="k">if</span> <span class="n">split_sizes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">split_sizes</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="o">!=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+                    <span class="k">return</span>
+
+            <span class="n">num_splits</span> <span class="o">=</span> <span class="n">split_op</span><span class="o">.</span><span class="n">num_splits</span>
+            <span class="k">if</span> <span class="n">num_splits</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">num_splits</span><span class="o">.</span><span class="n">val</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+                    <span class="k">return</span>
+
+            <span class="n">ops_to_remove</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">split_op</span><span class="p">)</span>
+
+            <span class="c1"># check if any of the output var of the stack / split op is the block output</span>
+            <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">ops_to_remove</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">val</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+                        <span class="k">return</span>
+
+            <span class="c1"># check if the outputs of the split op feed only into squeeze</span>
+            <span class="n">split_out_vars</span> <span class="o">=</span> <span class="n">split_op</span><span class="o">.</span><span class="n">outputs</span>
+            <span class="n">vars_to_replace</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">split_out_vars</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">child_ops</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">val</span><span class="o">.</span><span class="n">child_ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">op_type</span> <span class="o">!=</span> <span class="s2">&quot;squeeze&quot;</span><span class="p">:</span>
+                    <span class="n">should_fuse</span> <span class="o">=</span> <span class="kc">False</span>
+
+                <span class="n">squeeze_op</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">child_ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">if</span> <span class="p">[</span>
+                    <span class="n">_convert_axis_to_positive</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">rank</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">squeeze_op</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+                <span class="p">]</span> <span class="o">!=</span> <span class="p">[</span><span class="n">axis</span><span class="p">]:</span>
+                    <span class="k">return</span>
+
+                <span class="n">vars_to_replace</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">squeeze_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">ops_to_remove</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">squeeze_op</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">_input</span><span class="p">,</span> <span class="n">_var</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">vars_to_replace</span><span class="p">):</span>
+                <span class="n">new_var</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">_input</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">squeeze_op</span><span class="p">)</span>
+                <span class="n">block</span><span class="o">.</span><span class="n">replace_uses_of_var_after_op</span><span class="p">(</span>
+                    <span class="n">anchor_op</span><span class="o">=</span><span class="n">squeeze_op</span><span class="p">,</span>
+                    <span class="n">old_var</span><span class="o">=</span><span class="n">_var</span><span class="p">,</span>
+                    <span class="n">new_var</span><span class="o">=</span><span class="n">new_var</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">(</span><span class="n">ops_to_remove</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">stack_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c1"># get the params of the stack op</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">stack_op</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">rank</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">rank</span>
+        <span class="n">axis</span> <span class="o">=</span> <span class="n">_convert_axis_to_positive</span><span class="p">(</span><span class="n">stack_op</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">rank</span><span class="p">)</span>
+
+        <span class="c1"># go through the split child ops</span>
+        <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">stack_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">val</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;split&quot;</span><span class="p">:</span>
+                <span class="n">_try_fuse_a_branch</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+
+        <span class="c1"># remove the stack op if its output no longer consumed by any ops</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">stack_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">([</span><span class="n">stack_op</span><span class="p">])</span>
+
+
+    <span class="nd">@block_context_manager</span>
+    <span class="k">def</span> <span class="nf">fuse_stack_split_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fuse_stack_split_block</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">!=</span> <span class="s2">&quot;stack&quot;</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_try_to_transform</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
 </pre></div>
 
            </div>
@@ -1053,7 +1181,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

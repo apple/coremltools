@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MIL Graph Passes &mdash; coremltools API Reference 8.0b1 documentation</title>
+  <title>MIL Graph Passes &mdash; coremltools API Reference 8.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
@@ -21,7 +21,7 @@
   
         <script src="../_static/jquery.js?v=5d32c60e"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../_static/documentation_options.js?v=8cc1add8"></script>
         <script src="../_static/doctools.js?v=9a2dae69"></script>
         <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
@@ -43,7 +43,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                8.0b1
+                8.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -153,6 +153,10 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.symbol_transform">symbol_transform</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.symbol_transform.materialize_symbolic_shape_program"><code class="docutils literal notranslate"><span class="pre">materialize_symbolic_shape_program</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.transformer">transformer</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.transformer.scaled_dot_product_attention_sliced_q"><code class="docutils literal notranslate"><span class="pre">scaled_dot_product_attention_sliced_q</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -1851,6 +1855,26 @@ and <code class="docutils literal notranslate"><span class="pre">is0</span> <spa
 </dd></dl>
 
 </section>
+<section id="module-coremltools.converters.mil.mil.passes.defs.transformer">
+<span id="transformer"></span><h2>transformer<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.transformer" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.transformer.scaled_dot_product_attention_sliced_q">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.transformer.</span></span><span class="sig-name descname"><span class="pre">scaled_dot_product_attention_sliced_q</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/transformer.html#scaled_dot_product_attention_sliced_q"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.transformer.scaled_dot_product_attention_sliced_q" title="Link to this definition"></a></dt>
+<dd><p>Replace the ios18.scaled_dot_product_attention operation with a memory efficient
+implementation of attention calculation based on slicing Q. The benefits are clearly
+visible for higher Q sequence lengths, though.</p>
+<dl class="simple">
+<dt>Graph pass options:</dt><dd><ul class="simple">
+<li><p>min_seq_length: int
+Only operations working with Q of sequence length greater or equal to this value will be transformed.</p></li>
+<li><p>seq_length_divider: int
+Defines the size of the chunks of Q being processed in SDPA (chunk_size = seq_length / seq_length_divider)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 </section>
 
 
@@ -1864,7 +1888,7 @@ and <code class="docutils literal notranslate"><span class="pre">is0</span> <spa
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

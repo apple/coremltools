@@ -16,27 +16,30 @@
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
-  
-  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
-
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css?v=27a1495e" />
   
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
-  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
     <script src="../_static/documentation_options.js?v=6ab2ec1d"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
@@ -51,6 +54,7 @@
     <link rel="prev" title="Updatable Models" href="updatable-model-examples.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
   </head>
   
   
@@ -66,19 +70,8 @@
     <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
-  <input type="checkbox"
-          class="sidebar-toggle"
-          id="pst-primary-sidebar-checkbox"/>
-  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
-  
-  <input type="checkbox"
-          class="sidebar-toggle"
-          id="pst-secondary-sidebar-checkbox"/>
-  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
-  
-  <div class="search-button__wrapper">
-    <div class="search-button__overlay"></div>
-    <div class="search-button__search-container">
+  <dialog id="pst-search-dialog">
+    
 <form class="bd-search d-flex align-items-center"
       action="../search.html"
       method="get">
@@ -86,7 +79,6 @@
   <input type="search"
          class="form-control"
          name="q"
-         id="search-input"
          placeholder="Search..."
          aria-label="Search..."
          autocomplete="off"
@@ -94,8 +86,8 @@
          autocapitalize="off"
          spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form></div>
-  </div>
+</form>
+  </dialog>
 
   <div class="pst-async-banner-revealer d-none">
   <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
@@ -111,7 +103,8 @@
       
       
       
-      <div class="bd-sidebar-primary bd-sidebar">
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
   
@@ -141,15 +134,11 @@
 </a></div>
         <div class="sidebar-primary-item">
 
- <script>
- document.write(`
-   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span class="search-button__default-text">Search</span>
-    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-   </button>
- `);
- </script></div>
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
         <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">API Reference</span></p>
@@ -275,9 +264,14 @@
   
   
   <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
   </div>
-  
-  <div id="rtd-footer-container"></div>
 
 
       </div>
@@ -389,24 +383,16 @@
 
 
 
-<script>
-document.write(`
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
-  </button>
-`);
-</script>
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button>
 
 
-<script>
-document.write(`
-  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
-  </button>
-`);
-</script>
+</button>
 <button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <span class="fa-solid fa-list"></span>
 </button>
@@ -463,14 +449,14 @@ document.write(`
 <p>The updatable model has two updatable layers and uses categorical cross-entropy loss and Stochastic Gradient Descent (SGD) optimizer.</p>
 <section id="create-the-base-model">
 <h2>Create the Base Model<a class="headerlink" href="#create-the-base-model" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">create_keras_base_model</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">create_keras_base_model</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This method creates a convolutional neural network model using Keras.</span>
 <span class="sd">    url - The URL that the keras model will be saved as h5 file.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="kn">import</span><span class="w"> </span><span class="nn">keras</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">keras.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequential</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">keras.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">Dropout</span><span class="p">,</span> <span class="n">Flatten</span><span class="p">,</span> <span class="n">Conv2D</span><span class="p">,</span> <span class="n">MaxPooling2D</span>
+    <span class="kn">import</span> <span class="nn">keras</span>
+    <span class="kn">from</span> <span class="nn">keras.models</span> <span class="kn">import</span> <span class="n">Sequential</span>
+    <span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">Dropout</span><span class="p">,</span> <span class="n">Flatten</span><span class="p">,</span> <span class="n">Conv2D</span><span class="p">,</span> <span class="n">MaxPooling2D</span>
     
     <span class="n">keras</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">clear_session</span><span class="p">()</span>
     <span class="n">model</span> <span class="o">=</span> <span class="n">Sequential</span><span class="p">()</span>
@@ -498,15 +484,15 @@ document.write(`
 </section>
 <section id="convert-the-model-to-the-ml-model-format">
 <h2>Convert the Model to the ML Model Format<a class="headerlink" href="#convert-the-model-to-the-ml-model-format" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">convert_keras_to_mlmodel</span><span class="p">(</span><span class="n">keras_url</span><span class="p">,</span> <span class="n">mlmodel_url</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">convert_keras_to_mlmodel</span><span class="p">(</span><span class="n">keras_url</span><span class="p">,</span> <span class="n">mlmodel_url</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This method simply converts the keras model to a mlmodel using coremltools.</span>
 <span class="sd">    keras_url - The URL the keras model will be loaded.</span>
 <span class="sd">    mlmodel_url - the URL the Core ML model will be saved.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">keras.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_model</span>
+    <span class="kn">from</span> <span class="nn">keras.models</span> <span class="kn">import</span> <span class="n">load_model</span>
     <span class="n">keras_model</span> <span class="o">=</span> <span class="n">load_model</span><span class="p">(</span><span class="n">keras_url</span><span class="p">)</span>
     
-    <span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters</span><span class="w"> </span><span class="kn">import</span> <span class="n">keras</span> <span class="k">as</span> <span class="n">keras_converter</span>
+    <span class="kn">from</span> <span class="nn">coremltools.converters</span> <span class="kn">import</span> <span class="n">keras</span> <span class="k">as</span> <span class="n">keras_converter</span>
     <span class="n">class_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">,</span> <span class="s1">&#39;3&#39;</span><span class="p">,</span> <span class="s1">&#39;4&#39;</span><span class="p">,</span> <span class="s1">&#39;5&#39;</span><span class="p">,</span> <span class="s1">&#39;6&#39;</span><span class="p">,</span> <span class="s1">&#39;7&#39;</span><span class="p">,</span> <span class="s1">&#39;8&#39;</span><span class="p">,</span> <span class="s1">&#39;9&#39;</span><span class="p">]</span>
     <span class="n">mlmodel</span> <span class="o">=</span> <span class="n">keras_converter</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">keras_model</span><span class="p">,</span> <span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">],</span>
                                 <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;digitProbabilities&#39;</span><span class="p">],</span>
@@ -525,7 +511,7 @@ document.write(`
 <ol class="arabic">
 <li><p>Inspect the last 3 layers of the model:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># let&#39;s inspect the last few layers of this model</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span>
+<span class="kn">import</span> <span class="nn">coremltools</span>
 <span class="n">spec</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">load_spec</span><span class="p">(</span><span class="n">coreml_model_path</span><span class="p">)</span>
 <span class="n">builder</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">neural_network</span><span class="o">.</span><span class="n">NeuralNetworkBuilder</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="n">spec</span><span class="p">)</span>
 <span class="n">builder</span><span class="o">.</span><span class="n">inspect_layers</span><span class="p">(</span><span class="n">last</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
@@ -568,7 +554,7 @@ document.write(`
 <span class="n">neuralnetwork_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">imageType</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="mi">28</span>
 <span class="n">neuralnetwork_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">imageType</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="mi">28</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.proto</span><span class="w"> </span><span class="kn">import</span> <span class="n">FeatureTypes_pb2</span> <span class="k">as</span> <span class="n">_FeatureTypes_pb2</span>
+<span class="kn">from</span> <span class="nn">coremltools.proto</span> <span class="kn">import</span> <span class="n">FeatureTypes_pb2</span> <span class="k">as</span> <span class="n">_FeatureTypes_pb2</span>
 <span class="n">grayscale</span> <span class="o">=</span> <span class="n">_FeatureTypes_pb2</span><span class="o">.</span><span class="n">ImageFeatureType</span><span class="o">.</span><span class="n">ColorSpace</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s1">&#39;GRAYSCALE&#39;</span><span class="p">)</span>
 <span class="n">neuralnetwork_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">imageType</span><span class="o">.</span><span class="n">colorSpace</span> <span class="o">=</span> <span class="n">grayscale</span>
 
@@ -606,12 +592,12 @@ document.write(`
 </section>
 <section id="define-make-updatable">
 <h2>Define <code class="docutils literal notranslate"><span class="pre">make_updatable</span></code><a class="headerlink" href="#define-make-updatable" title="Link to this heading">#</a></h2>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">make_updatable</span><span class="p">(</span><span class="n">builder</span><span class="p">,</span> <span class="n">mlmodel_url</span><span class="p">,</span> <span class="n">mlmodel_updatable_path</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">make_updatable</span><span class="p">(</span><span class="n">builder</span><span class="p">,</span> <span class="n">mlmodel_url</span><span class="p">,</span> <span class="n">mlmodel_updatable_path</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This method makes an existing non-updatable mlmodel updatable.</span>
 <span class="sd">    mlmodel_url - the path the Core ML model is stored.</span>
 <span class="sd">    mlmodel_updatable_path - the path the updatable Core ML model will be saved.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span>
+    <span class="kn">import</span> <span class="nn">coremltools</span>
     <span class="n">model_spec</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">spec</span>
 
     <span class="c1"># make_updatable method is used to make a layer updatable. It requires a list of layer names.</span>
@@ -627,7 +613,7 @@ document.write(`
 
     <span class="c1"># in addition of the loss layer, an optimizer must also be defined. SGD and Adam optimizers are supported.</span>
     <span class="c1"># SGD has been used for this example. To use SGD, one must set lr(learningRate) and batch(miniBatchSize) (momentum is an optional parameter).</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.neural_network</span><span class="w"> </span><span class="kn">import</span> <span class="n">SgdParams</span>
+    <span class="kn">from</span> <span class="nn">coremltools.models.neural_network</span> <span class="kn">import</span> <span class="n">SgdParams</span>
     <span class="n">builder</span><span class="o">.</span><span class="n">set_sgd_optimizer</span><span class="p">(</span><span class="n">SgdParams</span><span class="p">(</span><span class="n">lr</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="mi">32</span><span class="p">))</span>
 
     <span class="c1"># Finally, the number of epochs must be set as follows.</span>
@@ -638,7 +624,7 @@ document.write(`
     <span class="n">model_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">trainingInput</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shortDescription</span> <span class="o">=</span> <span class="s1">&#39;Associated true label (digit) of example image&#39;</span>
 
     <span class="c1"># save the updated spec</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModel</span>
+    <span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">MLModel</span>
     <span class="n">mlmodel_updatable</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="n">model_spec</span><span class="p">)</span>
     <span class="n">mlmodel_updatable</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">mlmodel_updatable_path</span><span class="p">)</span>
 
@@ -652,7 +638,7 @@ document.write(`
 <ol class="arabic">
 <li><p>Add the input <code class="docutils literal notranslate"><span class="pre">digitProbabilities_true</span></code> as the target for the categorical cross-entropy loss layer:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># let&#39;s inspect the loss layer of the Core ML model</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span>
+<span class="kn">import</span> <span class="nn">coremltools</span>
 <span class="n">spec</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">load_spec</span><span class="p">(</span><span class="n">coreml_updatable_model_path</span><span class="p">)</span>
 <span class="n">builder</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">neural_network</span><span class="o">.</span><span class="n">NeuralNetworkBuilder</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="n">spec</span><span class="p">)</span>
 
@@ -731,7 +717,8 @@ Name: dense_1 (Type: innerProduct)
             
             
               
-                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
   <div class="sidebar-secondary-item">
@@ -793,8 +780,8 @@ By Apple
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
 
   <footer class="bd-footer">
   </footer>

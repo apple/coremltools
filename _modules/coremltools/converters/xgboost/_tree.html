@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.xgboost._tree &mdash; coremltools API Reference 8.0b1 documentation</title>
+  <title>coremltools.converters.xgboost._tree &mdash; coremltools API Reference 8.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=fd3f3429" />
@@ -20,7 +20,7 @@
   
         <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../_static/documentation_options.js?v=8cc1add8"></script>
         <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
@@ -40,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                8.0b1
+                8.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
@@ -98,10 +98,9 @@
 <span class="c1"># Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
+<span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
 <span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">__version__</span> <span class="k">as</span> <span class="n">ct_version</span>
-<span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">_METADATA_SOURCE</span><span class="p">,</span> <span class="n">_METADATA_VERSION</span>
 
-<span class="kn">from</span> <span class="nn">...models</span> <span class="kn">import</span> <span class="n">MLModel</span> <span class="k">as</span> <span class="n">_MLModel</span>
 <span class="kn">from</span> <span class="nn">._tree_ensemble</span> <span class="kn">import</span> <span class="n">convert_tree_ensemble</span> <span class="k">as</span> <span class="n">_convert_tree_ensemble</span>
 
 
@@ -168,7 +167,7 @@
 <span class="sd">		# Saving the Core ML model to a file.</span>
 <span class="sd">		&gt;&gt;&gt; coreml_model.save(&#39;my_model.mlmodel&#39;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">_MLModel</span><span class="p">(</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span>
         <span class="n">_convert_tree_ensemble</span><span class="p">(</span>
             <span class="n">model</span><span class="p">,</span>
             <span class="n">feature_names</span><span class="p">,</span>
@@ -182,10 +181,8 @@
 
     <span class="kn">from</span> <span class="nn">xgboost</span> <span class="kn">import</span> <span class="n">__version__</span> <span class="k">as</span> <span class="n">xgboost_version</span>
 
-    <span class="n">model</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="n">_METADATA_VERSION</span><span class="p">]</span> <span class="o">=</span> <span class="n">ct_version</span>
-    <span class="n">model</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="n">_METADATA_SOURCE</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;xgboost==</span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-        <span class="n">xgboost_version</span>
-    <span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_METADATA_VERSION</span><span class="p">]</span> <span class="o">=</span> <span class="n">ct_version</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_METADATA_SOURCE</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;xgboost==</span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xgboost_version</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">model</span></div>
 
@@ -198,7 +195,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

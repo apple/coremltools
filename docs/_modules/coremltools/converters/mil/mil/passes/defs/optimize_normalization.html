@@ -1,13 +1,11 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.passes.defs.optimize_normalization &mdash; coremltools API Reference 8.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/theme.css?v=e59714d7" />
+  <title>coremltools.converters.mil.mil.passes.defs.optimize_normalization &mdash; coremltools API Reference 8.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -16,11 +14,15 @@
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-      <script src="../../../../../../../_static/jquery.js?v=5d32c60e"></script>
-      <script src="../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
-      <script src="../../../../../../../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+  <!--[if lt IE 9]>
+    <script src="../../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../../_static/documentation_options.js?v=8cc1add8"></script>
+        <script src="../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../../../search.html" /> 
@@ -37,6 +39,9 @@
           <a href="../../../../../../../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
+              <div class="version">
+                8.3
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -93,26 +98,26 @@
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">_logger</span> <span class="k">as</span> <span class="n">logger</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">Block</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">mb</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">Program</span><span class="p">,</span> <span class="n">Var</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractGraphPass</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.helper</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_logger</span> <span class="k">as</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Block</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">mb</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">Program</span><span class="p">,</span> <span class="n">Var</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span> <span class="kn">import</span> <span class="n">AbstractGraphPass</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.helper</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_check_no_output_connection</span><span class="p">,</span>
     <span class="n">block_context_manager</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.pass_registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_pass</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.pass_registry</span> <span class="kn">import</span> <span class="n">register_pass</span>
 
 
 <div class="viewcode-block" id="fuse_layernorm_or_instancenorm">
 <a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_normalization.fuse_layernorm_or_instancenorm">[docs]</a>
 <span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">fuse_layernorm_or_instancenorm</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">fuse_layernorm_or_instancenorm</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A graph optimization pass on PyMIL to detect and fuse several variants of ``layer_norm`` or</span>
 <span class="sd">    ``instance_norm``. Pattern 1 corresponds to either ``layer_norm`` or ``instance_norm``. Patterns 2-4</span>
@@ -124,12 +129,12 @@
 
     <span class="n">_DEBUG</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># set to true to plot the block before and after the transformation</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">:</span> <span class="n">Program</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">:</span> <span class="n">Program</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="n">block_changed</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">while</span> <span class="n">block_changed</span><span class="p">:</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DEBUG</span><span class="p">:</span>
-                    <span class="kn">import</span><span class="w"> </span><span class="nn">graphviz</span>
+                    <span class="kn">import</span> <span class="nn">graphviz</span>
 
                     <span class="n">graphviz</span><span class="o">.</span><span class="n">Source</span><span class="p">(</span>
                         <span class="n">f</span><span class="o">.</span><span class="n">get_dot_string</span><span class="p">(</span>
@@ -150,7 +155,7 @@
                 <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Block after fuse_layernorm_or_instancenorm transform:</span><span class="se">\n</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_check_reduce_op</span><span class="p">(</span><span class="n">reduce_op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;reduce_mean&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_check_reduce_op</span><span class="p">(</span><span class="n">reduce_op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;reduce_mean&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">		Check whether or not the ``reduction`` op satisfies following conditions:</span>
 
@@ -179,7 +184,7 @@
         <span class="k">return</span> <span class="kc">True</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_check_child_op_types</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_check_child_op_types</span><span class="p">(</span>
         <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">child_op_types</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">check_order</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -206,7 +211,7 @@
         <span class="k">return</span> <span class="n">ops_types</span> <span class="o">==</span> <span class="n">child_op_types</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_try_get_child_op_type</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_try_get_child_op_type</span><span class="p">(</span>
         <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">child_op_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Operation</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -233,7 +238,7 @@
         <span class="k">return</span> <span class="n">child_ops</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_try_apply_transform</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_try_apply_transform</span><span class="p">(</span>
         <span class="n">reduce_op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span>
         <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">,</span>
         <span class="n">gamma_var</span><span class="p">:</span> <span class="n">Var</span><span class="p">,</span>
@@ -347,7 +352,7 @@
         <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">(</span><span class="n">ops_to_remove</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_try_match_and_transform_pattern_1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reduce_op</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_try_match_and_transform_pattern_1</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reduce_op</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Identify the pattern:</span>
 
@@ -498,7 +503,7 @@
             <span class="n">reduce_op</span><span class="p">,</span> <span class="n">block</span><span class="p">,</span> <span class="n">gamma_var</span><span class="p">,</span> <span class="n">beta_var</span><span class="p">,</span> <span class="n">epsilon_var</span><span class="p">,</span> <span class="n">add_op2</span><span class="p">,</span> <span class="n">ops_to_remove</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_try_match_and_transform_pattern_2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reduce_op</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_try_match_and_transform_pattern_2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reduce_op</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Identify the pattern:</span>
 
@@ -621,7 +626,7 @@
             <span class="n">reduce_op</span><span class="p">,</span> <span class="n">block</span><span class="p">,</span> <span class="n">gamma_var</span><span class="p">,</span> <span class="n">beta_var</span><span class="p">,</span> <span class="n">epsilon_var</span><span class="p">,</span> <span class="n">add_beta_op</span><span class="p">,</span> <span class="n">ops_to_remove</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_try_match_and_transform_pattern_3</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reduce_op</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_try_match_and_transform_pattern_3</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reduce_op</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Detect ``InstanceNorm`` pattern in TensorFlow-Addons.</span>
 
@@ -761,7 +766,7 @@
             <span class="n">reduce_op</span><span class="p">,</span> <span class="n">block</span><span class="p">,</span> <span class="n">gamma_var</span><span class="p">,</span> <span class="n">beta_var</span><span class="p">,</span> <span class="n">epsilon_var</span><span class="p">,</span> <span class="n">add_op</span><span class="p">,</span> <span class="n">ops_to_remove</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_try_match_and_transform_pattern_4</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reduce_op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_try_match_and_transform_pattern_4</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reduce_op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Identify the pattern:</span>
 
@@ -944,7 +949,7 @@
             <span class="n">reduce_op</span><span class="p">,</span> <span class="n">block</span><span class="p">,</span> <span class="n">gamma_var</span><span class="p">,</span> <span class="n">beta_var</span><span class="p">,</span> <span class="n">epsilon_var</span><span class="p">,</span> <span class="n">add_op</span><span class="p">,</span> <span class="n">ops_to_remove</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_try_match_and_transform_pattern_5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reduce_op</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_try_match_and_transform_pattern_5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reduce_op</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Detect BC1S ``LayerNorm`` pattern as in ml-ane-transformers.</span>
 
@@ -1139,7 +1144,7 @@
         <span class="p">)</span>
 
     <span class="nd">@block_context_manager</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_fuse_layernorm_or_instancenorm_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_fuse_layernorm_or_instancenorm_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">):</span>
         <span class="n">fusion_occurred</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1176,7 +1181,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

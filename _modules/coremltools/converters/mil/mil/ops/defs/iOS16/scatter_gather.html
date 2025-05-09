@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.ops.defs.iOS16.scatter_gather &mdash; coremltools API Reference 8.0b1 documentation</title>
+  <title>coremltools.converters.mil.mil.ops.defs.iOS16.scatter_gather &mdash; coremltools API Reference 8.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css?v=fd3f3429" />
@@ -20,7 +20,7 @@
   
         <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../../../../_static/documentation_options.js?v=8cc1add8"></script>
         <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../../../_static/js/theme.js"></script>
@@ -40,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                8.0b1
+                8.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
@@ -123,8 +123,8 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    x: tensor&lt;\*D, T&gt; (Required)</span>
-<span class="sd">    indices: tensor&lt;\*N, I&gt; (Required)</span>
+<span class="sd">    x: tensor&lt;\\*D, T&gt; (Required)</span>
+<span class="sd">    indices: tensor&lt;\\*N, I&gt; (Required)</span>
 <span class="sd">        * Indices values may be negative. More precisely, ``-D[axis]&lt;= v &lt; D[axis]`` for ``v`` in ``indices``.</span>
 <span class="sd">    axis: const i32 (Optional. Default=``0``)</span>
 <span class="sd">        * Negative axis is supported.</span>
@@ -133,7 +133,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*K, T&gt;</span>
+<span class="sd">    tensor&lt;\\*K, T&gt;</span>
 <span class="sd">        * Where ``K = D[:axis] + N[batch_dims:] + D[axis+1:]``.</span>
 
 <span class="sd">    Attributes</span>
@@ -224,14 +224,14 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    x: tensor&lt;\*D, T&gt; (Required)</span>
-<span class="sd">    indices: tensor&lt;\*K, I&gt; (Required)</span>
+<span class="sd">    x: tensor&lt;\\*D, T&gt; (Required)</span>
+<span class="sd">    indices: tensor&lt;\\*K, I&gt; (Required)</span>
 <span class="sd">    axis: const i32 (Optional):</span>
 <span class="sd">        * Default to ``0``.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*D, T&gt;:</span>
+<span class="sd">    tensor&lt;\\*D, T&gt;:</span>
 <span class="sd">        * Output tensor has the same shape as ``indices``.</span>
 
 <span class="sd">    Attributes</span>
@@ -266,14 +266,14 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    x: tensor&lt;\*D, T&gt; (Required)</span>
-<span class="sd">    indices: tensor&lt;\*K, I&gt; (Required)</span>
+<span class="sd">    x: tensor&lt;\\*D, T&gt; (Required)</span>
+<span class="sd">    indices: tensor&lt;\\*K, I&gt; (Required)</span>
 <span class="sd">    batch_dims: const i32 (Optional. Default=``0``)</span>
 <span class="sd">        * The number of batch dimensions.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*V, T&gt;</span>
+<span class="sd">    tensor&lt;\\*V, T&gt;</span>
 <span class="sd">        * ``V = K[:-1] + D[batch_dims + K[-1]:]``, where ``D = x.shape`` and ``K = indices.shape``.</span>
 
 <span class="sd">    Attributes</span>
@@ -323,7 +323,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

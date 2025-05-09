@@ -1,13 +1,11 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../../../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing &mdash; coremltools API Reference 8.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=e59714d7" />
+  <title>coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing &mdash; coremltools API Reference 8.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -16,11 +14,15 @@
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-      <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
-      <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
-      <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
-      <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+  <!--[if lt IE 9]>
+    <script src="../../../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../../../_static/documentation_options.js?v=8cc1add8"></script>
+        <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../../../../search.html" /> 
@@ -37,6 +39,9 @@
           <a href="../../../../../../../../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
+              <div class="version">
+                8.3
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -93,22 +98,22 @@
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">get_new_symbol</span><span class="p">,</span> <span class="n">types</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.input_type</span><span class="w"> </span><span class="kn">import</span> <span class="n">DefaultInputs</span><span class="p">,</span> <span class="n">InputSpec</span><span class="p">,</span> <span class="n">TensorInputType</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_op</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">get_new_symbol</span><span class="p">,</span> <span class="n">types</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="n">DefaultInputs</span><span class="p">,</span> <span class="n">InputSpec</span><span class="p">,</span> <span class="n">TensorInputType</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">crop_resize</span> <span class="k">as</span> <span class="n">_crop_resize_iOS16</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing</span><span class="w"> </span><span class="kn">import</span> <span class="n">resample</span> <span class="k">as</span> <span class="n">_resample_iOS16</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.ops.defs.iOS17</span><span class="w"> </span><span class="kn">import</span> <span class="n">_IOS17_TARGET</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing</span> <span class="kn">import</span> <span class="n">resample</span> <span class="k">as</span> <span class="n">_resample_iOS16</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs.iOS17</span> <span class="kn">import</span> <span class="n">_IOS17_TARGET</span>
 
 
 <div class="viewcode-block" id="crop_resize">
 <a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing.crop_resize">[docs]</a>
 <span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS17_TARGET</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">crop_resize</span><span class="p">(</span><span class="n">_crop_resize_iOS16</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">crop_resize</span><span class="p">(</span><span class="n">_crop_resize_iOS16</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The major differences between this version and the iOS 16 :py:class:`~.iOS16.image_resizing.crop_resize`</span>
 <span class="sd">    are as follows:</span>
@@ -210,7 +215,7 @@
         <span class="s2">&quot;BOX_INDEX_T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">uint16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
     <span class="p">}</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_indices</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">boxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
             <span class="c1"># The default box indices is [0, 1, ..., N-1], which is out-of-range for N&gt;B.</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -231,7 +236,7 @@
             <span class="n">pad_value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_validate_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s1">&#39;input to the &quot;crop_resize&quot; op must be of rank 4, but got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span><span class="si">}</span><span class="s1">&#39;</span>
@@ -266,7 +271,7 @@
                     <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">types</span><span class="o">.</span><span class="n">builtin_to_string</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sampling_mode</span><span class="o">.</span><span class="n">val</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_input</span><span class="p">()</span>
         <span class="c1"># Output shape is [N, C, h_out, w_out].</span>
         <span class="n">ret_shape</span> <span class="o">=</span> <span class="p">[</span>
@@ -282,7 +287,7 @@
 <div class="viewcode-block" id="resample">
 <a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing.resample">[docs]</a>
 <span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS17_TARGET</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">resample</span><span class="p">(</span><span class="n">_resample_iOS16</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">resample</span><span class="p">(</span><span class="n">_resample_iOS16</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Resample the input image tensor ``x`` at the ``coordinates``.</span>
 
@@ -318,7 +323,7 @@
 <div class="viewcode-block" id="resize">
 <a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing.resize">[docs]</a>
 <span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS17_TARGET</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">resize</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">resize</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Resizes the input tensor ``x`` by choosing the right-most ``resized_dims`` dimensions from</span>
 <span class="sd">    the input shape ``shape``, and by choosing the rest from ``x`` &#39;s shape.</span>
@@ -396,13 +401,13 @@
         <span class="s2">&quot;UNALIGN_CORNERS&quot;</span><span class="p">,</span>
     <span class="p">}</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">DefaultInputs</span><span class="p">(</span>
             <span class="n">interpolation_mode</span><span class="o">=</span><span class="s2">&quot;LINEAR&quot;</span><span class="p">,</span>
             <span class="n">sampling_mode</span><span class="o">=</span><span class="s2">&quot;DEFAULT&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_validate_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">shape_element_num</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">size</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">resized_dims</span><span class="o">.</span><span class="n">val</span> <span class="o">&gt;</span> <span class="n">shape_element_num</span><span class="p">:</span>
@@ -424,7 +429,7 @@
                 <span class="sa">f</span><span class="s2">&quot;Invalid sampling_mode </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sampling_mode</span><span class="o">.</span><span class="n">val</span><span class="si">}</span><span class="s2">. Supported modes are: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_VALID_SAMPLING_MODE</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_input</span><span class="p">()</span>
 
         <span class="c1"># The output tensor will have the same rank as the input tensor. The rightmost resized_dims</span>
@@ -452,7 +457,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

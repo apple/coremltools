@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.models._compiled_model &mdash; coremltools API Reference 8.0b1 documentation</title>
+  <title>coremltools.models._compiled_model &mdash; coremltools API Reference 8.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
@@ -20,7 +20,7 @@
   
         <script src="../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../_static/documentation_options.js?v=8cc1add8"></script>
         <script src="../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
@@ -40,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                8.0b1
+                8.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -100,14 +100,14 @@
 
 <span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">expanduser</span> <span class="k">as</span> <span class="n">_expanduser</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Type</span> <span class="k">as</span> <span class="n">_Type</span>
 
 <span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
 <span class="kn">from</span> <span class="nn">coremltools.models.model</span> <span class="kn">import</span> <span class="n">MLState</span> <span class="k">as</span> <span class="n">_MLState</span>
 
-<span class="kn">from</span> <span class="nn">.model</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">_verify_optimization_hint_input</span><span class="p">,</span>
-    <span class="n">MLModel</span> <span class="k">as</span> <span class="n">_MLModel</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.model</span> <span class="kn">import</span> <span class="n">MLModel</span> <span class="k">as</span> <span class="n">_MLModel</span>
+<span class="kn">from</span> <span class="nn">.model</span> <span class="kn">import</span> <span class="n">MLModelAsset</span> <span class="k">as</span> <span class="n">_MLModelAsset</span>
+<span class="kn">from</span> <span class="nn">.model</span> <span class="kn">import</span> <span class="n">_verify_optimization_hint_input</span>
 <span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">_macos_version</span>
 
 <span class="k">try</span><span class="p">:</span>
@@ -126,6 +126,7 @@
         <span class="n">compute_units</span><span class="p">:</span> <span class="n">_ComputeUnit</span><span class="p">,</span>
         <span class="n">function_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">optimization_hints</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">asset</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_MLModelAsset</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="k">if</span> <span class="n">_macos_version</span><span class="p">()</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">13</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Loading compiled Core ML models is only support on macOS 10.13 or higher.&quot;</span><span class="p">)</span>
@@ -135,13 +136,17 @@
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;The &quot;path&quot; parameter must be of type &quot;str&quot;.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">asset</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">asset</span><span class="p">,</span> <span class="n">_MLModelAsset</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;The &quot;asset&quot; parameter must be of type &quot;MLModelAsset&quot;.&#39;</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">compute_units</span><span class="p">,</span> <span class="n">_ComputeUnit</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;The &quot;compute_units&quot; parameter must be of type: &quot;coremltools.ComputeUnit&quot;.&#39;</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">function_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;The &quot;function_name&quot; parameter must be of type &quot;str&quot;.&#39;</span><span class="p">)</span>
 
         <span class="n">_verify_optimization_hint_input</span><span class="p">(</span><span class="n">optimization_hints</span><span class="p">)</span>
-
 
 <div class="viewcode-block" id="CompiledMLModel.__init__">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.CompiledMLModel.__init__">[docs]</a>
@@ -151,6 +156,7 @@
         <span class="n">compute_units</span><span class="p">:</span> <span class="n">_ComputeUnit</span> <span class="o">=</span> <span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">ALL</span><span class="p">,</span>
         <span class="n">function_name</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">optimization_hints</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">asset</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_MLModelAsset</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Loads a compiled Core ML model.</span>
@@ -171,8 +177,15 @@
 <span class="sd">                  not the GPU. Available only for macOS &gt;= 13.0.</span>
 
 <span class="sd">        optimization_hints : dict or None</span>
-<span class="sd">            Keys are the names of the optimization hint, either &#39;reshapeFrequency&#39; or &#39;specializationStrategy&#39;.</span>
-<span class="sd">            Values are enumeration values of type ``coremltools.ReshapeFrequency`` or ``coremltools.SpecializationStrategy``.</span>
+<span class="sd">            Keys are the names of the optimization hint: &#39;allowLowPrecisionAccumulationOnGPU&#39;, &#39;reshapeFrequency&#39;</span>
+<span class="sd">                or &#39;specializationStrategy&#39;.</span>
+
+<span class="sd">            - &#39;allowLowPrecisionAccumulationOnGPU&#39; value must have ``bool`` type.</span>
+<span class="sd">            - &#39;reshapeFrequency&#39; value must have ``coremltools.ReshapeFrequency`` type.</span>
+<span class="sd">            - &#39;specializationStrategy&#39; must have``coremltools.SpecializationStrategy`` type.</span>
+
+<span class="sd">        asset : MLModelAsset or None</span>
+<span class="sd">            The model asset.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -188,23 +201,94 @@
         <span class="k">if</span> <span class="n">function_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">function_name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_init_check</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">compute_units</span><span class="p">,</span> <span class="n">function_name</span><span class="p">,</span> <span class="n">optimization_hints</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_check</span><span class="p">(</span>
+            <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+            <span class="n">asset</span><span class="o">=</span><span class="n">asset</span><span class="p">,</span>
+            <span class="n">compute_units</span><span class="o">=</span><span class="n">compute_units</span><span class="p">,</span>
+            <span class="n">function_name</span><span class="o">=</span><span class="n">function_name</span><span class="p">,</span>
+            <span class="n">optimization_hints</span><span class="o">=</span><span class="n">optimization_hints</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">path_or_asset</span> <span class="o">=</span> <span class="n">_expanduser</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">asset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">path_or_asset</span> <span class="o">=</span> <span class="n">asset</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">compute_unit</span> <span class="o">=</span> <span class="n">compute_units</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">function_name</span> <span class="o">=</span> <span class="n">function_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path_or_asset</span> <span class="o">=</span> <span class="n">path_or_asset</span>
         <span class="k">if</span> <span class="n">optimization_hints</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">optimization_hints</span> <span class="o">=</span> <span class="n">optimization_hints</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">optimization_hints</span> <span class="o">=</span> <span class="kc">None</span>
 
-        <span class="n">path</span> <span class="o">=</span> <span class="n">_expanduser</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">asset_proxy</span> <span class="o">=</span> <span class="n">asset</span><span class="o">.</span><span class="n">__proxy__</span> <span class="k">if</span> <span class="n">asset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
 
+        <span class="n">optimization_hints_str_vals</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimization_hints</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">optimization_hints_str_vals</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimization_hints</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">optimization_hints_str_vals</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">optimization_hints</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+                    <span class="n">optimization_hints_str_vals</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">optimization_hints_str_vals</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">name</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_proxy</span> <span class="o">=</span> <span class="n">_MLModelProxy</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">compute_units</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">function_name</span><span class="p">,</span> <span class="n">optimization_hints_str_vals</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_proxy</span> <span class="o">=</span> <span class="n">_MLModelProxy</span><span class="p">(</span>
+            <span class="n">path</span><span class="p">,</span> <span class="n">compute_units</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">function_name</span><span class="p">,</span> <span class="n">optimization_hints_str_vals</span><span class="p">,</span> <span class="n">asset_proxy</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CompiledMLModel.from_asset">
+<a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.CompiledMLModel.from_asset">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_asset</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">asset</span><span class="p">:</span> <span class="n">_MLModelAsset</span><span class="p">,</span>
+        <span class="n">compute_units</span><span class="p">:</span> <span class="n">_ComputeUnit</span> <span class="o">=</span> <span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">ALL</span><span class="p">,</span>
+        <span class="n">function_name</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">optimization_hints</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Type</span><span class="p">[</span><span class="s2">&quot;CompiledMLModel&quot;</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a CompiledModel instance from an asset.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        asset: MLModelAsset</span>
+<span class="sd">            The model asset to create the compiled model from.</span>
+
+<span class="sd">        compute_units : coremltools.ComputeUnit</span>
+<span class="sd">            An enum with the following possible values:</span>
+<span class="sd">                - ``coremltools.ComputeUnit.ALL``: Use all compute units available, including the</span>
+<span class="sd">                  neural engine.</span>
+<span class="sd">                - ``coremltools.ComputeUnit.CPU_ONLY``: Limit the model to only use the CPU.</span>
+<span class="sd">                - ``coremltools.ComputeUnit.CPU_AND_GPU``: Use both the CPU and GPU, but not the</span>
+<span class="sd">                  neural engine.</span>
+<span class="sd">                - ``coremltools.ComputeUnit.CPU_AND_NE``: Use both the CPU and neural engine, but</span>
+<span class="sd">                  not the GPU. Available only for macOS &gt;= 13.0.</span>
+
+<span class="sd">        optimization_hints : dict or None</span>
+<span class="sd">            Keys are the names of the optimization hint, either &#39;reshapeFrequency&#39; or &#39;specializationStrategy&#39;.</span>
+<span class="sd">            Values are enumeration values of type ``coremltools.ReshapeFrequency`` or ``coremltools.SpecializationStrategy``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        CompiledMLModel</span>
+<span class="sd">            An instance of ``CompiledMLModel`` loaded from the provided asset.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        .. sourcecode:: python</span>
+
+<span class="sd">            my_model_asset = MLModelAsset.from_memory(spec_data)</span>
+<span class="sd">            my_compiled_model = CompiledMLModel.from_asset(my_model_asset)</span>
+<span class="sd">            y = my_compiled_model.predict({&quot;x&quot;: 3})</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">asset</span><span class="o">=</span><span class="n">asset</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="n">compute_units</span><span class="o">=</span><span class="n">compute_units</span><span class="p">,</span>
+            <span class="n">function_name</span><span class="o">=</span><span class="n">function_name</span><span class="p">,</span>
+            <span class="n">optimization_hints</span><span class="o">=</span><span class="n">optimization_hints</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 
 
@@ -282,7 +366,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

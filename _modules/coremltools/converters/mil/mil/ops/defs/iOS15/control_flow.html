@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.ops.defs.iOS15.control_flow &mdash; coremltools API Reference 8.0b1 documentation</title>
+  <title>coremltools.converters.mil.mil.ops.defs.iOS15.control_flow &mdash; coremltools API Reference 8.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css?v=fd3f3429" />
@@ -20,7 +20,7 @@
   
         <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../../../../_static/documentation_options.js?v=8cc1add8"></script>
         <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../../../_static/js/theme.js"></script>
@@ -40,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                8.0b1
+                8.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
@@ -243,7 +243,7 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    val: const&lt;\*,T&gt; (Required)</span>
+<span class="sd">    val: const&lt;\\*,T&gt; (Required)</span>
 
 <span class="sd">    mode: immediate_value, file_value (Optional)</span>
 <span class="sd">        * Determines how the constant value is stored in the internal MIL format.</span>
@@ -252,7 +252,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    const&lt;\*,T&gt;</span>
+<span class="sd">    const&lt;\\*,T&gt;</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
@@ -322,7 +322,7 @@
         <span class="k">return</span> <span class="n">builtin_type</span><span class="p">,</span> <span class="n">value</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">weight_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">weight_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Weight id for the const. It is used for weight sharing across multiple functions.</span>
 <span class="sd">        Constants sharing the same weight_id will use the same blob file value when</span>
@@ -331,11 +331,11 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weight_id</span>
 
     <span class="nd">@weight_id</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">weight_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">weight_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set weight id for the const.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">int</span><span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;weight_id must be type of int. Got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;weight_id must be type of str. Got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weight_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;cannot set </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> weight_id twice.&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_weight_id</span> <span class="o">=</span> <span class="n">val</span></div>
 
@@ -375,20 +375,20 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    cond: tensor&lt;[\*D1], B&gt; (Required)</span>
+<span class="sd">    cond: tensor&lt;[\\*D1], B&gt; (Required)</span>
 <span class="sd">        * Tensor. When ``True``, select element from ``x``, otherwise, ``y``.</span>
 
-<span class="sd">    a: tensor&lt;[\*D2], T&gt; (Optional)</span>
+<span class="sd">    a: tensor&lt;[\\*D2], T&gt; (Optional)</span>
 <span class="sd">        * Values selected at indices where ``cond`` is ``True``.</span>
 <span class="sd">        * Default is ``None``.</span>
 
-<span class="sd">    b: tensor&lt;[\*D3], T&gt; (Optional)</span>
+<span class="sd">    b: tensor&lt;[\\*D3], T&gt; (Optional)</span>
 <span class="sd">        * Values selected at indices where ``cond`` is ``False``.</span>
 <span class="sd">        * Default is ``None``.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*D_out], T&gt; or tensor&lt;[n, len(D1)], int32&gt;</span>
+<span class="sd">    tensor&lt;[\\*D_out], T&gt; or tensor&lt;[n, len(D1)], int32&gt;</span>
 <span class="sd">        *  If ``a, b`` are both provided, the return shape is based on broadcast rules</span>
 <span class="sd">           from ``cond, a, b``.</span>
 <span class="sd">        *  If ``a, b`` are ``None``, the return shape is 2-D, where the first dimension</span>
@@ -841,14 +841,14 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ls: List[\*] (Required)</span>
+<span class="sd">    ls: List[\\*] (Required)</span>
 
 <span class="sd">    index: &lt;i32&gt; (Required)</span>
 <span class="sd">        * Size of the list.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    &lt;\*,T&gt;</span>
+<span class="sd">    &lt;\\*,T&gt;</span>
 <span class="sd">        * The element&#39;s value.</span>
 
 <span class="sd">    Attributes</span>
@@ -882,14 +882,14 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    ls: List[\*] (Required)</span>
+<span class="sd">    ls: List[\\*] (Required)</span>
 
-<span class="sd">    indices: &lt;K,i32&gt; (Required)</span>
+<span class="sd">    indices: &lt;K, i32&gt; (Required)</span>
 <span class="sd">        * Gather from indices, whose element must be in ``[0, ls.length)`` at runtime.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    &lt;\*K,T&gt;</span>
+<span class="sd">    &lt;\\*K, T&gt;</span>
 <span class="sd">        * Selected tensors packed into a ``len(ls.elem_shape)+1`` rank tensor.</span>
 <span class="sd">        * ``K[0] == len(indices)``.</span>
 
@@ -991,7 +991,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Apple Inc.</p>
+    <p>&#169; Copyright 2025, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
