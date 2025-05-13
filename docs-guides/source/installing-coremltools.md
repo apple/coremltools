@@ -126,8 +126,6 @@ pip install coremltools-4.0-cp38-none-macosx_10_12_intel.whl
 
 ## Build From Source
 
-To build Core ML Tools and its dependent libraries from source, you need to install [CMake](https://cmake.org/) to configure the project.
-
 To perform the build, fork and clone the [`coremltools` repository](https://github.com/apple/coremltools) and run the [`build.sh`](https://github.com/apple/coremltools/blob/master/scripts/build.sh) script:
 
 ```shell
