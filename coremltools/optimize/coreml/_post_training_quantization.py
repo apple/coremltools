@@ -578,9 +578,9 @@ def linear_quantize_activations(
 
         # (Optional) It's recommended to use with linear_quantize_weights.
         weight_config = cto.coreml.OptimizationConfig(
-            global_config=cto.OpLinearQuantizerConfig(mode="linear_symmetric")
+            global_config=cto.coreml.OpLinearQuantizerConfig(mode="linear_symmetric")
         )
-        compressed_model_w8a8 = cto.linear_quantize_weights(compressed_model_a8, weight_config)
+        compressed_model_w8a8 = cto.coreml.linear_quantize_weights(compressed_model_a8, weight_config)
     """
     # Validate Sample data. If the sample data name is not provided, try to infer it.
     for sample in sample_data:
