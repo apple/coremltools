@@ -109,9 +109,10 @@ _LUT_BASED_QUANTIZATION = [
     _QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE,
 ]
 
-_METADATA_VERSION = "com.github.apple.coremltools.version"
+_METADATA_CONVERSION_DATE = "com.github.apple.coremltools.conversion_date"
 _METADATA_SOURCE = "com.github.apple.coremltools.source"
 _METADATA_SOURCE_DIALECT = "com.github.apple.coremltools.source_dialect"
+_METADATA_VERSION = "com.github.apple.coremltools.version"
 
 from .compute_device import MLComputeDevice as _MLComputeDevice
 

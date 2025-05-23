@@ -3,6 +3,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from datetime import date
 import itertools
 import os
 import platform
@@ -45,7 +46,7 @@ from coremltools.converters.mil.testing_utils import (
     get_op_types_in_program,
     verify_prediction,
 )
-from coremltools.models import _METADATA_SOURCE_DIALECT
+from coremltools.models import _METADATA_CONVERSION_DATE, _METADATA_SOURCE_DIALECT
 from coremltools.test.api.test_api_examples import TestInputs as _TestInputs
 
 if _HAS_TORCH:
@@ -140,6 +141,24 @@ class TestTorchScriptValidation:
         assert _METADATA_SOURCE_DIALECT in mlmodel.user_defined_metadata
 
         assert mlmodel.user_defined_metadata[_METADATA_SOURCE_DIALECT] == "TorchScript"
+
+    @staticmethod
+    def test_conversion_date_metadata(torch_model):
+        shape = (1, 10)
+        traced_torch_model = torch.jit.trace(torch_model, torch.rand(*shape))
+
+        mlmodel = ct.convert(
+            traced_torch_model,
+            source="pytorch",
+            inputs=[
+                ct.TensorType(
+                    shape=shape,
+                )
+            ],
+        )
+
+        current_date = str(date.today())
+        assert mlmodel.user_defined_metadata[_METADATA_CONVERSION_DATE] == current_date
 
 
 @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
