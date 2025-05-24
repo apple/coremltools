@@ -42,6 +42,7 @@ from .utils import (
     NUMPY_DTYPE_TO_TORCH_NUM,
     TORCH_DTYPE_TO_NUM,
     TORCH_EXPORT_BASED_FRONTENDS,
+    MIL_DTYPE_TO_TORCH_DTYPE,
     TorchFrontend,
     dtype_to_32bit,
 )
@@ -8155,7 +8156,7 @@ def im2col(context, node):
     PyTorch currently only supports rank=4 input: torch.nn.functional.unfold redispatches to at::im2col,
     which is why coremltools needs im2col to convert torch.nn.functional.unfold.
 
-    We currently only support rank=4 input (consistent with PyTorch) and dilation set to 1,
+    We currently only support rank=4 input (consistent with PyTorch),
     by gathering image entries into columns. More flexbible dilation support will be added in the future.
 
     Reference https://pytorch.org/docs/stable/generated/torch.nn.Unfold.html
@@ -8170,74 +8171,53 @@ def im2col(context, node):
         padding = inputs[3]
         stride = inputs[4]
 
-        return x, kernel_size, dilation, padding, stride
-
-    def _translate_torch_args(
-        x: Var, kernel_size: Var, dilation: Var, padding: Var, stride: Var
-    ) -> Tuple[Var, np.ndarray, np.ndarray, np.ndarray]:
-        if isinstance(kernel_size, Var):
-            kernel_size = kernel_size.val
-        if isinstance(dilation, Var):
-            dilation = dilation.val
-        if isinstance(padding, Var):
-            padding = padding.val
-        if isinstance(stride, Var):
-            stride = stride.val
-
         if x.rank != 4:
             raise ValueError("Only supports rank=4 input data for im2col (unfold).")
-        if not (dilation[0] == 1 and dilation[1] == 1):
-            raise ValueError("Only supports dilation=1 for im2col (unfold).")
-
-        # for simplicity, we explicitly pad; TODO: implicit padding would be more efficient
-        # torch.unfold padding has different semantics from Core ML
-        # * for torch.unfold
-        #   x.shape[i + x.rank - len(padding)] = padding[i] + x.shape[i + x.rank - len(padding)] + padding[i]
-        #   taking x.rank = 4 and len(padding) = 2 as an example:
-        #       x.shape[0 + 4 - 2] = padding[0] + x.shape[0 + 4 - 2] + padding[0]
-        #       x.shape[1 + 4 - 2] = padding[1] + x.shape[1 + 4 - 2] + padding[1]
-        #   i.e.
-        #   * the leading x.rank - len(padding) dims are not padded
-        #   * the last len(padding) dims are padded, same for both left and right
-        # * for mb.pad(x=x, pad=pad, mode="constant")
-        #   x.shape[i] = pad[2 * i] + x.shape[i] + pad[2 * i + 1]
-        #   i.e. start from the first dimension, pad left and right
-        missing_dims = x.rank - len(padding)
-        pad = [0, 0] * missing_dims + np.array(padding).repeat(2).tolist()
-        x = mb.pad(x=x, pad=pad, mode="constant")
-
-        return x, kernel_size, dilation, stride
+        return x, kernel_size, dilation, padding, stride
 
     x, kernel_size, dilation, padding, stride = _parse_positional_args(context, node)
-    x, kernel_size, dilation, stride = _translate_torch_args(
-        x, kernel_size, dilation, padding, stride
+    if isinstance(kernel_size, Var):
+        kernel_size = kernel_size.val
+    if isinstance(dilation, Var):
+        dilation = dilation.val
+    if isinstance(padding, Var):
+        padding = padding.val
+    if isinstance(stride, Var):
+        stride = stride.val
+    N, C, _, _ = x.shape
+
+    def _create_conv2d_weight(
+        in_channels: int,
+        kernel_size: tuple[int, int],
+        dtype: torch.dtype,
+    ) -> np.ndarray:
+        size = np.prod(kernel_size).item()
+        out_channels = in_channels * size
+        weight = torch.zeros((out_channels, in_channels, *kernel_size), dtype=dtype)
+        ic_idx, h_idx, w_idx = np.meshgrid(
+            np.arange(in_channels),
+            np.arange(kernel_size[0]),
+            np.arange(kernel_size[1]),
+            indexing='ij',
+        )
+        oc_idx = ic_idx * size + h_idx * kernel_size[1] + w_idx
+        weight[oc_idx, ic_idx, h_idx, w_idx] = 1
+        return weight.numpy()
+
+    w = _create_conv2d_weight(
+        in_channels=C,
+        kernel_size=tuple(kernel_size.tolist()),
+        dtype=MIL_DTYPE_TO_TORCH_DTYPE[x.dtype],
     )
-    N, C, H, W = x.shape
-
-    """
-    The implementation below assumes `x` to be contiguous
-    """
-    x = mb.reshape(x=x, shape=[-1])
-    indices = _construct_unfold_indices(N, C, H, W, kernel_size, stride)
-    gathered_data = mb.gather_along_axis(x=x, indices=indices, axis=0)
-
-    # Reshape gathered data to torch output shape
-    block_size = C * kernel_size[0] * kernel_size[1]
-    sptial_size = (H, W)
-    block_count = 1
-    for i in range(2):
-        # Get total number of blocks by the formula in torch.nn.Unfold documentation
-        block_count *= np.floor(
-            # the original formula is
-            #     (sptial_size[i] + 2 * padding[i] - dilation[i] * (kernel_size[i] - 1) - 1) / stride[i]
-            # since we have explicitly padded, we no longer add 2 * padding[i] to sptial_size[i]
-            (sptial_size[i] - dilation[i] * (kernel_size[i] - 1) - 1) / stride[i]
-            + 1
-        ).astype(np.int32)
-    output = mb.reshape(
-        x=gathered_data, shape=(N, block_size, block_count), name=node.name
+    conv2d = mb.conv(
+        x=x,
+        weight=w,
+        strides=stride,
+        pad_type="custom",
+        pad=(padding[0], padding[0], padding[1], padding[1]),
+        dilations=dilation,
     )
-
+    output = mb.reshape(x=conv2d, shape=(N, w.shape[0], -1), name=node.name)
     context.add(output)
 
 

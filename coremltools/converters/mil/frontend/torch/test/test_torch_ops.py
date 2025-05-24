@@ -13032,22 +13032,44 @@ class TestBitwiseAnd(TorchBaseTest):
 
 class TestUnfold(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, frontend, input_shape, kernel_size, padding, stride",
+        "compute_unit, backend, frontend, input_shape, is_dynamic_hw, kernel_size, dilation, padding, stride",
         itertools.product(
             compute_units,
             backends,
             frontends,
-            [(1, 1, 10, 11), (5, 3, 12, 13)],
-            [(2, 3)],
+            [(1, 1), (5, 3)],
+            [False, True],
+            [1, (2, 3)],
+            [1, (7, 9)],
             [0, 1, 8, (1, 3), (2, 6), (0, 5)],
             [1, 2, 7, (2, 3), (5, 4)],
         ),
     )
     def test_unfold(
-        self, compute_unit, backend, frontend, input_shape, kernel_size, padding, stride
+        self, compute_unit, backend, frontend, input_shape, is_dynamic_hw, kernel_size, dilation, padding, stride
     ):
         if frontend == TorchFrontend.EXECUTORCH:
             pytest.skip("ExecuTorch produces rank > 5 tensor")
+
+        if isinstance(kernel_size, int):
+            kernel_size = (kernel_size, kernel_size)
+        if isinstance(dilation, int):
+            dilation = (dilation, dilation)
+        if isinstance(padding, int):
+            padding = (padding, padding)
+        if isinstance(stride, int):
+            stride = (stride, stride)
+
+        min_h = max(1, (dilation[0]*kernel_size[0] + stride[0] - 2*padding[0]))
+        min_w = max(1, (dilation[1]*kernel_size[1] + stride[1] - 2*padding[1]))
+        input_shape = (input_shape[0], input_shape[1], min_h + 3, min_w + 3)
+
+        input_type, dynamic_shapes = None, None
+        if is_dynamic_hw:
+            h_coreml, w_coreml = RangeDim(min_h, 128), RangeDim(min_w, 128)
+            h_torch, w_torch = torch.export.Dim("h", min=min_h, max=128), torch.export.Dim("w", min=min_w, max=128)
+            input_type = [ct.TensorType(name="x", shape=ct.Shape([input_shape[0], input_shape[1], h_coreml, w_coreml]))]
+            dynamic_shapes = {"args": ((input_shape[0], input_shape[1], h_torch, w_torch),)}
 
         self.run_compare_torch(
             input_shape,
@@ -13055,6 +13077,7 @@ class TestUnfold(TorchBaseTest):
                 function=torch.nn.functional.unfold,
                 kwargs={
                     "kernel_size": kernel_size,
+                    "dilation": dilation,
                     "padding": padding,
                     "stride": stride,
                 },
@@ -13062,6 +13085,8 @@ class TestUnfold(TorchBaseTest):
             frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
+            converter_input_type=input_type,
+            torch_export_dynamic_shapes=dynamic_shapes,
         )
 
 
