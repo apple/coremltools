@@ -20,6 +20,7 @@ from . import (
 from ._compiled_model import CompiledMLModel
 from .model import (
     _LUT_BASED_QUANTIZATION,
+    _METADATA_CONVERSION_DATE,
     _METADATA_SOURCE,
     _METADATA_SOURCE_DIALECT,
     _METADATA_VERSION,

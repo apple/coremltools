@@ -4,6 +4,7 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import collections
+from datetime import date
 import gc
 import os
 from typing import List, Optional, Text, Union
@@ -37,7 +38,12 @@ from coremltools.converters.mil.mil.passes.defs.quantization import ComputePreci
 from coremltools.converters.mil.mil.passes.defs.quantization import FP16ComputePrecision
 from coremltools.converters.mil.mil.passes.graph_pass import PassOption as _PassOption
 from coremltools.converters.mil.mil.passes.pass_pipeline import PassPipeline
-from coremltools.models import _METADATA_SOURCE, _METADATA_SOURCE_DIALECT, _METADATA_VERSION
+from coremltools.models import (
+    _METADATA_CONVERSION_DATE,
+    _METADATA_SOURCE,
+    _METADATA_SOURCE_DIALECT,
+    _METADATA_VERSION
+)
 from coremltools.models.utils import _MLPACKAGE_EXTENSION
 
 if _HAS_TF_1:
@@ -1124,8 +1130,10 @@ def _record_build_metadata(mlmodel, exact_source, source_dialect=None):
     if source_dialect is not None:
         mlmodel.user_defined_metadata[_METADATA_SOURCE_DIALECT] = source_dialect
 
-    build_info = _get_metadata_from_mlmodel(mlmodel)
+    current_date = str(date.today())
+    mlmodel.user_defined_metadata[_METADATA_CONVERSION_DATE] = current_date
 
+    build_info = _get_metadata_from_mlmodel(mlmodel)
     mlmodel._set_build_info_mil_attributes(build_info)
 
     return mlmodel
