@@ -1704,6 +1704,10 @@ class insert_prefix_quantize_dequantize_pair(AbstractActCompressionPass):
         if op_config is None:
             return
 
+        x_is_const = op.inputs["x"].op is not None and op.inputs["x"].op.op_type == "const"
+        if x_is_const:
+            return  # Input x needs to be non-const.
+
         new_op_args = dict()
         new_op_args.update(op.inputs.items())
         new_op_args["x"] = self._construct_quant_dequant_op(
@@ -1722,9 +1726,8 @@ class insert_prefix_quantize_dequantize_pair(AbstractActCompressionPass):
                     quantize -> dequantize |
             So we need to quantize y in the same way.
             """
-            x_is_const = op.inputs["x"].op is not None and op.inputs["x"].op.op_type == "const"
             y_is_const = op.inputs["y"].op is not None and op.inputs["y"].op.op_type == "const"
-            if x_is_const or y_is_const:
+            if y_is_const:
                 return  # Both inputs x and y need to be non-const.
             new_op_args["y"] = self._construct_quant_dequant_op(
                 op.inputs["y"], op_config.dtype, op_config.mode
