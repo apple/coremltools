@@ -619,7 +619,7 @@ class CoreMLProtoExporter:
         List["proto.Model_pb2.FeatureDescription"], List["proto.Model_pb2.FeatureDescription"]
     ]:
         """
-        Utils seperates state input from non-state input features.
+        Utils separates state input from non-state input features.
         """
         state_features = []
         non_state_input_features = []
