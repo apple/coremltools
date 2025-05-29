@@ -964,7 +964,7 @@ class TestStateModelLoad:
         # main function is the default function
         self.verify_stateful_model(mlmodel, np.zeros((3,)))
 
-        # save the mlmodel on disk, and load "main" and "func_1" seperately
+        # save the mlmodel on disk, and load "main" and "func_1" separately
         package_path = tempfile.mkdtemp(suffix=".mlpackage")
         mlmodel.save(package_path)
 
