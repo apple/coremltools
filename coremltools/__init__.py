@@ -145,3 +145,6 @@ _ENABLE_PROFILING = _os.environ.get("ENABLE_PROFILING", False)
 
 if _ENABLE_PROFILING:
     _sys.setprofile(_profiler)
+
+if (_sys.version_info.major, _sys.version_info.minor) == (3, 7):
+    _logger.warning("Coremltools will drop support for Python 3.7 in the next release.")
