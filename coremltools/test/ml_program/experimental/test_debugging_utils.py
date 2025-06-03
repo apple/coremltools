@@ -162,11 +162,10 @@ class TestMLModelValidator:
         def prog(x, y):
             x1 = mb.add(x=x, y=y, name="add1")
             x2 = mb.real_div(x=x1, y=y, name="div1")
-            x3 = mb.real_div(x=x1, y=y, name="div2")
-            x4 = mb.add(x=x2, y=x3, name="add2")
-            x5 = mb.add(x=x3, y=x4, name="add3")
-            x6 = mb.mul(x=x4, y=x5, name="mul")
-            return x6
+            x3 = mb.add(x=x1, y=mb.const(val=1.0))
+            x4 = mb.real_div(x=x3, y=y, name="div2")
+            x5 = mb.add(x=x2, y=x4, name="add2")
+            return x5
 
         return prog
 
