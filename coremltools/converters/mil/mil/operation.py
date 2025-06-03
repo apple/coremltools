@@ -302,7 +302,7 @@ class Operation:
                         raise ValueError(msg)
                 else:
                     if types.is_tensor(sym_type) and types.is_complex(sym_type.T[0]):
-                        # Only `complex` and ``const ops need to maintain the real/imag data in the ComplexVar.
+                        # Only `complex` and `const` ops need to maintain the real/imag data in the ComplexVar.
                         # For other ops, this ComplexVar is just a placeholder here, which will be
                         # replaced by a newly created ComplexVar during complex ops lowering pass.
                         if self.op_type == "complex":
