@@ -13,6 +13,7 @@ from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, Program, types
 from coremltools.converters.mil.mil.passes.tests.test_passes import CONSTEXPR_FUNCS
 from coremltools.converters.mil.mil.scope import ScopeInfo, ScopeSource, add_graph_pass_scope
+from coremltools.converters.mil.mil.var import ComplexVar
 
 np.random.seed(0)
 
@@ -427,6 +428,36 @@ class TestMILBasic:
             def prog(x):
                 res = mb.rsqrt(x=x, epsilon=1)
                 return res
+            
+    @staticmethod
+    def test_const_complex_var_initialization():
+        """
+        Test that a const operation with a complex value correctly initializes
+        the real and imag parts of the output ComplexVar.
+        """
+        complex_val_np = np.array([[1+2j, 3-4j], [-5+6j, 7+8j]], dtype=np.complex64)
+        @mb.program(input_specs=[])
+        def prog():
+            complex_const_var = mb.const(val=complex_val_np, name="my_complex_const")
+            return complex_const_var
+        
+        main_func = prog.functions["main"]
+        output_var = main_func.outputs[0]
+        assert isinstance(output_var, ComplexVar), \
+            f"Output var should be ComplexVar, got {type(output_var)}"
+        assert output_var.op.op_type == "const", \
+            f"Expected op_type const, got {output_var.op.op_type}"
+        expected_real_part = np.real(complex_val_np)
+        expected_imag_part = np.imag(complex_val_np)
+        assert output_var.real is not None, "ComplexVar.real should not be None"
+        assert output_var.imag is not None, "ComplexVar.imag should not be None"
+        np.testing.assert_array_equal(output_var.real, expected_real_part,
+                                      err_msg="Real part of ComplexVar does not match expected.")
+        np.testing.assert_array_equal(output_var.imag, expected_imag_part,
+                                      err_msg="Imaginary part of ComplexVar does not match expected.")
+        const_op = output_var.op
+        np.testing.assert_array_equal(const_op.val.val, complex_val_np,
+                                      err_msg="Value of const op does not match original complex numpy array.")
 
     @staticmethod
     def test_get_dialect_namespaces():
