@@ -1028,7 +1028,8 @@ class MLModelValidator:
                         The operation did not pass validation, but its dependencies did.
                         This suggests that the failure likely comes from this operation.
                         """
-                        result.append(op)
+                        if op not in result:
+                            result.append(op)
 
                     queue.pop(0)
                 else:
@@ -1561,7 +1562,8 @@ class MLModelComparator:
                         The operation did not pass comparison check, but its dependencies did.
                         This suggests that the failure likely comes from this operation.
                         """
-                        result.append(op)
+                        if op not in result:
+                            result.append(op)
 
                     queue.pop(0)
                 else:
