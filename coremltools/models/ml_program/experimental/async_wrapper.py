@@ -248,7 +248,9 @@ class LocalMLModelAsyncWrapper(MLModelAsyncWrapper):
             raise ValueError("Failed to load model")
 
         self._model = model
-        self.temp_asset_path = self._model.package_path
+        # Perform cleanup only when a model is being created.
+        if isinstance(self.spec_or_path, proto.Model_pb2.Model): 
+            self.temp_asset_path = self._model.package_path
 
     def make_state_if_needed(self) -> Optional["MLState"]:
         if self._model._is_stateful():

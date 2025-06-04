@@ -44,9 +44,9 @@ def _gen_random_multiarray_value(type: "proto.FeatureTypes_pb2.ArrayFeatureType"
 
     shape = tuple(type.shape)
     if np_data_type == np.int32:
-        return np.random.randint(0, 10, shape)
+        return np.random.randint(0, 10, shape, dtype=np.int32)
 
-    return np.random.random(shape)
+    return np.random.random(shape).astype(np.float32)
 
 
 def _gen_random_image_value(type: "proto.FeatureTypes_pb2.ImageFeatureType") -> np.array:

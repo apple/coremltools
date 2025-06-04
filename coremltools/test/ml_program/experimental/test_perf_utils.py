@@ -9,6 +9,7 @@ import torch
 
 import coremltools as ct
 from coremltools.converters.mil import Builder as mb
+from coremltools.converters.mil.mil import types
 from coremltools.models.ml_program.experimental.perf_utils import MLModelBenchmarker
 from coremltools.models.ml_program.experimental.torch.perf_utils import (
     TorchMLModelBenchmarker,
@@ -25,6 +26,7 @@ pytestmark = pytest.mark.skipif(IS_INTEL_MAC, reason="Skip all tests on Apple In
     reason="MLModelBenchmarker API is available for macos versions >= 14.4.",
 )
 class TestMLModelBenchmarker:
+    @staticmethod
     def get_test_model():
         @mb.program(
             input_specs=[
@@ -42,6 +44,19 @@ class TestMLModelBenchmarker:
             return x
 
         return prog
+    
+    @staticmethod
+    def get_test_model_with_int32_inputs():
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(1, 2), dtype=types.int32),
+                mb.TensorSpec(shape=(1, 2), dtype=types.int32),
+            ]
+        )
+        def prog(x, y):
+            return mb.add(x=x, y=y, name="add")
+
+        return prog
 
     @staticmethod
     @pytest.mark.asyncio
@@ -50,7 +65,12 @@ class TestMLModelBenchmarker:
         compute_units: ct.ComputeUnit,
     ):
         prog = TestMLModelBenchmarker.get_test_model()
-        mlmodel = ct.convert(prog, convert_to="mlprogram", compute_precision=ct.precision.FLOAT32)
+        mlmodel = ct.convert(
+            prog,
+            convert_to="mlprogram",
+            compute_precision=ct.precision.FLOAT32,
+            compute_units=compute_units,
+        )
         benchmarker = MLModelBenchmarker(model=mlmodel)
 
         measurement = await benchmarker.benchmark_load(iterations=3)
@@ -68,7 +88,12 @@ class TestMLModelBenchmarker:
         warmup: bool,
     ):
         prog = TestMLModelBenchmarker.get_test_model()
-        mlmodel = ct.convert(prog, convert_to="mlprogram", compute_precision=ct.precision.FLOAT32)
+        mlmodel = ct.convert(
+            prog,
+            convert_to="mlprogram", 
+            compute_precision=ct.precision.FLOAT32,
+            compute_units=compute_units,
+        )
         benchmarker = MLModelBenchmarker(model=mlmodel)
         measurement = await benchmarker.benchmark_predict(
             iterations=3,
@@ -88,7 +113,12 @@ class TestMLModelBenchmarker:
         warmup: bool,
     ):
         prog = TestMLModelBenchmarker.get_test_model()
-        mlmodel = ct.convert(prog, convert_to="mlprogram", compute_precision=ct.precision.FLOAT32)
+        mlmodel = ct.convert(
+            prog,
+            convert_to="mlprogram",
+            compute_precision=ct.precision.FLOAT32,
+            compute_units=compute_units,
+        )
         benchmarker = MLModelBenchmarker(model=mlmodel)
         execution_infos = await benchmarker.benchmark_operation_execution(
             iterations=3,
@@ -105,6 +135,16 @@ class TestMLModelBenchmarker:
             assert measurement.statistics is not None
             assert measurement.statistics.average > 1e-6
 
+    @staticmethod
+    @pytest.mark.asyncio
+    async def test_benchmark_predict_with_int32_inputs():
+        prog = TestMLModelBenchmarker.get_test_model_with_int32_inputs()
+        mlmodel = ct.convert(prog, convert_to="mlprogram", compute_precision=ct.precision.FLOAT32)
+        benchmarker = MLModelBenchmarker(model=mlmodel)
+        measurement = await benchmarker.benchmark_predict()
+        assert len(measurement.samples) == 1
+        assert measurement.statistics is not None
+        assert measurement.statistics.average > 1e-6
 
 @pytest.mark.skipif(
     ct.utils._macos_version() < (14, 4),
