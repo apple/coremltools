@@ -123,6 +123,8 @@ try:
         _HAS_TF_2 = True
 
     if _HAS_TF_1:
+        logger.warning("Coremltools will drop support for conversion from TensorFlow 1.x models in the next release.")
+
         if tf_ver < Version(_TF_1_MIN_VERSION):
             logger.warning(
                 (
