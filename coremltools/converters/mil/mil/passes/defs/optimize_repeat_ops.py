@@ -575,7 +575,7 @@ class cast_optimization(AbstractGraphPass):
     def _fuse_or_cancel_consecutive_casts_block_wrapper(self, block):
         def _fuse_or_cancel_consecutive_casts_block(block, cast_ops_across_blocks):
             # We first make sure all the inner blocks are optimized
-            # It is important to do it seperately in the very beginning, to ensure the last step of optimization cast ops across the block boundary is correct.
+            # It is important to do it separately in the very beginning, to ensure the last step of optimization cast ops across the block boundary is correct.
             for op in block.operations:
                 for b in op.blocks:
                     self._fuse_or_cancel_consecutive_casts_block_wrapper(b)
