@@ -9,7 +9,7 @@
 # Implementation for EMAMinMaxObserver has been adapted from
 # https://github.com/ModelTC/MQBench/blob/main/mqbench/observer.py
 
-import distutils as _distutils
+from packaging.version import Version as _Version
 from typing import Any as _Any
 from typing import Dict as _Dict
 from typing import Optional as _Optional
@@ -76,7 +76,7 @@ class CustomObserverBase(_UniformQuantizationObserverBase):
         is_dynamic: bool = False,
     ):
         kwargs = {}
-        if _get_torch_version(_torch.__version__) >= _distutils.version.StrictVersion("2.2"):
+        if _get_torch_version(_torch.__version__) >= _Version("2.2"):
             kwargs["is_dynamic"] = is_dynamic
 
         super(CustomObserverBase, self).__init__(

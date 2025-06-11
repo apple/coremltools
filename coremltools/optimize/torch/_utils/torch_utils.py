@@ -10,7 +10,7 @@ import logging as _logging
 import operator as _operator
 import re as _re
 from contextlib import contextmanager
-from distutils.version import StrictVersion as _StrictVersion
+from packaging.version import Version as _Version
 from typing import Any as _Any
 from typing import Dict as _Dict
 from typing import List as _List
@@ -243,7 +243,7 @@ def get_torch_version(version):
     """
     version_regex = r"\d+\.\d+\.\d+"
     version = _re.search(version_regex, str(version)).group(0)
-    return _StrictVersion(version)
+    return _Version(version)
 
 
 def normalize_fsdp_module_name(module_name: str) -> str:
