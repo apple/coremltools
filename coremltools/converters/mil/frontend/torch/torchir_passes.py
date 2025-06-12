@@ -231,7 +231,8 @@ def populate_native_const_model_hierarchy(graph: InternalTorchIRGraph) -> None:
 
 def remove_getattr_nodes(graph: InternalTorchIRGraph) -> None:
     """
-    Remove the getattr nodes in the graph that are not output nodes
+    Remove the getattr nodes in the graph
+    If they are output nodes, convert them to constant nodes
     """
 
     new_nodes = []
