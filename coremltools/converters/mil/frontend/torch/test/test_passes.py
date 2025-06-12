@@ -18,6 +18,7 @@ from ..torchir_passes import (
     flatten_graph_input_values,
     flatten_graph_output_values,
     transform_inplace_ops,
+    remove_getattr_nodes
 )
 import coremltools as ct
 
@@ -405,3 +406,52 @@ class TestTorchPasses:
         y_cm = ct_model.predict({'x': x})['y']
 
         assert((y_cm == np.zeros(shape)).all())
+
+
+    @staticmethod
+    def test_remove_getattr_nodes_immediate_output():
+        graph_nodes = [
+            InternalTorchIRNode(
+                inputs=["self"],
+                attr={"name": "const_out2", "value": None},
+                outputs=["const_out2"],
+                kind="getattr",
+            ),
+            InternalTorchIRNode(
+                inputs=["self"],
+                attr={"name": "const_out1", "value": None},
+                outputs=["const_out1"],
+                kind="getattr",
+            ),
+            InternalTorchIRNode(
+                inputs=["const_out1", "const_out2"],
+                attr={"value": None},
+                outputs=["3"],
+                kind="tupleconstruct",
+            ),
+        ]
+        const2 = torch.tensor([5., 6., 7., 8.])
+        const1 = torch.tensor([1., 2., 3., 4.])
+        graph_params = {'const_out2': const2, 
+                        'const_out1': const1}
+        graph_inputs = []
+        graph_outputs = ["const_out1", "const_out2"]
+
+        graph = InternalTorchIRGraph(
+            nodes=graph_nodes,
+            params=graph_params,
+            inputs=graph_inputs,
+            outputs=graph_outputs,
+        )
+        
+        for node in graph.nodes:
+            node.parent = graph
+
+        remove_getattr_nodes(graph)
+
+        np.testing.assert_equal(graph.nodes[0].kind, "constant")
+        np.testing.assert_equal(graph.nodes[1].kind, "constant")
+        np.testing.assert_equal(graph.nodes[2].kind, "tupleconstruct")
+        np.testing.assert_allclose(graph.nodes[0].attr["value"], const2)
+        np.testing.assert_allclose(graph.nodes[1].attr["value"], const1)
+        
