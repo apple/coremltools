@@ -251,7 +251,7 @@ def remove_getattr_nodes(graph: InternalTorchIRGraph) -> None:
                             outputs=node.outputs,
                             kind="constant",
                             name="internal_immediate_output_attr",
-                            attr={"value": node.parent.params[node.name]}
+                            attr={"value": node.parent.params[node.name].detach()}
                         )
                     )
         else:
