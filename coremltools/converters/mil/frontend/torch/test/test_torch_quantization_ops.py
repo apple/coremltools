@@ -11,7 +11,6 @@ import numpy as np
 import numpy.testing
 import pytest
 import torch
-from torchao.quantization import granularity
 import torchvision
 from packaging.version import Version
 
@@ -43,7 +42,6 @@ from .testing_utils import TorchBaseTest, frontends
 if _HAS_TORCHAO:
     import torchao
     from torchao.quantization import quant_primitives as torchao_quant
-    from torchao.quantization import quantize_, PerGroup, PerAxis, IntxWeightOnlyConfig
 
 pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
 
@@ -222,18 +220,47 @@ class TestPyTorchQuantizationOps(TorchQuantizationBaseTest):
     
     @pytest.mark.skipif(not _HAS_TORCHAO, reason=MSG_TORCHAO_NOT_FOUND)
     @pytest.mark.parametrize(
-        "compute_unit, granularity, weight_dtype",
-        itertools.product(compute_units, [PerGroup(32), PerGroup(64), PerAxis(0)], [torch.int4, torch.int8]),
+        "compute_unit, group_size, bit_width, has_zeros",
+        itertools.product(compute_units, [32, 64], [4, 8], [True, False]),
     )
-    def test_dequantize_affine(self, compute_unit, granularity, weight_dtype):
-        model = torch.nn.Sequential(*[torch.nn.Linear(128, 128)])
+    def test_dequantize_affine(self, compute_unit, group_size, bit_width, has_zeros):
+
+        if bit_width == 4:
+            quant_min = -8
+            quant_max = 7
+        elif bit_width == 8:
+            quant_min = -128
+            quant_max = 127
+        else:
+            raise ValueError(f"Unsupported bit width: {bit_width}")
+
+        n = 4
+        k = 128
+        input_dtype = torch.int8
+        int_data = torch.randint(low=quant_min, high=quant_max, size=(n, k)).to(input_dtype)
+        scale = torch.rand(n, k // group_size)
+
+        zero_point = None
+        if has_zeros:
+            zero_point = torch.randint(low=quant_min, high=quant_max, size=(n, k // group_size)).to(input_dtype)
+
+
+        class Model(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.register_buffer("int_data", int_data)
+                self.register_buffer("scale", scale)
+                self.register_buffer("zero_point", zero_point)
+
+            def forward(self, x):
+                w = torchao_quant.dequantize_affine(self.int_data, [1, group_size], self.scale, self.zero_point, input_dtype, quant_min, quant_max)
+                return torch.nn.functional.linear(x, w)
+
+
+        model = Model()
         model = model.to(torch.device("cpu"))
-        quantize_(
-            model,
-            IntxWeightOnlyConfig(weight_dtype=weight_dtype, granularity=granularity),
-        )
-        
-        input_shape = [(2, 128)]
+       
+        input_shape = [(3, k)]
         res = self.run_compare_torch(
             input_shape,
             model,
