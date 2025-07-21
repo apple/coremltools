@@ -11,6 +11,7 @@ import numpy as np
 import numpy.testing
 import pytest
 import torch
+from torchao.quantization import granularity
 import torchvision
 from packaging.version import Version
 
@@ -42,6 +43,7 @@ from .testing_utils import TorchBaseTest, frontends
 if _HAS_TORCHAO:
     import torchao
     from torchao.quantization import quant_primitives as torchao_quant
+    from torchao.quantization import quantize_, PerGroup, PerAxis, IntxWeightOnlyConfig
 
 pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
 
@@ -217,6 +219,32 @@ class TestPyTorchQuantizationOps(TorchQuantizationBaseTest):
                 self.run_compare_torch([input_shape], model)
         else:
             self.run_compare_torch([input_shape], model, atol=5e-4, rtol=5e-4)
+    
+    @pytest.mark.skipif(not _HAS_TORCHAO, reason=MSG_TORCHAO_NOT_FOUND)
+    @pytest.mark.parametrize(
+        "compute_unit, granularity, weight_dtype",
+        itertools.product(compute_units, [PerGroup(32), PerGroup(64), PerAxis(0)], [torch.int4, torch.int8]),
+    )
+    def test_dequantize_affine(self, compute_unit, granularity, weight_dtype):
+        model = torch.nn.Sequential(*[torch.nn.Linear(128, 128)])
+        model = model.to(torch.device("cpu"))
+        quantize_(
+            model,
+            IntxWeightOnlyConfig(weight_dtype=weight_dtype, granularity=granularity),
+        )
+        
+        input_shape = [(2, 128)]
+        res = self.run_compare_torch(
+            input_shape,
+            model,
+            minimum_deployment_target=ct.target.iOS18,
+            compute_unit=compute_unit,
+            rtol=0.1,
+            frontend=TorchFrontend.TORCHEXPORT,
+        )
+        prog = res[1]._mil_program
+        assert get_op_types_in_program(prog) == ["constexpr_blockwise_shift_scale", "linear"]
+
 
 
 # TODO(rdar://108463675): refactor torch op tests later to parametrize quantized vs standard ops
@@ -587,7 +615,7 @@ class TestPytorchQuantizedOps(TorchQuantizationBaseTest):
         )
         prog = res[1]._mil_program
         assert get_op_types_in_program(prog) == ["constexpr_blockwise_shift_scale", "linear"]
-
+    
     @pytest.mark.skipif(
         not hasattr(torch.ops.quantized_decomposed, "embedding_4bit"),
         reason="The `embedding_4bit` op doesn't exist in quantized_decomposed custom opset.",
