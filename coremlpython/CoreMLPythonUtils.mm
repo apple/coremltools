@@ -463,9 +463,11 @@ py::object Utils::convertArrayValueToPython(MLMultiArray *value) {
     __block py::object array;
     [value getBytesWithHandler:^(const void *bytes, NSInteger size) {
         switch (type) {
+#if BUILT_WITH_MACOS26_SDK
             case MLMultiArrayDataTypeInt8:
                 array = py::array(shape, strides, reinterpret_cast<const int8_t *>(bytes));
                 break;
+#endif
             case MLMultiArrayDataTypeInt32:
                 array = py::array(shape, strides, reinterpret_cast<const int32_t *>(bytes));
                 break;

@@ -12,11 +12,16 @@
     char kind = dt.kind();
     size_t itemsize = dt.itemsize();
 
-    if (kind == 'i' && itemsize == 1) {
-        return MLMultiArrayDataTypeInt8;
-    } else if(kind == 'i' && itemsize == 4) {
+
+    if(kind == 'i' && itemsize == 4) {
         return MLMultiArrayDataTypeInt32;
-    } else if(kind == 'f' && itemsize == 4) {
+    }
+#if BUILT_WITH_MACOS26_SDK
+    else if (kind == 'i' && itemsize == 1) {
+        return MLMultiArrayDataTypeInt8;
+    }
+#endif
+    else if(kind == 'f' && itemsize == 4) {
         return MLMultiArrayDataTypeFloat32;
     } else if( (kind == 'f' || kind == 'd') && itemsize == 8) {
         return MLMultiArrayDataTypeDouble;

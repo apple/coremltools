@@ -27,6 +27,10 @@ const NSErrorDomain CoreMLPythonErrorDomain = @"com.apple.coremlpython";
 #define BUILT_WITH_MACOS13_SDK (MAC_OS_X_VERSION_MAX_ALLOWED >= 130000)
 #endif
 
+#ifndef BUILT_WITH_MACOS26_SDK
+#define BUILT_WITH_MACOS26_SDK (MAC_OS_X_VERSION_MAX_ALLOWED >= 140000)
+#endif
+
 namespace py = pybind11;
 
 using namespace CoreML::Python;
