@@ -212,6 +212,10 @@ MLMODEL_TEST(testStateFeatureHasNoArrayType_shouldFail)
 MLMODEL_TEST(testStateFeature_ArrayUsesRangeFlexibleShape_shouldFail)
 MLMODEL_TEST(testStateFeature_ArrayUsesEnumeratedFlexibleShape_shouldFail)
 
+// Int8 multi-array tests
+MLMODEL_TEST(testArrayFeature_Int8_SpecificationVersion)
+MLMODEL_TEST(testArrayFeature_DefaultOptionalValueOutOfRange_shouldFail)
+
 // Updatable model tests
 MLMODEL_TEST(testUpdatableModelSpecVersion)
 MLMODEL_TEST(testInvalidUpdatableModelQuantizedWeights)

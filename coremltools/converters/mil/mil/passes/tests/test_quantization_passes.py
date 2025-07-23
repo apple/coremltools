@@ -2129,6 +2129,55 @@ class TestReorderQuantizedLut:
         self._verify_numerical(prev_prog, prog, block, input_shape)
 
 
+    @pytest.mark.parametrize(
+        "input_shape, minimum_deployment_target",
+        itertools.product([(4, 3), (2, 3, 4)], [ct.target.iOS18, ct.target.iOS26]),
+    )
+    def test_iOS26(self, input_shape, minimum_deployment_target):
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=input_shape, dtype=types.fp16)],
+            opset_version=minimum_deployment_target,
+        )
+        def prog(x):
+            quantized_lut_weight1, quantized_lut_weight2 = self._construct_weights_with_two_orders(
+                weight_shape=(8, input_shape[-1])
+            )
+            output1 = mb.linear(x=x, weight=quantized_lut_weight1)
+            output2 = mb.linear(x=x, weight=quantized_lut_weight2)
+            return mb.add(x=output1, y=output2)
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            prog, "common::canonicalize_quantized_lut_pattern", skip_essential_scope_check=True
+        )
+
+        assert get_op_types_in_program(prev_prog) == [
+            "constexpr_lut_to_dense",
+            "constexpr_blockwise_shift_scale",
+            "constexpr_blockwise_shift_scale",
+            "constexpr_lut_to_dense",
+            "linear",
+            "linear",
+            "add",
+        ]
+        dequant_ops = prog.functions["main"].find_ops(op_type="constexpr_blockwise_shift_scale")
+        lut_ops = prog.functions["main"].find_ops(op_type="constexpr_lut_to_dense")
+        assert len(dequant_ops) == 2
+        assert len(lut_ops) == 2
+
+        if minimum_deployment_target >= ct.target.iOS26:
+            # For iOS26, the order is lut -> shift_scale op.
+            for lut_op in lut_ops:
+                assert lut_op.outputs[0].child_ops[0].op_type == "constexpr_blockwise_shift_scale"
+            for dequant_op in dequant_ops:
+                assert dequant_op.outputs[0].child_ops[0].op_type == "linear"
+        else:
+            # For pre-iOS26, the order is shift_scale -> lut op.
+            for dequant_op in dequant_ops:
+                assert dequant_op.outputs[0].child_ops[0].op_type == "constexpr_lut_to_dense"
+            for lut_op in lut_ops:
+                assert lut_op.outputs[0].child_ops[0].op_type == "linear"
+
+
 class TestFP16CastTransform:
     def assertEqual(self, first, second):
         """A convenience method to migrate from unittest (self.assertEqual) to pytest."""
@@ -2942,14 +2991,20 @@ class TestInt32CastToInt16:
         ):
             # Cast from fp16 to fp32 because fp16 is not supported in I/O before iOS16.
             expected_ops.append("cast")
-        if (
-            minimum_deployment_target >= ct.target.iOS17
-            and compute_precision == ct.precision.FLOAT16
-            and num_embeddings <= np.iinfo(np.int16).max
-        ):
-            # The int16 cast only happens for iOS17+ with fp16 precision and there is no overflow.
-            expected_ops.insert(0, "cast")
-            cast_op = prog["main"].find_ops(op_type="cast")[0]
-            assert cast_op.dtype.val == "int16"
-            assert cast_op.outputs[0] == prog["main"].find_ops(op_type="gather")[0].indices
+        if minimum_deployment_target >= ct.target.iOS17:
+            # Starting from iOS17 `gather` no longer supports negative indices
+            expected_ops = ["greater_equal", "add", "select"] + expected_ops
+            if (
+                compute_precision == ct.precision.FLOAT16
+                and num_embeddings <= np.iinfo(np.int16).max
+            ):
+                # The int16 cast only happens for iOS17+ with fp16 precision and there is no overflow.
+                expected_ops.insert(0, "cast")  # cast input to int16
+                expected_ops.insert(
+                    0, "cast"
+                )  # cast int16 input back to int32 for non-negativity guard
+                expected_ops.insert(-1, "cast")  # cast non-negative indices to int16 for `gather`
+                cast_op = prog["main"].find_ops(op_type="cast")[-1]
+                assert cast_op.dtype.val == "int16"
+                assert cast_op.outputs[0] == prog["main"].find_ops(op_type="gather")[0].indices
         assert get_op_types_in_program(prog) == expected_ops

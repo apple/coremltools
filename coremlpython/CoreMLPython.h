@@ -20,8 +20,11 @@
 #import <optional>
 
 #ifndef BUILT_WITH_MACOS15_SDK
-#define BUILT_WITH_MACOS15_SDK \
-  !(TARGET_OS_OSX && (!defined(__MAC_15_0) || __MAC_OS_X_VERSION_MAX_ALLOWED < __MAC_15_0))
+#if TARGET_OS_OSX && defined(__MAC_15_0) && __MAC_OS_X_VERSION_MAX_ALLOWED >= __MAC_15_0
+#define BUILT_WITH_MACOS15_SDK 1
+#else
+#define BUILT_WITH_MACOS15_SDK 0
+#endif
 #endif
 
 // Print BUILT_WITH_MACOS15_SDK value
@@ -67,6 +70,11 @@ namespace CoreML {
                 return (MLState *)m_impl;
             }
 #endif
+            // Retrieves the value of the specified state variable from the model.
+            py::object readState(const std::string& stateName) const;
+
+            // Sets the value of the specified state variable in the model.
+            void writeState(const std::string& stateName, py::object value);
 
             private:
              // Type erase `m_impl` otherwise it will result in a compiler warning.

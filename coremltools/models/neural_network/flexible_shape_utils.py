@@ -374,6 +374,7 @@ def _update_image_size_range_for_feature(
 def _add_multiarray_ndshape_enumeration_for_feature(
     feature: "_proto.Model_pb2.FeatureDescription",
     enumerated_shapes: _List[_Tuple[int]],
+    allow_duplicate_shapes: bool = False,
 ):
     if not isinstance(enumerated_shapes, list):
         raise Exception("enumerated_shapes must be a list")
@@ -388,30 +389,35 @@ def _add_multiarray_ndshape_enumeration_for_feature(
     if feature.type.multiArrayType.WhichOneof("ShapeFlexibility") != "enumeratedShapes":
         feature.type.multiArrayType.ClearField("ShapeFlexibility")
 
-    eshape_len = len(feature.type.multiArrayType.enumeratedShapes.shapes)
-
-    shapes_added_so_far = []
-
-    # Add default array shape to list of enumerated shapes if enumerated shapes
-    # field is currently empty
-    if eshape_len == 0:
-        fixed_shape = feature.type.multiArrayType.shape
-        s = feature.type.multiArrayType.enumeratedShapes.shapes.add()
-        s.shape.extend(fixed_shape)
-        shapes_added_so_far.append(list(fixed_shape))
-
+    shapes = []
+    default_shape = list(feature.type.multiArrayType.shape)
     for shape in enumerated_shapes:
         if not isinstance(shape, tuple):
             raise Exception("An element in 'enumerated_shapes' is not a tuple")
-        if list(shape) not in shapes_added_so_far:
-            s = feature.type.multiArrayType.enumeratedShapes.shapes.add()
-            s.shape.extend(list(shape))
-            shapes_added_so_far.append(list(shape))
 
+        shape = list(shape)
+        # Skip duplicates unless duplicate shapes are allowed
+        if shape in shapes and not allow_duplicate_shapes:
+            continue
+
+        # Ensure the default shape is placed first in the list.
+        if shape == default_shape:
+            shapes.insert(0, shape)
+        else:
+            shapes.append(shape)
+
+    # Ensure the default shape is included in shapes and placed first in the list.
+    if default_shape not in shapes:
+        shapes.insert(0, default_shape)
+
+    for shape in shapes:
+        s = feature.type.multiArrayType.enumeratedShapes.shapes.add()
+        s.shape.extend(shape)
 
 def _add_enumerated_image_sizes_for_feature(
     feature: "_proto.Model_pb2.FeatureDescription",
     sizes: _List[NeuralNetworkImageSize],
+    allow_duplicate_shapes: bool = False,
 ):
     if not isinstance(sizes, list):
         sizes = [sizes]
@@ -426,22 +432,25 @@ def _add_enumerated_image_sizes_for_feature(
     if feature.type.imageType.WhichOneof("SizeFlexibility") != "enumeratedSizes":
         feature.type.imageType.ClearField("SizeFlexibility")
 
-    esizes_len = len(feature.type.imageType.enumeratedSizes.sizes)
-
-    # Add default image size to list of enumerated sizes if enumerated sizes
-    # field is currently empty
-    if esizes_len == 0:
-        fixed_height = feature.type.imageType.height
-        fixed_width = feature.type.imageType.width
-        sizes.append(NeuralNetworkImageSize(fixed_height, fixed_width))
-
-    shapes_added_so_far = []
+    shapes = []
+    default_shape = [feature.type.imageType.height, feature.type.imageType.width]
     for size in sizes:
-        if [size.height, size.width] not in shapes_added_so_far:
-            s = feature.type.imageType.enumeratedSizes.sizes.add()
-            s.height = size.height
-            s.width = size.width
-            shapes_added_so_far.append([s.height, s.width])
+        shape = [size.height, size.width]
+        # Skip duplicates unless duplicate shapes are allowed
+        if shape in shapes and not allow_duplicate_shapes:
+            continue
+
+        # Ensure the default shape is placed first in the list.
+        shapes.append(shape)
+
+    # Ensure the default shape is included in shapes and placed first in the list.
+    if default_shape not in shapes:
+        shapes.insert(0, default_shape)
+
+    for shape in shapes:
+        s = feature.type.imageType.enumeratedSizes.sizes.add()
+        s.height = shape[0]
+        s.width = shape[1]
 
 
 def add_enumerated_multiarray_shapes(spec, feature_name, shapes):

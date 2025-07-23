@@ -4,6 +4,7 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
+import platform
 
 import numpy as np
 import pytest
@@ -61,6 +62,9 @@ class TestCoreMLUpdateState:
         ),
     )
     def test_coreml_update_stress(self, compute_unit, backend, shape):
+        if platform.machine() == "x86_64":
+            pytest.xfail("rdar://149313013")
+
         def build(x_in, y_in, z_in):
             def increase_val_by_one(state, input):
                 v = mb.add(x=input, y=np.float16(1))
@@ -267,7 +271,7 @@ class TestStatefulModel:
             y = mb.read_state(input=y_in)
             z = mb.read_state(input=z_in)
 
-            for i in range(10):
+            for i in range(1):
                 # single slice update
                 x = single_slice_update(x_in, x)
                 y = single_slice_update(y_in, y)

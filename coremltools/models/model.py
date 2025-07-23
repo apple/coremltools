@@ -130,11 +130,19 @@ def _verify_optimization_hint_input(optimization_hint_input: _Optional[dict] = N
         raise ValueError('Optimization hints are only available on macOS >= 15.0')
 
     for k in optimization_hint_input.keys():
-        if k not in ('allowLowPrecisionAccumulationOnGPU', 'reshapeFrequency', 'specializationStrategy'):
+        if k not in (
+            "allowLowPrecisionAccumulationOnGPU",
+            "reshapeFrequency",
+            "specializationStrategy",
+        ):
             raise ValueError(f"Unrecognized key in optimization_hint dictionary: {k}")
 
-    if "allowLowPrecisionAccumulationOnGPU" in optimization_hint_input and not isinstance(optimization_hint_input["allowLowPrecisionAccumulationOnGPU"], bool):
-        raise TypeError('"allowLowPrecisionAccumulationOnGPU" value of "optimization_hint_input" dictionary must be of type bool')
+    if "allowLowPrecisionAccumulationOnGPU" in optimization_hint_input and not isinstance(
+        optimization_hint_input["allowLowPrecisionAccumulationOnGPU"], bool
+    ):
+        raise TypeError(
+            '"allowLowPrecisionAccumulationOnGPU" value of "optimization_hint_input" dictionary must be of type bool'
+        )
 
     if "specializationStrategy" in optimization_hint_input and not isinstance(optimization_hint_input["specializationStrategy"], _SpecializationStrategy):
         raise TypeError('"specializationStrategy" value of "optimization_hint_input" dictionary must be of type coremltools.SpecializationStrategy')
@@ -183,13 +191,60 @@ class MLState:
         """
         Holds state for an MLModel.
 
-        This is an opaque object. Nothing can be done with it except pass it to MLModel.predict.
+        The MLState class provides methods to read and write model state.
 
         See Also
         --------
         ct.MLModel.predict
         """
         self.__proxy__ = proxy
+
+    def read_state(
+        self,
+        name: str,
+    ) -> _np.ndarray:
+        """
+        Retrieve the value of a model state variable.
+
+        Parameters
+        ----------
+        name : str
+            The name of the state variable to read.
+
+        Returns
+        -------
+        numpy.ndarray
+            The value of the specified state variable as a NumPy array.
+
+        Raises
+        ------
+        RuntimeError
+            If the state cannot be read (e.g. invalid state name).
+        """
+        return self.__proxy__.read_state(name)
+
+    def write_state(
+        self,
+        name: str,
+        value: _np.ndarray,
+    ):
+        """
+        Set the value of a model state variable.
+
+        Parameters
+        ----------
+        name : str
+            The name of the state variable to write.
+
+        value : numpy.ndarray
+            The new value to assign to the state variable.
+
+        Raises
+        ------
+        RuntimeError
+            If the state cannot be written (e.g. invalid value, or invalid state name).
+        """
+        return self.__proxy__.write_state(name, value)
 
 
 class MLModelAsset:
@@ -200,6 +255,7 @@ class MLModelAsset:
     - From a compiled model directory: The directory should have a '.mlmodelc' extension.
     - From memory: Allows direct initialization using in-memory model data.
     """
+
     def __init__(self, proxy) -> None:
         if _MLModelAssetProxy is None or not isinstance(proxy, _MLModelAssetProxy):
             raise TypeError("The proxy parameter must be of type _MLModelAssetProxy.")
@@ -1061,13 +1117,13 @@ class MLModel:
     def load_duration_in_nano_seconds(self) -> _Optional[int]:
         """
         Retrieves the duration of the model loading process in nanoseconds.
-        
+
         Notes
         -----
         Calculates the time elapsed during the model loading process, specifically
         measuring the execution time of ``[MLModel loadContentsOfURL:configuration:error:]`` method
         of the Core ML framework.
-        
+
         Returns
         -------
         Optional[int]:
@@ -1083,13 +1139,13 @@ class MLModel:
         Retrieves the duration of the last predict operation in nanoseconds.
         This method returns the time taken for the most recent prediction made by
         the model, measured in nanoseconds.
-        
+
         Notes
         -----
         Calculates the time elapsed during the model predict call, specifically
         measuring the execution time of ``[MLModel predictionFromFeatures:error:]``
         or ``[MLModel predictionFromBatch:error:]`` method of the Core ML framework.
-        
+
         Returns
         -------
         Optional[int]:

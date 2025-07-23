@@ -1,3 +1,8 @@
+// Copyright (c) 2025, Apple Inc. All rights reserved.
+//
+// Use of this source code is governed by a BSD-3-clause license that can be
+// found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
 #import "CoreMLPythonArray.h"
 
 @implementation PybindCompatibleArray
@@ -6,15 +11,17 @@
     const auto& dt = array.dtype();
     char kind = dt.kind();
     size_t itemsize = dt.itemsize();
-    
-    if(kind == 'i' && itemsize == 4) {
+
+    if (kind == 'i' && itemsize == 1) {
+        return MLMultiArrayDataTypeInt8;
+    } else if(kind == 'i' && itemsize == 4) {
         return MLMultiArrayDataTypeInt32;
     } else if(kind == 'f' && itemsize == 4) {
         return MLMultiArrayDataTypeFloat32;
     } else if( (kind == 'f' || kind == 'd') && itemsize == 8) {
         return MLMultiArrayDataTypeDouble;
     }
-    
+
     throw std::runtime_error("Unsupported array type: " + std::to_string(kind) + " with itemsize = " + std::to_string(itemsize));
 }
 
@@ -29,7 +36,7 @@
 + (NSArray<NSNumber *> *)stridesOf:(py::array)array {
     // numpy strides is in bytes.
     // this type must return number of ELEMENTS! (as per mlkit)
-    
+
     NSMutableArray<NSNumber *> *ret = [[NSMutableArray alloc] init];
     for (size_t i=0; i<array.ndim(); i++) {
         size_t stride = array.strides(i) / array.itemsize();

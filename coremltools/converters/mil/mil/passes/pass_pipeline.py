@@ -104,6 +104,12 @@ _COMMON_PASSES: List[Text] = [
     "common::add_fp16_cast",  # Will be removed if compute precision is not FP16.
     "common::add_int16_cast",  # Will be removed if compute precision is not FP16.
     "common::update_output_dtypes",  # Must run again after `add_fp16_cast` and `add_int16_cast`.
+    "common::guard_negative_gather_indices",  # add_int16_cast may give the chance to use uint indices; after that, guard remaining int indices of gather
+    "common::const_elimination",
+    "common::dead_code_elimination",
+    "common::cast_optimization",
+    "common::dead_code_elimination",  # must follow cast_optimization
+    "common::add_int16_cast",  # guard_negative_gather_indices may introduce int32 cast, need to cast back to int16
     "common::const_elimination",
     "common::dead_code_elimination",
     "common::cast_optimization",

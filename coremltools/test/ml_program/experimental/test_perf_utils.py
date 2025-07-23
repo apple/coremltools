@@ -1,6 +1,9 @@
 #  Copyright (c) 2025, Apple Inc. All rights reserved.
-import platform
+#
+#  Use of this source code is governed by a BSD-3-clause license that can be
+#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import platform
 from typing import Optional
 
 import numpy as np
@@ -44,7 +47,7 @@ class TestMLModelBenchmarker:
             return x
 
         return prog
-    
+
     @staticmethod
     def get_test_model_with_int32_inputs():
         @mb.program(
@@ -90,7 +93,7 @@ class TestMLModelBenchmarker:
         prog = TestMLModelBenchmarker.get_test_model()
         mlmodel = ct.convert(
             prog,
-            convert_to="mlprogram", 
+            convert_to="mlprogram",
             compute_precision=ct.precision.FLOAT32,
             compute_units=compute_units,
         )
@@ -202,16 +205,20 @@ class TestTorchMLModelBenchmarker:
         warmup: bool,
         use_torch_export: bool,
     ):
+        if use_torch_export and ct.utils._python_version()[:2] <= (3, 8):
+            pytest.skip("torch.export not support on Python 3.8 or lower")
+
         test_model = TestTorchMLModelBenchmarker.get_test_model()
         inputs = (
             torch.full((1, 10), 1, dtype=torch.float),
             torch.full((1, 10), 2, dtype=torch.float),
         )
-        torch_model = (
-            torch.export.export(test_model, inputs)
-            if use_torch_export
-            else torch.jit.trace(test_model, inputs)
-        )
+        torch_model = None
+        if use_torch_export:
+            torch_model = torch.export.export(test_model, inputs)
+            torch_model = torch_model.run_decompositions({})
+        else:
+            torch_model = torch.jit.trace(test_model, inputs)
 
         benchmarker = TorchMLModelBenchmarker(
             model=torch_model,
@@ -249,16 +256,21 @@ class TestTorchMLModelBenchmarker:
         warmup: bool,
         use_torch_export: bool,
     ):
+
+        if use_torch_export and ct.utils._python_version()[:2] <= (3, 8):
+            pytest.skip("torch.export not support on Python 3.8 or lower")
+
         test_model = TestTorchMLModelBenchmarker.get_test_model()
         inputs = (
             torch.full((1, 10), 1, dtype=torch.float),
             torch.full((1, 10), 2, dtype=torch.float),
         )
-        torch_model = (
-            torch.export.export(test_model, inputs)
-            if use_torch_export
-            else torch.jit.trace(test_model, inputs)
-        )
+        torch_model = None
+        if use_torch_export:
+            torch_model = torch.export.export(test_model, inputs)
+            torch_model = torch_model.run_decompositions({})
+        else:
+            torch_model = torch.jit.trace(test_model, inputs)
 
         benchmarker = TorchMLModelBenchmarker(
             model=torch_model,

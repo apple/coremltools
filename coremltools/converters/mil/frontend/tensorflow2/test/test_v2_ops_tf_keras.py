@@ -1281,6 +1281,9 @@ class TestPooling(TensorFlowBaseTest):
         ),
     )
     def test_pooling(self, compute_unit, backend, op, data_format, pool_size):
+        if data_format == "channels_last" and backend == ("mlprogram", "fp16"):
+            pytest.skip(reason="rdar://148471884")
+
         shape = None
         if op in {tf.keras.layers.AveragePooling1D, tf.keras.layers.MaxPool1D}:
             shape = np.random.randint(low=3, high=9, size=3)

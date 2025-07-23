@@ -601,6 +601,7 @@ class CoreMLProtoExporter:
         classifier_config: "mil_input_types.ClassifierConfig",
         convert_to: str,
         convert_from: str,
+        specification_version: int,
     ):
         self.prog = prog
         self.mil_proto = mil_proto
@@ -610,6 +611,7 @@ class CoreMLProtoExporter:
         self.convert_to = convert_to
         self.convert_from = convert_from
         self.export_as_multifunction = self.prog.export_as_multifunction
+        self.specification_version = specification_version
         self.prog.validate(check_essential_scope=True)
 
     @staticmethod
@@ -631,6 +633,10 @@ class CoreMLProtoExporter:
                 non_state_input_features.append(input)
 
         return state_features, non_state_input_features
+
+    @property
+    def supports_multiple_enumerated_shapes(self) -> bool:
+        return self.specification_version >= _SPECIFICATION_VERSION_IOS_18
 
     def get_func_input(self, func: mil.Function) -> List["proto.Model_pb2.FeatureDescription"]:
         """
@@ -768,7 +774,9 @@ class CoreMLProtoExporter:
                             NeuralNetworkImageSize(height=s.shape[-2], width=s.shape[-1])
                         )
                     flexible_shape_utils._add_enumerated_image_sizes_for_feature(
-                        input_features[-1], sizes=enumerated_shapes
+                        input_features[-1],
+                        sizes=enumerated_shapes,
+                        allow_duplicate_shapes=self.supports_multiple_enumerated_shapes,
                     )
                 else:
                     img_range = NeuralNetworkImageSizeRange()
@@ -796,7 +804,9 @@ class CoreMLProtoExporter:
             elif isinstance(input_type, mil_input_types.TensorType):
                 if isinstance(input_type.shape, mil_input_types.EnumeratedShapes):
                     flexible_shape_utils._add_multiarray_ndshape_enumeration_for_feature(
-                        input_features[-1], [tuple(s.shape) for s in input_type.shape.shapes]
+                        input_features[-1],
+                        [tuple(s.shape) for s in input_type.shape.shapes],
+                        allow_duplicate_shapes=self.supports_multiple_enumerated_shapes,
                     )
                 else:
                     lb = []
@@ -1089,5 +1099,6 @@ def load(
         classifier_config=kwargs.get("classifier_config", None),
         convert_to=kwargs.get("convert_to", None),
         convert_from=kwargs.get("convert_from", None),
+        specification_version=specification_version,
     )
     return coreml_proto_exporter.export(specification_version)

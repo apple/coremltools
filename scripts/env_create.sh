@@ -83,7 +83,7 @@ then
   echo "Build environment already exists in $ENV_DIR."
 else
   echo "Creating a new conda environment in $ENV_DIR"
-  conda create --prefix "$ENV_DIR" python="$PYTHON" -y
+  conda create --prefix "$ENV_DIR" python="$PYTHON" -y  --channel conda-forge --override-channels
   conda activate $ENV_DIR
 fi
 

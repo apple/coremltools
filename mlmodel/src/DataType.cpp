@@ -158,6 +158,8 @@ FeatureType FeatureType::T() { return FeatureType(U); }
                 return "Float32";
             case Specification::ArrayFeatureType_ArrayDataType_FLOAT16:
                 return "Float16";
+            case Specification::ArrayFeatureType_ArrayDataType_INT8:
+                return "Int8";
             case Specification::ArrayFeatureType_ArrayDataType_INVALID_ARRAY_DATA_TYPE:
             case Specification::ArrayFeatureType_ArrayDataType_ArrayFeatureType_ArrayDataType_INT_MAX_SENTINEL_DO_NOT_USE_:
             case Specification::ArrayFeatureType_ArrayDataType_ArrayFeatureType_ArrayDataType_INT_MIN_SENTINEL_DO_NOT_USE_:

@@ -301,6 +301,7 @@ bool ArrayFeatureType_ArrayDataType_IsValid(int value) {
     case 65552:
     case 65568:
     case 65600:
+    case 131080:
     case 131104:
       return true;
     default:
@@ -308,13 +309,14 @@ bool ArrayFeatureType_ArrayDataType_IsValid(int value) {
   }
 }
 
-static ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<std::string> ArrayFeatureType_ArrayDataType_strings[5] = {};
+static ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<std::string> ArrayFeatureType_ArrayDataType_strings[6] = {};
 
 static const char ArrayFeatureType_ArrayDataType_names[] =
   "DOUBLE"
   "FLOAT16"
   "FLOAT32"
   "INT32"
+  "INT8"
   "INVALID_ARRAY_DATA_TYPE";
 
 static const ::PROTOBUF_NAMESPACE_ID::internal::EnumEntry ArrayFeatureType_ArrayDataType_entries[] = {
@@ -322,14 +324,16 @@ static const ::PROTOBUF_NAMESPACE_ID::internal::EnumEntry ArrayFeatureType_Array
   { {ArrayFeatureType_ArrayDataType_names + 6, 7}, 65552 },
   { {ArrayFeatureType_ArrayDataType_names + 13, 7}, 65568 },
   { {ArrayFeatureType_ArrayDataType_names + 20, 5}, 131104 },
-  { {ArrayFeatureType_ArrayDataType_names + 25, 23}, 0 },
+  { {ArrayFeatureType_ArrayDataType_names + 25, 4}, 131080 },
+  { {ArrayFeatureType_ArrayDataType_names + 29, 23}, 0 },
 };
 
 static const int ArrayFeatureType_ArrayDataType_entries_by_number[] = {
-  4, // 0 -> INVALID_ARRAY_DATA_TYPE
+  5, // 0 -> INVALID_ARRAY_DATA_TYPE
   1, // 65552 -> FLOAT16
   2, // 65568 -> FLOAT32
   0, // 65600 -> DOUBLE
+  4, // 131080 -> INT8
   3, // 131104 -> INT32
 };
 
@@ -339,12 +343,12 @@ const std::string& ArrayFeatureType_ArrayDataType_Name(
       ::PROTOBUF_NAMESPACE_ID::internal::InitializeEnumStrings(
           ArrayFeatureType_ArrayDataType_entries,
           ArrayFeatureType_ArrayDataType_entries_by_number,
-          5, ArrayFeatureType_ArrayDataType_strings);
+          6, ArrayFeatureType_ArrayDataType_strings);
   (void) dummy;
   int idx = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumName(
       ArrayFeatureType_ArrayDataType_entries,
       ArrayFeatureType_ArrayDataType_entries_by_number,
-      5, value);
+      6, value);
   return idx == -1 ? ::PROTOBUF_NAMESPACE_ID::internal::GetEmptyString() :
                      ArrayFeatureType_ArrayDataType_strings[idx].get();
 }
@@ -352,7 +356,7 @@ bool ArrayFeatureType_ArrayDataType_Parse(
     ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, ArrayFeatureType_ArrayDataType* value) {
   int int_value;
   bool success = ::PROTOBUF_NAMESPACE_ID::internal::LookUpEnumValue(
-      ArrayFeatureType_ArrayDataType_entries, 5, name, &int_value);
+      ArrayFeatureType_ArrayDataType_entries, 6, name, &int_value);
   if (success) {
     *value = static_cast<ArrayFeatureType_ArrayDataType>(int_value);
   }
@@ -363,6 +367,7 @@ constexpr ArrayFeatureType_ArrayDataType ArrayFeatureType::INVALID_ARRAY_DATA_TY
 constexpr ArrayFeatureType_ArrayDataType ArrayFeatureType::FLOAT32;
 constexpr ArrayFeatureType_ArrayDataType ArrayFeatureType::DOUBLE;
 constexpr ArrayFeatureType_ArrayDataType ArrayFeatureType::INT32;
+constexpr ArrayFeatureType_ArrayDataType ArrayFeatureType::INT8;
 constexpr ArrayFeatureType_ArrayDataType ArrayFeatureType::FLOAT16;
 constexpr ArrayFeatureType_ArrayDataType ArrayFeatureType::ArrayDataType_MIN;
 constexpr ArrayFeatureType_ArrayDataType ArrayFeatureType::ArrayDataType_MAX;

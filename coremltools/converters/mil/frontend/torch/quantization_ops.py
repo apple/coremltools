@@ -560,7 +560,7 @@ def quantized_embedding_4bit(context, node):
     context.add(gather)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["_convert_weight_to_int4pack_for_cpu"])
 def _convert_weight_to_int4pack(context, node):
     """Pack weight to int4pack format which will be fed into `_weight_int4pack_mm` op."""
     inputs = _get_inputs(context, node, expected=2)
@@ -574,20 +574,32 @@ def _convert_weight_to_int4pack(context, node):
         )
 
     with _torch.no_grad():
-        x_int4packed = _torch._convert_weight_to_int4pack(
-            _torch.from_numpy(x), inner_k_tiles
-        ).numpy()
+        if node.kind == "_convert_weight_to_int4pack":
+            x_int4packed = _torch._convert_weight_to_int4pack(
+                _torch.from_numpy(x), inner_k_tiles
+            ).numpy()
+        else:
+            assert node.kind == "_convert_weight_to_int4pack_for_cpu"
+            x_int4packed = _torch._convert_weight_to_int4pack_for_cpu(
+                _torch.from_numpy(x), inner_k_tiles
+            ).numpy()
 
     res = mb.const(val=x_int4packed, name=node.name)
     context.add(res)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["_weight_int4pack_mm_for_cpu"])
 def _weight_int4pack_mm(context, node):
     """
     The first argument is the same as torch.mm, but the second argument (weight) is packed.
-    The packed weight has rank=4, because the meta registration in dynamo requires operator has the same output shape
-    for each device. So it creates a fake shape {N / 8, K / (16 * innerKTiles), 32, innerKTiles / 2} for CPU.
+    * GPU preferes shape to be {N / 8, K / (16 * innerKTiles), 32, innerKTiles / 2}
+      Since the meta registration in dynamo requires operator to have the same output shape
+      for each device, the CPU kernel of `_torch._weight_int4pack_mm` also have to
+      use this complicated and confusing shape
+    * So, as the fix to https://github.com/pytorch/ao/issues/1117#issuecomment-2451252756
+      A dedicated CPU op `_torch._weight_int4pack_mm_for_cpu` is introduced in some version
+      after torchao 0.4.0, so the packed weight now have more straightforward shape (N, K / 2)
+      with dtype uint8, where the 2 comes from packing 2 int4 numbers into 1 uint8 number
 
     More specifically:
 
@@ -643,26 +655,42 @@ def _weight_int4pack_mm(context, node):
     # Unpack the result of `torch._convert_weight_to_int4pack` back to plain layout.
     # TODO: Use `torchao.ops.unpack_tensor_core_tiled_layout` to unpack after it has CPU implementation.
     # The current way to unpack by using _weight_int4pack_mm with eye matrix is a workaround on CPU.
-    if len(y_int4pack.shape) != 4:
-        raise ValueError(
-            f"The packed y from torch should have 4 dims, but got {len(y_int4pack.shape)}."
-        )
-    inner_k_tiles = y_int4pack.shape[-1] * 2
-    y_unpacked_shape = (y_int4pack.shape[0] * 8, y_int4pack.shape[1] * (inner_k_tiles * 16))
-    eye_shape = y_unpacked_shape[1]
     quant_min = 0
     quant_max = 2**4 - 1
-    with _torch.no_grad():
-        y_dequantized = (
-            _torch._weight_int4pack_mm(
-                _torch.eye(eye_shape, device=_torch.device("cpu"), dtype=_torch.float32),
-                _torch.from_numpy(y_int4pack),
-                group_size,
-                _torch.from_numpy(y_scales_and_zeros).float(),
+    if node.kind == "_weight_int4pack_mm":
+        if len(y_int4pack.shape) != 4:
+            raise ValueError(
+                f"The packed y from torch should have 4 dims, but got {len(y_int4pack.shape)}."
             )
-            .t()
-            .contiguous()
-        )
+        inner_k_tiles = y_int4pack.shape[-1] * 2
+        y_unpacked_shape = (y_int4pack.shape[0] * 8, y_int4pack.shape[1] * (inner_k_tiles * 16))
+        eye_shape = y_unpacked_shape[1]
+        with _torch.no_grad():
+            y_dequantized = (
+                _torch._weight_int4pack_mm(
+                    _torch.eye(eye_shape, device=_torch.device("cpu"), dtype=_torch.float32),
+                    _torch.from_numpy(y_int4pack),
+                    group_size,
+                    _torch.from_numpy(y_scales_and_zeros).float(),
+                )
+                .t()
+                .contiguous()
+            )
+    else:
+        assert node.kind == "_weight_int4pack_mm_for_cpu"
+        eye_shape = x.shape[1]
+        with _torch.no_grad():
+            y_dequantized = (
+                _torch._weight_int4pack_mm_for_cpu(
+                    _torch.eye(eye_shape, device=_torch.device("cpu"), dtype=_torch.float32),
+                    _torch.from_numpy(y_int4pack).to(_torch.uint8),
+                    group_size,
+                    _torch.from_numpy(y_scales_and_zeros).float(),
+                )
+                .t()
+                .contiguous()
+            )
+    with _torch.no_grad():
         zero_point_domain = (
             torchao_quant.ZeroPointDomain.INT
             if _np.issubdtype(zero_points.dtype, _np.integer)

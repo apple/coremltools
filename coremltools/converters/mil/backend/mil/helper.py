@@ -308,6 +308,8 @@ def cast_to_framework_io_dtype(var, is_output):
         return proto.FeatureTypes_pb2.ArrayFeatureType.ArrayDataType.INT32
     elif var.dtype == types.fp16:
         return proto.FeatureTypes_pb2.ArrayFeatureType.ArrayDataType.FLOAT16
+    elif var.dtype == types.int8:
+        return proto.FeatureTypes_pb2.ArrayFeatureType.ArrayDataType.INT8
     else:
         ioname = "Output " if is_output else "Input "
         ioname2 = "outputs" if is_output else "inputs"

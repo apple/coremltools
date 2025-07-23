@@ -153,6 +153,7 @@ enum ArrayFeatureType_ArrayDataType : int {
   ArrayFeatureType_ArrayDataType_FLOAT32 = 65568,
   ArrayFeatureType_ArrayDataType_DOUBLE = 65600,
   ArrayFeatureType_ArrayDataType_INT32 = 131104,
+  ArrayFeatureType_ArrayDataType_INT8 = 131080,
   ArrayFeatureType_ArrayDataType_FLOAT16 = 65552,
   ArrayFeatureType_ArrayDataType_ArrayFeatureType_ArrayDataType_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
   ArrayFeatureType_ArrayDataType_ArrayFeatureType_ArrayDataType_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
@@ -1903,6 +1904,8 @@ class ArrayFeatureType final :
     ArrayFeatureType_ArrayDataType_DOUBLE;
   static constexpr ArrayDataType INT32 =
     ArrayFeatureType_ArrayDataType_INT32;
+  static constexpr ArrayDataType INT8 =
+    ArrayFeatureType_ArrayDataType_INT8;
   static constexpr ArrayDataType FLOAT16 =
     ArrayFeatureType_ArrayDataType_FLOAT16;
   static inline bool ArrayDataType_IsValid(int value) {

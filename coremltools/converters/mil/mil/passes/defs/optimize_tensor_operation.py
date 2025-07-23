@@ -9,7 +9,7 @@ from coremltools.converters.mil._deployment_compatibility import AvailableTarget
 from coremltools.converters.mil.frontend import _utils
 from coremltools.converters.mil.mil import Block
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import Operation, Program
+from coremltools.converters.mil.mil import Operation, Program, types
 from coremltools.converters.mil.mil.block import is_current_opset_version_compatible_with
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import (
@@ -678,6 +678,119 @@ class fuse_onehot_matmul_to_gather(AbstractGraphPass):
                 if self._try_to_transform(op, block):
                     fusion_occurred = True
         return fusion_occurred
+
+
+@register_pass(namespace="common")
+class guard_negative_gather_indices(AbstractGraphPass):
+    """
+    Starting from iOS17 gather / gather_nd no longer supports negative indices,
+    so if indices is signed integer, we need to check and add size to negative ones
+
+    .. code-block::
+
+        Input
+            gather = gather(x, indices, axis, ...) / gather_nd(x, indices, ...)
+
+        Output
+            if before iOS17 or indices.dtype is unsigned:
+                same as input
+            else:
+                cond = greater_equal(indices, 0)
+                x_shape = shape(x)
+                if gather:
+                    x_size = slice_by_index(x_shape, axis, squeeze_mask=True)
+                    indices_plus = add(indices, x_size)
+                else: (gather_nd)
+                    indices_shape = shape(indices)
+                    indices_last_dim = slice_by_index(indices_shape, indices.rank - 1, squeeze_mask=True)
+                    indices_last_dim_expand = expand_dims(indices_last_dim, axes=[0])
+                    slice_shape = slice_by_size(x_shape, 0, size=indices_last_dim_expand)
+                    indices_plus = add(indices, slice_shape)
+                nonnegative_indices = select(cond, indices, indices_plus)
+                gather = gather(x, nonnegative_indices, axis, ...) / gather_nd(x, nonnegative_indices, ...)
+
+        PS: There can be some casts in the output graph, which are omitted above
+    """
+
+    def apply(self, prog):
+        for f in prog.functions.values():
+            self._apply_block(f)
+
+    @block_context_manager
+    def _apply_block(self, block: Block) -> None:
+        block_operation_list = list(block.operations)
+
+        for op in block_operation_list:
+            # general boilterplate: special case when op manipulates block
+            if op.enclosing_block is None:
+                continue
+            for b in op.blocks:
+                self._apply_block(b)
+
+            if op.op_type in ("gather", "gather_nd"):
+                self._try_match_and_transform_pattern(op, block)
+
+    @staticmethod
+    def _try_match_and_transform_pattern(op: Operation, block: Block) -> None:
+        assert op.op_type in ("gather", "gather_nd")
+        if not is_current_opset_version_compatible_with(AvailableTarget.iOS17):
+            return
+        indices = op.indices
+        if types.is_unsigned_int(indices.dtype):
+            return
+        x = op.x
+        axis = op.axis.val if op.op_type == "gather" else None
+
+        # As of iOS18, greater_equal & select & add do not support int16
+        indices_int32 = (
+            indices
+            if indices.dtype == types.int32
+            else mb.cast(x=indices, dtype="int32", before_op=op)
+        )
+        # As of iOS18, shape does not support int16
+        x_for_shape = (
+            x
+            if x.dtype in (types.fp16, types.fp32, types.int32, types.bool)
+            else mb.cast(x=x, dtype="bool", before_op=op)
+        )
+
+        cond = mb.greater_equal(x=indices_int32, y=0, before_op=op)
+        x_shape = mb.shape(x=x_for_shape, before_op=op)
+        if op.op_type == "gather":
+            x_size = _utils.pymil_value_at(x_shape, axis, before_op=op)
+            indices_plus = mb.add(x=indices_int32, y=x_size, before_op=op)
+        else:
+            assert op.op_type == "gather_nd"
+            indices_shape = mb.shape(x=indices_int32, before_op=op)
+            indices_last_dim = _utils.pymil_value_at(indices_shape, indices.rank - 1, before_op=op)
+            indices_last_dim_expand = mb.expand_dims(x=indices_last_dim, axes=[0], before_op=op)
+            slice_shape = mb.slice_by_size(
+                x=x_shape, begin=[0], size=indices_last_dim_expand, before_op=op
+            )
+            indices_plus = mb.add(x=indices_int32, y=slice_shape, before_op=op)
+        nonnegative_indices = mb.select(cond=cond, a=indices_int32, b=indices_plus, before_op=op)
+
+        kwargs = {
+            "x": x,
+            "indices": nonnegative_indices,
+            "batch_dims": op.batch_dims,
+            "validate_indices": op.validate_indices,
+            "name": op.name,
+            "before_op": op,
+        }
+        if op.op_type == "gather":
+            kwargs["axis"] = axis
+            new_gather = mb.gather(**kwargs)
+        else:
+            assert op.op_type == "gather_nd"
+            new_gather = mb.gather_nd(**kwargs)
+
+        if block.try_replace_uses_of_var_after_op(
+            anchor_op=op,
+            old_var=op.outputs[0],
+            new_var=new_gather,
+        ):
+            block.remove_ops([op])
 
 
 @register_pass(namespace="common")

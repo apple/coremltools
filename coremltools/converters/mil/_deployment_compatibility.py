@@ -12,6 +12,7 @@ from coremltools import (
     _SPECIFICATION_VERSION_IOS_16,
     _SPECIFICATION_VERSION_IOS_17,
     _SPECIFICATION_VERSION_IOS_18,
+    _SPECIFICATION_VERSION_IOS_26,
 )
 
 
@@ -23,6 +24,7 @@ class AvailableTarget(IntEnum):
     iOS16 = _SPECIFICATION_VERSION_IOS_16
     iOS17 = _SPECIFICATION_VERSION_IOS_17
     iOS18 = _SPECIFICATION_VERSION_IOS_18
+    iOS26 = _SPECIFICATION_VERSION_IOS_26
 
     # macOS versions (aliases of iOS versions)
     macOS10_15 = _SPECIFICATION_VERSION_IOS_13
@@ -32,6 +34,7 @@ class AvailableTarget(IntEnum):
     macOS13 = _SPECIFICATION_VERSION_IOS_16
     macOS14 = _SPECIFICATION_VERSION_IOS_17
     macOS15 = _SPECIFICATION_VERSION_IOS_18
+    macOS26 = _SPECIFICATION_VERSION_IOS_26
 
     # watchOS versions (aliases of iOS versions)
     watchOS6 = _SPECIFICATION_VERSION_IOS_13
@@ -40,6 +43,7 @@ class AvailableTarget(IntEnum):
     watchOS9 = _SPECIFICATION_VERSION_IOS_16
     watchOS10 = _SPECIFICATION_VERSION_IOS_17
     watchOS11 = _SPECIFICATION_VERSION_IOS_18
+    watchOS26 = _SPECIFICATION_VERSION_IOS_26
 
     # tvOS versions (aliases of iOS versions)
     tvOS13 = _SPECIFICATION_VERSION_IOS_13
@@ -48,6 +52,7 @@ class AvailableTarget(IntEnum):
     tvOS16 = _SPECIFICATION_VERSION_IOS_16
     tvOS17 = _SPECIFICATION_VERSION_IOS_17
     tvOS18 = _SPECIFICATION_VERSION_IOS_18
+    tvOS26 = _SPECIFICATION_VERSION_IOS_26
 
     # customized __str__
     def __str__(self):

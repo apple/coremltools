@@ -6,8 +6,7 @@
 import copy
 import itertools
 import unittest
-
-from typing import ClassVar, Dict, List, Optional
+from typing import Dict, Optional
 
 import numpy as np
 import pytest
@@ -17,9 +16,11 @@ import coremltools as ct
 import coremltools.optimize as cto
 from coremltools._deps import _IS_MACOS
 from coremltools.converters.mil import mil
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget
 from coremltools.converters.mil.experimental.passes.generic_pass_infrastructure import (
     register_generic_pass,
 )
+from coremltools.converters.mil.frontend.milproto.load import load as _milproto_to_pymil
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, types
 from coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary import cast as _cast_iOS14
@@ -40,7 +41,6 @@ from coremltools.converters.mil.testing_utils import (
     get_op_types_in_program,
 )
 from coremltools.models.utils import _macos_version
-from coremltools.converters.mil.frontend.milproto.load import load as _milproto_to_pymil
 
 np.random.seed(1984)
 _VALIDATE_MODEL = True
@@ -4674,6 +4674,91 @@ class TestFuseOnehotMatmulToGather:
             {"x": input_shape},
             backend=backend,
             expected_output_shapes={block.outputs[0].name: input_shape + (embedding_size,)},
+            minimum_deployment_target=opset_version,
+        )
+
+
+class TestGuardNegativeGatherIndices:
+    @pytest.mark.parametrize("backend", backends)
+    @pytest.mark.parametrize("op_type", ["gather", "gather_nd"])
+    @pytest.mark.parametrize("opset_version", [None, AvailableTarget.iOS16, AvailableTarget.iOS17])
+    @pytest.mark.parametrize(
+        "indices_dtype", [types.int32, types.int16, types.uint16, types.int8, types.uint8]
+    )
+    def test_guard_negative_gather_indices(self, backend, op_type, opset_version, indices_dtype):
+        if opset_version is None and indices_dtype != types.int32:
+            pytest.skip("iOS 15 gather only accepts int32 indices")
+        if opset_version == AvailableTarget.iOS16 and indices_dtype._width < 16:
+            pytest.skip("iOS 16 gather only accepts >= 16 bit indices")
+
+        input_shape = (2, 3)
+        if op_type == "gather":
+            indices_shape = (1,)
+            axis = 0
+            output_shape = input_shape[:axis] + (1,) + input_shape[axis + 1 :]
+        else:
+            assert op_type == "gather_nd"
+            indices_shape = (2, 2)
+            output_shape = (indices_shape[0],)
+
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=input_shape, dtype=types.fp16),
+                mb.TensorSpec(shape=indices_shape, dtype=indices_dtype),
+            ],
+            opset_version=opset_version,
+        )
+        def prog(x, indices):
+            if op_type == "gather":
+                return mb.gather(x=x, indices=indices, axis=axis)
+            else:
+                assert op_type == "gather_nd"
+                return mb.gather_nd(x=x, indices=indices)
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::guard_negative_gather_indices"
+        )
+        assert get_op_types_in_program(prev_prog) == [op_type]
+
+        expected_ops = [op_type]
+        if opset_version == ct.target.iOS17:
+            if types.is_signed_int(indices_dtype):
+                if op_type == "gather":
+                    expected_ops = [
+                        "greater_equal",
+                        "shape",
+                        "slice_by_index",
+                        "add",
+                        "select",
+                    ] + expected_ops
+                else:
+                    assert op_type == "gather_nd"
+                    expected_ops = [
+                        "greater_equal",
+                        "shape",
+                        "shape",
+                        "slice_by_index",
+                        "expand_dims",
+                        "slice_by_size",
+                        "add",
+                        "select",
+                    ] + expected_ops
+                if indices_dtype._width < 32:
+                    expected_ops = ["cast"] + expected_ops
+        assert get_op_types_in_program(prog) == expected_ops
+
+        if opset_version == ct.target.iOS16:
+            if backend[0] != "mlprogram" or _macos_version() < (13, 0):
+                pytest.skip("IOS16 target available only on macOS 13+ with mlprogram.")
+        if opset_version == ct.target.iOS17:
+            if backend[0] != "mlprogram" or _macos_version() < (14, 0):
+                pytest.skip("IOS17 target available only on macOS 14+ with mlprogram.")
+
+        assert_model_is_valid(
+            prog,
+            {"x": input_shape, "indices": indices_shape},
+            backend=backend,
+            expected_output_shapes={block.outputs[0].name: output_shape},
             minimum_deployment_target=opset_version,
         )
 

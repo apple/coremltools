@@ -12,6 +12,7 @@ from coremltools.converters.mil.frontend import _utils
 from coremltools.converters.mil.mil import Block
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Operation, Var, types
+from coremltools.converters.mil.mil.block import is_current_opset_version_compatible_with
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import (
     _check_child_op_type,
@@ -1138,7 +1139,10 @@ class canonicalize_quantized_lut_pattern(AbstractGraphPass):
     @staticmethod
     def get_order_to_reverse(expect_dequant_first: bool) -> Tuple[str, str]:
         """Get the wrong order pattern which will be canonicalized."""
-        if expect_dequant_first:
+        if expect_dequant_first and not is_current_opset_version_compatible_with(
+            AvailableTarget.iOS26
+        ):
+            # This issue was fixed in iOS26.
             # The LUT -> shift_scale op pattern will be reversed.
             wrong_order_op1 = "constexpr_lut_to_dense"
             wrong_order_op2 = "constexpr_blockwise_shift_scale"

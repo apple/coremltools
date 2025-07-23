@@ -7,6 +7,7 @@ from datetime import date
 import itertools
 import os
 import platform
+import re
 import shutil
 import tempfile
 from unittest.mock import patch
@@ -60,6 +61,7 @@ if _HAS_HF:
     from peft import LoraConfig, get_peft_model
 
 if _HAS_TORCHAO:
+    import torchao
     from torchao.quantization import quant_api
     from torchao.utils import unwrap_tensor_subclass
 
@@ -754,6 +756,7 @@ class TestPyTorchConverterExamples:
     @pytest.mark.skipif(
         ct.utils._macos_version() < (15, 0), reason="States are supported since iOS18/macos15."
     )
+    @pytest.mark.skip(reason="rdar://152066678 (Attention Toy Model Prediction Crashes Python)")
     def test_attention_stateful_key_value_cache():
         """
         Use a toy attention model to showcase kv cache with states.
@@ -1613,6 +1616,100 @@ class TestTorchInputs(_TestInputs):
                 ],
             )
 
+
+    @staticmethod
+    @pytest.mark.xfail(reason="rdar://155895085 (Simple model with int8 input/output fails)")
+    @pytest.mark.parametrize(
+        "use_torch_export, int8_param, minimum_deployment_target",
+        itertools.product(
+            [True, False],
+            [ct.converters.mil.mil.types.int8, np.int8],
+            [ct.target.iOS26, ct.target.iOS18],
+        ),
+    )
+    def test_int8_tenors(
+        use_torch_export: bool, int8_param: type, minimum_deployment_target: ct.target
+    ):
+        class Model(nn.Module):
+            def forward(self, x):
+                return x + 1
+
+        model = Model()
+        x = torch.rand(3)
+
+        if use_torch_export:
+            if ct.utils._python_version()[:2] <= (3, 8):
+                pytest.skip("torch.export not support on python 3.8 or lower")
+
+            model = torch.export.export(model, (x,))
+            model = model.run_decompositions({})
+        else:
+            model = torch.jit.trace(model, (x))
+
+        in_type = ct.TensorType(shape=x.shape, dtype=int8_param)
+        out_type = ct.TensorType(name="y", dtype=int8_param)
+        if minimum_deployment_target == ct.target.iOS26:
+            # Non-error case
+            mlmodel = ct.convert(
+                model,
+                inputs=[in_type],
+                outputs=[out_type],
+                minimum_deployment_target=ct.target.iOS26,
+            )
+            assert mlmodel is not None
+
+            # Check parameters for MIL main function has right type.
+            expected_type = "int8"
+            mil_main_func = mlmodel._mil_program.functions["main"]
+            input_type = mil_main_func._input_dict["x"].dtype
+            assert builtin_to_string(input_type) == expected_type
+            output_type = mil_main_func.output_types[0].dtype
+            assert builtin_to_string(output_type) == expected_type
+
+            # Check the same parameter in the spec.
+            expected_type = proto.FeatureTypes_pb2.ArrayFeatureType.ArrayDataType.INT8
+            spec = mlmodel.get_spec()
+            input = spec.description.input[0]
+            input_dtype = input.type.multiArrayType.dataType
+            assert input_dtype == expected_type
+            output = spec.description.output[0]
+            output_dtype = output.type.multiArrayType.dataType
+            assert output_dtype == expected_type
+
+            # Make sure we can get preditions from the mlmodel
+            x_int8 = np.array([1, 2, 3], dtype=np.int8)
+            expected_y = np.array([2, 3, 4], dtype=np.int8)
+            predictons = mlmodel.predict({"x": x_int8})
+            assert all(predictons["y"] == expected_y)
+
+            x_fp16 = np.array([1, 2, 3], dtype=np.float16)
+            predictons = mlmodel.predict({"x": x_fp16})
+            assert all(predictons["y"] == expected_y)
+
+        else:
+            # Error cases
+            with pytest.raises(
+                TypeError,
+                match="int8 dtype for inputs is only supported for deployment target >= iOS26",
+            ):
+                # Check inputs error
+                mlmodel = ct.convert(
+                    model,
+                    inputs=[in_type],
+                    outputs=None,
+                    minimum_deployment_target=ct.target.iOS18,
+                )
+            with pytest.raises(
+                TypeError,
+                match="int8 dtype for outpus is only supported for deployment target >= iOS26",
+            ):
+                # Check outputs error
+                mlmodel = ct.convert(
+                    model,
+                    inputs=[ct.TensorType(shape=(10,))],
+                    outputs=[out_type],
+                    minimum_deployment_target=ct.target.iOS18,
+                )
 
 @pytest.fixture
 def int32_input_model():
@@ -3026,6 +3123,7 @@ class TestTorchao:
 
         if use_export:
             exported_model = torch.export.export(model, (input_data,))
+            exported_model = exported_model.run_decompositions({})
             inputs = None
         else:
             exported_model = torch.jit.trace(model, example_inputs=(input_data,))
@@ -3055,7 +3153,26 @@ class TestTorchao:
         Torchao quant_api.int4_weight_only only supports bfloat16.
         """
         model = self._construct_test_model().bfloat16()
-        quant_api.quantize_(model, quant_api.int4_weight_only(group_size=32, inner_k_tiles=2))
+        int4_weight_only_config = (
+            quant_api.int4_weight_only(
+                group_size=32, layout=quant_api.TensorCoreTiledLayout(inner_k_tiles=2)
+            )
+            if Version(torchao.__version__) > Version("0.4.0")
+            else quant_api.int4_weight_only(group_size=32, inner_k_tiles=2)
+        )
+        try:
+            quant_api.quantize_(model, int4_weight_only_config)
+        except NotImplementedError as e:
+            pattern = (
+                r"Could not run 'aten::_convert_weight_to_int4pack' with "
+                r"arguments from the 'CPU' backend\. .*"
+            )
+            if re.match(pattern, str(e)) and Version(torchao.__version__) > Version("0.4.0"):
+                pytest.xfail(
+                    "Starting from some version after torchao 0.4.0 "
+                    "torchao.quantization.quant_api.int4_weight_only "
+                    "no longer supports CPU"
+                )
         model = unwrap_tensor_subclass(model)
         input_data = torch.randn((2, 32), dtype=torch.float16)
         exported_model = torch.export.export(model, (input_data,))
@@ -3078,13 +3195,22 @@ class TestTorchao:
 
         if use_export:
             exported_model = torch.export.export(model, (input_data,))
+            exported_model = exported_model.run_decompositions({})
             inputs = None
-            err_msg = "Unsupported fx node quantize_per_token"
-            err_type = ValueError
+            err_msg = (
+                r"Unsupported fx node choose_qparams_affine, kind torchao::choose_qparams_affine"
+                if Version(torchao.__version__) >= Version("0.11.0")
+                else r"Unsupported fx node quantize_per_token"
+            )
+            err_type = NotImplementedError
         else:
             exported_model = torch.jit.trace(model, example_inputs=(input_data,))
             inputs = [ct.TensorType(shape=input_data.shape)]
-            err_msg = "Dynamic activation quantization is not supported in Core ML"
+            err_msg = (
+                r"PyTorch convert function for op 'torchao::choose_qparams_affine' not implemented."
+                if Version(torchao.__version__) >= Version("0.11.0")
+                else r"Dynamic activation quantization is not supported in Core ML"
+            )
             err_type = NotImplementedError
 
         with pytest.raises(err_type, match=err_msg):

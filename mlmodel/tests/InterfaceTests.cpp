@@ -513,3 +513,39 @@ int testStateFeature_ArrayUsesEnumeratedFlexibleShape_shouldFail() {
 
     return 0;
 }
+
+int testArrayFeature_Int8_SpecificationVersion() {
+    Specification::Model m;
+    auto *description = m.mutable_description();
+    auto *feature = description->add_input();
+    setupMultiArrayFeature(feature, "input");
+    feature->mutable_type()->mutable_multiarraytype()->set_datatype(::CoreML::Specification::ArrayFeatureType_ArrayDataType_INT8);
+
+    // Check model specification version requirements.
+    auto validationPolicy = ValidationPolicy();
+    validationPolicy.allowsEmptyOutput = true;
+
+    ML_ASSERT_BAD_WITH_TYPE(validateModelDescription(*description, MLMODEL_SPECIFICATION_VERSION_IOS18, validationPolicy), ResultType::INVALID_MODEL_INTERFACE);
+    ML_ASSERT_GOOD(validateModelDescription(*description, MLMODEL_SPECIFICATION_VERSION_IOS26, validationPolicy));
+
+    return 0;
+}
+
+int testArrayFeature_DefaultOptionalValueOutOfRange_shouldFail() {
+    Specification::Model m;
+    auto *description = m.mutable_description();
+    auto *feature = description->add_input();
+    setupMultiArrayFeature(feature, "input");
+    feature->mutable_type()->mutable_multiarraytype()->set_datatype(::CoreML::Specification::ArrayFeatureType_ArrayDataType_INT8);
+    feature->mutable_type()->mutable_multiarraytype()->set_intdefaultvalue(1);
+
+    auto validationPolicy = ValidationPolicy();
+    validationPolicy.allowsEmptyOutput = true;
+
+    ML_ASSERT_GOOD(validateModelDescription(*description, MLMODEL_SPECIFICATION_VERSION_NEWEST, validationPolicy));
+
+    feature->mutable_type()->mutable_multiarraytype()->set_intdefaultvalue(128);
+    ML_ASSERT_BAD_WITH_TYPE(validateModelDescription(*description, MLMODEL_SPECIFICATION_VERSION_NEWEST, validationPolicy), ResultType::INVALID_MODEL_INTERFACE);
+
+    return 0;
+}

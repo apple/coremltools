@@ -460,6 +460,8 @@ class TestLSTM:
         symbolic,
         dtype,
     ):
+        if input_size == 64:
+            pytest.skip(reason="rdar://148451040")
 
         torch.manual_seed(50)
         rnn = torch.nn.LSTM(input_size, hidden_size, 1, bias=has_bias)
@@ -599,6 +601,9 @@ class TestLSTM:
         symbolic,
         dtype,
     ):
+        if input_size == 64:
+            pytest.skip(reason="rdar://148451040")
+
         def _pytorch_hidden_to_coreml(x):
             x = x.detach().numpy()
             # Split of Direction axis
