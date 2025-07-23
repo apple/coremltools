@@ -592,7 +592,7 @@ def _convert_weight_to_int4pack(context, node):
 def _weight_int4pack_mm(context, node):
     """
     The first argument is the same as torch.mm, but the second argument (weight) is packed.
-    * GPU preferes shape to be {N / 8, K / (16 * innerKTiles), 32, innerKTiles / 2}
+    * GPU prefers shape to be {N / 8, K / (16 * innerKTiles), 32, innerKTiles / 2}
       Since the meta registration in dynamo requires operator to have the same output shape
       for each device, the CPU kernel of `_torch._weight_int4pack_mm` also have to
       use this complicated and confusing shape
