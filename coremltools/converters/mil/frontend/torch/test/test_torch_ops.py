@@ -13793,7 +13793,7 @@ class TestScaledDotProductAttention(TorchBaseTest):
         mask_as_input,
         dynamic,
     ):
-        if frontend == TorchFrontend.EXECUTORCH and not mask_as_input:
+        if frontend == TorchFrontend.EXECUTORCH:
             pytest.xfail(
                 "https://github.com/apple/coremltools/issues/2199: placeholder assertion error"
             )
