@@ -4,7 +4,7 @@ parameterized==0.8.1
 pillow
 pytest==7.1.2
 pytest-timeout
-pytest-xdist==3.6.1
+pytest-xdist==3.5.0
 tensorflow==1.15.4
 
 # TF1 only support protobuf <= 3.20
