@@ -425,6 +425,22 @@ class RangeDim:
     def __str__(self):
         return 'RangeDim(lower_bound={}, upper_bound={}, default={}, symbol="{}")'.format(
             self.lower_bound, self.upper_bound, self.default, self.symbol)
+    
+    def __ior__(self, other):
+        if not isinstance(other, RangeDim):
+            return NotImplemented
+
+        self.lower_bound = min(self.lower_bound, other.lower_bound)
+
+        if self.upper_bound == -1 or other.upper_bound == -1:
+            self.upper_bound = -1
+        else:
+            self.upper_bound = max(self.upper_bound, other.upper_bound)
+
+        # Adjust default to fit in new bounds if needed
+        self.default = max(self.lower_bound, min(self.default, self.upper_bound))
+
+        return self
 
 
 class Shape:
