@@ -31,6 +31,13 @@ To install the latest non-beta version, run the following command in your termin
 pip install -U coremltools
 ```
 
+## Install 9.0 Beta 1
+
+The [Coremltools version 9 beta 1](https://github.com/apple/coremltools/releases/tag/9.0b1) is now out. To install, run the following command in your terminal:
+```shell
+pip install coremltools==9.0b1
+```
+
 ## Core ML
 
 [Core ML](https://developer.apple.com/documentation/coreml) is an Apple framework to integrate machine learning models into your app. Core ML provides a unified representation for all models. Your app uses Core ML APIs and user data to make predictions, and to fine-tune models, all on the user’s device. Core ML optimizes on-device performance by leveraging the CPU, GPU, and Neural Engine while minimizing its memory footprint and power consumption. Running a model strictly on the user’s device removes any need for a network connection, which helps keep the user’s data private and your app responsive.
