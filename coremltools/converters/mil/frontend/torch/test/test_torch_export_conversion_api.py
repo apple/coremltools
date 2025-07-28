@@ -24,9 +24,6 @@ import torch
 
 from coremltools.converters.mil.frontend.torch.exir_utils import WRAPPED_SCALAR_INPUT_SUFFIX
 
-if TorchFrontend.EXECUTORCH in frontends:
-    import executorch.exir
-
 import coremltools as ct
 from coremltools import proto
 from coremltools.converters.mil import testing_reqs
@@ -223,13 +220,9 @@ class TestTorchExportConversionAPI(TorchBaseTest):
             batch_dim = torch.export.Dim("batch_dim")
             dynamic_shapes = {"x": {0: batch_dim}}
 
-        exported_program = torch.export.export(
-            model,
-            example_inputs,
-            dynamic_shapes=dynamic_shapes,
+        exported_program = export_torch_model_to_frontend(
+            model, example_inputs, frontend, torch_export_dynamic_shapes=dynamic_shapes
         )
-        if frontend == TorchFrontend.EXECUTORCH:
-            exported_program = executorch.exir.to_edge(exported_program).exported_program()
 
         with pytest.raises(
             ValueError,

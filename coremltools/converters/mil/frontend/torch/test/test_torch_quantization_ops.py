@@ -466,20 +466,34 @@ class TestPytorchQuantizedOps(TorchQuantizationBaseTest):
         ) = torchao.quantization.utils.groupwise_affine_quantize_tensor(
             y, n_bit=4, groupsize=group_size, dtype=torch.float32
         )
-        y_int4packed = torch._convert_weight_to_int4pack(y_quantized, inner_k_tiles)
-        y_unpacked_shape = (y_int4packed.shape[0] * 8, y_int4packed.shape[1] * (inner_k_tiles * 16))
-        eye_shape = y_unpacked_shape[1]
-        eye_matrix = torch.eye(eye_shape, device=torch.device("cpu"), dtype=torch.float32)
-        if Version(torch.__version__) < Version("2.4.0"):
-            # The `torch._weight_int4pack_mm` op requires bfloat16 before PyTorch 2.4.0.
-            eye_matrix = eye_matrix.to(torch.bfloat16)
-            y_scales_and_zeros = y_scales_and_zeros.to(torch.bfloat16)
-        y_dequant = torch._weight_int4pack_mm(
-            eye_matrix,
-            y_int4packed,
-            group_size,
-            y_scales_and_zeros,
-        )
+        if Version(torchao.__version__) > Version("0.4.0"):
+            y_int4packed = torch._convert_weight_to_int4pack_for_cpu(y_quantized, inner_k_tiles)
+            eye_shape = y.shape[0]
+            eye_matrix = torch.eye(eye_shape, device=torch.device("cpu"), dtype=torch.float32)
+            y_dequant = torch._weight_int4pack_mm_for_cpu(
+                eye_matrix,
+                y_int4packed,
+                group_size,
+                y_scales_and_zeros,
+            )
+        else:
+            y_int4packed = torch._convert_weight_to_int4pack(y_quantized, inner_k_tiles)
+            y_unpacked_shape = (
+                y_int4packed.shape[0] * 8,
+                y_int4packed.shape[1] * (inner_k_tiles * 16),
+            )
+            eye_shape = y_unpacked_shape[1]
+            eye_matrix = torch.eye(eye_shape, device=torch.device("cpu"), dtype=torch.float32)
+            if Version(torch.__version__) < Version("2.4.0"):
+                # The `torch._weight_int4pack_mm` op requires bfloat16 before PyTorch 2.4.0.
+                eye_matrix = eye_matrix.to(torch.bfloat16)
+                y_scales_and_zeros = y_scales_and_zeros.to(torch.bfloat16)
+            y_dequant = torch._weight_int4pack_mm(
+                eye_matrix,
+                y_int4packed,
+                group_size,
+                y_scales_and_zeros,
+            )
         y_dequant = y_dequant.t().contiguous().float()
 
         # Makes sure this `_weight_int4pack_mm` with eye matrix fully restores the original y.
@@ -526,16 +540,41 @@ class TestPytorchQuantizedOps(TorchQuantizationBaseTest):
     def test_weight_int4pack_mm(self, compute_unit, inner_k_tiles, group_size):
         y = torch.rand(128, 128, dtype=torch.float32, device=torch.device("cpu"))
 
-        class Model(torch.nn.Module):
-            def forward(self, x):
-                (
-                    y_quantized,
-                    y_scales_and_zeros,
-                ) = torchao.quantization.utils.groupwise_affine_quantize_tensor(
-                    y, n_bit=4, groupsize=group_size, dtype=torch.float32
-                )
-                y_int4packed = torch._convert_weight_to_int4pack(y_quantized, inner_k_tiles)
-                return torch._weight_int4pack_mm(x, y_int4packed, group_size, y_scales_and_zeros)
+        if Version(torchao.__version__) > Version("0.4.0"):
+            # TODO (rdar://150555626): Once torchao stabilizes the io signature
+            # of `choose_qparams_affine`, we can move the
+            # torchao.quantization.utils.groupwise_affine_quantize_tensor call
+            # into model.forward
+            (
+                y_quantized,
+                y_scales_and_zeros,
+            ) = torchao.quantization.utils.groupwise_affine_quantize_tensor(
+                y, n_bit=4, groupsize=group_size, dtype=torch.float32
+            )
+
+            class Model(torch.nn.Module):
+                def forward(self, x):
+                    y_int4packed = torch._convert_weight_to_int4pack_for_cpu(
+                        y_quantized, inner_k_tiles
+                    )
+                    return torch._weight_int4pack_mm_for_cpu(
+                        x, y_int4packed, group_size, y_scales_and_zeros
+                    )
+
+        else:
+
+            class Model(torch.nn.Module):
+                def forward(self, x):
+                    (
+                        y_quantized,
+                        y_scales_and_zeros,
+                    ) = torchao.quantization.utils.groupwise_affine_quantize_tensor(
+                        y, n_bit=4, groupsize=group_size, dtype=torch.float32
+                    )
+                    y_int4packed = torch._convert_weight_to_int4pack(y_quantized, inner_k_tiles)
+                    return torch._weight_int4pack_mm(
+                        x, y_int4packed, group_size, y_scales_and_zeros
+                    )
 
         model = Model().to(torch.device("cpu"))
         input_shape = [(2, 128)]
@@ -619,7 +658,13 @@ class TestPytorchQuantizedOps(TorchQuantizationBaseTest):
             rtol=1e-3,
         )
         prog = res[1]._mil_program
-        assert get_op_types_in_program(prog) == ["constexpr_blockwise_shift_scale", "gather"]
+        assert get_op_types_in_program(prog) == [
+            "constexpr_blockwise_shift_scale",
+            "greater_equal",
+            "add",
+            "select",
+            "gather",
+        ]
 
 
 @pytest.mark.skipif(not _HAS_TORCH_VISION, reason=MSG_TORCH_VISION_NOT_FOUND)
@@ -997,6 +1042,9 @@ class TestPytorchCarryCompressionInfo(TorchQuantizationBaseTest):
         itertools.product(compute_units, [ct.target.iOS16, ct.target.iOS18], frontends),
     )
     def test_palettization_8bit_lut(self, compute_unit, minimum_deployment_target, frontend):
+        if minimum_deployment_target == ct.target.iOS18:
+            pytest.xfail("rdar://148354519")
+
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data(
             multi_layer=True
         )

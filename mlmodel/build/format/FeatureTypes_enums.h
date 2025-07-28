@@ -32,6 +32,7 @@ enum MLArrayDataType: int {
     MLArrayDataTypeFLOAT32 = 65568,
     MLArrayDataTypeDOUBLE = 65600,
     MLArrayDataTypeINT32 = 131104,
+    MLArrayDataTypeINT8 = 131080,
     MLArrayDataTypeFLOAT16 = 65552,
 };
 

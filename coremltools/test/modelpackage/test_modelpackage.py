@@ -457,19 +457,19 @@ class TestMLModel:
 
         shutil.rmtree(package_path)
 
-
-    @pytest.mark.skipif(utils._macos_version() < (15, 0),
-                        reason="optimization hints available only on macOS15+")
-    @pytest.mark.parametrize("reshapeFrequency,"
-                             "specializationStrategy,"
-                             "allowLowPrecisionAccumulationOnGPU",
-                             itertools.product(
-                                 (ct.ReshapeFrequency.Frequent, ct.ReshapeFrequency.Infrequent, None),
-                                 (ct.SpecializationStrategy.FastPrediction, ct.SpecializationStrategy.Default, None),
-                                 (True, False, None),
-                             ))
+    @pytest.mark.skipif(
+        utils._macos_version() < (15, 0), reason="optimization hints available only on macOS15+"
+    )
+    @pytest.mark.parametrize(
+        "reshapeFrequency," "specializationStrategy," "allowLowPrecisionAccumulationOnGPU",
+        itertools.product(
+            (ct.ReshapeFrequency.Frequent, ct.ReshapeFrequency.Infrequent, None),
+            (ct.SpecializationStrategy.FastPrediction, ct.SpecializationStrategy.Default, None),
+            (True, False, None),
+        ),
+    )
     def test_optimization_hints(
-            self, reshapeFrequency, specializationStrategy, allowLowPrecisionAccumulationOnGPU
+        self, reshapeFrequency, specializationStrategy, allowLowPrecisionAccumulationOnGPU
     ):
         optimization_hints={}
         if reshapeFrequency is not None:
@@ -477,7 +477,9 @@ class TestMLModel:
         if specializationStrategy is not None:
             optimization_hints['specializationStrategy'] = specializationStrategy
         if allowLowPrecisionAccumulationOnGPU is not None:
-            optimization_hints['allowLowPrecisionAccumulationOnGPU'] = allowLowPrecisionAccumulationOnGPU
+            optimization_hints[
+                "allowLowPrecisionAccumulationOnGPU"
+            ] = allowLowPrecisionAccumulationOnGPU
         if len(optimization_hints) == 0:
             optimization_hints = None
 
@@ -498,7 +500,10 @@ class TestMLModel:
         with pytest.raises(ValueError, match='Unrecognized key in optimization_hint dictionary: bad key'):
             MLModel(self.spec, optimization_hints={'bad key': ct.ReshapeFrequency.Frequent})
 
-        with pytest.raises(TypeError, match='"allowLowPrecisionAccumulationOnGPU" value of "optimization_hint_input" dictionary must be of type bool'):
+        with pytest.raises(
+            TypeError,
+            match='"allowLowPrecisionAccumulationOnGPU" value of "optimization_hint_input" dictionary must be of type bool',
+        ):
             MLModel(self.spec, optimization_hints={"allowLowPrecisionAccumulationOnGPU": 12})
 
         with pytest.raises(TypeError, match='"specializationStrategy" value of "optimization_hint_input" dictionary must be of type coremltools.SpecializationStrategy'):

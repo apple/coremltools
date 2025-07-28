@@ -214,8 +214,10 @@ def export_torch_model_to_frontend(
         model_spec = torch.export.export(
             model, input_data_clone, dynamic_shapes=torch_export_dynamic_shapes
         )
+        model_spec = model_spec.run_decompositions({})
         if frontend == TorchFrontend.EXECUTORCH:
             model_spec = executorch.exir.to_edge(model_spec).exported_program()
+        torch._dynamo.reset()
 
     else:
         raise ValueError(

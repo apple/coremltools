@@ -67,6 +67,9 @@ _SPECIFICATION_VERSION_IOS_17 = 8
 # New versions for iOS 18.0
 _SPECIFICATION_VERSION_IOS_18 = 9
 
+# New versions for iOS 26.0
+_SPECIFICATION_VERSION_IOS_26 = 10
+
 
 class ComputeUnit(_Enum):
     '''
@@ -110,6 +113,7 @@ _OPSET = {
     _SPECIFICATION_VERSION_IOS_16: "CoreML6",
     _SPECIFICATION_VERSION_IOS_17: "CoreML7",
     _SPECIFICATION_VERSION_IOS_18: "CoreML8",
+    _SPECIFICATION_VERSION_IOS_26: "CoreML9",
 }
 
 # Default specification version for each backend

@@ -401,15 +401,25 @@ def _load_operation(context: TranscriptionContext, op_spec: proto.MIL_pb2.Operat
                 if binding_type == "name":
                     vars.append(context.get_var_from_name(binding.name))
                 elif binding_type == "value":
-                    # We only support the list value for now (for the classifier use case)
+                    # We only support the list and tensor value for now (for the classifier use case)
                     value_spec = binding.value
-                    assert value_spec.WhichOneof("value") == "immediateValue"
-                    assert value_spec.immediateValue.WhichOneof("value") == "list"
-                    list_value = _load_immediate_value(context, value_spec.immediateValue)
-                    values = []
-                    for value_spec in list_value:
-                        values.append(_load_value(context, value_spec))
-                    var = mb.const(val=mil_list(values))
+                    if value_spec.WhichOneof("value") != "immediateValue":
+                        raise AssertionError(
+                            f"The value_spec should be immediateValue, but got {value_spec.WhichOneof('value')}"
+                        )
+                    immediate_value_type = value_spec.immediateValue.WhichOneof("value")
+                    if immediate_value_type == "list":
+                        values = []
+                        for value_spec in _load_immediate_value(context, value_spec.immediateValue):
+                            values.append(_load_value(context, value_spec))
+                        values = mil_list(values)
+                    elif immediate_value_type == "tensor":
+                        values = _load_value(context, value_spec)
+                    else:
+                        raise AssertionError(
+                            f"Only support list or tensor, but got {immediate_value_type}"
+                        )
+                    var = mb.const(val=values)
                     vars.append(var)
                 else:
                     raise NotImplementedError("Binding {} not yet implemented".format(binding_type))

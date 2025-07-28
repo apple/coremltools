@@ -9,14 +9,16 @@ import platform
 import shutil
 import tempfile
 from collections import Counter
+from typing import List, Tuple
 
 import numpy as np
 import pytest
 
 import coremltools as ct
+from coremltools import proto
 from coremltools._deps import _HAS_TORCH
 from coremltools.converters.mil import Builder as mb
-from coremltools.converters.mil import mil
+from coremltools.converters.mil import mil as mil
 from coremltools.converters.mil.mil import Function, get_new_symbol, types
 from coremltools.converters.mil.testing_utils import get_op_types_in_program
 from coremltools.models.compute_device import (
@@ -140,10 +142,7 @@ class TestInputs:
 
 class TestMLProgramConverterExamples:
     @staticmethod
-    @pytest.mark.skipif(
-        ct.utils._macos_version() < (15, 0), reason="Tests are for deployment target iOS18/macos15"
-    )
-    def test_build_stateful_model():
+    def _get_stateful_program():
         @mb.program(
             input_specs=[
                 mb.TensorSpec((1,), dtype=types.fp16),
@@ -160,12 +159,37 @@ class TestMLProgramConverterExamples:
 
             return y
 
+        return prog
+
+    @staticmethod
+    @pytest.mark.skipif(
+        ct.utils._macos_version() < (15, 0), reason="Tests are for deployment target iOS18/macos15"
+    )
+    def test_build_stateful_model():
+        prog = TestMLProgramConverterExamples._get_stateful_program()
         mlmodel = ct.convert(prog, minimum_deployment_target=ct.target.iOS18)
 
         # try to run prediction on the stateful model
         state = mlmodel.make_state()
         assert mlmodel.predict({"x": np.array([1.0])}, state=state)["y"] == 1
         assert mlmodel.predict({"x": np.array([1.0])}, state=state)["y"] == 2
+
+    @staticmethod
+    @pytest.mark.skipif(
+        ct.utils._macos_version() < (15, 0), reason="Tests are for deployment target iOS18/macos15"
+    )
+    def test_stateful_model_read_write_state():
+        prog = TestMLProgramConverterExamples._get_stateful_program()
+        mlmodel = ct.convert(prog, minimum_deployment_target=ct.target.iOS18)
+
+        # try to run prediction on the stateful model
+        state = mlmodel.make_state()
+        state.write_state(name="accumulator_state", value=np.array([1.0]))
+        assert state.read_state(name="accumulator_state") == 1
+        assert mlmodel.predict({"x": np.array([1.0])}, state=state)["y"] == 2
+        state.write_state(name="accumulator_state", value=np.array([0.0]))
+        assert state.read_state(name="accumulator_state") == 0
+        assert mlmodel.predict({"x": np.array([1.0])}, state=state)["y"] == 1
 
     @staticmethod
     def test_model_save(tmpdir):
@@ -801,3 +825,152 @@ class TestMLModelAsset:
             ), "Value must be close to 500.0."
 
         TestMLModelAsset._remove_path(model.package_path)
+
+
+class TestMultipleEnumeratedShapes:
+    @staticmethod
+    def _get_test_model(
+        x_shapes: ct.EnumeratedShapes,
+        y_shapes: ct.EnumeratedShapes,
+        minimum_deployment_target: ct.target,
+        image_inputs: bool = False,
+    ) -> ct.models.MLModel:
+        input_specs = [mb.TensorSpec(shapes.symbolic_shape) for shapes in [x_shapes, y_shapes]]
+
+        @mb.program(input_specs=input_specs)
+        def prog(x, y):
+            return mb.add(x=mb.square(x=x), y=mb.square(x=y))
+
+        model = ct.convert(
+            model=prog,
+            source="milinternal",
+            convert_to="mlprogram",
+            inputs=[
+                ct.ImageType(name="x", shape=x_shapes)
+                if image_inputs
+                else ct.TensorType(name="x", shape=x_shapes),
+                ct.ImageType(name="y", shape=y_shapes)
+                if image_inputs
+                else ct.TensorType(name="y", shape=y_shapes),
+            ],
+            minimum_deployment_target=minimum_deployment_target,
+        )
+
+        return model
+
+    @staticmethod
+    def test_export_pre_ios18():
+        x_shapes = ct.EnumeratedShapes(shapes=[(1, 2), (1, 3)])
+        y_shapes = ct.EnumeratedShapes(shapes=[(1, 2), (1, 3)])
+        with pytest.raises(
+            ValueError,
+            match=(
+                "Expected a single enumerated shape input for deployment targets below iOS 18, "
+                "but found 2. Please ensure only one input with EnumeratedShapes type is present"
+            ),
+        ):
+            TestMultipleEnumeratedShapes._get_test_model(
+                x_shapes=x_shapes,
+                y_shapes=y_shapes,
+                minimum_deployment_target=ct.target.iOS17,
+            )
+
+    @staticmethod
+    def test_export_post_ios18():
+        x_shapes = ct.EnumeratedShapes(shapes=[(1, 2), (1, 3)])
+        y_shapes = ct.EnumeratedShapes(shapes=[(1, 2), (1, 3)])
+        model = TestMultipleEnumeratedShapes._get_test_model(
+            x_shapes=x_shapes,
+            y_shapes=y_shapes,
+            minimum_deployment_target=ct.target.iOS18,
+        )
+
+        assert model is not None, (
+            "Model creation failed for deployment targets iOS 18 or above with multiple enumerated shapes. "
+            "Expected a valid model instance, but got None."
+        )
+
+    @staticmethod
+    def test_export_post_ios18_unequal_shapes():
+        x_shapes = ct.EnumeratedShapes(shapes=[(1, 2), (1, 3), (1, 4)])
+        y_shapes = ct.EnumeratedShapes(shapes=[(1, 2), (1, 3)])
+        with pytest.raises(
+            ValueError,
+            match=(
+                "Enumerated shape input mismatch. All enumerated shape inputs must have the same number of shapes for deployment targets iOS 18 or above."
+            ),
+        ):
+            TestMultipleEnumeratedShapes._get_test_model(
+                x_shapes=x_shapes,
+                y_shapes=y_shapes,
+                minimum_deployment_target=ct.target.iOS18,
+            )
+
+    @staticmethod
+    def test_multiarray_export_post_ios18_repeated_shapes():
+        def get_enumerated_shapes_from_input_type(
+            input_type: proto.FeatureTypes_pb2.ArrayFeatureType,
+        ) -> List[Tuple[int]]:
+            return [tuple(shape.shape) for shape in input_type.enumeratedShapes.shapes]
+
+        x_shapes = [(1, 2), (1, 2), (1, 4)]
+        y_shapes = [(1, 2), (1, 2), (1, 4)]
+        model = TestMultipleEnumeratedShapes._get_test_model(
+            x_shapes=ct.EnumeratedShapes(shapes=x_shapes),
+            y_shapes=ct.EnumeratedShapes(shapes=y_shapes),
+            minimum_deployment_target=ct.target.iOS18,
+        )
+
+        assert model is not None, (
+            "Model creation failed for deployment targets iOS 18 or above with multiple enumerated shapes. "
+            "Expected a valid model instance, but got None."
+        )
+
+        model_description = model.get_spec().description
+        expected_x_shapes = get_enumerated_shapes_from_input_type(
+            model_description.input[0].type.multiArrayType
+        )
+        assert (
+            expected_x_shapes == x_shapes
+        ), f"Expected x_shapes to be {x_shapes}, but got {expected_x_shapes} from model description"
+        expected_y_shapes = get_enumerated_shapes_from_input_type(
+            model_description.input[1].type.multiArrayType
+        )
+        assert (
+            expected_y_shapes == y_shapes
+        ), f"Expected y_shapes to be {y_shapes}, but got {expected_y_shapes} from model description"
+
+    @staticmethod
+    def test_image_export_post_ios18_repeated_shapes():
+        def get_enumerated_shapes_from_input_type(
+            input_type: proto.FeatureTypes_pb2.ImageFeatureType,
+        ) -> List[Tuple[int]]:
+            return [(1, 3, size.height, size.width) for size in input_type.enumeratedSizes.sizes]
+
+        x_shapes = [(1, 3, 128, 128), (1, 3, 128, 128), (1, 3, 256, 256)]
+        y_shapes = [(1, 3, 128, 128), (1, 3, 128, 128), (1, 3, 256, 256)]
+        model = TestMultipleEnumeratedShapes._get_test_model(
+            x_shapes=ct.EnumeratedShapes(shapes=x_shapes),
+            y_shapes=ct.EnumeratedShapes(shapes=y_shapes),
+            minimum_deployment_target=ct.target.iOS18,
+            image_inputs=True,
+        )
+
+        assert model is not None, (
+            "Model creation failed for deployment targets iOS 18 or above with multiple enumerated shapes. "
+            "Expected a valid model instance, but got None."
+        )
+
+        model_description = model.get_spec().description
+        expected_x_shapes = get_enumerated_shapes_from_input_type(
+            model_description.input[0].type.imageType
+        )
+        assert (
+            expected_x_shapes == x_shapes
+        ), f"Expected x_shapes to be {x_shapes}, but got {expected_x_shapes} from model description"
+        expected_y_shapes = get_enumerated_shapes_from_input_type(
+            model_description.input[1].type.imageType
+        )
+        assert (
+            expected_y_shapes == y_shapes
+        ), f"Expected y_shapes to be {y_shapes}, but got {expected_y_shapes} from model description"

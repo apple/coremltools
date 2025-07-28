@@ -577,19 +577,33 @@ class add_int16_cast(CastTypeQuantization):
             return False
 
         input_op = input_var.op
-        if input_op is not None and input_op.op_type == "const":
-            if (
-                input_op.outputs[0].val.min() >= _UINT16_MIN
-                and input_op.outputs[0].val.max() <= _UINT16_MAX
-            ):
-                self._target_dtype = "uint16"
-            elif (
-                input_op.outputs[0].val.min() >= _INT16_MIN
-                and input_op.outputs[0].val.max() <= _INT16_MAX
-            ):
-                self._target_dtype = "int16"
-            else:
-                return False
+        if input_op is not None:
+            # here we do not handle input variables
+            if input_op.op_type == "const":
+                # check if const value can fit in 16-bit integer
+                if (
+                    input_op.outputs[0].val.min() >= _UINT16_MIN
+                    and input_op.outputs[0].val.max() <= _UINT16_MAX
+                ):
+                    self._target_dtype = "uint16"
+                elif (
+                    input_op.outputs[0].val.min() >= _INT16_MIN
+                    and input_op.outputs[0].val.max() <= _INT16_MAX
+                ):
+                    self._target_dtype = "int16"
+                else:
+                    return False
+            elif input_op.op_type == "cast":
+                # If the input op is a `cast`, then check if it is "cast uint16 to int32".
+                # If so, then the correct 16-bit integer quantization for it should be to
+                # restore its original uint16 value. To achieve this, we will generate
+                # "cast uint16 to int32 -> cast int32 to uint16" pattern because this is
+                # the only pattern for cast optimization to cancel these 2 casts, details see
+                # https://apple.github.io/coremltools/source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.cast_optimization
+                if input_op.x.dtype == types.uint16:
+                    self._target_dtype = "uint16"
+                else:
+                    self._target_dtype = "int16"
 
         # In `gather` and `gather_along_axis`, if the dim size of x is larger than int16
         # upperbound, the dynamic indices could overflow, so it shouldn't be cast.

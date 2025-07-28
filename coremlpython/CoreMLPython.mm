@@ -4,7 +4,7 @@
 // found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 #import <CoreML/CoreML.h>
-#include <mach/mach_time.h>
+#import <mach/mach_time.h>
 #import "CoreMLPythonArray.h"
 #import "CoreMLPython.h"
 #import "CoreMLPythonUtils.h"
@@ -25,6 +25,10 @@ const NSErrorDomain CoreMLPythonErrorDomain = @"com.apple.coremlpython";
 
 #ifndef BUILT_WITH_MACOS13_SDK
 #define BUILT_WITH_MACOS13_SDK (MAC_OS_X_VERSION_MAX_ALLOWED >= 130000)
+#endif
+
+#ifndef BUILT_WITH_MACOS26_SDK
+#define BUILT_WITH_MACOS26_SDK (MAC_OS_X_VERSION_MAX_ALLOWED >= 140000)
 #endif
 
 namespace py = pybind11;
@@ -66,35 +70,45 @@ namespace {
 #if ML_COMPUTE_DEVICE_IS_AVAILABLE
     API_AVAILABLE(macos(14.0))
     py::object toPythonObject(id<MLComputeDeviceProtocol> computeDevice) {
-        auto module = getComputeDeviceModule();
-        if ([computeDevice isKindOfClass:MLCPUComputeDevice.class]) {
-            CPUComputeDevice cpuComputeDevice(computeDevice);
-            auto cls = getPythonClass(MLCPUComputeDevice.class, module);
-            return cls(cpuComputeDevice);
-        } else if ([computeDevice isKindOfClass:MLGPUComputeDevice.class]) {
-            GPUComputeDevice gpuComputeDevice(computeDevice);
-            auto cls = getPythonClass(MLGPUComputeDevice.class, module);
-            return cls(gpuComputeDevice);
-        } else if ([computeDevice isKindOfClass:MLNeuralEngineComputeDevice.class]) {
-            NeuralEngineComputeDevice neuralEngineComputeDevice(computeDevice);
-            auto cls = getPythonClass(MLNeuralEngineComputeDevice.class, module);
-            return cls(neuralEngineComputeDevice);
+        if (@available(macOS 14.0, *)) {
+            auto module = getComputeDeviceModule();
+            if ([computeDevice isKindOfClass:MLCPUComputeDevice.class]) {
+                CPUComputeDevice cpuComputeDevice(computeDevice);
+                auto cls = getPythonClass(MLCPUComputeDevice.class, module);
+                return cls(cpuComputeDevice);
+            } else if ([computeDevice isKindOfClass:MLGPUComputeDevice.class]) {
+                GPUComputeDevice gpuComputeDevice(computeDevice);
+                auto cls = getPythonClass(MLGPUComputeDevice.class, module);
+                return cls(gpuComputeDevice);
+            } else if ([computeDevice isKindOfClass:MLNeuralEngineComputeDevice.class]) {
+                NeuralEngineComputeDevice neuralEngineComputeDevice(computeDevice);
+                auto cls = getPythonClass(MLNeuralEngineComputeDevice.class, module);
+                return cls(neuralEngineComputeDevice);
+            } else {
+                return py::none();
+            }
         } else {
+            throw std::runtime_error("MLComputeDevice is only available on macOS >= 14.0");
             return py::none();
         }
     }
 
     API_AVAILABLE(macos(14.0))
     py::list toPythonList(NSArray<id<MLComputeDeviceProtocol>> *computeDevices) {
-        py::list result;
-        for (id<MLComputeDeviceProtocol> computeDevice in computeDevices) {
-            auto pyComputeDevice = toPythonObject(computeDevice);
-            if (!pyComputeDevice.is_none()) {
-                result.append(pyComputeDevice);
+        if (@available(macOS 14.0, *)) {
+            py::list result;
+            for (id<MLComputeDeviceProtocol> computeDevice in computeDevices) {
+                auto pyComputeDevice = toPythonObject(computeDevice);
+                if (!pyComputeDevice.is_none()) {
+                    result.append(pyComputeDevice);
+                }
             }
-        }
 
-        return result;
+            return result;
+        } else {
+            throw std::runtime_error("MLComputeDevice is only available on macOS >= 14.0");
+            return py::none();
+        }
     }
 
 #endif
@@ -102,167 +116,233 @@ namespace {
 #if ML_MODEL_STRUCTURE_IS_AVAILABLE
     API_AVAILABLE(macos(14.4))
     py::object toPythonObject(MLModelStructureNeuralNetworkLayer *neuralNetworkLayer) {
-        py::str name(neuralNetworkLayer.name.UTF8String);
-        py::str type(neuralNetworkLayer.type.UTF8String);
-        py::list inputNames(toPythonList(neuralNetworkLayer.inputNames));
-        py::list outputNames(toPythonList(neuralNetworkLayer.outputNames));
-        py::object cls = getPythonClass(MLModelStructureNeuralNetworkLayer.class, getComputePlanModule());
-        auto proxy = ModelStructureNeuralNetworkLayer(neuralNetworkLayer);
-        return cls(name, type, inputNames, outputNames, proxy);
+        if (@available(macOS 14.4, *)) {
+            py::str name(neuralNetworkLayer.name.UTF8String);
+            py::str type(neuralNetworkLayer.type.UTF8String);
+            py::list inputNames(toPythonList(neuralNetworkLayer.inputNames));
+            py::list outputNames(toPythonList(neuralNetworkLayer.outputNames));
+            py::object cls = getPythonClass(MLModelStructureNeuralNetworkLayer.class, getComputePlanModule());
+            auto proxy = ModelStructureNeuralNetworkLayer(neuralNetworkLayer);
+            return cls(name, type, inputNames, outputNames, proxy);
+        } else {
+            throw std::runtime_error("MLModelStructure is only available on macOS >= 14.4");
+            return py::none();
+        }
     }
 
     API_AVAILABLE(macos(14.4))
     py::object toPythonObject(MLModelStructureNeuralNetwork *neuralNetwork) {
-        py::list layers;
-        for (MLModelStructureNeuralNetworkLayer *neuralNetworkLayer in neuralNetwork.layers) {
-            layers.append(toPythonObject(neuralNetworkLayer));
+        if (@available(macOS 14.4, *)) {
+            py::list layers;
+            for (MLModelStructureNeuralNetworkLayer *neuralNetworkLayer in neuralNetwork.layers) {
+                layers.append(toPythonObject(neuralNetworkLayer));
+            }
+            py::object cls = getPythonClass(MLModelStructureNeuralNetwork.class, getComputePlanModule());
+            return cls(layers);
+        } else {
+            throw std::runtime_error("MLModelStructure is only available on macOS >= 14.4");
+            return py::none();
         }
-        py::object cls = getPythonClass(MLModelStructureNeuralNetwork.class, getComputePlanModule());
-        return cls(layers);
     }
 
     API_AVAILABLE(macos(14.4))
     py::object toPythonObject(MLModelStructureProgramValueType *valueType) {
-        py::object cls = getPythonClass(MLModelStructureProgramValueType.class, getComputePlanModule());
-        return cls();
+        if (@available(macOS 14.4, *)) {
+            py::object cls = getPythonClass(MLModelStructureProgramValueType.class, getComputePlanModule());
+            return cls();
+        } else {
+            throw std::runtime_error("MLModelStructure is only available on macOS >= 14.4");
+            return py::none();
+        }
     }
 
     API_AVAILABLE(macos(14.4))
     py::object toPythonObject(MLModelStructureProgramNamedValueType *namedValueType) {
-        py::str name(namedValueType.name.UTF8String);
-        py::object type = toPythonObject(namedValueType.type);
-        py::object cls = getPythonClass(MLModelStructureProgramNamedValueType.class, getComputePlanModule());
-        return cls(name, type);
+        if (@available(macOS 14.4, *)) {
+            py::str name(namedValueType.name.UTF8String);
+            py::object type = toPythonObject(namedValueType.type);
+            py::object cls = getPythonClass(MLModelStructureProgramNamedValueType.class, getComputePlanModule());
+            return cls(name, type);
+        } else {
+            throw std::runtime_error("MLModelStructure is only available on macOS >= 14.4");
+            return py::none();
+        }
     }
 
     API_AVAILABLE(macos(14.4))
     py::object toPythonObject(MLModelStructureProgramValue *value) {
-        py::object cls = getPythonClass(MLModelStructureProgramValue.class, getComputePlanModule());
-        return cls();
+        if (@available(macOS 14.4, *)) {
+            py::object cls = getPythonClass(MLModelStructureProgramValue.class, getComputePlanModule());
+            return cls();
+        } else {
+            throw std::runtime_error("MLModelStructure is only available on macOS >= 14.4");
+            return py::none();
+        }
     }
 
     API_AVAILABLE(macos(14.4))
     py::object toPythonObject(MLModelStructureProgramBinding *binding) {
-        py::object name = py::none();
-        if (binding.name) {
-            name = py::str(binding.name.UTF8String);
-        }
+        if (@available(macOS 14.4, *)) {
+            py::object name = py::none();
+            if (binding.name) {
+                name = py::str(binding.name.UTF8String);
+            }
 
-        py::object value = py::none();
-        if (binding.value) {
-            value = toPythonObject(binding.value);
-        }
+            py::object value = py::none();
+            if (binding.value) {
+                value = toPythonObject(binding.value);
+            }
 
-        py::object cls = getPythonClass(MLModelStructureProgramBinding.class, getComputePlanModule());
-        return cls(name, value);
+            py::object cls = getPythonClass(MLModelStructureProgramBinding.class, getComputePlanModule());
+            return cls(name, value);
+        } else {
+            throw std::runtime_error("MLModelStructure is only available on macOS >= 14.4");
+            return py::none();
+        }
     }
 
     API_AVAILABLE(macos(14.4))
     py::object toPythonObject(MLModelStructureProgramArgument *argument) {
-        py::list bindings;
-        for (MLModelStructureProgramBinding *binding in argument.bindings) {
-            bindings.append(toPythonObject(binding));
-        }
+        if (@available(macOS 14.4, *)) {
+            py::list bindings;
+            for (MLModelStructureProgramBinding *binding in argument.bindings) {
+                bindings.append(toPythonObject(binding));
+            }
 
-        py::object cls = getPythonClass(MLModelStructureProgramArgument.class, getComputePlanModule());
-        return cls(bindings);
+            py::object cls = getPythonClass(MLModelStructureProgramArgument.class, getComputePlanModule());
+            return cls(bindings);
+        } else {
+            throw std::runtime_error("MLModelStructure is only available on macOS >= 14.4");
+            return py::none();
+        }
     }
 
     py::object toPythonObject(MLModelStructureProgramBlock *block) API_AVAILABLE(macos(14.4));
 
     API_AVAILABLE(macos(14.4))
     py::object toPythonObject(MLModelStructureProgramOperation *operation) {
-        py::dict inputs;
-        [operation.inputs enumerateKeysAndObjectsUsingBlock:^(NSString *name, MLModelStructureProgramArgument *argument, BOOL *stop) {
-            inputs[py::str(name.UTF8String)] = toPythonObject(argument);
-        }];
+        if (@available(macOS 14.4, *)) {
+            py::dict inputs;
+            [operation.inputs enumerateKeysAndObjectsUsingBlock:^(NSString *name, MLModelStructureProgramArgument *argument, BOOL *stop) {
+                inputs[py::str(name.UTF8String)] = toPythonObject(argument);
+            }];
 
-        py::str operatorName(operation.operatorName.UTF8String);
+            py::str operatorName(operation.operatorName.UTF8String);
 
-        py::list outputs;
-        for (MLModelStructureProgramNamedValueType *output in operation.outputs) {
-            outputs.append(toPythonObject(output));
+            py::list outputs;
+            for (MLModelStructureProgramNamedValueType *output in operation.outputs) {
+                outputs.append(toPythonObject(output));
+            }
+
+            py::list blocks;
+            for (MLModelStructureProgramBlock *block in operation.blocks) {
+                blocks.append(toPythonObject(block));
+            }
+
+            py::object cls = getPythonClass(MLModelStructureProgramOperation.class, getComputePlanModule());
+            auto proxy = ModelStructureProgramOperation(operation);
+            return cls(inputs, operatorName, outputs, blocks, proxy);
+        }  else {
+            throw std::runtime_error("MLModelStructure is only available on macOS >= 14.4");
+            return py::none();
         }
-
-        py::list blocks;
-        for (MLModelStructureProgramBlock *block in operation.blocks) {
-            blocks.append(toPythonObject(block));
-        }
-
-        py::object cls = getPythonClass(MLModelStructureProgramOperation.class, getComputePlanModule());
-        auto proxy = ModelStructureProgramOperation(operation);
-        return cls(inputs, operatorName, outputs, blocks, proxy);
     }
 
     API_AVAILABLE(macos(14.4))
     py::object toPythonObject(MLModelStructureProgramBlock *block) {
-        py::list inputs;
-        for (MLModelStructureProgramNamedValueType *input in block.inputs) {
-            inputs.append(toPythonObject(input));
+        if (@available(macOS 14.4, *)) {
+            py::list inputs;
+            for (MLModelStructureProgramNamedValueType *input in block.inputs) {
+                inputs.append(toPythonObject(input));
+            }
+
+            py::list outputNames = toPythonList(block.outputNames);
+
+            py::list operations;
+            for (MLModelStructureProgramOperation *operation in block.operations) {
+                operations.append(toPythonObject(operation));
+            }
+
+            py::object cls = getPythonClass(MLModelStructureProgramBlock.class, getComputePlanModule());
+            return cls(inputs, operations, outputNames);
+        } else {
+            throw std::runtime_error("MLModelStructure is only available on macOS >= 14.4");
+            return py::none();
         }
-
-        py::list outputNames = toPythonList(block.outputNames);
-
-        py::list operations;
-        for (MLModelStructureProgramOperation *operation in block.operations) {
-            operations.append(toPythonObject(operation));
-        }
-
-        py::object cls = getPythonClass(MLModelStructureProgramBlock.class, getComputePlanModule());
-        return cls(inputs, operations, outputNames);
     }
 
     API_AVAILABLE(macos(14.4))
     py::object toPythonObject(MLModelStructureProgramFunction *function) {
-        py::list inputs;
-        for (MLModelStructureProgramNamedValueType *input in function.inputs) {
-            inputs.append(toPythonObject(input));
+        if (@available(macOS 14.4, *)) {
+            py::list inputs;
+            for (MLModelStructureProgramNamedValueType *input in function.inputs) {
+                inputs.append(toPythonObject(input));
+            }
+            py::object block = toPythonObject(function.block);
+            py::object cls = getPythonClass(MLModelStructureProgramFunction.class, getComputePlanModule());
+            return cls(inputs, block);
+        } else {
+            throw std::runtime_error("MLModelStructure is only available on macOS >= 14.4");
+            return py::none();
         }
-        py::object block = toPythonObject(function.block);
-        py::object cls = getPythonClass(MLModelStructureProgramFunction.class, getComputePlanModule());
-        return cls(inputs, block);
     }
+
 
     API_AVAILABLE(macos(14.4))
     py::object toPythonObject(MLModelStructureProgram *program) {
-        py::dict functions;
-        [program.functions enumerateKeysAndObjectsUsingBlock:^(NSString *name, MLModelStructureProgramFunction *function, BOOL *stop) {
-            functions[py::str(name.UTF8String)] = toPythonObject(function);
-        }];
-        py::object cls = getPythonClass(MLModelStructureProgram.class, getComputePlanModule());
-        return cls(functions);
+        if (@available(macOS 14.4, *)) {
+            py::dict functions;
+            [program.functions enumerateKeysAndObjectsUsingBlock:^(NSString *name, MLModelStructureProgramFunction *function, BOOL *stop) {
+                functions[py::str(name.UTF8String)] = toPythonObject(function);
+            }];
+            py::object cls = getPythonClass(MLModelStructureProgram.class, getComputePlanModule());
+            return cls(functions);
+        } else {
+            throw std::runtime_error("MLModelStructure is only available on macOS >= 14.4");
+            return py::none();
+        }
     }
 
     py::object toPythonObject(MLModelStructure *modelStructure) API_AVAILABLE(macos(14.4));
 
     API_AVAILABLE(macos(14.4))
     py::object toPythonObject(MLModelStructurePipeline *pipeline) {
-        py::list submodels;
-        NSEnumerator<NSString *> *names = [pipeline.subModelNames objectEnumerator];
-        for (MLModelStructure *subModel in pipeline.subModels) {
-            NSString *name = [names nextObject];
-            py::tuple tuple = py::make_tuple(py::str(name.UTF8String), toPythonObject(subModel));
-            submodels.append(tuple);
-        }
+        if (@available(macOS 14.4, *)) {
+            py::list submodels;
+            NSEnumerator<NSString *> *names = [pipeline.subModelNames objectEnumerator];
+            for (MLModelStructure *subModel in pipeline.subModels) {
+                NSString *name = [names nextObject];
+                py::tuple tuple = py::make_tuple(py::str(name.UTF8String), toPythonObject(subModel));
+                submodels.append(tuple);
+            }
 
-        py::object cls = getPythonClass(MLModelStructurePipeline.class, getComputePlanModule());
-        return cls(submodels);
+            py::object cls = getPythonClass(MLModelStructurePipeline.class, getComputePlanModule());
+            return cls(submodels);
+        } else {
+            throw std::runtime_error("MLModelStructure is only available on macOS >= 14.4");
+            return py::none();
+        }
     }
 
     API_AVAILABLE(macos(14.4))
     py::object toPythonObject(MLModelStructure *modelStructure) {
-        py::object cls = getPythonClass(MLModelStructure.class, getComputePlanModule());
-        if (modelStructure.neuralNetwork) {
-            py::object neuralNetwork = toPythonObject(modelStructure.neuralNetwork);
-            return cls(neuralNetwork, py::none(), py::none());
-        } else if (modelStructure.program) {
-            py::object program = toPythonObject(modelStructure.program);
-            return cls(py::none(), program, py::none());
-        } else if (modelStructure.pipeline) {
-            py::object pipeline = toPythonObject(modelStructure.pipeline);
-            return cls(py::none(), py::none(), pipeline);
+        if (@available(macOS 14.4, *)) {
+            py::object cls = getPythonClass(MLModelStructure.class, getComputePlanModule());
+            if (modelStructure.neuralNetwork) {
+                py::object neuralNetwork = toPythonObject(modelStructure.neuralNetwork);
+                return cls(neuralNetwork, py::none(), py::none());
+            } else if (modelStructure.program) {
+                py::object program = toPythonObject(modelStructure.program);
+                return cls(py::none(), program, py::none());
+            } else if (modelStructure.pipeline) {
+                py::object pipeline = toPythonObject(modelStructure.pipeline);
+                return cls(py::none(), py::none(), pipeline);
+            } else {
+                return cls(py::none(), py::none(), py::none());
+            }
         } else {
-            return cls(py::none(), py::none(), py::none());
+            throw std::runtime_error("MLModelStructure is only available on macOS >= 14.4");
+            return py::none();
         }
     }
 #endif
@@ -270,23 +350,33 @@ namespace {
 #if ML_COMPUTE_PLAN_IS_AVAILABLE
     API_AVAILABLE(macos(14.4))
     py::object toPythonObject(MLComputePlanDeviceUsage *computeDeviceUsage) {
-        py::list supportedComputeDevices;
-        for (id<MLComputeDeviceProtocol> computeDevice in computeDeviceUsage.supportedComputeDevices) {
-            auto pyComputeDevice = toPythonObject(computeDevice);
-            if (!pyComputeDevice.is_none()) {
-                supportedComputeDevices.append(pyComputeDevice);
+        if (@available(macOS 14.4, *)) {
+            py::list supportedComputeDevices;
+            for (id<MLComputeDeviceProtocol> computeDevice in computeDeviceUsage.supportedComputeDevices) {
+                auto pyComputeDevice = toPythonObject(computeDevice);
+                if (!pyComputeDevice.is_none()) {
+                    supportedComputeDevices.append(pyComputeDevice);
+                }
             }
-        }
 
-        py::object preferredComputeDevice = toPythonObject(computeDeviceUsage.preferredComputeDevice);
-        py::object cls = getPythonClass(MLComputePlanDeviceUsage.class, getComputePlanModule());
-        return cls(preferredComputeDevice, supportedComputeDevices);
+            py::object preferredComputeDevice = toPythonObject(computeDeviceUsage.preferredComputeDevice);
+            py::object cls = getPythonClass(MLComputePlanDeviceUsage.class, getComputePlanModule());
+            return cls(preferredComputeDevice, supportedComputeDevices);
+        } else {
+            throw std::runtime_error("MLComputePlan is only available on macOS >= 14.4");
+            return py::none();
+        }
     }
 
     API_AVAILABLE(macos(14.4))
     py::object toPythonObject(MLComputePlanCost *estimatedCost) {
-        py::object cls = getPythonClass(MLComputePlanCost.class, getComputePlanModule());
-        return cls(estimatedCost.weight);
+        if (@available(macOS 14.4, *)) {
+            py::object cls = getPythonClass(MLComputePlanCost.class, getComputePlanModule());
+            return cls(estimatedCost.weight);
+        } else {
+            throw std::runtime_error("MLComputePlan is only available on macOS >= 14.4");
+            return py::none();
+        }
     }
 #endif
 
@@ -307,28 +397,33 @@ uint64_t convertMachTimeToNanoSeconds(uint64_t time) {
         MLModelConfiguration *configuration,
         NSError * __autoreleasing *error
     ) {
-        dispatch_semaphore_t sem = dispatch_semaphore_create(0);
-        __block MLModel *result = nil;
-        __block NSError *lError = nil;
-        uint64_t loadStartTime = mach_absolute_time();
-        __block uint64_t loadEndTime = loadStartTime;
-        [MLModel loadModelAsset:modelAsset
-                 configuration:configuration
-             completionHandler:^(MLModel * _Nullable model, NSError * _Nullable loadError){
-                result = model;
-                lError = loadError;
-                loadEndTime = mach_absolute_time();
-                dispatch_semaphore_signal(sem);
-        }];
+        if (@available(macOS 13.0, *)) {
+            dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+            __block MLModel *result = nil;
+            __block NSError *lError = nil;
+            uint64_t loadStartTime = mach_absolute_time();
+            __block uint64_t loadEndTime = loadStartTime;
+            [MLModel loadModelAsset:modelAsset
+                    configuration:configuration
+                completionHandler:^(MLModel * _Nullable model, NSError * _Nullable loadError){
+                    result = model;
+                    lError = loadError;
+                    loadEndTime = mach_absolute_time();
+                    dispatch_semaphore_signal(sem);
+            }];
 
-        dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+            dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
 
-        if (error) {
-            *error = lError;
+            if (error) {
+                *error = lError;
+            }
+
+            uint64_t loadDurationInNanoSeconds = convertMachTimeToNanoSeconds(loadEndTime - loadStartTime);
+            return {result, loadDurationInNanoSeconds};
+        } else {
+            throw std::runtime_error("MLModelAsset is only available on macOS >= 13.0");
+            return {nil, 0};
         }
-
-        uint64_t loadDurationInNanoSeconds = convertMachTimeToNanoSeconds(loadEndTime - loadStartTime);
-        return {result, loadDurationInNanoSeconds};
     }
 #endif
 }
@@ -392,7 +487,11 @@ Model::Model(
 #if BUILT_WITH_MACOS15_SDK
         setOptimizationHints(configuration, optimizationHints);
         if (!functionName.empty()) {
-            configuration.functionName = [NSString stringWithUTF8String:functionName.c_str()];
+            if (@available(macOS 15.0, *)) {
+                configuration.functionName = [NSString stringWithUTF8String:functionName.c_str()];
+            } else {
+                throw std::runtime_error("The 'functionName' property can only be set on macOS >= 15.0");
+            }
         }
 #endif
         uint64_t loadDurationInNanoSeconds = 0;
@@ -402,14 +501,16 @@ Model::Model(
             m_model = [MLModel modelWithContentsOfURL:compiledUrl configuration:configuration error:&error];
             uint64_t loadEndTime = mach_absolute_time();
             loadDurationInNanoSeconds = convertMachTimeToNanoSeconds(loadEndTime - loadStartTime);
-        } else {
-#if ML_MODEL_ASSET_IS_AVAILABLE
+        }
+        #if ML_MODEL_ASSET_IS_AVAILABLE
+        else if (@available(macOS 13.0, *)) {
             auto pair = createModelFromModelAsset(py::cast<ModelAsset>(asset).getImpl(), configuration, &error);
             m_model = pair.first;
             loadDurationInNanoSeconds = pair.second;
-#else
+        }
+        #endif
+        else {
             throw std::runtime_error("MLModelAsset is only available on macOS >= 13.0");
-#endif
         }
 
         Utils::handleError(error);
@@ -440,19 +541,21 @@ py::dict Model::predict(const py::dict& input, State* state) {
 
         id<MLFeatureProvider> outFeatures;
         uint64_t predictStartTime = mach_absolute_time();
-#if BUILT_WITH_MACOS15_SDK
         if (state == NULL) {
           outFeatures = [m_model predictionFromFeatures:static_cast<MLDictionaryFeatureProvider * _Nonnull>(inFeatures)
                                                             error:&error];
-        } else {
+        }
+        #if BUILT_WITH_MACOS15_SDK
+        else if (@available(macOS 15.0, *)) {
            outFeatures = [m_model predictionFromFeatures:static_cast<MLDictionaryFeatureProvider * _Nonnull>(inFeatures)
                                               usingState:state->getImpl()
                                                    error:&error];
         }
-#else
-        outFeatures = [m_model predictionFromFeatures:static_cast<MLDictionaryFeatureProvider * _Nonnull>(inFeatures)
-                                                error:&error];
-#endif
+        #endif
+        else {
+            throw std::runtime_error("Stateful predictions using MLState are only supported on macOS >= 15.0");
+        }
+
         uint64_t predictEndTime = mach_absolute_time();
         Utils::handleError(error);
 
@@ -468,13 +571,17 @@ void Model::setComputeUnit(MLModelConfiguration *configuration, const std::strin
     } else if (computeUnits == "CPU_AND_GPU") {
         configuration.computeUnits = MLComputeUnitsCPUAndGPU;
     } else if (computeUnits == "CPU_AND_NE") {
+        #if BUILT_WITH_MACOS13_SDK
         if (usingMacOS13OrHigher()) {
-#if BUILT_WITH_MACOS13_SDK
-            configuration.computeUnits = MLComputeUnitsCPUAndNeuralEngine;
-#endif // BUILT_WITH_MACOS13_SDK
+            if (@available(macOS 13.0, *)) {
+                configuration.computeUnits = MLComputeUnitsCPUAndNeuralEngine;
+            }
         } else {
-            throw std::runtime_error("CPU_AND_NE is only available on macOS >= 13.0");
+            throw std::runtime_error("MLComputeUnitsCPUAndNeuralEngine is only available on macOS >= 13.0");
         }
+        #else
+        throw std::runtime_error("MLComputeUnitsCPUAndNeuralEngine is only available on macOS >= 13.0");
+        #endif
     } else {
         assert(computeUnits == "ALL");
         configuration.computeUnits = MLComputeUnitsAll;
@@ -489,32 +596,45 @@ void Model::setOptimizationHints(MLModelConfiguration *configuration, const py::
     // Reshape frequency optimization hint
     if (optimizationHints.contains("reshapeFrequency")) {
         const std::string val = optimizationHints["reshapeFrequency"].cast<std::string>();
-        if (val == "Frequent") {
-            configuration.optimizationHints.reshapeFrequency = MLReshapeFrequencyHintFrequent;
+        if (@available(macOS 15.0, *)) {
+            if (val == "Frequent") {
+                configuration.optimizationHints.reshapeFrequency = MLReshapeFrequencyHintFrequent;
+            } else {
+                assert(val == "Infrequent");
+                configuration.optimizationHints.reshapeFrequency = MLReshapeFrequencyHintInfrequent;
+            }
         } else {
-            assert(val == "Infrequent");
-            configuration.optimizationHints.reshapeFrequency = MLReshapeFrequencyHintInfrequent;
+            throw std::runtime_error("Setting 'reshapeFrequency' is only available on macOS >= 15.0");
         }
     }
 
     // Specialization strategy optimization hint
     if (optimizationHints.contains("specializationStrategy")) {
         const std::string val = optimizationHints["specializationStrategy"].cast<std::string>();
-        if (val == "Default") {
-            configuration.optimizationHints.specializationStrategy = MLSpecializationStrategyDefault;
+        if (@available(macOS 15.0, *)) {
+            if (val == "Default") {
+                configuration.optimizationHints.specializationStrategy = MLSpecializationStrategyDefault;
+            } else {
+                assert(val == "FastPrediction");
+                configuration.optimizationHints.specializationStrategy = MLSpecializationStrategyFastPrediction;
+            }
         } else {
-            assert(val == "FastPrediction");
-            configuration.optimizationHints.specializationStrategy = MLSpecializationStrategyFastPrediction;
+            throw std::runtime_error("Setting 'specializationStrategy' is only available on macOS >= 15.0");
         }
     }
 
+    // Allow low precision accumulation on GPU optimization hint
     if (optimizationHints.contains("allowLowPrecisionAccumulationOnGPU")) {
         const std::string val = optimizationHints["allowLowPrecisionAccumulationOnGPU"].cast<std::string>();
-        if (val == "True") {
-            configuration.allowLowPrecisionAccumulationOnGPU = true;
+        if (@available(macOS 15.0, *)) {
+            if (val == "True") {
+                configuration.allowLowPrecisionAccumulationOnGPU = true;
+            } else {
+                assert(val == "False");
+                configuration.allowLowPrecisionAccumulationOnGPU = false;
+            }
         } else {
-            assert(val == "False");
-            configuration.allowLowPrecisionAccumulationOnGPU = false;
+            throw std::runtime_error("Setting 'allowLowPrecisionAccumulationOnGPU' is only available on macOS >= 15.0");
         }
     }
 }
@@ -560,42 +680,97 @@ py::str Model::getCompiledModelPath() const {
 
 #if BUILT_WITH_MACOS15_SDK
 State Model::newState() const {
-    State state = State([m_model newState]);
-    return state;
+    if (@available(macOS 15.0, *)) {
+        State state = State([m_model newState]);
+        return state;
+    }
+
+    throw std::runtime_error("Stateful model is only available on macOS >= 15.0");
+    return nil;
 }
 #endif
 
+py::object State::readState(const std::string& stateName) const {
+    __block py::object value = py::none();
+    #if ML_STATE_IS_AVAILABLE
+    if (@available(macOS 15.0, *)) {
+        @try {
+            [getImpl() getMultiArrayForStateNamed:@(stateName.c_str()) handler:^(MLMultiArray *buffer){
+                value = Utils::convertArrayValueToPython(buffer);
+            }];
+        } @catch (NSException *exception) {
+            NSString *reason = exception.reason ?: @"Unknown exception when reading state";
+            throw std::runtime_error(reason.UTF8String);
+        }
+    } else {
+        throw std::runtime_error("Reading state is only available on macOS >= 15.0");
+    }
+    #else
+    throw std::runtime_error("Reading state is only available on macOS >= 15.0");
+    #endif
+    return value;
+}
+
+void State::writeState(const std::string& stateName, py::object value) {
+    #if ML_STATE_IS_AVAILABLE
+    if (@available(macOS 15.0, *)) {
+        MLFeatureValue *featureValue = Utils::convertValueToObjC(value);
+        if (!featureValue.multiArrayValue) {
+            throw std::runtime_error("Failed to write state, only multi-array value is supported");
+        }
+        @try {
+            [getImpl() getMultiArrayForStateNamed:@(stateName.c_str()) handler:^(MLMultiArray *buffer){
+                [featureValue.multiArrayValue transferToMultiArray:buffer];
+            }];
+        } @catch (NSException *exception) {
+            NSString *reason = exception.reason ?: @"Unknown exception when writing state";
+            throw std::runtime_error(reason.UTF8String);
+        }
+    }
+    else {
+        throw std::runtime_error("Writing state is only available on macOS >= 15.0");
+    }
+    #else
+    throw std::runtime_error("Writing state is only available on macOS >= 15.0");
+    #endif
+}
+
 py::object Model::getModelStructure(const std::string& compiledModelPath) {
 #if ML_MODEL_STRUCTURE_IS_AVAILABLE
-    @autoreleasepool {
-        NSURL *compiledModelURL = Utils::stringToNSURL(compiledModelPath);
-        dispatch_semaphore_t sem = dispatch_semaphore_create(0);
-        __block py::object result = py::none();
-        __block NSError *error = nil;
-        __block MLModelStructure *modelStructure = nil;
-        [MLModelStructure loadContentsOfURL:compiledModelURL
-                            completionHandler:^(MLModelStructure * _Nullable lModelStructure,
-                                                NSError * _Nullable lError) {
-            error  = lError;
-            modelStructure = lModelStructure;
-            dispatch_semaphore_signal(sem);
-        }];
+    if (@available(macOS 14.4, *)) {
+        @autoreleasepool {
+            NSURL *compiledModelURL = Utils::stringToNSURL(compiledModelPath);
+            dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+            __block py::object result = py::none();
+            __block NSError *error = nil;
+            __block MLModelStructure *modelStructure = nil;
+            [MLModelStructure loadContentsOfURL:compiledModelURL
+                                completionHandler:^(MLModelStructure * _Nullable lModelStructure,
+                                                    NSError * _Nullable lError) {
+                error  = lError;
+                modelStructure = lModelStructure;
+                dispatch_semaphore_signal(sem);
+            }];
 
-        dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
-        if (modelStructure) {
-            try {
-                result = toPythonObject(modelStructure);
-            } catch(std::exception& ex) {
-                NSString *message = [NSString stringWithFormat:@"Failed to load model structure, with error=%s.", ex.what()];
-                error = [NSError errorWithDomain:CoreMLPythonErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey :message}];
-            } catch(...) {
-                NSString *message = @"Failed to load model structure, with unknown error.";
-                error = [NSError errorWithDomain:CoreMLPythonErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey :message}];
+            dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+            if (modelStructure) {
+                try {
+                    result = toPythonObject(modelStructure);
+                } catch(std::exception& ex) {
+                    NSString *message = [NSString stringWithFormat:@"Failed to load model structure, with error=%s.", ex.what()];
+                    error = [NSError errorWithDomain:CoreMLPythonErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey :message}];
+                } catch(...) {
+                    NSString *message = @"Failed to load model structure, with unknown error.";
+                    error = [NSError errorWithDomain:CoreMLPythonErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey :message}];
+                }
             }
-        }
 
-        Utils::handleError(error);
-        return result;
+            Utils::handleError(error);
+            return result;
+        }
+    } else {
+        throw std::runtime_error("MLModelStructure is only available on macOS >= 14.4");
+        return py::none();
     }
 #else
    throw std::runtime_error("MLModelStructure is only available on macOS >= 14.4");
@@ -605,8 +780,13 @@ py::object Model::getModelStructure(const std::string& compiledModelPath) {
 
 py::list Model::getAvailableComputeDevices() {
 #if ML_COMPUTE_DEVICE_IS_AVAILABLE
-    @autoreleasepool {
-        return toPythonList(MLModel.availableComputeDevices);
+    if (@available(macOS 14.0, *)) {
+        @autoreleasepool {
+            return toPythonList(MLModel.availableComputeDevices);
+        }
+    } else {
+        throw std::runtime_error("MLComputeDevice is only available on macOS >= 14.0");
+        return py::none();
     }
 #else
    throw std::runtime_error("MLComputeDevice is only available on macOS >= 14.0");
@@ -616,8 +796,13 @@ py::list Model::getAvailableComputeDevices() {
 
 py::list Model::getAllComputeDevices() {
 #if ML_COMPUTE_DEVICE_IS_AVAILABLE
-    @autoreleasepool {
-        return toPythonList(MLAllComputeDevices());
+    if (@available(macOS 14.0, *)) {
+        @autoreleasepool {
+            return toPythonList(MLAllComputeDevices());
+        }
+    } else {
+        throw std::runtime_error("MLComputeDevice is only available on macOS >= 14.0");
+        return py::none();
     }
 #else
    throw std::runtime_error("MLComputeDevice is only available on macOS >= 14.0");
@@ -627,7 +812,12 @@ py::list Model::getAllComputeDevices() {
 
 int NeuralEngineComputeDevice::getTotalCoreCount() const {
 #if ML_COMPUTE_DEVICE_IS_AVAILABLE
-    return getImpl().totalCoreCount;
+    if (@available(macOS 14.0, *)) {
+        return getImpl().totalCoreCount;
+    } else {
+        throw std::runtime_error("MLComputeDevice is only available on macOS >= 14.0");
+        return 0;
+    }
 #else
     throw std::runtime_error("MLNeuralEngineComputeDevice is only available on macOS >= 14.0");
     return 0;
@@ -636,40 +826,45 @@ int NeuralEngineComputeDevice::getTotalCoreCount() const {
 
 py::object Model::getComputePlan(const std::string& compiledModelPath, const std::string& computeUnits) {
 #if ML_COMPUTE_PLAN_IS_AVAILABLE
-    @autoreleasepool {
-        NSURL *compiledModelURL = Utils::stringToNSURL(compiledModelPath);
-        dispatch_semaphore_t sem = dispatch_semaphore_create(0);
-        __block py::object result = py::none();
-        __block NSError *error = nil;
-        __block MLComputePlan *computePlan = nil;
-        MLModelConfiguration *configuration = [[MLModelConfiguration alloc] init];
-        setComputeUnit(configuration, computeUnits);
-        [MLComputePlan loadContentsOfURL:compiledModelURL
-                            configuration:configuration
-                        completionHandler:^(MLComputePlan * _Nullable lComputePlan, NSError * _Nullable lError) {
-            computePlan = lComputePlan;
-            error = lError;
-            dispatch_semaphore_signal(sem);
-        }];
+    if (@available(macOS 14.4, *)) {
+        @autoreleasepool {
+            NSURL *compiledModelURL = Utils::stringToNSURL(compiledModelPath);
+            dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+            __block py::object result = py::none();
+            __block NSError *error = nil;
+            __block MLComputePlan *computePlan = nil;
+            MLModelConfiguration *configuration = [[MLModelConfiguration alloc] init];
+            setComputeUnit(configuration, computeUnits);
+            [MLComputePlan loadContentsOfURL:compiledModelURL
+                                configuration:configuration
+                            completionHandler:^(MLComputePlan * _Nullable lComputePlan, NSError * _Nullable lError) {
+                computePlan = lComputePlan;
+                error = lError;
+                dispatch_semaphore_signal(sem);
+            }];
 
-        dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
-        if (computePlan) {
-            try {
-                auto modelStructure = toPythonObject(computePlan.modelStructure);
-                auto proxy = ComputePlan(computePlan, modelStructure);
-                auto cls = getPythonClass(MLComputePlan.class, getComputePlanModule());
-                result = cls(proxy);
-            } catch(std::exception& ex) {
-                NSString *message = [NSString stringWithFormat:@"Failed to load compute plan, with error=%s.", ex.what()];
-                error = [NSError errorWithDomain:CoreMLPythonErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey :message}];
-            } catch(...) {
-                NSString *message = @"Failed to load compute plan, with unknown error.";
-                error = [NSError errorWithDomain:CoreMLPythonErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey :message}];
+            dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+            if (computePlan) {
+                try {
+                    auto modelStructure = toPythonObject(computePlan.modelStructure);
+                    auto proxy = ComputePlan(computePlan, modelStructure);
+                    auto cls = getPythonClass(MLComputePlan.class, getComputePlanModule());
+                    result = cls(proxy);
+                } catch(std::exception& ex) {
+                    NSString *message = [NSString stringWithFormat:@"Failed to load compute plan, with error=%s.", ex.what()];
+                    error = [NSError errorWithDomain:CoreMLPythonErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey :message}];
+                } catch(...) {
+                    NSString *message = @"Failed to load compute plan, with unknown error.";
+                    error = [NSError errorWithDomain:CoreMLPythonErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey :message}];
+                }
             }
-        }
-        Utils::handleError(error);
 
-        return result;
+            Utils::handleError(error);
+            return result;
+        }
+    } else {
+        throw std::runtime_error("MLComputePlan is only available on macOS >= 14.4");
+        return py::none();
     }
 #else
     throw std::runtime_error("MLComputePlan is only available on macOS >= 14.4");
@@ -679,65 +874,85 @@ py::object Model::getComputePlan(const std::string& compiledModelPath, const std
 
 #if ML_COMPUTE_PLAN_IS_AVAILABLE
 py::object ComputePlan::getComputeDeviceUsageForMLProgramOperation(py::object operation) {
-     @autoreleasepool {
-        auto proxy = py::cast<ModelStructureProgramOperation>(operation.attr("__proxy__"));
-        MLModelStructureProgramOperation *operationImpl = proxy.getImpl();
-        if (operationImpl == nil) {
-            return py::none();
+    if (@available(macOS 14.4, *)) {
+        @autoreleasepool {
+            auto proxy = py::cast<ModelStructureProgramOperation>(operation.attr("__proxy__"));
+            MLModelStructureProgramOperation *operationImpl = proxy.getImpl();
+            if (operationImpl == nil) {
+                return py::none();
+            }
+            MLComputePlanDeviceUsage *computeDeviceUsage = [getImpl() computeDeviceUsageForMLProgramOperation:operationImpl];
+            if (computeDeviceUsage == nil) {
+                return py::none();
+            }
+            auto result = toPythonObject(computeDeviceUsage);
+            return result;
         }
-        MLComputePlanDeviceUsage *computeDeviceUsage = [getImpl() computeDeviceUsageForMLProgramOperation:operationImpl];
-        if (computeDeviceUsage == nil) {
-            return py::none();
-        }
-        auto result = toPythonObject(computeDeviceUsage);
-        return result;
+    } else {
+        throw std::runtime_error("MLComputePlan is only available on macOS >= 14.4");
+        return py::none();
     }
 }
 
 py::object ComputePlan::getComputeDeviceUsageForNeuralNetworkLayer(py::object layer) {
-    @autoreleasepool {
-        auto proxy = py::cast<ModelStructureNeuralNetworkLayer>(layer.attr("__proxy__"));
-        MLModelStructureNeuralNetworkLayer *layerImpl = proxy.getImpl();
-        if (layerImpl == nil) {
-            return py::none();
+    if (@available(macOS 14.4, *)) {
+        @autoreleasepool {
+            auto proxy = py::cast<ModelStructureNeuralNetworkLayer>(layer.attr("__proxy__"));
+            MLModelStructureNeuralNetworkLayer *layerImpl = proxy.getImpl();
+            if (layerImpl == nil) {
+                return py::none();
+            }
+            MLComputePlanDeviceUsage *computeDeviceUsage = [getImpl() computeDeviceUsageForNeuralNetworkLayer:layerImpl];
+            if (computeDeviceUsage == nil) {
+                return py::none();
+            }
+            auto result = toPythonObject(computeDeviceUsage);
+            return result;
         }
-        MLComputePlanDeviceUsage *computeDeviceUsage = [getImpl() computeDeviceUsageForNeuralNetworkLayer:layerImpl];
-        if (computeDeviceUsage == nil) {
-            return py::none();
-        }
-        auto result = toPythonObject(computeDeviceUsage);
-        return result;
+    } else {
+        throw std::runtime_error("MLComputePlan is only available on macOS >= 14.4");
+        return py::none();
     }
 }
 
 py::object ComputePlan::getEstimatedCostForMLProgramOperation(py::object operation) {
-     @autoreleasepool {
-        auto proxy = py::cast<ModelStructureProgramOperation>(operation.attr("__proxy__"));
-        MLModelStructureProgramOperation *operationImpl = proxy.getImpl();
-        if (operationImpl == nil) {
-            return py::none();
+    if (@available(macOS 14.4, *)) {
+        @autoreleasepool {
+            auto proxy = py::cast<ModelStructureProgramOperation>(operation.attr("__proxy__"));
+            MLModelStructureProgramOperation *operationImpl = proxy.getImpl();
+            if (operationImpl == nil) {
+                return py::none();
+            }
+            MLComputePlanCost *estimatedCost = [getImpl() estimatedCostOfMLProgramOperation:operationImpl];
+            if (estimatedCost == nil) {
+                return py::none();
+            }
+            auto result = toPythonObject(estimatedCost);
+            return result;
         }
-        MLComputePlanCost *estimatedCost = [getImpl() estimatedCostOfMLProgramOperation:operationImpl];
-        if (estimatedCost == nil) {
-            return py::none();
-        }
-        auto result = toPythonObject(estimatedCost);
-        return result;
+    } else {
+        throw std::runtime_error("MLComputePlan is only available on macOS >= 14.4");
+        return py::none();
     }
 }
 #endif
 
 py::object Model::createModelAssetFromPath(const std::string& path) {
 #if BUILT_WITH_MACOS15_SDK
-    NSError *error = nil;
-    NSURL *url = Utils::stringToNSURL(path);
-    MLModelAsset *asset = [MLModelAsset modelAssetWithURL:url error:&error];
-    Utils::handleError(error);
-    auto proxy = ModelAsset(asset, {});
-    auto cls = getPythonClass(MLModelAsset.class, getMLModelModule());
-    return cls(proxy);
+    if (@available(macOS 15.0, *)) {
+        NSError *error = nil;
+        NSURL *url = Utils::stringToNSURL(path);
+        MLModelAsset *asset = [MLModelAsset modelAssetWithURL:url error:&error];
+        Utils::handleError(error);
+        auto proxy = ModelAsset(asset, {});
+        auto cls = getPythonClass(MLModelAsset.class, getMLModelModule());
+        return cls(proxy);
+    } else {
+        throw std::runtime_error("Creating an MLModelAsset from a file path is only available on macOS >= 15.0");
+        return py::none();
+    }
 #else
-    throw std::runtime_error("MLModelAsset creation from path is only available on macOS >= 15.0");
+    throw std::runtime_error("Creating an MLModelAsset from a file path is only available on macOS >= 15.0");
     return py::none();
 #endif
 }
@@ -745,38 +960,50 @@ py::object Model::createModelAssetFromPath(const std::string& path) {
 
 py::object Model::createModelAssetFromMemory(const py::bytes& pySpecData, const py::dict& pyBlobMapping) {
 #if ML_MODEL_ASSET_IS_AVAILABLE
-    NSError *error = nil;
-    // We are creating `NSData` instances without copying the underlying data, retain
-    // original data to prevent dangling references.
-    std::vector<py::bytes> datas;
+    if (@available(macOS 13.0, *)) {
+        NSError *error = nil;
+        // We are creating `NSData` instances without copying the underlying data, retain
+        // original data to prevent dangling references.
+        std::vector<py::bytes> datas;
 
-    NSData *specData = toNSDataWithoutCopy(pySpecData);
-    datas.push_back(pySpecData);
+        NSData *specData = toNSDataWithoutCopy(pySpecData);
+        datas.push_back(pySpecData);
 
-    NSMutableDictionary<NSURL *, NSData *> *blobMapping = [NSMutableDictionary dictionary];
-    for (const auto& pair : pyBlobMapping) {
-        auto pyBlob = py::cast<py::bytes>(pair.second);
-        NSString *blobName = @(py::cast<std::string>(pair.first).c_str());
-        NSData *blobData = toNSDataWithoutCopy(pyBlob);
-        NSURL *blobURL = [NSURL fileURLWithPath:blobName relativeToURL:nil];
-        blobMapping[blobURL] = blobData;
-        datas.push_back(std::move(pyBlob));
+        NSMutableDictionary<NSURL *, NSData *> *blobMapping = [NSMutableDictionary dictionary];
+        for (const auto& pair : pyBlobMapping) {
+            auto pyBlob = py::cast<py::bytes>(pair.second);
+            NSString *blobName = @(py::cast<std::string>(pair.first).c_str());
+            NSData *blobData = toNSDataWithoutCopy(pyBlob);
+            NSURL *blobURL = [NSURL fileURLWithPath:blobName relativeToURL:nil];
+            blobMapping[blobURL] = blobData;
+            datas.push_back(std::move(pyBlob));
+        }
+
+        MLModelAsset *asset = nil;
+        if (blobMapping.count > 0) {
+            #if BUILT_WITH_MACOS15_SDK
+            if (@available(macOS 15.0, *)) {
+                asset = [MLModelAsset modelAssetWithSpecificationData:specData blobMapping:blobMapping error:&error];
+            } else {
+                throw std::runtime_error("Creating an MLModelAsset using blob mapping is only available on macOS >= 15.0");
+                return py::none();
+            }
+            #else
+            throw std::runtime_error("Creating an MLModelAsset using blob mapping is only available on macOS >= 15.0");
+            return py::none();
+            #endif
+        } else {
+            asset = [MLModelAsset modelAssetWithSpecificationData:specData error:&error];
+        }
+        Utils::handleError(error);
+        auto proxy = ModelAsset(asset, std::move(datas));
+        auto cls = getPythonClass(MLModelAsset.class, getMLModelModule());
+        return cls(proxy);
+    } else {
+        throw std::runtime_error("MLModelAsset is only available on macOS >= 13.0");
     }
-
-#if BUILT_WITH_MACOS15_SDK
-    MLModelAsset *asset = [MLModelAsset modelAssetWithSpecificationData:specData blobMapping:blobMapping error:&error];
 #else
-    if (blobMapping.count > 0) {
-        throw std::runtime_error("MLModelAsset creation using blob mapping is only available on macOS >= 15.0");
-    }
-    MLModelAsset *asset = [MLModelAsset modelAssetWithSpecificationData:specData error:&error];
-#endif
-    Utils::handleError(error);
-    auto proxy = ModelAsset(asset, std::move(datas));
-    auto cls = getPythonClass(MLModelAsset.class, getMLModelModule());
-    return cls(proxy);
-#else
-    throw std::runtime_error("MLModelAsset creation from memory is only available on macOS >= 14.0");
+    throw std::runtime_error("Creating an MLModelAsset from memory is only available on macOS >= 14.0");
     return py::none();
 #endif
 }
@@ -857,7 +1084,9 @@ PYBIND11_PLUGIN(libcoremlpython) {
         .def_static("get_compute_plan", &Model::getComputePlan)
         .def_static("compileModel", &Model::compileModel);
 
-    py::class_<State>(m, "_State", py::module_local());
+    py::class_<State>(m, "_State", py::module_local())
+        .def("read_state", &State::readState)
+        .def("write_state", &State::writeState);
 
 #if ML_COMPUTE_DEVICE_IS_AVAILABLE
     py::class_<CPUComputeDevice>(m, "_MLCPUComputeDeviceProxy", py::module_local())

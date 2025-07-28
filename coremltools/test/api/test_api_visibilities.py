@@ -4,6 +4,8 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 
+import re
+
 import coremltools as ct
 
 
@@ -345,3 +347,7 @@ class TestApiVisibilities:
         _check_visible_modules(
             _get_visible_items(ct.models.compute_device.MLNeuralEngineComputeDevice), expected
         )
+
+    def test_package_version_is_legal(self):
+        version_regex = re.compile("^\d+(\.\d+)*((a|b|rc)\d+)?$")
+        assert version_regex.match(ct.__version__)

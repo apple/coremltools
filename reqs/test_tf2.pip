@@ -4,6 +4,7 @@ parameterized==0.8.1
 pillow
 pytest==7.1.2
 pytest-timeout
+pytest-xdist==3.6.1
 
 # TODO(rdar://123269464): Support a recent version of TensorFlow
 

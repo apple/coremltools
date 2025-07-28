@@ -26,6 +26,8 @@ namespace CoreML {
                 return "MLArrayDataTypeINT32";
             case MLArrayDataTypeFLOAT16:
                 return "MLArrayDataTypeFLOAT16";
+            case MLArrayDataTypeINT8:
+                return "MLArrayDataTypeINT8";
         }
     }
 
@@ -85,5 +87,3 @@ namespace CoreML {
     }
 
 }
-
-

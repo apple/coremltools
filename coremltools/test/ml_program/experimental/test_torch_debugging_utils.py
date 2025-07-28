@@ -184,6 +184,7 @@ class TestTorchMapping:
             traced_model = torch.jit.trace(model, example_inputs)
         elif export_method == "export":
             traced_model = torch.export.export(model, example_inputs)
+            traced_model = traced_model.run_decompositions({})
 
         assert traced_model is not None
 
@@ -297,6 +298,7 @@ class TestTorchModelComparator:
     ) -> TorchExportMLModelComparator:
         model = TestTorchModelComparator._get_simple_model()
         exported_model = torch.export.export(model, inputs)
+        exported_model = exported_model.run_decompositions({})
         comparator = TorchExportMLModelComparator(
             model=exported_model,
             inputs=[

@@ -90,6 +90,8 @@ def _get_io_supported_types(opset_version: target, input_types: Tuple["InputType
         if any(map(lambda t: isinstance(t, ImageType) and t.grayscale_use_uint8,
                    input_types)):
             supported_types.add(types.uint8)
+    if opset_version is not None and opset_version >= target.iOS26:
+        supported_types.add(types.int8)
     return supported_types
 
 

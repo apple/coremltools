@@ -29,6 +29,7 @@ static bool hasIOS14NeuralNetworkFeatures(const Specification::Model& model);
 static bool hasDefaultValueForOptionalInputs(const Specification::Model& model);
 static bool nonMaxSuppressionUsesFloat32InputsOrOutputs(const Specification::Model& model);
 static bool hasFloat16MultiArray(const Specification::Model& model);
+static bool hasInt8MultiArray(const Specification::Model& model);
 static bool hasGrayscaleFloat16Image(const Specification::Model& model);
 static bool hasCoreML6Opsets(const Specification::Model& model);
 static bool hasCoreML7Opsets(const Specification::Model& model);
@@ -409,6 +410,18 @@ static bool hasFloat16MultiArray(const Specification::Model& model) {
         });
 }
 
+
+static bool hasInt8MultiArray(const Specification::Model& model) {
+    return anyFeatureDescriptionOfModel(
+        model,
+        [](const auto& fd) {
+            return
+                (fd.type().Type_case() == Specification::FeatureType::kMultiArrayType) &&
+                (fd.type().multiarraytype().datatype() == Specification::ArrayFeatureType_ArrayDataType_INT8);
+        });
+}
+
+
 static bool hasOpsets(const Specification::Model& model, const std::string& opset) {
     return walkModelAndPipeline(
         model,
@@ -526,7 +539,7 @@ bool CoreML::hasIOS13Features(const Specification::Model& model) {
                     break;
             }
             return hasIOS13NeuralNetworkFeatures(m);
-        });    
+        });
 }
 
 static bool hasDefaultValueForOptionalInputs(const Specification::Model& model) {
@@ -701,6 +714,20 @@ bool CoreML::hasIOS18Features(const Specification::Model& model) {
                     break;
                 default:
                     break;
+            }
+            return false;
+        });
+}
+
+bool CoreML::hasIOS26Features(const Specification::Model& model) {
+    // New in IOS19 features:
+    // - int8 multi-array
+
+    return walkModelAndPipeline(
+        model,
+        [](const Specification::Model& m) {
+            if (hasInt8MultiArray(m)) {
+                return true;
             }
             return false;
         });

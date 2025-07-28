@@ -272,7 +272,7 @@ class InternalTorchIRNode:
                 elif i is None:
                     args.append(None)
                 else:
-                    raise AssertionError(
+                    raise NotImplementedError(
                         f"Unhandled node type {type(i)}. Node content is: {str(i)}"
                     )
             return tuple(args)
@@ -286,7 +286,7 @@ class InternalTorchIRNode:
                 kind = str(node.target)
         kind = sanitize_op_kind(kind)
         if kind not in _TORCH_OPS_REGISTRY:
-            raise ValueError(f"Unsupported fx node {str(node)}, kind {kind}")
+            raise NotImplementedError(f"Unsupported fx node {str(node)}, kind {kind}")
 
         inputs = get_arguments(node.args)
         outputs = [node.name]

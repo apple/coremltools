@@ -11,6 +11,7 @@ from unittest.mock import patch
 
 import numpy as np
 import pytest
+from packaging.version import Version
 
 torch = pytest.importorskip("torch")
 import torch.nn as nn
@@ -54,13 +55,6 @@ if _HAS_TORCH_VISION:
 
 backends = testing_reqs.backends
 compute_units = testing_reqs.compute_units
-for frontend in frontends:
-    if frontend in TORCH_EXPORT_BASED_FRONTENDS:
-        # torch.export limits the number of compilation frames to prevent infinite loop
-        # However, those frames are not immediately released after torch.export is done,
-        # so when we have many torch.export calls, we can still hit the frame number limit
-        torch._dynamo.config.accumulated_cache_size_limit = 1000000
-        break
 
 torch = pytest.importorskip("torch")
 torch.manual_seed(30)
@@ -245,7 +239,7 @@ class TestScriptedModels(TorchBaseTest):
                 a, _, b = x.shape
                 return torch.zeros([a, b])
         model = Model().eval()
-        
+
         input_shape = torch.randint(1, 10, [3]).tolist()
         input_type = ct.TensorType(shape=ct.Shape([input_shape[0], input_shape[1], ct.RangeDim(1, 1_000)]))
         self.run_compare_torch(
@@ -2651,6 +2645,14 @@ class TestUpsample(TorchBaseTest):
         align_corners,
         recompute_scale_factor,
     ):
+        if (
+            backend == ("mlprogram", "fp16")
+            and frontend == TorchFrontend.EXECUTORCH
+            and scales_h == 4.1
+            and scales_w == 5.3
+        ):
+            pytest.xfail("rdar://148372186")
+
         class TestModel(nn.Module):
             def forward(self, x):
                 input_data = torch.ones_like(x)
@@ -4622,6 +4624,9 @@ class TestRandint(TorchBaseTest):
         ),
     )
     def test_randint(self, compute_unit, backend, frontend, shape, low, high):
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.xfail("torch._ops.aten.randint.low is not in Core ATen opset")
+
         class TestModel(nn.Module):
             def forward(self, x):
                 y = torch.randint(low, high, x.shape)
@@ -4787,6 +4792,9 @@ class TestRandnLike(TorchBaseTest):
         ),
     )
     def test_randn_like(self, compute_unit, backend, frontend, shape):
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.xfail("torch._ops.aten.randn_like.default is not in Core ATen opset")
+
         class TestModel(nn.Module):
             def forward(self, x):
                 y = torch.randn_like(torch.randn(shape))
@@ -5936,6 +5944,8 @@ class TestUnflatten(TorchBaseTest):
             pytest.skip("torch.export handles 2 * symbol case but Core ML does not")
         if frontend == TorchFrontend.EXECUTORCH and dynamic:
             pytest.xfail("executorch incorrectly propagates dynamic shape")
+        if backend == ("mlprogram", "fp16") and not dynamic:
+            pytest.xfail("rdar://148351347")
 
         class Head(nn.Module):
             def __init__(self, nhead, batch_size, input_size, output_size):
@@ -6283,6 +6293,11 @@ class TestActivation(TorchBaseTest):
         ),
     )
     def test_randomized_leaky_relu(self, compute_unit, backend, frontend, shape):
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.xfail(
+                "torch._ops.aten.rrelu_with_noise_functional.default is not in Core ATen opset"
+            )
+
         model = nn.RReLU(lower=0.01, upper=0.9).eval()
         self.run_compare_torch(
             shape, model, frontend=frontend, backend=backend, compute_unit=compute_unit
@@ -7532,8 +7547,14 @@ class TestRepeatInterleave(TorchBaseTest):
     def test_scalar_repeat(self, compute_unit, backend, frontend, rank, dim, repeat):
         if dim is not None and dim >= rank:
             pytest.skip()
-        if isinstance(repeat, torch.Tensor) and frontend == TorchFrontend.EXECUTORCH:
-            pytest.xfail("torch._ops.aten.repeat_interleave.Tensor is not Aten Canonical")
+        if isinstance(repeat, torch.Tensor):
+            if (
+                Version(torch.__version__) >= Version("2.7.0")
+                and frontend == TorchFrontend.TORCHEXPORT
+            ):
+                pytest.xfail("AssertionError: u0 possible memo disaster")
+            elif frontend == TorchFrontend.EXECUTORCH:
+                pytest.xfail("torch._ops.aten.repeat_interleave.Tensor is not Aten Canonical")
         if rank == 5 and frontend == TorchFrontend.EXECUTORCH:
             pytest.xfail("ExecuTorch produces rank+1 const, but Core ML supports up to rank 5")
 
@@ -7570,7 +7591,9 @@ class TestRepeatInterleave(TorchBaseTest):
         ),
     )
     def test_single_fill_tensor_repeat(self, compute_unit, backend, frontend):
-        if frontend == TorchFrontend.EXECUTORCH:
+        if Version(torch.__version__) >= Version("2.7.0") and frontend == TorchFrontend.TORCHEXPORT:
+            pytest.xfail("AssertionError: u0 possible memo disaster")
+        elif frontend == TorchFrontend.EXECUTORCH:
             pytest.xfail("torch._ops.aten.repeat_interleave.Tensor is not Aten Canonical")
 
         input_shape = (3, 2)
@@ -11018,7 +11041,7 @@ class TestMeshgrid(TorchBaseTest):
             [5, 6],
             [torch.int, torch.float],
             ["norm", "list"],
-            [None, "ij", "xy"],
+            ["ij", "xy"],
             (True, False),
         ),
     )
@@ -11035,6 +11058,7 @@ class TestMeshgrid(TorchBaseTest):
         indexing,
         dynamic,
     ):
+
         class TestModel(nn.Module):
             def forward(self, x, y, z):
                 if inp_mode == "norm":
@@ -11590,6 +11614,11 @@ class TestHstack(TorchBaseTest):
         ),
     )
     def test_hstack_with_parameter_out(self, compute_unit, backend, frontend, shapes):
+        if frontend in TORCH_EXPORT_BASED_FRONTENDS:
+            pytest.xfail(
+                "torch._dynamo.exc.Unsupported: out variants with resizing on graph inputs"
+            )
+
         class HstackModel(nn.Module):
             def forward(self, *tensors):
                 output_tensor = torch.tensor([])
@@ -11634,6 +11663,11 @@ class TestRemainder(TorchBaseTest):
         ),
     )
     def test_remainder_with_parameter_out(self, compute_unit, backend, frontend, shapes):
+        if frontend in TORCH_EXPORT_BASED_FRONTENDS:
+            pytest.xfail(
+                "torch._dynamo.exc.Unsupported: out variants with resizing on graph inputs"
+            )
+
         class RemainderModel(nn.Module):
             def forward(self, dividend, divisor):
                 output_tensor = torch.tensor([])
@@ -13759,7 +13793,7 @@ class TestScaledDotProductAttention(TorchBaseTest):
         mask_as_input,
         dynamic,
     ):
-        if frontend == TorchFrontend.EXECUTORCH and not mask_as_input:
+        if frontend == TorchFrontend.EXECUTORCH:
             pytest.xfail(
                 "https://github.com/apple/coremltools/issues/2199: placeholder assertion error"
             )

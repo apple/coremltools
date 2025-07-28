@@ -71,7 +71,7 @@ class TorchMLModelBenchmarker(MLModelBenchmarker):
     ) -> None:
         mlModel = None
         source_to_target_ops_mapping = None
-        if isinstance(model, ExportedProgram):
+        if _HAS_TORCH_EXPORT_API and isinstance(model, ExportedProgram):
             (
                 mlModel,
                 source_to_target_ops_mapping,

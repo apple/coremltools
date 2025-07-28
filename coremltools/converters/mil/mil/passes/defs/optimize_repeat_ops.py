@@ -357,8 +357,8 @@ class cast_optimization(AbstractGraphPass):
             Output graph:
             input -> relu -> out
 
-         The input and output tensors for the ``cast`` op are both with type of ``fp16``.
-         Hence, it can be removed.
+        The input and output tensors for the ``cast`` op are both with type of ``fp16``.
+        Hence, it can be removed.
 
     (2) Example for two ``cast`` ops fusion:
         .. code-block::
@@ -369,8 +369,8 @@ class cast_optimization(AbstractGraphPass):
             Output graph:
             input(int8) -> cast(dtype="fp32") -> out
 
-         The data range and resolution of the above graph are limited by the int8 input,
-         so the fusion is allowed.
+        The data range and resolution of the above graph are limited by the int8 input,
+        so the fusion is allowed.
 
     (3) Negative example for two ``cast`` ops fusion:
         .. code-block::
@@ -381,9 +381,9 @@ class cast_optimization(AbstractGraphPass):
             Output graph:
             Same as input graph.
 
-         The above two ``cast`` ops cannot be merged, since after the first cast,
-         the resolution of the numerical output is downcasted to binary (``0, 1``).
-         If we fuse them, the output would be in the range and resolution of ``fp16`` instead.
+        The above two ``cast`` ops cannot be merged, since after the first cast,
+        the resolution of the numerical output is downcasted to binary (``0, 1``).
+        If we fuse them, the output would be in the range and resolution of ``fp16`` instead.
 
     (4) Another Negative example for two ``cast`` ops fusion:
         .. code-block::
@@ -394,11 +394,11 @@ class cast_optimization(AbstractGraphPass):
             Output graph:
             Same as input graph.
 
-         The above two ``cast`` ops cannot be merged, since in the original graph,
-         by going through two casts, the output numerical range is capped to ``[0, 127]``.
-         However, if two ``cast`` ops are reduced to 1 ``cast(dtype="uint8")``, the output
-         numerical would in the range of ``[0, 255]``. The fusion would cause numerical
-         issue for the numbers between ``[128, 255]``, which is prohibited.
+        The above two ``cast`` ops cannot be merged, since in the original graph,
+        by going through two casts, the output numerical range is capped to ``[0, 127]``.
+        However, if two ``cast`` ops are reduced to 1 ``cast(dtype="uint8")``, the output
+        numerical would in the range of ``[0, 255]``. The fusion would cause numerical
+        issue for the numbers between ``[128, 255]``, which is prohibited.
 
     In general, two ``cast`` ops can be merged if the output data range and resolution is not affected.
 
@@ -587,7 +587,7 @@ class cast_optimization(AbstractGraphPass):
                 if op.op_type == "cast":
                     if self._try_to_transform(op, cast_ops_across_blocks):
                         # It is important not to exist the loop right away when a fusion happens,
-                        # in order to make the time conplexity low.
+                        # in order to make the time complexity low.
                         # For instance, given a program of the pattern:
                         # relu -> relu -> cast -> cast -> cast,
                         # the three cast ops can be fused into a single cast op in one shot.
@@ -605,6 +605,7 @@ class cast_optimization(AbstractGraphPass):
         # fuse the cast ops across the inner / outer block boundary
         for k, v in cast_ops_across_blocks.items():
             self._fuse_casts_ops_across_blocks(k, tuple(v))
+
 
 class TransformAxisUpdateOps:
     """

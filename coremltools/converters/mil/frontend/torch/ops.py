@@ -134,13 +134,13 @@ def convert_single_node(context: TranscriptionContext, node: InternalTorchIRNode
     add_op = _TORCH_OPS_REGISTRY.get_func(op_lookup)
     if add_op is None:
         if re.match(r".*_dynamic", op_lookup):
-            raise RuntimeError(
+            raise NotImplementedError(
                 f"PyTorch convert function for op '{op_lookup}' not implemented.\n"
                 "Dynamic quantized models are not supported by Core ML.\n"
                 "Please use static quantization or the APIs in coremltools.optimize to quantize/compress models."
             )
         else:
-            raise RuntimeError(
+            raise NotImplementedError(
                 f"PyTorch convert function for op '{op_lookup}' not implemented."
             )
 
@@ -310,7 +310,11 @@ def _get_kwinputs(context, node, keyword: str, default: Optional[List[Var]] = No
         if bindings is None:
             return default
         else:
-            return _get_bindings(context, bindings)
+            kwinputs = _get_bindings(context, bindings)
+            if len(kwinputs) == 0:
+                return default
+            else:
+                return kwinputs
 
 
 def _list_select(shape_var, index):
@@ -322,13 +326,6 @@ def _list_select(shape_var, index):
     if shape_var.can_be_folded_to_const():
         res = mb.const(val=shape_var.val[index])
     else:
-        if is_current_opset_version_compatible_with(target.iOS17):
-            # IOS17 `gather` requires non-negative indices.
-            index = mb.select(
-                cond=mb.greater_equal(x=index, y=0),
-                a=index,
-                b=mb.add(x=index, y=_utils.pymil_value_at(mb.shape(x=shape_var), 0)),
-            )
         res = mb.gather(x=shape_var, indices=index)
     return res
 
@@ -401,7 +398,7 @@ def _cast_to(_input: Union[Var, np.ndarray], dtype_str: str, node_name: str) -> 
     """Create a Var to cast from input to target dtype."""
     valid_dtypes = SSAOpRegistry._get_core_op_cls("cast").supported_dtypes()
     if dtype_str in valid_dtypes:
-        res = mb.cast(x=_input, dtype=dtype_str)
+        res = mb.cast(x=_input, dtype=dtype_str, name=node_name)
     else:
         np_dtype = types.nptype_from_builtin(types.string_to_builtin(dtype_str))
         if np.issubdtype(np_dtype, np.integer):
@@ -413,7 +410,7 @@ def _cast_to(_input: Union[Var, np.ndarray], dtype_str: str, node_name: str) -> 
         logger.warning(
             f"The {dtype_str} is not supported by cast op. Will do best-effort cast to {target_dtype}"
         )
-        res = mb.cast(x=_input, dtype=target_dtype)
+        res = mb.cast(x=_input, dtype=target_dtype, name=node_name)
     return res
 
 
@@ -4025,9 +4022,10 @@ def upsample_bilinear2d(context, node):
             if x.val is not None and (output_size is None or output_size.val is not None):
                 if output_size is not None:
                     output_size = torch.tensor(output_size.val)
+                torch_x = torch.tensor(x.val).to(torch.float32)
                 upsample_res = (
                     torch.nn.functional.upsample_bilinear(
-                        torch.tensor(x.val), output_size, [scales_h, scales_w]
+                        torch_x, output_size, [scales_h, scales_w]
                     )
                     .detach()
                     .numpy()
@@ -4038,6 +4036,9 @@ def upsample_bilinear2d(context, node):
                 "recompute_scale_factor = False, align_corners = False with float output size "
                 f"is not supported for the upsample op {node.name}"
             )
+
+        if x.dtype not in (types.fp16, types.fp32):
+            x = mb.cast(x=x, dtype="fp32")
 
         upsample_bilinear = mb.upsample_bilinear(
             x=x,
@@ -4053,10 +4054,16 @@ def upsample_bilinear2d(context, node):
         assert (
             isinstance(output_size, list) and len(output_size) == 2
         ), "for dynamic shape torch should give [output_size_h, output_size_w]"
+        output_height = output_size[0]
+        output_width = output_size[1]
+        if output_height.dtype != types.int32:
+            output_height = mb.cast(x=output_height, dtype="int32")
+        if output_width.dtype != types.int32:
+            output_width = mb.cast(x=output_width, dtype="int32")
         upsample_bilinear = mb.torch_upsample_bilinear(
             x=x,
-            output_height=output_size[0],
-            output_width=output_size[1],
+            output_height=output_height,
+            output_width=output_width,
             align_corners=align_corners,
             name=node.name,
         )
@@ -5244,14 +5251,6 @@ def index(context, node):
         if len(indices_axes) == 1:
             axis = indices_axes[0]
             indices = valid_indices[0]
-            if is_current_opset_version_compatible_with(target.iOS17):
-                # IOS17 `gather` behaviour is undefined for negative indices.
-                indices = mb.cast(x=indices, dtype="int32")
-                indices = mb.select(
-                    cond=mb.greater_equal(x=indices, y=0),
-                    a=indices,
-                    b=mb.add(x=indices, y=_utils.pymil_value_at(mb.shape(x=x), axis)),
-                )
             # For the single index axis case, we can use mb.gather directly
             x = _utils._construct_gather_op("gather", x, indices, axis, name=name)
             context.add(x)
@@ -5312,20 +5311,6 @@ def index(context, node):
         name = node_name + "_transpose" if is_connected else node_name
         perm = indices_axes + [axis for axis in range(x.rank) if axis not in indices_axes]
         x = mb.transpose(x=x, perm=perm)
-
-        if is_current_opset_version_compatible_with(target.iOS17):
-            # IOS17 `gather_nd` behaviour is undefined for negative indices.
-            cond = mb.greater_equal(x=indices, y=0)
-            x_shape = mb.shape(x=x)
-            indices_shape = mb.shape(x=indices)
-            indices_last_dim = _utils.pymil_value_at(indices_shape, indices.rank - 1)
-            indices_last_dim_expand = mb.expand_dims(x=indices_last_dim, axes=[0])
-            slice_shape = mb.slice_by_size(x=x_shape, begin=[0], size=indices_last_dim_expand)
-            indices = mb.select(
-                cond=cond,
-                a=indices,
-                b=mb.add(x=indices, y=slice_shape),
-            )
         result = _utils._construct_gather_op("gather_nd", x, indices, name=name)
 
         # if the index axes are connect, we need to transpose it back
@@ -5566,9 +5551,35 @@ def randn(context, node):
 
 @register_torch_op
 def randn_like(context, node):
-    inputs = _get_inputs(context, node, expected=6)
-    x = inputs[0]
-    dtype = inputs[1]
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, min_expected=1)
+        nargs = len(inputs)
+
+        x = inputs[0]
+
+        dtype = inputs[1] if nargs > 1 else None
+        layout = inputs[2] if nargs > 2 else None
+        device = inputs[3] if nargs > 3 else None
+        pin_memory = inputs[4] if nargs > 4 else None
+        memory_format = inputs[5] if nargs > 5 else None
+
+        return x, dtype, layout, device, pin_memory, memory_format
+
+    def _parse_keyword_args(
+        context, node, dtype: Var, layout: Var, device: Var, pin_memory: Var, memory_format: Var
+    ) -> Tuple[Var]:
+        dtype = _get_kwinputs(context, node, "dtype", default=[dtype])[0]
+        layout = _get_kwinputs(context, node, "layout", default=[layout])[0]
+        device = _get_kwinputs(context, node, "device", default=[device])[0]
+        pin_memory = _get_kwinputs(context, node, "pin_memory", default=[pin_memory])[0]
+        memory_format = _get_kwinputs(context, node, "memory_format", default=[memory_format])[0]
+        return dtype, layout, device, pin_memory, memory_format
+
+    x, dtype, layout, device, pin_memory, memory_format = _parse_positional_args(context, node)
+    dtype, layout, device, pin_memory, memory_format = _parse_keyword_args(
+        context, node, dtype, layout, device, pin_memory, memory_format
+    )
+
     _assert_torch_dtype_num_is_not_complex_number(dtype)
     shape = mb.shape(x=x)
     rand_normal = mb.random_normal(shape=shape)
@@ -5853,7 +5864,7 @@ def slice(context, node):
     end_mask = [True] * len(x.shape)
 
     if end is not None:
-        is_end_const_int = isinstance(end, int) or np.issubdtype(end, np.integer)
+        is_end_const_int = isinstance(end, int) or np.issubdtype(end.dtype, np.integer)
         is_end_ge_size = is_end_const_int and not is_symbolic(x.shape[dim]) and end >= x.shape[dim]
         # PyTorch may use int32 max (i.e. 2147483647) to indicate "no end"
         is_end_const_int32max = is_end_const_int and end == np.iinfo(np.int32).max
@@ -6317,6 +6328,7 @@ def meshgrid(context, node):
     torch_alias=[
         "_assert_async.msg",
         "_assert_scalar",
+        "_assert_tensor_metadata",
         "_local_scalar_dense",
         "alias_copy",
         "clone",
@@ -8188,7 +8200,7 @@ def im2col(context, node):
 
     def _create_conv2d_weight(
         in_channels: int,
-        kernel_size: tuple[int, int],
+        kernel_size: "tuple[int, int]",
         dtype: torch.dtype,
     ) -> np.ndarray:
         size = np.prod(kernel_size).item()
@@ -8434,9 +8446,89 @@ def stft(context, node):
     """
     Lowers torch.stft with the dialect op `complex_stft` from complex_dialect_ops.py
     """
-    input_data, n_fft, hop_length, win_length, window, normalized, onesided, _ = _get_inputs(context, node, min_expected=2)
+
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, min_expected=2)
+        nargs = len(inputs)
+
+        input_data = inputs[0]
+        n_fft = inputs[1]
+
+        hop_length = inputs[2] if nargs > 2 else None
+        win_length = inputs[3] if nargs > 3 else None
+        window = inputs[4] if nargs > 4 else None
+        normalized = inputs[5] if nargs > 5 else False
+        onesides = inputs[6] if nargs > 6 else None
+        return_complex = inputs[7] if nargs > 7 else None
+        align_to_window = inputs[8] if nargs > 8 else None
+
+        return (
+            input_data,
+            n_fft,
+            hop_length,
+            win_length,
+            window,
+            normalized,
+            onesides,
+            return_complex,
+            align_to_window,
+        )
+
+    def _parse_keyword_args(
+        context,
+        node,
+        hop_length: Var,
+        win_length: Var,
+        window: Var,
+        normalized: Var,
+        onesides: Var,
+        return_complex: Var,
+        align_to_window: Var,
+    ) -> Tuple[Var]:
+        hop_length = _get_kwinputs(context, node, "hop_length", default=[hop_length])[0]
+        win_length = _get_kwinputs(context, node, "win_length", default=[win_length])[0]
+        window = _get_kwinputs(context, node, "window", default=[window])[0]
+        normalized = _get_kwinputs(context, node, "normalized", default=[normalized])[0]
+        onesides = _get_kwinputs(context, node, "onesides", default=[onesides])[0]
+        return_complex = _get_kwinputs(context, node, "return_complex", default=[return_complex])[0]
+        align_to_window = _get_kwinputs(
+            context, node, "align_to_window", default=[align_to_window]
+        )[0]
+        return hop_length, win_length, window, normalized, onesides, return_complex, align_to_window
+
+    (
+        input_data,
+        n_fft,
+        hop_length,
+        win_length,
+        window,
+        normalized,
+        onesides,
+        return_complex,
+        align_to_window,
+    ) = _parse_positional_args(context, node)
+    (
+        hop_length,
+        win_length,
+        window,
+        normalized,
+        onesides,
+        return_complex,
+        align_to_window,
+    ) = _parse_keyword_args(
+        context,
+        node,
+        hop_length,
+        win_length,
+        window,
+        normalized,
+        onesides,
+        return_complex,
+        align_to_window,
+    )
+
     if types.is_complex(input_data.dtype):
-        onesided = False # pytorch defaults onesided to False for complex inputs
+        onesides = False  # pytorch defaults onesided to False for complex inputs
     stft_res = mb.complex_stft(
         input=input_data,
         n_fft=n_fft,
@@ -8444,7 +8536,8 @@ def stft(context, node):
         win_length=win_length,
         window=window,
         normalized=normalized,
-        onesided=onesided)
+        onesided=onesides,
+    )
     context.add(stft_res, node.name)
 
 @register_torch_op(torch_alias=["torchvision::nms"])

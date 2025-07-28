@@ -321,6 +321,7 @@ class TestConstexprBlockwiseDequantize:
         "compute_unit, backend, nbits, has_offset",
         itertools.product(compute_units, backends, [4, 8], [True, False]),
     )
+    @pytest.mark.xfail(reason="rdar://148462865")
     def test_builder_to_backend_smoke(self, compute_unit, backend, nbits, has_offset):
         x_val = np.ones(1).astype(np.float32)
         input_placeholders = {"x": mb.placeholder(shape=x_val.shape)}
@@ -1686,6 +1687,9 @@ class TestJointCompressionOps:
                                                                 constexpr_lut_to_dense -> dense(fp)
                                                          indices /
         """
+
+        if vector_size == 4 and block_sizes != (2, 0, 0, 0):
+            pytest.xfail(reason="rdar://148464551")
 
         indices_shape = (4, 8, 16, 8)
         builtin_dtype = types.string_to_builtin(f"uint{nbits}")

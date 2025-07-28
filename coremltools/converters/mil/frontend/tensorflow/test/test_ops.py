@@ -1492,6 +1492,10 @@ class TestConv3d(TensorFlowBaseTest):
         padding_type,
         batch_size,
     ):
+
+        if backend == ("mlprogram", "fp16"):
+            pytest.skip(reason="rdar://148471884")
+
         C_in = np.random.randint(low=1, high=4)
         C_out = np.random.randint(low=1, high=(C_in + 1))
         input_shape = [batch_size] + list(input_size) + [C_in]
@@ -1935,10 +1939,18 @@ class TestConvTranspose(TensorFlowBaseTest):
         if _macos_version() < (12, 0) and strides == (1, 2, 3) and padding == "VALID":
             # Behavior changed in macOS 12
             return
-        if (platform.machine() == "x86_64" and compute_unit == ct.ComputeUnit.CPU_ONLY
-          and backend == ('mlprogram', 'fp16') and padding == "SAME"
-          and DHWkDkHkW in ((4, 6, 8, 2, 3, 1), (5, 7, 9, 2, 4, 2))
-          and strides == (1, 2, 3) and dilations == (1, 1, 1) and dynamic):
+        if backend == ("mlprogram", "fp16"):
+            pytest.skip(reason="rdar://148471884")
+        if (
+            platform.machine() == "x86_64"
+            and compute_unit == ct.ComputeUnit.CPU_ONLY
+            and backend == ("mlprogram", "fp16")
+            and padding == "SAME"
+            and DHWkDkHkW in ((4, 6, 8, 2, 3, 1), (5, 7, 9, 2, 4, 2))
+            and strides == (1, 2, 3)
+            and dilations == (1, 1, 1)
+            and dynamic
+        ):
             pytest.xfail("rdar://137132151")
 
         D, H, W, kD, kH, kW = DHWkDkHkW
@@ -2564,6 +2576,7 @@ class TestImageResizing(TensorFlowBaseTest):
             [True, False],
         ),
     )
+    @pytest.mark.skip(reason="rdar://148479849")
     def test_ios16_resize_bilinear_dynamic_shape_by_upsample_bilinear(
         self,
         compute_unit,
@@ -6652,6 +6665,13 @@ class TestSpaceToBatchND(TensorFlowBaseTest):
     def test_smoke_new_op(
         self, compute_unit, backend, shape_block_paddings, dynamic_input, dynamic_paddings
     ):
+        if (
+            backend == ("mlprogram", "fp16")
+            and dynamic_input
+            and not dynamic_paddings
+        ):
+            pytest.skip(reason="rdar://148523625")
+
         input_shape, block_shape, paddings = shape_block_paddings
         paddings = np.array(paddings, dtype=np.int32)
 

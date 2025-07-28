@@ -108,7 +108,7 @@ if [[ $OSTYPE == darwin* ]]; then
   CMAKE_COMMAND="xcrun --sdk ${sdk} "
 fi
 if [ -z "`which cmake`" ] || [ "`which cmake`" = "cmake not found" ]; then
-  conda install cmake -y
+  pip install cmake
 fi
 CMAKE_COMMAND+="cmake $ADDITIONAL_CMAKE_OPTIONS \
   -DCMAKE_BUILD_TYPE=$BUILD_MODE \

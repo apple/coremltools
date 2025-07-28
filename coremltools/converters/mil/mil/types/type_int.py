@@ -15,13 +15,23 @@ from .type_bool import bool
 from .type_spec import Type
 
 
-def make_int(width, unsigned):
-    delay_type_int = getattr(delay_type, unsigned + "int" + str(width))
+def make_int(width_, unsigned_):
+    delay_type_int = getattr(delay_type, unsigned_ + "int" + str(width_))
 
     @class_annotate()
     class int:
-        _width = width
-        _unsigned = unsigned
+        _width = width_
+        _unsigned = unsigned_
+
+        @classmethod
+        @property
+        def width(self):
+            return self._width
+
+        @classmethod
+        @property
+        def unsigned(self):
+            return self._unsigned
 
         @annotate(v=delay_type_int)
         def __init__(self, v=0):
@@ -206,6 +216,14 @@ _SUB_BYTE_TYPES = (int4, uint1, uint2, uint3, uint4, uint6)
 
 def is_int(t):
     return any(t is i or isinstance(t, i) for i in _INT_TYPES)
+
+
+def is_signed_int(t):
+    return is_int(t) and t._unsigned == ""
+
+
+def is_unsigned_int(t):
+    return is_int(t) and t._unsigned == "u"
 
 
 def is_sub_byte(t):

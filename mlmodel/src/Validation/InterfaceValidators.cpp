@@ -13,6 +13,7 @@
 #include "Globals.hpp"
 #include "Model.hpp"
 #include "Utils.hpp"
+#include <limits>
 
 namespace CoreML {
 
@@ -189,6 +190,15 @@ namespace CoreML {
                         }
 
                         break;
+                    case Specification::ArrayFeatureType_ArrayDataType_INT8:
+                        if (modelVersion < MLMODEL_SPECIFICATION_VERSION_IOS26) {
+                            return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                          "Description of multiarray feature '" + desc.name() +
+                                          "' has INT8 dataType, which is only valid in specification version >= " += std::to_string(MLMODEL_SPECIFICATION_VERSION_IOS26)+
+                                          ". This model has version " + std::to_string(modelVersion));
+                        }
+
+                        break;
                     default:
                         return Result(ResultType::INVALID_MODEL_INTERFACE,
                                       "Description of multiarray feature '" + desc.name() + "' has an invalid or unspecified dataType. "
@@ -212,7 +222,17 @@ namespace CoreML {
                         }
                         break;
                     case CoreML::Specification::ArrayFeatureType::kIntDefaultValue:
-                        if (type.multiarraytype().datatype() != Specification::ArrayFeatureType_ArrayDataType_INT32){
+                        if (type.multiarraytype().datatype() == Specification::ArrayFeatureType_ArrayDataType_INT32) {
+                            // OK
+                        } else if (type.multiarraytype().datatype() == Specification::ArrayFeatureType_ArrayDataType_INT8) {
+                            int defaultOptionalValue = type.multiarraytype().intdefaultvalue();
+                            if ((defaultOptionalValue < std::numeric_limits<int8_t>::min()) ||
+                                (std::numeric_limits<int8_t>::max() < defaultOptionalValue)) {
+                                return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                              "The default optional value of multiarray feature '" + desc.name() + "'"
+                                              " is " + std::to_string(defaultOptionalValue) + ", which is out of range for the data type INT8.");
+                            }
+                        } else {
                             return Result(ResultType::INVALID_MODEL_INTERFACE,
                                           "Description of multiarray feature '" + desc.name() + "' has mistmatch"
                                           " between dataType and the type of default optional value.");
@@ -418,6 +438,8 @@ namespace CoreML {
 
                 switch (type.statetype().arraytype().datatype()) {
                     case Specification::ArrayFeatureType_ArrayDataType_FLOAT16:
+                        break;
+                    case Specification::ArrayFeatureType_ArrayDataType_INT8:
                         break;
                     default:
                         return Result(ResultType::INVALID_MODEL_INTERFACE,
