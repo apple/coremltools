@@ -5896,7 +5896,7 @@ def slice(context, node):
     context.add(res)
 
 
-@register_torch_op(torch_alias=["split_with_sizes", "split_with_sizes_copy"])
+@register_torch_op(torch_alias=["split_with_sizes", "split_with_sizes_copy", "split_copy"])
 def split(context, node):
     def _parse_positional_args(context, node) -> Tuple[Var]:
         inputs = _get_inputs(context, node, min_expected=2)
