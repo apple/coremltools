@@ -7673,10 +7673,11 @@ class TestVarStd(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, torch_op, unbiased",
         itertools.product(
-            compute_units, backends, frontends, [torch.var, torch.std], [True, False]
+            compute_units, backends, frontends, ["var", "std"], [True, False]
         ),
     )
     def test_var_std_2_inputs(self, compute_unit, backend, frontend, torch_op, unbiased):
+        torch_op = getattr(torch, torch_op)
         model = ModuleWrapper(function=torch_op, kwargs={"unbiased": unbiased})
         x = torch.randn(1, 5, 10) * 3
         out = torch_op(x, unbiased=unbiased).unsqueeze(0)
@@ -7696,7 +7697,7 @@ class TestVarStd(TorchBaseTest):
             compute_units,
             backends,
             frontends,
-            [torch.var, torch.std],
+            ["var", "std"],
             [True, False],
             [[0, 2], [1], [2]],
             [True, False],
@@ -7705,6 +7706,7 @@ class TestVarStd(TorchBaseTest):
     def test_var_std_4_inputs(
         self, compute_unit, backend, frontend, torch_op, unbiased, dim, keepdim
     ):
+        torch_op = getattr(torch, torch_op)
         model = ModuleWrapper(
             function=torch_op,
             kwargs={"unbiased": unbiased, "dim": dim, "keepdim": keepdim},
@@ -7720,7 +7722,7 @@ class TestVarStd(TorchBaseTest):
             compute_units,
             backends,
             frontends,
-            [torch.var, torch.std],
+            ["var", "std"],
             [0, 1],
             [[0, 2], [1], [2]],
             [True, False],
@@ -7729,6 +7731,7 @@ class TestVarStd(TorchBaseTest):
     def test_var_std_with_correction(
         self, compute_unit, backend, frontend, torch_op, correction, dim, keepdim
     ):
+        torch_op = getattr(torch, torch_op)
         model = ModuleWrapper(
             function=torch_op,
             kwargs={"correction": correction, "dim": dim, "keepdim": keepdim},
@@ -9103,34 +9106,35 @@ class TestTorchTensor(TorchBaseTest):
             backends,
             frontends,
             [
-                torch.abs,
-                torch.acos,
-                torch.asin,
-                torch.atan,
-                torch.atanh,
-                torch.ceil,
-                torch.cos,
-                torch.cosh,
-                torch.exp,
-                torch.exp2,
-                torch.floor,
-                torch.log,
-                torch.log2,
-                torch.round,
-                torch.rsqrt,
-                torch.sign,
-                torch.sin,
-                torch.sinh,
-                torch.sqrt,
-                torch.square,
-                torch.tan,
-                torch.tanh,
+                "abs",
+                "acos",
+                "asin",
+                "atan",
+                "atanh",
+                "ceil",
+                "cos",
+                "cosh",
+                "exp",
+                "exp2",
+                "floor",
+                "log",
+                "log2",
+                "round",
+                "rsqrt",
+                "sign",
+                "sin",
+                "sinh",
+                "sqrt",
+                "square",
+                "tan",
+                "tanh",
             ],
         ),
     )
     def test_torch_rank0_tensor(self, compute_unit, backend, frontend, torch_op):
-        if frontend == TorchFrontend.EXECUTORCH and torch_op == torch.exp2:
+        if frontend == TorchFrontend.EXECUTORCH and torch_op == "exp2":
             pytest.skip("torch._ops.aten.exp2.default is not Aten Canonical")
+        torch_op = getattr(torch, torch_op)
 
         class Model(nn.Module):
             def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -12658,7 +12662,7 @@ class TestSTFT(TorchBaseTest):
             [16], # n_fft
             [None, 4, 5], # hop_length
             [None, 16, 9], # win_length
-            [None, torch.hann_window], # window
+            [None, "hann_window"], # window
             [None, False, True], # center
             ["constant", "reflect", "replicate"], # pad mode
             [False, True], # normalized
@@ -12668,6 +12672,8 @@ class TestSTFT(TorchBaseTest):
     def test_stft(self, compute_unit, backend, input_shape, complex, n_fft, hop_length, win_length, window, center, pad_mode, normalized, onesided):
         if complex and onesided:
             pytest.skip("Onesided stft not possible for complex inputs")
+        if window is not None:
+            window = getattr(torch, window)
 
         class STFTModel(torch.nn.Module):
             def forward(self, x):
