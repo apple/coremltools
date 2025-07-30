@@ -23,4 +23,3 @@ cmake_install.cmake
 .cache/
 .idea/
 *.log
-/coremltools-venv
