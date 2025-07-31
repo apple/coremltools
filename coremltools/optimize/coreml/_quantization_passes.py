@@ -1640,7 +1640,7 @@ class insert_prefix_quantize_dequantize_pair(AbstractActCompressionPass):
 
     _SUPPORTED_CONFIG_TYPE = OpLinearQuantizerConfig
 
-    SUPPORTED_UNARY_OP_TYPES = ["conv", "avg_pool", "max_pool"]
+    SUPPORTED_UNARY_OP_TYPES = ["conv", "avg_pool", "max_pool", "linear"]
     SUPPORTED_BINARY_OP_TYPES = ["add"]
     SUPPORTED_OP_TYPES = SUPPORTED_UNARY_OP_TYPES + SUPPORTED_BINARY_OP_TYPES
 

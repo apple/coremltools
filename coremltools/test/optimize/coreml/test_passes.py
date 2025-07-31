@@ -901,6 +901,21 @@ class TestCompressionPasses:
         return prog
 
     @staticmethod
+    def _get_test_program_linear():
+        """An iOS17 program with linear."""
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=(30, 10))], opset_version=ct.target.iOS17
+        )
+        def prog(x):
+            linear_weight = np.random.rand(30, 10).astype(np.float32)
+            x = mb.cast(x=x, dtype="fp16")
+            x = mb.linear(x=x, weight=linear_weight)
+            x = mb.cast(x=x, dtype="fp32")
+            return x
+
+        return prog
+
+    @staticmethod
     def _get_test_mlmodel_conv_concat():
         """A mlmodel has a concat with 2 inputs and 1 output all surrounded by conv."""
 
@@ -3705,6 +3720,57 @@ class TestLinearActivationQuantizer(TestCompressionPasses):
             "quantize",
             "dequantize",
             "max_pool",
+            "quantize",
+            "dequantize",
+            "cast",
+        ]
+
+    @pytest.mark.parametrize(
+        "mode, dtype, weight_threshold",
+        itertools.product(
+            ["LINEAR", "LINEAR_SYMMETRIC"],
+            [np.int8, np.uint8, types.int8, types.uint8],
+            [1000],
+        ),
+    )
+    def test_global_config_activation_quantizer_on_pattern_4(self, mode, dtype, weight_threshold):
+        """
+        Global config would compress all operations with the same config
+        Valid patterns:
+        - linear
+        """
+
+        # Insert prefix quantize/dequantize pairs
+        op_config = cto.coreml.OpLinearQuantizerConfig(
+            mode=mode, dtype=dtype, weight_threshold=weight_threshold
+        )
+        config = cto.coreml.OptimizationConfig(global_config=op_config)
+
+        # Test case: conv
+        prog = self._get_test_program_linear()
+
+        # Create activation_stats to all intermediate tensors
+        activation_stats = gen_activation_stats_for_program(prog)
+
+        # Insert prefix quantize/dequantize pairs
+        graph_pass_1 = _insert_prefix_quantize_dequantize_pair(config)
+        graph_pass_1.set_options([PassOption("activation_stats", activation_stats)])
+
+        # Insert suffix quantize/dequantize pairs
+        graph_pass_2 = PASS_REGISTRY["compression::insert_suffix_quantize_dequantize_pair"]
+        graph_pass_2.set_options(
+            [PassOption("config", config), PassOption("activation_stats", activation_stats)]
+        )
+
+        apply_pass_and_basic_check(prog, graph_pass_1)
+        apply_pass_and_basic_check(prog, graph_pass_2)
+
+        print(get_op_types_in_program(prog))
+        assert get_op_types_in_program(prog) == [
+            "cast",
+            "quantize",
+            "dequantize",
+            "linear",
             "quantize",
             "dequantize",
             "cast",
