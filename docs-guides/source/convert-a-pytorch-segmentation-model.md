@@ -52,7 +52,7 @@ To import code modules, load the segmentation model, and load the sample image, 
     input_image.show()
     ```
 
-```{figure} images/cat_dog.jpg
+```images/cat_dog.jpg
 :alt: Dog and cat test image
 :align: center
 :class: imgnoborder
@@ -111,7 +111,7 @@ Right-click and choose **Save Image** to download this test image.
     display_segmentation(input_image, torch_predictions)
     ```
 
-```{figure} images/seg_pytorch.png
+```images/seg_pytorch.png
 :alt: Plot predictions overlaid with image
 :align: center
 :class: imgnoborder
@@ -126,7 +126,7 @@ Now that the PyTorch model is segmenting the image correctly, you can trace the 
 
 However, the model returns a dictionary. If you try to use `trace = torch.jit.trace(model, input_batch)` without first extracting the output you want from the dictionary, the tracer outputs an error: `Only tensors or tuples of tensors can be output from traced functions`.
 
-To sidestep this limitation, you can wrap the model in a module that extracts the output  from the dictionary:
+To sidestep this limitation, you can wrap the model in a module that extracts the output from the dictionary:
 
 ```python
 class WrappedDeeplabv3Resnet101(nn.Module):

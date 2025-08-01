@@ -58,7 +58,7 @@ The TensorFlow [documentation on Einsum](https://www.tensorflow.org/api_docs/jav
 
 The error trace shows that the model uses the following notation for Einsum:
 
-```{image} images/first_eq_300.png
+```images/first_eq_300.png
 :alt: Notation for Einsum
 :align: center
 :width: 400px
@@ -69,7 +69,7 @@ The error trace shows that the model uses the following notation for Einsum:
 
 The above notation translates into the following mathematical expression:
 
-```{image} images/second_eq_300.png
+```images/second_eq_300.png
 :alt: Math expression
 :align: center
 :width: 600px
@@ -80,7 +80,7 @@ The above notation translates into the following mathematical expression:
 
 While the above may look complicated, it is essentially a batched matrix multiplication with a transpose on the second input:
 
-```{image} images/third_eq_300.png
+```images/third_eq_300.png
 :alt: Batched matrix multiplication
 :align: center
 :class: imgnoborder

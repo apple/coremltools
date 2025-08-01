@@ -9,7 +9,7 @@
 
 As ML models evolve in sophistication and complexity, their [representations](#model-representations) are also evolving to describe how they work. _ML programs_ are models that are represented as operations in code. The ML program model type is the foundation for future Core ML improvements.
 
-A few of the major the differences between a neural network and an ML program are as follows:
+A few of the major differences between a neural network and an ML program are as follows:
 
 | Neural Network | ML Program |
 | ----------- | ----------- |
@@ -42,7 +42,7 @@ Converting to an ML program provides the following advantages over converting to
 
 - More efficient compiling:
     
-    Since ML programs do not store weights in the protobuf file format, the models are more memory-efficient to compile. You can  significantly improve performance by using Core ML's on-device compilation API. For details, see [Downloading and Compiling a Model on the User’s Device](https://developer.apple.com/documentation/coreml/core_ml_api/downloading_and_compiling_a_model_on_the_user_s_device).
+    Since ML programs do not store weights in the protobuf file format, the models are more memory-efficient to compile. You can significantly improve performance by using Core ML's on-device compilation API. For details, see [Downloading and Compiling a Model on the User’s Device](https://developer.apple.com/documentation/coreml/core_ml_api/downloading_and_compiling_a_model_on_the_user_s_device).
 
 ## Model Representations
 
