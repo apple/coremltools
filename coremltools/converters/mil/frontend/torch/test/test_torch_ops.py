@@ -9523,6 +9523,31 @@ class TestTensorAssign(TorchBaseTest):
             assert "slice_update" in get_op_types_in_program(prog)
 
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, minimum_deployment_target",
+        itertools.product(
+            compute_units,
+            backends,
+            [None, ct.target.iOS18],
+        ),
+    )
+    def test_tensor_assign_no_op(self, compute_unit, backend, minimum_deployment_target):
+        # if the resulting update has `0` dimensions, and it is a noop
+        class TensorAssignModel(torch.nn.Module):
+            def forward(self, x):
+                x[:, -8:0, :] = 0
+                return x + 1
+
+        shape = (2, 10, 3)
+        model = TensorAssignModel()
+        res = self.run_compare_torch(
+            shape,
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+
 class TestSelectScatter(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, minimum_deployment_target, input_shape, dynamic",

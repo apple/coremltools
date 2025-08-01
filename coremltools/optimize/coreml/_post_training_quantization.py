@@ -601,7 +601,11 @@ def linear_quantize_activations(
         "compression::insert_prefix_quantize_dequantize_pair"
     ]
     insert_prefix_quantize_dequantize_pair.set_options([PassOption("config", config)])
-    activation_stats = _get_activation_calibration_stats(mlmodel, sample_data)
+    activation_stats = _get_activation_calibration_stats(
+        mlmodel, 
+        sample_data,
+        calibration_op_group_size,
+    )
     insert_prefix_quantize_dequantize_pair.set_options(
         [PassOption("activation_stats", activation_stats)]
     )

@@ -5,11 +5,15 @@
 
 import numpy as np
 import torch
+from io import StringIO
+import sys
 
 import coremltools as ct
 from coremltools.optimize.coreml.experimental._post_training_quantization import (
     _get_activation_calibration_stats,
 )
+from coremltools.test.optimize.coreml.test_passes import TestCompressionPasses
+import coremltools.optimize as cto
 
 
 class TestActivationQuantization:
@@ -72,6 +76,45 @@ class TestActivationQuantization:
 
 
 class TestGetActivationStats(TestActivationQuantization):
+
+    def test_activation_quantization(self):
+        """
+        Test the usage of linear_quantize_activations.
+        """
+        sample_data = []
+        for _ in range(3):
+            input_data = np.random.rand(5, 10, 4, 4)
+            sample_data.append({"data": input_data})
+
+        mlmodel = self._get_test_mlmodel_conv_relu()
+        activation_quant_config = cto.coreml.OptimizationConfig(
+            global_config=cto.coreml.experimental.OpActivationLinearQuantizerConfig(
+                mode="linear_symmetric", weight_threshold=10
+            )
+        )
+
+        def _run_quantization_with_group_size(group_size, expected_batch_size):
+            buffer = StringIO()
+            original_stderr = sys.stderr
+            sys.stderr = buffer
+            mlmodel_activation_quantized = cto.coreml.experimental.linear_quantize_activations(
+                mlmodel,
+                activation_quant_config,
+                sample_data,
+                calibration_op_group_size=group_size,
+            )
+            sys.stderr = original_stderr
+            output = buffer.getvalue()
+            assert f"tensors batch-by-batch: {expected_batch_size} batches" in output
+        
+        # when setting group size to -1, all intermediate outputs are in the same batch,
+        # hence we will only get 1 batch
+        _run_quantization_with_group_size(-1, 1)
+        # when setting group size to 1, all intermediate outputs are split into different batches,
+        # hence there will be 3 batches
+        _run_quantization_with_group_size(1, 3)
+
+
     def test_get_activation_calibration_stats_basic(self):
         """
         Calibration a floating point model with sample data.
@@ -113,7 +156,7 @@ class TestGetActivationStats(TestActivationQuantization):
             sample_data.append({"data_0": input_data})
 
         # Loading a floating point mlmodel
-        mlmodel = self._get_test_mlmodel_conv_concat()
+        mlmodel = TestCompressionPasses._get_test_mlmodel_conv_concat()
 
         activation_stats = _get_activation_calibration_stats(mlmodel, sample_data)
 

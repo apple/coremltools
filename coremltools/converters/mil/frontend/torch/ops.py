@@ -4836,17 +4836,23 @@ def _internal_op_tensor_inplace_fill(context, node):
 
     data, update_values = promote_input_dtypes([data, update_values])
 
-    updated_x = _translate_torch_tensor_assign(
-        x=data,
-        updates=update_values,
-        begin=begin,
-        end=end,
-        stride=stride,
-        begin_mask=begin_mask,
-        end_mask=end_mask,
-        squeeze_mask=squeeze_mask,
-        name=node.name,
-    )
+    if 0 in update_values.shape:
+        # if the update_values contains zero dimensions, this will be a noop
+        updated_x = mb.identity(x=data, name=node.name)
+    else:
+        # otherwise we translate it into a tensor assignment op
+        updated_x = _translate_torch_tensor_assign(
+            x=data,
+            updates=update_values,
+            begin=begin,
+            end=end,
+            stride=stride,
+            begin_mask=begin_mask,
+            end_mask=end_mask,
+            squeeze_mask=squeeze_mask,
+            name=node.name,
+        )
+
     context.add(updated_x)
 
 
