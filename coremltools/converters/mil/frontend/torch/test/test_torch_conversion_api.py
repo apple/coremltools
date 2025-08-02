@@ -1450,6 +1450,30 @@ class TestTorchInputs(_TestInputs):
                     result[name], expected.detach().numpy(), rtol=rtol, atol=atol
                 )
 
+    @staticmethod
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_torch_fp16_model_with_fp16_inputs(torch_model, backend):
+        if backend[0] == "neuralnetwork":
+            pytest.skip(
+                "Input float16 needs target >= iOS16, which doesn't support neuralnetwork."
+            )
+        traced_torch_model = torch.jit.trace(torch_model.half(), torch.rand(1, 10).half())
+        ct.convert(
+            traced_torch_model,
+            source="pytorch",
+            inputs=[
+                ct.TensorType(
+                    shape=(1, 10),
+                )
+            ],
+            outputs=[ct.TensorType(dtype=np.float16)],
+            convert_to=backend[0],
+            minimum_deployment_target=ct.target.macOS13,
+        )
+
 
 
     @staticmethod
