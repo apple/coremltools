@@ -7166,6 +7166,20 @@ class TestTranspose(TorchBaseTest):
         )
 
 
+class TestTransposeCopy(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, shape, dims",
+        itertools.product(
+            compute_units, backends, frontends, COMMON_SHAPES, [(0, 1), (-2, -1), (1, 0), (-1, -2)]
+        ),
+    )
+    def test(self, compute_unit, backend, frontend, shape, dims):
+        model = ModuleWrapper(function=torch.transpose_copy, kwargs={"dim0": dims[0], "dim1": dims[1]})
+        self.run_compare_torch(
+            shape, model, compute_unit=compute_unit, backend=backend, frontend=frontend
+        )
+
+
 class TestTo(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend",
