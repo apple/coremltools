@@ -1,11 +1,13 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.models.ml_program.experimental.torch.debugging_utils &mdash; coremltools API Reference 8.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../_static/css/theme.css?v=19f00094" />
+  <title>coremltools.models.ml_program.experimental.torch.debugging_utils &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -14,15 +16,11 @@
       <link rel="stylesheet" type="text/css" href="../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../../../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../../../_static/documentation_options.js?v=8cc1add8"></script>
-        <script src="../../../../../../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../../search.html" /> 
@@ -39,9 +37,6 @@
           <a href="../../../../../../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
-              <div class="version">
-                8.3
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -99,36 +94,36 @@
 <span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
 <span class="c1"># from coremltools.converters import convert</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span><span class="p">,</span> <span class="n">deque</span>
-<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
-<span class="kn">from</span> <span class="nn">logging</span> <span class="kn">import</span> <span class="n">getLogger</span> <span class="k">as</span> <span class="n">_getLogger</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span><span class="p">,</span> <span class="n">deque</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">getLogger</span> <span class="k">as</span> <span class="n">_getLogger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torch.jit._script</span> <span class="kn">import</span> <span class="n">ScriptModule</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.jit._script</span><span class="w"> </span><span class="kn">import</span> <span class="n">ScriptModule</span>
 
-<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">proto</span>
-<span class="kn">from</span> <span class="nn">coremltools._deps</span> <span class="kn">import</span> <span class="n">_HAS_TORCH_EXPORT_API</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.scope</span> <span class="kn">import</span> <span class="n">ScopeSource</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">proto</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools._deps</span><span class="w"> </span><span class="kn">import</span> <span class="n">_HAS_TORCH_EXPORT_API</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.scope</span><span class="w"> </span><span class="kn">import</span> <span class="n">ScopeSource</span>
 
-<span class="kn">from</span> <span class="nn">....model</span> <span class="kn">import</span> <span class="n">MLModel</span>
-<span class="kn">from</span> <span class="nn">..debugging_utils</span> <span class="kn">import</span> <span class="n">MLModelInspector</span><span class="p">,</span> <span class="n">_retrieve_dependency_names</span><span class="p">,</span> <span class="n">_Status</span>
-<span class="kn">from</span> <span class="nn">..remote_device</span> <span class="kn">import</span> <span class="n">Device</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">....model</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..debugging_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModelInspector</span><span class="p">,</span> <span class="n">_retrieve_dependency_names</span><span class="p">,</span> <span class="n">_Status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..remote_device</span><span class="w"> </span><span class="kn">import</span> <span class="n">Device</span>
 
 <span class="k">if</span> <span class="n">_HAS_TORCH_EXPORT_API</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">torch.export</span> <span class="kn">import</span> <span class="n">ExportedProgram</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">torch.export</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExportedProgram</span>
 
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">_getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 
-<span class="kn">import</span> <span class="nn">tqdm</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tqdm</span>
 
 <div class="viewcode-block" id="TorchScriptNodeInfo">
 <a class="viewcode-back" href="../../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.torch.debugging_utils.TorchScriptNodeInfo">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">TorchScriptNodeInfo</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TorchScriptNodeInfo</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents information about a node in a torch graph.</span>
 
@@ -155,7 +150,7 @@
     <span class="n">output_names</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">owning_module</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">owning_module</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;TorchScriptModuleInfo.Key&quot;</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span></div>
@@ -164,7 +159,7 @@
 <div class="viewcode-block" id="TorchScriptModuleInfo">
 <a class="viewcode-back" href="../../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.torch.debugging_utils.TorchScriptModuleInfo">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">TorchScriptModuleInfo</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TorchScriptModuleInfo</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents information about a torch module.</span>
 
@@ -194,18 +189,18 @@
     <span class="n">code</span><span class="p">:</span> <span class="nb">str</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">hierarchy_name</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">hierarchy_name</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hierarchy</span><span class="p">))</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TorchScriptModuleInfo.Key&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TorchScriptModuleInfo.Key&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hierarchy_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">call_sequence</span><span class="p">)</span></div>
 
 
 
-<span class="k">def</span> <span class="nf">_topological_sort_graph</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_topological_sort_graph</span><span class="p">(</span>
     <span class="n">graph</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">TorchScriptNodeInfo</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">TorchScriptNodeInfo</span><span class="p">]]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">TorchScriptNodeInfo</span><span class="p">]:</span>
     <span class="n">in_degrees</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="p">}</span>
@@ -229,7 +224,7 @@
     <span class="k">return</span> <span class="n">result</span>
 
 
-<span class="k">def</span> <span class="nf">_build_graph</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_graph</span><span class="p">(</span>
     <span class="n">nodes</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TorchScriptNodeInfo</span><span class="p">],</span>
 <span class="p">):</span>
     <span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="o">.</span><span class="n">values</span><span class="p">()}</span>
@@ -245,7 +240,7 @@
     <span class="k">return</span> <span class="n">result</span>
 
 
-<span class="k">def</span> <span class="nf">_topological_sort_nodes</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_topological_sort_nodes</span><span class="p">(</span>
     <span class="n">nodes</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TorchScriptNodeInfo</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;OrderedDict[str, TorchScriptNodeInfo]&quot;</span><span class="p">:</span>
     <span class="n">graph</span> <span class="o">=</span> <span class="n">_build_graph</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="n">nodes</span><span class="p">)</span>
@@ -259,7 +254,7 @@
 
 <div class="viewcode-block" id="TorchScriptModuleAnnotator">
 <a class="viewcode-back" href="../../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.torch.debugging_utils.TorchScriptModuleAnnotator">[docs]</a>
-<span class="k">class</span> <span class="nc">TorchScriptModuleAnnotator</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TorchScriptModuleAnnotator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class for annotating the module graph.</span>
 
@@ -267,8 +262,8 @@
 <span class="sd">    and analyze node dependencies within the graph.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">class</span> <span class="nc">ContextManager</span><span class="p">:</span>
-        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">ContextManager</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">annotator</span><span class="p">:</span> <span class="s2">&quot;TorchScriptModuleAnnotator&quot;</span><span class="p">,</span>
             <span class="n">module</span><span class="p">:</span> <span class="n">ScriptModule</span><span class="p">,</span>
@@ -282,7 +277,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">module_name</span> <span class="o">=</span> <span class="n">module_name</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span>
 
-        <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span>
+        <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
         <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">annotator</span><span class="o">.</span><span class="n">enter_module</span><span class="p">(</span>
@@ -292,13 +287,13 @@
                 <span class="n">graph</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="p">,</span>
             <span class="p">)</span>
 
-        <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span>
+        <span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="o">*</span><span class="n">args</span><span class="p">,</span>
         <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">annotator</span><span class="o">.</span><span class="n">exit_module</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;var&quot;</span><span class="p">,</span>
     <span class="p">):</span>
@@ -314,7 +309,7 @@
 
 <div class="viewcode-block" id="TorchScriptModuleAnnotator.annotate_module">
 <a class="viewcode-back" href="../../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.torch.debugging_utils.TorchScriptModuleAnnotator.annotate_module">[docs]</a>
-    <span class="k">def</span> <span class="nf">annotate_module</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">annotate_module</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">module</span><span class="p">:</span> <span class="n">ScriptModule</span><span class="p">,</span>
         <span class="n">hierarchy</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
@@ -350,20 +345,20 @@
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">node_infos</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;OrderedDict[str, TorchScriptNodeInfo]&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">node_infos</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;OrderedDict[str, TorchScriptNodeInfo]&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns a copy of the node information dictionary.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_node_infos</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">module_call_stack</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;OrderedDict[TorchScriptModuleInfo.Key, TorchScriptModuleInfo]&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">module_call_stack</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;OrderedDict[TorchScriptModuleInfo.Key, TorchScriptModuleInfo]&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns a copy of the module call stack.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module_call_stack</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">_get_module_call_sequence</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_module_call_sequence</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">hierarchy</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -372,7 +367,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_module_call_sequence</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span> <span class="o">+</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="n">value</span>
 
-    <span class="k">def</span> <span class="nf">_annotate_graph</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_annotate_graph</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">graph</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Graph</span><span class="p">,</span>
     <span class="p">):</span>
@@ -382,7 +377,7 @@
                 <span class="n">output</span><span class="o">.</span><span class="n">setDebugName</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_handle</span> <span class="o">+=</span> <span class="mi">1</span>
 
-    <span class="k">def</span> <span class="nf">_create_node_infos</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_node_infos</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">module_key</span><span class="p">:</span> <span class="n">TorchScriptModuleInfo</span><span class="o">.</span><span class="n">Key</span><span class="p">,</span>
         <span class="n">graph</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Graph</span><span class="p">,</span>
@@ -399,7 +394,7 @@
             <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">outputs</span><span class="p">():</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_node_infos</span><span class="p">[</span><span class="n">output</span><span class="o">.</span><span class="n">debugName</span><span class="p">()]</span> <span class="o">=</span> <span class="n">node_info</span>
 
-    <span class="k">def</span> <span class="nf">_update_node_infos</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_update_node_infos</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">module_key</span><span class="p">:</span> <span class="n">TorchScriptModuleInfo</span><span class="o">.</span><span class="n">Key</span><span class="p">,</span>
         <span class="n">graph</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Graph</span><span class="p">,</span>
@@ -428,7 +423,7 @@
 
 <div class="viewcode-block" id="TorchScriptModuleAnnotator.enter_module">
 <a class="viewcode-back" href="../../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.torch.debugging_utils.TorchScriptModuleAnnotator.enter_module">[docs]</a>
-    <span class="k">def</span> <span class="nf">enter_module</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">enter_module</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">module</span><span class="p">:</span> <span class="n">ScriptModule</span><span class="p">,</span>
         <span class="n">hierarchy</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
@@ -477,7 +472,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_graphs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_cleanup_dead_nodes</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_cleanup_dead_nodes</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">graph</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Graph</span><span class="p">,</span>
     <span class="p">):</span>
@@ -492,7 +487,7 @@
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys_to_remove</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_node_infos</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_update_submodules</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_update_submodules</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="k">for</span> <span class="p">(</span><span class="n">module_key</span><span class="p">,</span> <span class="n">submodule_keys</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_submodules</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -514,7 +509,7 @@
 
 <div class="viewcode-block" id="TorchScriptModuleAnnotator.exit_module">
 <a class="viewcode-back" href="../../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.torch.debugging_utils.TorchScriptModuleAnnotator.exit_module">[docs]</a>
-    <span class="k">def</span> <span class="nf">exit_module</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">exit_module</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -554,7 +549,7 @@
 
 
 
-<span class="k">class</span> <span class="nc">_TorchScriptModuleInliner</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_TorchScriptModuleInliner</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class for inlining a TorchScript module.</span>
 
@@ -562,7 +557,7 @@
 <span class="sd">    effectively flattening the module hierarchy.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">module</span><span class="p">:</span> <span class="n">ScriptModule</span><span class="p">,</span>
         <span class="n">annotator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TorchScriptModuleAnnotator</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -582,7 +577,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">annotator</span> <span class="o">=</span> <span class="n">annotator</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_clone_block</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_clone_block</span><span class="p">(</span>
         <span class="n">src</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Block</span><span class="p">,</span>
         <span class="n">dst</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Block</span><span class="p">,</span>
         <span class="n">dst_graph</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Graph</span><span class="p">,</span>
@@ -590,7 +585,7 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Block</span><span class="p">:</span>
         <span class="n">local_value_map</span> <span class="o">=</span> <span class="p">{}</span>
 
-        <span class="k">def</span> <span class="nf">block_find_value</span><span class="p">(</span><span class="n">old_value</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Value</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">block_find_value</span><span class="p">(</span><span class="n">old_value</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Value</span><span class="p">):</span>
             <span class="k">nonlocal</span> <span class="n">local_value_map</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">local_value_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">old_value</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">value</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">find_value</span><span class="p">(</span><span class="n">old_value</span><span class="p">)</span>
@@ -625,7 +620,7 @@
         <span class="k">return</span> <span class="n">dst</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_clone_node</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_clone_node</span><span class="p">(</span>
         <span class="n">node</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Node</span><span class="p">,</span>
         <span class="n">graph</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Graph</span><span class="p">,</span>
         <span class="n">find_value</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Value</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Value</span><span class="p">],</span>
@@ -650,13 +645,13 @@
 
         <span class="k">return</span> <span class="n">new_node</span>
 
-    <span class="k">def</span> <span class="nf">_insert_graph</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_insert_graph</span><span class="p">(</span>
         <span class="n">graph</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Graph</span><span class="p">,</span>
         <span class="n">callee</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Graph</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Value</span><span class="p">],</span>
         <span class="n">value_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Value</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Value</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Value</span><span class="p">]:</span>
-        <span class="k">def</span> <span class="nf">find_value</span><span class="p">(</span><span class="n">old_value</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Value</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">find_value</span><span class="p">(</span><span class="n">old_value</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Value</span><span class="p">):</span>
             <span class="k">nonlocal</span> <span class="n">value_map</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">value_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">old_value</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -683,11 +678,11 @@
         <span class="k">return</span> <span class="n">outputs</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_retrieve_submodule_from_node</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_retrieve_submodule_from_node</span><span class="p">(</span>
         <span class="n">node</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Node</span><span class="p">,</span>
         <span class="n">module</span><span class="p">:</span> <span class="n">ScriptModule</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">ScriptModule</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
-        <span class="k">def</span> <span class="nf">retrieve_submodule</span><span class="p">(</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">retrieve_submodule</span><span class="p">(</span>
             <span class="n">node</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Node</span><span class="p">,</span>
         <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ScriptModule</span><span class="p">]:</span>
             <span class="n">stack</span> <span class="o">=</span> <span class="p">[]</span>
@@ -721,7 +716,7 @@
         <span class="k">return</span> <span class="n">retrieve_submodule</span><span class="p">(</span><span class="n">node</span><span class="o">=</span><span class="n">node_input</span><span class="o">.</span><span class="n">node</span><span class="p">())</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_inline_call_node</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_inline_call_node</span><span class="p">(</span>
         <span class="n">node</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Node</span><span class="p">,</span>
         <span class="n">graph</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Graph</span><span class="p">,</span>
         <span class="n">callee</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Graph</span><span class="p">,</span>
@@ -747,7 +742,7 @@
         <span class="n">node</span><span class="o">.</span><span class="n">destroy</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">new_outputs</span>
 
-    <span class="k">def</span> <span class="nf">_inline_graph</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_inline_graph</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">graph</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Graph</span><span class="p">,</span>
         <span class="n">module</span><span class="p">:</span> <span class="n">ScriptModule</span><span class="p">,</span>
@@ -789,7 +784,7 @@
 
         <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">_jit_pass_dce</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_inline_module</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_inline_module</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">module</span><span class="p">:</span> <span class="n">ScriptModule</span><span class="p">,</span>
         <span class="n">graph</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">Graph</span><span class="p">,</span>
@@ -816,7 +811,7 @@
                 <span class="n">hierarchy</span><span class="o">=</span><span class="n">curr_hierarchy</span><span class="p">,</span>
             <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">inline</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">inline</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Performs the inlining process on the root module.</span>
 
@@ -831,7 +826,7 @@
         <span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">_TorchModuleInspector</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_TorchModuleInspector</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class for inspecting PyTorch modules during forward pass.</span>
 
@@ -839,7 +834,7 @@
 <span class="sd">    collecting their output tensors during a forward pass.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -855,7 +850,7 @@
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;The &quot;module&quot; parameter must be of type &quot;torch.nn.Module&quot;&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="n">model</span>
 
-    <span class="k">def</span> <span class="nf">inspect</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">inspect</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
         <span class="n">module_info_keys</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">TorchScriptModuleInfo</span><span class="o">.</span><span class="n">Key</span><span class="p">],</span>
@@ -890,8 +885,8 @@
         <span class="k">for</span> <span class="n">module_info_key</span> <span class="ow">in</span> <span class="n">module_info_keys</span><span class="p">:</span>
             <span class="n">result</span><span class="p">[</span><span class="n">module_info_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">module_info_key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">register_forward_hook</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-            <span class="k">def</span> <span class="nf">set_module_output</span><span class="p">(</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">register_forward_hook</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">set_module_output</span><span class="p">(</span>
                 <span class="n">curr_module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
                 <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
                 <span class="n">output</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
@@ -926,7 +921,7 @@
 <div class="viewcode-block" id="TorchScriptModuleMappingInfo">
 <a class="viewcode-back" href="../../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.torch.debugging_utils.TorchScriptModuleMappingInfo">[docs]</a>
 <span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">TorchScriptModuleMappingInfo</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TorchScriptModuleMappingInfo</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class that holds mapping information for a TorchScript module</span>
 <span class="sd">    and its corresponding operations in the converted Core ML model.</span>
@@ -953,10 +948,10 @@
     <span class="n">submodules</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s2">&quot;TorchScriptModuleMappingInfo&quot;</span><span class="p">]</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TorchScriptModuleInfo</span><span class="o">.</span><span class="n">Key</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TorchScriptModuleInfo</span><span class="o">.</span><span class="n">Key</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">key</span>
 
-    <span class="k">def</span> <span class="nf">get_source_ops_for_target_op</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_source_ops_for_target_op</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">target_op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">TorchScriptNodeInfo</span><span class="p">]:</span>
@@ -969,7 +964,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">_create_output_name_to_op_map_from_spec</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_output_name_to_op_map_from_spec</span><span class="p">(</span>
     <span class="n">spec</span><span class="p">:</span> <span class="s2">&quot;proto.Model_pb2.Model&quot;</span><span class="p">,</span>
     <span class="n">function_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;OrderedDict[str, proto.MIL_pb2.Operation]&quot;</span><span class="p">:</span>
@@ -991,7 +986,7 @@
     <span class="k">return</span> <span class="n">result</span>
 
 
-<span class="k">def</span> <span class="nf">_invert_deps</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_invert_deps</span><span class="p">(</span>
     <span class="n">modules</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">TorchScriptModuleInfo</span><span class="o">.</span><span class="n">Key</span><span class="p">,</span> <span class="n">TorchScriptModuleMappingInfo</span><span class="p">],</span>
     <span class="n">deps</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">TorchScriptModuleInfo</span><span class="o">.</span><span class="n">Key</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">TorchScriptModuleMappingInfo</span><span class="p">]],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">TorchScriptModuleInfo</span><span class="o">.</span><span class="n">Key</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">TorchScriptModuleMappingInfo</span><span class="p">]]:</span>
@@ -1007,7 +1002,7 @@
     <span class="k">return</span> <span class="n">result</span>
 
 
-<span class="k">def</span> <span class="nf">_get_module_deps</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_module_deps</span><span class="p">(</span>
     <span class="n">parent_module</span><span class="p">:</span> <span class="n">TorchScriptModuleInfo</span><span class="p">,</span>
     <span class="n">submodules</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">TorchScriptModuleInfo</span><span class="p">],</span>
     <span class="n">nodes</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TorchScriptNodeInfo</span><span class="p">],</span>
@@ -1051,11 +1046,11 @@
 
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">_OpTranslationMap</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_OpTranslationMap</span><span class="p">:</span>
     <span class="n">output_name_to_target_ops</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">]]</span>
 
 
-<span class="k">def</span> <span class="nf">_retrieve_source_to_target_op_map</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_retrieve_source_to_target_op_map</span><span class="p">(</span>
     <span class="n">target_model</span><span class="p">:</span> <span class="n">MLModel</span><span class="p">,</span>
     <span class="n">function_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_OpTranslationMap</span><span class="p">:</span>
@@ -1090,7 +1085,7 @@
 
 <div class="viewcode-block" id="inline_and_annotate_module">
 <a class="viewcode-back" href="../../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.torch.debugging_utils.inline_and_annotate_module">[docs]</a>
-<span class="k">def</span> <span class="nf">inline_and_annotate_module</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">inline_and_annotate_module</span><span class="p">(</span>
     <span class="n">model</span><span class="p">:</span> <span class="n">ScriptModule</span><span class="p">,</span>
     <span class="n">name_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;var&quot;</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TorchScriptModuleAnnotator</span><span class="p">:</span>
@@ -1127,7 +1122,7 @@
     <span class="k">return</span> <span class="n">annotator</span></div>
 
 
-<span class="k">def</span> <span class="nf">_convert_and_retrieve_jit_module_mapping</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_convert_and_retrieve_jit_module_mapping</span><span class="p">(</span>
     <span class="n">model</span><span class="p">:</span> <span class="n">ScriptModule</span><span class="p">,</span>
     <span class="n">annotator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TorchScriptModuleAnnotator</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="o">**</span><span class="n">converter_kwargs</span><span class="p">,</span>
@@ -1187,7 +1182,7 @@
 <span class="sd">        )</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Importing here to avoid circular import issues</span>
-    <span class="kn">from</span> <span class="nn">.....converters</span> <span class="kn">import</span> <span class="n">convert</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.....converters</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert</span>
 
     <span class="k">if</span> <span class="n">annotator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">annotator</span> <span class="o">=</span> <span class="n">inline_and_annotate_module</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
@@ -1205,7 +1200,7 @@
     <span class="n">module_call_stack</span> <span class="o">=</span> <span class="n">annotator</span><span class="o">.</span><span class="n">module_call_stack</span>
     <span class="n">module_map_infos</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">is_module_output</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_module_output</span><span class="p">(</span>
         <span class="n">op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span> <span class="n">output_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">]:</span>
         <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
@@ -1216,7 +1211,7 @@
 
         <span class="k">return</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">_get_module_output_names</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_module_output_names</span><span class="p">(</span>
         <span class="n">module_info</span><span class="p">:</span> <span class="n">TorchScriptModuleInfo</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1277,7 +1272,7 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">target_model</span><span class="p">,</span> <span class="n">module_map_infos</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_convert_and_retrieve_exported_program_op_mapping</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_convert_and_retrieve_exported_program_op_mapping</span><span class="p">(</span>
     <span class="n">model</span><span class="p">:</span> <span class="s2">&quot;ExportedProgram&quot;</span><span class="p">,</span>
     <span class="o">**</span><span class="n">converter_kwargs</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">MLModel</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">fx</span><span class="o">.</span><span class="n">Node</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">]]]:</span>
@@ -1328,7 +1323,7 @@
 <span class="sd">        )</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Importing here to avoid circular import issues</span>
-    <span class="kn">from</span> <span class="nn">.....converters</span> <span class="kn">import</span> <span class="n">convert</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.....converters</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert</span>
 
     <span class="n">debug_handle</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">source_nodes</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1375,7 +1370,7 @@
 <div class="viewcode-block" id="FrameInfo">
 <a class="viewcode-back" href="../../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.torch.debugging_utils.FrameInfo">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">FrameInfo</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FrameInfo</span><span class="p">:</span>
     <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">lineno</span><span class="p">:</span> <span class="nb">int</span></div>
 
@@ -1383,7 +1378,7 @@
 
 <div class="viewcode-block" id="get_stack_frame_infos">
 <a class="viewcode-back" href="../../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.torch.debugging_utils.get_stack_frame_infos">[docs]</a>
-<span class="k">def</span> <span class="nf">get_stack_frame_infos</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">TorchNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">FrameInfo</span><span class="p">]]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_stack_frame_infos</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">TorchNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">FrameInfo</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Extracts frame infos from the node&#39;s source range.</span>
 
@@ -1415,7 +1410,7 @@
 <div class="viewcode-block" id="TorchNodeToMILOperationMapping">
 <a class="viewcode-back" href="../../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.torch.debugging_utils.TorchNodeToMILOperationMapping">[docs]</a>
 <span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">TorchNodeToMILOperationMapping</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TorchNodeToMILOperationMapping</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class that represents the mapping between PyTorch nodes and MIL operations.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1424,7 +1419,7 @@
 
 <div class="viewcode-block" id="TorchNodeToMILOperationMapping.get_source_nodes_for_output_name">
 <a class="viewcode-back" href="../../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.torch.debugging_utils.TorchNodeToMILOperationMapping.get_source_nodes_for_output_name">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_source_nodes_for_output_name</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_source_nodes_for_output_name</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">output_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TorchNode</span><span class="p">]:</span>
@@ -1446,7 +1441,7 @@
 
 <div class="viewcode-block" id="TorchNodeToMILOperationMapping.get_source_nodes_for_operation">
 <a class="viewcode-back" href="../../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.torch.debugging_utils.TorchNodeToMILOperationMapping.get_source_nodes_for_operation">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_source_nodes_for_operation</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_source_nodes_for_operation</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">operation</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">TorchNode</span><span class="p">]:</span>
@@ -1475,7 +1470,7 @@
 
 <div class="viewcode-block" id="convert_and_retrieve_op_mapping">
 <a class="viewcode-back" href="../../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.torch.debugging_utils.convert_and_retrieve_op_mapping">[docs]</a>
-<span class="k">def</span> <span class="nf">convert_and_retrieve_op_mapping</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">convert_and_retrieve_op_mapping</span><span class="p">(</span>
     <span class="n">model</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;ExportedProgram&quot;</span><span class="p">,</span> <span class="n">ScriptModule</span><span class="p">],</span>
     <span class="o">**</span><span class="n">converter_kwargs</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">MLModel</span><span class="p">,</span> <span class="n">TorchNodeToMILOperationMapping</span><span class="p">]:</span>
@@ -1526,7 +1521,7 @@
 <span class="sd">        )</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">get_output_name_to_node_mapping</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_output_name_to_node_mapping</span><span class="p">(</span>
         <span class="n">op_mapping</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">TorchNode</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">]]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TorchNode</span><span class="p">]:</span>
         <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1564,7 +1559,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">_get_model_input_names</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_model_input_names</span><span class="p">(</span>
     <span class="n">model</span><span class="p">:</span> <span class="n">MLModel</span><span class="p">,</span>
     <span class="n">function_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
@@ -1576,7 +1571,7 @@
     <span class="k">return</span> <span class="p">[</span><span class="nb">input</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">function</span><span class="o">.</span><span class="n">inputs</span><span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">_flatten</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_flatten</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
     <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
@@ -1589,7 +1584,7 @@
 
 <div class="viewcode-block" id="TorchScriptMLModelComparator">
 <a class="viewcode-back" href="../../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.torch.debugging_utils.TorchScriptMLModelComparator">[docs]</a>
-<span class="k">class</span> <span class="nc">TorchScriptMLModelComparator</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TorchScriptMLModelComparator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class for comparing the the intermediate outputs of a torch model with its converted Core ML model.</span>
 
@@ -1606,7 +1601,7 @@
         <span class="nb">bool</span><span class="p">,</span>
     <span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">_is_failure_source</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_is_failure_source</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">module_map_info</span><span class="p">:</span> <span class="n">TorchScriptModuleMappingInfo</span><span class="p">,</span>
         <span class="n">statuses</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">TorchScriptModuleInfo</span><span class="o">.</span><span class="n">Key</span><span class="p">,</span> <span class="n">_Status</span><span class="p">],</span>
@@ -1617,7 +1612,7 @@
 
         <span class="n">queue</span> <span class="o">=</span> <span class="n">deque</span><span class="p">()</span>
 
-        <span class="k">def</span> <span class="nf">add_deps</span><span class="p">(</span><span class="n">curr</span><span class="p">:</span> <span class="n">TorchScriptModuleMappingInfo</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">add_deps</span><span class="p">(</span><span class="n">curr</span><span class="p">:</span> <span class="n">TorchScriptModuleMappingInfo</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">curr</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="p">[]):</span>
                 <span class="n">queue</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dep</span><span class="p">)</span>
 
@@ -1640,7 +1635,7 @@
 
 <div class="viewcode-block" id="TorchScriptMLModelComparator.__init__">
 <a class="viewcode-back" href="../../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.torch.debugging_utils.TorchScriptMLModelComparator.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
         <span class="n">example_inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">],</span>
@@ -1715,12 +1710,12 @@
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">module_map_infos</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">module_map_infos</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">TorchScriptModuleMappingInfo</span><span class="p">]:</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_module_map_infos</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
 
-    <span class="k">def</span> <span class="nf">get_source_ops_for_targe_ops</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_source_ops_for_targe_ops</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">target_op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">TorchScriptNodeInfo</span><span class="p">]:</span>
@@ -1734,7 +1729,7 @@
 
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">def</span> <span class="nf">_set_target_model</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_target_model</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">target_model</span><span class="p">:</span> <span class="n">MLModel</span><span class="p">,</span>
     <span class="p">):</span>
@@ -1747,7 +1742,7 @@
             <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_target_model_inspector</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">_retrieve_outputs</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_retrieve_outputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span>
@@ -1776,7 +1771,7 @@
         <span class="p">]</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">_process_module</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_process_module</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">source_module_outputs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
         <span class="n">module_map_info</span><span class="p">:</span> <span class="n">TorchScriptModuleMappingInfo</span><span class="p">,</span>
@@ -1785,7 +1780,7 @@
         <span class="n">queue</span><span class="p">:</span> <span class="n">deque</span><span class="p">,</span>
         <span class="n">deps</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">TorchScriptModuleInfo</span><span class="o">.</span><span class="n">Key</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="s2">&quot;TorchScriptModuleMappingInfo&quot;</span><span class="p">]],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Status</span><span class="p">:</span>
-        <span class="k">def</span> <span class="nf">add_module_deps</span><span class="p">():</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">add_module_deps</span><span class="p">():</span>
             <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">deps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">module_map_info</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="p">[]):</span>
                 <span class="n">queue</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dep</span><span class="p">)</span>
 
@@ -1793,7 +1788,7 @@
             <span class="n">add_module_deps</span><span class="p">()</span>
             <span class="k">return</span> <span class="n">_Status</span><span class="o">.</span><span class="n">PASS</span>
 
-        <span class="k">def</span> <span class="nf">to_numpy</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">to_numpy</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
                 <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
@@ -1852,7 +1847,7 @@
 
         <span class="k">return</span> <span class="n">status</span>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">_find_failing_modules</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_find_failing_modules</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">source_outputs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
         <span class="n">module_map_info</span><span class="p">:</span> <span class="n">TorchScriptModuleMappingInfo</span><span class="p">,</span>
@@ -1922,7 +1917,7 @@
 
 <div class="viewcode-block" id="TorchScriptMLModelComparator.find_failing_modules">
 <a class="viewcode-back" href="../../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.torch.debugging_utils.TorchScriptMLModelComparator.find_failing_modules">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">find_failing_modules</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">find_failing_modules</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">],</span>
         <span class="n">compare_outputs</span><span class="p">:</span> <span class="n">CompareOutputs</span><span class="p">,</span>
@@ -2042,8 +2037,8 @@
 
 
 
-<span class="k">class</span> <span class="nc">_TorchFXNodeValueInterpreter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">fx</span><span class="o">.</span><span class="n">Interpreter</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_TorchFXNodeValueInterpreter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">fx</span><span class="o">.</span><span class="n">Interpreter</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
         <span class="n">garbage_collect_values</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -2052,7 +2047,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_intermediates</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_interested_nodes</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">run_node</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_node</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">node</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">fx</span><span class="o">.</span><span class="n">Node</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
@@ -2061,7 +2056,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_intermediates</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">],</span>
         <span class="n">nodes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">fx</span><span class="o">.</span><span class="n">Node</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -2075,7 +2070,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_intermediates</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">result</span>
 
-<span class="k">def</span> <span class="nf">_find_terminal_ops</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_find_terminal_ops</span><span class="p">(</span>
     <span class="n">ops</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">]:</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ops</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
@@ -2095,7 +2090,7 @@
 
 <div class="viewcode-block" id="TorchExportMLModelComparator">
 <a class="viewcode-back" href="../../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.torch.debugging_utils.TorchExportMLModelComparator">[docs]</a>
-<span class="k">class</span> <span class="nc">TorchExportMLModelComparator</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TorchExportMLModelComparator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compares intermediate outputs between a PyTorch ExportedProgram and its converted Core ML model.</span>
 
@@ -2115,7 +2110,7 @@
 
 <div class="viewcode-block" id="TorchExportMLModelComparator.__init__">
 <a class="viewcode-back" href="../../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.torch.debugging_utils.TorchExportMLModelComparator.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model</span><span class="p">:</span> <span class="s2">&quot;ExportedProgram&quot;</span><span class="p">,</span>
         <span class="n">num_predict_intermediate_outputs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span>
@@ -2177,12 +2172,12 @@
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">source_to_target_ops_mapping</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">source_to_target_ops_mapping</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">fx</span><span class="o">.</span><span class="n">Node</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">]]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source_to_target_ops_mapping</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">get_source_ops_for_target_op</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_source_ops_for_target_op</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">target_op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">fx</span><span class="o">.</span><span class="n">Node</span><span class="p">]:</span>
@@ -2193,7 +2188,7 @@
 
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">def</span> <span class="nf">_set_target_model</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_set_target_model</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">target_model</span><span class="p">:</span> <span class="n">MLModel</span><span class="p">,</span>
     <span class="p">):</span>
@@ -2206,7 +2201,7 @@
             <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_target_model_inspector</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">_retrieve_outputs</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_retrieve_outputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span>
@@ -2236,7 +2231,7 @@
         <span class="k">return</span> <span class="n">result</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_is_failure_source</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_is_failure_source</span><span class="p">(</span>
         <span class="n">node</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">fx</span><span class="o">.</span><span class="n">Node</span><span class="p">,</span>
         <span class="n">statuses</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">fx</span><span class="o">.</span><span class="n">Node</span><span class="p">,</span> <span class="n">_Status</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -2245,7 +2240,7 @@
 
         <span class="n">queue</span> <span class="o">=</span> <span class="n">deque</span><span class="p">()</span>
 
-        <span class="k">def</span> <span class="nf">add_deps</span><span class="p">(</span><span class="n">curr</span><span class="p">:</span> <span class="n">TorchScriptModuleMappingInfo</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">add_deps</span><span class="p">(</span><span class="n">curr</span><span class="p">:</span> <span class="n">TorchScriptModuleMappingInfo</span><span class="p">):</span>
             <span class="n">op_type_to_skip</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;placeholder&quot;</span><span class="p">,</span> <span class="s2">&quot;get_attr&quot;</span><span class="p">,</span> <span class="s2">&quot;call_module&quot;</span><span class="p">]</span>
             <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">curr</span><span class="o">.</span><span class="n">all_input_nodes</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">dep</span><span class="o">.</span><span class="n">op</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">op_type_to_skip</span><span class="p">:</span>
@@ -2266,25 +2261,25 @@
 
         <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">_process_node</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_process_node</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">node</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">fx</span><span class="o">.</span><span class="n">Node</span><span class="p">,</span>
         <span class="n">target_inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span>
         <span class="n">queue</span><span class="p">:</span> <span class="n">deque</span><span class="p">,</span>
         <span class="n">compare_outputs</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span> <span class="nb">bool</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Status</span><span class="p">:</span>
-        <span class="k">def</span> <span class="nf">is_output_op</span><span class="p">(</span><span class="n">op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">is_output_op</span><span class="p">(</span><span class="n">op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">any</span><span class="p">(</span>
                 <span class="n">output</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="n">output</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_cast&quot;</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span>
             <span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">add_deps</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">fx</span><span class="o">.</span><span class="n">Node</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">add_deps</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">fx</span><span class="o">.</span><span class="n">Node</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">all_input_nodes</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">dep</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visited</span><span class="p">:</span>
                     <span class="n">queue</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dep</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">to_numpy</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">to_numpy</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
                 <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
@@ -2359,7 +2354,7 @@
 
 <div class="viewcode-block" id="TorchExportMLModelComparator.find_failing_ops">
 <a class="viewcode-back" href="../../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.torch.debugging_utils.TorchExportMLModelComparator.find_failing_ops">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">find_failing_ops</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">find_failing_ops</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">],</span>
         <span class="n">compare_outputs</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span> <span class="nb">bool</span><span class="p">],</span>
@@ -2496,7 +2491,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Apple Inc.</p>
+    <p>&#169; Copyright 2021, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

@@ -1,22 +1,22 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>OneHotEncoder &mdash; Core ML Format Reference  documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -29,11 +29,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> Core ML Format Reference
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Core ML Format Reference
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -88,9 +92,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="FeatureEngineering.html">Feature Engineering</a> &raquo;</li>
-      <li>OneHotEncoder</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="FeatureEngineering.html">Feature Engineering</a></li>
+      <li class="breadcrumb-item active">OneHotEncoder</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/Format/OneHotEncoder.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -101,14 +105,14 @@
            <div itemprop="articleBody">
              
   <section id="onehotencoder">
-<h1>OneHotEncoder<a class="headerlink" href="#onehotencoder" title="Permalink to this heading"></a></h1>
+<h1>OneHotEncoder<a class="headerlink" href="#onehotencoder" title="Link to this heading"></a></h1>
 <p>Transforms a categorical feature into an array. The array will be all
 zeros expect a single entry of one.</p>
 <p>Each categorical value will map to an index, this mapping is given by
 either the <code class="docutils literal notranslate"><span class="pre">stringCategories</span></code> parameter or the <code class="docutils literal notranslate"><span class="pre">int64Categories</span></code>
 parameter.</p>
 <section id="id1">
-<h2>OneHotEncoder<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h2>
+<h2>OneHotEncoder<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">OneHotEncoder</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="kd">enum</span><span class="w"> </span><span class="n">HandleUnknown</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="na">ErrorOnUnknown</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
@@ -129,7 +133,7 @@ parameter.</p>
 </div>
 </section>
 <section id="onehotlayerparams">
-<h2>OneHotLayerParams<a class="headerlink" href="#onehotlayerparams" title="Permalink to this heading"></a></h2>
+<h2>OneHotLayerParams<a class="headerlink" href="#onehotlayerparams" title="Link to this heading"></a></h2>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">OneHotLayerParams</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="kt">uint64</span><span class="w"> </span><span class="na">oneHotVectorSize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -141,7 +145,7 @@ parameter.</p>
 </div>
 </section>
 <section id="onehotencoder-handleunknown">
-<h2>OneHotEncoder.HandleUnknown<a class="headerlink" href="#onehotencoder-handleunknown" title="Permalink to this heading"></a></h2>
+<h2>OneHotEncoder.HandleUnknown<a class="headerlink" href="#onehotencoder-handleunknown" title="Link to this heading"></a></h2>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span><span class="w"> </span><span class="n">HandleUnknown</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="na">ErrorOnUnknown</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="w">    </span><span class="na">IgnoreUnknown</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">   </span><span class="c1">// Output will be all zeros for unknown values.</span>

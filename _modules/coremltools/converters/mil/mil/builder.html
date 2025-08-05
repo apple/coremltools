@@ -1,11 +1,13 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.builder &mdash; coremltools API Reference 8.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+  <title>coremltools.converters.mil.mil.builder &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -14,15 +16,11 @@
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../../_static/documentation_options.js?v=8cc1add8"></script>
-        <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" /> 
@@ -39,9 +37,6 @@
           <a href="../../../../../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
-              <div class="version">
-                8.3
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -98,37 +93,37 @@
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
-<span class="kn">import</span> <span class="nn">numbers</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Type</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numbers</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Type</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_logger</span> <span class="k">as</span> <span class="n">logger</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil</span> <span class="kn">import</span> <span class="n">mil</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil._deployment_compatibility</span> <span class="kn">import</span> <span class="n">AvailableTarget</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.symbolic</span> <span class="kn">import</span> <span class="n">any_symbolic</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">_logger</span> <span class="k">as</span> <span class="n">logger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">mil</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil._deployment_compatibility</span><span class="w"> </span><span class="kn">import</span> <span class="n">AvailableTarget</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.types.symbolic</span><span class="w"> </span><span class="kn">import</span> <span class="n">any_symbolic</span>
 
-<span class="kn">from</span> <span class="nn">.block</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">curr_block</span>
-<span class="kn">from</span> <span class="nn">.input_type</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.block</span><span class="w"> </span><span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">curr_block</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.input_type</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">InternalInputType</span><span class="p">,</span>
     <span class="n">ListOrTensorOrDictInputType</span><span class="p">,</span>
     <span class="n">TensorInputType</span><span class="p">,</span>
     <span class="n">TupleInputType</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.program</span> <span class="kn">import</span> <span class="n">Placeholder</span><span class="p">,</span> <span class="n">StateTensorPlaceholder</span>
-<span class="kn">from</span> <span class="nn">.scope</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.program</span><span class="w"> </span><span class="kn">import</span> <span class="n">Placeholder</span><span class="p">,</span> <span class="n">StateTensorPlaceholder</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.scope</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">SCOPE_STACK</span><span class="p">,</span>
     <span class="n">VALID_OPS_TO_COPY_SCOPE_INFO</span><span class="p">,</span>
     <span class="n">ScopeContextManager</span><span class="p">,</span>
     <span class="n">ScopeInfo</span><span class="p">,</span>
     <span class="n">ScopeSource</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.var</span> <span class="kn">import</span> <span class="n">InternalVar</span><span class="p">,</span> <span class="n">Var</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.var</span><span class="w"> </span><span class="kn">import</span> <span class="n">InternalVar</span><span class="p">,</span> <span class="n">Var</span>
 
 <span class="n">_BEFORE_OP_STACK</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s2">&quot;mil.Operation&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
-<span class="k">def</span> <span class="nf">is_python_value</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_python_value</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
     <span class="k">return</span> <span class="p">(</span>
         <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">generic</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">))</span>
         <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Number</span><span class="p">)</span>
@@ -137,8 +132,8 @@
         <span class="ow">or</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">is_python_value</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">val</span><span class="p">))</span>
     <span class="p">)</span>
 
-<span class="k">class</span> <span class="nc">BeforeOpContextManager</span><span class="p">:</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">before_op</span><span class="p">:</span> <span class="s2">&quot;mil.Operation&quot;</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">BeforeOpContextManager</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">before_op</span><span class="p">:</span> <span class="s2">&quot;mil.Operation&quot;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A context manager which makes the operations created within it contructed before the target ``before_op``.</span>
 
@@ -155,15 +150,15 @@
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">before_op</span> <span class="o">=</span> <span class="n">before_op</span>
 
-    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">_BEFORE_OP_STACK</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">before_op</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
         <span class="n">_BEFORE_OP_STACK</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
 
 <div class="viewcode-block" id="Builder">
 <a class="viewcode-back" href="../../../../../source/coremltools.converters.mil.html#coremltools.converters.mil.mil.Builder">[docs]</a>
-<span class="k">class</span> <span class="nc">Builder</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Builder</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This class is a singleton builder to construct a MIL program. For more</span>
 <span class="sd">    information, see `Create a MIL program &lt;https://coremltools.readme.io/docs/model-intermediate-language#create-a-mil-program&gt;`_.</span>
@@ -194,19 +189,19 @@
     <span class="n">name_count</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">_get_free_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_free_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
         <span class="n">new_name</span> <span class="o">=</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">name_count</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
         <span class="bp">cls</span><span class="o">.</span><span class="n">name_count</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="n">new_name</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">_maybe_set_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">op_type</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_maybe_set_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">op_type</span><span class="p">):</span>
         <span class="k">if</span> <span class="s2">&quot;name&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
             <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_free_name</span><span class="p">(</span><span class="n">op_type</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">kwargs</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">_add_const</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">before_op</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_const</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">before_op</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">is_python_value</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
             <span class="n">err_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Cannot add const </span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="k">if</span> <span class="n">any_symbolic</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
@@ -225,7 +220,7 @@
 
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">_create_vars</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">input_spec</span><span class="p">,</span> <span class="n">op_name</span><span class="p">,</span> <span class="n">before_op</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_vars</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">input_spec</span><span class="p">,</span> <span class="n">op_name</span><span class="p">,</span> <span class="n">before_op</span><span class="p">,</span>
         <span class="n">candidate_kv</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        For each key K in `candidate_kv`, create a Var if the</span>
@@ -285,7 +280,7 @@
         <span class="k">return</span> <span class="n">update_dict</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">_add_op</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">op_cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_op</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">op_cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add an op of type `op_cls` (e.g., convolution) to current block.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -337,7 +332,7 @@
         <span class="k">return</span> <span class="n">new_op</span><span class="o">.</span><span class="n">outputs</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">placeholder</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">placeholder</span><span class="p">(</span>
         <span class="n">shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
         <span class="n">dtype</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Type</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">allow_rank0_input</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -346,19 +341,19 @@
         <span class="k">return</span> <span class="n">Placeholder</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">allow_rank0_input</span><span class="o">=</span><span class="n">allow_rank0_input</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">TensorSpec</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">TensorSpec</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">Placeholder</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">StateTensorSpec</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">StateTensorSpec</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">StateTensorPlaceholder</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">state_tensor_placeholder</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">state_tensor_placeholder</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">StateTensorPlaceholder</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_create_function</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_function</span><span class="p">(</span>
         <span class="n">main_block</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
         <span class="n">input_specs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Placeholder</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">opset_version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AvailableTarget</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -396,7 +391,7 @@
         <span class="k">return</span> <span class="n">func</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">function</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">function</span><span class="p">(</span>
         <span class="n">input_specs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Placeholder</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">opset_version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AvailableTarget</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
@@ -419,7 +414,7 @@
 <span class="sd">        &gt;&gt;&gt;     return mb.add(x=a, y=2)</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="n">main_block</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">wrapper</span><span class="p">(</span><span class="n">main_block</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">Builder</span><span class="o">.</span><span class="n">_create_function</span><span class="p">(</span><span class="n">main_block</span><span class="p">,</span> <span class="n">input_specs</span><span class="p">,</span> <span class="n">opset_version</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">wrapper</span>
@@ -427,7 +422,7 @@
 <div class="viewcode-block" id="Builder.program">
 <a class="viewcode-back" href="../../../../../source/coremltools.converters.mil.html#coremltools.converters.mil.mil.Builder.program">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">program</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">program</span><span class="p">(</span>
         <span class="n">input_specs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Placeholder</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">opset_version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AvailableTarget</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">function_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;main&quot;</span><span class="p">,</span>
@@ -457,7 +452,7 @@
 <span class="sd">        &gt;&gt;&gt;     return mb.add(x=a, y=2)</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="n">main_block</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">wrapper</span><span class="p">(</span><span class="n">main_block</span><span class="p">):</span>
             <span class="n">function</span> <span class="o">=</span> <span class="n">Builder</span><span class="o">.</span><span class="n">_create_function</span><span class="p">(</span><span class="n">main_block</span><span class="p">,</span> <span class="n">input_specs</span><span class="p">,</span> <span class="n">opset_version</span><span class="p">)</span>
             <span class="n">program</span> <span class="o">=</span> <span class="n">mil</span><span class="o">.</span><span class="n">Program</span><span class="p">()</span>
             <span class="n">program</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">function_name</span><span class="p">,</span> <span class="n">function</span><span class="p">)</span>
@@ -466,7 +461,7 @@
 
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">set_before_op</span><span class="p">(</span><span class="n">before_op</span><span class="p">:</span> <span class="s2">&quot;mil.Operation&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BeforeOpContextManager</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_before_op</span><span class="p">(</span><span class="n">before_op</span><span class="p">:</span> <span class="s2">&quot;mil.Operation&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BeforeOpContextManager</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The ``mb.set_before_op`` creates a context manager, which makes the operations created within it contructed before the target ``before_op``.</span>
 
@@ -480,7 +475,7 @@
         <span class="k">return</span> <span class="n">BeforeOpContextManager</span><span class="p">(</span><span class="n">before_op</span><span class="o">=</span><span class="n">before_op</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">scope</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">scope</span><span class="p">(</span>
         <span class="o">*</span><span class="n">scopes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ScopeInfo</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScopeContextManager</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -546,7 +541,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Apple Inc.</p>
+    <p>&#169; Copyright 2021, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

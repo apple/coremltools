@@ -1,22 +1,22 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ItemSimilarityRecommender &mdash; Core ML Format Reference  documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -29,11 +29,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> Core ML Format Reference
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Core ML Format Reference
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -88,9 +92,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="OtherModels.html">Other Models</a> &raquo;</li>
-      <li>ItemSimilarityRecommender</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="OtherModels.html">Other Models</a></li>
+      <li class="breadcrumb-item active">ItemSimilarityRecommender</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/Format/ItemSimilarityRecommender.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -101,7 +105,7 @@
            <div itemprop="articleBody">
              
   <section id="itemsimilarityrecommender">
-<h1>ItemSimilarityRecommender<a class="headerlink" href="#itemsimilarityrecommender" title="Permalink to this heading"></a></h1>
+<h1>ItemSimilarityRecommender<a class="headerlink" href="#itemsimilarityrecommender" title="Link to this heading"></a></h1>
 <p>The Item Similarity recommender takes as input a list of items and scores,
 then uses that information and a table of item similarities to predict similarity
 scores for all items.  By default, the items predicted are most similar to the given
@@ -143,7 +147,7 @@ it’s occasionally used to counteract global biases for popular items.</p>
 </pre></div>
 </div>
 <section id="itemsimilarityrecommender-connecteditem">
-<h2>ItemSimilarityRecommender.ConnectedItem<a class="headerlink" href="#itemsimilarityrecommender-connecteditem" title="Permalink to this heading"></a></h2>
+<h2>ItemSimilarityRecommender.ConnectedItem<a class="headerlink" href="#itemsimilarityrecommender-connecteditem" title="Link to this heading"></a></h2>
 <p>The items similar to a given base item.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">ConnectedItem</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="kt">uint64</span><span class="w"> </span><span class="na">itemId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -153,7 +157,7 @@ it’s occasionally used to counteract global biases for popular items.</p>
 </div>
 </section>
 <section id="itemsimilarityrecommender-similaritems">
-<h2>ItemSimilarityRecommender.SimilarItems<a class="headerlink" href="#itemsimilarityrecommender-similaritems" title="Permalink to this heading"></a></h2>
+<h2>ItemSimilarityRecommender.SimilarItems<a class="headerlink" href="#itemsimilarityrecommender-similaritems" title="Link to this heading"></a></h2>
 <dl class="simple">
 <dt>The formula for the score of a given model as given above, with shift_k</dt><dd><p>parameter given by itemScoreAdjustment, and the similar item list filling in
 all the known sim(k,i) scores for i given by itemID and k given by the itemID parameter in

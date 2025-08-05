@@ -1,12 +1,14 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MIL Graph Passes &mdash; coremltools API Reference 8.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+  <title>MIL Graph Passes &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -15,15 +17,11 @@
       <link rel="stylesheet" type="text/css" href="../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=8cc1add8"></script>
-        <script src="../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -42,9 +40,6 @@
           <a href="../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
-              <div class="version">
-                8.3
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -296,7 +291,7 @@ variable names are tracked separately, so an op may have the same name as
 a variable.</p>
 <p>The pass preserves input and output name. Raises ValueError if we cannot
 dedup without changing the input/output var names.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">prog</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">prog</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp16&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;castop&quot;</span><span class="p">)</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp32&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;castop&quot;</span><span class="p">)</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;square_last&quot;</span><span class="p">)</span>
@@ -1267,59 +1262,55 @@ constant weights/tensors remain compressed at serialization.</p>
 <ol class="arabic">
 <li><p>Example for redundant <code class="docutils literal notranslate"><span class="pre">cast</span></code> op removal:
 .. code-block:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   Input graph:
-   input(fp16) -&gt; cast(dtype=&quot;fp16&quot;) -&gt; relu -&gt; out
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
+<span class="nb">input</span><span class="p">(</span><span class="n">fp16</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp16&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">relu</span> <span class="o">-&gt;</span> <span class="n">out</span>
 
-   Output graph:
-   input -&gt; relu -&gt; out
-
-The input and output tensors for the ``cast`` op are both with type of ``fp16``.
-Hence, it can be removed.
+<span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
+<span class="nb">input</span> <span class="o">-&gt;</span> <span class="n">relu</span> <span class="o">-&gt;</span> <span class="n">out</span>
 </pre></div>
 </div>
+<p>The input and output tensors for the <code class="docutils literal notranslate"><span class="pre">cast</span></code> op are both with type of <code class="docutils literal notranslate"><span class="pre">fp16</span></code>.
+Hence, it can be removed.</p>
 </li>
 <li><p>Example for two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops fusion:
 .. code-block:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
-   <span class="nb">input</span><span class="p">(</span><span class="n">int8</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp16&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp32&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">out</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
+<span class="nb">input</span><span class="p">(</span><span class="n">int8</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp16&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp32&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">out</span>
 
-   <span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
-   <span class="nb">input</span><span class="p">(</span><span class="n">int8</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp32&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">out</span>
-
-<span class="n">The</span> <span class="n">data</span> <span class="nb">range</span> <span class="ow">and</span> <span class="n">resolution</span> <span class="n">of</span> <span class="n">the</span> <span class="n">above</span> <span class="n">graph</span> <span class="n">are</span> <span class="n">limited</span> <span class="n">by</span> <span class="n">the</span> <span class="n">int8</span> <span class="nb">input</span><span class="p">,</span>
-<span class="n">so</span> <span class="n">the</span> <span class="n">fusion</span> <span class="ow">is</span> <span class="n">allowed</span><span class="o">.</span>
+<span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
+<span class="nb">input</span><span class="p">(</span><span class="n">int8</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp32&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">out</span>
 </pre></div>
 </div>
+<p>The data range and resolution of the above graph are limited by the int8 input,
+so the fusion is allowed.</p>
 </li>
 <li><p>Negative example for two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops fusion:
 .. code-block:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   Input graph:
-   input(fp32) -&gt; cast(dtype=&quot;bool&quot;) -&gt; cast(dtype=&quot;fp16&quot;) -&gt; out
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
+<span class="nb">input</span><span class="p">(</span><span class="n">fp32</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;bool&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp16&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">out</span>
 
-   Output graph:
-   Same as input graph.
-
-The above two ``cast`` ops cannot be merged, since after the first cast,
-the resolution of the numerical output is downcasted to binary (``0, 1``).
-If we fuse them, the output would be in the range and resolution of ``fp16`` instead.
+<span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
+<span class="n">Same</span> <span class="k">as</span> <span class="nb">input</span> <span class="n">graph</span><span class="o">.</span>
 </pre></div>
 </div>
+<p>The above two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops cannot be merged, since after the first cast,
+the resolution of the numerical output is downcasted to binary (<code class="docutils literal notranslate"><span class="pre">0,</span> <span class="pre">1</span></code>).
+If we fuse them, the output would be in the range and resolution of <code class="docutils literal notranslate"><span class="pre">fp16</span></code> instead.</p>
 </li>
 <li><p>Another Negative example for two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops fusion:
 .. code-block:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   Input graph:
-   input(int32) -&gt; cast(dtype=&quot;int8&quot;) -&gt; cast(dtype=&quot;uint8&quot;) -&gt; out
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
+<span class="nb">input</span><span class="p">(</span><span class="n">int32</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int8&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">out</span>
 
-   Output graph:
-   Same as input graph.
-
-The above two ``cast`` ops cannot be merged, since in the original graph,
-by going through two casts, the output numerical range is capped to ``[0, 127]``.
-However, if two ``cast`` ops are reduced to 1 ``cast(dtype=&quot;uint8&quot;)``, the output
-numerical would in the range of ``[0, 255]``. The fusion would cause numerical
-issue for the numbers between ``[128, 255]``, which is prohibited.
+<span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
+<span class="n">Same</span> <span class="k">as</span> <span class="nb">input</span> <span class="n">graph</span><span class="o">.</span>
 </pre></div>
 </div>
+<p>The above two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops cannot be merged, since in the original graph,
+by going through two casts, the output numerical range is capped to <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">127]</span></code>.
+However, if two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops are reduced to 1 <code class="docutils literal notranslate"><span class="pre">cast(dtype=&quot;uint8&quot;)</span></code>, the output
+numerical would in the range of <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">255]</span></code>. The fusion would cause numerical
+issue for the numbers between <code class="docutils literal notranslate"><span class="pre">[128,</span> <span class="pre">255]</span></code>, which is prohibited.</p>
 </li>
 </ol>
 <p>In general, two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops can be merged if the output data range and resolution is not affected.</p>
@@ -1888,7 +1879,7 @@ Defines the size of the chunks of Q being processed in SDPA (chunk_size = seq_le
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Apple Inc.</p>
+    <p>&#169; Copyright 2021, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

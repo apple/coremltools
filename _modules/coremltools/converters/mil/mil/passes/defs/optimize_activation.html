@@ -1,11 +1,13 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.passes.defs.optimize_activation &mdash; coremltools API Reference 8.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/theme.css?v=19f00094" />
+  <title>coremltools.converters.mil.mil.passes.defs.optimize_activation &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -14,15 +16,11 @@
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../../../../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../../../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../../../../_static/documentation_options.js?v=8cc1add8"></script>
-        <script src="../../../../../../../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../../../search.html" /> 
@@ -39,9 +37,6 @@
           <a href="../../../../../../../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
-              <div class="version">
-                8.3
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -98,27 +93,27 @@
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.experimental.passes.generic_pass_infrastructure</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.experimental.passes.generic_pass_infrastructure</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">fuse_all_blocks</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">mb</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">get_new_symbol</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span> <span class="kn">import</span> <span class="n">AbstractGraphPass</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.helper</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">mb</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_new_symbol</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractGraphPass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.helper</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">_check_child_op_type</span><span class="p">,</span>
     <span class="n">_check_var_scalar_value</span><span class="p">,</span>
     <span class="n">_check_var_scalar_value_in_interval</span><span class="p">,</span>
     <span class="n">block_context_manager</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.pass_registry</span> <span class="kn">import</span> <span class="n">register_pass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.pass_registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_pass</span>
 
 
 <div class="viewcode-block" id="fuse_gelu_exact">
 <a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_activation.fuse_gelu_exact">[docs]</a>
 <span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">fuse_gelu_exact</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">fuse_gelu_exact</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Identify the pattern that corresponds to the exact version of ``gelu``, and replace it with a single</span>
 <span class="sd">    ``gelu`` layer with ``mode=EXACT``. The pattern is ``y = 0.5 * x * (1 + erf (x / srqt (2))``, which</span>
@@ -148,14 +143,14 @@
 <span class="sd">            [...] ----&gt; gelu (mode=EXACT) ---&gt; [...]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="n">block_changed</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">while</span> <span class="n">block_changed</span><span class="p">:</span>
                 <span class="n">block_changed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fuse_gelu_exact_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_try_to_transform</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_try_to_transform</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
         <span class="n">ops_to_remove</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">op</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
@@ -248,7 +243,7 @@
         <span class="k">return</span> <span class="kc">True</span>
 
     <span class="nd">@block_context_manager</span>
-    <span class="k">def</span> <span class="nf">_fuse_gelu_exact_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fuse_gelu_exact_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
         <span class="n">fusion_occurred</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -273,7 +268,7 @@
 <div class="viewcode-block" id="fuse_gelu_tanh_approximation">
 <a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_activation.fuse_gelu_tanh_approximation">[docs]</a>
 <span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">fuse_gelu_tanh_approximation</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">fuse_gelu_tanh_approximation</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Identify the pattern that corresponds to the ``tanh`` approximate version of ``gelu``, and replace it</span>
 <span class="sd">    with a single ``gelu`` layer with ``mode=TANH_APPROXIMATION``.</span>
@@ -310,7 +305,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
         <span class="n">fuse_all_blocks</span><span class="p">(</span>
             <span class="n">ops_arrangement</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_gelu_pattern1</span><span class="p">(),</span>
             <span class="n">var_constraints</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">is_var_constraint_satisifed</span><span class="p">,</span>
@@ -326,7 +321,7 @@
         <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">is_var_constraint_satisifed</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_var_constraint_satisifed</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
 
         <span class="n">passed</span> <span class="o">=</span> <span class="n">_check_var_scalar_value</span><span class="p">(</span><span class="n">pattern</span><span class="o">.</span><span class="n">mul</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_check_var_scalar_value</span><span class="p">(</span>
             <span class="n">pattern</span><span class="o">.</span><span class="n">mul</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="mf">0.5</span>
@@ -351,7 +346,7 @@
         <span class="k">return</span> <span class="n">passed</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">transform_pattern</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform_pattern</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
         <span class="c1"># remove all the ops, and replace with a gelu op</span>
         <span class="n">out_name</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">mul_3</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">gelu</span><span class="p">(</span>
@@ -366,7 +361,7 @@
         <span class="n">pattern</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">(</span><span class="n">pattern</span><span class="o">.</span><span class="n">op_list</span><span class="p">())</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">get_gelu_pattern1</span><span class="p">():</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_gelu_pattern1</span><span class="p">():</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        ``y = x * (0.5 * (tanh(((.0447)x^3 + x ) * sqrt(2/pi)) + 1))``</span>
 
@@ -384,7 +379,7 @@
                 <span class="n">mb</span><span class="o">.</span><span class="n">TensorSpec</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">([</span><span class="n">get_new_symbol</span><span class="p">(),</span> <span class="n">get_new_symbol</span><span class="p">(),</span> <span class="n">get_new_symbol</span><span class="p">()])),</span>
             <span class="p">]</span>
         <span class="p">)</span>
-        <span class="k">def</span> <span class="nf">gelu_to_detect_1</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">gelu_to_detect_1</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
             <span class="c1"># MIL operation takes named inputs (instead of positional inputs).</span>
             <span class="c1"># Here `name` argument is MANDATORY.</span>
             <span class="nb">pow</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;pow&quot;</span><span class="p">)</span>
@@ -400,7 +395,7 @@
         <span class="k">return</span> <span class="n">gelu_to_detect_1</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">get_gelu_pattern2</span><span class="p">():</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_gelu_pattern2</span><span class="p">():</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        ``y = (0.5 * x) * (tanh(((.0447)x^3 + x ) * sqrt(2/pi)) + 1)``</span>
 
@@ -421,7 +416,7 @@
                 <span class="n">mb</span><span class="o">.</span><span class="n">TensorSpec</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">([</span><span class="n">get_new_symbol</span><span class="p">(),</span> <span class="n">get_new_symbol</span><span class="p">(),</span> <span class="n">get_new_symbol</span><span class="p">()])),</span>
             <span class="p">]</span>
         <span class="p">)</span>
-        <span class="k">def</span> <span class="nf">gelu_to_detect_2</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">gelu_to_detect_2</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
             <span class="nb">pow</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;pow&quot;</span><span class="p">)</span>
             <span class="n">mul_1</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mf">0.044714998453855515</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="nb">pow</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;mul_1&quot;</span><span class="p">)</span>
             <span class="n">add</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">mul_1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;add&quot;</span><span class="p">)</span>
@@ -439,7 +434,7 @@
 <div class="viewcode-block" id="fuse_leaky_relu">
 <a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_activation.fuse_leaky_relu">[docs]</a>
 <span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">fuse_leaky_relu</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">fuse_leaky_relu</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Detect the ``mul`` ---&gt; ``max`` pattern than can be mapped to ``leaky_relu``.</span>
 
@@ -478,14 +473,14 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="n">block_changed</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">while</span> <span class="n">block_changed</span><span class="p">:</span>
                 <span class="n">block_changed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fuse_leaky_relu_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_try_to_transform</span><span class="p">(</span><span class="n">mul_op</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_try_to_transform</span><span class="p">(</span><span class="n">mul_op</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
 
         <span class="n">ops_to_remove</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -527,7 +522,7 @@
         <span class="k">return</span> <span class="kc">True</span>
 
     <span class="nd">@block_context_manager</span>
-    <span class="k">def</span> <span class="nf">_fuse_leaky_relu_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fuse_leaky_relu_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
         <span class="n">fusion_occurred</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -549,9 +544,9 @@
 
 
 
-<span class="k">class</span> <span class="nc">FusePreluPattern1</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FusePreluPattern1</span><span class="p">:</span>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">is_var_constraint_satisifed</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_var_constraint_satisifed</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
         <span class="c1"># input must be rank 4</span>
         <span class="k">if</span> <span class="n">pattern</span><span class="o">.</span><span class="n">root_var</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
@@ -577,7 +572,7 @@
         <span class="k">return</span> <span class="kc">True</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">transform_pattern</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform_pattern</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
         <span class="c1"># remove all the ops, and replace with a prelu op</span>
         <span class="n">out_var</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">out_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">pattern</span><span class="o">.</span><span class="n">alpha_mul</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -596,7 +591,7 @@
         <span class="n">pattern</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">(</span><span class="n">pattern</span><span class="o">.</span><span class="n">op_list</span><span class="p">())</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">get_prelu_pattern</span><span class="p">():</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_prelu_pattern</span><span class="p">():</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        ``y = a * relu(-1 * x) + relu(x)``</span>
 
@@ -611,15 +606,15 @@
                 <span class="p">),</span>
             <span class="p">]</span>
         <span class="p">)</span>
-        <span class="k">def</span> <span class="nf">prelu_pattern</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">prelu_pattern</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">fuse_prelu</span><span class="o">.</span><span class="n">_prelu_pattern</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">prelu_pattern</span>
 
 
-<span class="k">class</span> <span class="nc">FusePreluPattern2</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FusePreluPattern2</span><span class="p">:</span>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">is_var_constraint_satisifed</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_var_constraint_satisifed</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
         <span class="n">perm</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">transpose</span><span class="o">.</span><span class="n">perm</span><span class="o">.</span><span class="n">val</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">perm</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">])):</span>
             <span class="k">return</span> <span class="kc">False</span>
@@ -643,7 +638,7 @@
         <span class="k">return</span> <span class="kc">True</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">transform_pattern</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform_pattern</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
         <span class="c1"># remove all the ops, and replace with a prelu op + transpose op</span>
         <span class="n">perm</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">transpose</span><span class="o">.</span><span class="n">perm</span><span class="o">.</span><span class="n">val</span>
         <span class="n">out_var</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">out_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -662,7 +657,7 @@
         <span class="n">pattern</span><span class="o">.</span><span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">(</span><span class="n">pattern</span><span class="o">.</span><span class="n">op_list</span><span class="p">())</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">get_prelu_pattern</span><span class="p">():</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_prelu_pattern</span><span class="p">():</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        ``x1 = transpose(perm=(0,2,3,1))(x)``</span>
 
@@ -680,7 +675,7 @@
                 <span class="p">),</span>
             <span class="p">]</span>
         <span class="p">)</span>
-        <span class="k">def</span> <span class="nf">prelu_pattern</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">prelu_pattern</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
             <span class="c1"># perm value can be anything, it will be checked in &quot;is_var_constraint_satisifed&quot; method</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">perm</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;transpose&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">fuse_prelu</span><span class="o">.</span><span class="n">_prelu_pattern</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
@@ -691,7 +686,7 @@
 <div class="viewcode-block" id="fuse_prelu">
 <a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_activation.fuse_prelu">[docs]</a>
 <span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">fuse_prelu</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">fuse_prelu</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Detect the following patterns that can be mapped to a ``prelu`` op.</span>
 <span class="sd">    Essentially, the ``prelu`` op can be broken down into the following ops:</span>
@@ -740,7 +735,7 @@
 <span class="sd">            x (BCHW) ------&gt; prelu ---------&gt; transpose ------&gt; y (BHWC)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="p">(</span><span class="n">FusePreluPattern1</span><span class="p">,</span> <span class="n">FusePreluPattern2</span><span class="p">):</span>
             <span class="n">fuse_all_blocks</span><span class="p">(</span>
                 <span class="n">ops_arrangement</span><span class="o">=</span><span class="n">pattern</span><span class="o">.</span><span class="n">get_prelu_pattern</span><span class="p">(),</span>
@@ -750,7 +745,7 @@
             <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_prelu_pattern</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_prelu_pattern</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
         <span class="c1"># MIL operation takes named inputs (instead of positional inputs).</span>
         <span class="c1"># Here `name` argument is MANDATORY.</span>
         <span class="n">neg</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;neg&quot;</span><span class="p">)</span>
@@ -767,17 +762,17 @@
 <div class="viewcode-block" id="prelu_to_lrelu">
 <a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_activation.prelu_to_lrelu">[docs]</a>
 <span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">prelu_to_lrelu</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">prelu_to_lrelu</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    If ``prelu`` has the same leakage factor across all channels, it will be converted to ``leaky_relu``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_prelu_to_lrelu_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
     <span class="nd">@block_context_manager</span>
-    <span class="k">def</span> <span class="nf">_prelu_to_lrelu_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_prelu_to_lrelu_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_prelu_to_lrelu_block</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
@@ -810,7 +805,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Apple Inc.</p>
+    <p>&#169; Copyright 2021, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

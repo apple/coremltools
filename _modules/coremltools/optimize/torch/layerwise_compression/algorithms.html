@@ -1,11 +1,13 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.optimize.torch.layerwise_compression.algorithms &mdash; coremltools API Reference 8.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+  <title>coremltools.optimize.torch.layerwise_compression.algorithms &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -14,15 +16,11 @@
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../../_static/documentation_options.js?v=8cc1add8"></script>
-        <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" /> 
@@ -39,9 +37,6 @@
           <a href="../../../../../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
-              <div class="version">
-                8.3
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -101,48 +96,48 @@
 <span class="c1"># Original implementation from https://github.com/IST-DASLab/sparsegpt</span>
 <span class="c1"># Copyright 2023 IST Austria Distributed Algorithms and Systems Lab. All Rights Reserved.</span>
 
-<span class="kn">import</span> <span class="nn">copy</span> <span class="k">as</span> <span class="nn">_copy</span>
-<span class="kn">import</span> <span class="nn">logging</span> <span class="k">as</span> <span class="nn">_logging</span>
-<span class="kn">import</span> <span class="nn">math</span> <span class="k">as</span> <span class="nn">_math</span>
-<span class="kn">import</span> <span class="nn">time</span> <span class="k">as</span> <span class="nn">_time</span>
-<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span> <span class="k">as</span> <span class="n">_ABC</span>
-<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span> <span class="k">as</span> <span class="n">_abstractmethod</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span> <span class="k">as</span> <span class="n">_Tuple</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span> <span class="k">as</span> <span class="n">_Union</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_copy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span> <span class="k">as</span> <span class="n">_ABC</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">abstractmethod</span> <span class="k">as</span> <span class="n">_abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span> <span class="k">as</span> <span class="n">_Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span> <span class="k">as</span> <span class="n">_Union</span>
 
-<span class="kn">import</span> <span class="nn">cattrs</span> <span class="k">as</span> <span class="nn">_cattrs</span>
-<span class="kn">import</span> <span class="nn">torch</span> <span class="k">as</span> <span class="nn">_torch</span>
-<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">_nn</span>
-<span class="kn">from</span> <span class="nn">attr</span> <span class="kn">import</span> <span class="n">define</span> <span class="k">as</span> <span class="n">_define</span>
-<span class="kn">from</span> <span class="nn">attr</span> <span class="kn">import</span> <span class="n">field</span> <span class="k">as</span> <span class="n">_field</span>
-<span class="kn">from</span> <span class="nn">attrs</span> <span class="kn">import</span> <span class="n">validators</span> <span class="k">as</span> <span class="n">_validators</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">cattrs</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_cattrs</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">attr</span><span class="w"> </span><span class="kn">import</span> <span class="n">define</span> <span class="k">as</span> <span class="n">_define</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">attr</span><span class="w"> </span><span class="kn">import</span> <span class="n">field</span> <span class="k">as</span> <span class="n">_field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">attrs</span><span class="w"> </span><span class="kn">import</span> <span class="n">validators</span> <span class="k">as</span> <span class="n">_validators</span>
 
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.metadata_utils</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch._utils.metadata_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">CompressionMetadata</span> <span class="k">as</span> <span class="n">_CompressionMetadata</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.python_utils</span> <span class="kn">import</span> <span class="n">ClassRegistryMixin</span> <span class="k">as</span> <span class="n">_ClassRegistryMixin</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch._utils.python_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassRegistryMixin</span> <span class="k">as</span> <span class="n">_ClassRegistryMixin</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch._utils.torch_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">get_n_bits_from_dtype</span> <span class="k">as</span> <span class="n">_get_n_bits_from_dtype</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch._utils.torch_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">maybe_convert_str_to_dtype</span> <span class="k">as</span> <span class="n">_maybe_convert_str_to_dtype</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.layerwise_compression._quant</span> <span class="kn">import</span> <span class="n">Quantizer</span> <span class="k">as</span> <span class="n">_Quantizer</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.layerwise_compression._quant</span> <span class="kn">import</span> <span class="n">_normal_float_palette</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.layerwise_compression._quant</span> <span class="kn">import</span> <span class="n">quantize</span> <span class="k">as</span> <span class="n">_quantize</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.optimization_config</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.layerwise_compression._quant</span><span class="w"> </span><span class="kn">import</span> <span class="n">Quantizer</span> <span class="k">as</span> <span class="n">_Quantizer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.layerwise_compression._quant</span><span class="w"> </span><span class="kn">import</span> <span class="n">_normal_float_palette</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.layerwise_compression._quant</span><span class="w"> </span><span class="kn">import</span> <span class="n">quantize</span> <span class="k">as</span> <span class="n">_quantize</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.optimization_config</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">ModuleOptimizationConfig</span> <span class="k">as</span> <span class="n">_ModuleOptimizationConfig</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.optimization_config</span> <span class="kn">import</span> <span class="n">QuantizationGranularity</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.quantization.quantization_config</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.optimization_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">QuantizationGranularity</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.quantization.quantization_config</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">QuantizationScheme</span> <span class="k">as</span> <span class="n">_QuantizationScheme</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">_logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">LayerwiseCompressionAlgorithmConfig</span><span class="p">(</span><span class="n">_ABC</span><span class="p">,</span> <span class="n">_ClassRegistryMixin</span><span class="p">,</span> <span class="n">_ModuleOptimizationConfig</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LayerwiseCompressionAlgorithmConfig</span><span class="p">(</span><span class="n">_ABC</span><span class="p">,</span> <span class="n">_ClassRegistryMixin</span><span class="p">,</span> <span class="n">_ModuleOptimizationConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A template class and registry for configuration classes to be used</span>
 <span class="sd">    with :py:class:`LayerwiseCompressionAlgorithm`.</span>
@@ -154,7 +149,7 @@
 <a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.layerwise_compression.algorithms.ModuleGPTQConfig">[docs]</a>
 <span class="nd">@LayerwiseCompressionAlgorithmConfig</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;gptq&quot;</span><span class="p">)</span>
 <span class="nd">@_define</span>
-<span class="k">class</span> <span class="nc">ModuleGPTQConfig</span><span class="p">(</span><span class="n">LayerwiseCompressionAlgorithmConfig</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ModuleGPTQConfig</span><span class="p">(</span><span class="n">LayerwiseCompressionAlgorithmConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Configuration class for specifying global and module-level compression options for the</span>
 <span class="sd">    `Generative Pre-Trained Transformer Quantization (GPTQ) &lt;https://arxiv.org/pdf/2210.17323.pdf&gt;`_ algorithm.</span>
@@ -214,7 +209,7 @@
     <span class="n">processing_group_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
     <span class="n">algorithm</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;gptq&quot;</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="s2">&quot;gptq&quot;</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">weight_n_bits</span> <span class="o">=</span> <span class="n">_get_n_bits_from_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span> <span class="o">=</span> <span class="n">_maybe_convert_str_to_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">_torch</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">float32</span><span class="p">]:</span>
@@ -223,7 +218,7 @@
             <span class="p">)</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">):</span>
         <span class="n">converter</span> <span class="o">=</span> <span class="n">_cattrs</span><span class="o">.</span><span class="n">Converter</span><span class="p">(</span><span class="n">forbid_extra_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">converter</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span>
             <span class="n">_Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">],</span>
@@ -237,7 +232,7 @@
 <a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.layerwise_compression.algorithms.ModuleSparseGPTConfig">[docs]</a>
 <span class="nd">@LayerwiseCompressionAlgorithmConfig</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;sparse_gpt&quot;</span><span class="p">)</span>
 <span class="nd">@_define</span>
-<span class="k">class</span> <span class="nc">ModuleSparseGPTConfig</span><span class="p">(</span><span class="n">LayerwiseCompressionAlgorithmConfig</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ModuleSparseGPTConfig</span><span class="p">(</span><span class="n">LayerwiseCompressionAlgorithmConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Configuration class for specifying global and module-level compression options for the</span>
 <span class="sd">    `Sparse Generative Pre-Trained Transformer (SparseGPT) &lt;https://arxiv.org/pdf/2301.00774.pdf&gt;`_ algorithm.</span>
@@ -299,7 +294,7 @@
     <span class="n">processing_group_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
     <span class="n">algorithm</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;sparse_gpt&quot;</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="s2">&quot;sparse_gpt&quot;</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">weight_n_bits</span> <span class="o">=</span> <span class="n">_get_n_bits_from_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span> <span class="o">=</span> <span class="n">_maybe_convert_str_to_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">_torch</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">float16</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">float32</span><span class="p">]:</span>
@@ -308,7 +303,7 @@
             <span class="p">)</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">):</span>
         <span class="n">converter</span> <span class="o">=</span> <span class="n">_cattrs</span><span class="o">.</span><span class="n">Converter</span><span class="p">(</span><span class="n">forbid_extra_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">converter</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span>
             <span class="n">_Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">],</span>
@@ -318,14 +313,14 @@
 
 
 
-<span class="k">class</span> <span class="nc">LayerwiseCompressionAlgorithm</span><span class="p">(</span><span class="n">_ClassRegistryMixin</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LayerwiseCompressionAlgorithm</span><span class="p">(</span><span class="n">_ClassRegistryMixin</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A template class for implementing layerwise compression algorithms</span>
 <span class="sd">    to be used with :py:class:`LayerwiseCompressor`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@_abstractmethod</span>
-    <span class="k">def</span> <span class="nf">add_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">out</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">out</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Perform computation on a batch of data to acquire statistics before</span>
 <span class="sd">        compression.</span>
@@ -333,21 +328,21 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Method not implemented in base class.&quot;</span><span class="p">)</span>
 
     <span class="nd">@_abstractmethod</span>
-    <span class="k">def</span> <span class="nf">cleanup</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cleanup</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Reset the state of the compression algorithm object and free GPU memory.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Method not implemented in base class.&quot;</span><span class="p">)</span>
 
     <span class="nd">@_abstractmethod</span>
-    <span class="k">def</span> <span class="nf">compress</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compress</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compress the weights of the layer.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Method not implemented in base class.&quot;</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">OBSCompressionAlgorithm</span><span class="p">(</span><span class="n">LayerwiseCompressionAlgorithm</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OBSCompressionAlgorithm</span><span class="p">(</span><span class="n">LayerwiseCompressionAlgorithm</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A compression algorithm which uses the Hessian of the reconstruction loss</span>
 <span class="sd">    to compress a weight matrix of a given layer. Based on the</span>
@@ -356,7 +351,7 @@
 <span class="sd">    &lt;https://arxiv.org/pdf/2208.11580.pdf&gt;`_.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">_nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">LayerwiseCompressionAlgorithmConfig</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">_nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">LayerwiseCompressionAlgorithmConfig</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_layer</span> <span class="o">=</span> <span class="n">layer</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layer</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">device</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_nsamples</span> <span class="o">=</span> <span class="mi">0</span>
@@ -370,16 +365,16 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_hessian</span> <span class="o">=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_columns</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_columns</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_device</span><span class="p">)</span>
 
     <span class="nd">@_abstractmethod</span>
-    <span class="k">def</span> <span class="nf">_init_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">LayerwiseCompressionAlgorithmConfig</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_init_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">LayerwiseCompressionAlgorithmConfig</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize parameters of the algorithm from config.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Method not implemented in base class.&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">add_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">out</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">out</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_compute_hessian</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_compute_hessian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">out</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_hessian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">out</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute Hessian of the L2 loss between the original output</span>
 <span class="sd">        of the layer and the output computed using compressed weights.</span>
@@ -409,20 +404,20 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_hessian</span> <span class="o">+=</span> <span class="n">inp</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">t</span><span class="p">())</span>
 
     <span class="nd">@_abstractmethod</span>
-    <span class="k">def</span> <span class="nf">_compress_impl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compress_impl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Implementation of the compression algorithm</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Method not implemented in base class.&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">compress</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compress</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_compress_impl</span><span class="p">()</span>
         <span class="c1"># NOTE: Currently algorithm assumes weight parameter is available for all layers</span>
         <span class="c1"># and the only parameter that gets updated</span>
         <span class="n">metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_compression_metadata</span><span class="p">(</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layer</span><span class="o">.</span><span class="n">weight</span><span class="p">)</span>
         <span class="n">metadata</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layer</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">cleanup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cleanup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_inp1</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_out1</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_nsamples</span> <span class="o">=</span> <span class="mi">0</span>
@@ -430,10 +425,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_hessian</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@_abstractmethod</span>
-    <span class="k">def</span> <span class="nf">_get_compression_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_compression_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Method not implemented in base class.&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_store_quantization_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">quantizer</span><span class="p">:</span> <span class="n">_Quantizer</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_store_quantization_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">quantizer</span><span class="p">:</span> <span class="n">_Quantizer</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">quantizer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">scale</span> <span class="o">=</span> <span class="n">quantizer</span><span class="o">.</span><span class="n">scale</span>
             <span class="n">scale_store</span> <span class="o">=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">_torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
@@ -449,7 +444,7 @@
 <div class="viewcode-block" id="GPTQ">
 <a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.layerwise_compression.algorithms.GPTQ">[docs]</a>
 <span class="nd">@LayerwiseCompressionAlgorithm</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;gptq&quot;</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">GPTQ</span><span class="p">(</span><span class="n">OBSCompressionAlgorithm</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GPTQ</span><span class="p">(</span><span class="n">OBSCompressionAlgorithm</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A post-training compression algorithm based on the paper</span>
 <span class="sd">    `GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers</span>
@@ -461,11 +456,11 @@
 <span class="sd">            for the GPTQ algorithm.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">_nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">ModuleGPTQConfig</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">_nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">ModuleGPTQConfig</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_init_parameters</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_init_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">ModuleGPTQConfig</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_init_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">ModuleGPTQConfig</span><span class="p">):</span>
         <span class="c1"># Defaults to blocking along input channel axis</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_block_size</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">block_size</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_block_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_columns</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_block_size</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
@@ -496,7 +491,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_zero_point</span> <span class="o">=</span> <span class="p">[]</span>
 
-    <span class="k">def</span> <span class="nf">_compress_impl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compress_impl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">weight</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layer</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layer</span><span class="p">,</span> <span class="n">_nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">):</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_block_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -610,7 +605,7 @@
             <span class="o">%</span> <span class="p">(</span><span class="n">_torch</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_layer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inp1</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_out1</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_get_compression_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_compression_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
         <span class="n">metadata</span> <span class="o">=</span> <span class="n">_CompressionMetadata</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span>
 
         <span class="n">scale</span> <span class="o">=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scale</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -633,7 +628,7 @@
 <div class="viewcode-block" id="SparseGPT">
 <a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.layerwise_compression.algorithms.SparseGPT">[docs]</a>
 <span class="nd">@LayerwiseCompressionAlgorithm</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;sparse_gpt&quot;</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">SparseGPT</span><span class="p">(</span><span class="n">OBSCompressionAlgorithm</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SparseGPT</span><span class="p">(</span><span class="n">OBSCompressionAlgorithm</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A post-training compression algorithm based on the paper</span>
 <span class="sd">    `SparseGPT: Massive Language Models Can be Accurately Pruned in One-Shot</span>
@@ -645,11 +640,11 @@
 <span class="sd">            for the SparseGPT algorithm.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">_nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">ModuleSparseGPTConfig</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">:</span> <span class="n">_nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">ModuleSparseGPTConfig</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_init_parameters</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_init_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">ModuleSparseGPTConfig</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_init_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">ModuleSparseGPTConfig</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_target_sparsity</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">target_sparsity</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_weight_n_bits</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">weight_n_bits</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_n_m_ratio</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">n_m_ratio</span>
@@ -675,7 +670,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_prune_n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prune_m</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
 
-    <span class="k">def</span> <span class="nf">_compress_impl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compress_impl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">weight</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layer</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layer</span><span class="p">,</span> <span class="n">_nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">):</span>
             <span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
@@ -797,7 +792,7 @@
             <span class="o">%</span> <span class="p">(</span><span class="n">_torch</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_layer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inp1</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_out1</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_get_compression_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_compression_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
         <span class="n">metadata</span> <span class="o">=</span> <span class="n">_CompressionMetadata</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span>
         <span class="n">compression_type</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;pruning&quot;</span><span class="p">]</span>
 
@@ -830,7 +825,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Apple Inc.</p>
+    <p>&#169; Copyright 2021, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

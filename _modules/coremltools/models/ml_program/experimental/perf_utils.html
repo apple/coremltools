@@ -1,11 +1,13 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.models.ml_program.experimental.perf_utils &mdash; coremltools API Reference 8.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+  <title>coremltools.models.ml_program.experimental.perf_utils &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -14,15 +16,11 @@
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../../_static/documentation_options.js?v=8cc1add8"></script>
-        <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" /> 
@@ -39,9 +37,6 @@
           <a href="../../../../../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
-              <div class="version">
-                8.3
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -98,31 +93,31 @@
 <span class="c1"># Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
-<span class="kn">import</span> <span class="nn">gc</span>
-<span class="kn">import</span> <span class="nn">random</span>
-<span class="kn">import</span> <span class="nn">string</span>
-<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">gc</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">string</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">ComputeUnit</span><span class="p">,</span> <span class="n">proto</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">ComputeUnit</span><span class="p">,</span> <span class="n">proto</span>
 
-<span class="kn">from</span> <span class="nn">...compute_plan</span> <span class="kn">import</span> <span class="n">MLComputePlanDeviceUsage</span>
-<span class="kn">from</span> <span class="nn">...model</span> <span class="kn">import</span> <span class="n">MLModel</span>
-<span class="kn">from</span> <span class="nn">.async_wrapper</span> <span class="kn">import</span> <span class="n">MLModelAsyncWrapper</span>
-<span class="kn">from</span> <span class="nn">.model_structure_path</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">...compute_plan</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLComputePlanDeviceUsage</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">...model</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.async_wrapper</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModelAsyncWrapper</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.model_structure_path</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">ModelStructurePath</span><span class="p">,</span>
     <span class="n">map_model_spec_to_path</span><span class="p">,</span>
     <span class="n">map_model_structure_to_path</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.remote_device</span> <span class="kn">import</span> <span class="n">Device</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.remote_device</span><span class="w"> </span><span class="kn">import</span> <span class="n">Device</span>
 
-<span class="k">def</span> <span class="nf">_convert_nanoseconds_to_milliseconds</span><span class="p">(</span><span class="n">nanoseconds</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_convert_nanoseconds_to_milliseconds</span><span class="p">(</span><span class="n">nanoseconds</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">nanoseconds</span> <span class="o">/</span> <span class="mi">1000000</span>
 
 
-<span class="k">def</span> <span class="nf">_gen_random_multiarray_value</span><span class="p">(</span><span class="nb">type</span><span class="p">:</span> <span class="s2">&quot;proto.FeatureTypes_pb2.ArrayFeatureType&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_gen_random_multiarray_value</span><span class="p">(</span><span class="nb">type</span><span class="p">:</span> <span class="s2">&quot;proto.FeatureTypes_pb2.ArrayFeatureType&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
     <span class="n">data_types</span> <span class="o">=</span> <span class="p">{</span>
         <span class="n">proto</span><span class="o">.</span><span class="n">FeatureTypes_pb2</span><span class="o">.</span><span class="n">ArrayFeatureType</span><span class="o">.</span><span class="n">ArrayDataType</span><span class="o">.</span><span class="n">FLOAT32</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
         <span class="n">proto</span><span class="o">.</span><span class="n">FeatureTypes_pb2</span><span class="o">.</span><span class="n">ArrayFeatureType</span><span class="o">.</span><span class="n">ArrayDataType</span><span class="o">.</span><span class="n">FLOAT16</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">,</span>
@@ -139,21 +134,21 @@
 
     <span class="n">shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">type</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">np_data_type</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_gen_random_image_value</span><span class="p">(</span><span class="nb">type</span><span class="p">:</span> <span class="s2">&quot;proto.FeatureTypes_pb2.ImageFeatureType&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_gen_random_image_value</span><span class="p">(</span><span class="nb">type</span><span class="p">:</span> <span class="s2">&quot;proto.FeatureTypes_pb2.ImageFeatureType&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
     <span class="k">except</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="s2">&quot;The Python Imaging Library (PIL) is required but not installed. &quot;</span>
             <span class="s2">&quot;Please install it by running &#39;pip install pillow&#39;.&quot;</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">gen_random_pixel_value</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">gen_random_pixel_value</span><span class="p">(</span>
         <span class="n">colorSpace</span><span class="p">:</span> <span class="s2">&quot;proto.FeatureTypes_pb2.ImageFeatureType.ColorSpace&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
         <span class="k">if</span> <span class="p">(</span>
@@ -168,7 +163,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported image color space=</span><span class="si">{</span><span class="n">colorSpace</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">get_image_type</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_image_type</span><span class="p">(</span>
         <span class="n">colorSpace</span><span class="p">:</span> <span class="s2">&quot;proto.FeatureTypes_pb2.ImageFeatureType.ColorSpace&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">if</span> <span class="p">(</span>
@@ -198,7 +193,7 @@
     <span class="k">return</span> <span class="n">image</span>
 
 
-<span class="k">def</span> <span class="nf">_gen_random_feature_value</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_gen_random_feature_value</span><span class="p">(</span>
     <span class="nb">type</span><span class="p">:</span> <span class="s2">&quot;proto.FeatureTypes_pb2.FeatureType&quot;</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
     <span class="n">feature_type</span> <span class="o">=</span> <span class="nb">type</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">)</span>
@@ -221,7 +216,7 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported feature type: </span><span class="si">{</span><span class="nb">type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_gen_random_inputs</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_gen_random_inputs</span><span class="p">(</span>
     <span class="n">model_description</span><span class="p">:</span> <span class="s2">&quot;proto.Model_pb2.ModelDescription&quot;</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 
@@ -237,7 +232,7 @@
 
 <div class="viewcode-block" id="MLModelBenchmarker">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.perf_utils.MLModelBenchmarker">[docs]</a>
-<span class="k">class</span> <span class="nc">MLModelBenchmarker</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MLModelBenchmarker</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class for benchmarking an MLModel.</span>
 
@@ -248,7 +243,7 @@
 <div class="viewcode-block" id="MLModelBenchmarker.Statistics">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.perf_utils.MLModelBenchmarker.Statistics">[docs]</a>
     <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">class</span> <span class="nc">Statistics</span><span class="p">:</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Statistics</span><span class="p">:</span>
         <span class="n">minimum</span><span class="p">:</span> <span class="nb">float</span>
         <span class="n">maximum</span><span class="p">:</span> <span class="nb">float</span>
         <span class="n">average</span><span class="p">:</span> <span class="nb">float</span>
@@ -256,7 +251,7 @@
         <span class="n">median</span><span class="p">:</span> <span class="nb">float</span>
 
         <span class="nd">@staticmethod</span>
-        <span class="k">def</span> <span class="nf">from_values</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;MLModelBenchmarker.Statistics&quot;</span><span class="p">]:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">from_values</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;MLModelBenchmarker.Statistics&quot;</span><span class="p">]:</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">None</span>
 
@@ -278,18 +273,18 @@
 <div class="viewcode-block" id="MLModelBenchmarker.Measurement">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.perf_utils.MLModelBenchmarker.Measurement">[docs]</a>
     <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">class</span> <span class="nc">Measurement</span><span class="p">:</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Measurement</span><span class="p">:</span>
         <span class="n">statistics</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;MLModelBenchmarker.Statistics&quot;</span><span class="p">]</span>
         <span class="n">samples</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
 
         <span class="nd">@staticmethod</span>
-        <span class="k">def</span> <span class="nf">from_samples</span><span class="p">(</span><span class="n">samples</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;MLModelBenchmarker.Measurement&quot;</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">from_samples</span><span class="p">(</span><span class="n">samples</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;MLModelBenchmarker.Measurement&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">MLModelBenchmarker</span><span class="o">.</span><span class="n">Measurement</span><span class="p">(</span>
                 <span class="n">statistics</span><span class="o">=</span><span class="n">MLModelBenchmarker</span><span class="o">.</span><span class="n">Statistics</span><span class="o">.</span><span class="n">from_values</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="n">samples</span><span class="p">),</span>
                 <span class="n">samples</span><span class="o">=</span><span class="n">samples</span><span class="p">,</span>
             <span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">add_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;MLModelBenchmarker.Measurement&quot;</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">add_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">samples</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;MLModelBenchmarker.Measurement&quot;</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">self</span>
 
@@ -307,7 +302,7 @@
             <span class="p">)</span>
 
         <span class="nd">@property</span>
-        <span class="k">def</span> <span class="nf">sort_key</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">sort_key</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
             <span class="k">return</span> <span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">statistics</span><span class="o">.</span><span class="n">median</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
@@ -317,14 +312,14 @@
 <div class="viewcode-block" id="MLModelBenchmarker.OperationExecutionInfo">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.perf_utils.MLModelBenchmarker.OperationExecutionInfo">[docs]</a>
     <span class="nd">@dataclass</span>
-    <span class="k">class</span> <span class="nc">OperationExecutionInfo</span><span class="p">:</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">OperationExecutionInfo</span><span class="p">:</span>
         <span class="n">spec</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span>
         <span class="n">path</span><span class="p">:</span> <span class="n">ModelStructurePath</span>
         <span class="n">compute_device_usage</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MLComputePlanDeviceUsage</span><span class="p">]</span>
         <span class="n">measurement</span><span class="p">:</span> <span class="s2">&quot;MLModelBenchmarker.Measurement&quot;</span></div>
 
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model</span><span class="p">:</span> <span class="n">MLModel</span><span class="p">,</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Device</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -335,11 +330,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_model</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">compute_units</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ComputeUnit</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_units</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ComputeUnit</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">compute_unit</span>
 
     <span class="nd">@compute_units</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">compute_units</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">compute_units</span><span class="p">:</span> <span class="n">ComputeUnit</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_units</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">compute_units</span><span class="p">:</span> <span class="n">ComputeUnit</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">compute_unit</span> <span class="o">!=</span> <span class="n">compute_units</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span>
                 <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_spec</span><span class="p">,</span>
@@ -352,7 +347,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_loaded_model</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">_create_loaded_model</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_create_loaded_model</span><span class="p">(</span>
         <span class="n">model</span><span class="p">:</span> <span class="n">MLModel</span><span class="p">,</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Device</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MLModelAsyncWrapper</span><span class="p">:</span>
@@ -370,7 +365,7 @@
 
 <div class="viewcode-block" id="MLModelBenchmarker.benchmark_load">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.perf_utils.MLModelBenchmarker.benchmark_load">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">benchmark_load</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">benchmark_load</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MLModelBenchmarker.Measurement&quot;</span><span class="p">:</span>
@@ -423,7 +418,7 @@
 
 
     <span class="nd">@staticmethod</span>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">_benchmark_model_predict</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_benchmark_model_predict</span><span class="p">(</span>
         <span class="n">model</span><span class="p">:</span> <span class="n">MLModel</span><span class="p">,</span>
         <span class="n">iterations</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
@@ -450,7 +445,7 @@
 
 <div class="viewcode-block" id="MLModelBenchmarker.benchmark_predict">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.perf_utils.MLModelBenchmarker.benchmark_predict">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">benchmark_predict</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">benchmark_predict</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
@@ -510,7 +505,7 @@
 
 <div class="viewcode-block" id="MLModelBenchmarker.benchmark_operation_execution">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.perf_utils.MLModelBenchmarker.benchmark_operation_execution">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">benchmark_operation_execution</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">benchmark_operation_execution</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
@@ -607,7 +602,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Apple Inc.</p>
+    <p>&#169; Copyright 2021, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

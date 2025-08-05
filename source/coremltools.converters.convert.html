@@ -1,12 +1,14 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Unified (TensorFlow and Pytorch) &mdash; coremltools API Reference 8.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+  <title>Unified (TensorFlow and Pytorch) &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -15,15 +17,11 @@
       <link rel="stylesheet" type="text/css" href="../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=8cc1add8"></script>
-        <script src="../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -42,9 +40,6 @@
           <a href="../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
-              <div class="version">
-                8.3
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -175,7 +170,7 @@ determines the framework automatically for most cases. Raises
 be applied to the input of the converted model. For example, the
 following code snippet will produce a Core ML model with float 16 typed
 inputs.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
 
 <span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
     <span class="n">keras_model</span><span class="p">,</span>
@@ -187,7 +182,7 @@ inputs.</p>
 </li>
 <li><p>The following code snippet will produce a Core ML model with the
 <code class="docutils literal notranslate"><span class="pre">GRAYSCALE_FLOAT16</span></code> input image type:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
 
 <span class="c1"># H : image height, W: image width</span>
 <span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
@@ -261,7 +256,7 @@ It defaults to float 16.</p></li>
 <li><p>If you specify <code class="docutils literal notranslate"><span class="pre">dtype</span></code> with <code class="docutils literal notranslate"><span class="pre">TensorType</span></code> or <code class="docutils literal notranslate"><span class="pre">ImageType</span></code>,
 it will be applied to the output of the converted model. For example,
 to produce float 16 typed inputs and outputs:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
 
 <span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
     <span class="n">keras_model</span><span class="p">,</span>
@@ -273,7 +268,7 @@ to produce float 16 typed inputs and outputs:</p>
 </div>
 </li>
 <li><p>To produce image inputs and outputs:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
 
 <span class="c1"># H: image height, W: image width</span>
 <span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
@@ -332,18 +327,22 @@ between ML programs and neural networks, see
 <a class="reference external" href="https://apple.github.io/coremltools/docs-guides/source/convert-to-ml-program.html">ML Programs</a>.</p>
 <ul>
 <li><p>The converter produces a neural network (<code class="docutils literal notranslate"><span class="pre">neuralnetwork</span></code>) if:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">minimum_deployment_target</span> <span class="o">&lt;=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS14</span><span class="o">/</span>
-                             <span class="n">coremltools</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">macOS11</span><span class="o">/</span>
-                             <span class="n">coremltools</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">watchOS7</span><span class="o">/</span>
-                             <span class="n">coremltools</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">tvOS14</span><span class="p">:</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">(</span>
+    <span class="n">minimum_deployment_target</span> <span class="o">&lt;=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS14</span>
+    <span class="ow">or</span> <span class="n">minimum_deployment_target</span> <span class="o">&lt;=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">macOS11</span>
+    <span class="ow">or</span> <span class="n">minimum_deployment_target</span> <span class="o">&lt;=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">watchOS7</span>
+    <span class="ow">or</span> <span class="n">minimum_deployment_target</span> <span class="o">&lt;=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">tvOS14</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </li>
 <li><p>The converter produces an ML program (<code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>) if:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">minimum_deployment_target</span> <span class="o">&gt;=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS15</span><span class="o">/</span>
-                              <span class="n">coremltools</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">macOS12</span><span class="o">/</span>
-                              <span class="n">coremltools</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">watchOS8</span><span class="o">/</span>
-                              <span class="n">coremltools</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">tvOS15</span><span class="p">:</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">(</span>
+    <span class="n">minimum_deployment_target</span> <span class="o">&gt;=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS15</span>
+    <span class="ow">or</span> <span class="n">minimum_deployment_target</span> <span class="o">&gt;=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">macOS12</span>
+    <span class="ow">or</span> <span class="n">minimum_deployment_target</span> <span class="o">&gt;=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">watchOS8</span>
+    <span class="ow">or</span> <span class="n">minimum_deployment_target</span> <span class="o">&gt;=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">tvOS15</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </li>
@@ -353,10 +352,10 @@ model type with as minimum of a deployment target as possible.</p></li>
 <li><p>If this parameter is specified and <code class="docutils literal notranslate"><span class="pre">convert_to</span></code> is also specified,
 they must be compatible. The following are examples of invalid values:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Invalid:</span>
-<span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;mlprogram&quot;</span><span class="p">,</span> <span class="n">minimum_deployment_target</span><span class="o">=</span><span class="n">coremltools</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS14</span>
+<span class="n">convert_to</span> <span class="o">=</span> <span class="s2">&quot;mlprogram&quot;</span><span class="p">,</span> <span class="n">minimum_deployment_target</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS14</span>
 
 <span class="c1"># Invalid:</span>
-<span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;neuralnetwork&quot;</span><span class="p">,</span> <span class="n">minimum_deployment_target</span><span class="o">=</span><span class="n">coremltools</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS15</span>
+<span class="n">convert_to</span> <span class="o">=</span> <span class="s2">&quot;neuralnetwork&quot;</span><span class="p">,</span> <span class="n">minimum_deployment_target</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS15</span>
 </pre></div>
 </div>
 </li>
@@ -399,8 +398,7 @@ ML program. Must be one of the following.</p>
 applied to produce a float 16 program; that is, a program in which all
 the intermediate float tensors are of type float 16 (for ops that
 support that type).</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">coremltools</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">FP16ComputePrecision</span><span class="p">(</span><span class="n">op_selector</span><span class="o">=</span>
-                                           <span class="k">lambda</span> <span class="n">op</span><span class="p">:</span><span class="kc">True</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">coremltools</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">FP16ComputePrecision</span><span class="p">(</span><span class="n">op_selector</span><span class="o">=</span><span class="k">lambda</span> <span class="n">op</span><span class="p">:</span> <span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The above transform iterates through all the ops, looking at each op’s
@@ -420,8 +418,9 @@ the op_selector function is invoked on the op object. This function
 must return a boolean value. By default it returns <code class="docutils literal notranslate"><span class="pre">True</span></code> for every op,
 but you can customize this.</p>
 <p>For example:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">coremltools</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">FP16ComputePrecision</span><span class="p">(</span><span class="n">op_selector</span><span class="o">=</span>
-                            <span class="k">lambda</span> <span class="n">op</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">!=</span> <span class="s2">&quot;linear&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">coremltools</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">FP16ComputePrecision</span><span class="p">(</span>
+    <span class="n">op_selector</span><span class="o">=</span><span class="k">lambda</span> <span class="n">op</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">!=</span> <span class="s2">&quot;linear&quot;</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 <p>The above casts all the float32 tensors to be float 16, except
@@ -437,7 +436,7 @@ needs to be <code class="docutils literal notranslate"><span class="pre">None</s
 <li><p>For example, you can customize the float 16 precision transform to prevent
 casting all the <code class="docutils literal notranslate"><span class="pre">real_div</span></code> ops in the program to float 16
 precision:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">skip_real_div_ops</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">skip_real_div_ops</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;real_div&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">False</span>
     <span class="k">return</span> <span class="kc">True</span>
@@ -547,14 +546,14 @@ by providing the <code class="docutils literal notranslate"><span class="pre">St
 The stateful model is useful when converting a large language model with KV-Cache.
 The name of <code class="docutils literal notranslate"><span class="pre">StateType</span></code> must match the key of the PyTorch <code class="docutils literal notranslate"><span class="pre">named_buffers()</span></code> method in the source traced model.</p>
 <p>The following example converts a torch model with a buffer called <code class="docutils literal notranslate"><span class="pre">state_1</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">UpdateBufferModel</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">UpdateBufferModel</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">UpdateBufferModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span>
             <span class="s2">&quot;state_1&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="c1"># In place update of the model state</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">state_1</span><span class="o">.</span><span class="n">add_</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_1</span>
@@ -652,7 +651,7 @@ The name of <code class="docutils literal notranslate"><span class="pre">StateTy
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Apple Inc.</p>
+    <p>&#169; Copyright 2021, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

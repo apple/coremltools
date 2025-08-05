@@ -1,11 +1,13 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.models._compiled_model &mdash; coremltools API Reference 8.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+  <title>coremltools.models._compiled_model &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -14,15 +16,11 @@
       <link rel="stylesheet" type="text/css" href="../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../_static/documentation_options.js?v=8cc1add8"></script>
-        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -39,9 +37,6 @@
           <a href="../../../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
-              <div class="version">
-                8.3
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -98,30 +93,30 @@
 <span class="c1"># Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
-<span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">expanduser</span> <span class="k">as</span> <span class="n">_expanduser</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Type</span> <span class="k">as</span> <span class="n">_Type</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">os.path</span><span class="w"> </span><span class="kn">import</span> <span class="n">expanduser</span> <span class="k">as</span> <span class="n">_expanduser</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Type</span> <span class="k">as</span> <span class="n">_Type</span>
 
-<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
-<span class="kn">from</span> <span class="nn">coremltools.models.model</span> <span class="kn">import</span> <span class="n">MLState</span> <span class="k">as</span> <span class="n">_MLState</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLState</span> <span class="k">as</span> <span class="n">_MLState</span>
 
-<span class="kn">from</span> <span class="nn">.model</span> <span class="kn">import</span> <span class="n">MLModel</span> <span class="k">as</span> <span class="n">_MLModel</span>
-<span class="kn">from</span> <span class="nn">.model</span> <span class="kn">import</span> <span class="n">MLModelAsset</span> <span class="k">as</span> <span class="n">_MLModelAsset</span>
-<span class="kn">from</span> <span class="nn">.model</span> <span class="kn">import</span> <span class="n">_verify_optimization_hint_input</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">_macos_version</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModel</span> <span class="k">as</span> <span class="n">_MLModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModelAsset</span> <span class="k">as</span> <span class="n">_MLModelAsset</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">_verify_optimization_hint_input</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">_macos_version</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">..libcoremlpython</span> <span class="kn">import</span> <span class="n">_MLModelProxy</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">..libcoremlpython</span><span class="w"> </span><span class="kn">import</span> <span class="n">_MLModelProxy</span>
 <span class="k">except</span><span class="p">:</span>
     <span class="n">_MLModelProxy</span> <span class="o">=</span> <span class="kc">None</span>
 
 
 <div class="viewcode-block" id="CompiledMLModel">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.CompiledMLModel">[docs]</a>
-<span class="k">class</span> <span class="nc">CompiledMLModel</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CompiledMLModel</span><span class="p">:</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_init_check</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_init_check</span><span class="p">(</span>
         <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">compute_units</span><span class="p">:</span> <span class="n">_ComputeUnit</span><span class="p">,</span>
         <span class="n">function_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -150,7 +145,7 @@
 
 <div class="viewcode-block" id="CompiledMLModel.__init__">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.CompiledMLModel.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">compute_units</span><span class="p">:</span> <span class="n">_ComputeUnit</span> <span class="o">=</span> <span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">ALL</span><span class="p">,</span>
@@ -239,7 +234,7 @@
 <div class="viewcode-block" id="CompiledMLModel.from_asset">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.CompiledMLModel.from_asset">[docs]</a>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_asset</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_asset</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">asset</span><span class="p">:</span> <span class="n">_MLModelAsset</span><span class="p">,</span>
         <span class="n">compute_units</span><span class="p">:</span> <span class="n">_ComputeUnit</span> <span class="o">=</span> <span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">ALL</span><span class="p">,</span>
@@ -294,7 +289,7 @@
 
 <div class="viewcode-block" id="CompiledMLModel.predict">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.CompiledMLModel.predict">[docs]</a>
-    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_MLState</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_MLState</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return predictions for the model.</span>
 
@@ -339,7 +334,7 @@
 
 <div class="viewcode-block" id="CompiledMLModel.make_state">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.CompiledMLModel.make_state">[docs]</a>
-    <span class="k">def</span> <span class="nf">make_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_MLState</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">make_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_MLState</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns a new state object, which can be passed to the ``predict`` method.</span>
 
@@ -366,7 +361,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Apple Inc.</p>
+    <p>&#169; Copyright 2021, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

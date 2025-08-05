@@ -1,11 +1,13 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.models.pipeline &mdash; coremltools API Reference 8.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+  <title>coremltools.models.pipeline &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -14,15 +16,11 @@
       <link rel="stylesheet" type="text/css" href="../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../_static/documentation_options.js?v=8cc1add8"></script>
-        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -39,9 +37,6 @@
           <a href="../../../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
-              <div class="version">
-                8.3
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -102,12 +97,12 @@
 <span class="sd">Pipeline utils for this package.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">proto</span> <span class="k">as</span> <span class="n">_proto</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">proto</span> <span class="k">as</span> <span class="n">_proto</span>
 
-<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">SPECIFICATION_VERSION</span> <span class="k">as</span> <span class="n">_SPECIFICATION_VERSION</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_feature_management</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">model</span> <span class="k">as</span> <span class="n">_model</span>
-<span class="kn">from</span> <span class="nn">._interface_management</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..</span><span class="w"> </span><span class="kn">import</span> <span class="n">SPECIFICATION_VERSION</span> <span class="k">as</span> <span class="n">_SPECIFICATION_VERSION</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">_feature_management</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">model</span> <span class="k">as</span> <span class="n">_model</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._interface_management</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">set_classifier_interface_params</span><span class="p">,</span>
     <span class="n">set_regressor_interface_params</span><span class="p">,</span>
     <span class="n">set_training_features</span><span class="p">,</span>
@@ -117,7 +112,7 @@
 
 <div class="viewcode-block" id="Pipeline">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.Pipeline">[docs]</a>
-<span class="k">class</span> <span class="nc">Pipeline</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Pipeline</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A pipeline model that exposes a sequence of models as a single model,</span>
 <span class="sd">    It requires a set of inputs, a sequence of other models and a set of outputs.</span>
@@ -131,7 +126,7 @@
 
 <div class="viewcode-block" id="Pipeline.__init__">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.Pipeline.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_features</span><span class="p">,</span> <span class="n">output_features</span><span class="p">,</span> <span class="n">training_features</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_features</span><span class="p">,</span> <span class="n">output_features</span><span class="p">,</span> <span class="n">training_features</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a pipeline of models to be executed sequentially.</span>
 
@@ -165,7 +160,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">spec</span> <span class="o">=</span> <span class="n">spec</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_validate_updatable_pipeline_on_add_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_updatable_pipeline_on_add_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">isUpdatable</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;New sub-models cannot be added after the pipeline has been marked as updatable&quot;</span>
@@ -173,7 +168,7 @@
 
 <div class="viewcode-block" id="Pipeline.add_model">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.Pipeline.add_model">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a protobuf spec or :py:class:`models.MLModel` instance to the pipeline.</span>
 
@@ -196,7 +191,7 @@
         <span class="n">step_spec</span><span class="o">.</span><span class="n">CopyFrom</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_validate_sub_models_and_make_updatable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipeline</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_sub_models_and_make_updatable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipeline</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
 
         <span class="n">num_models</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pipeline</span><span class="o">.</span><span class="n">models</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">num_models</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -218,12 +213,12 @@
 
         <span class="n">spec</span><span class="o">.</span><span class="n">isUpdatable</span> <span class="o">=</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">make_updatable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">make_updatable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_sub_models_and_make_updatable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">pipeline</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Pipeline.set_training_input">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.Pipeline.set_training_input">[docs]</a>
-    <span class="k">def</span> <span class="nf">set_training_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">training_input</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_training_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">training_input</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the training inputs of the network spec.</span>
 
@@ -240,7 +235,7 @@
 
 <div class="viewcode-block" id="PipelineRegressor">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.PipelineRegressor">[docs]</a>
-<span class="k">class</span> <span class="nc">PipelineRegressor</span><span class="p">(</span><span class="n">Pipeline</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PipelineRegressor</span><span class="p">(</span><span class="n">Pipeline</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A pipeline model that exposes a sequence of models as a single model,</span>
 <span class="sd">    It requires a set of inputs, a sequence of other models and a set of outputs.</span>
@@ -250,7 +245,7 @@
 
 <div class="viewcode-block" id="PipelineRegressor.__init__">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.PipelineRegressor.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_features</span><span class="p">,</span> <span class="n">output_features</span><span class="p">,</span> <span class="n">training_features</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_features</span><span class="p">,</span> <span class="n">output_features</span><span class="p">,</span> <span class="n">training_features</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a set of pipeline models given a set of model specs.  The final</span>
 <span class="sd">        output model must be a regression model.</span>
@@ -286,7 +281,7 @@
 
 <div class="viewcode-block" id="PipelineRegressor.add_model">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.PipelineRegressor.add_model">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a protobuf spec or :py:class:`models.MLModel` instance to the pipeline.</span>
 
@@ -309,14 +304,14 @@
         <span class="n">step_spec</span><span class="o">.</span><span class="n">CopyFrom</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">make_updatable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">make_updatable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_validate_sub_models_and_make_updatable</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">pipelineRegressor</span><span class="o">.</span><span class="n">pipeline</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="PipelineRegressor.set_training_input">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.PipelineRegressor.set_training_input">[docs]</a>
-    <span class="k">def</span> <span class="nf">set_training_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">training_input</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_training_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">training_input</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the training inputs of the network spec.</span>
 
@@ -333,7 +328,7 @@
 
 <div class="viewcode-block" id="PipelineClassifier">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.PipelineClassifier">[docs]</a>
-<span class="k">class</span> <span class="nc">PipelineClassifier</span><span class="p">(</span><span class="n">Pipeline</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PipelineClassifier</span><span class="p">(</span><span class="n">Pipeline</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A pipeline model that exposes a sequence of models as a single model,</span>
 <span class="sd">    It requires a set of inputs, a sequence of other models and a set of outputs.</span>
@@ -343,7 +338,7 @@
 
 <div class="viewcode-block" id="PipelineClassifier.__init__">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.PipelineClassifier.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">input_features</span><span class="p">,</span> <span class="n">class_labels</span><span class="p">,</span> <span class="n">output_features</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">training_features</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -396,7 +391,7 @@
 
 <div class="viewcode-block" id="PipelineClassifier.add_model">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.PipelineClassifier.add_model">[docs]</a>
-    <span class="k">def</span> <span class="nf">add_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a protobuf spec or :py:class:`models.MLModel` instance to the pipeline.</span>
 
@@ -418,14 +413,14 @@
         <span class="n">step_spec</span><span class="o">.</span><span class="n">CopyFrom</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">make_updatable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">make_updatable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">PipelineClassifier</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_validate_sub_models_and_make_updatable</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">pipelineClassifier</span><span class="o">.</span><span class="n">pipeline</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="PipelineClassifier.set_training_input">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.PipelineClassifier.set_training_input">[docs]</a>
-    <span class="k">def</span> <span class="nf">set_training_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">training_input</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_training_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">training_input</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the training inputs of the network spec.</span>
 
@@ -447,7 +442,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Apple Inc.</p>
+    <p>&#169; Copyright 2021, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

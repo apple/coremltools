@@ -1,11 +1,13 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.models.ml_program.experimental.debugging_utils &mdash; coremltools API Reference 8.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+  <title>coremltools.models.ml_program.experimental.debugging_utils &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -14,15 +16,11 @@
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../../_static/documentation_options.js?v=8cc1add8"></script>
-        <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" /> 
@@ -39,9 +37,6 @@
           <a href="../../../../../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
-              <div class="version">
-                8.3
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -98,13 +93,13 @@
 <span class="c1"># Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
-<span class="kn">import</span> <span class="nn">gc</span>
-<span class="kn">import</span> <span class="nn">random</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span><span class="p">,</span> <span class="n">deque</span>
-<span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">AsyncIterator</span>
-<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
-<span class="kn">from</span> <span class="nn">logging</span> <span class="kn">import</span> <span class="n">getLogger</span> <span class="k">as</span> <span class="n">_getLogger</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">gc</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span><span class="p">,</span> <span class="n">deque</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncIterator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">getLogger</span> <span class="k">as</span> <span class="n">_getLogger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">Any</span><span class="p">,</span>
     <span class="n">AsyncIterator</span><span class="p">,</span>
     <span class="n">Callable</span><span class="p">,</span>
@@ -119,23 +114,23 @@
     <span class="n">TypeVar</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">tqdm</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tqdm</span>
 
-<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_SPECIFICATION_VERSION_IOS_16</span><span class="p">,</span> <span class="n">ComputeUnit</span><span class="p">,</span> <span class="n">proto</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">_SPECIFICATION_VERSION_IOS_16</span><span class="p">,</span> <span class="n">ComputeUnit</span><span class="p">,</span> <span class="n">proto</span>
 
-<span class="kn">from</span> <span class="nn">...model</span> <span class="kn">import</span> <span class="n">MLModel</span>
-<span class="kn">from</span> <span class="nn">.async_wrapper</span> <span class="kn">import</span> <span class="n">MLModelAsyncWrapper</span>
-<span class="kn">from</span> <span class="nn">.remote_device</span> <span class="kn">import</span> <span class="n">Device</span><span class="p">,</span> <span class="n">_DeviceCtlError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">...model</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.async_wrapper</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModelAsyncWrapper</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.remote_device</span><span class="w"> </span><span class="kn">import</span> <span class="n">Device</span><span class="p">,</span> <span class="n">_DeviceCtlError</span>
 
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">_getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <span class="n">K</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;K&quot;</span><span class="p">)</span>
 <span class="n">V</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;V&quot;</span><span class="p">)</span>
 
-<span class="k">class</span> <span class="nc">_Trie</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">K</span><span class="p">,</span> <span class="n">V</span><span class="p">]):</span>
-    <span class="k">class</span> <span class="nc">Node</span><span class="p">:</span>
-        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_Trie</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">K</span><span class="p">,</span> <span class="n">V</span><span class="p">]):</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Node</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">K</span><span class="p">],</span>
             <span class="n">values</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">V</span><span class="p">]],</span>
@@ -144,10 +139,10 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="n">values</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">root</span> <span class="o">=</span> <span class="n">_Trie</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">insert</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">keys</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">K</span><span class="p">],</span>
         <span class="n">value</span><span class="p">:</span> <span class="n">V</span><span class="p">,</span>
@@ -171,7 +166,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">curr_node</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="n">keys</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">_Trie</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">keys</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">value</span><span class="p">])</span>
 
-    <span class="k">def</span> <span class="nf">find</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">find</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">keys</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">K</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">V</span><span class="p">]]:</span>
@@ -189,7 +184,7 @@
         <span class="n">node</span> <span class="o">=</span> <span class="n">curr_node</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">keys</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">values</span> <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">remove</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">keys</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">K</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">V</span><span class="p">]]:</span>
@@ -208,7 +203,7 @@
         <span class="n">removed_values</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">values</span> <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="n">removed_values</span>
 
-    <span class="k">def</span> <span class="nf">starts_with</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">starts_with</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">keys</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">K</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">V</span><span class="p">]]:</span>
@@ -235,7 +230,7 @@
 
 <div class="viewcode-block" id="MLModelInspector">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.debugging_utils.MLModelInspector">[docs]</a>
-<span class="k">class</span> <span class="nc">MLModelInspector</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MLModelInspector</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class for inspecting an ML model.</span>
 
@@ -258,7 +253,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_clone_spec</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_clone_spec</span><span class="p">(</span>
         <span class="n">spec</span><span class="p">:</span> <span class="s2">&quot;proto.Model_pb2.Model&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;proto.Model_pb2.Model&quot;</span><span class="p">:</span>
         <span class="n">spec_class</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="vm">__class__</span>
@@ -267,7 +262,7 @@
         <span class="k">return</span> <span class="n">new_spec</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_create_output_name_to_op_map</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_output_name_to_op_map</span><span class="p">(</span>
         <span class="n">ops</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;OrderedDict[str, proto.MIL_pb2.Operation]&quot;</span><span class="p">:</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
@@ -277,7 +272,7 @@
         <span class="k">return</span> <span class="n">result</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_init_check</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_init_check</span><span class="p">(</span>
         <span class="n">model</span><span class="p">:</span> <span class="n">MLModel</span><span class="p">,</span>
         <span class="n">compute_units</span><span class="p">:</span> <span class="n">ComputeUnit</span><span class="p">,</span>
         <span class="n">function_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
@@ -310,7 +305,7 @@
 
 <div class="viewcode-block" id="MLModelInspector.__init__">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.debugging_utils.MLModelInspector.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model</span><span class="p">:</span> <span class="n">MLModel</span><span class="p">,</span>
         <span class="n">compute_units</span><span class="p">:</span> <span class="n">ComputeUnit</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -384,7 +379,7 @@
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">output_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">output_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns a list of all output names in the model.</span>
 
@@ -396,7 +391,7 @@
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_name_to_op_map</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">output_name_to_op_map</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;OrderedDict[str, proto.MIL_pb2.Operation]&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">output_name_to_op_map</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;OrderedDict[str, proto.MIL_pb2.Operation]&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns a dictionary mapping output names to their corresponding operations.</span>
 
@@ -407,7 +402,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_name_to_op_map</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">_create_model_with_outputs</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_create_model_with_outputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">output_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
         <span class="n">ignore_const_ops</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
@@ -481,7 +476,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_cached_models</span><span class="p">[</span><span class="n">model_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span>
         <span class="k">return</span> <span class="n">model</span>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">_generate_models_with_outputs</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_generate_models_with_outputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">output_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
         <span class="n">ignore_const_ops</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
@@ -531,7 +526,7 @@
 
 <div class="viewcode-block" id="MLModelInspector.clear_cached_models">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.debugging_utils.MLModelInspector.clear_cached_models">[docs]</a>
-    <span class="k">def</span> <span class="nf">clear_cached_models</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">clear_cached_models</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Clears the cache of generated models.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -544,7 +539,7 @@
 
 <div class="viewcode-block" id="MLModelInspector.inspect">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.debugging_utils.MLModelInspector.inspect">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">inspect</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">inspect</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span>
         <span class="n">output_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -595,12 +590,12 @@
 <span class="sd">                print(f&quot;Output: {output_value}&quot;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="nf">batch</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">batch</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
             <span class="n">l</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
                 <span class="k">yield</span> <span class="n">iterable</span><span class="p">[</span><span class="n">index</span> <span class="p">:</span> <span class="nb">min</span><span class="p">(</span><span class="n">index</span> <span class="o">+</span> <span class="n">size</span><span class="p">,</span> <span class="n">l</span><span class="p">)]</span>
 
-        <span class="k">def</span> <span class="nf">find_index</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">start</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">find_index</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">start</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">start</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">start</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid start index: </span><span class="si">{</span><span class="n">start</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">try</span><span class="p">:</span>
@@ -666,12 +661,12 @@
                 <span class="k">yield</span> <span class="p">(</span><span class="n">output_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">clear_cached_models</span><span class="p">()</span>
 
 <div class="viewcode-block" id="MLModelInspector.retrieve_outputs">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.debugging_utils.MLModelInspector.retrieve_outputs">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">retrieve_outputs</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">retrieve_outputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span>
         <span class="n">output_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
@@ -737,13 +732,13 @@
 
 
 
-<span class="k">class</span> <span class="nc">_Status</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_Status</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
     <span class="n">PASS</span> <span class="o">=</span> <span class="s2">&quot;pass&quot;</span>
     <span class="n">FAIL</span> <span class="o">=</span> <span class="s2">&quot;fail&quot;</span>
     <span class="n">UNKNOWN</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span>
 
 
-<span class="k">def</span> <span class="nf">_retrieve_direct_dependency_names</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_retrieve_direct_dependency_names</span><span class="p">(</span>
     <span class="n">op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
     <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
@@ -754,7 +749,7 @@
     <span class="k">return</span> <span class="n">result</span>
 
 
-<span class="k">def</span> <span class="nf">_retrieve_direct_dependencies</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_retrieve_direct_dependencies</span><span class="p">(</span>
     <span class="n">op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span>
     <span class="n">output_name_to_op_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">]:</span>
@@ -767,7 +762,7 @@
     <span class="k">return</span> <span class="n">result</span>
 
 
-<span class="k">def</span> <span class="nf">_retrieve_dependency_names</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_retrieve_dependency_names</span><span class="p">(</span>
     <span class="n">op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span>
     <span class="n">output_name_to_op_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">],</span>
     <span class="n">processed_output_names</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
@@ -778,7 +773,7 @@
     <span class="n">visited</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
     <span class="n">queue</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">enqueue_deps</span><span class="p">(</span><span class="n">curr_op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">enqueue_deps</span><span class="p">(</span><span class="n">curr_op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">):</span>
         <span class="k">nonlocal</span> <span class="n">visited</span>
         <span class="k">nonlocal</span> <span class="n">queue</span>
 
@@ -807,7 +802,7 @@
     <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
 
-<span class="k">def</span> <span class="nf">_is_failure_source</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_failure_source</span><span class="p">(</span>
     <span class="n">op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span>
     <span class="n">statuses</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">_Status</span><span class="p">],</span>
     <span class="n">output_name_to_op_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">],</span>
@@ -817,7 +812,7 @@
 
     <span class="n">queue</span> <span class="o">=</span> <span class="n">deque</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">add_deps</span><span class="p">(</span><span class="n">curr_op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_deps</span><span class="p">(</span><span class="n">curr_op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">):</span>
         <span class="n">deps</span> <span class="o">=</span> <span class="n">_retrieve_direct_dependencies</span><span class="p">(</span>
             <span class="n">op</span><span class="o">=</span><span class="n">curr_op</span><span class="p">,</span>
             <span class="n">output_name_to_op_map</span><span class="o">=</span><span class="n">output_name_to_op_map</span><span class="p">,</span>
@@ -845,7 +840,7 @@
 
 <div class="viewcode-block" id="skip_op_by_type">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.debugging_utils.skip_op_by_type">[docs]</a>
-<span class="k">def</span> <span class="nf">skip_op_by_type</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">skip_op_by_type</span><span class="p">(</span>
     <span class="n">op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span>
     <span class="n">op_types</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;expand_dims&quot;</span><span class="p">,</span>
@@ -877,11 +872,11 @@
 
 
 
-<span class="k">def</span> <span class="nf">_skip_op_excluding_output_names</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_skip_op_excluding_output_names</span><span class="p">(</span>
     <span class="n">skip_op</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">],</span> <span class="nb">bool</span><span class="p">],</span>
     <span class="n">output_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]:</span>
-    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="n">op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wrapper</span><span class="p">(</span><span class="n">op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">output_names</span> <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span>
 
@@ -889,7 +884,7 @@
 
     <span class="k">return</span> <span class="n">wrapper</span>
 
-<span class="k">def</span> <span class="nf">_get_unique_dependencies</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_unique_dependencies</span><span class="p">(</span>
     <span class="n">op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span>
     <span class="n">output_name_to_op_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">]:</span>
@@ -915,7 +910,7 @@
 
 <div class="viewcode-block" id="MLModelValidator">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.debugging_utils.MLModelValidator">[docs]</a>
-<span class="k">class</span> <span class="nc">MLModelValidator</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MLModelValidator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A validator class for diagnosing numerical issues in an ML model.</span>
 
@@ -939,7 +934,7 @@
 
 <div class="viewcode-block" id="MLModelValidator.__init__">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.debugging_utils.MLModelValidator.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model</span><span class="p">:</span> <span class="n">MLModel</span><span class="p">,</span>
         <span class="n">function_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -989,7 +984,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_output_name_to_op_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_inspector</span><span class="o">.</span><span class="n">output_name_to_op_map</span></div>
 
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">_process_op</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_process_op</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span>
@@ -997,7 +992,7 @@
         <span class="n">validate_output</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span> <span class="nb">bool</span><span class="p">],</span>
         <span class="n">skip_op</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">],</span> <span class="nb">bool</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Status</span><span class="p">:</span>
-        <span class="k">def</span> <span class="nf">add_deps</span><span class="p">(</span><span class="n">curr_op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">add_deps</span><span class="p">(</span><span class="n">curr_op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">):</span>
             <span class="c1"># The operation validation failed; process its dependencies.</span>
             <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">_retrieve_direct_dependencies</span><span class="p">(</span>
                 <span class="n">op</span><span class="o">=</span><span class="n">curr_op</span><span class="p">,</span>
@@ -1060,7 +1055,7 @@
 
 <div class="viewcode-block" id="MLModelValidator.find_failing_ops">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.debugging_utils.MLModelValidator.find_failing_ops">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">find_failing_ops</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">find_failing_ops</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span>
         <span class="n">validate_output</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span> <span class="nb">bool</span><span class="p">],</span>
@@ -1148,7 +1143,8 @@
 <span class="sd">                        The operation did not pass validation, but its dependencies did.</span>
 <span class="sd">                        This suggests that the failure likely comes from this operation.</span>
 <span class="sd">                        &quot;&quot;&quot;</span>
-                        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">op</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+                            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
 
                     <span class="n">queue</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
@@ -1176,7 +1172,7 @@
 
 <div class="viewcode-block" id="MLModelValidator.find_failing_ops_with_infinite_output">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.debugging_utils.MLModelValidator.find_failing_ops_with_infinite_output">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">find_failing_ops_with_infinite_output</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">find_failing_ops_with_infinite_output</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span>
         <span class="n">output_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1222,7 +1218,7 @@
 <span class="sd">            )</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="nf">validate_output</span><span class="p">(</span><span class="n">op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">validate_output</span><span class="p">(</span><span class="n">op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">):</span>
             <span class="k">return</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_failing_ops</span><span class="p">(</span>
@@ -1235,7 +1231,7 @@
 
 <div class="viewcode-block" id="MLModelValidator.find_failing_ops_with_nan_output">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.debugging_utils.MLModelValidator.find_failing_ops_with_nan_output">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">find_failing_ops_with_nan_output</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">find_failing_ops_with_nan_output</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span>
         <span class="n">output_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1281,7 +1277,7 @@
 <span class="sd">            )</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="nf">validate_output</span><span class="p">(</span><span class="n">op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">validate_output</span><span class="p">(</span><span class="n">op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">):</span>
             <span class="k">return</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_failing_ops</span><span class="p">(</span>
@@ -1296,7 +1292,7 @@
 
 <div class="viewcode-block" id="compute_snr_and_psnr">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.debugging_utils.compute_snr_and_psnr">[docs]</a>
-<span class="k">def</span> <span class="nf">compute_snr_and_psnr</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_snr_and_psnr</span><span class="p">(</span>
     <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span>
     <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
@@ -1347,7 +1343,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">_create_name_index</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_name_index</span><span class="p">(</span>
     <span class="n">names</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Trie</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">_Trie</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]()</span>
@@ -1361,7 +1357,7 @@
     <span class="k">return</span> <span class="n">result</span>
 
 
-<span class="k">async</span> <span class="k">def</span> <span class="nf">_retrieve_target_outputs</span><span class="p">(</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_retrieve_target_outputs</span><span class="p">(</span>
     <span class="n">inspector</span><span class="p">:</span> <span class="n">MLModelInspector</span><span class="p">,</span>
     <span class="n">reference_output_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
     <span class="n">inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span>
@@ -1397,7 +1393,7 @@
 
 <div class="viewcode-block" id="MLModelComparator">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.debugging_utils.MLModelComparator">[docs]</a>
-<span class="k">class</span> <span class="nc">MLModelComparator</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MLModelComparator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class for comparing two MLModel objects and identifying discrepancies in their outputs.</span>
 
@@ -1435,7 +1431,7 @@
 
 <div class="viewcode-block" id="MLModelComparator.__init__">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.debugging_utils.MLModelComparator.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">reference_model</span><span class="p">:</span> <span class="n">MLModel</span><span class="p">,</span>
         <span class="n">target_model</span><span class="p">:</span> <span class="n">MLModel</span><span class="p">,</span>
@@ -1503,7 +1499,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_num_predict_intermediate_outputs</span> <span class="o">=</span> <span class="n">num_predict_intermediate_outputs</span></div>
 
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">_process_op</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_process_op</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span>
@@ -1511,7 +1507,7 @@
         <span class="n">compare_outputs</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span> <span class="nb">bool</span><span class="p">],</span>
         <span class="n">skip_op</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">skip_op_by_type</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Status</span><span class="p">:</span>
-        <span class="k">def</span> <span class="nf">add_deps</span><span class="p">(</span><span class="n">curr_op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">add_deps</span><span class="p">(</span><span class="n">curr_op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">):</span>
             <span class="c1"># The operation validation failed; process its dependencies.</span>
             <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">_retrieve_direct_dependencies</span><span class="p">(</span>
                 <span class="n">op</span><span class="o">=</span><span class="n">curr_op</span><span class="p">,</span>
@@ -1596,7 +1592,7 @@
 
 <div class="viewcode-block" id="MLModelComparator.find_failing_ops">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.debugging_utils.MLModelComparator.find_failing_ops">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">find_failing_ops</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">find_failing_ops</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span>
         <span class="n">compare_outputs</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span> <span class="nb">bool</span><span class="p">],</span>
@@ -1699,7 +1695,8 @@
 <span class="sd">                        The operation did not pass comparison check, but its dependencies did.</span>
 <span class="sd">                        This suggests that the failure likely comes from this operation.</span>
 <span class="sd">                        &quot;&quot;&quot;</span>
-                        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">op</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+                            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
 
                     <span class="n">queue</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
@@ -1735,7 +1732,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Apple Inc.</p>
+    <p>&#169; Copyright 2021, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

@@ -1,11 +1,13 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.models.ml_program.experimental.remote_device &mdash; coremltools API Reference 8.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+  <title>coremltools.models.ml_program.experimental.remote_device &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -14,15 +16,11 @@
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../../_static/documentation_options.js?v=8cc1add8"></script>
-        <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" /> 
@@ -39,9 +37,6 @@
           <a href="../../../../../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
-              <div class="version">
-                8.3
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -98,42 +93,42 @@
 <span class="c1"># Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
-<span class="kn">import</span> <span class="nn">asyncio</span> <span class="k">as</span> <span class="nn">_asyncio</span>
-<span class="kn">import</span> <span class="nn">json</span> <span class="k">as</span> <span class="nn">_json</span>
-<span class="kn">import</span> <span class="nn">os</span> <span class="k">as</span> <span class="nn">_os</span>
-<span class="kn">import</span> <span class="nn">shutil</span> <span class="k">as</span> <span class="nn">_shutil</span>
-<span class="kn">import</span> <span class="nn">subprocess</span> <span class="k">as</span> <span class="nn">_subprocess</span>
-<span class="kn">import</span> <span class="nn">tempfile</span> <span class="k">as</span> <span class="nn">_tempfile</span>
-<span class="kn">import</span> <span class="nn">uuid</span> <span class="k">as</span> <span class="nn">_uuid</span>
-<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span> <span class="k">as</span> <span class="n">_ABC</span>
-<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span> <span class="k">as</span> <span class="n">_abstractmethod</span>
-<span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Mapping</span> <span class="k">as</span> <span class="n">_Mapping</span>
-<span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Sequence</span> <span class="k">as</span> <span class="n">_Sequence</span>
-<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span> <span class="k">as</span> <span class="n">_dataclass</span>
-<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span> <span class="k">as</span> <span class="n">_Enum</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span> <span class="k">as</span> <span class="n">_Path</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span> <span class="k">as</span> <span class="n">_Any</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">BinaryIO</span> <span class="k">as</span> <span class="n">_BinaryIO</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span> <span class="k">as</span> <span class="n">_Dict</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span> <span class="k">as</span> <span class="n">_List</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span> <span class="k">as</span> <span class="n">_Tuple</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Type</span> <span class="k">as</span> <span class="n">_Type</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span> <span class="k">as</span> <span class="n">_Union</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_asyncio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_subprocess</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_tempfile</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_uuid</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span> <span class="k">as</span> <span class="n">_ABC</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">abstractmethod</span> <span class="k">as</span> <span class="n">_abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span> <span class="k">as</span> <span class="n">_Mapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span> <span class="k">as</span> <span class="n">_Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span> <span class="k">as</span> <span class="n">_dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span> <span class="k">as</span> <span class="n">_Enum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span> <span class="k">as</span> <span class="n">_Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span> <span class="k">as</span> <span class="n">_Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">BinaryIO</span> <span class="k">as</span> <span class="n">_BinaryIO</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span> <span class="k">as</span> <span class="n">_Dict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span> <span class="k">as</span> <span class="n">_List</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span> <span class="k">as</span> <span class="n">_Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Type</span> <span class="k">as</span> <span class="n">_Type</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span> <span class="k">as</span> <span class="n">_Union</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_np</span>
-<span class="kn">import</span> <span class="nn">tqdm</span> <span class="k">as</span> <span class="nn">_tqdm</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_tqdm</span>
 
-<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
-<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_logger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">_logger</span>
 
-<span class="kn">from</span> <span class="nn">.model_structure_path</span> <span class="kn">import</span> <span class="n">ModelStructurePath</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.model_structure_path</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelStructurePath</span>
 
 
 <div class="viewcode-block" id="AppSigningCredentials">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.remote_device.AppSigningCredentials">[docs]</a>
 <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">AppSigningCredentials</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">AppSigningCredentials</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents the credentials required for signing an iOS application.</span>
 
@@ -172,7 +167,7 @@
 
 <div class="viewcode-block" id="DeviceType">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.remote_device.DeviceType">[docs]</a>
-<span class="k">class</span> <span class="nc">DeviceType</span><span class="p">(</span><span class="n">_Enum</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DeviceType</span><span class="p">(</span><span class="n">_Enum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Enumeration of device types.</span>
 
@@ -210,14 +205,14 @@
     <span class="n">UNKNOWN</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">_missing_</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_missing_</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">DeviceType</span><span class="o">.</span><span class="n">UNKNOWN</span></div>
 
 
 
 <div class="viewcode-block" id="DeviceState">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.remote_device.DeviceState">[docs]</a>
-<span class="k">class</span> <span class="nc">DeviceState</span><span class="p">(</span><span class="n">_Enum</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DeviceState</span><span class="p">(</span><span class="n">_Enum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Enumeration of device states.</span>
 
@@ -250,7 +245,7 @@
     <span class="n">UNKNOWN</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">_missing_</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_missing_</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">DeviceState</span><span class="o">.</span><span class="n">UNKNOWN</span></div>
 
 
@@ -258,7 +253,7 @@
 <div class="viewcode-block" id="Device">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.remote_device.Device">[docs]</a>
 <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">Device</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Device</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents a device.</span>
 
@@ -299,7 +294,7 @@
 <div class="viewcode-block" id="Device.get_devices">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.remote_device.Device.get_devices">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">get_devices</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">_List</span><span class="p">[</span><span class="n">_Type</span><span class="p">[</span><span class="s2">&quot;Device&quot;</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_devices</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">_List</span><span class="p">[</span><span class="n">_Type</span><span class="p">[</span><span class="s2">&quot;Device&quot;</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Retrieve a list of available devices.</span>
 
@@ -317,7 +312,7 @@
 <div class="viewcode-block" id="Device.get_connected_devices">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.remote_device.Device.get_connected_devices">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">get_connected_devices</span><span class="p">(</span><span class="n">device_type</span><span class="p">:</span> <span class="n">DeviceType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_List</span><span class="p">[</span><span class="n">_Type</span><span class="p">[</span><span class="s2">&quot;Device&quot;</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_connected_devices</span><span class="p">(</span><span class="n">device_type</span><span class="p">:</span> <span class="n">DeviceType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_List</span><span class="p">[</span><span class="n">_Type</span><span class="p">[</span><span class="s2">&quot;Device&quot;</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Retrieve a list of connected devices of a specified type.</span>
 
@@ -336,13 +331,13 @@
 <span class="sd">        List[Device]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="nf">is_device_connected</span><span class="p">(</span><span class="n">device</span><span class="p">:</span> <span class="n">Device</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">is_device_connected</span><span class="p">(</span><span class="n">device</span><span class="p">:</span> <span class="n">Device</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">device</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="n">DeviceState</span><span class="o">.</span><span class="n">CONNECTED</span> <span class="ow">and</span> <span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">device_type</span>
 
         <span class="k">return</span> <span class="p">[</span><span class="n">device</span> <span class="k">for</span> <span class="n">device</span> <span class="ow">in</span> <span class="n">Device</span><span class="o">.</span><span class="n">get_devices</span><span class="p">()</span> <span class="k">if</span> <span class="n">is_device_connected</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)]</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_install_and_launch_app</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_install_and_launch_app</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">app_path</span><span class="p">:</span> <span class="n">_Path</span><span class="p">,</span>
         <span class="n">working_directory</span><span class="p">:</span> <span class="n">_Path</span><span class="p">,</span>
@@ -376,7 +371,7 @@
             <span class="n">working_directory</span><span class="o">=</span><span class="n">working_directory</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_launch_app</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_launch_app</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">app_path</span><span class="p">:</span> <span class="n">_Path</span><span class="p">,</span>
         <span class="n">working_directory</span><span class="p">:</span> <span class="n">_Path</span><span class="p">,</span>
@@ -410,14 +405,14 @@
             <span class="n">working_directory</span><span class="o">=</span><span class="n">working_directory</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_build_and_launch_model_runner_app</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_and_launch_model_runner_app</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">build_directory</span><span class="p">:</span> <span class="n">_Path</span><span class="p">,</span>
         <span class="n">working_directory</span><span class="p">:</span> <span class="n">_Path</span><span class="p">,</span>
         <span class="n">credentials</span><span class="p">:</span> <span class="n">AppSigningCredentials</span> <span class="o">=</span> <span class="n">AppSigningCredentials</span><span class="p">(),</span>
         <span class="n">clean</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Type</span><span class="p">[</span><span class="s2">&quot;_AppSession&quot;</span><span class="p">]:</span>
-        <span class="k">def</span> <span class="nf">command_exists</span><span class="p">(</span><span class="n">command</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">command_exists</span><span class="p">(</span><span class="n">command</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Check if a command exists in the system&#39;s PATH.&quot;&quot;&quot;</span>
             <span class="k">return</span> <span class="n">_shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="n">command</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
@@ -440,7 +435,7 @@
 
 <div class="viewcode-block" id="Device.prepare_for_model_debugging">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.remote_device.Device.prepare_for_model_debugging">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">prepare_for_model_debugging</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">prepare_for_model_debugging</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">credentials</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">AppSigningCredentials</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">working_directory</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_Path</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -471,7 +466,7 @@
 <span class="sd">            A new Device instance with the prepared session.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">async</span> <span class="k">def</span> <span class="nf">report_progress</span><span class="p">(</span>
+        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">report_progress</span><span class="p">(</span>
             <span class="n">future</span><span class="p">:</span> <span class="n">_asyncio</span><span class="o">.</span><span class="n">Future</span><span class="p">,</span>
             <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
             <span class="n">delay</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
@@ -545,13 +540,13 @@
 
 
 <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">_DataTransferInfo</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_DataTransferInfo</span><span class="p">:</span>
     <span class="n">source</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">destination</span><span class="p">:</span> <span class="nb">str</span>
 
 
 <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">_AppInstallationInfo</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_AppInstallationInfo</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents the result of an application installation.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -560,7 +555,7 @@
     <span class="n">database_uuid</span><span class="p">:</span> <span class="nb">str</span>
 
 
-<span class="k">class</span> <span class="nc">_AppSession</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_AppSession</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents a session for an application running on a device.</span>
 
@@ -568,7 +563,7 @@
 <span class="sd">    file transfers to and from the application.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">Device</span><span class="p">,</span>
         <span class="n">process</span><span class="p">:</span> <span class="n">_subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">,</span>
@@ -602,7 +597,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_process</span> <span class="o">=</span> <span class="n">process</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">working_directory</span> <span class="o">=</span> <span class="n">working_directory</span>
 
-    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Stop the application session.</span>
 
@@ -610,7 +605,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">is_alive</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_alive</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check if the application session is still active.</span>
 
@@ -623,7 +618,7 @@
         <span class="k">return</span> <span class="n">poll</span> <span class="ow">is</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">bundle_identifier</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">bundle_identifier</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Bundle identifier of the application.</span>
 
@@ -634,7 +629,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">installation_info</span><span class="o">.</span><span class="n">bundle_identifier</span>
 
-    <span class="k">def</span> <span class="nf">send_file_to_app</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">send_file_to_app</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">source_path</span><span class="p">:</span> <span class="n">_Path</span><span class="p">,</span>
         <span class="n">destination</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -662,7 +657,7 @@
             <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">receive_file_from_app</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">receive_file_from_app</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">destination_path</span><span class="p">:</span> <span class="n">_Path</span><span class="p">,</span>
         <span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -690,19 +685,19 @@
             <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
         <span class="p">)</span>
 
-<span class="k">class</span> <span class="nc">_DeviceCtlError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_DeviceCtlError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom exception for device ctl errors.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">error_code</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">error_code</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">error_code</span> <span class="o">=</span> <span class="n">error_code</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;[Error Code </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">error_code</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
 
 
-<span class="k">class</span> <span class="nc">_DeviceCtl</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_DeviceCtl</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The DeviceCtl class provides a set of methods to perform various operations</span>
 <span class="sd">    on devices, such as listing connected devices, installing and launching applications,</span>
@@ -713,8 +708,8 @@
     <span class="n">_validation_done</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_validate</span><span class="p">():</span>
-        <span class="k">def</span> <span class="nf">command_exists</span><span class="p">(</span><span class="n">command</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate</span><span class="p">():</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">command_exists</span><span class="p">(</span><span class="n">command</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Check if a command exists in the system&#39;s PATH.&quot;&quot;&quot;</span>
             <span class="k">return</span> <span class="n">_shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="n">command</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
@@ -727,7 +722,7 @@
         <span class="n">_DeviceCtl</span><span class="o">.</span><span class="n">_validation_done</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_run_command</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_run_command</span><span class="p">(</span>
         <span class="n">command</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">any</span><span class="p">]:</span>
         <span class="n">_DeviceCtl</span><span class="o">.</span><span class="n">_validate</span><span class="p">()</span>
@@ -754,7 +749,7 @@
                 <span class="k">return</span> <span class="n">result</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_run_command_async</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_run_command_async</span><span class="p">(</span>
         <span class="n">command</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">:</span>
         <span class="n">_DeviceCtl</span><span class="o">.</span><span class="n">_validate</span><span class="p">()</span>
@@ -768,8 +763,8 @@
         <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_check_tools</span><span class="p">():</span>
-        <span class="k">def</span> <span class="nf">command_exists</span><span class="p">(</span><span class="n">command</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_tools</span><span class="p">():</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">command_exists</span><span class="p">(</span><span class="n">command</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Check if a command exists in the system&#39;s PATH.&quot;&quot;&quot;</span>
             <span class="k">return</span> <span class="n">_shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="n">command</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
@@ -779,7 +774,7 @@
             <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">install_app</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">install_app</span><span class="p">(</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">Device</span><span class="p">,</span>
         <span class="n">app_path</span><span class="p">:</span> <span class="n">_Path</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_AppInstallationInfo</span><span class="p">:</span>
@@ -832,7 +827,7 @@
         <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">launch_app</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">launch_app</span><span class="p">(</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">Device</span><span class="p">,</span>
         <span class="n">installation_info</span><span class="p">:</span> <span class="n">_AppInstallationInfo</span><span class="p">,</span>
         <span class="n">working_directory</span><span class="p">:</span> <span class="n">_Path</span><span class="p">,</span>
@@ -875,7 +870,7 @@
         <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">install_and_launch_app</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">install_and_launch_app</span><span class="p">(</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">Device</span><span class="p">,</span>
         <span class="n">app_path</span><span class="p">:</span> <span class="n">_Path</span><span class="p">,</span>
         <span class="n">working_directory</span><span class="p">:</span> <span class="n">_Path</span><span class="p">,</span>
@@ -915,7 +910,7 @@
         <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_parse_data_transfer_result</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_data_transfer_result</span><span class="p">(</span>
         <span class="n">json_data</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">any</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_DataTransferInfo</span><span class="p">:</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;result&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
@@ -936,7 +931,7 @@
         <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">send_file_to_app</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">send_file_to_app</span><span class="p">(</span>
         <span class="n">bundle_identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">source_path</span><span class="p">:</span> <span class="n">_Path</span><span class="p">,</span>
         <span class="n">destination</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -985,7 +980,7 @@
         <span class="k">return</span> <span class="n">_DeviceCtl</span><span class="o">.</span><span class="n">_parse_data_transfer_result</span><span class="p">(</span><span class="n">json_data</span><span class="o">=</span><span class="n">json_data</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">receive_file_from_app</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">receive_file_from_app</span><span class="p">(</span>
         <span class="n">bundle_identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">destination_path</span><span class="p">:</span> <span class="n">_Path</span><span class="p">,</span>
@@ -1036,7 +1031,7 @@
         <span class="k">return</span> <span class="n">_DeviceCtl</span><span class="o">.</span><span class="n">_parse_data_transfer_result</span><span class="p">(</span><span class="n">json_data</span><span class="o">=</span><span class="n">json_data</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">get_devices</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">_List</span><span class="p">[</span><span class="n">Device</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_devices</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">_List</span><span class="p">[</span><span class="n">Device</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Retrieve a list of all available devices connected to the host.</span>
 
@@ -1121,24 +1116,24 @@
         <span class="k">return</span> <span class="n">result</span>
 
 
-<span class="k">class</span> <span class="nc">_AppBuilder</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_AppBuilder</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A utility class for building Xcode projects for different device types.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">class</span> <span class="nc">Error</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">Error</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Custom exception for build errors.&quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">error_code</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">error_code</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">error_code</span> <span class="o">=</span> <span class="n">error_code</span>
             <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
             <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;[Error Code </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">error_code</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">get_scheme_name</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_scheme_name</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">workspace_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">Device</span><span class="p">,</span>
@@ -1171,7 +1166,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No scheme for device=</span><span class="si">{</span><span class="n">device</span><span class="si">}</span><span class="s2">, type = </span><span class="si">{</span><span class="n">device</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">get_sdk_name</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_sdk_name</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">Device</span><span class="p">,</span>
         <span class="n">credentials</span><span class="p">:</span> <span class="n">AppSigningCredentials</span><span class="p">,</span>
@@ -1201,7 +1196,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No sdk for device=</span><span class="si">{</span><span class="n">device</span><span class="si">}</span><span class="s2">, type = </span><span class="si">{</span><span class="n">device</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">get_destination</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_destination</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">Device</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -1230,7 +1225,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No destination for device=</span><span class="si">{</span><span class="n">device</span><span class="si">}</span><span class="s2">, type = </span><span class="si">{</span><span class="n">device</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">get_build_path</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_build_path</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">Device</span><span class="p">,</span>
         <span class="n">build_directory</span><span class="p">:</span> <span class="n">_Path</span><span class="p">,</span>
@@ -1254,7 +1249,7 @@
         <span class="k">return</span> <span class="n">build_directory</span> <span class="o">/</span> <span class="n">device</span><span class="o">.</span><span class="n">udid</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">check_app_signing_credentials</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_app_signing_credentials</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">credentials</span><span class="p">:</span> <span class="n">AppSigningCredentials</span><span class="p">,</span>
     <span class="p">):</span>
@@ -1269,7 +1264,7 @@
             <span class="p">)</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">Device</span><span class="p">,</span>
         <span class="n">build_directory</span><span class="p">:</span> <span class="n">_Path</span><span class="p">,</span>
@@ -1375,17 +1370,17 @@
         <span class="k">return</span> <span class="n">result</span>
 
 
-<span class="k">class</span> <span class="nc">_ModelRunnerAppBuilder</span><span class="p">(</span><span class="n">_AppBuilder</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_ModelRunnerAppBuilder</span><span class="p">(</span><span class="n">_AppBuilder</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A utility class for building the modelrunner Xcode project.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_get_project_path</span><span class="p">():</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_project_path</span><span class="p">():</span>
         <span class="k">return</span> <span class="n">_Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;modelrunner&quot;</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">Device</span><span class="p">,</span>
         <span class="n">build_directory</span><span class="p">:</span> <span class="n">_Path</span><span class="p">,</span>
@@ -1416,7 +1411,7 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="nf">command_exists</span><span class="p">(</span><span class="n">command</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">command_exists</span><span class="p">(</span><span class="n">command</span><span class="p">):</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Check if a command exists in the system&#39;s PATH.&quot;&quot;&quot;</span>
             <span class="k">return</span> <span class="n">_shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="n">command</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
@@ -1449,7 +1444,7 @@
 
 
 <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">_JSONRPCRequest</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_JSONRPCRequest</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents a JSON-RPC request.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1459,22 +1454,22 @@
     <span class="n">params</span><span class="p">:</span> <span class="nb">any</span>
 
 
-<span class="k">class</span> <span class="nc">_JSONRPCError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_JSONRPCError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents a JSON-RPC error.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">code</span> <span class="o">=</span> <span class="n">code</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Error </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
 
 
 <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">_JSONRPCResponse</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_JSONRPCResponse</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents a JSON-RPC response with an associated resource.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1485,7 +1480,7 @@
     <span class="n">resource</span><span class="p">:</span> <span class="n">_Path</span>
 
 
-<span class="k">class</span> <span class="nc">_JSONRPCSocket</span><span class="p">(</span><span class="n">_ABC</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_JSONRPCSocket</span><span class="p">(</span><span class="n">_ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An abstract base class representing a JSON-RPC socket for communication.</span>
 
@@ -1494,7 +1489,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@_abstractmethod</span>
-    <span class="k">def</span> <span class="nf">send</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">send</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">request</span><span class="p">:</span> <span class="n">_JSONRPCRequest</span><span class="p">,</span>
         <span class="n">resource_path</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_Path</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1517,7 +1512,7 @@
         <span class="k">pass</span>
 
     <span class="nd">@_abstractmethod</span>
-    <span class="k">def</span> <span class="nf">receive</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">receive</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_JSONRPCResponse</span><span class="p">]:</span>
@@ -1541,7 +1536,7 @@
 
     <span class="nd">@property</span>
     <span class="nd">@_abstractmethod</span>
-    <span class="k">def</span> <span class="nf">is_alive</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_alive</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Checks if the socket is active.</span>
 
@@ -1553,7 +1548,7 @@
         <span class="k">pass</span>
 
 
-<span class="k">class</span> <span class="nc">_DeviceCtlSocket</span><span class="p">(</span><span class="n">_JSONRPCSocket</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_DeviceCtlSocket</span><span class="p">(</span><span class="n">_JSONRPCSocket</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class for managing communication with a device application using JSON-RPC over a custom socket-like interface.</span>
 
@@ -1561,7 +1556,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_parse_error</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_error</span><span class="p">(</span>
         <span class="n">value</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_Any</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_JSONRPCError</span><span class="p">]:</span>
         <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1577,7 +1572,7 @@
             <span class="n">message</span><span class="o">=</span><span class="n">message</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">Device</span><span class="p">,</span>
         <span class="n">source</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -1603,7 +1598,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">requests_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">working_directory</span> <span class="o">/</span> <span class="s2">&quot;requests&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">responses_directory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">working_directory</span> <span class="o">/</span> <span class="s2">&quot;responses&quot;</span>
 
-    <span class="k">def</span> <span class="nf">send</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">send</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">request</span><span class="p">:</span> <span class="n">_JSONRPCRequest</span><span class="p">,</span>
         <span class="n">resource_path</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_Path</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1655,7 +1650,7 @@
             <span class="n">destination</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="si">}</span><span class="s2">/requests/messages/</span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">/message.json&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">receive</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">receive</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_JSONRPCResponse</span><span class="p">]:</span>
@@ -1735,7 +1730,7 @@
         <span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">is_alive</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_alive</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Checks if the socket is active.</span>
 
@@ -1747,7 +1742,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">is_alive</span>
 
 
-<span class="k">class</span> <span class="nc">_RemoteService</span><span class="p">(</span><span class="n">_ABC</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_RemoteService</span><span class="p">(</span><span class="n">_ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An abstract base class representing a remote service capable of executing methods.</span>
 
@@ -1755,7 +1750,7 @@
 <span class="sd">    for asynchronous calls with optional resource handling.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">call_method</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">call_method</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">params</span><span class="p">:</span> <span class="n">_Any</span><span class="p">,</span>
@@ -1788,7 +1783,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span>
 
-    <span class="k">def</span> <span class="nf">fire_and_forget</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fire_and_forget</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">params</span><span class="p">:</span> <span class="n">_Any</span><span class="p">,</span>
@@ -1816,7 +1811,7 @@
         <span class="k">pass</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">is_alive</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_alive</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Checks if the service is active.</span>
 
@@ -1828,7 +1823,7 @@
         <span class="k">pass</span>
 
 
-<span class="k">class</span> <span class="nc">_DeviceCtlRemoteService</span><span class="p">(</span><span class="n">_RemoteService</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_DeviceCtlRemoteService</span><span class="p">(</span><span class="n">_RemoteService</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A service class for managing device control operations using a DeviceCtlSocket.</span>
 
@@ -1836,7 +1831,7 @@
 <span class="sd">    using JSON-RPC over a custom socket implementation.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">socket</span><span class="p">:</span> <span class="n">_DeviceCtlSocket</span><span class="p">,</span> <span class="n">poll_time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">max_attempts</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">socket</span><span class="p">:</span> <span class="n">_DeviceCtlSocket</span><span class="p">,</span> <span class="n">poll_time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">max_attempts</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize a DeviceCtlService instance.</span>
 
@@ -1854,13 +1849,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_event_loop</span> <span class="o">=</span> <span class="n">_asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">working_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Path</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">working_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Path</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the working directory of the associated socket.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">working_dir</span>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">call_method</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">call_method</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">params</span><span class="p">:</span> <span class="n">_Any</span><span class="p">,</span>
@@ -1892,7 +1887,7 @@
 <span class="sd">            - The path to any resource returned by the method (Optional[Path])</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span> <span class="nf">should_throw_exception</span><span class="p">(</span><span class="n">attempt</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">should_throw_exception</span><span class="p">(</span><span class="n">attempt</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
             <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">socket</span><span class="o">.</span><span class="n">is_alive</span> <span class="ow">or</span> <span class="p">(</span><span class="n">attempt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_attempts</span>
 
         <span class="n">request</span> <span class="o">=</span> <span class="n">_JSONRPCRequest</span><span class="p">(</span>
@@ -1944,7 +1939,7 @@
 
         <span class="k">return</span> <span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">result</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">resource</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">fire_and_forget</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fire_and_forget</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">params</span><span class="p">:</span> <span class="n">_Any</span><span class="p">,</span>
@@ -1978,7 +1973,7 @@
         <span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">is_alive</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_alive</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Checks if the socket is active.</span>
 
@@ -1991,7 +1986,7 @@
 
 
 <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">_TensorStorage</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_TensorStorage</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents a segment of data with an offset and size.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1999,7 +1994,7 @@
     <span class="n">offset</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">size</span><span class="p">:</span> <span class="nb">int</span>
 
-    <span class="k">def</span> <span class="nf">as_dict</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">as_dict</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -2013,7 +2008,7 @@
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;offset&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span> <span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">}</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span>
         <span class="nb">dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Type</span><span class="p">[</span><span class="s2">&quot;_TensorStorage&quot;</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -2036,12 +2031,12 @@
 
 
 <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">_TensorDescriptor</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_TensorDescriptor</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Describes the properties of a tensor.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">class</span> <span class="nc">DataType</span><span class="p">(</span><span class="n">_Enum</span><span class="p">):</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">DataType</span><span class="p">(</span><span class="n">_Enum</span><span class="p">):</span>
         <span class="n">Float16</span> <span class="o">=</span> <span class="s2">&quot;Float16&quot;</span>
         <span class="n">Float32</span> <span class="o">=</span> <span class="s2">&quot;Float32&quot;</span>
         <span class="n">Float64</span> <span class="o">=</span> <span class="s2">&quot;Float64&quot;</span>
@@ -2053,7 +2048,7 @@
     <span class="n">storage</span><span class="p">:</span> <span class="n">_TensorStorage</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_to_multi_array_dtype</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_to_multi_array_dtype</span><span class="p">(</span>
         <span class="n">dtype</span><span class="p">:</span> <span class="n">_np</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">dtype</span> <span class="o">==</span> <span class="n">_np</span><span class="o">.</span><span class="n">float16</span><span class="p">:</span>
@@ -2068,7 +2063,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dtype</span><span class="si">}</span><span class="s2"> is not supported&quot;</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_to_numpy_dtype</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_to_numpy_dtype</span><span class="p">(</span>
         <span class="n">dtype</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">dtype</span> <span class="o">==</span> <span class="n">_TensorDescriptor</span><span class="o">.</span><span class="n">DataType</span><span class="o">.</span><span class="n">Float16</span><span class="p">:</span>
@@ -2083,7 +2078,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dtype</span><span class="si">}</span><span class="s2"> is not supported&quot;</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">from_array</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_array</span><span class="p">(</span>
         <span class="n">array</span><span class="p">:</span> <span class="n">_np</span><span class="o">.</span><span class="n">array</span><span class="p">,</span>
         <span class="n">file</span><span class="p">:</span> <span class="n">_BinaryIO</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Type</span><span class="p">[</span><span class="s2">&quot;_TensorDescriptor&quot;</span><span class="p">]:</span>
@@ -2127,7 +2122,7 @@
             <span class="n">storage</span><span class="o">=</span><span class="n">storage</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">to_array</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_array</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">file</span><span class="p">:</span> <span class="n">_BinaryIO</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
@@ -2158,7 +2153,7 @@
         <span class="n">result</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">strided_view</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span>
 
-    <span class="k">def</span> <span class="nf">as_dict</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">as_dict</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -2185,7 +2180,7 @@
         <span class="k">return</span> <span class="n">result</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span>
         <span class="nb">dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Type</span><span class="p">[</span><span class="s2">&quot;_TensorDescriptor&quot;</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -2214,41 +2209,41 @@
 <div class="viewcode-block" id="ComputePlan">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.remote_device.ComputePlan">[docs]</a>
 <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">ComputePlan</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ComputePlan</span><span class="p">:</span>
 <div class="viewcode-block" id="ComputePlan.CPUDevice">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.remote_device.ComputePlan.CPUDevice">[docs]</a>
     <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">class</span> <span class="nc">CPUDevice</span><span class="p">:</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">CPUDevice</span><span class="p">:</span>
         <span class="nd">@staticmethod</span>
-        <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="nb">dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="s2">&quot;ComputePlan.CPUDevice&quot;</span><span class="p">]:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span><span class="nb">dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="s2">&quot;ComputePlan.CPUDevice&quot;</span><span class="p">]:</span>
             <span class="n">value</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">ComputePlan</span><span class="o">.</span><span class="n">CPUDevice</span><span class="p">()</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
 
-        <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
             <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;cpu&quot;</span><span class="p">:</span> <span class="p">{}}</span></div>
 
 
 <div class="viewcode-block" id="ComputePlan.GPUDevice">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.remote_device.ComputePlan.GPUDevice">[docs]</a>
     <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">class</span> <span class="nc">GPUDevice</span><span class="p">:</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">GPUDevice</span><span class="p">:</span>
         <span class="nd">@staticmethod</span>
-        <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="nb">dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="s2">&quot;ComputePlan.GPUDevice&quot;</span><span class="p">]:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span><span class="nb">dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="s2">&quot;ComputePlan.GPUDevice&quot;</span><span class="p">]:</span>
             <span class="n">value</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;gpu&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">ComputePlan</span><span class="o">.</span><span class="n">GPUDevice</span><span class="p">()</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
 
-        <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
             <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;gpu&quot;</span><span class="p">:</span> <span class="p">{}}</span></div>
 
 
 <div class="viewcode-block" id="ComputePlan.NeuralEngineDevice">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.remote_device.ComputePlan.NeuralEngineDevice">[docs]</a>
     <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">class</span> <span class="nc">NeuralEngineDevice</span><span class="p">:</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">NeuralEngineDevice</span><span class="p">:</span>
         <span class="n">total_core_count</span><span class="p">:</span> <span class="nb">int</span>
 
         <span class="nd">@staticmethod</span>
-        <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="nb">dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="s2">&quot;ComputePlan.NeuralEngineDevice&quot;</span><span class="p">]:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span><span class="nb">dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="s2">&quot;ComputePlan.NeuralEngineDevice&quot;</span><span class="p">]:</span>
             <span class="n">value</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;neuralEngine&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">_Mapping</span><span class="p">):</span>
                 <span class="k">return</span> <span class="kc">None</span>
@@ -2256,7 +2251,7 @@
             <span class="n">total_core_count</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;totalCoreCount&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">ComputePlan</span><span class="o">.</span><span class="n">NeuralEngineDevice</span><span class="p">(</span><span class="n">total_core_count</span><span class="o">=</span><span class="n">total_core_count</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
             <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;neuralEngine&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;totalCoreCount&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_core_count</span><span class="p">}}</span></div>
 
 
@@ -2269,15 +2264,15 @@
 <div class="viewcode-block" id="ComputePlan.DeviceUsage">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.remote_device.ComputePlan.DeviceUsage">[docs]</a>
     <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">class</span> <span class="nc">DeviceUsage</span><span class="p">:</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">DeviceUsage</span><span class="p">:</span>
         <span class="n">preferred</span><span class="p">:</span> <span class="s2">&quot;ComputePlan.Device&quot;</span>
         <span class="n">supported</span><span class="p">:</span> <span class="n">_List</span><span class="p">[</span><span class="s2">&quot;ComputePlan.Device&quot;</span><span class="p">]</span>
 
         <span class="nd">@staticmethod</span>
-        <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span>
             <span class="nb">dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">],</span>
         <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="s2">&quot;ComputePlan.Device&quot;</span><span class="p">]:</span>
-            <span class="k">def</span> <span class="nf">device_from_dict</span><span class="p">(</span><span class="nb">dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">Device</span><span class="p">]:</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">device_from_dict</span><span class="p">(</span><span class="nb">dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">Device</span><span class="p">]:</span>
                 <span class="n">device_types</span> <span class="o">=</span> <span class="p">[</span>
                     <span class="n">ComputePlan</span><span class="o">.</span><span class="n">CPUDevice</span><span class="p">,</span>
                     <span class="n">ComputePlan</span><span class="o">.</span><span class="n">GPUDevice</span><span class="p">,</span>
@@ -2306,7 +2301,7 @@
 
             <span class="k">return</span> <span class="n">ComputePlan</span><span class="o">.</span><span class="n">DeviceUsage</span><span class="p">(</span><span class="n">preferred</span><span class="o">=</span><span class="n">preferred</span><span class="p">,</span> <span class="n">supported</span><span class="o">=</span><span class="n">supported</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
             <span class="k">return</span> <span class="p">{</span>
                 <span class="s2">&quot;preferred&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">preferred</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
                 <span class="s2">&quot;supported&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">device</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">device</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">supported</span><span class="p">],</span>
@@ -2316,13 +2311,13 @@
 <div class="viewcode-block" id="ComputePlan.OperationOrLayerInfo">
 <a class="viewcode-back" href="../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.remote_device.ComputePlan.OperationOrLayerInfo">[docs]</a>
     <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">class</span> <span class="nc">OperationOrLayerInfo</span><span class="p">:</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">OperationOrLayerInfo</span><span class="p">:</span>
         <span class="n">device_usage</span><span class="p">:</span> <span class="s2">&quot;ComputePlan.DeviceUsage&quot;</span>
         <span class="n">estimated_cost</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
         <span class="n">path</span><span class="p">:</span> <span class="n">ModelStructurePath</span>
 
         <span class="nd">@staticmethod</span>
-        <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span>
             <span class="nb">dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">],</span>
         <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="s2">&quot;ComputePlan.OperationOrLayerInfo&quot;</span><span class="p">]:</span>
             <span class="n">device_usage</span> <span class="o">=</span> <span class="n">ComputePlan</span><span class="o">.</span><span class="n">DeviceUsage</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;deviceUsage&quot;</span><span class="p">,</span> <span class="p">{}))</span>
@@ -2335,7 +2330,7 @@
                 <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
             <span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
             <span class="k">return</span> <span class="p">{</span>
                 <span class="s2">&quot;deviceUsage&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">device_usage</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
                 <span class="s2">&quot;estimatedCost&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimated_cost</span><span class="p">,</span>
@@ -2346,7 +2341,7 @@
     <span class="n">infos</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="n">ModelStructurePath</span><span class="p">,</span> <span class="s2">&quot;ComputePlan.OperationOrLayerInfo&quot;</span><span class="p">]</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="nb">dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="s2">&quot;ComputePlan&quot;</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span><span class="nb">dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="s2">&quot;ComputePlan&quot;</span><span class="p">]:</span>
         <span class="n">infos</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;infos&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">infos</span><span class="p">,</span> <span class="n">_Sequence</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">None</span>
@@ -2354,25 +2349,25 @@
         <span class="n">infos</span> <span class="o">=</span> <span class="p">(</span><span class="n">ComputePlan</span><span class="o">.</span><span class="n">OperationOrLayerInfo</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">info</span><span class="p">)</span> <span class="k">for</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">infos</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ComputePlan</span><span class="p">(</span><span class="n">infos</span><span class="o">=</span><span class="p">{</span><span class="n">info</span><span class="o">.</span><span class="n">path</span><span class="p">:</span> <span class="n">info</span> <span class="k">for</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">infos</span><span class="p">})</span>
 
-    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;infos&quot;</span><span class="p">:</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">infos</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
         <span class="p">}</span></div>
 
 
 
-<span class="k">class</span> <span class="nc">_RemoteMLModelService</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_RemoteMLModelService</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This class provides a service interface for interacting with an MLModel</span>
 <span class="sd">    on a remote device using a DeviceCtlService.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">class</span> <span class="nc">State</span><span class="p">(</span><span class="n">_Enum</span><span class="p">):</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">State</span><span class="p">(</span><span class="n">_Enum</span><span class="p">):</span>
         <span class="n">Loaded</span> <span class="o">=</span> <span class="s2">&quot;loaded&quot;</span>
         <span class="n">Unloaded</span> <span class="o">=</span> <span class="s2">&quot;unloaded&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_validate_args</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_args</span><span class="p">(</span>
         <span class="n">service</span><span class="p">:</span> <span class="n">_RemoteService</span><span class="p">,</span>
         <span class="n">compiled_model_path</span><span class="p">:</span> <span class="n">_Union</span><span class="p">[</span><span class="n">_Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
         <span class="n">compute_units</span><span class="p">:</span> <span class="n">_ComputeUnit</span><span class="p">,</span>
@@ -2404,7 +2399,7 @@
                 <span class="sa">f</span><span class="s2">&quot;Parameter &#39;optimization_hints&#39; must be a mapping type (e.g., dict), not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">optimization_hints</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">service</span><span class="p">:</span> <span class="n">_RemoteService</span><span class="p">,</span>
         <span class="n">compiled_model_path</span><span class="p">:</span> <span class="n">_Union</span><span class="p">[</span><span class="n">_Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
@@ -2450,14 +2445,14 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_last_predict_duration_in_nano_seconds</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">load_duration_in_nano_seconds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_duration_in_nano_seconds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_duration_in_nano_seconds</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">last_predict_duration_in_nano_seconds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">last_predict_duration_in_nano_seconds</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_predict_duration_in_nano_seconds</span>
 
-    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">==</span> <span class="n">_RemoteMLModelService</span><span class="o">.</span><span class="n">State</span><span class="o">.</span><span class="n">Unloaded</span><span class="p">:</span>
             <span class="k">return</span>
 
@@ -2472,7 +2467,7 @@
         <span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">model_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">model_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the unique identifier for this model instance.</span>
 
@@ -2484,7 +2479,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_id</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">compute_units</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_ComputeUnit</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_units</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_ComputeUnit</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the compute units used for this model.</span>
 
@@ -2495,7 +2490,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_units</span>
 
-    <span class="k">def</span> <span class="nf">_validate_result</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_result</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">result</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -2510,7 +2505,7 @@
             <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_validate_device_state</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_device_state</span><span class="p">(</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">Device</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="k">if</span> <span class="n">device</span><span class="o">.</span><span class="n">session</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -2523,7 +2518,7 @@
                 <span class="s2">&quot;The device session is not active. Please call `prepare_for_model_debugging()` on the device to establish a new session.&quot;</span>
             <span class="p">)</span>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">load</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -2556,7 +2551,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_load_duration_in_nano_seconds</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;duration&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_prepare_data_for_transfer</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_prepare_data_for_transfer</span><span class="p">(</span>
         <span class="n">values</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Tuple</span><span class="p">[</span><span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">],</span> <span class="n">_Path</span><span class="p">]:</span>
         <span class="n">data_file</span> <span class="o">=</span> <span class="n">_tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="s2">&quot;w+b&quot;</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.bin&quot;</span><span class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -2574,7 +2569,7 @@
 
         <span class="k">return</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">data_file_path</span><span class="p">)</span>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_np</span><span class="o">.</span><span class="n">array</span><span class="p">]:</span>
@@ -2639,7 +2634,7 @@
 
         <span class="k">return</span> <span class="n">values</span>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">retrieve_compute_plan</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">retrieve_compute_plan</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ComputePlan</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -2657,7 +2652,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_result</span><span class="p">(</span><span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ComputePlan</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="nb">dict</span><span class="o">=</span><span class="n">result</span><span class="p">)</span>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">unload</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">unload</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -2680,7 +2675,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">=</span> <span class="n">_RemoteMLModelService</span><span class="o">.</span><span class="n">State</span><span class="o">.</span><span class="n">Unloaded</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">load_on_device</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">load_on_device</span><span class="p">(</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">Device</span><span class="p">,</span>
         <span class="n">compiled_model_path</span><span class="p">:</span> <span class="n">_Union</span><span class="p">[</span><span class="n">_Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
         <span class="n">compute_units</span><span class="p">:</span> <span class="n">_ComputeUnit</span><span class="p">,</span>
@@ -2711,7 +2706,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Apple Inc.</p>
+    <p>&#169; Copyright 2021, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
