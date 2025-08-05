@@ -52,7 +52,7 @@ To import code modules, load the segmentation model, and load the sample image, 
     input_image.show()
     ```
 
-```images/cat_dog.jpg
+```{figure} images/cat_dog.jpg
 :alt: Dog and cat test image
 :align: center
 :class: imgnoborder
@@ -111,7 +111,7 @@ Right-click and choose **Save Image** to download this test image.
     display_segmentation(input_image, torch_predictions)
     ```
 
-```images/seg_pytorch.png
+```{figure} images/seg_pytorch.png
 :alt: Plot predictions overlaid with image
 :align: center
 :class: imgnoborder
