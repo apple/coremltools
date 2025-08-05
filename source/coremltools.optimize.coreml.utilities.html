@@ -1,12 +1,14 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Utilities &mdash; coremltools API Reference 8.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+  <title>Utilities &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -15,15 +17,11 @@
       <link rel="stylesheet" type="text/css" href="../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=8cc1add8"></script>
-        <script src="../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -42,9 +40,6 @@
           <a href="../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
-              <div class="version">
-                8.3
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -152,7 +147,7 @@ elements, it will not be returned by the <code class="docutils literal notransla
 A weight named <code class="docutils literal notranslate"><span class="pre">conv_1_weight</span></code> is feeding into a <code class="docutils literal notranslate"><span class="pre">conv</span></code> op named <code class="docutils literal notranslate"><span class="pre">conv_1</span></code>,
 while another weight named <code class="docutils literal notranslate"><span class="pre">linear_1_weight</span></code> is feeding into a <code class="docutils literal notranslate"><span class="pre">linear</span></code> op named <code class="docutils literal notranslate"><span class="pre">linear_1</span></code>.
 You can access the metadata by <code class="docutils literal notranslate"><span class="pre">weight_metadata_dict[&quot;conv_1_weight&quot;]</span></code>, and so on.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
 
 <span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">)</span>
 <span class="n">weight_metadata_dict</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">optimize</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">get_weights_metadata</span><span class="p">(</span>
@@ -229,7 +224,7 @@ That is, convert any of the following three ops to <code class="docutils literal
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_compressed_model.mlpackage&quot;</span><span class="p">)</span>
 <span class="n">decompressed_model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">optimize</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">decompress_weights</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
@@ -263,8 +258,8 @@ That is, convert any of the following three ops to <code class="docutils literal
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.coreml</span> <span class="kn">import</span> <span class="n">CoreMLWeightMetaData</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.coreml</span><span class="w"> </span><span class="kn">import</span> <span class="n">CoreMLWeightMetaData</span>
 
 <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
 <span class="n">meta_data</span> <span class="o">=</span> <span class="n">CoreMLWeightMetaData</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
@@ -320,7 +315,7 @@ Providing the following levels: <cite>global</cite>, <cite>op type</cite>, and <
 </ol>
 <p>The following is an example that constructs an optimization config for weight palettization.</p>
 <blockquote>
-<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.optimize.coreml</span> <span class="kn">import</span> <span class="n">OpPalettizerConfig</span><span class="p">,</span> <span class="n">OptimizationConfig</span>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.coreml</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpPalettizerConfig</span><span class="p">,</span> <span class="n">OptimizationConfig</span>
 
 <span class="c1"># The default global configuration is 8 bits palettization with kmeans</span>
 <span class="n">global_config</span> <span class="o">=</span> <span class="n">OpPalettizerConfig</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;kmeans&quot;</span><span class="p">,</span> <span class="n">nbits</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
@@ -476,7 +471,7 @@ example of the YAML file:</p>
 <dt class="sig sig-object py" id="coremltools.optimize.coreml.OptimizationConfig.set_global">
 <span class="sig-name descname"><span class="pre">set_global</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">OpCompressorConfig</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_config.html#OptimizationConfig.set_global"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.OptimizationConfig.set_global" title="Link to this definition"></a></dt>
 <dd><p>Sets the global config that would be applied to all constant ops.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.optimize.coreml</span> <span class="kn">import</span> <span class="n">OpPalettizerConfig</span><span class="p">,</span> <span class="n">OptimizationConfig</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.coreml</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpPalettizerConfig</span><span class="p">,</span> <span class="n">OptimizationConfig</span>
 
 <span class="n">config</span> <span class="o">=</span> <span class="n">OptimizationConfig</span><span class="p">()</span>
 <span class="n">global_config</span> <span class="o">=</span> <span class="n">OpPalettizerConfig</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;kmeans&quot;</span><span class="p">,</span> <span class="n">nbits</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
@@ -497,7 +492,7 @@ example of the YAML file:</p>
 <dt class="sig sig-object py" id="coremltools.optimize.coreml.OptimizationConfig.set_op_name">
 <span class="sig-name descname"><span class="pre">set_op_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">OpCompressorConfig</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_config.html#OptimizationConfig.set_op_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.OptimizationConfig.set_op_name" title="Link to this definition"></a></dt>
 <dd><p>Sets the compression config at the level of constant / op instance by name.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.optimize.coreml</span> <span class="kn">import</span> <span class="n">OpPalettizerConfig</span><span class="p">,</span> <span class="n">OptimizationConfig</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.coreml</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpPalettizerConfig</span><span class="p">,</span> <span class="n">OptimizationConfig</span>
 
 <span class="n">config</span> <span class="o">=</span> <span class="n">OptimizationConfig</span><span class="p">()</span>
 <span class="n">op_config</span> <span class="o">=</span> <span class="n">OpPalettizerConfig</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;kmeans&quot;</span><span class="p">,</span> <span class="n">nbits</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
@@ -521,7 +516,7 @@ example of the YAML file:</p>
 <dt class="sig sig-object py" id="coremltools.optimize.coreml.OptimizationConfig.set_op_type">
 <span class="sig-name descname"><span class="pre">set_op_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">OpCompressorConfig</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_config.html#OptimizationConfig.set_op_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.OptimizationConfig.set_op_type" title="Link to this definition"></a></dt>
 <dd><p>Sets the compression config at the level of op type.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.optimize.coreml</span> <span class="kn">import</span> <span class="n">OpPalettizerConfig</span><span class="p">,</span> <span class="n">OptimizationConfig</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.coreml</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpPalettizerConfig</span><span class="p">,</span> <span class="n">OptimizationConfig</span>
 
 <span class="n">config</span> <span class="o">=</span> <span class="n">OptimizationConfig</span><span class="p">()</span>
 <span class="n">conv_config</span> <span class="o">=</span> <span class="n">OpPalettizerConfig</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;kmeans&quot;</span><span class="p">,</span> <span class="n">nbits</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
@@ -555,7 +550,7 @@ example of the YAML file:</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Apple Inc.</p>
+    <p>&#169; Copyright 2021, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

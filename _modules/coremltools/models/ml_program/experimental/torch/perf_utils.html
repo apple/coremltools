@@ -1,11 +1,13 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.models.ml_program.experimental.torch.perf_utils &mdash; coremltools API Reference 8.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../_static/css/theme.css?v=19f00094" />
+  <title>coremltools.models.ml_program.experimental.torch.perf_utils &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -14,15 +16,11 @@
       <link rel="stylesheet" type="text/css" href="../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../../../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../../../_static/documentation_options.js?v=8cc1add8"></script>
-        <script src="../../../../../../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../../search.html" /> 
@@ -39,9 +37,6 @@
           <a href="../../../../../../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
-              <div class="version">
-                8.3
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -98,22 +93,22 @@
 <span class="c1"># Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
-<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">proto</span>
-<span class="kn">from</span> <span class="nn">coremltools._deps</span> <span class="kn">import</span> <span class="n">_HAS_TORCH_EXPORT_API</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">proto</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools._deps</span><span class="w"> </span><span class="kn">import</span> <span class="n">_HAS_TORCH_EXPORT_API</span>
 
-<span class="kn">from</span> <span class="nn">..perf_utils</span> <span class="kn">import</span> <span class="n">MLModelBenchmarker</span>
-<span class="kn">from</span> <span class="nn">..remote_device</span> <span class="kn">import</span> <span class="n">Device</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..perf_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModelBenchmarker</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..remote_device</span><span class="w"> </span><span class="kn">import</span> <span class="n">Device</span>
 
 <span class="k">if</span> <span class="n">_HAS_TORCH_EXPORT_API</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">torch.export</span> <span class="kn">import</span> <span class="n">ExportedProgram</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">torch.export</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExportedProgram</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 
-<span class="kn">from</span> <span class="nn">.debugging_utils</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.debugging_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">TorchScriptNodeInfo</span><span class="p">,</span>
     <span class="n">_convert_and_retrieve_exported_program_op_mapping</span><span class="p">,</span>
     <span class="n">_convert_and_retrieve_jit_module_mapping</span><span class="p">,</span>
@@ -124,7 +119,7 @@
 
 <div class="viewcode-block" id="TorchMLModelBenchmarker">
 <a class="viewcode-back" href="../../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.torch.perf_utils.TorchMLModelBenchmarker">[docs]</a>
-<span class="k">class</span> <span class="nc">TorchMLModelBenchmarker</span><span class="p">(</span><span class="n">MLModelBenchmarker</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TorchMLModelBenchmarker</span><span class="p">(</span><span class="n">MLModelBenchmarker</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A specialized benchmarker for PyTorch models.</span>
 
@@ -137,13 +132,13 @@
 <div class="viewcode-block" id="TorchMLModelBenchmarker.NodeExecutionInfo">
 <a class="viewcode-back" href="../../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.torch.perf_utils.TorchMLModelBenchmarker.NodeExecutionInfo">[docs]</a>
     <span class="nd">@dataclass</span>
-    <span class="k">class</span> <span class="nc">NodeExecutionInfo</span><span class="p">:</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">NodeExecutionInfo</span><span class="p">:</span>
         <span class="n">node</span><span class="p">:</span> <span class="n">TorchNode</span>
         <span class="n">targets</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">MLModelBenchmarker</span><span class="o">.</span><span class="n">OperationExecutionInfo</span><span class="p">]</span>
         <span class="n">measurement</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;MLModelBenchmarker.Measurement&quot;</span><span class="p">]</span>
 
         <span class="nd">@staticmethod</span>
-        <span class="k">def</span> <span class="nf">from_source</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">TorchNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TorchMLModelBenchmarker.NodeExecutionInfo&quot;</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">from_source</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">TorchNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TorchMLModelBenchmarker.NodeExecutionInfo&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">TorchMLModelBenchmarker</span><span class="o">.</span><span class="n">NodeExecutionInfo</span><span class="p">(</span>
                 <span class="n">node</span><span class="o">=</span><span class="n">node</span><span class="p">,</span>
                 <span class="n">targets</span><span class="o">=</span><span class="p">[],</span>
@@ -154,19 +149,19 @@
 <div class="viewcode-block" id="TorchMLModelBenchmarker.ModuleExecutionInfo">
 <a class="viewcode-back" href="../../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.torch.perf_utils.TorchMLModelBenchmarker.ModuleExecutionInfo">[docs]</a>
     <span class="nd">@dataclass</span>
-    <span class="k">class</span> <span class="nc">ModuleExecutionInfo</span><span class="p">:</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">ModuleExecutionInfo</span><span class="p">:</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
         <span class="n">ops</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s2">&quot;TorchMLModelBenchmarker.NodeExecutionInfo&quot;</span><span class="p">]</span>
         <span class="n">measurement</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;MLModelBenchmarker.Measurement&quot;</span><span class="p">]</span>
 
         <span class="nd">@staticmethod</span>
-        <span class="k">def</span> <span class="nf">from_name</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TorchMLModelBenchmarker.ModuleExecutionInfo&quot;</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">from_name</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TorchMLModelBenchmarker.ModuleExecutionInfo&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">TorchMLModelBenchmarker</span><span class="o">.</span><span class="n">ModuleExecutionInfo</span><span class="p">(</span>
                 <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">ops</span><span class="o">=</span><span class="p">[],</span> <span class="n">measurement</span><span class="o">=</span><span class="n">MLModelBenchmarker</span><span class="o">.</span><span class="n">Measurement</span><span class="o">.</span><span class="n">from_samples</span><span class="p">([])</span>
             <span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;ExportedProgram&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">ScriptModule</span><span class="p">],</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Device</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -174,7 +169,7 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">mlModel</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">source_to_target_ops_mapping</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">ExportedProgram</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">_HAS_TORCH_EXPORT_API</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">ExportedProgram</span><span class="p">):</span>
             <span class="p">(</span>
                 <span class="n">mlModel</span><span class="p">,</span>
                 <span class="n">source_to_target_ops_mapping</span><span class="p">,</span>
@@ -212,8 +207,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_target_output_name_to_source_ops_mapping</span> <span class="o">=</span> <span class="n">target_output_name_to_source_ops_mapping</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">get_module_names</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">TorchNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
-        <span class="k">def</span> <span class="nf">parse_nn_module_stack</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">fx</span><span class="o">.</span><span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_module_names</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">TorchNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">parse_nn_module_stack</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">fx</span><span class="o">.</span><span class="n">Node</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
             <span class="k">if</span> <span class="s2">&quot;nn_module_stack&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">meta</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">None</span>
 
@@ -233,7 +228,7 @@
                 <span class="s2">&quot;Expected either &#39;TorchScriptNodeInfo&#39; or &#39;torch.fx.Node&#39;&quot;</span>
             <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">find_source_nodes_for_target_op</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">find_source_nodes_for_target_op</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">target_op</span><span class="p">:</span> <span class="n">proto</span><span class="o">.</span><span class="n">MIL_pb2</span><span class="o">.</span><span class="n">Operation</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">TorchNode</span><span class="p">]:</span>
@@ -245,7 +240,7 @@
 
 <div class="viewcode-block" id="TorchMLModelBenchmarker.benchmark_node_execution">
 <a class="viewcode-back" href="../../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.torch.perf_utils.TorchMLModelBenchmarker.benchmark_node_execution">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">benchmark_node_execution</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">benchmark_node_execution</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
@@ -307,7 +302,7 @@
 
 <div class="viewcode-block" id="TorchMLModelBenchmarker.benchmark_module_execution">
 <a class="viewcode-back" href="../../../../../../source/coremltools.models.html#coremltools.models.ml_program.experimental.torch.perf_utils.TorchMLModelBenchmarker.benchmark_module_execution">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">benchmark_module_execution</span><span class="p">(</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">benchmark_module_execution</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
@@ -382,7 +377,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Apple Inc.</p>
+    <p>&#169; Copyright 2021, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

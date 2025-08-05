@@ -1,11 +1,13 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.passes.defs.quantization &mdash; coremltools API Reference 8.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/theme.css?v=19f00094" />
+  <title>coremltools.converters.mil.mil.passes.defs.quantization &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -14,15 +16,11 @@
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../../../../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../../../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../../../../_static/documentation_options.js?v=8cc1add8"></script>
-        <script src="../../../../../../../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../../../search.html" /> 
@@ -39,9 +37,6 @@
           <a href="../../../../../../../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
-              <div class="version">
-                8.3
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -98,34 +93,34 @@
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
-<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span>
-<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span> <span class="k">as</span> <span class="n">_Enum</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span> <span class="k">as</span> <span class="n">_Enum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Tuple</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_logger</span> <span class="k">as</span> <span class="n">logger</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil</span> <span class="kn">import</span> <span class="n">input_types</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil._deployment_compatibility</span> <span class="kn">import</span> <span class="n">AvailableTarget</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Block</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">mb</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">Var</span><span class="p">,</span> <span class="n">types</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.block</span> <span class="kn">import</span> <span class="n">is_current_opset_version_compatible_with</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.registry</span> <span class="kn">import</span> <span class="n">SSAOpRegistry</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span> <span class="kn">import</span> <span class="n">AbstractGraphPass</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.helper</span> <span class="kn">import</span> <span class="n">block_context_manager</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.pass_registry</span> <span class="kn">import</span> <span class="n">register_pass</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.program</span> <span class="kn">import</span> <span class="n">Program</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.symbolic</span> <span class="kn">import</span> <span class="n">is_symbolic</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.type_mapping</span> <span class="kn">import</span> <span class="n">string_to_builtin</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">_logger</span> <span class="k">as</span> <span class="n">logger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">input_types</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil._deployment_compatibility</span><span class="w"> </span><span class="kn">import</span> <span class="n">AvailableTarget</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">Block</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">mb</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">Var</span><span class="p">,</span> <span class="n">types</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.block</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_current_opset_version_compatible_with</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.ops.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">SSAOpRegistry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractGraphPass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.helper</span><span class="w"> </span><span class="kn">import</span> <span class="n">block_context_manager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.pass_registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_pass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.program</span><span class="w"> </span><span class="kn">import</span> <span class="n">Program</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.types.symbolic</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_symbolic</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.types.type_mapping</span><span class="w"> </span><span class="kn">import</span> <span class="n">string_to_builtin</span>
 
 
-<span class="k">class</span> <span class="nc">ComputePrecision</span><span class="p">(</span><span class="n">_Enum</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ComputePrecision</span><span class="p">(</span><span class="n">_Enum</span><span class="p">):</span>
     <span class="n">FLOAT16</span> <span class="o">=</span> <span class="s2">&quot;float16&quot;</span>
     <span class="n">FLOAT32</span> <span class="o">=</span> <span class="s2">&quot;float32&quot;</span>
 
 
-<span class="k">class</span> <span class="nc">AbstractQuantizationPass</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">AbstractQuantizationPass</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for Post-Training Quantization transforms.</span>
 
@@ -137,7 +132,7 @@
     <span class="n">type_min</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">type_negmin</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op_selector</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op_selector</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">op_selector</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">op_selector</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
@@ -151,10 +146,10 @@
         <span class="c1"># Note that, we make it a stack of dict to keep tracking the blocks</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cache_vars</span> <span class="o">=</span> <span class="p">[]</span>
 
-    <span class="k">def</span> <span class="nf">current_cache_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Var</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">current_cache_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Var</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_vars</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Walks over each operation in the graph and performs following two steps,</span>
 <span class="sd">        1. Checks whether an operation is valid for that quantized transform using `is_valid_op` method.</span>
@@ -174,7 +169,7 @@
             <span class="p">)</span>
 
         <span class="nd">@block_context_manager</span>
-        <span class="k">def</span> <span class="nf">apply_block</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">apply_block</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_cache_vars</span><span class="o">.</span><span class="n">append</span><span class="p">({})</span>
             <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
@@ -193,7 +188,7 @@
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="n">apply_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">transform_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Replaces an op with a transformed op.</span>
 
@@ -204,7 +199,7 @@
             <span class="s1">&#39;Op transformation for quantization mode &quot;</span><span class="si">{}</span><span class="s1">&quot; not implemented.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">is_valid_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_valid_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Checks whether an operation is valid for given quantized transform.</span>
 
@@ -216,7 +211,7 @@
         <span class="p">)</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">_close_to_zero</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">np_type</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_close_to_zero</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">np_type</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">np_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">type_eps</span><span class="p">:</span>
             <span class="bp">cls</span><span class="o">.</span><span class="n">type_eps</span><span class="p">[</span><span class="n">np_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">np_type</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span>
             <span class="bp">cls</span><span class="o">.</span><span class="n">type_min</span><span class="p">[</span><span class="n">np_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nextafter</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np_type</span><span class="p">)</span>
@@ -224,14 +219,14 @@
 
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">type_min</span><span class="p">[</span><span class="n">np_type</span><span class="p">],</span> <span class="n">rtol</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">type_eps</span><span class="p">[</span><span class="n">np_type</span><span class="p">])</span>
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
 
 
-<span class="k">class</span> <span class="nc">CastTypeQuantization</span><span class="p">(</span><span class="n">AbstractQuantizationPass</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CastTypeQuantization</span><span class="p">(</span><span class="n">AbstractQuantizationPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for all type casting related quantization, such as fp32-&gt;fp16, int32-&gt;int16, etc.</span>
 
@@ -241,24 +236,24 @@
 <span class="sd">    All child classes need to specify `origin_dtype` and `target_dtype`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op_selector</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op_selector</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">op_selector</span><span class="o">=</span><span class="n">op_selector</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">origin_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">origin_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Original dtype that need to be cast, such as fp32.&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;origin_dtype must be specified in subclass.&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">target_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">target_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Target dtype, such as fp16.&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;target_dtype must be specified in subclass.&quot;</span><span class="p">)</span>
 
     <span class="c1"># TODO: rdar://122845072 ([Infra] Refactor the transform_function_signatures, adjust_io_to_supported_types and update_output_dtypes using a shared graph pass)</span>
     <span class="nd">@block_context_manager</span>
-    <span class="k">def</span> <span class="nf">transform_function_signatures</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Function</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform_function_signatures</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Function</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This utility transform a function input / output signatures from the original_dtype to</span>
 <span class="sd">        the target_dtype.</span>
@@ -343,7 +338,7 @@
 
         <span class="n">func</span><span class="o">.</span><span class="n">output_types</span> <span class="o">=</span> <span class="n">output_types</span>
 
-    <span class="k">def</span> <span class="nf">should_cast_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">param_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">should_cast_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">param_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Determines if a param of an op should be cast to target_dtype.</span>
 
@@ -359,13 +354,13 @@
 
         <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">_get_casted_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">casted_inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Var</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Var</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_casted_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">casted_inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Var</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Var</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Given an op and casted_inputs, this utility returns the new resulting outputs.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mb</span><span class="p">,</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span><span class="p">)(</span><span class="o">**</span><span class="n">casted_inputs</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">transform_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Transform the input(s)/output(s) dtypes of the op.&quot;&quot;&quot;</span>
         <span class="n">block</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span>
         <span class="n">casted_inputs</span> <span class="o">=</span> <span class="p">{}</span>
@@ -458,7 +453,7 @@
             <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">([</span><span class="n">op</span><span class="p">])</span>
 
 
-<span class="k">class</span> <span class="nc">FP16ComputePrecision</span><span class="p">(</span><span class="n">CastTypeQuantization</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FP16ComputePrecision</span><span class="p">(</span><span class="n">CastTypeQuantization</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This transform does the following, for each valid op and if the &quot;op_selector&quot; return True:</span>
 <span class="sd">    - For each input of dtype float32, inject a &quot;cast&quot; op to change it to float16 dtype</span>
@@ -492,19 +487,19 @@
         <span class="s2">&quot;coreml_update_state&quot;</span><span class="p">,</span>
     <span class="p">}</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op_selector</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op_selector</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">FP16ComputePrecision</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">op_selector</span><span class="o">=</span><span class="n">op_selector</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">origin_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">origin_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;fp32&quot;</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">target_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">target_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;fp16&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">fp16_overflow</span><span class="p">(</span><span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fp16_overflow</span><span class="p">(</span><span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Determines if any of the op&#39;s input will overflow when represented by FP16.</span>
 
@@ -531,7 +526,7 @@
                         <span class="k">return</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">is_valid_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_valid_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Determines if op is valid for fp16 casting.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_UNSUPPORTED_FP16_OPS</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
@@ -541,7 +536,7 @@
 
         <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">should_cast_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">param_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">should_cast_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">param_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Determines if a param of an op should be cast to fp16.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">should_cast_parameter</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">param_name</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span>
@@ -560,7 +555,7 @@
 
         <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">_check_underflow_to_zero</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_var</span><span class="p">,</span> <span class="n">var</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_underflow_to_zero</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_var</span><span class="p">,</span> <span class="n">var</span><span class="p">):</span>
         <span class="c1"># We check whether there are casted values that &quot;becomes&quot; 0 which is not ideal for eps purposes.</span>
         <span class="c1"># However we skip arrays with more than 400 in case we compare through a large sparse matrix.</span>
         <span class="k">if</span> <span class="p">(</span>
@@ -593,7 +588,7 @@
 <div class="viewcode-block" id="add_fp16_cast">
 <a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.quantization.add_fp16_cast">[docs]</a>
 <span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">add_fp16_cast</span><span class="p">(</span><span class="n">FP16ComputePrecision</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">add_fp16_cast</span><span class="p">(</span><span class="n">FP16ComputePrecision</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    For each input of dtype float32, inject a ``cast`` op to change it to float16 dtype.</span>
 
@@ -610,17 +605,17 @@
     <span class="n">_skip_ops_by_type</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">skip_ops_by_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">skip_ops_by_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_skip_ops_by_type</span>
 
     <span class="nd">@skip_ops_by_type</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">skip_ops_by_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">criteria</span><span class="p">:</span> <span class="n">Text</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">skip_ops_by_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">criteria</span><span class="p">:</span> <span class="n">Text</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_skip_ops_by_type</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">criteria</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">))</span></div>
 
 
 
 <span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">add_int16_cast</span><span class="p">(</span><span class="n">CastTypeQuantization</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">add_int16_cast</span><span class="p">(</span><span class="n">CastTypeQuantization</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This transform does the following, for each op that supports int16/uint16:</span>
 <span class="sd">    - For each input of dtype int32 which supports int16/uint16, inject a &quot;cast&quot; op to change it</span>
@@ -635,27 +630,27 @@
     <span class="c1"># This is achieved by type domain confirmation in `CastTypeQuantization.should_cast_parameter`</span>
     <span class="n">_PREFER_INT16_OPS</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;gather&quot;</span><span class="p">,</span> <span class="s2">&quot;gather_along_axis&quot;</span><span class="p">,</span> <span class="s2">&quot;gather_nd&quot;</span><span class="p">,</span> <span class="s2">&quot;squeeze&quot;</span><span class="p">,</span> <span class="s2">&quot;topk&quot;</span><span class="p">}</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op_selector</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op_selector</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">op_selector</span><span class="o">=</span><span class="n">op_selector</span><span class="p">)</span>
         <span class="c1"># Use variable instead of hard-coded &quot;int16&quot; because the target dtype could be uint16</span>
         <span class="c1"># depending on if the param is non-negative const and within uint16 range.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_target_dtype</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;int16&quot;</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">origin_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">origin_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;int32&quot;</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">target_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">target_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target_dtype</span>
 
     <span class="nd">@target_dtype</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">target_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_dtype</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">target_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_dtype</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">target_dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;int16&quot;</span><span class="p">,</span> <span class="s2">&quot;uint16&quot;</span><span class="p">}:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The target_dtype in add_int16_cast must be int16 or uint16&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_target_dtype</span> <span class="o">=</span> <span class="n">target_dtype</span>
 
-    <span class="k">def</span> <span class="nf">should_cast_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">param_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">should_cast_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">param_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Determine if a parameter should be cast or not.</span>
 <span class="sd">        If should be cast, determine whether to use int16 or uint16.</span>
@@ -675,19 +670,33 @@
             <span class="k">return</span> <span class="kc">False</span>
 
         <span class="n">input_op</span> <span class="o">=</span> <span class="n">input_var</span><span class="o">.</span><span class="n">op</span>
-        <span class="k">if</span> <span class="n">input_op</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">input_op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;const&quot;</span><span class="p">:</span>
-            <span class="k">if</span> <span class="p">(</span>
-                <span class="n">input_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">_UINT16_MIN</span>
-                <span class="ow">and</span> <span class="n">input_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="n">_UINT16_MAX</span>
-            <span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_target_dtype</span> <span class="o">=</span> <span class="s2">&quot;uint16&quot;</span>
-            <span class="k">elif</span> <span class="p">(</span>
-                <span class="n">input_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">_INT16_MIN</span>
-                <span class="ow">and</span> <span class="n">input_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="n">_INT16_MAX</span>
-            <span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_target_dtype</span> <span class="o">=</span> <span class="s2">&quot;int16&quot;</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">input_op</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># here we do not handle input variables</span>
+            <span class="k">if</span> <span class="n">input_op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;const&quot;</span><span class="p">:</span>
+                <span class="c1"># check if const value can fit in 16-bit integer</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="n">input_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">_UINT16_MIN</span>
+                    <span class="ow">and</span> <span class="n">input_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="n">_UINT16_MAX</span>
+                <span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_target_dtype</span> <span class="o">=</span> <span class="s2">&quot;uint16&quot;</span>
+                <span class="k">elif</span> <span class="p">(</span>
+                    <span class="n">input_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">_INT16_MIN</span>
+                    <span class="ow">and</span> <span class="n">input_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="n">_INT16_MAX</span>
+                <span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_target_dtype</span> <span class="o">=</span> <span class="s2">&quot;int16&quot;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">elif</span> <span class="n">input_op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;cast&quot;</span><span class="p">:</span>
+                <span class="c1"># If the input op is a `cast`, then check if it is &quot;cast uint16 to int32&quot;.</span>
+                <span class="c1"># If so, then the correct 16-bit integer quantization for it should be to</span>
+                <span class="c1"># restore its original uint16 value. To achieve this, we will generate</span>
+                <span class="c1"># &quot;cast uint16 to int32 -&gt; cast int32 to uint16&quot; pattern because this is</span>
+                <span class="c1"># the only pattern for cast optimization to cancel these 2 casts, details see</span>
+                <span class="c1"># https://apple.github.io/coremltools/source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.cast_optimization</span>
+                <span class="k">if</span> <span class="n">input_op</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">types</span><span class="o">.</span><span class="n">uint16</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_target_dtype</span> <span class="o">=</span> <span class="s2">&quot;uint16&quot;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_target_dtype</span> <span class="o">=</span> <span class="s2">&quot;int16&quot;</span>
 
         <span class="c1"># In `gather` and `gather_along_axis`, if the dim size of x is larger than int16</span>
         <span class="c1"># upperbound, the dynamic indices could overflow, so it shouldn&#39;t be cast.</span>
@@ -702,7 +711,7 @@
 
         <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">is_valid_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_valid_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Determines if op is valid for int16/uint16 casting.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_PREFER_INT16_OPS</span>
 </pre></div>
@@ -714,7 +723,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Apple Inc.</p>
+    <p>&#169; Copyright 2021, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
