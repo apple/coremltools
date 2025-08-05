@@ -1,23 +1,23 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NeuralNetwork &mdash; Core ML Format Reference  documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -30,11 +30,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> Core ML Format Reference
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Core ML Format Reference
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -322,8 +326,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>NeuralNetwork</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">NeuralNetwork</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/Format/NeuralNetwork.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -334,7 +338,7 @@
            <div itemprop="articleBody">
              
   <section id="neuralnetwork">
-<h1>NeuralNetwork<a class="headerlink" href="#neuralnetwork" title="Permalink to this heading"></a></h1>
+<h1>NeuralNetwork<a class="headerlink" href="#neuralnetwork" title="Link to this heading"></a></h1>
 <p>A neural network is defined through a collection of layers
 and represents a directed acyclic graph (DAG).
 Each layer has a name, a layer type,
@@ -401,9 +405,9 @@ of the input will be ignored.</p>
 </pre></div>
 </div>
 <section id="preprocessing">
-<h2>Preprocessing<a class="headerlink" href="#preprocessing" title="Permalink to this heading"></a></h2>
+<h2>Preprocessing<a class="headerlink" href="#preprocessing" title="Link to this heading"></a></h2>
 <section id="neuralnetworkimagescaler">
-<h3>NeuralNetworkImageScaler<a class="headerlink" href="#neuralnetworkimagescaler" title="Permalink to this heading"></a></h3>
+<h3>NeuralNetworkImageScaler<a class="headerlink" href="#neuralnetworkimagescaler" title="Link to this heading"></a></h3>
 <p>A neural network preprocessor that
 performs a scalar multiplication of an image
 followed by addition of scalar biases to the channels.</p>
@@ -443,7 +447,7 @@ or in grayscale format with shape <code class="docutils literal notranslate"><sp
 </div>
 </section>
 <section id="neuralnetworkmeanimage">
-<h3>NeuralNetworkMeanImage<a class="headerlink" href="#neuralnetworkmeanimage" title="Permalink to this heading"></a></h3>
+<h3>NeuralNetworkMeanImage<a class="headerlink" href="#neuralnetworkmeanimage" title="Link to this heading"></a></h3>
 <p>A neural network preprocessor that
 subtracts the provided mean image from the input image.
 The mean image is subtracted from the input named
@@ -457,7 +461,7 @@ The mean image is subtracted from the input named
 </div>
 </section>
 <section id="neuralnetworkpreprocessing">
-<h3>NeuralNetworkPreprocessing<a class="headerlink" href="#neuralnetworkpreprocessing" title="Permalink to this heading"></a></h3>
+<h3>NeuralNetworkPreprocessing<a class="headerlink" href="#neuralnetworkpreprocessing" title="Link to this heading"></a></h3>
 <p>Preprocessing parameters for image inputs.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">NeuralNetworkPreprocessing</span><span class="w"> </span><span class="p">{</span>
 
@@ -473,9 +477,9 @@ The mean image is subtracted from the input named
 </section>
 </section>
 <section id="activation-functions">
-<h2>Activation Functions<a class="headerlink" href="#activation-functions" title="Permalink to this heading"></a></h2>
+<h2>Activation Functions<a class="headerlink" href="#activation-functions" title="Link to this heading"></a></h2>
 <section id="activationrelu">
-<h3>ActivationReLU<a class="headerlink" href="#activationrelu" title="Permalink to this heading"></a></h3>
+<h3>ActivationReLU<a class="headerlink" href="#activationrelu" title="Link to this heading"></a></h3>
 <p>A rectified linear unit (ReLU) activation function.</p>
 <p>This function has the following formula:</p>
 <div class="math notranslate nohighlight">
@@ -487,7 +491,7 @@ The mean image is subtracted from the input named
 </div>
 </section>
 <section id="activationleakyrelu">
-<h3>ActivationLeakyReLU<a class="headerlink" href="#activationleakyrelu" title="Permalink to this heading"></a></h3>
+<h3>ActivationLeakyReLU<a class="headerlink" href="#activationleakyrelu" title="Link to this heading"></a></h3>
 <p>A leaky rectified linear unit (ReLU) activation function.</p>
 <p>This function has the following formula:</p>
 <div class="math notranslate nohighlight">
@@ -504,7 +508,7 @@ The mean image is subtracted from the input named
 </div>
 </section>
 <section id="activationtanh">
-<h3>ActivationTanh<a class="headerlink" href="#activationtanh" title="Permalink to this heading"></a></h3>
+<h3>ActivationTanh<a class="headerlink" href="#activationtanh" title="Link to this heading"></a></h3>
 <p>A hyperbolic tangent activation function.</p>
 <p>This function has the following formula:</p>
 <div class="math notranslate nohighlight">
@@ -516,7 +520,7 @@ The mean image is subtracted from the input named
 </div>
 </section>
 <section id="activationscaledtanh">
-<h3>ActivationScaledTanh<a class="headerlink" href="#activationscaledtanh" title="Permalink to this heading"></a></h3>
+<h3>ActivationScaledTanh<a class="headerlink" href="#activationscaledtanh" title="Link to this heading"></a></h3>
 <p>A scaled hyperbolic tangent activation function.</p>
 <p>This function has the following formula:</p>
 <div class="math notranslate nohighlight">
@@ -531,7 +535,7 @@ The mean image is subtracted from the input named
 </div>
 </section>
 <section id="activationsigmoid">
-<h3>ActivationSigmoid<a class="headerlink" href="#activationsigmoid" title="Permalink to this heading"></a></h3>
+<h3>ActivationSigmoid<a class="headerlink" href="#activationsigmoid" title="Link to this heading"></a></h3>
 <p>A sigmoid activation function.</p>
 <p>This function has the following formula:</p>
 <div class="math notranslate nohighlight">
@@ -543,7 +547,7 @@ The mean image is subtracted from the input named
 </div>
 </section>
 <section id="activationlinear">
-<h3>ActivationLinear<a class="headerlink" href="#activationlinear" title="Permalink to this heading"></a></h3>
+<h3>ActivationLinear<a class="headerlink" href="#activationlinear" title="Link to this heading"></a></h3>
 <p>A linear activation function.</p>
 <p>This function has the following formula:</p>
 <div class="math notranslate nohighlight">
@@ -558,7 +562,7 @@ The mean image is subtracted from the input named
 </div>
 </section>
 <section id="activationsigmoidhard">
-<h3>ActivationSigmoidHard<a class="headerlink" href="#activationsigmoidhard" title="Permalink to this heading"></a></h3>
+<h3>ActivationSigmoidHard<a class="headerlink" href="#activationsigmoidhard" title="Link to this heading"></a></h3>
 <p>A hard sigmoid activation function.</p>
 <p>This function has the following formula:</p>
 <div class="math notranslate nohighlight">
@@ -573,7 +577,7 @@ The mean image is subtracted from the input named
 </div>
 </section>
 <section id="activationprelu">
-<h3>ActivationPReLU<a class="headerlink" href="#activationprelu" title="Permalink to this heading"></a></h3>
+<h3>ActivationPReLU<a class="headerlink" href="#activationprelu" title="Link to this heading"></a></h3>
 <p>A parameterized rectified linear unit (PReLU) activation function.
 Input must be at least rank 3. Axis = -3 is denoted by “C”, or channels.
 “alpha” parameter can be a vector of length C.</p>
@@ -594,7 +598,7 @@ Input must be at least rank 3. Axis = -3 is denoted by “C”, or channels.
 </div>
 </section>
 <section id="activationelu">
-<h3>ActivationELU<a class="headerlink" href="#activationelu" title="Permalink to this heading"></a></h3>
+<h3>ActivationELU<a class="headerlink" href="#activationelu" title="Link to this heading"></a></h3>
 <p>An exponential linear unit (ELU) activation function.</p>
 <p>This function has the following formula:</p>
 <div class="math notranslate nohighlight">
@@ -611,7 +615,7 @@ Input must be at least rank 3. Axis = -3 is denoted by “C”, or channels.
 </div>
 </section>
 <section id="activationthresholdedrelu">
-<h3>ActivationThresholdedReLU<a class="headerlink" href="#activationthresholdedrelu" title="Permalink to this heading"></a></h3>
+<h3>ActivationThresholdedReLU<a class="headerlink" href="#activationthresholdedrelu" title="Link to this heading"></a></h3>
 <p>A thresholded rectified linear unit (ReLU) activation function.</p>
 <p>This function has the following formula:</p>
 <div class="math notranslate nohighlight">
@@ -628,7 +632,7 @@ Input must be at least rank 3. Axis = -3 is denoted by “C”, or channels.
 </div>
 </section>
 <section id="activationsoftsign">
-<h3>ActivationSoftsign<a class="headerlink" href="#activationsoftsign" title="Permalink to this heading"></a></h3>
+<h3>ActivationSoftsign<a class="headerlink" href="#activationsoftsign" title="Link to this heading"></a></h3>
 <p>A softsign activation function.</p>
 <p>This function has the following formula:</p>
 <div class="math notranslate nohighlight">
@@ -640,7 +644,7 @@ Input must be at least rank 3. Axis = -3 is denoted by “C”, or channels.
 </div>
 </section>
 <section id="activationsoftplus">
-<h3>ActivationSoftplus<a class="headerlink" href="#activationsoftplus" title="Permalink to this heading"></a></h3>
+<h3>ActivationSoftplus<a class="headerlink" href="#activationsoftplus" title="Link to this heading"></a></h3>
 <p>A softplus activation function.</p>
 <p>This function has the following formula:</p>
 <div class="math notranslate nohighlight">
@@ -652,7 +656,7 @@ Input must be at least rank 3. Axis = -3 is denoted by “C”, or channels.
 </div>
 </section>
 <section id="activationparametricsoftplus">
-<h3>ActivationParametricSoftplus<a class="headerlink" href="#activationparametricsoftplus" title="Permalink to this heading"></a></h3>
+<h3>ActivationParametricSoftplus<a class="headerlink" href="#activationparametricsoftplus" title="Link to this heading"></a></h3>
 <p>A parametric softplus activation function.
 Input must be at least rank 3. axis = -3 is denoted by “C”, or channels.
 “alpha”/”beta” parameter can be a vector of length C.</p>
@@ -670,7 +674,7 @@ Input must be at least rank 3. axis = -3 is denoted by “C”, or channels.
 </div>
 </section>
 <section id="activationparams">
-<h3>ActivationParams<a class="headerlink" href="#activationparams" title="Permalink to this heading"></a></h3>
+<h3>ActivationParams<a class="headerlink" href="#activationparams" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">ActivationParams</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="k">oneof</span><span class="w"> </span><span class="n">NonlinearityType</span><span class="w"> </span><span class="p">{</span>
@@ -699,7 +703,7 @@ Input must be at least rank 3. axis = -3 is denoted by “C”, or channels.
 </div>
 </section>
 <section id="tensor">
-<h3>Tensor<a class="headerlink" href="#tensor" title="Permalink to this heading"></a></h3>
+<h3>Tensor<a class="headerlink" href="#tensor" title="Link to this heading"></a></h3>
 <p>Representation of the intermediate tensors</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">Tensor</span><span class="w"> </span><span class="p">{</span>
 
@@ -714,7 +718,7 @@ Input must be at least rank 3. axis = -3 is denoted by “C”, or channels.
 </div>
 </section>
 <section id="neuralnetworklayer">
-<h3>NeuralNetworkLayer<a class="headerlink" href="#neuralnetworklayer" title="Permalink to this heading"></a></h3>
+<h3>NeuralNetworkLayer<a class="headerlink" href="#neuralnetworklayer" title="Link to this heading"></a></h3>
 <p>A single neural network layer.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">NeuralNetworkLayer</span><span class="w"> </span><span class="p">{</span>
 
@@ -967,7 +971,7 @@ Input must be at least rank 3. axis = -3 is denoted by “C”, or channels.
 </div>
 </section>
 <section id="branchlayerparams">
-<h3>BranchLayerParams<a class="headerlink" href="#branchlayerparams" title="Permalink to this heading"></a></h3>
+<h3>BranchLayerParams<a class="headerlink" href="#branchlayerparams" title="Link to this heading"></a></h3>
 <p>Branching Layer</p>
 <p>A layer that provides the functionality of branching or an If-Else block.</p>
 <p>Must have 1 input. There are no outputs as the execution is transferred to either the
@@ -983,7 +987,7 @@ if or the else branch based on the value of the input.</p>
 </div>
 </section>
 <section id="looplayerparams">
-<h3>LoopLayerParams<a class="headerlink" href="#looplayerparams" title="Permalink to this heading"></a></h3>
+<h3>LoopLayerParams<a class="headerlink" href="#looplayerparams" title="Link to this heading"></a></h3>
 <p>Loop Layer</p>
 <p>A layer that provides the functionality of a “for” loop or a “while” loop.</p>
 <p>There are either no inputs or 1 input. When an input is present, it corresponds
@@ -1036,7 +1040,7 @@ condition. Equivalent pseudo-code:</p>
 </div>
 </section>
 <section id="loopbreaklayerparams">
-<h3>LoopBreakLayerParams<a class="headerlink" href="#loopbreaklayerparams" title="Permalink to this heading"></a></h3>
+<h3>LoopBreakLayerParams<a class="headerlink" href="#loopbreaklayerparams" title="Link to this heading"></a></h3>
 <p>Loop break Layer</p>
 <p>Terminate the loop that has this layer.
 If present, it should always reside in the “bodyNetwork” of the loop layer</p>
@@ -1048,7 +1052,7 @@ If present, it should always reside in the “bodyNetwork” of the loop layer</
 </div>
 </section>
 <section id="loopcontinuelayerparams">
-<h3>LoopContinueLayerParams<a class="headerlink" href="#loopcontinuelayerparams" title="Permalink to this heading"></a></h3>
+<h3>LoopContinueLayerParams<a class="headerlink" href="#loopcontinuelayerparams" title="Link to this heading"></a></h3>
 <p>Loop Continue Layer</p>
 <p>Stop the current loop iteration and continue on the next iteration.
 If present, it should always reside in the “bodyNetwork” of the loop layer</p>
@@ -1060,7 +1064,7 @@ If present, it should always reside in the “bodyNetwork” of the loop layer</
 </div>
 </section>
 <section id="copylayerparams">
-<h3>CopyLayerParams<a class="headerlink" href="#copylayerparams" title="Permalink to this heading"></a></h3>
+<h3>CopyLayerParams<a class="headerlink" href="#copylayerparams" title="Link to this heading"></a></h3>
 <p>Copy Layer</p>
 <p>A layer that copies its input tensor to the output tensor.
 Must have 1 input and 1 output, with distinct names.
@@ -1073,7 +1077,7 @@ in which case it will overwrite the output tensor.</p>
 </div>
 </section>
 <section id="greaterthanlayerparams">
-<h3>GreaterThanLayerParams<a class="headerlink" href="#greaterthanlayerparams" title="Permalink to this heading"></a></h3>
+<h3>GreaterThanLayerParams<a class="headerlink" href="#greaterthanlayerparams" title="Link to this heading"></a></h3>
 <p>GreaterThan Layer</p>
 <p>Either 1 or 2 inputs.
 Produces 1 output.
@@ -1094,7 +1098,7 @@ Perform elementwise greater than operation.</p>
 </div>
 </section>
 <section id="greaterequallayerparams">
-<h3>GreaterEqualLayerParams<a class="headerlink" href="#greaterequallayerparams" title="Permalink to this heading"></a></h3>
+<h3>GreaterEqualLayerParams<a class="headerlink" href="#greaterequallayerparams" title="Link to this heading"></a></h3>
 <p>GreaterEqual Layer</p>
 <p>Either 1 or 2 inputs.
 Produces 1 output.
@@ -1115,7 +1119,7 @@ Perform elementwise greater equal operation.</p>
 </div>
 </section>
 <section id="lessthanlayerparams">
-<h3>LessThanLayerParams<a class="headerlink" href="#lessthanlayerparams" title="Permalink to this heading"></a></h3>
+<h3>LessThanLayerParams<a class="headerlink" href="#lessthanlayerparams" title="Link to this heading"></a></h3>
 <p>LessThan Layer</p>
 <p>Either 1 or 2 inputs.
 Produces 1 output.
@@ -1136,7 +1140,7 @@ Perform elementwise less than operation.</p>
 </div>
 </section>
 <section id="lessequallayerparams">
-<h3>LessEqualLayerParams<a class="headerlink" href="#lessequallayerparams" title="Permalink to this heading"></a></h3>
+<h3>LessEqualLayerParams<a class="headerlink" href="#lessequallayerparams" title="Link to this heading"></a></h3>
 <p>LessEqual Layer</p>
 <p>Either 1 or 2 inputs.
 Produces 1 output.
@@ -1157,7 +1161,7 @@ Perform elementwise less equal operation.</p>
 </div>
 </section>
 <section id="equallayerparams">
-<h3>EqualLayerParams<a class="headerlink" href="#equallayerparams" title="Permalink to this heading"></a></h3>
+<h3>EqualLayerParams<a class="headerlink" href="#equallayerparams" title="Link to this heading"></a></h3>
 <p>Equal Layer</p>
 <p>Either 1 or 2 inputs.
 Produces 1 output.
@@ -1178,7 +1182,7 @@ Perform elementwise equal operation.</p>
 </div>
 </section>
 <section id="notequallayerparams">
-<h3>NotEqualLayerParams<a class="headerlink" href="#notequallayerparams" title="Permalink to this heading"></a></h3>
+<h3>NotEqualLayerParams<a class="headerlink" href="#notequallayerparams" title="Link to this heading"></a></h3>
 <p>NotEqual Layer</p>
 <p>Either 1 or 2 inputs.
 Produces 1 output.
@@ -1199,7 +1203,7 @@ Perform elementwise not equal operation.</p>
 </div>
 </section>
 <section id="logicalandlayerparams">
-<h3>LogicalAndLayerParams<a class="headerlink" href="#logicalandlayerparams" title="Permalink to this heading"></a></h3>
+<h3>LogicalAndLayerParams<a class="headerlink" href="#logicalandlayerparams" title="Link to this heading"></a></h3>
 <p>LogicalAnd Layer</p>
 <p>Must have 2 inputs, produces 1 output.
 Perform elementwise logical AND operation.</p>
@@ -1216,7 +1220,7 @@ Output is 1.0f if the condition is true otherwise 0.0f.</p>
 </div>
 </section>
 <section id="logicalorlayerparams">
-<h3>LogicalOrLayerParams<a class="headerlink" href="#logicalorlayerparams" title="Permalink to this heading"></a></h3>
+<h3>LogicalOrLayerParams<a class="headerlink" href="#logicalorlayerparams" title="Link to this heading"></a></h3>
 <p>LogicalOr Layer</p>
 <p>Must have 2 inputs, produces 1 output.
 Perform elementwise logical OR operation.</p>
@@ -1233,7 +1237,7 @@ Output is 1.0f if the condition is true otherwise 0.0f.</p>
 </div>
 </section>
 <section id="logicalxorlayerparams">
-<h3>LogicalXorLayerParams<a class="headerlink" href="#logicalxorlayerparams" title="Permalink to this heading"></a></h3>
+<h3>LogicalXorLayerParams<a class="headerlink" href="#logicalxorlayerparams" title="Link to this heading"></a></h3>
 <p>LogicalXor Layer</p>
 <p>Must have 2 inputs, produces 1 output.
 Perform elementwise logical XOR operation.</p>
@@ -1250,7 +1254,7 @@ Output is 1.0f if the condition is true otherwise 0.0f.</p>
 </div>
 </section>
 <section id="logicalnotlayerparams">
-<h3>LogicalNotLayerParams<a class="headerlink" href="#logicalnotlayerparams" title="Permalink to this heading"></a></h3>
+<h3>LogicalNotLayerParams<a class="headerlink" href="#logicalnotlayerparams" title="Link to this heading"></a></h3>
 <p>LogicalNot Layer</p>
 <p>Must have 1 input, produces 1 output.
 Perform elementwise logical NOT operation.</p>
@@ -1267,9 +1271,9 @@ Output is 1.0f if the condition is true otherwise 0.0f.</p>
 </section>
 </section>
 <section id="borderamounts">
-<h2>BorderAmounts<a class="headerlink" href="#borderamounts" title="Permalink to this heading"></a></h2>
+<h2>BorderAmounts<a class="headerlink" href="#borderamounts" title="Link to this heading"></a></h2>
 <section id="borderamounts-edgesizes">
-<h3>BorderAmounts.EdgeSizes<a class="headerlink" href="#borderamounts-edgesizes" title="Permalink to this heading"></a></h3>
+<h3>BorderAmounts.EdgeSizes<a class="headerlink" href="#borderamounts-edgesizes" title="Link to this heading"></a></h3>
 <p>Specifies the amount of spatial border to be either padded or cropped.</p>
 <p>For padding:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">H_out</span> <span class="o">=</span> <span class="n">borderAmounts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startEdgeSize</span> <span class="o">+</span> <span class="n">H_in</span> <span class="o">+</span> <span class="n">borderAmounts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">endEdgeSize</span>
@@ -1313,7 +1317,7 @@ Output is 1.0f if the condition is true otherwise 0.0f.</p>
 </div>
 </section>
 <section id="validpadding">
-<h3>ValidPadding<a class="headerlink" href="#validpadding" title="Permalink to this heading"></a></h3>
+<h3>ValidPadding<a class="headerlink" href="#validpadding" title="Link to this heading"></a></h3>
 <p>Specifies the type of padding to be used with Convolution/Deconvolution and Pooling layers.
 After padding, input spatial shape: <code class="docutils literal notranslate"><span class="pre">[H_in,</span> <span class="pre">W_in]</span></code>, gets modified to the
 output spatial shape <code class="docutils literal notranslate"><span class="pre">[H_out,</span> <span class="pre">W_out]</span></code>.</p>
@@ -1349,7 +1353,7 @@ If non-zero values are provided for <code class="docutils literal notranslate"><
 </div>
 </section>
 <section id="samepadding">
-<h3>SamePadding<a class="headerlink" href="#samepadding" title="Permalink to this heading"></a></h3>
+<h3>SamePadding<a class="headerlink" href="#samepadding" title="Link to this heading"></a></h3>
 <p>Specifies the type of padding to be used with Convolution/Deconvolution and pooling layers.
 After padding, input spatial shape: <code class="docutils literal notranslate"><span class="pre">[H_in,</span> <span class="pre">W_in]</span></code>, gets modified to the
 output spatial shape <code class="docutils literal notranslate"><span class="pre">[H_out,</span> <span class="pre">W_out]</span></code>.
@@ -1399,7 +1403,7 @@ With Convolution or pooling:</p>
 </div>
 </section>
 <section id="samplingmode">
-<h3>SamplingMode<a class="headerlink" href="#samplingmode" title="Permalink to this heading"></a></h3>
+<h3>SamplingMode<a class="headerlink" href="#samplingmode" title="Link to this heading"></a></h3>
 <p>Specifies how grid points are sampled from an interval.
 Without the loss of generality, assume the interval to be [0, X-1] from which N points are to be sampled.
 Here X may correspond to an input image’s height or width.
@@ -1428,7 +1432,7 @@ The methods vary in how the <code class="docutils literal notranslate"><span cla
 </div>
 </section>
 <section id="boxcoordinatesmode">
-<h3>BoxCoordinatesMode<a class="headerlink" href="#boxcoordinatesmode" title="Permalink to this heading"></a></h3>
+<h3>BoxCoordinatesMode<a class="headerlink" href="#boxcoordinatesmode" title="Link to this heading"></a></h3>
 <p>Specifies the convention used to specify four bounding box coordinates for an image of size (Height, Width).
 The (0,0) coordinate corresponds to the top-left corner of the image.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">BoxCoordinatesMode</span><span class="w"> </span><span class="p">{</span>
@@ -1452,7 +1456,7 @@ The (0,0) coordinate corresponds to the top-left corner of the image.</p>
 </div>
 </section>
 <section id="weightparams">
-<h3>WeightParams<a class="headerlink" href="#weightparams" title="Permalink to this heading"></a></h3>
+<h3>WeightParams<a class="headerlink" href="#weightparams" title="Link to this heading"></a></h3>
 <p>Weights for layer parameters.
 Weights are stored as repeated floating point numbers
 using row-major ordering
@@ -1476,7 +1480,7 @@ and can represent 1-, 2-, 3-, or 4-dimensional data.</p>
 </div>
 </section>
 <section id="quantizationparams">
-<h3>QuantizationParams<a class="headerlink" href="#quantizationparams" title="Permalink to this heading"></a></h3>
+<h3>QuantizationParams<a class="headerlink" href="#quantizationparams" title="Link to this heading"></a></h3>
 <p>Quantization parameters.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">QuantizationParams</span><span class="w"> </span><span class="p">{</span>
 
@@ -1491,7 +1495,7 @@ and can represent 1-, 2-, 3-, or 4-dimensional data.</p>
 </div>
 </section>
 <section id="linearquantizationparams">
-<h3>LinearQuantizationParams<a class="headerlink" href="#linearquantizationparams" title="Permalink to this heading"></a></h3>
+<h3>LinearQuantizationParams<a class="headerlink" href="#linearquantizationparams" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">LinearQuantizationParams</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="k">repeated</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="na">scale</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -1502,21 +1506,21 @@ and can represent 1-, 2-, 3-, or 4-dimensional data.</p>
 </div>
 </section>
 <section id="lookuptablequantizationparams">
-<h3>LookUpTableQuantizationParams<a class="headerlink" href="#lookuptablequantizationparams" title="Permalink to this heading"></a></h3>
-<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span>message LookUpTableQuantizationParams {
+<h3>LookUpTableQuantizationParams<a class="headerlink" href="#lookuptablequantizationparams" title="Link to this heading"></a></h3>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">LookUpTableQuantizationParams</span><span class="w"> </span><span class="p">{</span>
 
-    (2^numberOfBits) Elements.
-    repeated float floatValue = 1;
+<span class="w">    </span><span class="p">(</span><span class="mi">2</span><span class="err">^</span><span class="n">numberOfBits</span><span class="p">)</span><span class="w"> </span><span class="n">Elements.</span>
+<span class="w">    </span><span class="k">repeated</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="na">floatValue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
 
-}
+<span class="p">}</span>
 </pre></div>
 </div>
 </section>
 </section>
 <section id="layers">
-<h2>Layers<a class="headerlink" href="#layers" title="Permalink to this heading"></a></h2>
+<h2>Layers<a class="headerlink" href="#layers" title="Link to this heading"></a></h2>
 <section id="convolutionlayerparams">
-<h3>ConvolutionLayerParams<a class="headerlink" href="#convolutionlayerparams" title="Permalink to this heading"></a></h3>
+<h3>ConvolutionLayerParams<a class="headerlink" href="#convolutionlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs spatial convolution or deconvolution.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">ConvolutionLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -1586,7 +1590,7 @@ and “SamePadding”. Padded values are all zeros.</p>
 </div>
 </section>
 <section id="convolution3dlayerparams">
-<h3>Convolution3DLayerParams<a class="headerlink" href="#convolution3dlayerparams" title="Permalink to this heading"></a></h3>
+<h3>Convolution3DLayerParams<a class="headerlink" href="#convolution3dlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs a 3-dimensional convolution.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">Convolution3DLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -1672,7 +1676,7 @@ will have size <code class="docutils literal notranslate"><span class="pre">[1,<
 </div>
 </section>
 <section id="innerproductlayerparams">
-<h3>InnerProductLayerParams<a class="headerlink" href="#innerproductlayerparams" title="Permalink to this heading"></a></h3>
+<h3>InnerProductLayerParams<a class="headerlink" href="#innerproductlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs a matrix-vector or matrix-matrix product.
 This is equivalent to a fully-connected, or dense layer.
 The weight parameters correspond to a matrix of dimensions (inputChannels, outputChannels) i.e. (C_in, C_out)</p>
@@ -1713,7 +1717,7 @@ rank 5: (x1, x2, C_out, 1, 1)</p>
 </div>
 </section>
 <section id="embeddinglayerparams">
-<h3>EmbeddingLayerParams<a class="headerlink" href="#embeddinglayerparams" title="Permalink to this heading"></a></h3>
+<h3>EmbeddingLayerParams<a class="headerlink" href="#embeddinglayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs a matrix lookup and optionally adds a bias.
 The weights matrix is stored with dimensions [outputChannels, inputDim].</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">EmbeddingLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
@@ -1746,7 +1750,7 @@ rank 5: shape (x1, x2, outputChannels, 1, 1)</p>
 </div>
 </section>
 <section id="embeddingndlayerparams">
-<h3>EmbeddingNDLayerParams<a class="headerlink" href="#embeddingndlayerparams" title="Permalink to this heading"></a></h3>
+<h3>EmbeddingNDLayerParams<a class="headerlink" href="#embeddingndlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs a matrix lookup and optionally adds a bias.
 The weights matrix is stored with dimensions [embeddingSize, vocabSize].</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">EmbeddingNDLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
@@ -1781,7 +1785,7 @@ rank 5: shape (x1, x2, x3, x4, embeddingSize)</p>
 </div>
 </section>
 <section id="batchnormlayerparams">
-<h3>BatchnormLayerParams<a class="headerlink" href="#batchnormlayerparams" title="Permalink to this heading"></a></h3>
+<h3>BatchnormLayerParams<a class="headerlink" href="#batchnormlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs batch normalization,
 which is performed along axis = -3,
 and repeated along the other axes, if present.</p>
@@ -1819,7 +1823,7 @@ For ranks greater than 3, the leading dimensions, starting from 0 to -4 (inclusi
 </div>
 </section>
 <section id="poolinglayerparams">
-<h3>PoolingLayerParams<a class="headerlink" href="#poolinglayerparams" title="Permalink to this heading"></a></h3>
+<h3>PoolingLayerParams<a class="headerlink" href="#poolinglayerparams" title="Link to this heading"></a></h3>
 <p>A spatial pooling layer.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">PoolingLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -1885,7 +1889,7 @@ Only symmetric padding is supported with this option.</p>
 </div>
 </section>
 <section id="poolinglayerparams-validcompletepadding">
-<h3>PoolingLayerParams.ValidCompletePadding<a class="headerlink" href="#poolinglayerparams-validcompletepadding" title="Permalink to this heading"></a></h3>
+<h3>PoolingLayerParams.ValidCompletePadding<a class="headerlink" href="#poolinglayerparams-validcompletepadding" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">ValidCompletePadding</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="k">repeated</span><span class="w"> </span><span class="kt">uint64</span><span class="w"> </span><span class="na">paddingAmounts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span>
@@ -1895,7 +1899,7 @@ Only symmetric padding is supported with this option.</p>
 </div>
 </section>
 <section id="pooling3dlayerparams">
-<h3>Pooling3DLayerParams<a class="headerlink" href="#pooling3dlayerparams" title="Permalink to this heading"></a></h3>
+<h3>Pooling3DLayerParams<a class="headerlink" href="#pooling3dlayerparams" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">Pooling3DLayerParams</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="kd">enum</span><span class="w"> </span><span class="n">PoolingType3D</span><span class="w"> </span><span class="p">{</span>
@@ -1956,7 +1960,7 @@ Only symmetric padding is supported with this option.</p>
 </div>
 </section>
 <section id="globalpooling3dlayerparams">
-<h3>GlobalPooling3DLayerParams<a class="headerlink" href="#globalpooling3dlayerparams" title="Permalink to this heading"></a></h3>
+<h3>GlobalPooling3DLayerParams<a class="headerlink" href="#globalpooling3dlayerparams" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">GlobalPooling3DLayerParams</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="kd">enum</span><span class="w"> </span><span class="n">GlobalPoolingType3D</span><span class="w"> </span><span class="p">{</span>
@@ -1971,7 +1975,7 @@ Only symmetric padding is supported with this option.</p>
 </div>
 </section>
 <section id="paddinglayerparams">
-<h3>PaddingLayerParams<a class="headerlink" href="#paddinglayerparams" title="Permalink to this heading"></a></h3>
+<h3>PaddingLayerParams<a class="headerlink" href="#paddinglayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs padding along spatial dimensions.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">PaddingLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -2070,7 +2074,7 @@ with each of the supported types:</p>
 </div>
 </section>
 <section id="paddinglayerparams-paddingconstant">
-<h3>PaddingLayerParams.PaddingConstant<a class="headerlink" href="#paddinglayerparams-paddingconstant" title="Permalink to this heading"></a></h3>
+<h3>PaddingLayerParams.PaddingConstant<a class="headerlink" href="#paddinglayerparams-paddingconstant" title="Link to this heading"></a></h3>
 <p>Fill a constant value in the padded region.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">PaddingConstant</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="na">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -2079,7 +2083,7 @@ with each of the supported types:</p>
 </div>
 </section>
 <section id="paddinglayerparams-paddingreflection">
-<h3>PaddingLayerParams.PaddingReflection<a class="headerlink" href="#paddinglayerparams-paddingreflection" title="Permalink to this heading"></a></h3>
+<h3>PaddingLayerParams.PaddingReflection<a class="headerlink" href="#paddinglayerparams-paddingreflection" title="Link to this heading"></a></h3>
 <p>Reflect the values at the border for padding.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">PaddingReflection</span><span class="w"> </span><span class="p">{</span>
 <span class="p">}</span>
@@ -2087,7 +2091,7 @@ with each of the supported types:</p>
 </div>
 </section>
 <section id="paddinglayerparams-paddingreplication">
-<h3>PaddingLayerParams.PaddingReplication<a class="headerlink" href="#paddinglayerparams-paddingreplication" title="Permalink to this heading"></a></h3>
+<h3>PaddingLayerParams.PaddingReplication<a class="headerlink" href="#paddinglayerparams-paddingreplication" title="Link to this heading"></a></h3>
 <p>Replicate the values at the border for padding.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">PaddingReplication</span><span class="w"> </span><span class="p">{</span>
 <span class="p">}</span>
@@ -2095,7 +2099,7 @@ with each of the supported types:</p>
 </div>
 </section>
 <section id="concatlayerparams">
-<h3>ConcatLayerParams<a class="headerlink" href="#concatlayerparams" title="Permalink to this heading"></a></h3>
+<h3>ConcatLayerParams<a class="headerlink" href="#concatlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that concatenates along the axis = -3 or -5.
 For general concatenation along any axis, see ConcatNDLayer.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">ConcatLayer</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">x2</span><span class="p">,</span><span class="o">....</span><span class="p">)</span>
@@ -2119,7 +2123,7 @@ If “sequenceConcat” = True, rank must be greater than equal to 5. In this ca
 </div>
 </section>
 <section id="lrnlayerparams">
-<h3>LRNLayerParams<a class="headerlink" href="#lrnlayerparams" title="Permalink to this heading"></a></h3>
+<h3>LRNLayerParams<a class="headerlink" href="#lrnlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs local response normalization (LRN).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">LRNLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -2150,7 +2154,7 @@ that is, over a window “across” channels in 1x1 spatial neighborhoods.</p>
 </div>
 </section>
 <section id="softmaxlayerparams">
-<h3>SoftmaxLayerParams<a class="headerlink" href="#softmaxlayerparams" title="Permalink to this heading"></a></h3>
+<h3>SoftmaxLayerParams<a class="headerlink" href="#softmaxlayerparams" title="Link to this heading"></a></h3>
 <p>Softmax Normalization Layer</p>
 <p>A layer that performs softmax normalization.
 Normalization is applied along axis = -3 or N-3 (where N is the rank of the input)
@@ -2175,7 +2179,7 @@ For softmax layer that can operate on any axis, see SoftmaxNDLayer.</p>
 </div>
 </section>
 <section id="splitlayerparams">
-<h3>SplitLayerParams<a class="headerlink" href="#splitlayerparams" title="Permalink to this heading"></a></h3>
+<h3>SplitLayerParams<a class="headerlink" href="#splitlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that uniformly splits across axis = -3 to produce a specified number of outputs.
 For general split operation along any axis, see SplitNDLayer.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">y1</span><span class="p">,</span><span class="n">y2</span><span class="p">,</span><span class="o">...</span><span class="n">yN</span><span class="p">)</span> <span class="o">=</span> <span class="n">SplitLayer</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">where</span> <span class="n">N</span> <span class="o">=</span> <span class="n">nOutputs</span>
@@ -2200,7 +2204,7 @@ will be <code class="docutils literal notranslate"><span class="pre">[C/nOutputs
 </div>
 </section>
 <section id="addlayerparams">
-<h3>AddLayerParams<a class="headerlink" href="#addlayerparams" title="Permalink to this heading"></a></h3>
+<h3>AddLayerParams<a class="headerlink" href="#addlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs elementwise addition.
 This layer has limited broadcasting support. For general broadcasting see
 AddBroadcastableLayer.</p>
@@ -2228,7 +2232,7 @@ However, only certain set of shapes are broadcastable. For example:
 </div>
 </section>
 <section id="multiplylayerparams">
-<h3>MultiplyLayerParams<a class="headerlink" href="#multiplylayerparams" title="Permalink to this heading"></a></h3>
+<h3>MultiplyLayerParams<a class="headerlink" href="#multiplylayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs elementwise multiplication.
 This layer has limited broadcasting support. For general broadcasting see MultiplyBroadcastableLayer.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">MultiplyLayer</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">x2</span><span class="p">,</span><span class="o">...</span><span class="p">)</span>
@@ -2255,7 +2259,7 @@ However, only certain set of shapes are broadcastable. For example:
 </div>
 </section>
 <section id="unaryfunctionlayerparams">
-<h3>UnaryFunctionLayerParams<a class="headerlink" href="#unaryfunctionlayerparams" title="Permalink to this heading"></a></h3>
+<h3>UnaryFunctionLayerParams<a class="headerlink" href="#unaryfunctionlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that applies a unary function.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">UnaryFunctionLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -2297,7 +2301,7 @@ However, only certain set of shapes are broadcastable. For example:
 </div>
 </section>
 <section id="upsamplelayerparams">
-<h3>UpsampleLayerParams<a class="headerlink" href="#upsamplelayerparams" title="Permalink to this heading"></a></h3>
+<h3>UpsampleLayerParams<a class="headerlink" href="#upsamplelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that scales up spatial dimensions.
 It supports two modes: nearest neighbour (default) and bilinear.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">UpsampleLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
@@ -2344,7 +2348,7 @@ For example: blob with shape <code class="docutils literal notranslate"><span cl
 </div>
 </section>
 <section id="resizebilinearlayerparams">
-<h3>ResizeBilinearLayerParams<a class="headerlink" href="#resizebilinearlayerparams" title="Permalink to this heading"></a></h3>
+<h3>ResizeBilinearLayerParams<a class="headerlink" href="#resizebilinearlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that resizes the input to a pre-specified spatial size using bilinear interpolation.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">ResizeBilinearLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -2371,7 +2375,7 @@ For example: blob with shape <code class="docutils literal notranslate"><span cl
 </div>
 </section>
 <section id="cropresizelayerparams">
-<h3>CropResizeLayerParams<a class="headerlink" href="#cropresizelayerparams" title="Permalink to this heading"></a></h3>
+<h3>CropResizeLayerParams<a class="headerlink" href="#cropresizelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that extracts cropped spatial patches or RoIs (regions of interest) from
 the input and resizes them to a pre-specified size using bilinear interpolation.</p>
 <p>Note that RoI Align layer can be implemented with this layer followed by a pooling layer.</p>
@@ -2430,7 +2434,7 @@ specify the bounding box coordinates.</p>
 </div>
 </section>
 <section id="biaslayerparams">
-<h3>BiasLayerParams<a class="headerlink" href="#biaslayerparams" title="Permalink to this heading"></a></h3>
+<h3>BiasLayerParams<a class="headerlink" href="#biaslayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs elementwise addition of a bias,
 which is broadcasted to match the input shape.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">BiasLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
@@ -2457,7 +2461,7 @@ For ranks greater than 3, the leading dimensions, starting from 0 to -4
 </div>
 </section>
 <section id="scalelayerparams">
-<h3>ScaleLayerParams<a class="headerlink" href="#scalelayerparams" title="Permalink to this heading"></a></h3>
+<h3>ScaleLayerParams<a class="headerlink" href="#scalelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs elmentwise multiplication by a scale factor
 and optionally adds a bias;
 both the scale and bias are broadcasted to match the input shape.</p>
@@ -2491,7 +2495,7 @@ For ranks greater than 3, the leading dimensions, starting from 0 to -4
 </div>
 </section>
 <section id="loadconstantlayerparams">
-<h3>LoadConstantLayerParams<a class="headerlink" href="#loadconstantlayerparams" title="Permalink to this heading"></a></h3>
+<h3>LoadConstantLayerParams<a class="headerlink" href="#loadconstantlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that loads data as a parameter and provides it as an output.
 The output is rank 5. For general rank, see LoadConstantNDLayer.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">LoadConstantLayer</span><span class="p">()</span>
@@ -2513,7 +2517,7 @@ The output is rank 5. For general rank, see LoadConstantNDLayer.</p>
 </div>
 </section>
 <section id="l2normalizelayerparams">
-<h3>L2NormalizeLayerParams<a class="headerlink" href="#l2normalizelayerparams" title="Permalink to this heading"></a></h3>
+<h3>L2NormalizeLayerParams<a class="headerlink" href="#l2normalizelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs L2 normalization, i.e. divides by the
 the square root of the sum of squares of all elements of input.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">L2NormalizeLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
@@ -2541,9 +2545,9 @@ For ranks greater than 3, the leading dimensions, starting from 0 to -4
 </section>
 </section>
 <section id="data-reorganization-layers">
-<h2>Data Reorganization Layers<a class="headerlink" href="#data-reorganization-layers" title="Permalink to this heading"></a></h2>
+<h2>Data Reorganization Layers<a class="headerlink" href="#data-reorganization-layers" title="Link to this heading"></a></h2>
 <section id="flattenlayerparams">
-<h3>FlattenLayerParams<a class="headerlink" href="#flattenlayerparams" title="Permalink to this heading"></a></h3>
+<h3>FlattenLayerParams<a class="headerlink" href="#flattenlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that flattens the input. Requires 1 input and produces 1 output.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">FlattenLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -2577,7 +2581,7 @@ because row major ordering is used by internal storage.
 </div>
 </section>
 <section id="reshapelayerparams">
-<h3>ReshapeLayerParams<a class="headerlink" href="#reshapelayerparams" title="Permalink to this heading"></a></h3>
+<h3>ReshapeLayerParams<a class="headerlink" href="#reshapelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that recasts the input into a new shape.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">ReshapeLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -2618,7 +2622,7 @@ both the flattening and permuting requires the data to be rearranged.</p>
 </div>
 </section>
 <section id="permutelayerparams">
-<h3>PermuteLayerParams<a class="headerlink" href="#permutelayerparams" title="Permalink to this heading"></a></h3>
+<h3>PermuteLayerParams<a class="headerlink" href="#permutelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that rearranges the dimensions and data of an input.
 For generic transpose/permute operation see TransposeLayer.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">PermuteLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
@@ -2656,7 +2660,7 @@ the output is the same as the input.</p></li>
 </div>
 </section>
 <section id="reorganizedatalayerparams">
-<h3>ReorganizeDataLayerParams<a class="headerlink" href="#reorganizedatalayerparams" title="Permalink to this heading"></a></h3>
+<h3>ReorganizeDataLayerParams<a class="headerlink" href="#reorganizedatalayerparams" title="Link to this heading"></a></h3>
 <p>A layer that reorganizes data in the input in specific ways.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">ReorganizeDataLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -2732,7 +2736,7 @@ DEPTH_TO_SPACE, but with the input and output swapped.</p>
 </div>
 </section>
 <section id="slicelayerparams">
-<h3>SliceLayerParams<a class="headerlink" href="#slicelayerparams" title="Permalink to this heading"></a></h3>
+<h3>SliceLayerParams<a class="headerlink" href="#slicelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that slices the input data along axis = -1 or -2 or -3.
 For general slice along any axis, please see SliceStaticLayer/SliceDynamicLayer.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">SliceLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
@@ -2775,7 +2779,7 @@ Negative indexing is supported for startIndex and endIndex.
 </div>
 </section>
 <section id="reducelayerparams">
-<h3>ReduceLayerParams<a class="headerlink" href="#reducelayerparams" title="Permalink to this heading"></a></h3>
+<h3>ReduceLayerParams<a class="headerlink" href="#reducelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that reduces the input using a specified operation.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">ReduceLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -2836,7 +2840,7 @@ For mode == ‘ArgMax’, axis must be [-1] or [-2] or [-3].</p>
 </div>
 </section>
 <section id="croplayerparams">
-<h3>CropLayerParams<a class="headerlink" href="#croplayerparams" title="Permalink to this heading"></a></h3>
+<h3>CropLayerParams<a class="headerlink" href="#croplayerparams" title="Link to this heading"></a></h3>
 <p>A layer that crops the spatial dimensions of an input.
 If two inputs are provided, the shape of the second input is used as the
 reference shape.</p>
@@ -2889,7 +2893,7 @@ shape <code class="docutils literal notranslate"><span class="pre">[C,</span> <s
 </div>
 </section>
 <section id="averagelayerparams">
-<h3>AverageLayerParams<a class="headerlink" href="#averagelayerparams" title="Permalink to this heading"></a></h3>
+<h3>AverageLayerParams<a class="headerlink" href="#averagelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that computes the elementwise average of the inputs.
 This layer has limited broadcasting support. For general broadcasting see AddBroadcastableLayer.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">AverageLayer</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">x2</span><span class="p">,</span><span class="o">...</span><span class="p">)</span>
@@ -2911,7 +2915,7 @@ However, only certain set of shapes are broadcastable. For example:
 </div>
 </section>
 <section id="maxlayerparams">
-<h3>MaxLayerParams<a class="headerlink" href="#maxlayerparams" title="Permalink to this heading"></a></h3>
+<h3>MaxLayerParams<a class="headerlink" href="#maxlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that computes the elementwise maximum over the inputs.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">MaxLayer</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">x2</span><span class="p">,</span><span class="o">...</span><span class="p">)</span>
 </pre></div>
@@ -2932,7 +2936,7 @@ However, only certain set of shapes are broadcastable. For example:
 </div>
 </section>
 <section id="minlayerparams">
-<h3>MinLayerParams<a class="headerlink" href="#minlayerparams" title="Permalink to this heading"></a></h3>
+<h3>MinLayerParams<a class="headerlink" href="#minlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that computes the elementwise minimum over the inputs.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">MinLayer</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">x2</span><span class="p">,</span><span class="o">...</span><span class="p">)</span>
 </pre></div>
@@ -2953,7 +2957,7 @@ However, only certain set of shapes are broadcastable. For example:
 </div>
 </section>
 <section id="dotproductlayerparams">
-<h3>DotProductLayerParams<a class="headerlink" href="#dotproductlayerparams" title="Permalink to this heading"></a></h3>
+<h3>DotProductLayerParams<a class="headerlink" href="#dotproductlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that computes the dot product of two vectors.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">DotProductLayer</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">x2</span><span class="p">)</span>
 </pre></div>
@@ -2978,7 +2982,7 @@ For example: For rank 4 inputs, output shape: <code class="docutils literal notr
 </div>
 </section>
 <section id="meanvariancenormalizelayerparams">
-<h3>MeanVarianceNormalizeLayerParams<a class="headerlink" href="#meanvariancenormalizelayerparams" title="Permalink to this heading"></a></h3>
+<h3>MeanVarianceNormalizeLayerParams<a class="headerlink" href="#meanvariancenormalizelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs mean variance normalization, along axis = -3.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">MeanVarianceNormalizeLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -3011,7 +3015,7 @@ across spatial dimensions (i.e. last two dimensions).</p>
 </div>
 </section>
 <section id="sequencerepeatlayerparams">
-<h3>SequenceRepeatLayerParams<a class="headerlink" href="#sequencerepeatlayerparams" title="Permalink to this heading"></a></h3>
+<h3>SequenceRepeatLayerParams<a class="headerlink" href="#sequencerepeatlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that repeats a sequence or the dimension sitting at axis = -5</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">SequenceRepeatLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -3036,7 +3040,7 @@ is <code class="docutils literal notranslate"><span class="pre">[nRepetitions</s
 </section>
 </section>
 <section id="recurrent-layers">
-<h2>Recurrent Layers<a class="headerlink" href="#recurrent-layers" title="Permalink to this heading"></a></h2>
+<h2>Recurrent Layers<a class="headerlink" href="#recurrent-layers" title="Link to this heading"></a></h2>
 <dl class="simple">
 <dt>The following activations are supported with recurrent layers:</dt><dd><ul class="simple">
 <li><p>Linear</p></li>
@@ -3051,7 +3055,7 @@ for alpha = 0.2, beta = 0.5</p></li>
 </dd>
 </dl>
 <section id="simplerecurrentlayerparams">
-<h3>SimpleRecurrentLayerParams<a class="headerlink" href="#simplerecurrentlayerparams" title="Permalink to this heading"></a></h3>
+<h3>SimpleRecurrentLayerParams<a class="headerlink" href="#simplerecurrentlayerparams" title="Link to this heading"></a></h3>
 <p>A simple recurrent layer.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y_t</span> <span class="o">=</span> <span class="n">SimpleRecurrentLayer</span><span class="p">(</span><span class="n">x_t</span><span class="p">,</span> <span class="n">y_</span><span class="p">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">})</span>
 </pre></div>
@@ -3106,7 +3110,7 @@ Represents a vector of size <code class="docutils literal notranslate"><span cla
 </div>
 </section>
 <section id="grulayerparams">
-<h3>GRULayerParams<a class="headerlink" href="#grulayerparams" title="Permalink to this heading"></a></h3>
+<h3>GRULayerParams<a class="headerlink" href="#grulayerparams" title="Link to this heading"></a></h3>
 <p>Gated-Recurrent Unit (GRU) Layer</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y_t</span> <span class="o">=</span> <span class="n">GRULayer</span><span class="p">(</span><span class="n">x_t</span><span class="p">,</span> <span class="n">y_</span><span class="p">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">})</span>
 </pre></div>
@@ -3191,7 +3195,7 @@ Represents a vector of size <code class="docutils literal notranslate"><span cla
 </div>
 </section>
 <section id="lstmparams">
-<h3>LSTMParams<a class="headerlink" href="#lstmparams" title="Permalink to this heading"></a></h3>
+<h3>LSTMParams<a class="headerlink" href="#lstmparams" title="Link to this heading"></a></h3>
 <p>Long short-term memory (LSTM) parameters.</p>
 <p>This is described by the following equations:</p>
 <dl>
@@ -3260,7 +3264,7 @@ Represents a vector of size <code class="docutils literal notranslate"><span cla
 </div>
 </section>
 <section id="lstmweightparams">
-<h3>LSTMWeightParams<a class="headerlink" href="#lstmweightparams" title="Permalink to this heading"></a></h3>
+<h3>LSTMWeightParams<a class="headerlink" href="#lstmweightparams" title="Link to this heading"></a></h3>
 <p>Weights for long short-term memory (LSTM) layers</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">LSTMWeightParams</span><span class="w"> </span><span class="p">{</span>
 
@@ -3290,7 +3294,7 @@ Represents a vector of size <code class="docutils literal notranslate"><span cla
 </div>
 </section>
 <section id="unidirectionallstmlayerparams">
-<h3>UniDirectionalLSTMLayerParams<a class="headerlink" href="#unidirectionallstmlayerparams" title="Permalink to this heading"></a></h3>
+<h3>UniDirectionalLSTMLayerParams<a class="headerlink" href="#unidirectionallstmlayerparams" title="Link to this heading"></a></h3>
 <p>A unidirectional long short-term memory (LSTM) layer.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">y_t</span><span class="p">,</span> <span class="n">c_t</span><span class="p">)</span> <span class="o">=</span> <span class="n">UniDirectionalLSTMLayer</span><span class="p">(</span><span class="n">x_t</span><span class="p">,</span> <span class="n">y_</span><span class="p">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">},</span> <span class="n">c_</span><span class="p">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">})</span>
 </pre></div>
@@ -3325,7 +3329,7 @@ Represents a vector of size <code class="docutils literal notranslate"><span cla
 </div>
 </section>
 <section id="bidirectionallstmlayerparams">
-<h3>BiDirectionalLSTMLayerParams<a class="headerlink" href="#bidirectionallstmlayerparams" title="Permalink to this heading"></a></h3>
+<h3>BiDirectionalLSTMLayerParams<a class="headerlink" href="#bidirectionallstmlayerparams" title="Link to this heading"></a></h3>
 <p>Bidirectional long short-term memory (LSTM) layer</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">y_t</span><span class="p">,</span> <span class="n">c_t</span><span class="p">,</span> <span class="n">y_t_reverse</span><span class="p">,</span> <span class="n">c_t_reverse</span><span class="p">)</span> <span class="o">=</span> <span class="n">BiDirectionalLSTMLayer</span><span class="p">(</span><span class="n">x_t</span><span class="p">,</span> <span class="n">y_</span><span class="p">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">},</span> <span class="n">c_</span><span class="p">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">},</span> <span class="n">y_</span><span class="p">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">}</span><span class="n">_reverse</span><span class="p">,</span> <span class="n">c_</span><span class="p">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">}</span><span class="n">_reverse</span><span class="p">)</span>
 </pre></div>
@@ -3382,7 +3386,7 @@ where <code class="docutils literal notranslate"><span class="pre">x_i</span></c
 </div>
 </section>
 <section id="customlayerparams">
-<h3>CustomLayerParams<a class="headerlink" href="#customlayerparams" title="Permalink to this heading"></a></h3>
+<h3>CustomLayerParams<a class="headerlink" href="#customlayerparams" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">CustomLayerParams</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="kd">message</span><span class="w"> </span><span class="nc">CustomLayerParamValue</span><span class="w"> </span><span class="p">{</span>
@@ -3405,7 +3409,7 @@ where <code class="docutils literal notranslate"><span class="pre">x_i</span></c
 </div>
 </section>
 <section id="customlayerparams-customlayerparamvalue">
-<h3>CustomLayerParams.CustomLayerParamValue<a class="headerlink" href="#customlayerparams-customlayerparamvalue" title="Permalink to this heading"></a></h3>
+<h3>CustomLayerParams.CustomLayerParamValue<a class="headerlink" href="#customlayerparams-customlayerparamvalue" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">CustomLayerParamValue</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">oneof</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="kt">double</span><span class="w"> </span><span class="na">doubleValue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span>
@@ -3419,7 +3423,7 @@ where <code class="docutils literal notranslate"><span class="pre">x_i</span></c
 </div>
 </section>
 <section id="customlayerparams-parametersentry">
-<h3>CustomLayerParams.ParametersEntry<a class="headerlink" href="#customlayerparams-parametersentry" title="Permalink to this heading"></a></h3>
+<h3>CustomLayerParams.ParametersEntry<a class="headerlink" href="#customlayerparams-parametersentry" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">CustomLayerParamValue</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">oneof</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="kt">double</span><span class="w"> </span><span class="na">doubleValue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span>
@@ -3433,7 +3437,7 @@ where <code class="docutils literal notranslate"><span class="pre">x_i</span></c
 </div>
 </section>
 <section id="transposelayerparams">
-<h3>TransposeLayerParams<a class="headerlink" href="#transposelayerparams" title="Permalink to this heading"></a></h3>
+<h3>TransposeLayerParams<a class="headerlink" href="#transposelayerparams" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">TransposeLayerParams</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="k">repeated</span><span class="w"> </span><span class="kt">uint64</span><span class="w"> </span><span class="na">axes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="c1">//</span>
@@ -3443,7 +3447,7 @@ where <code class="docutils literal notranslate"><span class="pre">x_i</span></c
 </div>
 </section>
 <section id="batchedmatmullayerparams">
-<h3>BatchedMatMulLayerParams<a class="headerlink" href="#batchedmatmullayerparams" title="Permalink to this heading"></a></h3>
+<h3>BatchedMatMulLayerParams<a class="headerlink" href="#batchedmatmullayerparams" title="Link to this heading"></a></h3>
 <p>A layer that computes the matrix multiplication of two tensors with numpy-like broadcasting
 where the matrices reside in the last two indices of the tensor.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">BatchedMatMul</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
@@ -3509,7 +3513,7 @@ All the indices, except for the last two, are broadcasted using conventional rul
 </div>
 </section>
 <section id="concatndlayerparams">
-<h3>ConcatNDLayerParams<a class="headerlink" href="#concatndlayerparams" title="Permalink to this heading"></a></h3>
+<h3>ConcatNDLayerParams<a class="headerlink" href="#concatndlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that concatenates a list of tensors along a specified axis.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">ConcatNDLayer</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">x2</span><span class="p">,</span><span class="o">....</span><span class="p">)</span>
 </pre></div>
@@ -3530,7 +3534,7 @@ All the indices, except for the last two, are broadcasted using conventional rul
 </div>
 </section>
 <section id="softmaxndlayerparams">
-<h3>SoftmaxNDLayerParams<a class="headerlink" href="#softmaxndlayerparams" title="Permalink to this heading"></a></h3>
+<h3>SoftmaxNDLayerParams<a class="headerlink" href="#softmaxndlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs softmax normalization along a specified axis.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">SoftmaxNDLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -3546,7 +3550,7 @@ All the indices, except for the last two, are broadcasted using conventional rul
 </div>
 </section>
 <section id="reverselayerparams">
-<h3>ReverseLayerParams<a class="headerlink" href="#reverselayerparams" title="Permalink to this heading"></a></h3>
+<h3>ReverseLayerParams<a class="headerlink" href="#reverselayerparams" title="Link to this heading"></a></h3>
 <p>A layer that reverses specific dimensions of the input tensor.
 It is similar in functionality to the numpy.flip method.</p>
 <p>Requires 1 input and produces 1 output.
@@ -3560,7 +3564,7 @@ Output shape is same as the input.</p>
 </div>
 </section>
 <section id="reverseseqlayerparams">
-<h3>ReverseSeqLayerParams<a class="headerlink" href="#reverseseqlayerparams" title="Permalink to this heading"></a></h3>
+<h3>ReverseSeqLayerParams<a class="headerlink" href="#reverseseqlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that reverses variable length slices.</p>
 <p>Requires 2 inputs and produces 1 output.</p>
 <p>2 inputs, in order are denoted by “data”, “seq_lengths”.
@@ -3617,7 +3621,7 @@ each of which is flipped along the dimension “sequenceAxis”, by the amount s
 </div>
 </section>
 <section id="loadconstantndlayerparams">
-<h3>LoadConstantNDLayerParams<a class="headerlink" href="#loadconstantndlayerparams" title="Permalink to this heading"></a></h3>
+<h3>LoadConstantNDLayerParams<a class="headerlink" href="#loadconstantndlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that loads data as a parameter and provides it as an output.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">LoadConstantNDLayer</span><span class="p">()</span>
 </pre></div>
@@ -3634,7 +3638,7 @@ each of which is flipped along the dimension “sequenceAxis”, by the amount s
 </div>
 </section>
 <section id="filllikelayerparams">
-<h3>FillLikeLayerParams<a class="headerlink" href="#filllikelayerparams" title="Permalink to this heading"></a></h3>
+<h3>FillLikeLayerParams<a class="headerlink" href="#filllikelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that generates an output tensor with a constant value.
 Input is only used to determine the shape of the output.
 This layer is used to allocate a tensor with a dynamic shape (that of the input) and constant value.</p>
@@ -3658,7 +3662,7 @@ infer the shape of the output.</p>
 </div>
 </section>
 <section id="fillstaticlayerparams">
-<h3>FillStaticLayerParams<a class="headerlink" href="#fillstaticlayerparams" title="Permalink to this heading"></a></h3>
+<h3>FillStaticLayerParams<a class="headerlink" href="#fillstaticlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that generates an output tensor with a constant value.
 This layer is used to allocate a tensor with a static shape and constant value.</p>
 <p>Requires no input and produces 1 output.</p>
@@ -3679,7 +3683,7 @@ This layer is used to allocate a tensor with a static shape and constant value.<
 </div>
 </section>
 <section id="filldynamiclayerparams">
-<h3>FillDynamicLayerParams<a class="headerlink" href="#filldynamiclayerparams" title="Permalink to this heading"></a></h3>
+<h3>FillDynamicLayerParams<a class="headerlink" href="#filldynamiclayerparams" title="Link to this heading"></a></h3>
 <p>A layer that generates an output tensor with a constant value.
 This layer is used to allocate a tensor with a dynamic shape (as specified by the input) and constant value.</p>
 <p>Requires 1 input and produces 1 output.</p>
@@ -3701,7 +3705,7 @@ This layer is used to allocate a tensor with a dynamic shape (as specified by th
 </div>
 </section>
 <section id="wherebroadcastablelayerparams">
-<h3>WhereBroadcastableLayerParams<a class="headerlink" href="#wherebroadcastablelayerparams" title="Permalink to this heading"></a></h3>
+<h3>WhereBroadcastableLayerParams<a class="headerlink" href="#wherebroadcastablelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that returns the elements either from tensor x or tensor y,
 depending on the value in the condition tensor.
 It is similar in functionality to the numpy.where method with 3 inputs.</p>
@@ -3724,7 +3728,7 @@ Inputs, in order, are the condition tensor, x and y.</p>
 </div>
 </section>
 <section id="sinlayerparams">
-<h3>SinLayerParams<a class="headerlink" href="#sinlayerparams" title="Permalink to this heading"></a></h3>
+<h3>SinLayerParams<a class="headerlink" href="#sinlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that computes elementwise trigonometric sine function.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">SinLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -3738,7 +3742,7 @@ Output shape is same as the input.</p>
 </div>
 </section>
 <section id="coslayerparams">
-<h3>CosLayerParams<a class="headerlink" href="#coslayerparams" title="Permalink to this heading"></a></h3>
+<h3>CosLayerParams<a class="headerlink" href="#coslayerparams" title="Link to this heading"></a></h3>
 <p>A layer that computes elementwise trigonometric cosine function.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">CosLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -3752,7 +3756,7 @@ Output shape is same as the input.</p>
 </div>
 </section>
 <section id="tanlayerparams">
-<h3>TanLayerParams<a class="headerlink" href="#tanlayerparams" title="Permalink to this heading"></a></h3>
+<h3>TanLayerParams<a class="headerlink" href="#tanlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that computes elementwise trigonometric tangent function.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">TanLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -3766,7 +3770,7 @@ Output shape is same as the input.</p>
 </div>
 </section>
 <section id="asinlayerparams">
-<h3>AsinLayerParams<a class="headerlink" href="#asinlayerparams" title="Permalink to this heading"></a></h3>
+<h3>AsinLayerParams<a class="headerlink" href="#asinlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that computes elementwise trigonometric arcsine function.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">AsinLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -3780,7 +3784,7 @@ Output shape is same as the input.</p>
 </div>
 </section>
 <section id="acoslayerparams">
-<h3>AcosLayerParams<a class="headerlink" href="#acoslayerparams" title="Permalink to this heading"></a></h3>
+<h3>AcosLayerParams<a class="headerlink" href="#acoslayerparams" title="Link to this heading"></a></h3>
 <p>A layer that computes elementwise trigonometric arccosine function.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">AcosLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -3794,7 +3798,7 @@ Output shape is same as the input.</p>
 </div>
 </section>
 <section id="atanlayerparams">
-<h3>AtanLayerParams<a class="headerlink" href="#atanlayerparams" title="Permalink to this heading"></a></h3>
+<h3>AtanLayerParams<a class="headerlink" href="#atanlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that computes elementwise trigonometric arctangent function.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">AtanLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -3808,7 +3812,7 @@ Output shape is same as the input.</p>
 </div>
 </section>
 <section id="sinhlayerparams">
-<h3>SinhLayerParams<a class="headerlink" href="#sinhlayerparams" title="Permalink to this heading"></a></h3>
+<h3>SinhLayerParams<a class="headerlink" href="#sinhlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that computes elementwise trigonometric hyperbolic sine function.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">SinhLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -3822,7 +3826,7 @@ Output shape is same as the input.</p>
 </div>
 </section>
 <section id="coshlayerparams">
-<h3>CoshLayerParams<a class="headerlink" href="#coshlayerparams" title="Permalink to this heading"></a></h3>
+<h3>CoshLayerParams<a class="headerlink" href="#coshlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that computes elementwise trigonometric hyperbolic cosine function.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">CoshLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -3836,7 +3840,7 @@ Output shape is same as the input.</p>
 </div>
 </section>
 <section id="tanhlayerparams">
-<h3>TanhLayerParams<a class="headerlink" href="#tanhlayerparams" title="Permalink to this heading"></a></h3>
+<h3>TanhLayerParams<a class="headerlink" href="#tanhlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that computes elementwise trigonometric hyperbolic tangent function.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">TanhLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -3850,7 +3854,7 @@ Output shape is same as the input.</p>
 </div>
 </section>
 <section id="asinhlayerparams">
-<h3>AsinhLayerParams<a class="headerlink" href="#asinhlayerparams" title="Permalink to this heading"></a></h3>
+<h3>AsinhLayerParams<a class="headerlink" href="#asinhlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that computes elementwise trigonometric hyperbolic arcsine function.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">AsinhLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -3864,7 +3868,7 @@ Output shape is same as the input.</p>
 </div>
 </section>
 <section id="acoshlayerparams">
-<h3>AcoshLayerParams<a class="headerlink" href="#acoshlayerparams" title="Permalink to this heading"></a></h3>
+<h3>AcoshLayerParams<a class="headerlink" href="#acoshlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that computes elementwise trigonometric hyperbolic arccosine function.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">AcoshLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -3878,7 +3882,7 @@ Output shape is same as the input.</p>
 </div>
 </section>
 <section id="atanhlayerparams">
-<h3>AtanhLayerParams<a class="headerlink" href="#atanhlayerparams" title="Permalink to this heading"></a></h3>
+<h3>AtanhLayerParams<a class="headerlink" href="#atanhlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that computes elementwise trigonometric hyperbolic arctangent function.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">AtanhLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -3892,7 +3896,7 @@ Output shape is same as the input.</p>
 </div>
 </section>
 <section id="powbroadcastablelayerparams">
-<h3>PowBroadcastableLayerParams<a class="headerlink" href="#powbroadcastablelayerparams" title="Permalink to this heading"></a></h3>
+<h3>PowBroadcastableLayerParams<a class="headerlink" href="#powbroadcastablelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that raises each element in first tensor to the power of
 corresponding element in the second tensor.
 Supports conventional numpy-like broadcasting.</p>
@@ -3916,7 +3920,7 @@ Supports conventional numpy-like broadcasting.</p>
 </div>
 </section>
 <section id="exp2layerparams">
-<h3>Exp2LayerParams<a class="headerlink" href="#exp2layerparams" title="Permalink to this heading"></a></h3>
+<h3>Exp2LayerParams<a class="headerlink" href="#exp2layerparams" title="Link to this heading"></a></h3>
 <p>A layer that computes the exponential of all elements in the input tensor, with the base 2.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">Exp2Layer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
@@ -3930,7 +3934,7 @@ Output shape is same as the input.</p>
 </div>
 </section>
 <section id="wherenonzerolayerparams">
-<h3>WhereNonZeroLayerParams<a class="headerlink" href="#wherenonzerolayerparams" title="Permalink to this heading"></a></h3>
+<h3>WhereNonZeroLayerParams<a class="headerlink" href="#wherenonzerolayerparams" title="Link to this heading"></a></h3>
 <p>A layer that returns a tensor containing the indices of all non-zero
 elements of input tensor.
 It is similar in functionality to the numpy.where method with 1 input.</p>
@@ -3967,7 +3971,7 @@ where N is the number of non-zero elements in the input and R is the rank of the
 </div>
 </section>
 <section id="matrixbandpartlayerparams">
-<h3>MatrixBandPartLayerParams<a class="headerlink" href="#matrixbandpartlayerparams" title="Permalink to this heading"></a></h3>
+<h3>MatrixBandPartLayerParams<a class="headerlink" href="#matrixbandpartlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that copies a tensor setting everything outside a central band in
 each inner-most matrix to zero. Requires 1 input and produces 1 output.</p>
 <p>Parameters for matrix_band_part layer:</p>
@@ -3985,7 +3989,7 @@ while the rest are treated as batch.</p>
 </div>
 </section>
 <section id="uppertriangularlayerparams">
-<h3>UpperTriangularLayerParams<a class="headerlink" href="#uppertriangularlayerparams" title="Permalink to this heading"></a></h3>
+<h3>UpperTriangularLayerParams<a class="headerlink" href="#uppertriangularlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that copies a tensor setting everything outside upper triangular to zero.</p>
 <p>Requires 1 input and produces 1 output.</p>
 <p>Output shape is same as the input shape.
@@ -4000,7 +4004,7 @@ For rank higher than 2, the last 2 dimensions are treated as the matrix, while t
 </div>
 </section>
 <section id="lowertriangularlayerparams">
-<h3>LowerTriangularLayerParams<a class="headerlink" href="#lowertriangularlayerparams" title="Permalink to this heading"></a></h3>
+<h3>LowerTriangularLayerParams<a class="headerlink" href="#lowertriangularlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that copies a tensor setting everything outside lower triangular to zero.</p>
 <p>Requires 1 input and produces 1 output.</p>
 <p>Output shape is same as the input shape.
@@ -4015,7 +4019,7 @@ For rank higher than 2, the last 2 dimensions are treated as the matrix, while t
 </div>
 </section>
 <section id="broadcasttolikelayerparams">
-<h3>BroadcastToLikeLayerParams<a class="headerlink" href="#broadcasttolikelayerparams" title="Permalink to this heading"></a></h3>
+<h3>BroadcastToLikeLayerParams<a class="headerlink" href="#broadcasttolikelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that broadcasts a tensor to a new shape.</p>
 <p>Requires 2 inputs and produces 1 output.</p>
 <p>First input is broadcast to produce the output, while the second input is only
@@ -4028,7 +4032,7 @@ used to determine the shape of the output. Values of second input are not used.<
 </div>
 </section>
 <section id="broadcasttostaticlayerparams">
-<h3>BroadcastToStaticLayerParams<a class="headerlink" href="#broadcasttostaticlayerparams" title="Permalink to this heading"></a></h3>
+<h3>BroadcastToStaticLayerParams<a class="headerlink" href="#broadcasttostaticlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that broadcasts a tensor to a new shape.</p>
 <p>Requires 1 input and produces 1 output.</p>
 <p>Output tensor is the broadcasted version of the input and has shape as specified in the
@@ -4042,7 +4046,7 @@ parameter “targetShape”.</p>
 </div>
 </section>
 <section id="broadcasttodynamiclayerparams">
-<h3>BroadcastToDynamicLayerParams<a class="headerlink" href="#broadcasttodynamiclayerparams" title="Permalink to this heading"></a></h3>
+<h3>BroadcastToDynamicLayerParams<a class="headerlink" href="#broadcasttodynamiclayerparams" title="Link to this heading"></a></h3>
 <p>A layer that broadcasts a tensor to a new shape.</p>
 <p>Requires 2 inputs and produces 1 output.</p>
 <p>First input is the one that is broadcasted to produce the output.
@@ -4055,7 +4059,7 @@ Output tensor has shape as specified by the values in the 2nd input tensor.</p>
 </div>
 </section>
 <section id="addbroadcastablelayerparams">
-<h3>AddBroadcastableLayerParams<a class="headerlink" href="#addbroadcastablelayerparams" title="Permalink to this heading"></a></h3>
+<h3>AddBroadcastableLayerParams<a class="headerlink" href="#addbroadcastablelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs element-wise addition operation with broadcast support.</p>
 <p>Requires 2 inputs and produces 1 output.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">AddBroadcastableLayerParams</span><span class="w"> </span><span class="p">{</span>
@@ -4065,7 +4069,7 @@ Output tensor has shape as specified by the values in the 2nd input tensor.</p>
 </div>
 </section>
 <section id="maxbroadcastablelayerparams">
-<h3>MaxBroadcastableLayerParams<a class="headerlink" href="#maxbroadcastablelayerparams" title="Permalink to this heading"></a></h3>
+<h3>MaxBroadcastableLayerParams<a class="headerlink" href="#maxbroadcastablelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs element-wise maximum operation with broadcast support.</p>
 <p>Requires 2 inputs and produces 1 output.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">MaxBroadcastableLayerParams</span><span class="w"> </span><span class="p">{</span>
@@ -4075,7 +4079,7 @@ Output tensor has shape as specified by the values in the 2nd input tensor.</p>
 </div>
 </section>
 <section id="minbroadcastablelayerparams">
-<h3>MinBroadcastableLayerParams<a class="headerlink" href="#minbroadcastablelayerparams" title="Permalink to this heading"></a></h3>
+<h3>MinBroadcastableLayerParams<a class="headerlink" href="#minbroadcastablelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs element-wise minimum operation with broadcast support.</p>
 <p>Requires 2 inputs and produces 1 output.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">MinBroadcastableLayerParams</span><span class="w"> </span><span class="p">{</span>
@@ -4085,7 +4089,7 @@ Output tensor has shape as specified by the values in the 2nd input tensor.</p>
 </div>
 </section>
 <section id="modbroadcastablelayerparams">
-<h3>ModBroadcastableLayerParams<a class="headerlink" href="#modbroadcastablelayerparams" title="Permalink to this heading"></a></h3>
+<h3>ModBroadcastableLayerParams<a class="headerlink" href="#modbroadcastablelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs element-wise modular operation with broadcast support.</p>
 <p>Requires 2 inputs and produces 1 output.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">ModBroadcastableLayerParams</span><span class="w"> </span><span class="p">{</span>
@@ -4095,7 +4099,7 @@ Output tensor has shape as specified by the values in the 2nd input tensor.</p>
 </div>
 </section>
 <section id="floordivbroadcastablelayerparams">
-<h3>FloorDivBroadcastableLayerParams<a class="headerlink" href="#floordivbroadcastablelayerparams" title="Permalink to this heading"></a></h3>
+<h3>FloorDivBroadcastableLayerParams<a class="headerlink" href="#floordivbroadcastablelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs element-wise floor division operation with broadcast support.</p>
 <p>Requires 2 inputs and produces 1 output.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">FloorDivBroadcastableLayerParams</span><span class="w"> </span><span class="p">{</span>
@@ -4105,7 +4109,7 @@ Output tensor has shape as specified by the values in the 2nd input tensor.</p>
 </div>
 </section>
 <section id="subtractbroadcastablelayerparams">
-<h3>SubtractBroadcastableLayerParams<a class="headerlink" href="#subtractbroadcastablelayerparams" title="Permalink to this heading"></a></h3>
+<h3>SubtractBroadcastableLayerParams<a class="headerlink" href="#subtractbroadcastablelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs element-wise subtract operation with broadcast support.</p>
 <p>Requires 2 inputs and produces 1 output.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">SubtractBroadcastableLayerParams</span><span class="w"> </span><span class="p">{</span>
@@ -4115,7 +4119,7 @@ Output tensor has shape as specified by the values in the 2nd input tensor.</p>
 </div>
 </section>
 <section id="multiplybroadcastablelayerparams">
-<h3>MultiplyBroadcastableLayerParams<a class="headerlink" href="#multiplybroadcastablelayerparams" title="Permalink to this heading"></a></h3>
+<h3>MultiplyBroadcastableLayerParams<a class="headerlink" href="#multiplybroadcastablelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs element-wise multiply operation with broadcast support.</p>
 <p>Requires 2 inputs and produces 1 output.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">MultiplyBroadcastableLayerParams</span><span class="w"> </span><span class="p">{</span>
@@ -4125,7 +4129,7 @@ Output tensor has shape as specified by the values in the 2nd input tensor.</p>
 </div>
 </section>
 <section id="dividebroadcastablelayerparams">
-<h3>DivideBroadcastableLayerParams<a class="headerlink" href="#dividebroadcastablelayerparams" title="Permalink to this heading"></a></h3>
+<h3>DivideBroadcastableLayerParams<a class="headerlink" href="#dividebroadcastablelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs element-wise division operation with broadcast support.</p>
 <p>Requires 2 inputs and produces 1 output.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">DivideBroadcastableLayerParams</span><span class="w"> </span><span class="p">{</span>
@@ -4135,7 +4139,7 @@ Output tensor has shape as specified by the values in the 2nd input tensor.</p>
 </div>
 </section>
 <section id="gatherlayerparams">
-<h3>GatherLayerParams<a class="headerlink" href="#gatherlayerparams" title="Permalink to this heading"></a></h3>
+<h3>GatherLayerParams<a class="headerlink" href="#gatherlayerparams" title="Link to this heading"></a></h3>
 <p>Gather layer that gathers elements from the first input, along a specified axis,
 at indices specified in the second input.</p>
 <p>It is similar in functionality to the <code class="docutils literal notranslate"><span class="pre">numpy.take</span></code> method.</p>
@@ -4175,7 +4179,7 @@ and store into output.</p>
 </div>
 </section>
 <section id="scatterlayerparams">
-<h3>ScatterLayerParams<a class="headerlink" href="#scatterlayerparams" title="Permalink to this heading"></a></h3>
+<h3>ScatterLayerParams<a class="headerlink" href="#scatterlayerparams" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">ScatterLayerParams</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="kt">int64</span><span class="w"> </span><span class="na">axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -4186,7 +4190,7 @@ and store into output.</p>
 </div>
 </section>
 <section id="gatherndlayerparams">
-<h3>GatherNDLayerParams<a class="headerlink" href="#gatherndlayerparams" title="Permalink to this heading"></a></h3>
+<h3>GatherNDLayerParams<a class="headerlink" href="#gatherndlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that gathers elements from the first input, <code class="docutils literal notranslate"><span class="pre">'params'</span></code>, at the
 multi-indices specified by the second input, <code class="docutils literal notranslate"><span class="pre">'indices'</span></code>.</p>
 <p>Requires two inputs and produces one output.</p>
@@ -4228,7 +4232,7 @@ point is <code class="docutils literal notranslate"><span class="pre">indices[0,
 </div>
 </section>
 <section id="scatterndlayerparams">
-<h3>ScatterNDLayerParams<a class="headerlink" href="#scatterndlayerparams" title="Permalink to this heading"></a></h3>
+<h3>ScatterNDLayerParams<a class="headerlink" href="#scatterndlayerparams" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">ScatterNDLayerParams</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="n">ScatterMode</span><span class="w"> </span><span class="na">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -4238,7 +4242,7 @@ point is <code class="docutils literal notranslate"><span class="pre">indices[0,
 </div>
 </section>
 <section id="gatheralongaxislayerparams">
-<h3>GatherAlongAxisLayerParams<a class="headerlink" href="#gatheralongaxislayerparams" title="Permalink to this heading"></a></h3>
+<h3>GatherAlongAxisLayerParams<a class="headerlink" href="#gatheralongaxislayerparams" title="Link to this heading"></a></h3>
 <p>Gather layer that gathers elements from the first input, along a specified axis,
 at indices specified in the second input.
 It is similar in functionality to the numpy.take_along_axis method.</p>
@@ -4260,7 +4264,7 @@ Shapes of ‘indices’ and ‘data’ match, except at the ‘axis’ dimension
 </div>
 </section>
 <section id="scatteralongaxislayerparams">
-<h3>ScatterAlongAxisLayerParams<a class="headerlink" href="#scatteralongaxislayerparams" title="Permalink to this heading"></a></h3>
+<h3>ScatterAlongAxisLayerParams<a class="headerlink" href="#scatteralongaxislayerparams" title="Link to this heading"></a></h3>
 <p>A layer that scatters data into a new tensor according to indices from
 the input along the given axis into the output tensor.
 This is the inverse operation of GatherAlongAxis.
@@ -4297,7 +4301,7 @@ Shapes of ‘indices’ and ‘updates’ match, which is same as the shape of
 </div>
 </section>
 <section id="stacklayerparams">
-<h3>StackLayerParams<a class="headerlink" href="#stacklayerparams" title="Permalink to this heading"></a></h3>
+<h3>StackLayerParams<a class="headerlink" href="#stacklayerparams" title="Link to this heading"></a></h3>
 <p>A layer that stacks the input tensors along the given axis.
 It is similar in functionality to the numpy.stack method.</p>
 <p>Requires at least 2 inputs and produces 1 output.
@@ -4325,7 +4329,7 @@ Rank of the output is 1 greater than the rank of the inputs.</p>
 </div>
 </section>
 <section id="rankpreservingreshapelayerparams">
-<h3>RankPreservingReshapeLayerParams<a class="headerlink" href="#rankpreservingreshapelayerparams" title="Permalink to this heading"></a></h3>
+<h3>RankPreservingReshapeLayerParams<a class="headerlink" href="#rankpreservingreshapelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that reshapes a tensor that does not alter the rank of the input.
 Order of the data is left unchanged.</p>
 <p>Requires 1 input and produces 1 output.</p>
@@ -4352,7 +4356,7 @@ Order of the data is left unchanged.</p>
 </div>
 </section>
 <section id="constantpaddinglayerparams">
-<h3>ConstantPaddingLayerParams<a class="headerlink" href="#constantpaddinglayerparams" title="Permalink to this heading"></a></h3>
+<h3>ConstantPaddingLayerParams<a class="headerlink" href="#constantpaddinglayerparams" title="Link to this heading"></a></h3>
 <p>Constant padding layer.
 Pad the input array with a constant value, either along a single given axis or along a set of axes.</p>
 <p>Requires 1 or 2 inputs and produces 1 output.
@@ -4393,7 +4397,7 @@ The amount of padding can be either set as a parameter (“padAmounts”) or pro
 </div>
 </section>
 <section id="randomnormallikelayerparams">
-<h3>RandomNormalLikeLayerParams<a class="headerlink" href="#randomnormallikelayerparams" title="Permalink to this heading"></a></h3>
+<h3>RandomNormalLikeLayerParams<a class="headerlink" href="#randomnormallikelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that returns a tensor filled with values from the normal distribution.</p>
 <p>Requires 1 input and produces 1 output.</p>
 <dl class="simple">
@@ -4418,7 +4422,7 @@ infer the shape of the output.</p>
 </div>
 </section>
 <section id="randomnormalstaticlayerparams">
-<h3>RandomNormalStaticLayerParams<a class="headerlink" href="#randomnormalstaticlayerparams" title="Permalink to this heading"></a></h3>
+<h3>RandomNormalStaticLayerParams<a class="headerlink" href="#randomnormalstaticlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that returns a tensor filled with values from the normal distribution.</p>
 <p>Requires no input and produces 1 output.</p>
 <dl class="simple">
@@ -4442,7 +4446,7 @@ outputShape: shape of the output tensor.</p>
 </div>
 </section>
 <section id="randomnormaldynamiclayerparams">
-<h3>RandomNormalDynamicLayerParams<a class="headerlink" href="#randomnormaldynamiclayerparams" title="Permalink to this heading"></a></h3>
+<h3>RandomNormalDynamicLayerParams<a class="headerlink" href="#randomnormaldynamiclayerparams" title="Link to this heading"></a></h3>
 <p>A layer that returns a tensor filled with values from the normal distribution.</p>
 <p>Requires 1 input and produces 1 output.</p>
 <dl class="simple">
@@ -4466,7 +4470,7 @@ stdDev: standard deviation of the normal distribution.</p>
 </div>
 </section>
 <section id="randomuniformlikelayerparams">
-<h3>RandomUniformLikeLayerParams<a class="headerlink" href="#randomuniformlikelayerparams" title="Permalink to this heading"></a></h3>
+<h3>RandomUniformLikeLayerParams<a class="headerlink" href="#randomuniformlikelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that returns a tensor filled with values from the uniform distribution.</p>
 <p>Requires 1 input and produces 1 output.</p>
 <dl class="simple">
@@ -4491,7 +4495,7 @@ infer the shape of the output.</p>
 </div>
 </section>
 <section id="randomuniformstaticlayerparams">
-<h3>RandomUniformStaticLayerParams<a class="headerlink" href="#randomuniformstaticlayerparams" title="Permalink to this heading"></a></h3>
+<h3>RandomUniformStaticLayerParams<a class="headerlink" href="#randomuniformstaticlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that returns a tensor filled with values from the uniform distribution.</p>
 <p>Requires no input and produces 1 output.</p>
 <dl class="simple">
@@ -4515,7 +4519,7 @@ outputShape: shape of the output tensor.</p>
 </div>
 </section>
 <section id="randomuniformdynamiclayerparams">
-<h3>RandomUniformDynamicLayerParams<a class="headerlink" href="#randomuniformdynamiclayerparams" title="Permalink to this heading"></a></h3>
+<h3>RandomUniformDynamicLayerParams<a class="headerlink" href="#randomuniformdynamiclayerparams" title="Link to this heading"></a></h3>
 <p>A layer that returns a tensor filled with values from the uniform distribution.</p>
 <p>Requires 1 input and produces 1 output.</p>
 <dl class="simple">
@@ -4539,7 +4543,7 @@ maxVal: upper bound on the range of random values for the uniform distribution.<
 </div>
 </section>
 <section id="randombernoullilikelayerparams">
-<h3>RandomBernoulliLikeLayerParams<a class="headerlink" href="#randombernoullilikelayerparams" title="Permalink to this heading"></a></h3>
+<h3>RandomBernoulliLikeLayerParams<a class="headerlink" href="#randombernoullilikelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that returns a tensor filled with values from the Bernoulli distribution.</p>
 <p>Requires 1 input and produces 1 output.</p>
 <dl class="simple">
@@ -4562,7 +4566,7 @@ infer the shape of the output.</p>
 </div>
 </section>
 <section id="randombernoullistaticlayerparams">
-<h3>RandomBernoulliStaticLayerParams<a class="headerlink" href="#randombernoullistaticlayerparams" title="Permalink to this heading"></a></h3>
+<h3>RandomBernoulliStaticLayerParams<a class="headerlink" href="#randombernoullistaticlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that returns a tensor filled with values from the Bernoulli distribution.</p>
 <p>Requires no input and produces 1 output.</p>
 <dl class="simple">
@@ -4584,7 +4588,7 @@ outputShape: shape of the output tensor.</p>
 </div>
 </section>
 <section id="randombernoullidynamiclayerparams">
-<h3>RandomBernoulliDynamicLayerParams<a class="headerlink" href="#randombernoullidynamiclayerparams" title="Permalink to this heading"></a></h3>
+<h3>RandomBernoulliDynamicLayerParams<a class="headerlink" href="#randombernoullidynamiclayerparams" title="Link to this heading"></a></h3>
 <p>A layer that returns a tensor filled with values from the Bernoulli distribution.</p>
 <p>Requires 1 input and produces 1 output.</p>
 <dl class="simple">
@@ -4606,7 +4610,7 @@ prob: probability of a 1 event.</p>
 </div>
 </section>
 <section id="categoricaldistributionlayerparams">
-<h3>CategoricalDistributionLayerParams<a class="headerlink" href="#categoricaldistributionlayerparams" title="Permalink to this heading"></a></h3>
+<h3>CategoricalDistributionLayerParams<a class="headerlink" href="#categoricaldistributionlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that returns a tensor of the specified shape filled with values from the categorical distribution.</p>
 <p>Requires 1 input and produces 1 output.</p>
 <dl class="simple">
@@ -4631,7 +4635,7 @@ Then the shape of the output is [D_1, D_2, … , D_(R-1), numSamples] (Rank = R)
 </div>
 </section>
 <section id="reducel1layerparams">
-<h3>ReduceL1LayerParams<a class="headerlink" href="#reducel1layerparams" title="Permalink to this heading"></a></h3>
+<h3>ReduceL1LayerParams<a class="headerlink" href="#reducel1layerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs reduction with L1 normalization operation.</p>
 <p>Negative indexing is supported.
 Requires 1 input and produces 1 output.</p>
@@ -4652,7 +4656,7 @@ reduceAll: ignore the “axes” parameter, perform reduction along all axes</p>
 </div>
 </section>
 <section id="reducel2layerparams">
-<h3>ReduceL2LayerParams<a class="headerlink" href="#reducel2layerparams" title="Permalink to this heading"></a></h3>
+<h3>ReduceL2LayerParams<a class="headerlink" href="#reducel2layerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs reduction with L2 normalization operation.</p>
 <p>Negative indexing is supported.
 Requires 1 input and produces 1 output.</p>
@@ -4673,7 +4677,7 @@ reduceAll: ignore the “axes” parameter, perform reduction along all axes</p>
 </div>
 </section>
 <section id="reducemaxlayerparams">
-<h3>ReduceMaxLayerParams<a class="headerlink" href="#reducemaxlayerparams" title="Permalink to this heading"></a></h3>
+<h3>ReduceMaxLayerParams<a class="headerlink" href="#reducemaxlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs reduction with max operation.</p>
 <p>Negative indexing is supported.
 Requires 1 input and produces 1 output.</p>
@@ -4694,7 +4698,7 @@ reduceAll: ignore the “axes” parameter, perform reduction along all axes</p>
 </div>
 </section>
 <section id="reduceminlayerparams">
-<h3>ReduceMinLayerParams<a class="headerlink" href="#reduceminlayerparams" title="Permalink to this heading"></a></h3>
+<h3>ReduceMinLayerParams<a class="headerlink" href="#reduceminlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs reduction with min operation.</p>
 <p>Negative indexing is supported.
 Requires 1 input and produces 1 output.</p>
@@ -4715,7 +4719,7 @@ reduceAll: ignore the “axes” parameter, perform reduction along all axes</p>
 </div>
 </section>
 <section id="reducesumlayerparams">
-<h3>ReduceSumLayerParams<a class="headerlink" href="#reducesumlayerparams" title="Permalink to this heading"></a></h3>
+<h3>ReduceSumLayerParams<a class="headerlink" href="#reducesumlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs reduction with sum operation.</p>
 <p>Negative indexing is supported.
 Requires 1 input and produces 1 output.</p>
@@ -4736,7 +4740,7 @@ reduceAll: ignore the “axes” parameter, perform reduction along all axes</p>
 </div>
 </section>
 <section id="reduceprodlayerparams">
-<h3>ReduceProdLayerParams<a class="headerlink" href="#reduceprodlayerparams" title="Permalink to this heading"></a></h3>
+<h3>ReduceProdLayerParams<a class="headerlink" href="#reduceprodlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs reduction with prod operation.</p>
 <p>Negative indexing is supported.
 Requires 1 input and produces 1 output.</p>
@@ -4757,7 +4761,7 @@ reduceAll: ignore the “axes” parameter, perform reduction along all axes</p>
 </div>
 </section>
 <section id="reducemeanlayerparams">
-<h3>ReduceMeanLayerParams<a class="headerlink" href="#reducemeanlayerparams" title="Permalink to this heading"></a></h3>
+<h3>ReduceMeanLayerParams<a class="headerlink" href="#reducemeanlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs reduction with mean operation.</p>
 <p>Negative indexing is supported.
 Requires 1 input and produces 1 output.</p>
@@ -4778,7 +4782,7 @@ reduceAll: ignore the “axes” parameter, perform reduction along all axes</p>
 </div>
 </section>
 <section id="reducelogsumlayerparams">
-<h3>ReduceLogSumLayerParams<a class="headerlink" href="#reducelogsumlayerparams" title="Permalink to this heading"></a></h3>
+<h3>ReduceLogSumLayerParams<a class="headerlink" href="#reducelogsumlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs reduction with logSum operation.</p>
 <p>Negative indexing is supported.
 Requires 1 input and produces 1 output.</p>
@@ -4799,7 +4803,7 @@ reduceAll: ignore the “axes” parameter, perform reduction along all axes</p>
 </div>
 </section>
 <section id="reducesumsquarelayerparams">
-<h3>ReduceSumSquareLayerParams<a class="headerlink" href="#reducesumsquarelayerparams" title="Permalink to this heading"></a></h3>
+<h3>ReduceSumSquareLayerParams<a class="headerlink" href="#reducesumsquarelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs reduction with logSumExp operation.</p>
 <p>Negative indexing is supported.
 Requires 1 input and produces 1 output.</p>
@@ -4820,7 +4824,7 @@ reduceAll: ignore the “axes” parameter, perform reduction along all axes</p>
 </div>
 </section>
 <section id="reducelogsumexplayerparams">
-<h3>ReduceLogSumExpLayerParams<a class="headerlink" href="#reducelogsumexplayerparams" title="Permalink to this heading"></a></h3>
+<h3>ReduceLogSumExpLayerParams<a class="headerlink" href="#reducelogsumexplayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs reduction with logSumExp operation.</p>
 <p>Negative indexing is supported.
 Requires 1 input and produces 1 output.</p>
@@ -4841,7 +4845,7 @@ reduceAll: ignore the “axes” parameter, perform reduction along all axes</p>
 </div>
 </section>
 <section id="expanddimslayerparams">
-<h3>ExpandDimsLayerParams<a class="headerlink" href="#expanddimslayerparams" title="Permalink to this heading"></a></h3>
+<h3>ExpandDimsLayerParams<a class="headerlink" href="#expanddimslayerparams" title="Link to this heading"></a></h3>
 <p>A layer that increases the rank of the input tensor by adding unit dimensions.</p>
 <p>Requires 1 input and produces 1 output.</p>
 <p>For example:</p>
@@ -4867,7 +4871,7 @@ reduceAll: ignore the “axes” parameter, perform reduction along all axes</p>
 </div>
 </section>
 <section id="flattento2dlayerparams">
-<h3>FlattenTo2DLayerParams<a class="headerlink" href="#flattento2dlayerparams" title="Permalink to this heading"></a></h3>
+<h3>FlattenTo2DLayerParams<a class="headerlink" href="#flattento2dlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that flattens the input tensor into a 2-dimensional matrix.</p>
 <p>Requires 1 input and produces 1 output.
 Output tensor is always rank 2.</p>
@@ -4908,7 +4912,7 @@ Second dimension of output is the product of all the dimensions in input[axis:] 
 </div>
 </section>
 <section id="reshapestaticlayerparams">
-<h3>ReshapeStaticLayerParams<a class="headerlink" href="#reshapestaticlayerparams" title="Permalink to this heading"></a></h3>
+<h3>ReshapeStaticLayerParams<a class="headerlink" href="#reshapestaticlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that reshapes a tensor.</p>
 <p>Requires 1 input and produces 1 output.</p>
 <p>Output tensor is the reshaped version of the input and has shape as specified in the
@@ -4922,7 +4926,7 @@ parameter “targetShape”.</p>
 </div>
 </section>
 <section id="reshapelikelayerparams">
-<h3>ReshapeLikeLayerParams<a class="headerlink" href="#reshapelikelayerparams" title="Permalink to this heading"></a></h3>
+<h3>ReshapeLikeLayerParams<a class="headerlink" href="#reshapelikelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that reshapes a tensor.</p>
 <p>Requires 2 inputs and produces 1 output.</p>
 <p>First input is reshaped to produce the output, while the second input is only
@@ -4935,7 +4939,7 @@ used to determine the shape of the output. Values of the second input are not us
 </div>
 </section>
 <section id="reshapedynamiclayerparams">
-<h3>ReshapeDynamicLayerParams<a class="headerlink" href="#reshapedynamiclayerparams" title="Permalink to this heading"></a></h3>
+<h3>ReshapeDynamicLayerParams<a class="headerlink" href="#reshapedynamiclayerparams" title="Link to this heading"></a></h3>
 <p>A layer that reshapes a tensor.</p>
 <p>Requires 2 inputs and produces 1 output.</p>
 <p>First input is the one that is reshaped to produce the output.
@@ -4948,7 +4952,7 @@ Output tensor has shape as specified by the values in the 2nd input tensor.</p>
 </div>
 </section>
 <section id="squeezelayerparams">
-<h3>SqueezeLayerParams<a class="headerlink" href="#squeezelayerparams" title="Permalink to this heading"></a></h3>
+<h3>SqueezeLayerParams<a class="headerlink" href="#squeezelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that decreases the rank of the input tensor by removing unit dimensions.</p>
 <p>Requires 1 input and produces 1 output.</p>
 <p>Output rank is one less than input rank, if input rank is more than 1.
@@ -4981,7 +4985,7 @@ If input rank is 1, output rank is also 1.</p>
 </div>
 </section>
 <section id="topklayerparams">
-<h3>TopKLayerParams<a class="headerlink" href="#topklayerparams" title="Permalink to this heading"></a></h3>
+<h3>TopKLayerParams<a class="headerlink" href="#topklayerparams" title="Link to this heading"></a></h3>
 <p>A layer that returns top K (or bottom K) values and the corresponding indices
 of the input along a given axis.</p>
 <p>Requires 1 or 2 inputs and produces 2 outputs.</p>
@@ -5006,7 +5010,7 @@ Second input must correspond to a scalar tensor.</p>
 </div>
 </section>
 <section id="argmaxlayerparams">
-<h3>ArgMaxLayerParams<a class="headerlink" href="#argmaxlayerparams" title="Permalink to this heading"></a></h3>
+<h3>ArgMaxLayerParams<a class="headerlink" href="#argmaxlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that returns the indices of the maximum value along a specified axis in a tensor.</p>
 <p>Requires 1 input and produces 1 output. Negative indexing is supported.</p>
 <p>Output has the same rank as the input if “removeDim” is False (default).
@@ -5032,7 +5036,7 @@ Output has rank one less than the input if “removeDim” is True and input ran
 </div>
 </section>
 <section id="argminlayerparams">
-<h3>ArgMinLayerParams<a class="headerlink" href="#argminlayerparams" title="Permalink to this heading"></a></h3>
+<h3>ArgMinLayerParams<a class="headerlink" href="#argminlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that returns the indices of the minimum value along a specified axis in a tensor.</p>
 <p>Requires 1 input and produces 1 output. Negative indexing is supported.</p>
 <p>Output has the same rank as the input if “removeDim” is False (default).
@@ -5058,7 +5062,7 @@ Output has rank one less than the input if “removeDim” is True and input ran
 </div>
 </section>
 <section id="splitndlayerparams">
-<h3>SplitNDLayerParams<a class="headerlink" href="#splitndlayerparams" title="Permalink to this heading"></a></h3>
+<h3>SplitNDLayerParams<a class="headerlink" href="#splitndlayerparams" title="Link to this heading"></a></h3>
 <p>A layer layer that splits the input tensor into multiple output tensors,
 along the specified axis.</p>
 <p>The layer either uniformly splits the input tensor into <code class="docutils literal notranslate"><span class="pre">num_splits</span></code> tensors, or
@@ -5086,7 +5090,7 @@ Rank of all the outputs is same as that of the input.</p>
 </div>
 </section>
 <section id="ceillayerparams">
-<h3>CeilLayerParams<a class="headerlink" href="#ceillayerparams" title="Permalink to this heading"></a></h3>
+<h3>CeilLayerParams<a class="headerlink" href="#ceillayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs element-wise ceil operation on the input tensor that
 rounds the value to the smallest integer not less than x.</p>
 <p>Requires 1 input and produces 1 output.
@@ -5098,7 +5102,7 @@ Output shape is same as the input.</p>
 </div>
 </section>
 <section id="roundlayerparams">
-<h3>RoundLayerParams<a class="headerlink" href="#roundlayerparams" title="Permalink to this heading"></a></h3>
+<h3>RoundLayerParams<a class="headerlink" href="#roundlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs element-wise round operation on the input tensor
 that rounds the value to the nearest integer.</p>
 <p>Requires 1 input and produces 1 output.
@@ -5110,7 +5114,7 @@ Output shape is same as the input.</p>
 </div>
 </section>
 <section id="floorlayerparams">
-<h3>FloorLayerParams<a class="headerlink" href="#floorlayerparams" title="Permalink to this heading"></a></h3>
+<h3>FloorLayerParams<a class="headerlink" href="#floorlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs element-wise floor operation on the input tensor
 that rounds the value to the largest integer not greater than x.</p>
 <p>Requires 1 input and produces 1 output.
@@ -5122,7 +5126,7 @@ Output shape is same as the input.</p>
 </div>
 </section>
 <section id="signlayerparams">
-<h3>SignLayerParams<a class="headerlink" href="#signlayerparams" title="Permalink to this heading"></a></h3>
+<h3>SignLayerParams<a class="headerlink" href="#signlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs element-wise sign operation (+1 for positive values,
 -1 for negative values, 0 for zeros).</p>
 <p>Requires 1 input and produces 1 output.
@@ -5134,7 +5138,7 @@ Output shape is same as the input.</p>
 </div>
 </section>
 <section id="cliplayerparams">
-<h3>ClipLayerParams<a class="headerlink" href="#cliplayerparams" title="Permalink to this heading"></a></h3>
+<h3>ClipLayerParams<a class="headerlink" href="#cliplayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs element-wise clip operation. Clip the values in the
 input tensor to the threshold values [min_value, max_value].</p>
 <p>Requires 1 input and produces 1 output.</p>
@@ -5152,7 +5156,7 @@ Parameter maxVal: the maximum threshold.</p>
 </div>
 </section>
 <section id="slicestaticlayerparams">
-<h3>SliceStaticLayerParams<a class="headerlink" href="#slicestaticlayerparams" title="Permalink to this heading"></a></h3>
+<h3>SliceStaticLayerParams<a class="headerlink" href="#slicestaticlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that extracts a slice of size <code class="docutils literal notranslate"><span class="pre">(end</span> <span class="pre">-</span> <span class="pre">begin)</span> <span class="pre">/</span> <span class="pre">stride</span></code>
 from the given input tensor.
 Support negative indexing and negative strides.</p>
@@ -5205,7 +5209,7 @@ out, and all other masks and inputs are ignored.</p>
 </div>
 </section>
 <section id="slicedynamiclayerparams">
-<h3>SliceDynamicLayerParams<a class="headerlink" href="#slicedynamiclayerparams" title="Permalink to this heading"></a></h3>
+<h3>SliceDynamicLayerParams<a class="headerlink" href="#slicedynamiclayerparams" title="Link to this heading"></a></h3>
 <p>A layer that extracts a slice of size <code class="docutils literal notranslate"><span class="pre">(end</span> <span class="pre">-</span> <span class="pre">begin)</span> <span class="pre">/</span> <span class="pre">stride</span></code>
 from the given input tensor.
 Support negative indexing and negative strides.
@@ -5234,7 +5238,7 @@ The 7th input, if present, corresponds to “squeezeMasks”. In this case the v
 </div>
 </section>
 <section id="tilelayerparams">
-<h3>TileLayerParams<a class="headerlink" href="#tilelayerparams" title="Permalink to this heading"></a></h3>
+<h3>TileLayerParams<a class="headerlink" href="#tilelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that constructs a tensor by repeating the input tensor multiple
 number of times.</p>
 <p>Requires 1 or 2 inputs and produces 1 output.
@@ -5270,7 +5274,7 @@ If it is less than the input rank, it is made equal to the input rank by prepend
 </div>
 </section>
 <section id="getshapelayerparams">
-<h3>GetShapeLayerParams<a class="headerlink" href="#getshapelayerparams" title="Permalink to this heading"></a></h3>
+<h3>GetShapeLayerParams<a class="headerlink" href="#getshapelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that returns the shape of an input tensor.</p>
 <p>Requires 1 input and produces 1 output.</p>
 <p>Input: a tensor.
@@ -5283,7 +5287,7 @@ Output is always a rank 1 tensor.</p>
 </div>
 </section>
 <section id="erflayerparams">
-<h3>ErfLayerParams<a class="headerlink" href="#erflayerparams" title="Permalink to this heading"></a></h3>
+<h3>ErfLayerParams<a class="headerlink" href="#erflayerparams" title="Link to this heading"></a></h3>
 <p>A layer that computes the Gauss error function,
 which is defined as:</p>
 <div class="math notranslate nohighlight">
@@ -5297,7 +5301,7 @@ Output shape is same as the input.</p>
 </div>
 </section>
 <section id="gelulayerparams">
-<h3>GeluLayerParams<a class="headerlink" href="#gelulayerparams" title="Permalink to this heading"></a></h3>
+<h3>GeluLayerParams<a class="headerlink" href="#gelulayerparams" title="Link to this heading"></a></h3>
 <p>A layer that evaluates the Gaussian Error Linear Unit (GELU) activation.
 Following equations are used to compute the activation based on the value of the “mode” parameter:</p>
 <p><code class="docutils literal notranslate"><span class="pre">mode</span> <span class="pre">==</span> <span class="pre">'EXACT'</span></code>:</p>
@@ -5328,7 +5332,7 @@ Output shape is same as the input.</p>
 </div>
 </section>
 <section id="rangestaticlayerparams">
-<h3>RangeStaticLayerParams<a class="headerlink" href="#rangestaticlayerparams" title="Permalink to this heading"></a></h3>
+<h3>RangeStaticLayerParams<a class="headerlink" href="#rangestaticlayerparams" title="Link to this heading"></a></h3>
 <p>RangeStatic layer that returns a tensor that contains evenly spaced values.
 It is similar in functionality to the numpy.arange method.</p>
 <p>Requires no input and produces 1 output.
@@ -5344,7 +5348,7 @@ Output is a rank 1 tensor.</p>
 </div>
 </section>
 <section id="rangedynamiclayerparams">
-<h3>RangeDynamicLayerParams<a class="headerlink" href="#rangedynamiclayerparams" title="Permalink to this heading"></a></h3>
+<h3>RangeDynamicLayerParams<a class="headerlink" href="#rangedynamiclayerparams" title="Link to this heading"></a></h3>
 <p>A layer that returns a tensor that contains evenly spaced values.
 Its functionality is similar to the numpy.arange method.</p>
 <p>Requires at least 1 input, up to a maximum of 3 inputs.
@@ -5363,7 +5367,7 @@ The third input, if present, corresponds to “stepSizeValue”. In this case th
 </div>
 </section>
 <section id="slidingwindowslayerparams">
-<h3>SlidingWindowsLayerParams<a class="headerlink" href="#slidingwindowslayerparams" title="Permalink to this heading"></a></h3>
+<h3>SlidingWindowsLayerParams<a class="headerlink" href="#slidingwindowslayerparams" title="Link to this heading"></a></h3>
 <p>A layer that returns a tensor containing all windows of size <code class="docutils literal notranslate"><span class="pre">windowSize</span></code>
 separated by <code class="docutils literal notranslate"><span class="pre">step</span></code> along the dimension <code class="docutils literal notranslate"><span class="pre">axis</span></code>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">SlidingWindows</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
@@ -5408,7 +5412,7 @@ and batch size respectively.</p></li>
 </div>
 </section>
 <section id="layernormalizationlayerparams">
-<h3>LayerNormalizationLayerParams<a class="headerlink" href="#layernormalizationlayerparams" title="Permalink to this heading"></a></h3>
+<h3>LayerNormalizationLayerParams<a class="headerlink" href="#layernormalizationlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that applies layer normalization over the input tensor.</p>
 <p>Requires 1 input and produces 1 output.</p>
 <p>output = gamma * (input - computed_mean) / (sqrt(computed_variance + eps)) + beta</p>
@@ -5440,7 +5444,7 @@ eps: small constant to avoid division by 0</p>
 </div>
 </section>
 <section id="nonmaximumsuppressionlayerparams">
-<h3>NonMaximumSuppressionLayerParams<a class="headerlink" href="#nonmaximumsuppressionlayerparams" title="Permalink to this heading"></a></h3>
+<h3>NonMaximumSuppressionLayerParams<a class="headerlink" href="#nonmaximumsuppressionlayerparams" title="Link to this heading"></a></h3>
 <p>Non maximum suppression (NMS) layer.</p>
 <p>Applies the non maximum suppression algorithm to input bounding box coordinates.</p>
 <p>The effect of this layer is similar to the functionality of the “NonMaximumSuppression”
@@ -5509,7 +5513,7 @@ in case the padded outputs are not required.</p>
 </div>
 </section>
 <section id="clampedrelulayerparams">
-<h3>ClampedReLULayerParams<a class="headerlink" href="#clampedrelulayerparams" title="Permalink to this heading"></a></h3>
+<h3>ClampedReLULayerParams<a class="headerlink" href="#clampedrelulayerparams" title="Link to this heading"></a></h3>
 <p>A layer that performs element-wise clamped ReLU operation.</p>
 <p>Requires 1 input and produces 1 output.</p>
 <p>This function has the following formula:</p>
@@ -5530,7 +5534,7 @@ in case the padded outputs are not required.</p>
 </div>
 </section>
 <section id="argsortlayerparams">
-<h3>ArgSortLayerParams<a class="headerlink" href="#argsortlayerparams" title="Permalink to this heading"></a></h3>
+<h3>ArgSortLayerParams<a class="headerlink" href="#argsortlayerparams" title="Link to this heading"></a></h3>
 <p>A layer that returns the indices that would sort the input tensor, along a specified axis.</p>
 <p>Requires 1 input and produces 1 output.</p>
 <p>Output has the same rank and shape as the input.</p>
@@ -5561,7 +5565,7 @@ in case the padded outputs are not required.</p>
 </div>
 </section>
 <section id="slicebysizelayerparams">
-<h3>SliceBySizeLayerParams<a class="headerlink" href="#slicebysizelayerparams" title="Permalink to this heading"></a></h3>
+<h3>SliceBySizeLayerParams<a class="headerlink" href="#slicebysizelayerparams" title="Link to this heading"></a></h3>
 <p>A layer that does slice operation by providing size to be extracted
 from the given input tensor.</p>
 <p>Requires 2 inputs and produces 1 output.
@@ -5585,9 +5589,9 @@ axis: 1</p>
 </section>
 </section>
 <section id="neural-network-specializations">
-<h2>Neural Network Specializations<a class="headerlink" href="#neural-network-specializations" title="Permalink to this heading"></a></h2>
+<h2>Neural Network Specializations<a class="headerlink" href="#neural-network-specializations" title="Link to this heading"></a></h2>
 <section id="neuralnetworkclassifier">
-<h3>NeuralNetworkClassifier<a class="headerlink" href="#neuralnetworkclassifier" title="Permalink to this heading"></a></h3>
+<h3>NeuralNetworkClassifier<a class="headerlink" href="#neuralnetworkclassifier" title="Link to this heading"></a></h3>
 <p>A neural network specialized as a classifier.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">NeuralNetworkClassifier</span><span class="w"> </span><span class="p">{</span>
 
@@ -5617,7 +5621,7 @@ axis: 1</p>
 </div>
 </section>
 <section id="onehotlayerparams">
-<h3>OneHotLayerParams<a class="headerlink" href="#onehotlayerparams" title="Permalink to this heading"></a></h3>
+<h3>OneHotLayerParams<a class="headerlink" href="#onehotlayerparams" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">OneHotLayerParams</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="kt">uint64</span><span class="w"> </span><span class="na">oneHotVectorSize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -5629,7 +5633,7 @@ axis: 1</p>
 </div>
 </section>
 <section id="cumsumlayerparams">
-<h3>CumSumLayerParams<a class="headerlink" href="#cumsumlayerparams" title="Permalink to this heading"></a></h3>
+<h3>CumSumLayerParams<a class="headerlink" href="#cumsumlayerparams" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">CumSumLayerParams</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="kt">int64</span><span class="w"> </span><span class="na">axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -5642,7 +5646,7 @@ axis: 1</p>
 </div>
 </section>
 <section id="neuralnetworkregressor">
-<h3>NeuralNetworkRegressor<a class="headerlink" href="#neuralnetworkregressor" title="Permalink to this heading"></a></h3>
+<h3>NeuralNetworkRegressor<a class="headerlink" href="#neuralnetworkregressor" title="Link to this heading"></a></h3>
 <p>A neural network specialized as a regressor.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">NeuralNetworkRegressor</span><span class="w"> </span><span class="p">{</span>
 
@@ -5663,9 +5667,9 @@ axis: 1</p>
 </section>
 </section>
 <section id="on-device-training-messages">
-<h2>On-device Training Messages<a class="headerlink" href="#on-device-training-messages" title="Permalink to this heading"></a></h2>
+<h2>On-device Training Messages<a class="headerlink" href="#on-device-training-messages" title="Link to this heading"></a></h2>
 <section id="networkupdateparameters">
-<h3>NetworkUpdateParameters<a class="headerlink" href="#networkupdateparameters" title="Permalink to this heading"></a></h3>
+<h3>NetworkUpdateParameters<a class="headerlink" href="#networkupdateparameters" title="Link to this heading"></a></h3>
 <p>Details on how the network will be updated</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">NetworkUpdateParameters</span><span class="w"> </span><span class="p">{</span>
 
@@ -5681,7 +5685,7 @@ axis: 1</p>
 </div>
 </section>
 <section id="losslayer">
-<h3>LossLayer<a class="headerlink" href="#losslayer" title="Permalink to this heading"></a></h3>
+<h3>LossLayer<a class="headerlink" href="#losslayer" title="Link to this heading"></a></h3>
 <p>Loss layer - categorical cross entropy and mean squared error are the only supported loss functions currently</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">LossLayer</span><span class="w"> </span><span class="p">{</span>
 
@@ -5698,7 +5702,7 @@ axis: 1</p>
 </div>
 </section>
 <section id="categoricalcrossentropylosslayer">
-<h3>CategoricalCrossEntropyLossLayer<a class="headerlink" href="#categoricalcrossentropylosslayer" title="Permalink to this heading"></a></h3>
+<h3>CategoricalCrossEntropyLossLayer<a class="headerlink" href="#categoricalcrossentropylosslayer" title="Link to this heading"></a></h3>
 <p>Categorical cross entropy loss layer is used for single label categorization
 (only one category is applicable for each data point).</p>
 <p>The input is a vector of length N representing the distribution over <code class="docutils literal notranslate"><span class="pre">N</span></code>
@@ -5718,7 +5722,7 @@ be inverse mapped to the corresponding categorical index for you.</p>
 </div>
 </section>
 <section id="meansquarederrorlosslayer">
-<h3>MeanSquaredErrorLossLayer<a class="headerlink" href="#meansquarederrorlosslayer" title="Permalink to this heading"></a></h3>
+<h3>MeanSquaredErrorLossLayer<a class="headerlink" href="#meansquarederrorlosslayer" title="Link to this heading"></a></h3>
 <p>Mean squared error loss layer,
 specifying input and target</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">MeanSquaredErrorLossLayer</span><span class="w"> </span><span class="p">{</span>
@@ -5731,7 +5735,7 @@ specifying input and target</p>
 </div>
 </section>
 <section id="optimizer">
-<h3>Optimizer<a class="headerlink" href="#optimizer" title="Permalink to this heading"></a></h3>
+<h3>Optimizer<a class="headerlink" href="#optimizer" title="Link to this heading"></a></h3>
 <p>Optimizer - stochastic gradient descent and adam are the only supported optimizers currently</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">Optimizer</span><span class="w"> </span><span class="p">{</span>
 
@@ -5747,7 +5751,7 @@ specifying input and target</p>
 </div>
 </section>
 <section id="sgdoptimizer">
-<h3>SGDOptimizer<a class="headerlink" href="#sgdoptimizer" title="Permalink to this heading"></a></h3>
+<h3>SGDOptimizer<a class="headerlink" href="#sgdoptimizer" title="Link to this heading"></a></h3>
 <p>Stochastic gradient descent optimizer,
 specifying configurable learning rate, mini batch size, and momentum</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">SGDOptimizer</span><span class="w"> </span><span class="p">{</span>
@@ -5761,7 +5765,7 @@ specifying configurable learning rate, mini batch size, and momentum</p>
 </div>
 </section>
 <section id="adamoptimizer">
-<h3>AdamOptimizer<a class="headerlink" href="#adamoptimizer" title="Permalink to this heading"></a></h3>
+<h3>AdamOptimizer<a class="headerlink" href="#adamoptimizer" title="Link to this heading"></a></h3>
 <p>Adam optimizer,
 specifying configurable learning rate, mini batch size, betas, and eps</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">AdamOptimizer</span><span class="w"> </span><span class="p">{</span>
@@ -5777,7 +5781,7 @@ specifying configurable learning rate, mini batch size, betas, and eps</p>
 </div>
 </section>
 <section id="convolution3dlayerparams-paddingtype">
-<h3>Convolution3DLayerParams.PaddingType<a class="headerlink" href="#convolution3dlayerparams-paddingtype" title="Permalink to this heading"></a></h3>
+<h3>Convolution3DLayerParams.PaddingType<a class="headerlink" href="#convolution3dlayerparams-paddingtype" title="Link to this heading"></a></h3>
 <p>The type of padding.
 All padding types pad the input shape with zeros.
 CUSTOM padding will add the custom padding values specified below to their respective
@@ -5802,7 +5806,7 @@ and 2 zeros will be added to the back side.</p>
 </div>
 </section>
 <section id="flattenlayerparams-flattenorder">
-<h3>FlattenLayerParams.FlattenOrder<a class="headerlink" href="#flattenlayerparams-flattenorder" title="Permalink to this heading"></a></h3>
+<h3>FlattenLayerParams.FlattenOrder<a class="headerlink" href="#flattenlayerparams-flattenorder" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span><span class="w"> </span><span class="n">FlattenOrder</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="na">CHANNEL_FIRST</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
@@ -5813,7 +5817,7 @@ and 2 zeros will be added to the back side.</p>
 </div>
 </section>
 <section id="gelulayerparams-gelumode">
-<h3>GeluLayerParams.GeluMode<a class="headerlink" href="#gelulayerparams-gelumode" title="Permalink to this heading"></a></h3>
+<h3>GeluLayerParams.GeluMode<a class="headerlink" href="#gelulayerparams-gelumode" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span><span class="w"> </span><span class="n">GeluMode</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="na">EXACT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
@@ -5825,7 +5829,7 @@ and 2 zeros will be added to the back side.</p>
 </div>
 </section>
 <section id="globalpooling3dlayerparams-globalpoolingtype3d">
-<h3>GlobalPooling3DLayerParams.GlobalPoolingType3D<a class="headerlink" href="#globalpooling3dlayerparams-globalpoolingtype3d" title="Permalink to this heading"></a></h3>
+<h3>GlobalPooling3DLayerParams.GlobalPoolingType3D<a class="headerlink" href="#globalpooling3dlayerparams-globalpoolingtype3d" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span><span class="w"> </span><span class="n">GlobalPoolingType3D</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="na">MAX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="w">    </span><span class="na">AVERAGE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -5834,7 +5838,7 @@ and 2 zeros will be added to the back side.</p>
 </div>
 </section>
 <section id="neuralnetworkimageshapemapping">
-<h3>NeuralNetworkImageShapeMapping<a class="headerlink" href="#neuralnetworkimageshapemapping" title="Permalink to this heading"></a></h3>
+<h3>NeuralNetworkImageShapeMapping<a class="headerlink" href="#neuralnetworkimageshapemapping" title="Link to this heading"></a></h3>
 <p>Describes how the shape of the input tensors is constructed from image inputs.</p>
 <p>In this case, image input is mapped to a rank 5 tensor.</p>
 <ul class="simple">
@@ -5861,7 +5865,7 @@ Supported only for Specification version &gt;= 4 (iOS &gt;= 13, macOS &gt;= 10.1
 </div>
 </section>
 <section id="neuralnetworkmultiarrayshapemapping">
-<h3>NeuralNetworkMultiArrayShapeMapping<a class="headerlink" href="#neuralnetworkmultiarrayshapemapping" title="Permalink to this heading"></a></h3>
+<h3>NeuralNetworkMultiArrayShapeMapping<a class="headerlink" href="#neuralnetworkmultiarrayshapemapping" title="Link to this heading"></a></h3>
 <p>Describes how the MultiArray shape for the inputs,
 provided in Features Types proto via model description,
 is mapped to construct tensors that are fed into the Neural Network layers.</p>
@@ -5901,7 +5905,7 @@ Supported only for Specification version &gt;= 4 (iOS &gt;= 13, macOS &gt;= 10.1
 </div>
 </section>
 <section id="pooling3dlayerparams-pooling3dpaddingtype">
-<h3>Pooling3DLayerParams.Pooling3DPaddingType<a class="headerlink" href="#pooling3dlayerparams-pooling3dpaddingtype" title="Permalink to this heading"></a></h3>
+<h3>Pooling3DLayerParams.Pooling3DPaddingType<a class="headerlink" href="#pooling3dlayerparams-pooling3dpaddingtype" title="Link to this heading"></a></h3>
 <p>The type of padding.
 All padding types pad the input shape with zeros.
 CUSTOM padding will add the custom padding values specified below to their respective
@@ -5924,7 +5928,7 @@ total horizontal padding is 3, then there will be 1 padding on the left, and 2 p
 </div>
 </section>
 <section id="pooling3dlayerparams-poolingtype3d">
-<h3>Pooling3DLayerParams.PoolingType3D<a class="headerlink" href="#pooling3dlayerparams-poolingtype3d" title="Permalink to this heading"></a></h3>
+<h3>Pooling3DLayerParams.PoolingType3D<a class="headerlink" href="#pooling3dlayerparams-poolingtype3d" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span><span class="w"> </span><span class="n">PoolingType3D</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="na">MAX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="w">    </span><span class="na">AVERAGE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -5933,7 +5937,7 @@ total horizontal padding is 3, then there will be 1 padding on the left, and 2 p
 </div>
 </section>
 <section id="poolinglayerparams-poolingtype">
-<h3>PoolingLayerParams.PoolingType<a class="headerlink" href="#poolinglayerparams-poolingtype" title="Permalink to this heading"></a></h3>
+<h3>PoolingLayerParams.PoolingType<a class="headerlink" href="#poolinglayerparams-poolingtype" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span><span class="w"> </span><span class="n">PoolingType</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="na">MAX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
@@ -5945,7 +5949,7 @@ total horizontal padding is 3, then there will be 1 padding on the left, and 2 p
 </div>
 </section>
 <section id="reducelayerparams-reduceaxis">
-<h3>ReduceLayerParams.ReduceAxis<a class="headerlink" href="#reducelayerparams-reduceaxis" title="Permalink to this heading"></a></h3>
+<h3>ReduceLayerParams.ReduceAxis<a class="headerlink" href="#reducelayerparams-reduceaxis" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span><span class="w"> </span><span class="n">ReduceAxis</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="na">CHW</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
@@ -5959,7 +5963,7 @@ total horizontal padding is 3, then there will be 1 padding on the left, and 2 p
 </div>
 </section>
 <section id="reducelayerparams-reduceoperation">
-<h3>ReduceLayerParams.ReduceOperation<a class="headerlink" href="#reducelayerparams-reduceoperation" title="Permalink to this heading"></a></h3>
+<h3>ReduceLayerParams.ReduceOperation<a class="headerlink" href="#reducelayerparams-reduceoperation" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span><span class="w"> </span><span class="n">ReduceOperation</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="na">SUM</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
@@ -5978,7 +5982,7 @@ total horizontal padding is 3, then there will be 1 padding on the left, and 2 p
 </div>
 </section>
 <section id="reorganizedatalayerparams-reorganizationtype">
-<h3>ReorganizeDataLayerParams.ReorganizationType<a class="headerlink" href="#reorganizedatalayerparams-reorganizationtype" title="Permalink to this heading"></a></h3>
+<h3>ReorganizeDataLayerParams.ReorganizationType<a class="headerlink" href="#reorganizedatalayerparams-reorganizationtype" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span><span class="w"> </span><span class="n">ReorganizationType</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="na">SPACE_TO_DEPTH</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
@@ -5990,7 +5994,7 @@ total horizontal padding is 3, then there will be 1 padding on the left, and 2 p
 </div>
 </section>
 <section id="reshapelayerparams-reshapeorder">
-<h3>ReshapeLayerParams.ReshapeOrder<a class="headerlink" href="#reshapelayerparams-reshapeorder" title="Permalink to this heading"></a></h3>
+<h3>ReshapeLayerParams.ReshapeOrder<a class="headerlink" href="#reshapelayerparams-reshapeorder" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span><span class="w"> </span><span class="n">ReshapeOrder</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="na">CHANNEL_FIRST</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
@@ -6001,7 +6005,7 @@ total horizontal padding is 3, then there will be 1 padding on the left, and 2 p
 </div>
 </section>
 <section id="samepadding-samepaddingmode">
-<h3>SamePadding.SamePaddingMode<a class="headerlink" href="#samepadding-samepaddingmode" title="Permalink to this heading"></a></h3>
+<h3>SamePadding.SamePaddingMode<a class="headerlink" href="#samepadding-samepaddingmode" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span><span class="w"> </span><span class="n">SamePaddingMode</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="na">BOTTOM_RIGHT_HEAVY</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
@@ -6012,7 +6016,7 @@ total horizontal padding is 3, then there will be 1 padding on the left, and 2 p
 </div>
 </section>
 <section id="samplingmode-method">
-<h3>SamplingMode.Method<a class="headerlink" href="#samplingmode-method" title="Permalink to this heading"></a></h3>
+<h3>SamplingMode.Method<a class="headerlink" href="#samplingmode-method" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span><span class="w"> </span><span class="n">Method</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="na">STRICT_ALIGN_ENDPOINTS_MODE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
@@ -6028,7 +6032,7 @@ total horizontal padding is 3, then there will be 1 padding on the left, and 2 p
 </div>
 </section>
 <section id="boxcoordinatesmode-coordinates">
-<h3>BoxCoordinatesMode.Coordinates<a class="headerlink" href="#boxcoordinatesmode-coordinates" title="Permalink to this heading"></a></h3>
+<h3>BoxCoordinatesMode.Coordinates<a class="headerlink" href="#boxcoordinatesmode-coordinates" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span><span class="w"> </span><span class="n">Coordinates</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="na">CORNERS_HEIGHT_FIRST</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
@@ -6044,7 +6048,7 @@ total horizontal padding is 3, then there will be 1 padding on the left, and 2 p
 </div>
 </section>
 <section id="scattermode">
-<h3>ScatterMode<a class="headerlink" href="#scattermode" title="Permalink to this heading"></a></h3>
+<h3>ScatterMode<a class="headerlink" href="#scattermode" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span><span class="w"> </span><span class="n">ScatterMode</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="na">SCATTER_UPDATE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
@@ -6060,7 +6064,7 @@ total horizontal padding is 3, then there will be 1 padding on the left, and 2 p
 </div>
 </section>
 <section id="slicelayerparams-sliceaxis">
-<h3>SliceLayerParams.SliceAxis<a class="headerlink" href="#slicelayerparams-sliceaxis" title="Permalink to this heading"></a></h3>
+<h3>SliceLayerParams.SliceAxis<a class="headerlink" href="#slicelayerparams-sliceaxis" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span><span class="w"> </span><span class="n">SliceAxis</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="na">CHANNEL_AXIS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
@@ -6072,7 +6076,7 @@ total horizontal padding is 3, then there will be 1 padding on the left, and 2 p
 </div>
 </section>
 <section id="unaryfunctionlayerparams-operation">
-<h3>UnaryFunctionLayerParams.Operation<a class="headerlink" href="#unaryfunctionlayerparams-operation" title="Permalink to this heading"></a></h3>
+<h3>UnaryFunctionLayerParams.Operation<a class="headerlink" href="#unaryfunctionlayerparams-operation" title="Link to this heading"></a></h3>
 <p>A unary operator.</p>
 <p>The following functions are supported:</p>
 <dl>
@@ -6115,7 +6119,7 @@ total horizontal padding is 3, then there will be 1 padding on the left, and 2 p
 </div>
 </section>
 <section id="upsamplelayerparams-interpolationmode">
-<h3>UpsampleLayerParams.InterpolationMode<a class="headerlink" href="#upsamplelayerparams-interpolationmode" title="Permalink to this heading"></a></h3>
+<h3>UpsampleLayerParams.InterpolationMode<a class="headerlink" href="#upsamplelayerparams-interpolationmode" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span><span class="w"> </span><span class="n">InterpolationMode</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="na">NN</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
@@ -6126,7 +6130,7 @@ total horizontal padding is 3, then there will be 1 padding on the left, and 2 p
 </div>
 </section>
 <section id="upsamplelayerparams-linearupsamplemode">
-<h3>UpsampleLayerParams.LinearUpsampleMode<a class="headerlink" href="#upsamplelayerparams-linearupsamplemode" title="Permalink to this heading"></a></h3>
+<h3>UpsampleLayerParams.LinearUpsampleMode<a class="headerlink" href="#upsamplelayerparams-linearupsamplemode" title="Link to this heading"></a></h3>
 <p>LinearUpsampleMode specifies the behavior for linear upsampling. Only valid when
 Interpolation Mode is BILINEAR.</p>
 <p>If input grid is [0, Xin-1] (corresponding to an input size of Xin), and if the

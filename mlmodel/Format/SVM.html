@@ -1,23 +1,23 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Support Vector Machine &mdash; Core ML Format Reference  documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -30,11 +30,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> Core ML Format Reference
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Core ML Format Reference
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -88,8 +92,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Support Vector Machine</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Support Vector Machine</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/Format/SVM.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -100,9 +104,9 @@
            <div itemprop="articleBody">
              
   <section id="support-vector-machine">
-<h1>Support Vector Machine<a class="headerlink" href="#support-vector-machine" title="Permalink to this heading"></a></h1>
+<h1>Support Vector Machine<a class="headerlink" href="#support-vector-machine" title="Link to this heading"></a></h1>
 <section id="linearkernel">
-<h2>LinearKernel<a class="headerlink" href="#linearkernel" title="Permalink to this heading"></a></h2>
+<h2>LinearKernel<a class="headerlink" href="#linearkernel" title="Link to this heading"></a></h2>
 <p>A linear kernel.</p>
 <p>This function has the following formula:</p>
 <div class="math notranslate nohighlight">
@@ -113,7 +117,7 @@
 </div>
 </section>
 <section id="rbfkernel">
-<h2>RBFKernel<a class="headerlink" href="#rbfkernel" title="Permalink to this heading"></a></h2>
+<h2>RBFKernel<a class="headerlink" href="#rbfkernel" title="Link to this heading"></a></h2>
 <p>A Gaussian radial basis function (RBF) kernel.</p>
 <p>This function has the following formula:</p>
 <div class="math notranslate nohighlight">
@@ -126,7 +130,7 @@
 </div>
 </section>
 <section id="polykernel">
-<h2>PolyKernel<a class="headerlink" href="#polykernel" title="Permalink to this heading"></a></h2>
+<h2>PolyKernel<a class="headerlink" href="#polykernel" title="Link to this heading"></a></h2>
 <p>A polynomial kernel.</p>
 <p>This function has the following formula:</p>
 <div class="math notranslate nohighlight">
@@ -141,7 +145,7 @@
 </div>
 </section>
 <section id="sigmoidkernel">
-<h2>SigmoidKernel<a class="headerlink" href="#sigmoidkernel" title="Permalink to this heading"></a></h2>
+<h2>SigmoidKernel<a class="headerlink" href="#sigmoidkernel" title="Link to this heading"></a></h2>
 <p>A sigmoid kernel.</p>
 <p>This function has the following formula:</p>
 <div class="math notranslate nohighlight">
@@ -155,7 +159,7 @@
 </div>
 </section>
 <section id="kernel">
-<h2>Kernel<a class="headerlink" href="#kernel" title="Permalink to this heading"></a></h2>
+<h2>Kernel<a class="headerlink" href="#kernel" title="Link to this heading"></a></h2>
 <p>A kernel.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">Kernel</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">oneof</span><span class="w"> </span><span class="n">kernel</span><span class="w"> </span><span class="p">{</span>
@@ -169,7 +173,7 @@
 </div>
 </section>
 <section id="sparsenode">
-<h2>SparseNode<a class="headerlink" href="#sparsenode" title="Permalink to this heading"></a></h2>
+<h2>SparseNode<a class="headerlink" href="#sparsenode" title="Link to this heading"></a></h2>
 <p>A sparse node.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">SparseNode</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="kt">int32</span><span class="w"> </span><span class="na">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="c1">// 1-based indexes, like libsvm</span>
@@ -179,7 +183,7 @@
 </div>
 </section>
 <section id="sparsevector">
-<h2>SparseVector<a class="headerlink" href="#sparsevector" title="Permalink to this heading"></a></h2>
+<h2>SparseVector<a class="headerlink" href="#sparsevector" title="Link to this heading"></a></h2>
 <p>A sparse vector.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">SparseVector</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">repeated</span><span class="w"> </span><span class="n">SparseNode</span><span class="w"> </span><span class="na">nodes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -188,7 +192,7 @@
 </div>
 </section>
 <section id="sparsesupportvectors">
-<h2>SparseSupportVectors<a class="headerlink" href="#sparsesupportvectors" title="Permalink to this heading"></a></h2>
+<h2>SparseSupportVectors<a class="headerlink" href="#sparsesupportvectors" title="Link to this heading"></a></h2>
 <p>One or more sparse support vectors.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">SparseSupportVectors</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">repeated</span><span class="w"> </span><span class="n">SparseVector</span><span class="w"> </span><span class="na">vectors</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -197,7 +201,7 @@
 </div>
 </section>
 <section id="densevector">
-<h2>DenseVector<a class="headerlink" href="#densevector" title="Permalink to this heading"></a></h2>
+<h2>DenseVector<a class="headerlink" href="#densevector" title="Link to this heading"></a></h2>
 <p>A dense vector.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">DenseVector</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">repeated</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="na">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -206,7 +210,7 @@
 </div>
 </section>
 <section id="densesupportvectors">
-<h2>DenseSupportVectors<a class="headerlink" href="#densesupportvectors" title="Permalink to this heading"></a></h2>
+<h2>DenseSupportVectors<a class="headerlink" href="#densesupportvectors" title="Link to this heading"></a></h2>
 <p>One or more dense support vectors.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">DenseSupportVectors</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">repeated</span><span class="w"> </span><span class="n">DenseVector</span><span class="w"> </span><span class="na">vectors</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -215,7 +219,7 @@
 </div>
 </section>
 <section id="coefficients">
-<h2>Coefficients<a class="headerlink" href="#coefficients" title="Permalink to this heading"></a></h2>
+<h2>Coefficients<a class="headerlink" href="#coefficients" title="Link to this heading"></a></h2>
 <p>One or more coefficients.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">Coefficients</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">repeated</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="na">alpha</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -224,7 +228,7 @@
 </div>
 </section>
 <section id="supportvectorregressor">
-<h2>SupportVectorRegressor<a class="headerlink" href="#supportvectorregressor" title="Permalink to this heading"></a></h2>
+<h2>SupportVectorRegressor<a class="headerlink" href="#supportvectorregressor" title="Link to this heading"></a></h2>
 <p>A support vector regressor.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">SupportVectorRegressor</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="n">Kernel</span><span class="w"> </span><span class="na">kernel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -244,7 +248,7 @@
 </div>
 </section>
 <section id="supportvectorclassifier">
-<h2>SupportVectorClassifier<a class="headerlink" href="#supportvectorclassifier" title="Permalink to this heading"></a></h2>
+<h2>SupportVectorClassifier<a class="headerlink" href="#supportvectorclassifier" title="Link to this heading"></a></h2>
 <p>A support vector classifier</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">SupportVectorClassifier</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="n">Kernel</span><span class="w"> </span><span class="na">kernel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>

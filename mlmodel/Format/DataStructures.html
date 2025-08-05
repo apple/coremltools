@@ -1,22 +1,22 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DataStructures &mdash; Core ML Format Reference  documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -29,11 +29,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> Core ML Format Reference
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Core ML Format Reference
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -91,9 +95,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="DataStructuresTypes.html">Data Structures, Types and Parameters</a> &raquo;</li>
-      <li>DataStructures</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="DataStructuresTypes.html">Data Structures, Types and Parameters</a></li>
+      <li class="breadcrumb-item active">DataStructures</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/Format/DataStructures.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -104,9 +108,9 @@
            <div itemprop="articleBody">
              
   <section id="datastructures">
-<h1>DataStructures<a class="headerlink" href="#datastructures" title="Permalink to this heading"></a></h1>
+<h1>DataStructures<a class="headerlink" href="#datastructures" title="Link to this heading"></a></h1>
 <section id="stringtoint64map">
-<h2>StringToInt64Map<a class="headerlink" href="#stringtoint64map" title="Permalink to this heading"></a></h2>
+<h2>StringToInt64Map<a class="headerlink" href="#stringtoint64map" title="Link to this heading"></a></h2>
 <p>A mapping from a string
 to a 64-bit integer.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">StringToInt64Map</span><span class="w"> </span><span class="p">{</span>
@@ -116,7 +120,7 @@ to a 64-bit integer.</p>
 </div>
 </section>
 <section id="int64tostringmap">
-<h2>Int64ToStringMap<a class="headerlink" href="#int64tostringmap" title="Permalink to this heading"></a></h2>
+<h2>Int64ToStringMap<a class="headerlink" href="#int64tostringmap" title="Link to this heading"></a></h2>
 <p>A mapping from a 64-bit integer
 to a string.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">Int64ToStringMap</span><span class="w"> </span><span class="p">{</span>
@@ -126,7 +130,7 @@ to a string.</p>
 </div>
 </section>
 <section id="stringtodoublemap">
-<h2>StringToDoubleMap<a class="headerlink" href="#stringtodoublemap" title="Permalink to this heading"></a></h2>
+<h2>StringToDoubleMap<a class="headerlink" href="#stringtodoublemap" title="Link to this heading"></a></h2>
 <p>A mapping from a string
 to a double-precision floating point number.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">StringToDoubleMap</span><span class="w"> </span><span class="p">{</span>
@@ -136,7 +140,7 @@ to a double-precision floating point number.</p>
 </div>
 </section>
 <section id="int64todoublemap">
-<h2>Int64ToDoubleMap<a class="headerlink" href="#int64todoublemap" title="Permalink to this heading"></a></h2>
+<h2>Int64ToDoubleMap<a class="headerlink" href="#int64todoublemap" title="Link to this heading"></a></h2>
 <p>A mapping from a 64-bit integer
 to a double-precision floating point number.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">Int64ToDoubleMap</span><span class="w"> </span><span class="p">{</span>
@@ -146,7 +150,7 @@ to a double-precision floating point number.</p>
 </div>
 </section>
 <section id="stringvector">
-<h2>StringVector<a class="headerlink" href="#stringvector" title="Permalink to this heading"></a></h2>
+<h2>StringVector<a class="headerlink" href="#stringvector" title="Link to this heading"></a></h2>
 <p>A vector of strings.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">StringVector</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">repeated</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="na">vector</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -155,7 +159,7 @@ to a double-precision floating point number.</p>
 </div>
 </section>
 <section id="int64vector">
-<h2>Int64Vector<a class="headerlink" href="#int64vector" title="Permalink to this heading"></a></h2>
+<h2>Int64Vector<a class="headerlink" href="#int64vector" title="Link to this heading"></a></h2>
 <p>A vector of 64-bit integers.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">Int64Vector</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">repeated</span><span class="w"> </span><span class="kt">int64</span><span class="w"> </span><span class="na">vector</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -164,7 +168,7 @@ to a double-precision floating point number.</p>
 </div>
 </section>
 <section id="floatvector">
-<h2>FloatVector<a class="headerlink" href="#floatvector" title="Permalink to this heading"></a></h2>
+<h2>FloatVector<a class="headerlink" href="#floatvector" title="Link to this heading"></a></h2>
 <p>A vector of floating point numbers.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">FloatVector</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">repeated</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="na">vector</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -173,7 +177,7 @@ to a double-precision floating point number.</p>
 </div>
 </section>
 <section id="doublevector">
-<h2>DoubleVector<a class="headerlink" href="#doublevector" title="Permalink to this heading"></a></h2>
+<h2>DoubleVector<a class="headerlink" href="#doublevector" title="Link to this heading"></a></h2>
 <p>A vector of double-precision floating point numbers.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">DoubleVector</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">repeated</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="na">vector</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -182,7 +186,7 @@ to a double-precision floating point number.</p>
 </div>
 </section>
 <section id="int64range">
-<h2>Int64Range<a class="headerlink" href="#int64range" title="Permalink to this heading"></a></h2>
+<h2>Int64Range<a class="headerlink" href="#int64range" title="Link to this heading"></a></h2>
 <p>A range of int64 values</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">Int64Range</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="kt">int64</span><span class="w"> </span><span class="na">minValue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -192,7 +196,7 @@ to a double-precision floating point number.</p>
 </div>
 </section>
 <section id="int64set">
-<h2>Int64Set<a class="headerlink" href="#int64set" title="Permalink to this heading"></a></h2>
+<h2>Int64Set<a class="headerlink" href="#int64set" title="Link to this heading"></a></h2>
 <p>A set of int64 values</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">Int64Set</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">repeated</span><span class="w"> </span><span class="kt">int64</span><span class="w"> </span><span class="na">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -201,7 +205,7 @@ to a double-precision floating point number.</p>
 </div>
 </section>
 <section id="doublerange">
-<h2>DoubleRange<a class="headerlink" href="#doublerange" title="Permalink to this heading"></a></h2>
+<h2>DoubleRange<a class="headerlink" href="#doublerange" title="Link to this heading"></a></h2>
 <p>A range of double values</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">DoubleRange</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="na">minValue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -211,22 +215,22 @@ to a double-precision floating point number.</p>
 </div>
 </section>
 <section id="precisionrecallcurve">
-<h2>PrecisionRecallCurve<a class="headerlink" href="#precisionrecallcurve" title="Permalink to this heading"></a></h2>
+<h2>PrecisionRecallCurve<a class="headerlink" href="#precisionrecallcurve" title="Link to this heading"></a></h2>
 <p>The syntax comprises two tables: one to look up the precision value threshold
 for a given precision, and the other for a given recall.</p>
 <table class="docutils align-default" id="id1">
-<caption><span class="caption-text">Example</span><a class="headerlink" href="#id1" title="Permalink to this table"></a></caption>
+<caption><span class="caption-text">Example</span><a class="headerlink" href="#id1" title="Link to this table"></a></caption>
 <colgroup>
-<col style="width: 55%" />
-<col style="width: 5%" />
-<col style="width: 5%" />
-<col style="width: 5%" />
-<col style="width: 5%" />
-<col style="width: 5%" />
-<col style="width: 5%" />
-<col style="width: 5%" />
-<col style="width: 5%" />
-<col style="width: 5%" />
+<col style="width: 55.0%" />
+<col style="width: 5.0%" />
+<col style="width: 5.0%" />
+<col style="width: 5.0%" />
+<col style="width: 5.0%" />
+<col style="width: 5.0%" />
+<col style="width: 5.0%" />
+<col style="width: 5.0%" />
+<col style="width: 5.0%" />
+<col style="width: 5.0%" />
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">precisionValues</span></code></p></td>
