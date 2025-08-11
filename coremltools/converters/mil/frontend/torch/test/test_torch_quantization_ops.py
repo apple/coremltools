@@ -217,6 +217,61 @@ class TestPyTorchQuantizationOps(TorchQuantizationBaseTest):
                 self.run_compare_torch([input_shape], model)
         else:
             self.run_compare_torch([input_shape], model, atol=5e-4, rtol=5e-4)
+    
+    @pytest.mark.skipif(not _HAS_TORCHAO, reason=MSG_TORCHAO_NOT_FOUND)
+    @pytest.mark.parametrize(
+        "compute_unit, group_size, bit_width, has_zeros",
+        itertools.product(compute_units, [32, 64], [4, 8], [True, False]),
+    )
+    def test_dequantize_affine(self, compute_unit, group_size, bit_width, has_zeros):
+
+        if bit_width == 4:
+            quant_min = -8
+            quant_max = 7
+        elif bit_width == 8:
+            quant_min = -128
+            quant_max = 127
+        else:
+            raise ValueError(f"Unsupported bit width: {bit_width}")
+
+        n = 4
+        k = 128
+        input_dtype = torch.int8
+        int_data = torch.randint(low=quant_min, high=quant_max, size=(n, k)).to(input_dtype)
+        scale = torch.rand(n, k // group_size)
+
+        zero_point = None
+        if has_zeros:
+            zero_point = torch.randint(low=quant_min, high=quant_max, size=(n, k // group_size)).to(input_dtype)
+
+
+        class Model(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.register_buffer("int_data", int_data)
+                self.register_buffer("scale", scale)
+                self.register_buffer("zero_point", zero_point)
+
+            def forward(self, x):
+                w = torchao_quant.dequantize_affine(self.int_data, [1, group_size], self.scale, self.zero_point, input_dtype, quant_min, quant_max)
+                return torch.nn.functional.linear(x, w)
+
+
+        model = Model()
+        model = model.to(torch.device("cpu"))
+       
+        input_shape = [(3, k)]
+        res = self.run_compare_torch(
+            input_shape,
+            model,
+            minimum_deployment_target=ct.target.iOS18,
+            compute_unit=compute_unit,
+            rtol=0.1,
+            frontend=TorchFrontend.TORCHEXPORT,
+        )
+        prog = res[1]._mil_program
+        assert get_op_types_in_program(prog) == ["constexpr_blockwise_shift_scale", "linear"]
+
 
 
 # TODO(rdar://108463675): refactor torch op tests later to parametrize quantized vs standard ops
@@ -587,7 +642,7 @@ class TestPytorchQuantizedOps(TorchQuantizationBaseTest):
         )
         prog = res[1]._mil_program
         assert get_op_types_in_program(prog) == ["constexpr_blockwise_shift_scale", "linear"]
-
+    
     @pytest.mark.skipif(
         not hasattr(torch.ops.quantized_decomposed, "embedding_4bit"),
         reason="The `embedding_4bit` op doesn't exist in quantized_decomposed custom opset.",
