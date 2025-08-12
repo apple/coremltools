@@ -1,11 +1,13 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.models.compute_plan &mdash; coremltools API Reference 8.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+  <title>coremltools.models.compute_plan &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -14,15 +16,11 @@
       <link rel="stylesheet" type="text/css" href="../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../_static/documentation_options.js?v=8cc1add8"></script>
-        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -39,9 +37,6 @@
           <a href="../../../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
-              <div class="version">
-                8.3
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -99,26 +94,26 @@
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
 
-<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span> <span class="k">as</span> <span class="n">_dataclass</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span> <span class="k">as</span> <span class="n">_Any</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span> <span class="k">as</span> <span class="n">_Dict</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span> <span class="k">as</span> <span class="n">_List</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span> <span class="k">as</span> <span class="n">_Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span> <span class="k">as</span> <span class="n">_dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span> <span class="k">as</span> <span class="n">_Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span> <span class="k">as</span> <span class="n">_Dict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span> <span class="k">as</span> <span class="n">_List</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span> <span class="k">as</span> <span class="n">_Tuple</span>
 
-<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
-<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_logger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">_logger</span>
 
-<span class="kn">from</span> <span class="nn">.compute_device</span> <span class="kn">import</span> <span class="n">MLComputeDevice</span> <span class="k">as</span> <span class="n">_MLComputeDevice</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.compute_device</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLComputeDevice</span> <span class="k">as</span> <span class="n">_MLComputeDevice</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">..libcoremlpython</span> <span class="kn">import</span> <span class="n">_MLModelProxy</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">..libcoremlpython</span><span class="w"> </span><span class="kn">import</span> <span class="n">_MLModelProxy</span>
 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
     <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to load _MLModelProxy: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">_MLModelProxy</span> <span class="o">=</span> <span class="kc">None</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">..libcoremlpython</span> <span class="kn">import</span> <span class="n">_MLComputePlanProxy</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">..libcoremlpython</span><span class="w"> </span><span class="kn">import</span> <span class="n">_MLComputePlanProxy</span>
 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
     <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to load _MLComputePlanProxy: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">_MLComputePlanProxy</span> <span class="o">=</span> <span class="kc">None</span>
@@ -126,7 +121,7 @@
 <div class="viewcode-block" id="MLModelStructureNeuralNetworkLayer">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.compute_plan.MLModelStructureNeuralNetworkLayer">[docs]</a>
 <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">MLModelStructureNeuralNetworkLayer</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MLModelStructureNeuralNetworkLayer</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents a layer in a neural network model structure.</span>
 
@@ -155,7 +150,7 @@
 <div class="viewcode-block" id="MLModelStructureNeuralNetwork">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.compute_plan.MLModelStructureNeuralNetwork">[docs]</a>
 <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">MLModelStructureNeuralNetwork</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MLModelStructureNeuralNetwork</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents the structure of a neural network model.</span>
 
@@ -171,7 +166,7 @@
 <div class="viewcode-block" id="MLModelStructureProgramValue">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.compute_plan.MLModelStructureProgramValue">[docs]</a>
 <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">MLModelStructureProgramValue</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MLModelStructureProgramValue</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents the value of a constant in an ML Program.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -182,7 +177,7 @@
 <div class="viewcode-block" id="MLModelStructureProgramBinding">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.compute_plan.MLModelStructureProgramBinding">[docs]</a>
 <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">MLModelStructureProgramBinding</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MLModelStructureProgramBinding</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents a binding between a name and a program value in an ML Program.</span>
 <span class="sd">    This is either a previously defined name of a variable or a constant value in the Program.</span>
@@ -203,7 +198,7 @@
 <div class="viewcode-block" id="MLModelStructureProgramArgument">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.compute_plan.MLModelStructureProgramArgument">[docs]</a>
 <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">MLModelStructureProgramArgument</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MLModelStructureProgramArgument</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents an argument in an ML Program.</span>
 
@@ -219,7 +214,7 @@
 <div class="viewcode-block" id="MLModelStructureProgramValueType">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.compute_plan.MLModelStructureProgramValueType">[docs]</a>
 <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">MLModelStructureProgramValueType</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MLModelStructureProgramValueType</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents the type of a value or a variable in an ML Program.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -229,7 +224,7 @@
 <div class="viewcode-block" id="MLModelStructureProgramNamedValueType">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.compute_plan.MLModelStructureProgramNamedValueType">[docs]</a>
 <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">MLModelStructureProgramNamedValueType</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MLModelStructureProgramNamedValueType</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents a parameter&#39;s name and type in an ML Program.</span>
 
@@ -249,7 +244,7 @@
 <div class="viewcode-block" id="MLModelStructureProgramOperation">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.compute_plan.MLModelStructureProgramOperation">[docs]</a>
 <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">MLModelStructureProgramOperation</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MLModelStructureProgramOperation</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents an operation in an ML Program.</span>
 
@@ -278,7 +273,7 @@
 <div class="viewcode-block" id="MLModelStructureProgramBlock">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.compute_plan.MLModelStructureProgramBlock">[docs]</a>
 <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">MLModelStructureProgramBlock</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MLModelStructureProgramBlock</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents a block in an ML Program.</span>
 
@@ -305,7 +300,7 @@
 <div class="viewcode-block" id="MLModelStructureProgramFunction">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.compute_plan.MLModelStructureProgramFunction">[docs]</a>
 <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">MLModelStructureProgramFunction</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MLModelStructureProgramFunction</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents a function in an ML Program.</span>
 
@@ -326,7 +321,7 @@
 <div class="viewcode-block" id="MLModelStructureProgram">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.compute_plan.MLModelStructureProgram">[docs]</a>
 <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">MLModelStructureProgram</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MLModelStructureProgram</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents the structure of an ML Program model.</span>
 
@@ -343,7 +338,7 @@
 <div class="viewcode-block" id="MLModelStructurePipeline">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.compute_plan.MLModelStructurePipeline">[docs]</a>
 <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">MLModelStructurePipeline</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MLModelStructurePipeline</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents the structure of a pipeline model.</span>
 
@@ -359,7 +354,7 @@
 <div class="viewcode-block" id="MLModelStructure">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.compute_plan.MLModelStructure">[docs]</a>
 <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">MLModelStructure</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MLModelStructure</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents the structure of a model.</span>
 
@@ -382,7 +377,7 @@
 <div class="viewcode-block" id="MLModelStructure.load_from_path">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.compute_plan.MLModelStructure.load_from_path">[docs]</a>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">load_from_path</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">compiled_model_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MLModelStructure&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_from_path</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">compiled_model_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MLModelStructure&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Loads the structure of a compiled model.</span>
 
@@ -431,7 +426,7 @@
 <div class="viewcode-block" id="MLComputePlanDeviceUsage">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.compute_plan.MLComputePlanDeviceUsage">[docs]</a>
 <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">MLComputePlanDeviceUsage</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MLComputePlanDeviceUsage</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents the anticipated compute devices that would be used for executing a layer/operation.</span>
 
@@ -452,7 +447,7 @@
 <div class="viewcode-block" id="MLComputePlanCost">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.compute_plan.MLComputePlanCost">[docs]</a>
 <span class="nd">@_dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">MLComputePlanCost</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MLComputePlanCost</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents the estimated cost of executing a layer/operation.</span>
 
@@ -467,7 +462,7 @@
 
 <div class="viewcode-block" id="MLComputePlan">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.compute_plan.MLComputePlan">[docs]</a>
-<span class="k">class</span> <span class="nc">MLComputePlan</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MLComputePlan</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents the plan for executing a model.</span>
 
@@ -475,13 +470,13 @@
 <span class="sd">    resources of the model before running the predictions.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proxy</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proxy</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">_MLComputePlanProxy</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">proxy</span><span class="p">,</span> <span class="n">_MLComputePlanProxy</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;The proxy parameter must be of type _MLComputePlanProxy.&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span> <span class="o">=</span> <span class="n">proxy</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">model_structure</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MLModelStructure</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">model_structure</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MLModelStructure</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the model structure.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -489,7 +484,7 @@
 
 <div class="viewcode-block" id="MLComputePlan.get_compute_device_usage_for_mlprogram_operation">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.compute_plan.MLComputePlan.get_compute_device_usage_for_mlprogram_operation">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_compute_device_usage_for_mlprogram_operation</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_compute_device_usage_for_mlprogram_operation</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">operation</span><span class="p">:</span> <span class="n">MLModelStructureProgramOperation</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">MLComputePlanDeviceUsage</span><span class="p">]:</span>
@@ -511,7 +506,7 @@
 
 <div class="viewcode-block" id="MLComputePlan.get_compute_device_usage_for_neuralnetwork_layer">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.compute_plan.MLComputePlan.get_compute_device_usage_for_neuralnetwork_layer">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_compute_device_usage_for_neuralnetwork_layer</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_compute_device_usage_for_neuralnetwork_layer</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">layer</span><span class="p">:</span> <span class="n">MLModelStructureNeuralNetworkLayer</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">MLComputePlanDeviceUsage</span><span class="p">]:</span>
@@ -533,7 +528,7 @@
 
 <div class="viewcode-block" id="MLComputePlan.get_estimated_cost_for_mlprogram_operation">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.compute_plan.MLComputePlan.get_estimated_cost_for_mlprogram_operation">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_estimated_cost_for_mlprogram_operation</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_estimated_cost_for_mlprogram_operation</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">operation</span><span class="p">:</span> <span class="n">MLModelStructureProgramOperation</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">MLComputePlanCost</span><span class="p">]:</span>
@@ -556,7 +551,7 @@
 <div class="viewcode-block" id="MLComputePlan.load_from_path">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.compute_plan.MLComputePlan.load_from_path">[docs]</a>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">load_from_path</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_from_path</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">compute_units</span><span class="p">:</span> <span class="n">_ComputeUnit</span> <span class="o">=</span> <span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">ALL</span><span class="p">,</span>
@@ -613,7 +608,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Apple Inc.</p>
+    <p>&#169; Copyright 2021, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

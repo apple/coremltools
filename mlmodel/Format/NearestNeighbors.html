@@ -1,22 +1,22 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NearestNeighbors &mdash; Core ML Format Reference  documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -29,11 +29,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> Core ML Format Reference
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Core ML Format Reference
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -85,9 +89,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="Classifiers.html">Other Classifiers</a> &raquo;</li>
-      <li>NearestNeighbors</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="Classifiers.html">Other Classifiers</a></li>
+      <li class="breadcrumb-item active">NearestNeighbors</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/Format/NearestNeighbors.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -98,9 +102,9 @@
            <div itemprop="articleBody">
              
   <section id="nearestneighbors">
-<h1>NearestNeighbors<a class="headerlink" href="#nearestneighbors" title="Permalink to this heading"></a></h1>
+<h1>NearestNeighbors<a class="headerlink" href="#nearestneighbors" title="Link to this heading"></a></h1>
 <section id="knearestneighborsclassifier">
-<h2>KNearestNeighborsClassifier<a class="headerlink" href="#knearestneighborsclassifier" title="Permalink to this heading"></a></h2>
+<h2>KNearestNeighborsClassifier<a class="headerlink" href="#knearestneighborsclassifier" title="Link to this heading"></a></h2>
 <p>A k-Nearest-Neighbor classifier</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">KNearestNeighborsClassifier</span><span class="w"> </span><span class="p">{</span>
 
@@ -127,7 +131,7 @@
 </div>
 </section>
 <section id="nearestneighborsindex">
-<h2>NearestNeighborsIndex<a class="headerlink" href="#nearestneighborsindex" title="Permalink to this heading"></a></h2>
+<h2>NearestNeighborsIndex<a class="headerlink" href="#nearestneighborsindex" title="Link to this heading"></a></h2>
 <p>The “core” attributes of a Nearest Neighbors model.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">NearestNeighborsIndex</span><span class="w"> </span><span class="p">{</span>
 
@@ -149,7 +153,7 @@
 </div>
 </section>
 <section id="uniformweighting">
-<h2>UniformWeighting<a class="headerlink" href="#uniformweighting" title="Permalink to this heading"></a></h2>
+<h2>UniformWeighting<a class="headerlink" href="#uniformweighting" title="Link to this heading"></a></h2>
 <p>Specifies a uniform weighting scheme (i.e. each neighbor receives equal
 voting power).</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">UniformWeighting</span><span class="w"> </span><span class="p">{</span>
@@ -158,7 +162,7 @@ voting power).</p>
 </div>
 </section>
 <section id="inversedistanceweighting">
-<h2>InverseDistanceWeighting<a class="headerlink" href="#inversedistanceweighting" title="Permalink to this heading"></a></h2>
+<h2>InverseDistanceWeighting<a class="headerlink" href="#inversedistanceweighting" title="Link to this heading"></a></h2>
 <p>Specifies a inverse-distance weighting scheme (i.e. closest neighbors receives higher
 voting power). A nearest neighbor with highest sum of (1 / distance) is picked.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">InverseDistanceWeighting</span><span class="w"> </span><span class="p">{</span>
@@ -167,7 +171,7 @@ voting power). A nearest neighbor with highest sum of (1 / distance) is picked.<
 </div>
 </section>
 <section id="linearindex">
-<h2>LinearIndex<a class="headerlink" href="#linearindex" title="Permalink to this heading"></a></h2>
+<h2>LinearIndex<a class="headerlink" href="#linearindex" title="Link to this heading"></a></h2>
 <p>Specifies a flat index of data points to be searched by brute force.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">LinearIndex</span><span class="w"> </span><span class="p">{</span>
 <span class="p">}</span>
@@ -175,7 +179,7 @@ voting power). A nearest neighbor with highest sum of (1 / distance) is picked.<
 </div>
 </section>
 <section id="singlekdtreeindex">
-<h2>SingleKdTreeIndex<a class="headerlink" href="#singlekdtreeindex" title="Permalink to this heading"></a></h2>
+<h2>SingleKdTreeIndex<a class="headerlink" href="#singlekdtreeindex" title="Link to this heading"></a></h2>
 <p>Specifies a kd-tree backend for the nearest neighbors model.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">SingleKdTreeIndex</span><span class="w"> </span><span class="p">{</span>
 
@@ -186,7 +190,7 @@ voting power). A nearest neighbor with highest sum of (1 / distance) is picked.<
 </div>
 </section>
 <section id="squaredeuclideandistance">
-<h2>SquaredEuclideanDistance<a class="headerlink" href="#squaredeuclideandistance" title="Permalink to this heading"></a></h2>
+<h2>SquaredEuclideanDistance<a class="headerlink" href="#squaredeuclideandistance" title="Link to this heading"></a></h2>
 <p>Specifies the Squared Euclidean Distance function.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">SquaredEuclideanDistance</span><span class="w"> </span><span class="p">{</span>
 <span class="p">}</span>

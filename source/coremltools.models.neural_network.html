@@ -1,12 +1,14 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>neural_network.builder &mdash; coremltools API Reference 8.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+  <title>neural_network.builder &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -15,16 +17,12 @@
       <link rel="stylesheet" type="text/css" href="../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=8cc1add8"></script>
-        <script src="../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -43,9 +41,6 @@
           <a href="../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
-              <div class="version">
-                8.3
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -166,11 +161,11 @@ network classifiers.</p>
 <p>Refer to the protobuf messages in the specification (NeuralNetwork.proto)
 for more details.</p>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">datatypes</span>
-<span class="kn">from</span> <span class="nn">coremltools.models.neural_network</span> <span class="kn">import</span> <span class="n">NeuralNetworkBuilder</span>
-<span class="kn">from</span> <span class="nn">coremltools.models.utils</span> <span class="kn">import</span> <span class="n">save_spec</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">datatypes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.neural_network</span><span class="w"> </span><span class="kn">import</span> <span class="n">NeuralNetworkBuilder</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">save_spec</span>
 
 <span class="c1"># Create a neural network binary classifier that classifies</span>
 <span class="c1"># 3-dimensional data points</span>
@@ -5633,8 +5628,8 @@ size information for a image feature.</p></li>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span>
-<span class="kn">from</span> <span class="nn">coremltools.models.neural_network</span> <span class="kn">import</span> <span class="n">flexible_shape_utils</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.neural_network</span><span class="w"> </span><span class="kn">import</span> <span class="n">flexible_shape_utils</span>
 
 <span class="n">spec</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">load_spec</span><span class="p">(</span><span class="s2">&quot;mymodel.mlmodel&quot;</span><span class="p">)</span>
 <span class="n">image_sizes</span> <span class="o">=</span> <span class="p">[</span><span class="n">flexible_shape_utils</span><span class="o">.</span><span class="n">NeuralNetworkImageSize</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">)]</span>
@@ -5672,8 +5667,8 @@ size information for a image feature.</p></li>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span>
-<span class="kn">from</span> <span class="nn">coremltools.models.neural_network</span> <span class="kn">import</span> <span class="n">flexible_shape_utils</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.neural_network</span><span class="w"> </span><span class="kn">import</span> <span class="n">flexible_shape_utils</span>
 
 <span class="n">spec</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">load_spec</span><span class="p">(</span><span class="s2">&quot;mymodel.mlmodel&quot;</span><span class="p">)</span>
 <span class="n">array_shapes</span> <span class="o">=</span> <span class="p">[</span><span class="n">flexible_shape_utils</span><span class="o">.</span><span class="n">NeuralNetworkMultiArrayShape</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span>
@@ -5717,8 +5712,8 @@ list of shapes, where each shape is specified as a tuple of integers.</p></li>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span>
-<span class="kn">from</span> <span class="nn">coremltools.models.neural_network</span> <span class="kn">import</span> <span class="n">flexible_shape_utils</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.neural_network</span><span class="w"> </span><span class="kn">import</span> <span class="n">flexible_shape_utils</span>
 
 <span class="n">spec</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">load_spec</span><span class="p">(</span><span class="s2">&quot;mymodel.mlmodel&quot;</span><span class="p">)</span>
 <span class="c1"># say, the default shape of &quot;my_multiarray_featurename&quot; is (2,3)</span>
@@ -5761,8 +5756,8 @@ Length must be same as the rank (length of shape) of the <code class="docutils l
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span>
-<span class="kn">from</span> <span class="nn">coremltools.models.neural_network</span> <span class="kn">import</span> <span class="n">flexible_shape_utils</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.neural_network</span><span class="w"> </span><span class="kn">import</span> <span class="n">flexible_shape_utils</span>
 
 <span class="n">spec</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">load_spec</span><span class="p">(</span><span class="s2">&quot;mymodel.mlmodel&quot;</span><span class="p">)</span>
 <span class="c1"># say, the default shape of &quot;my_multiarray_featurename&quot; is (2,3)</span>
@@ -5802,8 +5797,8 @@ range information.</p></li>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span>
-<span class="kn">from</span> <span class="nn">coremltools.models.neural_network</span> <span class="kn">import</span> <span class="n">flexible_shape_utils</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.neural_network</span><span class="w"> </span><span class="kn">import</span> <span class="n">flexible_shape_utils</span>
 
 <span class="n">spec</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">load_spec</span><span class="p">(</span><span class="s2">&quot;mymodel.mlmodel&quot;</span><span class="p">)</span>
 <span class="n">img_size_ranges</span> <span class="o">=</span> <span class="n">flexible_shape_utils</span><span class="o">.</span><span class="n">NeuralNetworkImageSizeRange</span><span class="p">()</span>
@@ -5844,8 +5839,8 @@ the object is invalid then an exception is thrown.</p></li>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span>
-<span class="kn">from</span> <span class="nn">coremltools.models.neural_network</span> <span class="kn">import</span> <span class="n">flexible_shape_utils</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.neural_network</span><span class="w"> </span><span class="kn">import</span> <span class="n">flexible_shape_utils</span>
 
 <span class="n">spec</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">load_spec</span><span class="p">(</span><span class="s2">&quot;mymodel.mlmodel&quot;</span><span class="p">)</span>
 <span class="n">shape_range</span> <span class="o">=</span> <span class="n">flexible_shape_utils</span><span class="o">.</span><span class="n">NeuralNetworkMultiArrayShapeRange</span><span class="p">()</span>
@@ -5876,7 +5871,7 @@ Only available in coremltools 2.0b1 and onwards</p>
 layers to skip during quantization process and the minimum size parameters
 in quantized convolution layers.</p>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.models.neural_network.quantization_utils</span> <span class="kn">import</span> <span class="p">(</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.neural_network.quantization_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">AdvancedQuantizedLayerSelector</span><span class="p">,</span>
 <span class="p">)</span>
 
@@ -5932,11 +5927,11 @@ two model outputs</p>
 layers during quantization. To implement a custom selector, create a class
 that inherits this class and override <cite>do_quantize()</cite> method.</p>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyLayerSelector</span><span class="p">(</span><span class="n">QuantizedLayerSelector</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyLayerSelector</span><span class="p">(</span><span class="n">QuantizedLayerSelector</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">do_quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">do_quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">do_quantize</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">ret</span> <span class="ow">or</span> <span class="n">layer</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;dense_2&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
@@ -6061,8 +6056,8 @@ otherwise the quantized model specification is returned</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span>
-<span class="kn">from</span> <span class="nn">coremltools.models.neural_network</span> <span class="kn">import</span> <span class="n">quantization_utils</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.neural_network</span><span class="w"> </span><span class="kn">import</span> <span class="n">quantization_utils</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model.mlmodel&quot;</span><span class="p">)</span>
 <span class="n">quantized_model</span> <span class="o">=</span> <span class="n">quantization_utils</span><span class="o">.</span><span class="n">quantize_weights</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="s2">&quot;linear&quot;</span><span class="p">)</span>
@@ -6190,7 +6185,7 @@ otherwise the quantized model specification is returned</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Apple Inc.</p>
+    <p>&#169; Copyright 2021, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

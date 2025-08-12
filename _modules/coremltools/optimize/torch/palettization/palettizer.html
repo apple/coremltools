@@ -1,11 +1,13 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.optimize.torch.palettization.palettizer &mdash; coremltools API Reference 8.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+  <title>coremltools.optimize.torch.palettization.palettizer &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -14,15 +16,11 @@
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../../_static/documentation_options.js?v=8cc1add8"></script>
-        <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" /> 
@@ -39,9 +37,6 @@
           <a href="../../../../../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
-              <div class="version">
-                8.3
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -98,66 +93,66 @@
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
-<span class="kn">import</span> <span class="nn">logging</span> <span class="k">as</span> <span class="nn">_logging</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span> <span class="k">as</span> <span class="n">_Dict</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span> <span class="k">as</span> <span class="n">_Dict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
 
-<span class="kn">import</span> <span class="nn">torch</span> <span class="k">as</span> <span class="nn">_torch</span>
-<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">_nn</span>
-<span class="kn">from</span> <span class="nn">torch.ao.quantization</span> <span class="kn">import</span> <span class="n">FakeQuantize</span> <span class="k">as</span> <span class="n">_FakeQuantize</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.ao.quantization</span><span class="w"> </span><span class="kn">import</span> <span class="n">FakeQuantize</span> <span class="k">as</span> <span class="n">_FakeQuantize</span>
 
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._typing</span> <span class="kn">import</span> <span class="n">ParamsDict</span> <span class="k">as</span> <span class="n">_ParamsDict</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.joint_compression_utils</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch._typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParamsDict</span> <span class="k">as</span> <span class="n">_ParamsDict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch._utils.joint_compression_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">is_pruner_prepared</span> <span class="k">as</span> <span class="n">_is_pruner_prepared</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.math_utils</span> <span class="kn">import</span> <span class="n">rmse_error</span> <span class="k">as</span> <span class="n">_rmse_error</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.metadata_utils</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch._utils.math_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">rmse_error</span> <span class="k">as</span> <span class="n">_rmse_error</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch._utils.metadata_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">register_metadata_version</span> <span class="k">as</span> <span class="n">_register_metadata_version</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.optimizer_utils</span> <span class="kn">import</span> <span class="n">_ConfigToOptimizerRegistry</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="n">get_eval_model</span> <span class="k">as</span> <span class="n">_get_eval_model</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch._utils.optimizer_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">_ConfigToOptimizerRegistry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch._utils.torch_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_eval_model</span> <span class="k">as</span> <span class="n">_get_eval_model</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch._utils.torch_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">normalize_fsdp_module_name</span> <span class="k">as</span> <span class="n">_normalize_fsdp_module_name</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.validation_utils</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch._utils.validation_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">validate_param_config</span> <span class="k">as</span> <span class="n">_validate_param_config</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.base_model_optimizer</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.base_model_optimizer</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">BaseTrainingTimeModelOptimizer</span> <span class="k">as</span> <span class="n">_BaseTrainingTimeModelOptimizer</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.base_model_optimizer</span> <span class="kn">import</span> <span class="n">_Report</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.palettization._custom_conversion</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.base_model_optimizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">_Report</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.palettization._custom_conversion</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">get_conversion_custom_config_dict</span> <span class="k">as</span> <span class="n">_get_conversion_custom_config_dict</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.palettization._supported_modules</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.palettization._supported_modules</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DKMPalettizerModulesRegistry</span> <span class="k">as</span> <span class="n">_DKMPalettizerModulesRegistry</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.palettization.fake_palettize</span> <span class="kn">import</span> <span class="n">FakePalettize</span> <span class="k">as</span> <span class="n">_FakePalettize</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.palettization.palettization_config</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.palettization.fake_palettize</span><span class="w"> </span><span class="kn">import</span> <span class="n">FakePalettize</span> <span class="k">as</span> <span class="n">_FakePalettize</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.palettization.palettization_config</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DEFAULT_PALETTIZATION_ADVANCED_OPTIONS</span> <span class="k">as</span> <span class="n">_DEFAULT_PALETTIZATION_ADVANCED_OPTIONS</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.palettization.palettization_config</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.palettization.palettization_config</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DEFAULT_PALETTIZATION_SCHEME</span> <span class="k">as</span> <span class="n">_DEFAULT_PALETTIZATION_SCHEME</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.palettization.palettization_config</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.palettization.palettization_config</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DKMPalettizerConfig</span> <span class="k">as</span> <span class="n">_DKMPalettizerConfig</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.palettization.palettization_config</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize.torch.palettization.palettization_config</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">ModuleDKMPalettizerConfig</span> <span class="k">as</span> <span class="n">_ModuleDKMPalettizerConfig</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">_logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">Palettizer</span><span class="p">(</span><span class="n">_BaseTrainingTimeModelOptimizer</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Palettizer</span><span class="p">(</span><span class="n">_BaseTrainingTimeModelOptimizer</span><span class="p">):</span>
     <span class="k">pass</span>
 
 
-<span class="k">class</span> <span class="nc">_PalettizerLUTObserver</span><span class="p">(</span><span class="n">_torch</span><span class="o">.</span><span class="n">quantization</span><span class="o">.</span><span class="n">MovingAveragePerChannelMinMaxObserver</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_PalettizerLUTObserver</span><span class="p">(</span><span class="n">_torch</span><span class="o">.</span><span class="n">quantization</span><span class="o">.</span><span class="n">MovingAveragePerChannelMinMaxObserver</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Subclassing _torch.quantization.MovingAveragePerChannelMinMaxObserver to add reset_parameters method</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">reset_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        FSDP expects reset_parameters method to initialize parameters/buffers in submodules</span>
 <span class="sd">        Initializing buffers used by the MovingAveragePerChannelMinMaxObserver</span>
@@ -170,7 +165,7 @@
 <div class="viewcode-block" id="DKMPalettizer">
 <a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizer">[docs]</a>
 <span class="nd">@_ConfigToOptimizerRegistry</span><span class="o">.</span><span class="n">register_config</span><span class="p">(</span><span class="n">_DKMPalettizerConfig</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">DKMPalettizer</span><span class="p">(</span><span class="n">Palettizer</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DKMPalettizer</span><span class="p">(</span><span class="n">Palettizer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A palettization algorithm based on `&quot;DKM: Differentiable K-Means Clustering Layer for Neural Network</span>
 <span class="sd">    Compression&quot; &lt;https://arxiv.org/pdf/2108.12659.pdf&gt;`_. It clusters the weights</span>
@@ -216,14 +211,14 @@
 <span class="sd">            different submodules in the model will be configured for palettization.</span>
 <span class="sd">            Default config is used when passed as ``None``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">_nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_DKMPalettizerConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">_nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_DKMPalettizerConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="n">config</span> <span class="o">=</span> <span class="n">_DKMPalettizerConfig</span><span class="p">()</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">config</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_milestones</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_palettization_module_mapping</span> <span class="o">=</span> <span class="n">_DKMPalettizerModulesRegistry</span><span class="o">.</span><span class="n">REGISTRY</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_supported_modules</span> <span class="o">=</span> <span class="n">_DKMPalettizerModulesRegistry</span><span class="o">.</span><span class="n">get_supported_modules</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">_palettize_supported_modules</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_palettize_supported_modules</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Method to palettize supported modules.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -300,7 +295,7 @@
                             <span class="bp">self</span><span class="o">.</span><span class="n">_milestones</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">updated_config</span><span class="o">.</span><span class="n">milestone</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_attach_qconfig</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_attach_qconfig</span><span class="p">(</span>
         <span class="n">module</span><span class="p">:</span> <span class="n">_nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
         <span class="n">n_bits</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">cluster_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -342,7 +337,7 @@
         <span class="n">module</span><span class="o">.</span><span class="n">qconfig</span> <span class="o">=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">quantization</span><span class="o">.</span><span class="n">QConfig</span><span class="p">(</span><span class="n">activation</span><span class="o">=</span><span class="n">fq_activation</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">fq_weight</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_get_module_level_advanced_options</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_module_level_advanced_options</span><span class="p">(</span>
         <span class="n">module</span><span class="p">:</span> <span class="n">_nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">module_level_config</span><span class="p">:</span> <span class="n">_ModuleDKMPalettizerConfig</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_ParamsDict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -366,7 +361,7 @@
 
 <div class="viewcode-block" id="DKMPalettizer.prepare">
 <a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizer.prepare">[docs]</a>
-    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Prepares a model for palettization aware training by inserting :py:class:`FakePalettize` layers in appropriate</span>
 <span class="sd">        places as specified by the config.</span>
@@ -391,14 +386,14 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_default_enable_fake_palett</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_default_enable_fake_palett</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">module</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">named_modules</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_milestones</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_milestones</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_enable_fake_palett_impl</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 
 <div class="viewcode-block" id="DKMPalettizer.finalize">
 <a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizer.finalize">[docs]</a>
-    <span class="k">def</span> <span class="nf">finalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">finalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Removes :py:class:`FakePalettize` layers from a model and creates new model weights from the ``LUT`` and</span>
 <span class="sd">        ``indices`` buffers.</span>
@@ -429,7 +424,7 @@
 
 <div class="viewcode-block" id="DKMPalettizer.step">
 <a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizer.step">[docs]</a>
-    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Step through the palettizer. When the number of times ``step``</span>
 <span class="sd">        is called is equal to ``milestone``, palettization is enabled.</span>
@@ -448,7 +443,7 @@
 
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_init_prune_threshold_and_module_wise_target_sparsity</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_init_prune_threshold_and_module_wise_target_sparsity</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;weight_fake_quant&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;weight_mask&quot;</span><span class="p">):</span>
             <span class="n">non_zero_weights</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">weight_mask</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
             <span class="n">total_weights</span> <span class="o">=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">numel</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">weight_mask</span><span class="p">)</span>
@@ -466,7 +461,7 @@
             <span class="n">module</span><span class="o">.</span><span class="n">weight_fake_quant</span><span class="o">.</span><span class="n">_target_module_level_sparsity</span> <span class="o">=</span> <span class="n">target_module_level_sparsity</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_update_prune_threshold</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_update_prune_threshold</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;weight_fake_quant&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;weight_mask&quot;</span><span class="p">):</span>
             <span class="n">weight_detached</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
             <span class="n">qweight</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">weight_fake_quant</span><span class="o">.</span><span class="n">palettize</span><span class="p">(</span><span class="n">weight_detached</span><span class="p">)</span>
@@ -479,7 +474,7 @@
                 <span class="n">prune_multiplier</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">prune_ratio</span><span class="p">,</span> <span class="mf">1.25</span><span class="p">),</span> <span class="mf">0.9</span><span class="p">)</span>
                 <span class="n">module</span><span class="o">.</span><span class="n">weight_fake_quant</span><span class="o">.</span><span class="n">prune_threshold</span> <span class="o">*=</span> <span class="n">prune_multiplier</span>
 
-    <span class="k">def</span> <span class="nf">enable_fake_palett</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">enable_fake_palett</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
         <span class="n">_logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">] &quot;</span> <span class="o">+</span> <span class="p">(</span><span class="s2">&quot;enable&quot;</span> <span class="k">if</span> <span class="n">flag</span> <span class="k">else</span> <span class="s2">&quot;disable&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; fake_palett&quot;</span>
         <span class="p">)</span>
@@ -487,8 +482,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_enable_fake_palett_impl</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">flag</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_enable_fake_palett_impl</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
-        <span class="k">def</span> <span class="nf">enable_fn</span><span class="p">(</span><span class="n">mod</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_enable_fake_palett_impl</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">flag</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">enable_fn</span><span class="p">(</span><span class="n">mod</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="s2">&quot;enable_fake_palett&quot;</span><span class="p">):</span>
                 <span class="n">mod</span><span class="o">.</span><span class="n">enable_fake_palett</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span>
 
@@ -496,7 +491,7 @@
 
 <div class="viewcode-block" id="DKMPalettizer.report">
 <a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizer.report">[docs]</a>
-    <span class="k">def</span> <span class="nf">report</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Report</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">report</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Report</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns a dictionary with important statistics related to current state of palettization.</span>
 <span class="sd">        Each key in the dictionary corresponds to a module name, and the</span>
@@ -536,7 +531,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Apple Inc.</p>
+    <p>&#169; Copyright 2021, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

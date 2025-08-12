@@ -1,11 +1,13 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.models.neural_network.quantization_utils &mdash; coremltools API Reference 8.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+  <title>coremltools.models.neural_network.quantization_utils &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -14,15 +16,11 @@
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../_static/documentation_options.js?v=8cc1add8"></script>
-        <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" /> 
@@ -39,9 +37,6 @@
           <a href="../../../../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
-              <div class="version">
-                8.3
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -102,29 +97,29 @@
 <span class="sd">Utilities to compress Neural Network Models.</span>
 <span class="sd">Only available in coremltools 2.0b1 and onwards</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">listdir</span> <span class="k">as</span> <span class="n">_listdir</span>
-<span class="kn">from</span> <span class="nn">sys</span> <span class="kn">import</span> <span class="n">stdout</span> <span class="k">as</span> <span class="n">_stdout</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">os</span><span class="w"> </span><span class="kn">import</span> <span class="n">listdir</span> <span class="k">as</span> <span class="n">_listdir</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sys</span><span class="w"> </span><span class="kn">import</span> <span class="n">stdout</span> <span class="k">as</span> <span class="n">_stdout</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_np</span>
 
-<span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">_ct</span>
-<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_logger</span>
-<span class="kn">from</span> <span class="nn">coremltools._deps</span> <span class="kn">import</span> <span class="n">_HAS_KMEANS1D</span><span class="p">,</span> <span class="n">_kmeans1d</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize</span> <span class="kn">import</span> <span class="n">_utils</span> <span class="k">as</span> <span class="n">_optimize_utils</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_ct</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">_logger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools._deps</span><span class="w"> </span><span class="kn">import</span> <span class="n">_HAS_KMEANS1D</span><span class="p">,</span> <span class="n">_kmeans1d</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">_utils</span> <span class="k">as</span> <span class="n">_optimize_utils</span>
 
-<span class="kn">from</span> <span class="nn">...</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">...</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">_MINIMUM_FP16_SPEC_VERSION</span><span class="p">,</span>
     <span class="n">_MINIMUM_QUANTIZED_MODEL_SPEC_VERSION</span><span class="p">,</span>
     <span class="n">_SPECIFICATION_VERSION_IOS_14</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">_get_model</span><span class="p">,</span> <span class="n">_macos_version</span><span class="p">,</span> <span class="n">_wp_to_fp16wp</span>
-<span class="kn">from</span> <span class="nn">.optimization_utils</span> <span class="kn">import</span> <span class="n">_optimize_nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">_get_model</span><span class="p">,</span> <span class="n">_macos_version</span><span class="p">,</span> <span class="n">_wp_to_fp16wp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.optimization_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">_optimize_nn</span>
 
 
 <div class="viewcode-block" id="QuantizedLayerSelector">
 <a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.QuantizedLayerSelector">[docs]</a>
-<span class="k">class</span> <span class="nc">QuantizedLayerSelector</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">QuantizedLayerSelector</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This is the base class to implement custom selectors to skip certain</span>
 <span class="sd">    layers during quantization. To implement a custom selector, create a class</span>
@@ -153,7 +148,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">quantizable_layer_types</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;convolution&quot;</span><span class="p">,</span>
             <span class="s2">&quot;innerProduct&quot;</span><span class="p">,</span>
@@ -174,14 +169,14 @@
             <span class="s2">&quot;branch&quot;</span><span class="p">,</span>
         <span class="p">}</span>
 
-    <span class="k">def</span> <span class="nf">do_quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">do_quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">layer</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;layer&quot;</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">quantizable_layer_types</span></div>
 
 
 
 <div class="viewcode-block" id="AdvancedQuantizedLayerSelector">
 <a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.AdvancedQuantizedLayerSelector">[docs]</a>
-<span class="k">class</span> <span class="nc">AdvancedQuantizedLayerSelector</span><span class="p">(</span><span class="n">QuantizedLayerSelector</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">AdvancedQuantizedLayerSelector</span><span class="p">(</span><span class="n">QuantizedLayerSelector</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Quantized layer selector allowing the user to specify some types of</span>
 <span class="sd">    layers to skip during quantization process and the minimum size parameters</span>
 <span class="sd">    in quantized convolution layers.</span>
@@ -204,7 +199,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">skip_layer_types</span><span class="o">=</span><span class="p">[],</span>
         <span class="n">minimum_conv_kernel_channels</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
@@ -233,7 +228,7 @@
 
 <div class="viewcode-block" id="AdvancedQuantizedLayerSelector.do_quantize">
 <a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.AdvancedQuantizedLayerSelector.do_quantize">[docs]</a>
-    <span class="k">def</span> <span class="nf">do_quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">weight_param</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">do_quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">weight_param</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; weight_param - should be name of the WeightParam field</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">do_quantize</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
@@ -287,7 +282,7 @@
 
 <div class="viewcode-block" id="MatrixMultiplyLayerSelector">
 <a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.MatrixMultiplyLayerSelector">[docs]</a>
-<span class="k">class</span> <span class="nc">MatrixMultiplyLayerSelector</span><span class="p">(</span><span class="n">QuantizedLayerSelector</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MatrixMultiplyLayerSelector</span><span class="p">(</span><span class="n">QuantizedLayerSelector</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Layer selector object that allows users to select matrix multiplication layers</span>
 <span class="sd">    with one of the matrices being constant, based on some criterions like total</span>
@@ -296,7 +291,7 @@
 <span class="sd">    selected.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">minimum_weight_count</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="n">minimum_input_channels</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
@@ -329,7 +324,7 @@
 
 <div class="viewcode-block" id="MatrixMultiplyLayerSelector.do_quantize">
 <a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.MatrixMultiplyLayerSelector.do_quantize">[docs]</a>
-    <span class="k">def</span> <span class="nf">do_quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">weight_param</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">do_quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">weight_param</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        weight_param - should be name of the WeightParam field</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -383,7 +378,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">_convert_1bit_array_to_byte_array</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_convert_1bit_array_to_byte_array</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert bit array to byte array.</span>
 
@@ -418,7 +413,7 @@
     <span class="k">return</span> <span class="n">_np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">bit_arr</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_convert_array_to_nbit_quantized_bytes</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">nbits</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_convert_array_to_nbit_quantized_bytes</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">nbits</span><span class="p">):</span>
     <span class="n">split_arr</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">)):</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">nbits</span><span class="p">)):</span>
@@ -427,7 +422,7 @@
     <span class="k">return</span> <span class="n">_convert_1bit_array_to_byte_array</span><span class="p">(</span><span class="n">split_arr</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_decompose_bytes_to_bit_arr</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_decompose_bytes_to_bit_arr</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Unpack bytes to bits</span>
 
@@ -446,7 +441,7 @@
     <span class="k">return</span> <span class="n">bit_arr</span>
 
 
-<span class="k">def</span> <span class="nf">_get_linear_lookup_table_and_weight</span><span class="p">(</span><span class="n">nbits</span><span class="p">,</span> <span class="n">wp</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_linear_lookup_table_and_weight</span><span class="p">(</span><span class="n">nbits</span><span class="p">,</span> <span class="n">wp</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generate a linear lookup table.</span>
 
@@ -470,7 +465,7 @@
     <span class="k">return</span> <span class="n">lookup_table</span><span class="p">,</span> <span class="n">qw</span>
 
 
-<span class="k">def</span> <span class="nf">_get_kmeans_lookup_table_and_weight</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_kmeans_lookup_table_and_weight</span><span class="p">(</span>
     <span class="n">nbits</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">force_kmeans1d</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cluster_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">vector_axis</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -521,7 +516,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># Cluster with scikit-learn</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">sklearn.cluster</span> <span class="kn">import</span> <span class="n">KMeans</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.cluster</span><span class="w"> </span><span class="kn">import</span> <span class="n">KMeans</span>
         <span class="k">except</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span>
                 <span class="s2">&quot;scikit-learn is required for k-means quantization.&quot;</span>
@@ -542,7 +537,7 @@
     <span class="k">return</span> <span class="n">lut</span><span class="p">,</span> <span class="n">wq</span>
 
 
-<span class="k">def</span> <span class="nf">_quantize_channelwise_linear</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">symmetric</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_quantize_channelwise_linear</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">symmetric</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Linearly quantize weight blob.</span>
 
@@ -612,7 +607,7 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">quantized_weight</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">bias</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_quantize_wp</span><span class="p">(</span><span class="n">wp</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">qm</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_quantize_wp</span><span class="p">(</span><span class="n">wp</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">qm</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Quantize the weight blob</span>
 
@@ -675,7 +670,7 @@
     <span class="k">return</span> <span class="n">scale</span><span class="p">,</span> <span class="n">bias</span><span class="p">,</span> <span class="n">lut</span><span class="p">,</span> <span class="n">quantized_wp</span>
 
 
-<span class="k">def</span> <span class="nf">_quantize_wp_field</span><span class="p">(</span><span class="n">wp</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">qm</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_quantize_wp_field</span><span class="p">(</span><span class="n">wp</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">qm</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Quantize WeightParam field in Neural Network Protobuf</span>
 
@@ -762,7 +757,7 @@
     <span class="k">del</span> <span class="n">wp</span><span class="o">.</span><span class="n">floatValue</span><span class="p">[:]</span>
 
 
-<span class="k">def</span> <span class="nf">_unpack_to_bytes</span><span class="p">(</span><span class="n">byte_arr</span><span class="p">,</span> <span class="n">num_weights</span><span class="p">,</span> <span class="n">nbits</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_unpack_to_bytes</span><span class="p">(</span><span class="n">byte_arr</span><span class="p">,</span> <span class="n">num_weights</span><span class="p">,</span> <span class="n">nbits</span><span class="p">):</span>
     <span class="k">assert</span> <span class="n">num_weights</span> <span class="o">%</span> <span class="mi">1</span> <span class="o">==</span> <span class="mi">0</span>
     <span class="n">num_weights</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_weights</span><span class="p">)</span>
     <span class="n">bit_arr</span> <span class="o">=</span> <span class="n">_decompose_bytes_to_bit_arr</span><span class="p">(</span><span class="n">byte_arr</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
@@ -772,7 +767,7 @@
     <span class="k">return</span> <span class="n">byte_arr</span>
 
 
-<span class="k">def</span> <span class="nf">_dequantize_linear</span><span class="p">(</span><span class="n">weight_8bit</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">bias</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_dequantize_linear</span><span class="p">(</span><span class="n">weight_8bit</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">bias</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">weight_8bit</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># vector situation, treat as 1 channel</span>
         <span class="n">weight_8bit</span> <span class="o">=</span> <span class="n">weight_8bit</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">weight_8bit</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
 
@@ -792,11 +787,11 @@
     <span class="k">return</span> <span class="n">weight</span>
 
 
-<span class="k">def</span> <span class="nf">_dequantize_lut</span><span class="p">(</span><span class="n">weight_8bit</span><span class="p">,</span> <span class="n">lut</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_dequantize_lut</span><span class="p">(</span><span class="n">weight_8bit</span><span class="p">,</span> <span class="n">lut</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">lut</span><span class="p">[</span><span class="n">weight_8bit</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;uint8&quot;</span><span class="p">)]</span>
 
 
-<span class="k">def</span> <span class="nf">_dequantize_wp</span><span class="p">(</span><span class="n">wp</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_dequantize_wp</span><span class="p">(</span><span class="n">wp</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">wp</span><span class="o">.</span><span class="n">floatValue</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span>
 
@@ -842,14 +837,14 @@
     <span class="n">wp</span><span class="o">.</span><span class="n">floatValue</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">dequantized_weight</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
 
 
-<span class="k">def</span> <span class="nf">_dequantize_nn_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_dequantize_nn_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Dequantize weights in NeuralNetwork type mlmodel specifications.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_quantize_nn_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">_QUANTIZATION_MODE_DEQUANTIZE</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_quantize_nn_spec</span><span class="p">(</span><span class="n">nn_spec</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">qm</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_quantize_nn_spec</span><span class="p">(</span><span class="n">nn_spec</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">qm</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Quantize weights in NeuralNetwork type mlmodel specifications.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1115,7 +1110,7 @@
         <span class="c1"># LSTM Layers</span>
         <span class="k">elif</span> <span class="n">layer_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;uniDirectionalLSTM&quot;</span><span class="p">,</span> <span class="s2">&quot;biDirectionalLSTM&quot;</span><span class="p">]:</span>
 
-            <span class="k">def</span> <span class="nf">_lstmwp_to_fp16_lstmwp</span><span class="p">(</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">_lstmwp_to_fp16_lstmwp</span><span class="p">(</span>
                 <span class="n">lstm_wp</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">qm</span><span class="p">,</span> <span class="n">i_size</span><span class="p">,</span> <span class="n">o_size</span><span class="p">,</span> <span class="n">has_peephole</span><span class="o">=</span><span class="kc">True</span>
             <span class="p">):</span>
                 <span class="k">assert</span> <span class="n">lstm_wp</span>
@@ -1249,7 +1244,7 @@
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unknown layer &quot;</span> <span class="o">+</span> <span class="n">layer_type</span> <span class="o">+</span> <span class="s2">&quot; to be quantized&quot;</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_quantize_spec_weights</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">quantization_mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_quantize_spec_weights</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">quantization_mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="n">nn_model_types</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s2">&quot;neuralNetwork&quot;</span><span class="p">,</span>
         <span class="s2">&quot;neuralNetworkClassifier&quot;</span><span class="p">,</span>
@@ -1294,20 +1289,20 @@
     <span class="k">return</span> <span class="n">spec</span>
 
 
-<span class="k">def</span> <span class="nf">_load_and_resize_image</span><span class="p">(</span><span class="n">image_path</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
-    <span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_load_and_resize_image</span><span class="p">(</span><span class="n">image_path</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
 
     <span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">img</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">Image</span><span class="o">.</span><span class="n">LANCZOS</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">TopKMetrics</span><span class="p">:</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">topk</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TopKMetrics</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">topk</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_topk</span> <span class="o">=</span> <span class="n">topk</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_correct_count</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_total_count</span> <span class="o">=</span> <span class="mi">0</span>
 
-    <span class="k">def</span> <span class="nf">add_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output1</span><span class="p">,</span> <span class="n">output2</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output1</span><span class="p">,</span> <span class="n">output2</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_total_count</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_topk</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">output1</span> <span class="o">==</span> <span class="n">output2</span><span class="p">:</span>
@@ -1319,7 +1314,7 @@
             <span class="k">if</span> <span class="n">out1_topk</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">out2_topk</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_correct_count</span> <span class="o">+=</span> <span class="mi">1</span>
 
-    <span class="k">def</span> <span class="nf">display_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">display_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">pcorrect</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_correct_count</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_total_count</span><span class="p">))</span> <span class="o">*</span> <span class="mi">100</span>
         <span class="n">pcorrect</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">pcorrect</span><span class="p">,</span> <span class="n">decimals</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_topk</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
@@ -1328,13 +1323,13 @@
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Top </span><span class="si">{}</span><span class="s2"> Agreement: </span><span class="si">{}</span><span class="s2">%</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_topk</span><span class="p">,</span> <span class="n">pcorrect</span><span class="p">))</span>
 
 
-<span class="k">class</span> <span class="nc">NoiseMetrics</span><span class="p">:</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NoiseMetrics</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_snr</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_psnr</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_compute_snr</span><span class="p">(</span><span class="n">arr1</span><span class="p">,</span> <span class="n">arr2</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_snr</span><span class="p">(</span><span class="n">arr1</span><span class="p">,</span> <span class="n">arr2</span><span class="p">):</span>
         <span class="n">noise</span> <span class="o">=</span> <span class="n">arr1</span> <span class="o">-</span> <span class="n">arr2</span>
         <span class="n">noise_var</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">noise</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">noise</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1e-7</span>
         <span class="n">signal_energy</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">arr2</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr2</span><span class="p">)</span>
@@ -1343,8 +1338,8 @@
         <span class="n">psnr</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">_np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">max_signal_energy</span> <span class="o">/</span> <span class="n">noise_var</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">snr</span><span class="p">,</span> <span class="n">psnr</span>
 
-    <span class="k">def</span> <span class="nf">add_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output1</span><span class="p">,</span> <span class="n">output2</span><span class="p">):</span>
-        <span class="kn">import</span> <span class="nn">PIL</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output1</span><span class="p">,</span> <span class="n">output2</span><span class="p">):</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">PIL</span>
 
         <span class="c1"># Output is Image</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">output1</span><span class="p">,</span> <span class="n">PIL</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">Image</span><span class="p">):</span>
@@ -1365,20 +1360,20 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_snr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">snr</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_psnr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">psnr</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">display_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">display_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;SNR:  </span><span class="si">{}</span><span class="s2"> +/- </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_snr</span><span class="p">),</span> <span class="n">_np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_snr</span><span class="p">)))</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;PSNR: </span><span class="si">{}</span><span class="s2"> +/- </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_psnr</span><span class="p">),</span> <span class="n">_np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_psnr</span><span class="p">)))</span>
 
 
 <div class="viewcode-block" id="OutputMetric">
 <a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.OutputMetric">[docs]</a>
-<span class="k">class</span> <span class="nc">OutputMetric</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OutputMetric</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility class to calculate and hold metrics between</span>
 <span class="sd">    two model outputs</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -1399,11 +1394,11 @@
                 <span class="p">)</span>
             <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">add_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output1</span><span class="p">,</span> <span class="n">output2</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output1</span><span class="p">,</span> <span class="n">output2</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="p">:</span>
             <span class="n">metric</span><span class="o">.</span><span class="n">add_metric</span><span class="p">(</span><span class="n">output1</span><span class="p">,</span> <span class="n">output2</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">display_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">display_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="p">:</span>
             <span class="n">metric</span><span class="o">.</span><span class="n">display_metrics</span><span class="p">()</span></div>
 
@@ -1411,25 +1406,25 @@
 
 <div class="viewcode-block" id="ModelMetrics">
 <a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.ModelMetrics">[docs]</a>
-<span class="k">class</span> <span class="nc">ModelMetrics</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ModelMetrics</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A utility class to hold evaluation metrics</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_metrics</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">output</span><span class="p">:</span>
             <span class="n">output_type</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model_metrics</span><span class="p">[</span><span class="n">output</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">OutputMetric</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">output_type</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">add_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model1_output</span><span class="p">,</span> <span class="n">model2_output</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model1_output</span><span class="p">,</span> <span class="n">model2_output</span><span class="p">):</span>
         <span class="n">outputs</span> <span class="o">=</span> <span class="n">model1_output</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model_metrics</span><span class="p">[</span><span class="n">output</span><span class="p">]</span><span class="o">.</span><span class="n">add_metric</span><span class="p">(</span>
                 <span class="n">model1_output</span><span class="p">[</span><span class="n">output</span><span class="p">],</span> <span class="n">model2_output</span><span class="p">[</span><span class="n">output</span><span class="p">]</span>
             <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">display_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">display_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_metrics</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Output </span><span class="si">{}</span><span class="s2">:&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">metric</span><span class="p">))</span>
             <span class="n">dash</span> <span class="o">=</span> <span class="s2">&quot;----------&quot;</span>
@@ -1440,7 +1435,7 @@
 
 
 
-<span class="k">def</span> <span class="nf">_characterize_qmodel_perf_with_data_dir</span><span class="p">(</span><span class="n">fpmodel</span><span class="p">,</span> <span class="n">qspec</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_characterize_qmodel_perf_with_data_dir</span><span class="p">(</span><span class="n">fpmodel</span><span class="p">,</span> <span class="n">qspec</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">):</span>
     <span class="n">supported_image_exts</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;jpg&quot;</span><span class="p">,</span> <span class="s2">&quot;bmp&quot;</span><span class="p">,</span> <span class="s2">&quot;png&quot;</span><span class="p">,</span> <span class="s2">&quot;jpeg&quot;</span><span class="p">]</span>
     <span class="n">test_image_paths</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">fn</span><span class="p">)</span>
@@ -1497,7 +1492,7 @@
     <span class="n">model_metrics</span><span class="o">.</span><span class="n">display_metrics</span><span class="p">()</span>
 
 
-<span class="k">def</span> <span class="nf">_characterize_quantized_model_perf</span><span class="p">(</span><span class="n">fpmodel</span><span class="p">,</span> <span class="n">qspec</span><span class="p">,</span> <span class="n">sample_data</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_characterize_quantized_model_perf</span><span class="p">(</span><span class="n">fpmodel</span><span class="p">,</span> <span class="n">qspec</span><span class="p">,</span> <span class="n">sample_data</span><span class="p">):</span>
     <span class="n">qmodel</span> <span class="o">=</span> <span class="n">_get_model</span><span class="p">(</span><span class="n">qspec</span><span class="p">)</span>
     <span class="n">model_metrics</span> <span class="o">=</span> <span class="n">ModelMetrics</span><span class="p">(</span><span class="n">qspec</span><span class="p">)</span>
 
@@ -1534,7 +1529,7 @@
 
 <div class="viewcode-block" id="compare_models">
 <a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.compare_models">[docs]</a>
-<span class="k">def</span> <span class="nf">compare_models</span><span class="p">(</span><span class="n">full_precision_model</span><span class="p">,</span> <span class="n">quantized_model</span><span class="p">,</span> <span class="n">sample_data</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compare_models</span><span class="p">(</span><span class="n">full_precision_model</span><span class="p">,</span> <span class="n">quantized_model</span><span class="p">,</span> <span class="n">sample_data</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility function to compare the performance of a full precision vs quantized model</span>
 
@@ -1590,7 +1585,7 @@
 
 <div class="viewcode-block" id="activate_int8_int8_matrix_multiplications">
 <a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.activate_int8_int8_matrix_multiplications">[docs]</a>
-<span class="k">def</span> <span class="nf">activate_int8_int8_matrix_multiplications</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">activate_int8_int8_matrix_multiplications</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility function that takes in either a full precision (float) spec or</span>
 <span class="sd">    an nbit quantized spec to selectively enable int8 activation + weight quantization</span>
@@ -1637,7 +1632,7 @@
             <span class="n">selector</span><span class="o">=</span><span class="n">selector</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">_quantized_weight_and_scale</span><span class="p">(</span><span class="n">W</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_quantized_weight_and_scale</span><span class="p">(</span><span class="n">W</span><span class="p">):</span>
             <span class="n">W_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">_np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">_np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">W</span><span class="p">)),</span> <span class="n">_np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">_np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">W</span><span class="p">)))</span>
             <span class="n">W_normalized</span> <span class="o">=</span> <span class="n">W</span> <span class="o">/</span> <span class="n">W_max</span>  <span class="c1"># [-1,1]</span>
             <span class="n">W_quantized_int8</span> <span class="o">=</span> <span class="mf">127.0</span> <span class="o">*</span> <span class="n">W_normalized</span>  <span class="c1"># [-127, 127]</span>
@@ -1654,7 +1649,7 @@
         <span class="k">elif</span> <span class="n">spec</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">)</span> <span class="ow">in</span> <span class="s2">&quot;neuralNetworkRegressor&quot;</span><span class="p">:</span>
             <span class="n">nn_spec</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">neuralNetworkRegressor</span>
 
-        <span class="k">def</span> <span class="nf">_process_nn_layers</span><span class="p">(</span><span class="n">nn_spec</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_process_nn_layers</span><span class="p">(</span><span class="n">nn_spec</span><span class="p">):</span>
             <span class="n">layers</span> <span class="o">=</span> <span class="n">nn_spec</span><span class="o">.</span><span class="n">layers</span>
 
             <span class="c1"># Replacing each matrix multiplication</span>
@@ -1716,7 +1711,7 @@
 
 <div class="viewcode-block" id="quantize_weights">
 <a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.quantize_weights">[docs]</a>
-<span class="k">def</span> <span class="nf">quantize_weights</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">quantize_weights</span><span class="p">(</span>
     <span class="n">full_precision_model</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">quantization_mode</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="n">sample_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1832,7 +1827,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Apple Inc.</p>
+    <p>&#169; Copyright 2021, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

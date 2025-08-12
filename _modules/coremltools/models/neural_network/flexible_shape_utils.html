@@ -1,11 +1,13 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.models.neural_network.flexible_shape_utils &mdash; coremltools API Reference 8.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+  <title>coremltools.models.neural_network.flexible_shape_utils &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -14,15 +16,11 @@
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../_static/documentation_options.js?v=8cc1add8"></script>
-        <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" /> 
@@ -39,9 +37,6 @@
           <a href="../../../../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
-              <div class="version">
-                8.3
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -102,13 +97,13 @@
 <span class="sd">Utilities to annotate neural network features with flexible shape information.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span> <span class="k">as</span> <span class="n">_List</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span> <span class="k">as</span> <span class="n">_Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span> <span class="k">as</span> <span class="n">_List</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span> <span class="k">as</span> <span class="n">_Tuple</span>
 
-<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">proto</span> <span class="k">as</span> <span class="n">_proto</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">proto</span> <span class="k">as</span> <span class="n">_proto</span>
 
-<span class="kn">from</span> <span class="nn">...</span> <span class="kn">import</span> <span class="n">_MINIMUM_FLEXIBLE_SHAPES_SPEC_VERSION</span><span class="p">,</span> <span class="n">_MINIMUM_NDARRAY_SPEC_VERSION</span>
-<span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">_get_feature</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">...</span><span class="w"> </span><span class="kn">import</span> <span class="n">_MINIMUM_FLEXIBLE_SHAPES_SPEC_VERSION</span><span class="p">,</span> <span class="n">_MINIMUM_NDARRAY_SPEC_VERSION</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">_get_feature</span>
 
 <span class="n">_SEQUENCE_KEY</span> <span class="o">=</span> <span class="s2">&quot;S&quot;</span>
 <span class="n">_BATCH_KEY</span> <span class="o">=</span> <span class="s2">&quot;B&quot;</span>
@@ -119,48 +114,48 @@
 <span class="n">_CONSTRAINED_KEYS</span> <span class="o">=</span> <span class="p">[</span><span class="n">_CHANNEL_KEY</span><span class="p">,</span> <span class="n">_HEIGHT_KEY</span><span class="p">,</span> <span class="n">_WIDTH_KEY</span><span class="p">]</span>
 
 
-<span class="k">class</span> <span class="nc">Shape</span><span class="p">:</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape_value</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Shape</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape_value</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">shape_value</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Invalid value. Size/Shape values must be &gt; 0&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="n">shape_value</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span>
 
 
-<span class="k">class</span> <span class="nc">Size</span><span class="p">(</span><span class="n">Shape</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size_value</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Size</span><span class="p">(</span><span class="n">Shape</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size_value</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">Size</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">size_value</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="NeuralNetworkMultiArrayShape">
 <a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShape">[docs]</a>
-<span class="k">class</span> <span class="nc">NeuralNetworkMultiArrayShape</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NeuralNetworkMultiArrayShape</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An object representing a shape for a multiArray feature in a</span>
 <span class="sd">    neural network. Valid shapes must have have only the Channel ``[C]``</span>
 <span class="sd">    shape or the Channel, Height and Width ``[C, H, W]`` shapes populated</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">_CHANNEL_KEY</span><span class="p">:</span> <span class="n">Shape</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">channel</span><span class="p">))</span> <span class="k">if</span> <span class="n">channel</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">_HEIGHT_KEY</span><span class="p">:</span> <span class="n">Shape</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">height</span><span class="p">))</span> <span class="k">if</span> <span class="n">height</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">_WIDTH_KEY</span><span class="p">:</span> <span class="n">Shape</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">width</span><span class="p">))</span> <span class="k">if</span> <span class="n">width</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">}</span>
 
-    <span class="k">def</span> <span class="nf">set_channel_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel_shape</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_channel_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel_shape</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span><span class="p">[</span><span class="n">_CHANNEL_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">Shape</span><span class="p">(</span><span class="n">channel_shape</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">set_height_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">height_shape</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_height_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">height_shape</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span><span class="p">[</span><span class="n">_HEIGHT_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">Shape</span><span class="p">(</span><span class="n">height_shape</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">set_width_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">width_shape</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_width_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">width_shape</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span><span class="p">[</span><span class="n">_WIDTH_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">Shape</span><span class="p">(</span><span class="n">width_shape</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_validate_multiarray_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_multiarray_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">num_dims</span> <span class="o">=</span> <span class="nb">len</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">num_dims</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">num_dims</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
@@ -173,7 +168,7 @@
                 <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Channel Shape not specified&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">multiarray_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">multiarray_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">num_dims</span> <span class="o">=</span> <span class="nb">len</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">num_dims</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_shape</span><span class="p">[</span><span class="n">_CHANNEL_KEY</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">]</span>
@@ -190,34 +185,34 @@
 
 <div class="viewcode-block" id="NeuralNetworkImageSize">
 <a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkImageSize">[docs]</a>
-<span class="k">class</span> <span class="nc">NeuralNetworkImageSize</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NeuralNetworkImageSize</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An object representing a size for an image feature inside a</span>
 <span class="sd">    neural network. Valid sizess for height and width are &gt; 0.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_height</span> <span class="o">=</span> <span class="n">Size</span><span class="p">(</span><span class="n">height</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_width</span> <span class="o">=</span> <span class="n">Size</span><span class="p">(</span><span class="n">width</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">set_width</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">width</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_width</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">width</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_width</span> <span class="o">=</span> <span class="n">Size</span><span class="p">(</span><span class="n">width</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">set_height</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_height</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_height</span> <span class="o">=</span> <span class="n">Size</span><span class="p">(</span><span class="n">height</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">width</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">width</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_width</span><span class="o">.</span><span class="n">value</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">height</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">height</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_height</span><span class="o">.</span><span class="n">value</span></div>
 
 
 
-<span class="k">class</span> <span class="nc">ShapeRange</span><span class="p">:</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lowerBound</span><span class="p">,</span> <span class="n">upperBound</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ShapeRange</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lowerBound</span><span class="p">,</span> <span class="n">upperBound</span><span class="p">):</span>
         <span class="n">unBounded</span> <span class="o">=</span> <span class="kc">False</span>
 
         <span class="k">if</span> <span class="n">upperBound</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
@@ -244,25 +239,25 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_unBounded</span> <span class="o">=</span> <span class="n">unBounded</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">lowerBound</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">lowerBound</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lowerBound</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">upperBound</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">upperBound</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upperBound</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">isUnbounded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">isUnbounded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unBounded</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">isFlexible</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">isFlexible</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lowerBound</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upperBound</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="NeuralNetworkMultiArrayShapeRange">
 <a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShapeRange">[docs]</a>
-<span class="k">class</span> <span class="nc">NeuralNetworkMultiArrayShapeRange</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NeuralNetworkMultiArrayShapeRange</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An object representing a range of shapes for a multiArray feature in a</span>
 <span class="sd">    neural network. Valid shape ranges must have have only the Channel ``[C]``</span>
@@ -270,7 +265,7 @@
 <span class="sd">    value in an upper bound represents an unbounded range.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_ranges</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_ranges</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">arrayShapeRange</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="k">if</span> <span class="n">input_ranges</span><span class="p">:</span>
@@ -284,32 +279,32 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">arrayShapeRange</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_shape_range</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">validate_array_shape_range</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">_create_shape_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_shape_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Range should be a ShapeRange or a tuple object&quot;</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Range tuple should be at least length 2&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ShapeRange</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 
-    <span class="k">def</span> <span class="nf">add_channel_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel_range</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_channel_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel_range</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">channel_range</span><span class="p">,</span> <span class="n">ShapeRange</span><span class="p">):</span>
             <span class="n">channel_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_shape_range</span><span class="p">(</span><span class="n">channel_range</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">arrayShapeRange</span><span class="p">[</span><span class="n">_CHANNEL_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">channel_range</span>
 
-    <span class="k">def</span> <span class="nf">add_height_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">height_range</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_height_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">height_range</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">height_range</span><span class="p">,</span> <span class="n">ShapeRange</span><span class="p">):</span>
             <span class="n">height_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_shape_range</span><span class="p">(</span><span class="n">height_range</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">arrayShapeRange</span><span class="p">[</span><span class="n">_HEIGHT_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">height_range</span>
 
-    <span class="k">def</span> <span class="nf">add_width_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">width_range</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_width_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">width_range</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">width_range</span><span class="p">,</span> <span class="n">ShapeRange</span><span class="p">):</span>
             <span class="n">width_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_shape_range</span><span class="p">(</span><span class="n">width_range</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">arrayShapeRange</span><span class="p">[</span><span class="n">_WIDTH_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">width_range</span>
 
-    <span class="k">def</span> <span class="nf">get_shape_range_dims</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_shape_range_dims</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">arrayShapeRange</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
-    <span class="k">def</span> <span class="nf">validate_array_shape_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_array_shape_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">num_dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_shape_range_dims</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">num_dims</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">num_dims</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
@@ -331,18 +326,18 @@
                     <span class="s2">&quot;Shape range constraint missing for either channel, height, or width.&quot;</span>
                 <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">get_channel_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_channel_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">arrayShapeRange</span><span class="p">[</span><span class="n">_CHANNEL_KEY</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">get_height_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_height_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">arrayShapeRange</span><span class="p">[</span><span class="n">_HEIGHT_KEY</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">get_width_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_width_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">arrayShapeRange</span><span class="p">[</span><span class="n">_WIDTH_KEY</span><span class="p">]</span>
 
 <div class="viewcode-block" id="NeuralNetworkMultiArrayShapeRange.isFlexible">
 <a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShapeRange.isFlexible">[docs]</a>
-    <span class="k">def</span> <span class="nf">isFlexible</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">isFlexible</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns true if any one of the channel, height, or width ranges of this shape allow more than one input value.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -358,7 +353,7 @@
 
 <div class="viewcode-block" id="NeuralNetworkImageSizeRange">
 <a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkImageSizeRange">[docs]</a>
-<span class="k">class</span> <span class="nc">NeuralNetworkImageSizeRange</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NeuralNetworkImageSizeRange</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An object representing a range of sizes for an image feature inside a</span>
 <span class="sd">    neural network. Valid ranges for height and width are &gt; 0. A ``-1``</span>
@@ -366,7 +361,7 @@
 <span class="sd">    for that dimension.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">height_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">width_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">height_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">width_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">height_range</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">height_range</span><span class="p">,</span> <span class="n">ShapeRange</span><span class="p">):</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">height_range</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Height range should be a ShapeRange or a tuple object&quot;</span><span class="p">)</span>
@@ -384,7 +379,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_height_range</span> <span class="o">=</span> <span class="n">height_range</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_width_range</span> <span class="o">=</span> <span class="n">width_range</span>
 
-    <span class="k">def</span> <span class="nf">add_width_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">width_range</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_width_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">width_range</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">width_range</span><span class="p">,</span> <span class="n">ShapeRange</span><span class="p">):</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">width_range</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Width range should be a ShapeRange or a tuple object&quot;</span><span class="p">)</span>
@@ -393,7 +388,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_width_range</span> <span class="o">=</span> <span class="n">ShapeRange</span><span class="p">(</span><span class="n">width_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">width_range</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 
-    <span class="k">def</span> <span class="nf">add_height_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">height_range</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_height_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">height_range</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">height_range</span><span class="p">,</span> <span class="n">ShapeRange</span><span class="p">):</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">height_range</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Height range should be a ShapeRange or a tuple object&quot;</span><span class="p">)</span>
@@ -402,15 +397,15 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_height_range</span> <span class="o">=</span> <span class="n">ShapeRange</span><span class="p">(</span><span class="n">height_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">height_range</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 
-    <span class="k">def</span> <span class="nf">get_width_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_width_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_width_range</span>
 
-    <span class="k">def</span> <span class="nf">get_height_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_height_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_height_range</span></div>
 
 
 
-<span class="k">def</span> <span class="nf">_set_multiarray_ndshape_range_for_feature</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_set_multiarray_ndshape_range_for_feature</span><span class="p">(</span>
     <span class="n">feature</span><span class="p">:</span> <span class="s2">&quot;_proto.Model_pb2.FeatureDescription&quot;</span><span class="p">,</span>
     <span class="n">lower_bounds</span><span class="p">:</span> <span class="n">_List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
     <span class="n">upper_bounds</span><span class="p">:</span> <span class="n">_List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
@@ -455,7 +450,7 @@
         <span class="n">s</span><span class="o">.</span><span class="n">upperBound</span> <span class="o">=</span> <span class="n">upper_bounds</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">_update_image_size_range_for_feature</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_update_image_size_range_for_feature</span><span class="p">(</span>
     <span class="n">feature</span><span class="p">:</span> <span class="s2">&quot;_proto.Model_pb2.FeatureDescription&quot;</span><span class="p">,</span>
     <span class="n">size_range</span><span class="p">:</span> <span class="n">NeuralNetworkImageSizeRange</span><span class="p">,</span>
 <span class="p">):</span>
@@ -481,9 +476,10 @@
     <span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_add_multiarray_ndshape_enumeration_for_feature</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_multiarray_ndshape_enumeration_for_feature</span><span class="p">(</span>
     <span class="n">feature</span><span class="p">:</span> <span class="s2">&quot;_proto.Model_pb2.FeatureDescription&quot;</span><span class="p">,</span>
     <span class="n">enumerated_shapes</span><span class="p">:</span> <span class="n">_List</span><span class="p">[</span><span class="n">_Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
+    <span class="n">allow_duplicate_shapes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">enumerated_shapes</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;enumerated_shapes must be a list&quot;</span><span class="p">)</span>
@@ -498,30 +494,35 @@
     <span class="k">if</span> <span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;ShapeFlexibility&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;enumeratedShapes&quot;</span><span class="p">:</span>
         <span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="o">.</span><span class="n">ClearField</span><span class="p">(</span><span class="s2">&quot;ShapeFlexibility&quot;</span><span class="p">)</span>
 
-    <span class="n">eshape_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="o">.</span><span class="n">enumeratedShapes</span><span class="o">.</span><span class="n">shapes</span><span class="p">)</span>
-
-    <span class="n">shapes_added_so_far</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="c1"># Add default array shape to list of enumerated shapes if enumerated shapes</span>
-    <span class="c1"># field is currently empty</span>
-    <span class="k">if</span> <span class="n">eshape_len</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">fixed_shape</span> <span class="o">=</span> <span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="o">.</span><span class="n">shape</span>
-        <span class="n">s</span> <span class="o">=</span> <span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="o">.</span><span class="n">enumeratedShapes</span><span class="o">.</span><span class="n">shapes</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
-        <span class="n">s</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">fixed_shape</span><span class="p">)</span>
-        <span class="n">shapes_added_so_far</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">fixed_shape</span><span class="p">))</span>
-
+    <span class="n">shapes</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">default_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">enumerated_shapes</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;An element in &#39;enumerated_shapes&#39; is not a tuple&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">list</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">shapes_added_so_far</span><span class="p">:</span>
-            <span class="n">s</span> <span class="o">=</span> <span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="o">.</span><span class="n">enumeratedShapes</span><span class="o">.</span><span class="n">shapes</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
-            <span class="n">s</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">shape</span><span class="p">))</span>
-            <span class="n">shapes_added_so_far</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">shape</span><span class="p">))</span>
 
+        <span class="n">shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+        <span class="c1"># Skip duplicates unless duplicate shapes are allowed</span>
+        <span class="k">if</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">shapes</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">allow_duplicate_shapes</span><span class="p">:</span>
+            <span class="k">continue</span>
 
-<span class="k">def</span> <span class="nf">_add_enumerated_image_sizes_for_feature</span><span class="p">(</span>
+        <span class="c1"># Ensure the default shape is placed first in the list.</span>
+        <span class="k">if</span> <span class="n">shape</span> <span class="o">==</span> <span class="n">default_shape</span><span class="p">:</span>
+            <span class="n">shapes</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">shapes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="c1"># Ensure the default shape is included in shapes and placed first in the list.</span>
+    <span class="k">if</span> <span class="n">default_shape</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">shapes</span><span class="p">:</span>
+        <span class="n">shapes</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">default_shape</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">shapes</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="o">.</span><span class="n">enumeratedShapes</span><span class="o">.</span><span class="n">shapes</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_enumerated_image_sizes_for_feature</span><span class="p">(</span>
     <span class="n">feature</span><span class="p">:</span> <span class="s2">&quot;_proto.Model_pb2.FeatureDescription&quot;</span><span class="p">,</span>
     <span class="n">sizes</span><span class="p">:</span> <span class="n">_List</span><span class="p">[</span><span class="n">NeuralNetworkImageSize</span><span class="p">],</span>
+    <span class="n">allow_duplicate_shapes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sizes</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="n">sizes</span> <span class="o">=</span> <span class="p">[</span><span class="n">sizes</span><span class="p">]</span>
@@ -536,27 +537,30 @@
     <span class="k">if</span> <span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">imageType</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;SizeFlexibility&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;enumeratedSizes&quot;</span><span class="p">:</span>
         <span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">imageType</span><span class="o">.</span><span class="n">ClearField</span><span class="p">(</span><span class="s2">&quot;SizeFlexibility&quot;</span><span class="p">)</span>
 
-    <span class="n">esizes_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">imageType</span><span class="o">.</span><span class="n">enumeratedSizes</span><span class="o">.</span><span class="n">sizes</span><span class="p">)</span>
-
-    <span class="c1"># Add default image size to list of enumerated sizes if enumerated sizes</span>
-    <span class="c1"># field is currently empty</span>
-    <span class="k">if</span> <span class="n">esizes_len</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">fixed_height</span> <span class="o">=</span> <span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">imageType</span><span class="o">.</span><span class="n">height</span>
-        <span class="n">fixed_width</span> <span class="o">=</span> <span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">imageType</span><span class="o">.</span><span class="n">width</span>
-        <span class="n">sizes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">NeuralNetworkImageSize</span><span class="p">(</span><span class="n">fixed_height</span><span class="p">,</span> <span class="n">fixed_width</span><span class="p">))</span>
-
-    <span class="n">shapes_added_so_far</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">shapes</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">default_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">imageType</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">imageType</span><span class="o">.</span><span class="n">width</span><span class="p">]</span>
     <span class="k">for</span> <span class="n">size</span> <span class="ow">in</span> <span class="n">sizes</span><span class="p">:</span>
-        <span class="k">if</span> <span class="p">[</span><span class="n">size</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">size</span><span class="o">.</span><span class="n">width</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">shapes_added_so_far</span><span class="p">:</span>
-            <span class="n">s</span> <span class="o">=</span> <span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">imageType</span><span class="o">.</span><span class="n">enumeratedSizes</span><span class="o">.</span><span class="n">sizes</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
-            <span class="n">s</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="n">size</span><span class="o">.</span><span class="n">height</span>
-            <span class="n">s</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">size</span><span class="o">.</span><span class="n">width</span>
-            <span class="n">shapes_added_so_far</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">width</span><span class="p">])</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">size</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">size</span><span class="o">.</span><span class="n">width</span><span class="p">]</span>
+        <span class="c1"># Skip duplicates unless duplicate shapes are allowed</span>
+        <span class="k">if</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">shapes</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">allow_duplicate_shapes</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Ensure the default shape is placed first in the list.</span>
+        <span class="n">shapes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="c1"># Ensure the default shape is included in shapes and placed first in the list.</span>
+    <span class="k">if</span> <span class="n">default_shape</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">shapes</span><span class="p">:</span>
+        <span class="n">shapes</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">default_shape</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">shapes</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">imageType</span><span class="o">.</span><span class="n">enumeratedSizes</span><span class="o">.</span><span class="n">sizes</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="add_enumerated_multiarray_shapes">
 <a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.flexible_shape_utils.add_enumerated_multiarray_shapes">[docs]</a>
-<span class="k">def</span> <span class="nf">add_enumerated_multiarray_shapes</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">feature_name</span><span class="p">,</span> <span class="n">shapes</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_enumerated_multiarray_shapes</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">feature_name</span><span class="p">,</span> <span class="n">shapes</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Annotate an input or output multiArray feature in a neural network spec to</span>
 <span class="sd">    to accommodate a list of enumerated array shapes.</span>
@@ -646,7 +650,7 @@
 
 <div class="viewcode-block" id="add_enumerated_image_sizes">
 <a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.flexible_shape_utils.add_enumerated_image_sizes">[docs]</a>
-<span class="k">def</span> <span class="nf">add_enumerated_image_sizes</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">feature_name</span><span class="p">,</span> <span class="n">sizes</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_enumerated_image_sizes</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">feature_name</span><span class="p">,</span> <span class="n">sizes</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Annotate an input or output image feature in a neural network spec to</span>
 <span class="sd">    to accommodate a list of enumerated image sizes.</span>
@@ -719,7 +723,7 @@
 
 <div class="viewcode-block" id="update_image_size_range">
 <a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.flexible_shape_utils.update_image_size_range">[docs]</a>
-<span class="k">def</span> <span class="nf">update_image_size_range</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">feature_name</span><span class="p">,</span> <span class="n">size_range</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_image_size_range</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">feature_name</span><span class="p">,</span> <span class="n">size_range</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Annotate an input or output Image feature in a neural network spec to</span>
 <span class="sd">    to accommodate a range of image sizes.</span>
@@ -766,7 +770,7 @@
 
 <div class="viewcode-block" id="update_multiarray_shape_range">
 <a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.flexible_shape_utils.update_multiarray_shape_range">[docs]</a>
-<span class="k">def</span> <span class="nf">update_multiarray_shape_range</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">feature_name</span><span class="p">,</span> <span class="n">shape_range</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_multiarray_shape_range</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">feature_name</span><span class="p">,</span> <span class="n">shape_range</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Annotate an input or output MLMultiArray feature in a neural network spec</span>
 <span class="sd">    to accommodate a range of shapes.</span>
@@ -840,7 +844,7 @@
 
 <div class="viewcode-block" id="set_multiarray_ndshape_range">
 <a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.flexible_shape_utils.set_multiarray_ndshape_range">[docs]</a>
-<span class="k">def</span> <span class="nf">set_multiarray_ndshape_range</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">feature_name</span><span class="p">,</span> <span class="n">lower_bounds</span><span class="p">,</span> <span class="n">upper_bounds</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">set_multiarray_ndshape_range</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">feature_name</span><span class="p">,</span> <span class="n">lower_bounds</span><span class="p">,</span> <span class="n">upper_bounds</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Annotate an input or output MLMultiArray feature in a neural network spec</span>
 <span class="sd">    to accommodate a range of shapes.</span>
@@ -895,7 +899,7 @@
 
 <div class="viewcode-block" id="add_multiarray_ndshape_enumeration">
 <a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.flexible_shape_utils.add_multiarray_ndshape_enumeration">[docs]</a>
-<span class="k">def</span> <span class="nf">add_multiarray_ndshape_enumeration</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">feature_name</span><span class="p">,</span> <span class="n">enumerated_shapes</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_multiarray_ndshape_enumeration</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">feature_name</span><span class="p">,</span> <span class="n">enumerated_shapes</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Annotate an input or output MLMultiArray feature in a neural network spec</span>
 <span class="sd">    to accommodate a range of shapes.</span>
@@ -950,7 +954,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Apple Inc.</p>
+    <p>&#169; Copyright 2021, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

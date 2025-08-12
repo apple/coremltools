@@ -1,22 +1,22 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NonMaximumSuppression &mdash; Core ML Format Reference  documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -29,11 +29,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> Core ML Format Reference
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Core ML Format Reference
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -86,9 +90,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="FeatureEngineering.html">Feature Engineering</a> &raquo;</li>
-      <li>NonMaximumSuppression</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="FeatureEngineering.html">Feature Engineering</a></li>
+      <li class="breadcrumb-item active">NonMaximumSuppression</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/Format/NonMaximumSuppression.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -99,44 +103,44 @@
            <div itemprop="articleBody">
              
   <section id="nonmaximumsuppression">
-<h1>NonMaximumSuppression<a class="headerlink" href="#nonmaximumsuppression" title="Permalink to this heading"></a></h1>
-<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span>message NonMaximumSuppression {
-    // Suppression methods:
-    message PickTop {
-        bool perClass = 1;
-    }
+<h1>NonMaximumSuppression<a class="headerlink" href="#nonmaximumsuppression" title="Link to this heading"></a></h1>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">NonMaximumSuppression</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Suppression methods:</span>
+<span class="w">    </span><span class="kd">message</span><span class="w"> </span><span class="nc">PickTop</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="na">perClass</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
 
-    oneof SuppressionMethod {
-        PickTop pickTop = 1;
-    }
+<span class="w">    </span><span class="k">oneof</span><span class="w"> </span><span class="n">SuppressionMethod</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">PickTop</span><span class="w"> </span><span class="na">pickTop</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
 
-    oneof ClassLabels {
-        StringVector stringClassLabels = 100;
-        Int64Vector int64ClassLabels = 101;
-    }
+<span class="w">    </span><span class="k">oneof</span><span class="w"> </span><span class="n">ClassLabels</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">StringVector</span><span class="w"> </span><span class="na">stringClassLabels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span><span class="p">;</span>
+<span class="w">        </span><span class="n">Int64Vector</span><span class="w"> </span><span class="na">int64ClassLabels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">101</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
 
-    double iouThreshold = 110;
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="na">iouThreshold</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">110</span><span class="p">;</span>
 
-           it means there is a 60% (0.2 + 0.4) confidence that an object is
-           present)
-    double confidenceThreshold = 111;
+<span class="w">           </span><span class="n">it</span><span class="w"> </span><span class="n">means</span><span class="w"> </span><span class="n">there</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="mi">60</span><span class="err">%</span><span class="w"> </span><span class="p">(</span><span class="mf">0.2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">0.4</span><span class="p">)</span><span class="w"> </span><span class="n">confidence</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">an</span><span class="w"> </span><span class="n">object</span><span class="w"> </span><span class="n">is</span>
+<span class="w">           </span><span class="n">present</span><span class="p">)</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="na">confidenceThreshold</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">111</span><span class="p">;</span>
 
-    string confidenceInputFeatureName = 200;
+<span class="w">    </span><span class="kt">string</span><span class="w"> </span><span class="na">confidenceInputFeatureName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">200</span><span class="p">;</span>
 
-    string coordinatesInputFeatureName = 201;
+<span class="w">    </span><span class="kt">string</span><span class="w"> </span><span class="na">coordinatesInputFeatureName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">201</span><span class="p">;</span>
 
-    string iouThresholdInputFeatureName = 202;
+<span class="w">    </span><span class="kt">string</span><span class="w"> </span><span class="na">iouThresholdInputFeatureName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">202</span><span class="p">;</span>
 
-    string confidenceThresholdInputFeatureName = 203;
+<span class="w">    </span><span class="kt">string</span><span class="w"> </span><span class="na">confidenceThresholdInputFeatureName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">203</span><span class="p">;</span>
 
-    string confidenceOutputFeatureName = 210;
+<span class="w">    </span><span class="kt">string</span><span class="w"> </span><span class="na">confidenceOutputFeatureName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">210</span><span class="p">;</span>
 
-    string coordinatesOutputFeatureName = 211;
-}
+<span class="w">    </span><span class="kt">string</span><span class="w"> </span><span class="na">coordinatesOutputFeatureName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">211</span><span class="p">;</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 <section id="nonmaximumsuppression-picktop">
-<h2>NonMaximumSuppression.PickTop<a class="headerlink" href="#nonmaximumsuppression-picktop" title="Permalink to this heading"></a></h2>
+<h2>NonMaximumSuppression.PickTop<a class="headerlink" href="#nonmaximumsuppression-picktop" title="Link to this heading"></a></h2>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">PickTop</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="na">perClass</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>

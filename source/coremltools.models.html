@@ -1,12 +1,14 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Model APIs &mdash; coremltools API Reference 8.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+  <title>Model APIs &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -15,16 +17,12 @@
       <link rel="stylesheet" type="text/css" href="../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=8cc1add8"></script>
-        <script src="../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -43,9 +41,6 @@
           <a href="../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
-              <div class="version">
-                8.3
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -906,14 +901,14 @@ If not provided, the inputs from the original model are used.</p>
 </dl>
 <p class="rubric">Examples</p>
 <p>Neural network:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">coremltools.converters.mil.debugging_utils</span> <span class="kn">import</span> <span class="n">extract_submodel</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.debugging_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">extract_submodel</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;neuralnetwork&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">outputs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;output_0&quot;</span><span class="p">,</span> <span class="s2">&quot;output_1&quot;</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">submodel</span> <span class="o">=</span> <span class="n">extract_submodel</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>ML program:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">coremltools.converters.mil.debugging_utils</span> <span class="kn">import</span> <span class="n">extract_submodel</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.debugging_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">extract_submodel</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;mlprogram&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">outputs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;output_0&quot;</span><span class="p">,</span> <span class="s2">&quot;output_1&quot;</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt;</span>
@@ -972,8 +967,8 @@ given as dictionaries of index to value.</p>
 <p>Please see the Core ML Nearest Neighbors protobuf message for more information
 on KNearestNeighborsClassifier parameters.</p>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.models.nearest_neighbors</span> <span class="kn">import</span> <span class="n">KNearestNeighborsClassifierBuilder</span>
-<span class="kn">from</span> <span class="nn">coremltools.models.utils</span> <span class="kn">import</span> <span class="n">save_spec</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.nearest_neighbors</span><span class="w"> </span><span class="kn">import</span> <span class="n">KNearestNeighborsClassifierBuilder</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">save_spec</span>
 
 <span class="c1"># Create a KNearestNeighborsClassifier model that takes 4-dimensional input data and outputs a string label.</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">builder</span> <span class="o">=</span> <span class="n">KNearestNeighborsClassifierBuilder</span><span class="p">(</span><span class="n">input_name</span><span class="o">=</span><span class="s1">&#39;input&#39;</span><span class="p">,</span>
@@ -1687,10 +1682,10 @@ using methods to add branch and leaf nodes specifying the behavior of the model.
 <p>In the following example, the code saves the model to disk, which is a
 recommended practice but not required.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Required inputs</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">coremltools</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">datatypes</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">coremltools.models.tree_ensemble</span> <span class="kn">import</span> <span class="n">TreeEnsembleRegressor</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">datatypes</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.tree_ensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">TreeEnsembleRegressor</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Define input features</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">input_features</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="mi">3</span><span class="p">)),</span> <span class="p">(</span><span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">datatypes</span><span class="o">.</span><span class="n">Double</span><span class="p">()))]</span>
@@ -1774,7 +1769,7 @@ you can export a multifunction model using the <code class="docutils literal not
 </dl>
 </div>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.utils</span> <span class="kn">import</span> <span class="n">MultiFunctionDescriptor</span><span class="p">,</span> <span class="n">save_multifunction</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultiFunctionDescriptor</span><span class="p">,</span> <span class="n">save_multifunction</span>
 
 <span class="c1"># Initialize a MultiFunctionDescriptor instance with functions in an existing mlpackage.</span>
 <span class="c1"># desc will contain all functions in &quot;my_model.mlpackage&quot;</span>
@@ -1861,7 +1856,7 @@ The function names will remain the same as in the original model.</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
 
 <span class="n">model_path</span> <span class="o">=</span> <span class="s2">&quot;my_model.mlpackage&quot;</span>
 <span class="n">output_dir</span> <span class="o">=</span> <span class="s2">&quot;./output/&quot;</span>
@@ -1920,9 +1915,9 @@ type will be updated).</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.models.model</span> <span class="kn">import</span> <span class="n">MLModel</span>
-<span class="kn">from</span> <span class="nn">coremltools.utils</span> <span class="kn">import</span> <span class="n">change_input_output_tensor_type</span>
-<span class="kn">from</span> <span class="nn">coremltools.proto.FeatureTypes_pb2</span> <span class="kn">import</span> <span class="n">ArrayFeatureType</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">change_input_output_tensor_type</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.proto.FeatureTypes_pb2</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArrayFeatureType</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">)</span>
 <span class="n">updated_model</span> <span class="o">=</span> <span class="n">change_input_output_tensor_type</span><span class="p">(</span>
@@ -1962,9 +1957,9 @@ type will be updated).</p>
 </dl>
 </div>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">CompiledMLModel</span>
-<span class="kn">from</span> <span class="nn">coremltools.models.utils</span> <span class="kn">import</span> <span class="n">compile_model</span>
-<span class="kn">from</span> <span class="nn">coremltools.proto</span> <span class="kn">import</span> <span class="n">Model_pb2</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">CompiledMLModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.models.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">compile_model</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.proto</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model_pb2</span>
 
 <span class="n">spec</span> <span class="o">=</span> <span class="n">Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
 <span class="n">spec</span><span class="o">.</span><span class="n">specificationVersion</span> <span class="o">=</span> <span class="mi">1</span>
@@ -2254,7 +2249,7 @@ then the old function will be overridden</p>
 </dl>
 </div>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.utils</span> <span class="kn">import</span> <span class="n">materialize_dynamic_shape_mlmodel</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">materialize_dynamic_shape_mlmodel</span>
 
 <span class="c1"># A dynamic-shape mlmodel you have converted</span>
 <span class="n">dynamic_shape_mlmodel</span><span class="p">:</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span>
@@ -2306,7 +2301,7 @@ then the old function will be overridden</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ct</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">)</span>
 <span class="n">randomized_mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">randomize_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">)</span>
@@ -2381,7 +2376,7 @@ This function also performs constant deduplication across functions to allow for
 </dl>
 </div>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.utils</span> <span class="kn">import</span> <span class="n">MultiFunctionDescriptor</span><span class="p">,</span> <span class="n">save_multifunction</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultiFunctionDescriptor</span><span class="p">,</span> <span class="n">save_multifunction</span>
 
 <span class="n">desc</span> <span class="o">=</span> <span class="n">MultiFunctionDescriptor</span><span class="p">(</span><span class="s2">&quot;my_model_1.mlpackage&quot;</span><span class="p">)</span>
 <span class="n">desc</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="s2">&quot;my_model_2.mlpackage&quot;</span><span class="p">,</span> <span class="s2">&quot;main&quot;</span><span class="p">,</span> <span class="s2">&quot;main_2&quot;</span><span class="p">)</span>
@@ -3005,8 +3000,8 @@ identifying those that fail the comparison criteria.</p>
 <li><p>An operation is considered a failure source if it fails comparison while its direct inputs do not.</p></li>
 </ul>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">()</span>
@@ -3027,7 +3022,7 @@ identifying those that fail the comparison criteria.</p>
     <span class="p">)</span>
 <span class="p">)</span>
 
-<span class="k">def</span> <span class="nf">compare_outputs</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">reference_output</span><span class="p">,</span> <span class="n">target_output</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compare_outputs</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">reference_output</span><span class="p">,</span> <span class="n">target_output</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">reference_output</span><span class="p">,</span> <span class="n">target_output</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 
 <span class="n">ops</span> <span class="o">=</span> <span class="k">await</span> <span class="n">comparator</span><span class="o">.</span><span class="n">find_failing_ops</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span> <span class="n">compare_outputs</span><span class="o">=</span><span class="n">compare_outputs</span><span class="p">)</span>
@@ -3123,8 +3118,8 @@ converted Core ML model to identify operations that produce different results.</
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">()</span>
@@ -3144,7 +3139,7 @@ converted Core ML model to identify operations that produce different results.</
     <span class="p">)</span>
 <span class="p">)</span>
 
-<span class="k">def</span> <span class="nf">compare_outputs</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">reference_output</span><span class="p">,</span> <span class="n">target_output</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compare_outputs</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">reference_output</span><span class="p">,</span> <span class="n">target_output</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">reference_output</span><span class="p">,</span> <span class="n">target_output</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 
 <span class="n">modules</span> <span class="o">=</span> <span class="k">await</span> <span class="n">comparator</span><span class="o">.</span><span class="n">find_failing_modules</span><span class="p">(</span>
@@ -3785,7 +3780,7 @@ identifying those that fail the comparison criteria.</p>
 <span class="n">input_data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;input_1&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)}</span>
 
 <span class="c1"># Define a custom comparison function</span>
-<span class="k">def</span> <span class="nf">compare_outputs</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">reference_output</span><span class="p">,</span> <span class="n">target_output</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compare_outputs</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">reference_output</span><span class="p">,</span> <span class="n">target_output</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">reference_output</span><span class="p">,</span> <span class="n">target_output</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
 
 <span class="c1"># Find failing operations</span>
@@ -4619,7 +4614,7 @@ to determine the intended backends for each operation.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Apple Inc.</p>
+    <p>&#169; Copyright 2021, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

@@ -1,22 +1,22 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TreeEnsemble &mdash; Core ML Format Reference  documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -28,11 +28,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> Core ML Format Reference
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Core ML Format Reference
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -82,8 +86,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>TreeEnsemble</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">TreeEnsemble</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/Format/TreeEnsemble.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -94,7 +98,7 @@
            <div itemprop="articleBody">
              
   <section id="treeensemble">
-<h1>TreeEnsemble<a class="headerlink" href="#treeensemble" title="Permalink to this heading"></a></h1>
+<h1>TreeEnsemble<a class="headerlink" href="#treeensemble" title="Link to this heading"></a></h1>
 <p>Each tree is a collection of nodes,
 each of which is identified by a unique identifier.</p>
 <p>Each node is either a branch or a leaf node.
@@ -110,7 +114,7 @@ All leaf nodes must be accessible
 by evaluating one or more branch nodes in sequence,
 starting from the root node.</p>
 <section id="treeensembleparameters">
-<h2>TreeEnsembleParameters<a class="headerlink" href="#treeensembleparameters" title="Permalink to this heading"></a></h2>
+<h2>TreeEnsembleParameters<a class="headerlink" href="#treeensembleparameters" title="Link to this heading"></a></h2>
 <p>Tree ensemble parameters.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">TreeEnsembleParameters</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="kd">message</span><span class="w"> </span><span class="nc">TreeNode</span><span class="w"> </span><span class="p">{</span>
@@ -154,7 +158,7 @@ starting from the root node.</p>
 </pre></div>
 </div>
 <section id="treeensembleparameters-treenode">
-<h3>TreeEnsembleParameters.TreeNode<a class="headerlink" href="#treeensembleparameters-treenode" title="Permalink to this heading"></a></h3>
+<h3>TreeEnsembleParameters.TreeNode<a class="headerlink" href="#treeensembleparameters-treenode" title="Link to this heading"></a></h3>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">TreeNode</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="kt">uint64</span><span class="w"> </span><span class="na">treeId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
 <span class="w">    </span><span class="kt">uint64</span><span class="w"> </span><span class="na">nodeId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
@@ -190,7 +194,7 @@ starting from the root node.</p>
 </div>
 </section>
 <section id="treeensembleparameters-treenode-evaluationinfo">
-<h3>TreeEnsembleParameters.TreeNode.EvaluationInfo<a class="headerlink" href="#treeensembleparameters-treenode-evaluationinfo" title="Permalink to this heading"></a></h3>
+<h3>TreeEnsembleParameters.TreeNode.EvaluationInfo<a class="headerlink" href="#treeensembleparameters-treenode-evaluationinfo" title="Link to this heading"></a></h3>
 <p>The leaf mode.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">nodeBehavior</span></code> == <code class="docutils literal notranslate"><span class="pre">LeafNode</span></code>,
 then the evaluationValue is added to the base prediction value
@@ -211,7 +215,7 @@ it is expected that evaluationIndex is exactly 0.</p>
 </section>
 </section>
 <section id="treeensembleclassifier">
-<h2>TreeEnsembleClassifier<a class="headerlink" href="#treeensembleclassifier" title="Permalink to this heading"></a></h2>
+<h2>TreeEnsembleClassifier<a class="headerlink" href="#treeensembleclassifier" title="Link to this heading"></a></h2>
 <p>A tree ensemble classifier.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">TreeEnsembleClassifier</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="n">TreeEnsembleParameters</span><span class="w"> </span><span class="na">treeEnsemble</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -227,7 +231,7 @@ it is expected that evaluationIndex is exactly 0.</p>
 </div>
 </section>
 <section id="treeensembleregressor">
-<h2>TreeEnsembleRegressor<a class="headerlink" href="#treeensembleregressor" title="Permalink to this heading"></a></h2>
+<h2>TreeEnsembleRegressor<a class="headerlink" href="#treeensembleregressor" title="Link to this heading"></a></h2>
 <p>A tree ensemble regressor.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">TreeEnsembleRegressor</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="n">TreeEnsembleParameters</span><span class="w"> </span><span class="na">treeEnsemble</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -237,7 +241,7 @@ it is expected that evaluationIndex is exactly 0.</p>
 </div>
 </section>
 <section id="treeensembleparameters-treenode-treenodebehavior">
-<h2>TreeEnsembleParameters.TreeNode.TreeNodeBehavior<a class="headerlink" href="#treeensembleparameters-treenode-treenodebehavior" title="Permalink to this heading"></a></h2>
+<h2>TreeEnsembleParameters.TreeNode.TreeNodeBehavior<a class="headerlink" href="#treeensembleparameters-treenode-treenodebehavior" title="Link to this heading"></a></h2>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span><span class="w"> </span><span class="n">TreeNodeBehavior</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="na">BranchOnValueLessThanEqual</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="w">    </span><span class="na">BranchOnValueLessThan</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
@@ -251,7 +255,7 @@ it is expected that evaluationIndex is exactly 0.</p>
 </div>
 </section>
 <section id="treeensemblepostevaluationtransform">
-<h2>TreeEnsemblePostEvaluationTransform<a class="headerlink" href="#treeensemblepostevaluationtransform" title="Permalink to this heading"></a></h2>
+<h2>TreeEnsemblePostEvaluationTransform<a class="headerlink" href="#treeensemblepostevaluationtransform" title="Link to this heading"></a></h2>
 <p>A tree ensemble post-evaluation transform.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span><span class="w"> </span><span class="n">TreeEnsemblePostEvaluationTransform</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="na">NoTransform</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>

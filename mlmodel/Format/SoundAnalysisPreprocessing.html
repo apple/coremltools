@@ -1,22 +1,22 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SoundAnalysisPreprocessing &mdash; Core ML Format Reference  documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -29,11 +29,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> Core ML Format Reference
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Core ML Format Reference
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -87,9 +91,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="OtherModels.html">Other Models</a> &raquo;</li>
-      <li>SoundAnalysisPreprocessing</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="OtherModels.html">Other Models</a></li>
+      <li class="breadcrumb-item active">SoundAnalysisPreprocessing</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/Format/SoundAnalysisPreprocessing.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -100,57 +104,57 @@
            <div itemprop="articleBody">
              
   <section id="soundanalysispreprocessing">
-<h1>SoundAnalysisPreprocessing<a class="headerlink" href="#soundanalysispreprocessing" title="Permalink to this heading"></a></h1>
+<h1>SoundAnalysisPreprocessing<a class="headerlink" href="#soundanalysispreprocessing" title="Link to this heading"></a></h1>
 <p>A model which takes audio signal samples as input and outputs an array of
 preprocessed samples according to the specified preprocessing types</p>
-<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span>message SoundAnalysisPreprocessing {
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">SoundAnalysisPreprocessing</span><span class="w"> </span><span class="p">{</span>
 
-    // Specific preprocessing types for sound analysis
+<span class="w">    </span><span class="c1">// Specific preprocessing types for sound analysis</span>
 
-       be fed to Vggish feature extractor.
-       c.f. https://arxiv.org/pdf/1609.09430.pdf
+<span class="w">       </span><span class="n">be</span><span class="w"> </span><span class="n">fed</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">Vggish</span><span class="w"> </span><span class="n">feature</span><span class="w"> </span><span class="n">extractor.</span>
+<span class="w">       </span><span class="n">c.f.</span><span class="w"> </span><span class="n">https</span><span class="o">:</span><span class="c1">//arxiv.org/pdf/1609.09430.pdf</span>
 
-       The preprocessing takes input a single channel (monophonic) audio samples
-       975 milliseconds long, sampled at 16KHz, i.e., 15600 samples 1D multiarray
-       and produces preprocessed samples in multiarray of shape [1, 96, 64]
+<span class="w">       </span><span class="n">The</span><span class="w"> </span><span class="n">preprocessing</span><span class="w"> </span><span class="n">takes</span><span class="w"> </span><span class="n">input</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">single</span><span class="w"> </span><span class="n">channel</span><span class="w"> </span><span class="p">(</span><span class="n">monophonic</span><span class="p">)</span><span class="w"> </span><span class="n">audio</span><span class="w"> </span><span class="n">samples</span>
+<span class="w">       </span><span class="mi">975</span><span class="w"> </span><span class="n">milliseconds</span><span class="w"> </span><span class="n">long</span><span class="p">,</span><span class="w"> </span><span class="n">sampled</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="mi">16</span><span class="n">KHz</span><span class="p">,</span><span class="w"> </span><span class="n">i.e.</span><span class="p">,</span><span class="w"> </span><span class="mi">15600</span><span class="w"> </span><span class="n">samples</span><span class="w"> </span><span class="mi">1</span><span class="n">D</span><span class="w"> </span><span class="n">multiarray</span>
+<span class="w">       </span><span class="n">and</span><span class="w"> </span><span class="n">produces</span><span class="w"> </span><span class="n">preprocessed</span><span class="w"> </span><span class="n">samples</span><span class="w"> </span><span class="n">in</span><span class="w"> </span><span class="n">multiarray</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">shape</span><span class="w"> </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">96</span><span class="p">,</span><span class="w"> </span><span class="mi">64</span><span class="p">]</span>
 
-     (1) Splits the input audio samples into overlapping frames, where each
-         frame is 25 milliseconds long and hops forward by 10 milliseconds.
-         Any partial frames at the end are dropped.
+<span class="w">     </span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="n">Splits</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">input</span><span class="w"> </span><span class="n">audio</span><span class="w"> </span><span class="n">samples</span><span class="w"> </span><span class="n">into</span><span class="w"> </span><span class="n">overlapping</span><span class="w"> </span><span class="n">frames</span><span class="p">,</span><span class="w"> </span><span class="n">where</span><span class="w"> </span><span class="n">each</span>
+<span class="w">         </span><span class="n">frame</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="mi">25</span><span class="w"> </span><span class="n">milliseconds</span><span class="w"> </span><span class="n">long</span><span class="w"> </span><span class="n">and</span><span class="w"> </span><span class="n">hops</span><span class="w"> </span><span class="n">forward</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="n">milliseconds.</span>
+<span class="w">         </span><span class="n">Any</span><span class="w"> </span><span class="n">partial</span><span class="w"> </span><span class="n">frames</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">end</span><span class="w"> </span><span class="n">are</span><span class="w"> </span><span class="n">dropped.</span>
 
-     (2) Hann window: apply a periodic Hann with a window_length of
-         25 milliseconds, which translates to 400 samples in 16KHz sampling rate
+<span class="w">     </span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="n">Hann</span><span class="w"> </span><span class="n">window</span><span class="o">:</span><span class="w"> </span><span class="n">apply</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">periodic</span><span class="w"> </span><span class="n">Hann</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">window_length</span><span class="w"> </span><span class="n">of</span>
+<span class="w">         </span><span class="mi">25</span><span class="w"> </span><span class="n">milliseconds</span><span class="p">,</span><span class="w"> </span><span class="n">which</span><span class="w"> </span><span class="n">translates</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="mi">400</span><span class="w"> </span><span class="n">samples</span><span class="w"> </span><span class="n">in</span><span class="w"> </span><span class="mi">16</span><span class="n">KHz</span><span class="w"> </span><span class="n">sampling</span><span class="w"> </span><span class="n">rate</span>
 
-         w(n) = 0.5 - 0.5 * cos(2*pi*n/window_length_sample),
-         where 0 &lt;= n &lt;= window_lenth_samples - 1 and window_lenth_samples = 400
+<span class="w">         </span><span class="n">w</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mf">0.5</span><span class="w"> </span><span class="err">*</span><span class="w"> </span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span><span class="err">*</span><span class="n">pi</span><span class="err">*</span><span class="n">n</span><span class="o">/</span><span class="n">window_length_sample</span><span class="p">),</span>
+<span class="w">         </span><span class="n">where</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">&lt;</span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="p">&lt;</span><span class="o">=</span><span class="w"> </span><span class="n">window_lenth_samples</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">and</span><span class="w"> </span><span class="na">window_lenth_samples</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">400</span>
 
-         Then, the Hann window is applied to each frame as below
+<span class="w">         </span><span class="n">Then</span><span class="p">,</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">Hann</span><span class="w"> </span><span class="n">window</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">applied</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">each</span><span class="w"> </span><span class="n">frame</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">below</span>
 
-         windowed_frame(n) = frame(n) * w(n)
-         where 0 &lt;= n &lt;= window_lenth_samples - 1 and window_lenth_samples = 400
+<span class="w">         </span><span class="n">windowed_frame</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="err">*</span><span class="w"> </span><span class="n">w</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="w">         </span><span class="n">where</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">&lt;</span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="p">&lt;</span><span class="o">=</span><span class="w"> </span><span class="n">window_lenth_samples</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="n">and</span><span class="w"> </span><span class="na">window_lenth_samples</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">400</span>
 
-     (3) Power spectrum: calculate short-time Fourier transfor magnitude, with
-         an FFT length of 512
+<span class="w">     </span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="n">Power</span><span class="w"> </span><span class="n">spectrum</span><span class="o">:</span><span class="w"> </span><span class="n">calculate</span><span class="w"> </span><span class="n">short</span><span class="o">-</span><span class="n">time</span><span class="w"> </span><span class="n">Fourier</span><span class="w"> </span><span class="n">transfor</span><span class="w"> </span><span class="n">magnitude</span><span class="p">,</span><span class="w"> </span><span class="n">with</span>
+<span class="w">         </span><span class="n">an</span><span class="w"> </span><span class="n">FFT</span><span class="w"> </span><span class="n">length</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="mi">512</span>
 
-     (4) Log Mel filter bank: calculates a log magnitude mel-frequency
-         spectrogram minimum frequency of 125Hz and maximum frequency of 7500Hz,
-         number of mel bins is 64, log_offset is 0.01, number of spectrum bins
-         is 64.
+<span class="w">     </span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="n">Log</span><span class="w"> </span><span class="n">Mel</span><span class="w"> </span><span class="n">filter</span><span class="w"> </span><span class="n">bank</span><span class="o">:</span><span class="w"> </span><span class="n">calculates</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">log</span><span class="w"> </span><span class="n">magnitude</span><span class="w"> </span><span class="n">mel</span><span class="o">-</span><span class="n">frequency</span>
+<span class="w">         </span><span class="n">spectrogram</span><span class="w"> </span><span class="n">minimum</span><span class="w"> </span><span class="n">frequency</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="mi">125</span><span class="n">Hz</span><span class="w"> </span><span class="n">and</span><span class="w"> </span><span class="n">maximum</span><span class="w"> </span><span class="n">frequency</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="mi">7500</span><span class="n">Hz</span><span class="p">,</span>
+<span class="w">         </span><span class="n">number</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">mel</span><span class="w"> </span><span class="n">bins</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="mi">64</span><span class="p">,</span><span class="w"> </span><span class="n">log_offset</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="mf">0.01</span><span class="p">,</span><span class="w"> </span><span class="n">number</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">spectrum</span><span class="w"> </span><span class="n">bins</span>
+<span class="w">         </span><span class="n">is</span><span class="w"> </span><span class="mf">64.</span>
 
-    message Vggish {
-        // no specific parameter
-    }
+<span class="w">    </span><span class="kd">message</span><span class="w"> </span><span class="nc">Vggish</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// no specific parameter</span>
+<span class="w">    </span><span class="p">}</span>
 
-    // Vision feature print type
-    oneof SoundAnalysisPreprocessingType {
-        Vggish vggish = 20;
-    }
+<span class="w">    </span><span class="c1">// Vision feature print type</span>
+<span class="w">    </span><span class="k">oneof</span><span class="w"> </span><span class="n">SoundAnalysisPreprocessingType</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">Vggish</span><span class="w"> </span><span class="na">vggish</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
 
-}
+<span class="p">}</span>
 </pre></div>
 </div>
 <section id="soundanalysispreprocessing-vggish">
-<h2>SoundAnalysisPreprocessing.Vggish<a class="headerlink" href="#soundanalysispreprocessing-vggish" title="Permalink to this heading"></a></h2>
+<h2>SoundAnalysisPreprocessing.Vggish<a class="headerlink" href="#soundanalysispreprocessing-vggish" title="Link to this heading"></a></h2>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span><span class="w"> </span><span class="nc">Vggish</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="c1">// no specific parameter</span>
 <span class="p">}</span>

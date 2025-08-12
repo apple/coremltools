@@ -1,11 +1,13 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.passes.defs.optimize_conv &mdash; coremltools API Reference 8.3 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/theme.css?v=19f00094" />
+  <title>coremltools.converters.mil.mil.passes.defs.optimize_conv &mdash; coremltools API Reference 8.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
@@ -14,15 +16,11 @@
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../../../../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../../../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../../../../../_static/documentation_options.js?v=8cc1add8"></script>
-        <script src="../../../../../../../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../../../../_static/documentation_options.js?v=1f41a3ab"></script>
+      <script src="../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../../../search.html" /> 
@@ -39,9 +37,6 @@
           <a href="../../../../../../../index.html" class="icon icon-home">
             coremltools API Reference
           </a>
-              <div class="version">
-                8.3
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -98,29 +93,29 @@
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
-<span class="kn">import</span> <span class="nn">copy</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_logger</span> <span class="k">as</span> <span class="n">logger</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Block</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">mb</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">Program</span><span class="p">,</span> <span class="n">types</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span> <span class="kn">import</span> <span class="n">AbstractGraphPass</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.helper</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools</span><span class="w"> </span><span class="kn">import</span> <span class="n">_logger</span> <span class="k">as</span> <span class="n">logger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">Block</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">mb</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">Program</span><span class="p">,</span> <span class="n">types</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractGraphPass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.helper</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">_check_child_op_type</span><span class="p">,</span>
     <span class="n">_check_no_output_connection</span><span class="p">,</span>
     <span class="n">block_context_manager</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.pass_registry</span> <span class="kn">import</span> <span class="n">register_pass</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.symbolic</span> <span class="kn">import</span> <span class="n">any_symbolic</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.passes.pass_registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_pass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">coremltools.converters.mil.mil.types.symbolic</span><span class="w"> </span><span class="kn">import</span> <span class="n">any_symbolic</span>
 
 
 <div class="viewcode-block" id="add_conv_transpose_output_shape">
 <a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_conv.add_conv_transpose_output_shape">[docs]</a>
 <span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">add_conv_transpose_output_shape</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">add_conv_transpose_output_shape</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The ``conv_transpose`` input ``output_shape`` is an optional input.</span>
 <span class="sd">    Since we can infer the output shape from ``type_inference``, we add</span>
@@ -137,12 +132,12 @@
 <span class="sd">          %3: (1, 5, 39, fp32) = conv_transpose(..., output_shape=%2)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_handle_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_match_pattern</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_match_pattern</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span>
             <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;conv_transpose&quot;</span>
             <span class="ow">and</span> <span class="n">op</span><span class="o">.</span><span class="n">output_shape</span> <span class="ow">is</span> <span class="kc">None</span>
@@ -150,7 +145,7 @@
         <span class="p">)</span>
 
     <span class="nd">@block_context_manager</span>
-    <span class="k">def</span> <span class="nf">_handle_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_handle_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_handle_block</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
@@ -175,7 +170,7 @@
 <div class="viewcode-block" id="compose_conv1d">
 <a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_conv.compose_conv1d">[docs]</a>
 <span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">compose_conv1d</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">compose_conv1d</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    In `TensorFlow &lt;https://github.com/tensorflow/tensorflow/blob/r1.15/tensorflow/python/ops/nn_ops.py#L1657&gt;`_,</span>
 <span class="sd">    ``tf.keras.layers.Conv1D`` is a composite op:</span>
@@ -219,13 +214,13 @@
 <span class="sd">                ...</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_compose_conv1d_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
     <span class="nd">@block_context_manager</span>
-    <span class="k">def</span> <span class="nf">_compose_conv1d_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">):</span>
-        <span class="k">def</span> <span class="nf">help_compose_conv1d_block</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compose_conv1d_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">help_compose_conv1d_block</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
             <span class="n">fusion_occurred</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -254,7 +249,7 @@
         <span class="k">while</span> <span class="n">block_changed</span><span class="p">:</span>
             <span class="n">block_changed</span> <span class="o">=</span> <span class="n">help_compose_conv1d_block</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_try_match_and_transform_pattern</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expand_op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_try_match_and_transform_pattern</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expand_op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        identify the pattern: `expand_dim` -&gt; `conv2d` -&gt; `squeeze`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -281,7 +276,7 @@
         <span class="c1"># everything looks good</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_try_apply_transform</span><span class="p">(</span><span class="n">expand_op</span><span class="p">,</span> <span class="n">conv_op</span><span class="p">,</span> <span class="n">squeeze_op</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_try_match_and_transform_pattern_channel_last</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_try_match_and_transform_pattern_channel_last</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">expand_op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -333,7 +328,7 @@
         <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_try_apply_transform</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_try_apply_transform</span><span class="p">(</span>
         <span class="n">expand_op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">conv_op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">squeeze_op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="n">ops_to_remove</span> <span class="o">=</span> <span class="p">[</span><span class="n">expand_op</span><span class="p">,</span> <span class="n">conv_op</span><span class="p">,</span> <span class="n">squeeze_op</span><span class="p">]</span>
@@ -375,7 +370,7 @@
         <span class="k">return</span> <span class="kc">False</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_try_apply_transform_channel_last</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_try_apply_transform_channel_last</span><span class="p">(</span>
         <span class="n">expand_op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span>
         <span class="n">transpose1_op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span>
         <span class="n">conv_op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span>
@@ -433,7 +428,7 @@
 <div class="viewcode-block" id="fuse_conv_batchnorm">
 <a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_conv.fuse_conv_batchnorm">[docs]</a>
 <span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">fuse_conv_batchnorm</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">fuse_conv_batchnorm</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Fuse the following ``batch_norm`` layer into ``conv`` and ``conv_transpose``.</span>
 <span class="sd">    That is, convert ``conv + batch_norm`` to ``conv``, by modifying the weight and bias in the ``conv`` layer.</span>
@@ -451,14 +446,14 @@
 <span class="sd">            ...</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="n">block_changed</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">while</span> <span class="n">block_changed</span><span class="p">:</span>
                 <span class="n">block_changed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fuse_conv_batchnorm_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_try_to_transform</span><span class="p">(</span><span class="n">conv_op</span><span class="p">,</span> <span class="n">bn_op</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_try_to_transform</span><span class="p">(</span><span class="n">conv_op</span><span class="p">,</span> <span class="n">bn_op</span><span class="p">):</span>
         <span class="c1"># get parameters from batch_norm layer</span>
         <span class="n">gamma</span> <span class="o">=</span> <span class="n">bn_op</span><span class="o">.</span><span class="n">gamma</span><span class="o">.</span><span class="n">val</span>
         <span class="n">beta</span> <span class="o">=</span> <span class="n">bn_op</span><span class="o">.</span><span class="n">beta</span><span class="o">.</span><span class="n">val</span>
@@ -602,8 +597,8 @@
         <span class="k">return</span> <span class="kc">False</span>
 
     <span class="nd">@block_context_manager</span>
-    <span class="k">def</span> <span class="nf">_fuse_conv_batchnorm_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
-        <span class="k">def</span> <span class="nf">_match_pattern</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fuse_conv_batchnorm_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_match_pattern</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;conv&quot;</span> <span class="ow">or</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;conv_transpose&quot;</span><span class="p">:</span>
                 <span class="c1"># abort fusion if op output is also a block output</span>
                 <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
@@ -640,7 +635,7 @@
 <div class="viewcode-block" id="fuse_conv_bias">
 <a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_conv.fuse_conv_bias">[docs]</a>
 <span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">fuse_conv_bias</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">fuse_conv_bias</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Fold ``add``/``sub`` into ``bias`` of ``conv`` and ``conv_transpose``.</span>
 <span class="sd">    That is, convert ``conv + add/sub`` to ``conv``, when ``add``/``sub`` is adding a constant.</span>
@@ -677,13 +672,13 @@
 
     <span class="n">child_op_types</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;add&quot;</span><span class="p">,</span> <span class="s2">&quot;sub&quot;</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="n">block_changed</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">while</span> <span class="n">block_changed</span><span class="p">:</span>
                 <span class="n">block_changed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fuse_conv_bias_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_match_pattern</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_match_pattern</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;conv&quot;</span> <span class="ow">or</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;conv_transpose&quot;</span><span class="p">:</span>
             <span class="c1"># abort fusion if op output is also a block output</span>
             <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
@@ -697,7 +692,7 @@
         <span class="k">return</span> <span class="kc">None</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_try_to_transform_transpose_pattern</span><span class="p">(</span><span class="n">conv_op</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_try_to_transform_transpose_pattern</span><span class="p">(</span><span class="n">conv_op</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
 
         <span class="n">ops_to_remove</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -807,7 +802,7 @@
         <span class="k">return</span> <span class="kc">False</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_try_to_transform</span><span class="p">(</span><span class="n">conv_op</span><span class="p">,</span> <span class="n">add_op</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_try_to_transform</span><span class="p">(</span><span class="n">conv_op</span><span class="p">,</span> <span class="n">add_op</span><span class="p">):</span>
 
         <span class="k">if</span> <span class="n">add_op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;sub&quot;</span><span class="p">:</span>
             <span class="n">bias_var</span> <span class="o">=</span> <span class="n">add_op</span><span class="o">.</span><span class="n">y</span>
@@ -919,7 +914,7 @@
         <span class="k">return</span> <span class="kc">False</span>
 
     <span class="nd">@block_context_manager</span>
-    <span class="k">def</span> <span class="nf">_fuse_conv_bias_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fuse_conv_bias_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
         <span class="n">fusion_occurred</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -950,7 +945,7 @@
 <div class="viewcode-block" id="fuse_conv_scale">
 <a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_conv.fuse_conv_scale">[docs]</a>
 <span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">fuse_conv_scale</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">fuse_conv_scale</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Fold ``mul``/``div`` into ``conv``/``conv_transpose`` by updating the weight/bias of the convolution layers.</span>
 
@@ -971,14 +966,14 @@
 <span class="sd">            ...</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="n">block_changed</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">while</span> <span class="n">block_changed</span><span class="p">:</span>
                 <span class="n">block_changed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fuse_conv_scale_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_try_to_transform</span><span class="p">(</span><span class="n">conv_op</span><span class="p">,</span> <span class="n">scale_op</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_try_to_transform</span><span class="p">(</span><span class="n">conv_op</span><span class="p">,</span> <span class="n">scale_op</span><span class="p">):</span>
         <span class="c1"># get the scale</span>
         <span class="k">if</span> <span class="n">scale_op</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">scale_op</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
@@ -1116,8 +1111,8 @@
         <span class="k">return</span> <span class="kc">False</span>
 
     <span class="nd">@block_context_manager</span>
-    <span class="k">def</span> <span class="nf">_fuse_conv_scale_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
-        <span class="k">def</span> <span class="nf">_match_pattern</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fuse_conv_scale_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_match_pattern</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;conv&quot;</span> <span class="ow">or</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;conv_transpose&quot;</span><span class="p">:</span>
                 <span class="c1"># abort fusion if op output is also a block output</span>
                 <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
@@ -1156,7 +1151,7 @@
 <div class="viewcode-block" id="fuse_pad_conv">
 <a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_conv.fuse_pad_conv">[docs]</a>
 <span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">fuse_pad_conv</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">fuse_pad_conv</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    When we observe ``pad -&gt; transpose -&gt; conv``, we move the ``pad`` to be next to ``conv``.</span>
 <span class="sd">    This allows us to meld ``pad + conv`` if possible.</span>
@@ -1176,14 +1171,14 @@
 <span class="sd">            ...</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="n">block_changed</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">while</span> <span class="n">block_changed</span><span class="p">:</span>
                 <span class="n">block_changed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pad_conv_connect_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_match_pattern</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_match_pattern</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([])</span>
         <span class="n">child_ops</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span>
 
@@ -1199,8 +1194,8 @@
         <span class="k">return</span> <span class="n">ret</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_try_to_transform</span><span class="p">(</span><span class="n">pad_op</span><span class="p">,</span> <span class="n">transpose_ops</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
-        <span class="k">def</span> <span class="nf">_compute_new_pad_values</span><span class="p">(</span><span class="n">transpose_op</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_try_to_transform</span><span class="p">(</span><span class="n">pad_op</span><span class="p">,</span> <span class="n">transpose_ops</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_compute_new_pad_values</span><span class="p">(</span><span class="n">transpose_op</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">pad_op</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;pad&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">None</span>
             <span class="n">pad_amounts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">pad_op</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;pad&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
@@ -1256,7 +1251,7 @@
         <span class="k">return</span> <span class="kc">True</span>
 
     <span class="nd">@block_context_manager</span>
-    <span class="k">def</span> <span class="nf">_pad_conv_connect_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_pad_conv_connect_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
         <span class="n">fusion_occurred</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1281,7 +1276,7 @@
 
 
 <span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">fuse_dilated_conv</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">fuse_dilated_conv</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    When we observe ``space_to_batch -&gt; conv (2D) -&gt; batch_to_space``, we attempt to fuse these</span>
 <span class="sd">    three ops into a single ``conv`` with dilations.</span>
@@ -1300,7 +1295,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_uses_same_padding</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_uses_same_padding</span><span class="p">(</span>
         <span class="n">input_h</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">input_w</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">W_h</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -1345,14 +1340,14 @@
             <span class="ow">and</span> <span class="n">crop</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="n">pad_end_extra_w</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">AbstractGraphPass</span><span class="p">,</span> <span class="n">prog</span><span class="p">:</span> <span class="n">Program</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">AbstractGraphPass</span><span class="p">,</span> <span class="n">prog</span><span class="p">:</span> <span class="n">Program</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="n">block_changed</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">while</span> <span class="n">block_changed</span><span class="p">:</span>
                 <span class="n">block_changed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fuse_dilated_conv_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_match_pattern</span><span class="p">(</span><span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Operation</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_match_pattern</span><span class="p">(</span><span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Operation</span><span class="p">]]:</span>
         <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">!=</span> <span class="s2">&quot;space_to_batch&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
 
@@ -1374,7 +1369,7 @@
         <span class="k">return</span> <span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">conv_op</span><span class="p">,</span> <span class="n">batch_to_space_op</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_try_to_transform</span><span class="p">(</span><span class="n">matched_ops</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Operation</span><span class="p">],</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_try_to_transform</span><span class="p">(</span><span class="n">matched_ops</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Operation</span><span class="p">],</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">_check_no_output_connection</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">matched_ops</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span>
@@ -1430,7 +1425,7 @@
         <span class="k">return</span> <span class="kc">False</span>
 
     <span class="nd">@block_context_manager</span>
-    <span class="k">def</span> <span class="nf">_fuse_dilated_conv_block</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">AbstractGraphPass</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fuse_dilated_conv_block</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">AbstractGraphPass</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="n">fusion_occurred</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1455,7 +1450,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2025, Apple Inc.</p>
+    <p>&#169; Copyright 2021, Apple Inc.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
