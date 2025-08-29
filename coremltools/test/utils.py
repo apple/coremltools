@@ -12,19 +12,18 @@ import requests
 
 
 def load_boston():
-    DATA_URL = "http://lib.stat.cmu.edu/datasets/boston"
-    LOCAL_FILE = "/tmp/bostonHousingData.txt"
+    DATA_URL = "https://storage.googleapis.com/tensorflow/tf-keras-datasets/boston_housing.npz"
+    LOCAL_FILE = "/tmp/boston_housing.npz"
 
     if not os.path.isfile(LOCAL_FILE):
         r = requests.get(DATA_URL)
 
-        with open(LOCAL_FILE, 'w') as f:
-            f.write(r.text)
+        with open(LOCAL_FILE, 'wb') as f:
+            f.write(r.content)
 
-    raw_df = pd.read_csv(LOCAL_FILE, sep="\s+", skiprows=22, header=None)
-    data = np.hstack([raw_df.values[::2, :], raw_df.values[1::2, :2]])
-    data = np.array(data, order='C')
-    target = raw_df.values[1::2, 2]
+    boston = np.load(LOCAL_FILE, allow_pickle=True)
+    data = boston['x']
+    target = boston['y']
 
     feature_names = np.array(['CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX', 'RM', 'AGE', 'DIS', 'RAD',
                               'TAX', 'PTRATIO', 'B', 'LSTAT'], dtype='<U7')
