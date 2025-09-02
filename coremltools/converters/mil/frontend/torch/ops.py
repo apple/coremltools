@@ -903,10 +903,54 @@ def _array_construct(context, node, array_type):
         const = mb.const(val=val, name=node.name)
         context.add(const)
     else:
+        # Previously:
         # If at least one input to the construct op is non-const, collect
         # the inputs and add them directly to the context. Ops that use this
         # node's output will take the list directly as input.
-        context.add(array_type(inputs), node.name)
+        #
+        # Previous code inside the else condition:
+        # context.add(array_type(inputs), node.name)
+
+        # Fix for Issue #2583: Dynamic padding values in torch.nn.functional.pad
+        # GitHub Link: https://github.com/apple/coremltools/issues/2583
+        #
+        # Verified with:
+        #   - coremltools 8.3.0
+        #   - torch 2.6.0
+        #
+        # Problem:
+        # When padding values contain runtime-determined sizes (e.g., x.size(-1)),
+        # the original code would return a Python list instead of the Var object.
+        # This breaks downstream operations like pad() which expect a Var with
+        # a .val attribute, causing: AttributeError: 'list' object has no attribute 'val'
+        # See detailed analysis in issue #2583 for MIL representation differences
+        # between static and dynamic padding cases.
+        #
+        # Root cause:
+        # The condition `inp.can_be_folded_to_const()` returns False for dynamic
+        # values, causing len(scalar_inputs) != len(inputs). This triggered the
+        # else branch which added a raw Python list to the context instead of
+        # creating a proper Var object.
+        #
+        # Solution:
+        # Create a proper Var object using mb.concat that can handle both
+        # constant and dynamic values, maintaining the expected Var interface
+        # throughout the conversion pipeline.
+        
+        # Convert all inputs to tensors (scalars become 1D tensors)
+        tensor_inputs = []
+        for inp in inputs:
+            if len(inp.shape) == 0:  # It is a scalar object
+                # Convert scalar to 1D tensor
+                tensor_inp = mb.expand_dims(x=inp, axes=[0])
+                tensor_inputs.append(tensor_inp)
+            else:
+                tensor_inputs.append(inp)
+        
+        # Concatenate into a single tensor Var with shape (n,)
+        # This creates a proper Var that will contain the correct values at runtime
+        stacked_var = mb.concat(values=tensor_inputs, axis=0, name=node.name)
+        context.add(stacked_var)
 
 
 @register_torch_op
