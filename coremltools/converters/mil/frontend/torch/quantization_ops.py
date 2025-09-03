@@ -803,7 +803,6 @@ def dequantize_affine(context, node):
         int_data.astype(quantized_np_dtype),
         zero_point,
         scale,
-        axis=-1,
         name=node.name,
     )
     context.add(output, node.name)
