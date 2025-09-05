@@ -82,17 +82,17 @@ echo
 echo "Using python from $(which python)"
 echo
 
+# Install dependencies if specified
+if [ ! -z "${REQUIREMENTS}" ]; then
+   $PIP_EXECUTABLE install --prefer-binary -r "${REQUIREMENTS}"
+fi
+
 if [[ $WHEEL_PATH == "" ]]; then
     cd ..
     $PIP_EXECUTABLE install -e ${COREMLTOOLS_NAME}  --upgrade --no-deps
     cd ${COREMLTOOLS_NAME}
 else
     $PIP_EXECUTABLE install $~WHEEL_PATH --upgrade --no-deps --force-reinstall
-fi
-
-# Install dependencies if specified
-if [ ! -z "${REQUIREMENTS}" ]; then
-   $PIP_EXECUTABLE install --prefer-binary -r "${REQUIREMENTS}"
 fi
 
 if [[ ! -z "${WHEEL_PATH}" ]]; then
