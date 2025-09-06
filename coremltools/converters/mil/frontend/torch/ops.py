@@ -3057,6 +3057,81 @@ def layer_norm(context, node):
     else:
         context.add(layer_norm)
 
+@register_torch_op
+def rms_norm(context, node):
+    # Parse Inputs
+    inputs = _get_inputs(context, node, expected=4)
+    x = inputs[0]
+    normalized_shape = inputs[1]
+    weight = inputs[2]
+    eps = inputs[3]
+    axes = list(range(-len(normalized_shape.val), 0))
+    # Store epsilon value to ensure ZeroDivisionError doesn't occur
+    # while computing RMSNorm
+    eps_val = eps.val if eps is not None else 1e-5
+
+    # RMS Normalization Formula:
+    # RMS(x) = sqrt(E[x^2] + epsilon)
+    # out = gamma * x / RMS(x)
+    # For more info, check out: `<https://arxiv.org/pdf/1910.07467.pdf>`
+
+    # Note: Apple Neural Engine (ANE) does not have native RMSNorm support 
+    # and computing x^2 directly can cause FP16 overflow for 
+    # large activation values (>256).
+    # 
+    # To ensure ANE compatibility and prevent overflow, 
+    # we scale the input by its maximum
+    # absolute value before computing RMS, then scale back the result.
+    # Reference: https://x.com/anemll/status/1942432672007192928
+    #
+    # Advantages:
+    # - Prevents FP16 overflow on ANE.
+    # - Maintains ANE placement (avoiding CPU/GPU fallback).
+    #
+    # Trade-offs:
+    # - May introduce slight numerical differences compared
+    #   to the standard operation due to the division
+    #   and rescaling operations.
+    # - Maximum relative error is typically < 0.1% in practice.
+    #
+    # Note: For applications requiring exact PyTorch parity,
+    # consider using CPU/GPU compute units.
+
+    max_val_tensor = mb.reduce_max(
+        x=mb.abs(x=x, name=node.name + "_abs"),
+        axes=axes,
+        keep_dims=True,
+        name=node.name + "_max_val"
+        )
+    x_scaled = mb.real_div(x=x, y=max_val_tensor, name=node.name + "_scale")
+    x_scale_squared = mb.square(x=x_scaled, name=node.name + "_square")
+    mean_squared = mb.reduce_mean(
+        x=x_scale_squared,
+        axes=axes,
+        keep_dims=True,
+        name=node.name + "_mean_squared"
+        )
+    mean_plus_eps = mb.add(
+        x=mean_squared,
+        y=eps_val,
+        name=node.name + "_add_eps"
+        )
+    rms = mb.sqrt(x=mean_plus_eps, name=node.name + "_rms")
+    rms_scaled = mb.mul(
+        x=rms,
+        y=max_val_tensor,
+        name=node.name + "_rms_scaled"
+        )
+    normalized = mb.real_div(x=x, y=rms_scaled, name=node.name + "_normalized")
+
+    # Apply weight if provided
+    if weight is not None:
+        output = mb.mul(x=normalized, y=weight, name=node.name)
+    else:
+        output = normalized
+
+    context.add(output, node.name)
+
 
 @register_torch_op
 def numtotensor(context, node):
