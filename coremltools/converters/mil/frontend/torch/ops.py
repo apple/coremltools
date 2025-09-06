@@ -3057,6 +3057,43 @@ def layer_norm(context, node):
     else:
         context.add(layer_norm)
 
+@register_torch_op
+def rms_norm(context, node):
+    # Parse Inputs
+    inputs = _get_inputs(context, node, expected=4)
+    x = inputs[0]
+    normalized_shape = inputs[1]
+    weight = inputs[2]
+    eps = inputs[3]
+    axes = list(range(-len(normalized_shape.val), 0))
+    # Store epsilon value to ensure ZeroDivisionError doesn't occur
+    # while computing RMSNorm
+    eps_val = eps.val if eps is not None else 1e-5
+
+    # RMS Normalization Formula:
+    # RMS(x) = sqrt(E[x^2] + epsilon)
+    # out = gamma * x / RMS(x)
+    # For more info, check out: `<https://arxiv.org/pdf/1910.07467.pdf>`
+    
+    x_squared = mb.square(x=x, name=node.name + "_square")
+    mean_squared = mb.reduce_mean(
+        x=x_squared,
+        axes=axes,
+        keep_dims=True,
+        name=node.name + "_mean_squared"
+    )
+    mean_plus_eps = mb.add(x=mean_squared, y=eps_val, name=node.name + "_add_eps")
+    rms = mb.sqrt(x=mean_plus_eps, name=node.name + "_rms")
+    normalized = mb.real_div(x=x, y=rms, name=node.name + "_normalized")
+
+    # Apply weight if provided
+    if weight is not None:
+        output = mb.mul(x=normalized, y=weight, name=node.name)
+    else:
+        output = normalized
+
+    context.add(output, node.name)
+
 
 @register_torch_op
 def numtotensor(context, node):
