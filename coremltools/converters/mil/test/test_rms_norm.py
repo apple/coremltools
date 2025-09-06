@@ -59,7 +59,13 @@ class TestRMSNorm:
             ((4, 8, 16, 32), (16, 32), True, 1e-5, "multi_axis"),
         ]
     )
-    def test_rms_norm_conversion(input_shape, normalized_shape, elementwise_affine, eps, test_name):
+    def test_rms_norm_conversion(
+        input_shape,
+        normalized_shape,
+        elementwise_affine,
+        eps,
+        test_name
+    ):
         """
         Test RMSNorm conversion with various configurations
         """
@@ -67,11 +73,11 @@ class TestRMSNorm:
             def __init__(self):
                 super().__init__()
                 self.norm = torch.nn.RMSNorm(
-                    normalized_shape, 
-                    eps=eps, 
+                    normalized_shape,
+                    eps=eps,
                     elementwise_affine=elementwise_affine
                 )
-            
+
             def forward(self, x):
                 return self.norm(x)
 
@@ -105,8 +111,10 @@ class TestRMSNorm:
         )
 
         # Verify no NaN or Inf are present in any tensor
-        assert not np.isnan(coreml_out).any(), f"Test '{test_name}' produced NaN values"
-        assert not np.isinf(coreml_out).any(), f"Test '{test_name}' produced Inf values"
+        assert not np.isnan(coreml_out).any(), \
+            f"Test '{test_name}' produced NaN values"
+        assert not np.isinf(coreml_out).any(), \
+            f"Test '{test_name}' produced Inf values"
 
     @staticmethod
     def test_edge_cases():
@@ -117,7 +125,7 @@ class TestRMSNorm:
             def __init__(self):
                 super().__init__()
                 self.norm = torch.nn.RMSNorm(512)
-            
+
             def forward(self, x):
                 return self.norm(x)
 
@@ -127,12 +135,14 @@ class TestRMSNorm:
         # Test with zeros
         zeros = torch.zeros(2, 512)
         out_zeros = model(zeros)
-        assert not torch.isnan(out_zeros).any(), "RMSNorm produced NaN with zero input"
+        assert not torch.isnan(out_zeros).any(), \
+            "RMSNorm produced NaN with zero input"
 
         # Test with very small values
         small = torch.full((2, 512), 1e-10)
         out_small = model(small)
-        assert not torch.isinf(out_small).any(), "RMSNorm produced Inf with small input"
+        assert not torch.isinf(out_small).any(), \
+            "RMSNorm produced Inf with small input"
 
     @staticmethod
     def test_dynamic_shapes():
@@ -170,8 +180,10 @@ class TestRMSNorm:
         for shape in [(1, 10, 768), (2, 20, 768), (4, 50, 768)]:
             test_input = torch.randn(shape)
             torch_out = model(test_input)
-            coreml_out = mlmodel.predict({"input": test_input.numpy()})["output"]
-            
+            coreml_out = mlmodel.predict({
+                "input": test_input.numpy()
+            })["output"]
+
             np.testing.assert_allclose(
                 torch_out.detach().numpy(),
                 coreml_out,
