@@ -1704,12 +1704,14 @@ def elu(context, node):
 
         x = inputs[0]
         alpha = 1 if nargs < 2 else inputs[1]
+        scale = None if nargs < 3 or context.frontend != TorchFrontend.EXECUTORCH else inputs[2]
+        return x, alpha, scale
 
-        return x, alpha
-
-    x, alpha = _parse_positional_args(context, node)
-
-    res = mb.elu(x=x, alpha=alpha, name=node.name)
+    x, alpha, scale = _parse_positional_args(context, node)
+    res = mb.elu(x=x, alpha=alpha)
+    if scale is not None:
+        res = mb.mul(x=res, y=scale)
+    res.name = node.name
     context.add(res)
 
 
