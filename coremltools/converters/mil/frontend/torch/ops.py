@@ -903,9 +903,6 @@ def _array_construct(context, node, array_type):
         const = mb.const(val=val, name=node.name)
         context.add(const)
     else:
-        # If at least one input to the construct op is non-const, collect
-        # the inputs and add them directly to the context. Ops that use this
-        # node's output will take the list directly as input.
         context.add(array_type(inputs), node.name)
 
 
@@ -2387,7 +2384,54 @@ def pad(context, node):
         return mode, value
 
     def _translate_torch_args(pad: Var, mode: Var, value: Var) -> Tuple[Var]:
-        if pad.val is not None:
+        # Check if pad is a list (which happens when `_array_construct` returns
+        # a list for dynamic values). When _array_construct returns a list,
+        # it means at least one value is dynamic (not compile-time constant).
+        if isinstance(pad, list):
+            # NOTE:
+            # - CoreML's `mb.pad` operation only supports dynamic padding for 
+            #   1D tensors.
+            # - For n-dimensional tensors (2D, 3D, 4D, etc.), dynamic padding 
+            #   values cause runtime errors even when formatted correctly.
+            # - This is a fundamental limitation of the CoreML framework,
+            #   not this converter.
+            if len(pad) == 2 and x.rank == 1:
+                tensor_inputs = []
+                for inp in pad:
+                    if isinstance(inp, (int, float)):
+                        # Convert plain number to const Var
+                        const_var = mb.const(val=[inp])
+                        tensor_inputs.append(const_var)
+                    elif isinstance(inp, Var):
+                        if len(inp.shape) == 0:  # Scalar Var
+                            # Convert scalar to 1D tensor
+                            tensor_inp = mb.expand_dims(x=inp, axes=[0])
+                            tensor_inputs.append(tensor_inp)
+                        else:
+                            tensor_inputs.append(inp)
+                    else:
+                        tensor_inputs.append(inp)
+                # Concatenate into a single tensor Var with shape (n,)
+                pad = mb.concat(values=tensor_inputs, axis=0)
+            else:
+                # Dynamic padding for n-dimensional tensors is not supported
+                # by CoreML
+                # This includes:
+                # - 1D padding on multi-dimensional tensors.
+                #   (e.g., padding only last dim of 2D tensor)
+                # - Multi-dimensional padding with any dynamic values
+                #
+                # Although it works for n-dimension when used with
+                # MIL operations (reshape, reverse, concat),
+                # CoreML's mb.pad operation fails at runtime when given
+                # dynamic padding for n-dimensional tensors.
+                raise NotImplementedError(
+                    f"Dynamic padding for n-dimensional tensors is not " \
+                    f"supported. " \
+                    f"Received {len(pad)} padding values. " \
+                    f"Only 1D dynamic padding (2 values) is supported."
+                )
+        elif pad.val is not None:
             # torch.nn.functional.pad has different semantics from Core ML
             # * for torch.nn.functional.pad
             #   x.shape[-1] = padding[0] + x.shape[-1] + padding[1]
