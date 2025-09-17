@@ -1035,21 +1035,11 @@ def pixel_unshuffle(context, node):
     context.add(perm)
 
 
-def _construct_matmul(x: Var, y: Var, name: Optional[str] = None) -> Var:
-    if (len(y.shape) == 2 and len(x.shape) <= 3) and (_is_const(y) or y.is_descendant_of_const):
-        linear_x, weight = x, y
-        transposed_weight = mb.transpose(x=weight, perm=(1, 0))
-        res = mb.linear(x=linear_x, weight=transposed_weight, name=name)
-    else:
-        x, y = promote_input_dtypes([x, y])
-        res = mb.matmul(x=x, y=y, name=name)
-    return res
-
-
 @register_torch_op(torch_alias=["bmm", "mm"])
 def matmul(context, node):
     x, y = _get_inputs(context, node, expected=2)
-    res = _construct_matmul(x, y, node.name)
+    x, y = promote_input_dtypes([x, y])
+    res = mb.matmul(x=x, y=y, name=node.name)
     context.add(res)
 
 

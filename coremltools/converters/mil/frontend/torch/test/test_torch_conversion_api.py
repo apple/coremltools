@@ -3215,15 +3215,3 @@ class TestTorchao:
 
         with pytest.raises(err_type, match=err_msg):
             ct.convert(exported_model, inputs=inputs, minimum_deployment_target=ct.target.iOS17)
-
-
-class TestUtilsImport:
-    @staticmethod
-    def test_import_construct_matmul():
-        """
-        _construct_matmul is an utility function that used by some 3rd party codes,
-        so here we make sure that this method is exposed.
-        """
-        from coremltools.converters.mil.frontend.torch.ops import _construct_matmul
-
-        assert _construct_matmul is not None

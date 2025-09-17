@@ -493,7 +493,7 @@ class TestPytorchQuantizedOps(TorchQuantizationBaseTest):
         )
         prog = res[1]._mil_program
         if minimum_deployment_target < ct.target.iOS18:
-            assert get_op_types_in_program(prog) == ["constexpr_affine_dequantize", "linear"]
+            assert get_op_types_in_program(prog) == ["constexpr_affine_dequantize", "matmul"]
         else:
             assert get_op_types_in_program(prog) == ["constexpr_blockwise_shift_scale", "matmul"]
 
@@ -1072,13 +1072,15 @@ class TestPytorchCarryCompressionInfo(TorchQuantizationBaseTest):
             expected_quantize_ops_num = 2
             expected_palettize_ops_num = 2
             # The lut with pcs op order is determined by canonicalize_quantized_lut_pattern graph pass.
-            palettize_op_child_op_type = "linear" if use_linear else "conv"
         else:
             expected_dtype = "uint8"
             expected_quantize_ops_num = 0
             expected_palettize_ops_num = 1
             # The iOS16 doesn't have per-channel-scale, so lut output is directly fed into next op.
-            palettize_op_child_op_type = "linear" if use_linear else "conv"
+        if use_linear:
+            palettize_op_child_op_type = "matmul" if frontend == TorchFrontend.EXECUTORCH else "linear"
+        else:
+            palettize_op_child_op_type = "conv"
 
         quantize_ops = main_func.find_ops(op_type="constexpr_blockwise_shift_scale")
         assert len(quantize_ops) == expected_quantize_ops_num
@@ -1348,10 +1350,14 @@ class TestPytorchCarryCompressionInfo(TorchQuantizationBaseTest):
 
         sparse_ops = main_func.find_ops(op_type="constexpr_sparse_to_dense")
         assert len(sparse_ops) == 2
+        if use_linear:
+            op_type = "linear" if frontend != TorchFrontend.EXECUTORCH else "matmul"
+        else:
+            op_type = "conv"
         for sparse_op in sparse_ops:
             assert types.builtin_to_string(sparse_op.mask.dtype) == "uint1"
             assert types.builtin_to_string(sparse_op.nonzero_data.dtype) == "fp32"
-            assert sparse_op.outputs[0].child_ops[0].op_type == "linear" if use_linear else "conv"
+            assert sparse_op.outputs[0].child_ops[0].op_type == op_type
 
     @pytest.mark.parametrize(
         "compute_unit, n_bits, group_size, use_linear, frontend",

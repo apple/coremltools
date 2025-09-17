@@ -7023,6 +7023,32 @@ class TestMatMul(TorchBaseTest):
             torch_device=torch.device("mps"),
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, shape, dtype",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [(1, 1, 1), (1, 3, 5), (3, 3, 3), (5, 3, 1), (5, 5, 5), (512, 512, 512)],
+            [torch.float16, torch.float32, torch.int32],
+        ),
+    )
+    def test_matmul_const_mat2(self, compute_unit, backend, frontend, shape, dtype):
+        shape0, shape1 = (shape[0], shape[1]), (shape[1], shape[2])
+        x = torch.randn(shape0, dtype=dtype) if dtype != torch.int32 else torch.randint(-9, 9, shape0, dtype=dtype)
+        mat2 = torch.randn(shape1, dtype=dtype) if dtype != torch.int32 else torch.randint(-9, 9, shape1, dtype=dtype)
+        model = ModuleWrapper(function=torch.mm, kwargs={"mat2": mat2})
+        
+        self.run_compare_torch(
+            x,
+            model,
+            compute_unit=compute_unit,
+            backend=backend,
+            frontend=frontend,
+            input_as_shape=False,
+            minimum_deployment_target=ct.target.iOS16 if dtype == torch.float16 else None,
+        )
+        
 
 class TestNumel(TorchBaseTest):
     @pytest.mark.parametrize(
