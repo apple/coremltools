@@ -740,7 +740,7 @@ def _weight_int4pack_mm(context, node):
 
 
 @register_torch_op(
-    torch_alias=["torchao::dequantize_affine", "torchao.dequantize_affine"],
+    torch_alias=["torchao::dequantize_affine", "torchao.dequantize_affine", "quant::dequantize_affine"],
 )
 def dequantize_affine(context, node):
     if not _HAS_TORCHAO:

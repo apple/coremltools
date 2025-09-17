@@ -36,10 +36,6 @@ from .testing_utils import TorchBaseTest, export_torch_model_to_frontend
 backends = testing_reqs.backends
 compute_units = testing_reqs.compute_units
 
-TORCH_EXPORT_DEFAULT_LOWER_BOUND = {TorchFrontend.TORCHEXPORT: 2, TorchFrontend.EXECUTORCH: 2}
-if torch.__version__ >= "2.4.0":
-    TORCH_EXPORT_DEFAULT_LOWER_BOUND[TorchFrontend.TORCHEXPORT] = 0
-
 
 class TestTorchExportConversionAPI(TorchBaseTest):
     @pytest.mark.parametrize("frontend", frontends)
@@ -160,7 +156,10 @@ class TestTorchExportConversionAPI(TorchBaseTest):
         )[1]
         input_proto = coreml_model.input_description._fd_spec[0]
         size_ranges = input_proto.type.multiArrayType.shapeRange.sizeRanges
-        assert size_ranges[0].lowerBound == TORCH_EXPORT_DEFAULT_LOWER_BOUND[frontend]
+        assert size_ranges[0].lowerBound == {
+            TorchFrontend.TORCHEXPORT: 0,
+            TorchFrontend.EXECUTORCH: 2,
+        }[frontend]
         assert size_ranges[0].upperBound == 2147483647
         assert size_ranges[1].lowerBound == 3
         assert size_ranges[1].upperBound == 3
@@ -351,7 +350,7 @@ class TestExecuTorchExamples(TorchBaseTest):
 
         dynamic_shapes = None
         if dynamic:
-            dim0 = torch.export.Dim("dim0")
+            dim0 = torch.export.Dim.AUTO
             dim1 = torch.export.Dim("dim1", min=1, max=3)
             dynamic_shapes = {
                 "input": {0: dim0, 1: dim1},
@@ -370,11 +369,12 @@ class TestExecuTorchExamples(TorchBaseTest):
         if dynamic:
             for input_proto in coreml_model.input_description._fd_spec:
                 size_ranges = input_proto.type.multiArrayType.shapeRange.sizeRanges
-                assert size_ranges[0].lowerBound == TORCH_EXPORT_DEFAULT_LOWER_BOUND[frontend]
+                assert size_ranges[0].lowerBound == 2
                 assert size_ranges[0].upperBound == 2147483647
-                assert size_ranges[1].lowerBound == max(
-                    1, TORCH_EXPORT_DEFAULT_LOWER_BOUND[frontend]
-                )
+                assert size_ranges[1].lowerBound == {
+                    TorchFrontend.TORCHEXPORT: 1,
+                    TorchFrontend.EXECUTORCH: 2,
+                }[frontend]
                 assert size_ranges[1].upperBound == 3
 
         mil_program = coreml_model._mil_program
@@ -451,7 +451,10 @@ class TestExecuTorchExamples(TorchBaseTest):
         if dynamic:
             input_proto = coreml_model.input_description._fd_spec[0]
             size_ranges = input_proto.type.multiArrayType.shapeRange.sizeRanges
-            assert size_ranges[0].lowerBound == TORCH_EXPORT_DEFAULT_LOWER_BOUND[frontend]
+            assert size_ranges[0].lowerBound == {
+                TorchFrontend.TORCHEXPORT: 0,
+                TorchFrontend.EXECUTORCH: 2,
+            }[frontend]
             assert size_ranges[0].upperBound == 2147483647
             assert size_ranges[1].lowerBound == 3
             assert size_ranges[1].upperBound == 3
@@ -637,10 +640,16 @@ class TestExecuTorchExamples(TorchBaseTest):
                 if i == 0:
                     assert size_ranges[0].lowerBound == 2
                     assert size_ranges[0].upperBound == 2
-                    assert size_ranges[1].lowerBound == TORCH_EXPORT_DEFAULT_LOWER_BOUND[frontend]
+                    assert size_ranges[1].lowerBound == {
+                        TorchFrontend.TORCHEXPORT: 0,
+                        TorchFrontend.EXECUTORCH: 2,
+                    }[frontend]
                     assert size_ranges[1].upperBound == 2147483647
                 elif i == 1:
-                    assert size_ranges[0].lowerBound == TORCH_EXPORT_DEFAULT_LOWER_BOUND[frontend]
+                    assert size_ranges[0].lowerBound == {
+                        TorchFrontend.TORCHEXPORT: 0,
+                        TorchFrontend.EXECUTORCH: 2,
+                    }[frontend]
                     assert size_ranges[0].upperBound == 2147483647
                     assert size_ranges[1].lowerBound == 2
                     assert size_ranges[1].upperBound == 2
@@ -745,7 +754,10 @@ class TestExecuTorchExamples(TorchBaseTest):
         if dynamic:
             input_proto = coreml_model.input_description._fd_spec[0]
             size_ranges = input_proto.type.multiArrayType.shapeRange.sizeRanges
-            assert size_ranges[0].lowerBound == TORCH_EXPORT_DEFAULT_LOWER_BOUND[frontend]
+            assert size_ranges[0].lowerBound == {
+                TorchFrontend.TORCHEXPORT: 0,
+                TorchFrontend.EXECUTORCH: 2,
+            }[frontend]
             assert size_ranges[0].upperBound == 2147483647
             assert size_ranges[1].lowerBound == 2
             assert size_ranges[1].upperBound == 2
