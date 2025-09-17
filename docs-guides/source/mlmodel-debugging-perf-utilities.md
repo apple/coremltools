@@ -59,7 +59,7 @@ from coremltools.models.ml_program.experimental.debugging_utils import MLModelVa
 # Initialize MLModelValidator
 validator = MLModelValidator(
     model = model,
-    compute_unit = ct.ComputeUnit.CPU_ONLY,
+    compute_units = ct.ComputeUnit.CPU_ONLY,
 )
 # Find the ops that are responsible for NaN output
 failing_ops = await validator.find_failing_ops_with_nan_output(
@@ -79,7 +79,7 @@ from coremltools.models.ml_program.experimental.debugging_utils import MLModelVa
 # Initialize MLModelValidator
 validator = MLModelValidator(
     model = model,
-    compute_unit = ct.ComputeUnit.CPU_ONLY,
+    compute_units = ct.ComputeUnit.CPU_ONLY,
 )
 # Find the ops that are responsible for NaN output
 failing_ops = await validator.find_failing_ops_with_infinite_output(
@@ -101,7 +101,7 @@ from coremltools import proto
 # Initialize MLModelValidator
 validator = MLModelValidator(
     model = model,
-    compute_unit = ct.ComputeUnit.CPU_ONLY,
+    compute_units = ct.ComputeUnit.CPU_ONLY,
 )
 
 def validate_output(op: proto.MIL_pb2.Operation, value: np.array):
@@ -199,7 +199,7 @@ comparator = TorchScriptMLModelComparator(
         coremltools.TensorType(name="x", shape=inputs[0].shape, dtype=np.float32),
         coremltools.TensorType(name="y", shape=inputs[1].shape, dtype=np.float32),
     ],
-    compute_unit = ct.ComputeUnit.CPU_ONLY,
+    compute_units = ct.ComputeUnit.CPU_ONLY,
 )
 
 # Define a custom comparison function
@@ -255,7 +255,7 @@ comparator = TorchExportMLModelComparator(
         ct.TensorType(name="x", shape=inputs[0].shape, dtype=np.float32),
         ct.TensorType(name="y", shape=inputs[1].shape, dtype=np.float32),
     ],
-    compute_unit = ct.ComputeUnit.CPU_ONLY,
+    compute_units = ct.ComputeUnit.CPU_ONLY,
 )
 
 # Define a custom comparison function
