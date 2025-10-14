@@ -1204,12 +1204,11 @@ class TestBatchNorm(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, frontend, has_weight, has_bias, has_running_mean, has_running_var",
+        "compute_unit, backend, frontend, has_weight, has_bias, has_running_mean_and_var",
         itertools.product(
             compute_units,
             backends,
             frontends,
-            [True, False],
             [True, False],
             [True, False],
             [True, False],
@@ -1222,8 +1221,7 @@ class TestBatchNorm(TorchBaseTest):
         frontend,
         has_weight,
         has_bias,
-        has_running_mean,
-        has_running_var,
+        has_running_mean_and_var,
     ):
         if frontend in TORCH_EXPORT_BASED_FRONTENDS:
             pytest.skip("torch.export converter does not handle input mutation")
@@ -1233,8 +1231,8 @@ class TestBatchNorm(TorchBaseTest):
 
         weight = torch.randn(num_features) if has_weight else None
         bias = torch.randn(num_features) if has_bias else None
-        running_mean = torch.randn(num_features) if has_running_mean else None
-        running_var = torch.randn(num_features) if has_running_var else None
+        running_mean = torch.randn(num_features) if has_running_mean_and_var else None
+        running_var = torch.randn(num_features) if has_running_mean_and_var else None
 
         class Model(torch.nn.Module):
             def forward(self, x):
