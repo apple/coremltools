@@ -382,7 +382,7 @@ class TestExecuTorchExamples(TorchBaseTest):
         mul = mil_program.functions["main"].find_ops(op_type="mul")[0]
 
         stack_trace = mul.scopes[ScopeSource.EXIR_STACK_TRACE][0]
-        assert stack_trace.split("\n")[-2].strip() == "return input * other"
+        assert stack_trace.split("\n")[-1].strip() == "return input * other"
 
         if frontend == TorchFrontend.EXECUTORCH:
             debug_handle = mul.scopes[ScopeSource.EXIR_DEBUG_HANDLE][0]
@@ -464,7 +464,7 @@ class TestExecuTorchExamples(TorchBaseTest):
         linear = mil_program.functions["main"].find_ops(op_type="linear")[0]
 
         stack_trace = linear.scopes[ScopeSource.EXIR_STACK_TRACE][0]
-        assert stack_trace.split("\n")[-2].strip() == "return self.linear(arg)"
+        assert stack_trace.split("\n")[1].strip() == "return self.linear(arg)"
 
         if frontend == TorchFrontend.EXECUTORCH:
             debug_handle = linear.scopes[ScopeSource.EXIR_DEBUG_HANDLE][0]
@@ -555,7 +555,7 @@ class TestExecuTorchExamples(TorchBaseTest):
             "z = z + z",
         ]
         for i, stack_trace in enumerate(stack_traces):
-            assert stack_trace.split("\n")[-2].strip() == source_codes[i]
+            assert stack_trace.strip().split("\n")[-1].strip() == source_codes[i]
 
         if frontend == TorchFrontend.EXECUTORCH:
             debug_handles = [add.scopes[ScopeSource.EXIR_DEBUG_HANDLE][0] for add in adds]
@@ -674,7 +674,7 @@ class TestExecuTorchExamples(TorchBaseTest):
         for op_type in ("matmul", "add"):
             stack_trace = stack_traces[op_type]
             source_code = source_codes[op_type]
-            assert stack_trace.split("\n")[-2].strip() == source_code
+            assert stack_trace.strip().split("\n")[-1].strip() == source_code
 
         if frontend == TorchFrontend.EXECUTORCH:
             debug_handle = {
@@ -767,7 +767,7 @@ class TestExecuTorchExamples(TorchBaseTest):
         softmax = mil_program.functions["main"].find_ops(op_type="softmax")[0]
 
         stack_trace = softmax.scopes[ScopeSource.EXIR_STACK_TRACE][0]
-        assert stack_trace.split("\n")[-2].strip() == "return self.softmax(x)"
+        assert stack_trace.split("\n")[1].strip() == "return self.softmax(x)"
 
         if frontend == TorchFrontend.EXECUTORCH:
             debug_handle = softmax.scopes[ScopeSource.EXIR_DEBUG_HANDLE][0]
