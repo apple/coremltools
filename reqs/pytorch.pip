@@ -5,7 +5,7 @@ torchaudio==2.2.0; platform_machine != "arm64"
 torchvision==0.17.0; platform_machine != "arm64"
 
 # Torch dependencies for ARM
-torch==2.7.0; platform_machine == "arm64"
+torch>=2.2.0,<=2.7.0; platform_machine == "arm64"
 torchaudio>=2.2.0; platform_machine == "arm64"
 torchvision>=0.17.0; platform_machine == "arm64"
 torchsr==1.0.4; platform_machine == "arm64"

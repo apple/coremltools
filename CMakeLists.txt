@@ -70,7 +70,7 @@ add_library(modelpackage
   modelpackage/src/utils/JsonMap.cpp
   modelpackage/src/ModelPackagePython.cpp
   )
-  
+
 target_compile_definitions(modelpackage
   PRIVATE
   CPU_ONLY=1
@@ -197,7 +197,12 @@ set(KMEANS_DIR "${PROJECT_SOURCE_DIR}/deps/kmeans1d")
 execute_process(
   COMMAND python3 setup.py build_ext --inplace
   WORKING_DIRECTORY ${KMEANS_DIR}
+  RESULT_VARIABLE KMEANS1D_BUILD_STATUS
 )
+
+if(NOT KMEANS1D_BUILD_STATUS EQUAL 0)
+  message(FATAL_ERROR "Could not build kmeans1d dependency")
+endif()
 
 # Somehow Python's setuptools is building this shared object file so that it tries to load the C++
 # standard library using an rpath that only exist on the build machine. Change that so it gets
