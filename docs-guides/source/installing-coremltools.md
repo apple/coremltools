@@ -4,7 +4,7 @@ This page describes how to install the [`coremltools`](https://github.com/apple/
 
 ```{admonition} Supported Python and MacOS Versions
 
-The current version of coremltools ([version 8.0](https://github.com/apple/coremltools)) includes wheels for Python 3.7, 3.8, 3.9, 3.10, 3.11, and 3.12. The last stable release of coremltools to support Python 2 is version 4.0.
+The current version of coremltools ([version 9.0b1](https://github.com/apple/coremltools)) includes wheels for Python 3.7, 3.8, 3.9, 3.10, 3.11, 3.12, 3.13. The last stable release of coremltools to support Python 2 is version 4.0.
 
 The supported MacOS versions are as follows:
 
@@ -19,7 +19,7 @@ The supported MacOS versions are as follows:
 If you are using macOS, you should already be familiar with the [Mac Terminal app command line](https://developer.apple.com/library/archive/documentation/OpenSource/Conceptual/ShellScripting/CommandLInePrimer/CommandLine.html#//apple_ref/doc/uid/TP40004268-CH271-BBCBEAJD "Command Line Primer") to perform tasks such as installations and updates. If you are using Linux, you should already be familiar with [basic Shell commands in Linux](https://www.geeksforgeeks.org/basic-shell-commands-in-linux/).
 ```
 
-Before installing coremltools, you need [Python](https://www.python.org/downloads/ "Python Downloads") and the [`pip`](https://pip.pypa.io/en/stable/) installer. 
+Before installing coremltools, you need [Python](https://www.python.org/downloads/ "Python Downloads") and the [`pip`](https://pip.pypa.io/en/stable/) installer.
 
 The `coremltools` package supports [Python 3](https://www.python.org/download/releases/3.0/). We recommend that you install Python 3.6 or newer. Use a Python package manager such as [Conda](https://docs.conda.io/en/latest/index.html) or [venv](https://docs.python.org/3/library/venv.html) to install the newest version of Python and other dependencies. [Conda](https://docs.conda.io/en/latest/index.html) is recommended because it is the most reliable way to install all required dependencies.
 
@@ -82,7 +82,7 @@ python -m venv coremltools-venv
 source coremltools-venv/bin/activate
 ```
 
-4. Follow the instructions in [Install Core ML Tools](#install-core-ml-tools). 
+4. Follow the instructions in [Install Core ML Tools](#install-core-ml-tools).
 
 ## Install Core ML Tools
 
@@ -103,17 +103,17 @@ The continuous integration (CI) system linked to the `coremltools` repo builds a
 To access the wheel for a particular `coremltools` release, follow these steps:
 
 1. Go to the [`coremltools` repository](https://github.com/apple/coremltools) on GitHub, scroll down to the **README.md** heading, and click the **build passing** button. The **Branches** tab appears:
-    
+
     ![Branches tab](images/repo-readme-build-passing-button-annot.png)
-    
+
     ![Branches passed](images/repo-branches-passed-button.png)
 
 2. Click the **passed** button to show the **Pipeline** tab:
-    
+
     ![Pipeline tab](images/repo-build-wheel-selected.png)
 
 3. Click a wheel in the **Build** column. For example, in the previous figure, the **build_wheel_macos_py38** wheel is highlighted for clicking. After clicking a wheel, the raw job log appears, with the **Download** and **Browse** buttons in the right column:
-    
+
     ![Download and Browse](images/repo-job-artifacts.png)
 
 4. Click the **Download** button to download the `dist` folder with the wheel files.

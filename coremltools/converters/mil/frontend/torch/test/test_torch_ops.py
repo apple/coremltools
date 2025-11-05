@@ -2669,6 +2669,41 @@ class TestUpsample(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_upsample_with_shape_gather_pattern(self, compute_unit, backend, frontend):
+        if frontend == TorchFrontend.TORCHEXPORT:
+            pytest.xfail("CoreML model not runnable for the torch export frontend.")
+
+        input_shape = (1, 3, 32, 32)
+
+        class UpsampleBilinear(nn.Module):
+            def forward(self, x):
+                b, c, h, w = x.shape
+                return nn.functional.interpolate(
+                    x, size=(h * 2, w * 2), mode="bilinear", align_corners=False
+                )
+
+        model = UpsampleBilinear().eval()
+
+        h_dim = torch.export.Dim(name="height", min=16, max=128)
+        w_dim = torch.export.Dim(name="width", min=16, max=128)
+        torch_export_dynamic_shapes = {"x": {2: h_dim, 3: w_dim}}
+
+        self.run_compare_torch(
+            input_shape,
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            converter_input_type=[
+                TensorType(shape=(1, 3, ct.RangeDim(16, 128), ct.RangeDim(16, 128))),
+            ],
+            torch_export_dynamic_shapes=torch_export_dynamic_shapes,
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend, output_size",
         itertools.product(compute_units, backends, frontends, [10, 170]),
     )
@@ -5234,7 +5269,42 @@ class TestExpand(TorchBaseTest):
             input_shapes, model, compute_unit=compute_unit, backend=backend, frontend=frontend
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, input_shape",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [
+                (ct.RangeDim(3, 21), ),
+                (15, )
+            ]
+        ),
+    )
+    def test_expand_dynamic_shape4(self, compute_unit, backend, frontend, input_shape):
+        if frontend in TORCH_EXPORT_BASED_FRONTENDS:
+            pytest.xfail(
+                "torch.export refuses to make size-1 dim dynamic, "
+                "and cannot expand one dynamic dimension into another dynamic dimension"
+            )
 
+        class TestModel(nn.Module):
+            def forward(self, x):
+                return x.reshape(-1, 1, 3).expand(-1, 7, -1)
+
+        converter_input_type = [ct.TensorType(name = "x", shape=input_shape, dtype=types.fp32)]
+        model = TestModel()
+
+        self.run_compare_torch(
+            torch.rand(15),
+            model,
+            input_as_shape=False,
+            converter_input_type=converter_input_type,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+      
 class TestExpandDims(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, rank_and_axis",

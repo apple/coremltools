@@ -126,7 +126,12 @@ def pymil_broadcast_to(tensor: Var, shape: Union[Var, VARIABLE_SHAPE_TYPE], name
 
     if any_symbolic(tensor.shape) or shape_var.val is None:
         tensor_shape = mb.shape(x=tensor)
-        reps = mb.real_div(x=shape_var, y=tensor_shape)
+        reps = mb.select(
+            cond = mb.equal(x=shape_var, y=-1),
+            a = tensor_shape,
+            b = shape_var,
+        )
+        reps = mb.real_div(x=reps, y=tensor_shape)
         reps = mb.cast(x=reps, dtype="int32")
         res = mb.tile(x=tensor, reps=reps, name=name)
     else:

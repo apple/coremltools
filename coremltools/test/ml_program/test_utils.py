@@ -9,6 +9,7 @@ import os
 import platform
 import shutil
 import tempfile
+from sys import version_info
 from typing import Dict, Tuple
 
 import numpy as np
@@ -1496,8 +1497,11 @@ class TestMaterializeSymbolicShapeMLModel:
         shutil.rmtree(multifunction_mlpackage_path)
 
 
+@pytest.mark.skipif(
+    (version_info.major, version_info.minor) == (3, 13),
+    reason="rdar://157488825 (Python 3.13 Unit Test Segmentation Fault)",
+)
 class TestBisectModel:
-
     @staticmethod
     def check_spec_op_type(model_path, expected_ops):
         spec = load_spec(model_path)

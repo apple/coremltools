@@ -1,5 +1,6 @@
 boto3==1.14.8; python_version < '3.12'
-boto3==1.24.22; python_version >= '3.12'
+boto3==1.24.22; python_version == '3.12'
+boto3==1.39.3; python_version >= '3.13'
 
 configparser
 future
@@ -7,7 +8,6 @@ future
 olefile==0.44
 pandas
 parameterized==0.8.1
-protobuf
 pillow
 pytest==7.1.2
 pytest-cov

@@ -334,6 +334,7 @@ class TestTorchExportConversionAPI(TorchBaseTest):
         assert mlmodel.user_defined_metadata[_METADATA_SOURCE_DIALECT] == dialect_name
 
 
+@pytest.mark.skipif((version_info.major, version_info.minor) == (3, 13), reason="rdar://158079341")
 class TestExecuTorchExamples(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, dynamic",
