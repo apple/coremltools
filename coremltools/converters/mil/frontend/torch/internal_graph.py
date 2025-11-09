@@ -3,7 +3,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from collections import OrderedDict
+from collections import OrderedDict, deque
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -584,9 +584,28 @@ class InternalTorchIRGraph:
         else:
             outputs = user_outputs
 
+        preserved_node_targets = set([
+            torch.ops.aten._assert_tensor_metadata.default, # dtype of some ops
+        ])
+        graph_nodes = exported_program.graph_module.graph.nodes
+        user_count = {n: len(n.users) for n in graph_nodes}
+        def _is_skip(node: torch.fx.Node):
+            return user_count[node] <= 0 and node.op == "call_function" and node.target not in preserved_node_targets
+
+        skip_nodes = set()
+        node_que = deque([n for n in graph_nodes if _is_skip(n)])
+        while node_que:
+            n = node_que.popleft()
+            skip_nodes.add(n)
+            for in_n in n.all_input_nodes:
+                user_count[in_n] -= 1
+                if _is_skip(in_n): node_que.append(in_n)
+
         nodes = []
-        for node in exported_program.graph_module.graph.nodes:
-            if node.op == "call_function":
+        for node in graph_nodes:
+            if node in skip_nodes:
+                continue
+            elif node.op == "call_function":
                 nodes.append(InternalTorchIRNode.from_exir_node(node=node))
             elif node.op == "get_attr":
                 name = node.target
