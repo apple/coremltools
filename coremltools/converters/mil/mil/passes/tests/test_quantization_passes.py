@@ -2853,8 +2853,8 @@ class TestInt32CastToInt16:
             assert cast_op.dtype.val == "uint16"
             assert cast_op.outputs[0] == block.find_ops(op_type="gather")[0].indices
 
-    def test_gather_along_axis_overflow_second_input(self):
-        """First input is safe to cast, but second input is not."""
+    def test_stable_sort_program_does_not_underflow_output(self):
+        """Stable-sort implementation should not underflow output."""
 
         @mb.program(
             input_specs=[
@@ -2886,18 +2886,13 @@ class TestInt32CastToInt16:
             )
             return gather_along_axis_2, gather_along_axis_3
 
-        # prev_prog, _, block = apply_pass_and_basic_check(prog, "common::add_int16_cast")
-        # assert get_op_types_in_program(prog) == get_op_types_in_program(prev_prog)
-
-        # prev_model = ct.convert(prev_prog, minimum_deployment_target=ct.target.iOS17)
         model = ct.convert(prog, minimum_deployment_target=ct.target.iOS17)
-
-        # prev_output = list(prev_model.predict({"x": x, "y": y}).values())[0]
 
         a = np.array([1, 3, 1, 4, 3, 5, 4], dtype=np.int32)
         b = np.array([0, 4, 0, 4, 0, -21, -12], dtype=np.int32)
         output1, output2 = tuple(model.predict({"a": a, "b": b}).values())
         # The CoreML program implements a stable multi-key sort, ensure the output is sorted by a, then by b
+        # Ensure that the output is not underflowed due to uint16 casting
         assert np.array_equal(output2, np.array([1, 1, 3, 3, 4, 4, 5], dtype=np.int32))
         assert np.array_equal(output1, np.array([0, 0, 0, 4, -12, 4, -21], dtype=np.int32))
 
