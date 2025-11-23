@@ -5,7 +5,7 @@
 
 from abc import abstractmethod
 from enum import Enum as _Enum
-from typing import Dict, Set, Text, Tuple
+from typing import Dict, Set, Text, Tuple, Optional
 
 import numpy as np
 
@@ -248,21 +248,29 @@ class CastTypeQuantization(AbstractQuantizationPass):
 
         func.output_types = output_types
 
-    def should_cast_parameter(self, op: Operation, param_name: str) -> bool:
+    def _check_target_dtype_for_param(self, op: Operation, param_name: str, param_target_dtype: str) -> bool:
         """
-        Determines if a param of an op should be cast to target_dtype.
+        Determines if a param of an op should be cast to param_target_dtype.
+        Returns the target dtype string if it should be cast, otherwise None.
 
         There are two cases that an op shouldn't be cast:
-        1. The op's parameter doesn't support target_dtype.
-        2. The cast op itself doesn't support target_dtype
+        1. The op's parameter doesn't support param_target_dtype.
+        2. The cast op itself doesn't support param_target_dtype
         """
         type_domain = getattr(op.input_spec.input_types[param_name], "type_domain", None)
-        if type_domain and types.string_to_builtin(self.target_dtype) not in type_domain:
+        if type_domain and types.string_to_builtin(param_target_dtype) not in type_domain:
             return False
-        if self.target_dtype not in SSAOpRegistry._get_core_op_cls("cast").supported_dtypes():
+        if param_target_dtype not in SSAOpRegistry._get_core_op_cls("cast").supported_dtypes():
             return False
 
         return True
+
+    def should_cast_parameter(self, op: Operation, param_name: str) -> Optional[str]:
+        """
+        Determines if a param of an op should be cast to target_dtype.
+        Returns the target dtype string if it should be cast, otherwise None.
+        """
+        raise NotImplementedError("Must be implemented in child class.")
 
     def _get_casted_outputs(self, op: Operation, casted_inputs: Dict[str, Var]) -> Tuple[Var]:
         """
@@ -277,7 +285,8 @@ class CastTypeQuantization(AbstractQuantizationPass):
         inputs_modified = False
 
         for param, inputs in op.inputs.items():
-            if not self.should_cast_parameter(op, param):
+            param_target_dtype = self.should_cast_parameter(op, param)
+            if param_target_dtype is None:
                 continue
 
             is_list_input = isinstance(inputs, (list, tuple))
@@ -300,7 +309,7 @@ class CastTypeQuantization(AbstractQuantizationPass):
                         continue
 
                     inputs_modified = True
-                    casted_var_name = f"{var.name}_to_{self.target_dtype}"
+                    casted_var_name = f"{var.name}_to_{param_target_dtype}"
                     if len(var._child_ops) > 1 and casted_var_name in self.current_cache_vars():
                         if self.current_cache_vars()[casted_var_name].op.x != var:
                             logger.warning(
@@ -311,11 +320,11 @@ class CastTypeQuantization(AbstractQuantizationPass):
                     else:
                         x = mb.cast(
                             x=var,
-                            dtype=self.target_dtype,
+                            dtype=param_target_dtype,
                             name=casted_var_name,
                             before_op=op,
                         )
-                        if self.target_dtype == "fp16":
+                        if param_target_dtype == "fp16":
                             self._check_underflow_to_zero(x, var)
                         Block._copy_metadata(var, x)
 
@@ -446,24 +455,24 @@ class FP16ComputePrecision(CastTypeQuantization):
 
         return True
 
-    def should_cast_parameter(self, op: Operation, param_name: str) -> bool:
+    def should_cast_parameter(self, op: Operation, param_name: str) -> Optional[str]:
         """Determines if a param of an op should be cast to fp16."""
-        if not super().should_cast_parameter(op, param_name):
-            return False
+        if not super()._check_target_dtype_for_param(op, param_name, self.target_dtype):
+            return None
 
         if is_current_opset_version_compatible_with(AvailableTarget.iOS17):
             # In IOS17+ activation ops with alpha/beta support mixed precision, and we don't want to
             # cast alpha/beta to fp16 for better numerical accuracy.
             if op.op_type in self._ACTIVATION_ALPHA_OPS and param_name == "alpha":
-                return False
+                return None
             if op.op_type in self._ACTIVATION_ALPHA_BETA_OPS and param_name in {"alpha", "beta"}:
-                return False
+                return None
 
             # Element-wise unary ops with epsilon also support mixed precision.
             if op.op_type in self._ELEMENTWISE_UNARY_EPSILON_OPS and param_name == "epsilon":
-                return False
+                return None
 
-        return True
+        return self.target_dtype
 
     def _check_underflow_to_zero(self, new_var, var):
         # We check whether there are casted values that "becomes" 0 which is not ideal for eps purposes.
@@ -539,9 +548,6 @@ class add_int16_cast(CastTypeQuantization):
 
     def __init__(self, op_selector=None):
         super().__init__(op_selector=op_selector)
-        # Use variable instead of hard-coded "int16" because the target dtype could be uint16
-        # depending on if the param is non-negative const and within uint16 range.
-        self._target_dtype: str = "int16"
 
     @property
     def origin_dtype(self) -> str:
@@ -549,15 +555,9 @@ class add_int16_cast(CastTypeQuantization):
 
     @property
     def target_dtype(self) -> str:
-        return self._target_dtype
+        return "int16"
 
-    @target_dtype.setter
-    def target_dtype(self, target_dtype: str):
-        if target_dtype not in {"int16", "uint16"}:
-            raise ValueError("The target_dtype in add_int16_cast must be int16 or uint16")
-        self._target_dtype = target_dtype
-
-    def should_cast_parameter(self, op: Operation, param_name: str) -> bool:
+    def should_cast_parameter(self, op: Operation, param_name: str) -> Optional[str]:
         """
         Determine if a parameter should be cast or not.
         If should be cast, determine whether to use int16 or uint16.
@@ -574,8 +574,9 @@ class add_int16_cast(CastTypeQuantization):
             return input_var.val == "int32"
         # otherwise only int32 tensor / scalar should get cast to int16
         elif not input_var.is_tensor_or_scalar_of(dtype="int32"):
-            return False
+            return None
 
+        param_target_dtype = None
         input_op = input_var.op
         if input_op is not None:
             # here we do not handle input variables
@@ -585,14 +586,14 @@ class add_int16_cast(CastTypeQuantization):
                     input_op.outputs[0].val.min() >= _UINT16_MIN
                     and input_op.outputs[0].val.max() <= _UINT16_MAX
                 ):
-                    self._target_dtype = "uint16"
+                    param_target_dtype = "uint16"
                 elif (
                     input_op.outputs[0].val.min() >= _INT16_MIN
                     and input_op.outputs[0].val.max() <= _INT16_MAX
                 ):
-                    self._target_dtype = "int16"
+                    param_target_dtype = "int16"
                 else:
-                    return False
+                    return None
             elif input_op.op_type == "cast":
                 # If the input op is a `cast`, then check if it is "cast uint16 to int32".
                 # If so, then the correct 16-bit integer quantization for it should be to
@@ -601,9 +602,9 @@ class add_int16_cast(CastTypeQuantization):
                 # the only pattern for cast optimization to cancel these 2 casts, details see
                 # https://apple.github.io/coremltools/source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.cast_optimization
                 if input_op.x.dtype == types.uint16:
-                    self._target_dtype = "uint16"
+                    param_target_dtype = "uint16"
                 else:
-                    self._target_dtype = "int16"
+                    param_target_dtype = "int16"
 
         # In `gather` and `gather_along_axis`, if the dim size of x is larger than int16
         # upperbound, the dynamic indices could overflow, so it shouldn't be cast.
@@ -611,12 +612,14 @@ class add_int16_cast(CastTypeQuantization):
             if op.indices.val is None and op.x.shape is not None:
                 dim_size = op.x.shape[op.axis.val]
                 if not is_symbolic(dim_size) and dim_size > _INT16_MAX:
-                    return False
+                    return None
 
-        if not super().should_cast_parameter(op, param_name):
-            return False
+        if not param_target_dtype:
+            param_target_dtype = self.target_dtype
+        if not super()._check_target_dtype_for_param(op, param_name, param_target_dtype):
+            return None
 
-        return True
+        return param_target_dtype
 
     def is_valid_op(self, op: Operation) -> bool:
         """Determines if op is valid for int16/uint16 casting."""
