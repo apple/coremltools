@@ -691,20 +691,19 @@ def _weight_int4pack_mm(context, node):
                 .contiguous()
             )
     with _torch.no_grad():
-        zero_point_domain = (
-            torchao_quant.ZeroPointDomain.INT
-            if _np.issubdtype(zero_points.dtype, _np.integer)
-            else torchao_quant.ZeroPointDomain.FLOAT
-        )
+        scale = _torch.from_numpy(scales)
+        zero_point = _torch.from_numpy(zero_points)
+        if scale.dtype == _torch.float32:
+            mid_point = (quant_max + quant_min + 1) / 2
+            zero_point = _torch.round(mid_point - zero_point / scale).to(_torch.int32)
         y_quantized = torchao_quant.quantize_affine(
             y_dequantized,
             (1, group_size),
-            _torch.from_numpy(scales),
-            _torch.from_numpy(zero_points),
+            scale,
+            zero_point,
             _torch.int32,
             quant_min=quant_min,
             quant_max=quant_max,
-            zero_point_domain=zero_point_domain,
         )
     y_quantized = y_quantized.numpy().astype(_np.uint8)
     if len(y_quantized.shape) != 2:
