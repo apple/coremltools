@@ -274,14 +274,13 @@ class TestPyTorchQuantizationOps(TorchQuantizationBaseTest):
 
     @pytest.mark.skipif(not _HAS_TORCHAO, reason=MSG_TORCHAO_NOT_FOUND)
     @pytest.mark.parametrize(
-        "compute_unit, has_zeros",
-        itertools.product(compute_units, [True, False], [ct.target.IOS16, ct.target.IOS17]),
+        "compute_unit, has_zeros, minimum_deployment_target",
+        itertools.product(compute_units, [True, False], [ct.target.iOS16, ct.target.iOS17]),
     )
     def test_dequantize_affine_before_ios18(self, compute_unit, has_zeros, minimum_deployment_target):
-
         quant_min = -128
         quant_max = 127
-        
+
         n = 4
         k = 128
         input_dtype = torch.int8
