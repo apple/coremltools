@@ -6518,6 +6518,40 @@ def argmax(context, node):
     context.add(res)
 
 
+@register_torch_op
+def argmin(context, node):
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, expected=(1, 2, 3, 4))
+        nargs = len(inputs)
+
+        x = inputs[0]
+
+        dim = inputs[1] if nargs > 1 else None
+        keepdim = inputs[2] if nargs > 2 else False
+
+        # When node.kind == argmin.out, there can be 1 more arg `Tensor(a!) out`,
+        # which is for in-place mutation, so we ignore it since Core ML is functional
+        return x, dim, keepdim
+
+    def _parse_keyword_args(context, node, dim, keepdim) -> Tuple[Var]:
+        dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
+        keepdim = _get_kwinputs(context, node, "keepdim", default=[keepdim])[0]
+        return dim, keepdim
+
+    x, dim, keepdim = _parse_positional_args(context, node)
+    dim, keepdim = _parse_keyword_args(context, node, dim, keepdim)
+    if isinstance(dim, Var):
+        dim = dim.val
+    if isinstance(keepdim, Var):
+        keepdim = keepdim.val
+
+    if types.is_int(x.dtype) and x.dtype._width == 64:
+        # MIL reduce_argmin doesn't support int64.
+        x = mb.cast(x=x, dtype="int32")
+    res = mb.reduce_argmin(x=x, axis=dim, keep_dims=keepdim, name=node.name)
+    context.add(res)
+
+
 @register_torch_op(torch_alias=["empty_like"])
 def zeros_like(context, node):
     inputs = _get_inputs(
