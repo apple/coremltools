@@ -571,7 +571,10 @@ class add_int16_cast(CastTypeQuantization):
         # input may be a string that specifies the dtype,
         # so if it is "int32" then we would like to replace with "int16"
         if input_var.dtype == types.str:
-            return input_var.val == "int32"
+            if input_var.val == "int32":
+                return "int16"
+            else:
+                return None
         # otherwise only int32 tensor / scalar should get cast to int16
         elif not input_var.is_tensor_or_scalar_of(dtype="int32"):
             return None
