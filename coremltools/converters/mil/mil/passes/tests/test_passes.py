@@ -5466,6 +5466,42 @@ class TestDivideToMultiply:
         if _VALIDATE_MODEL:
             assert_model_is_valid(prog, {"x": (2, 4)})
 
+    def test_divide_to_multiply_skip_size(self):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(42,))])
+        def prog(x):
+            div_const = mb.range_1d(start=1., end=43., step=1.)
+
+            div_val_1 = np.random.rand(42).astype(np.float32)
+            div_const_1 = mb.const(val=div_val_1)
+
+            real_div = mb.real_div(x=x, y=div_const_1)
+
+            return mb.real_div(x=real_div, y=div_const)
+
+        assert_op_count_match(prog, expect=2, op="real_div")
+        assert_op_count_match(prog, expect=0, op="mul")
+
+        def check_counts(divs, muls, const_skip=False):
+            new_prog = copy.deepcopy(prog)
+            if const_skip is None:
+                PASS_REGISTRY["common::const_elimination"](new_prog)
+            elif const_skip:
+                const_elim = copy.deepcopy(PASS_REGISTRY["common::const_elimination"])
+                const_elim.skip_const_by_size = const_skip
+                const_elim(new_prog)
+            PASS_REGISTRY["common::divide_to_multiply"](new_prog)
+            assert_same_output_names(prog, new_prog)
+            assert_op_count_match(new_prog, expect=divs, op="real_div")
+            assert_op_count_match(new_prog, expect=muls, op="mul")
+
+        check_counts(divs=1, muls=1)
+        check_counts(divs=0, muls=2, const_skip=None)
+        check_counts(divs=1, muls=1, const_skip=32)
+        check_counts(divs=0, muls=2, const_skip=64)
+
+        if _VALIDATE_MODEL:
+            assert_model_is_valid(prog, {"x": (42,)})
+
 
 class TestSelectOptimization:
     @pytest.mark.parametrize(
