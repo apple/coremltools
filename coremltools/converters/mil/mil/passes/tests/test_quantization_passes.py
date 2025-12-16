@@ -2853,6 +2853,49 @@ class TestInt32CastToInt16:
             assert cast_op.dtype.val == "uint16"
             assert cast_op.outputs[0] == block.find_ops(op_type="gather")[0].indices
 
+    def test_stable_sort_program_does_not_underflow_output(self):
+        """Stable-sort implementation should not underflow output."""
+
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(7,), dtype=types.int32),
+                mb.TensorSpec(shape=(7,), dtype=types.int32),
+            ],
+            opset_version=ct.target.iOS17
+        )
+        def prog(a, b):
+            cast_0 = mb.cast(x=b, dtype="fp32")
+            mul_0 = mb.mul(x=[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0], y=0.07142857142857142)
+            add_0 = mb.add(x=cast_0, y=mul_0)
+            argsort_0 = mb.argsort(x=add_0, axis=0, ascending=True)
+            gather_along_axis_0 = mb.gather_along_axis(
+                x=a, indices=argsort_0, axis=0, validate_indices=False
+            )
+            cast_1 = mb.cast(x=gather_along_axis_0, dtype="fp32")
+            mul_1 = mb.mul(x=[0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0], y=0.07142857142857142)
+            add_1 = mb.add(x=cast_1, y=mul_1)
+            argsort_1 = mb.argsort(x=add_1, axis=0, ascending=True)
+            gather_along_axis_1 = mb.gather_along_axis(
+                x=argsort_0, indices=argsort_1, axis=0, validate_indices=False
+            )
+            gather_along_axis_2 = mb.gather_along_axis(
+                x=a, indices=gather_along_axis_1, axis=0, validate_indices=False
+            )
+            gather_along_axis_3 = mb.gather_along_axis(
+                x=b, indices=gather_along_axis_1, axis=0, validate_indices=False
+            )
+            return gather_along_axis_2, gather_along_axis_3
+
+        model = ct.convert(prog, minimum_deployment_target=ct.target.iOS17)
+
+        a = np.array([1, 3, 1, 4, 3, 5, 4], dtype=np.int32)
+        b = np.array([0, 4, 0, 4, 0, -21, -12], dtype=np.int32)
+        output1, output2 = tuple(model.predict({"a": a, "b": b}).values())
+        # The CoreML program implements a stable multi-key sort, ensure the output is sorted by a, then by b
+        # Ensure that the output is not underflowed due to uint16 casting
+        assert np.array_equal(output2, np.array([1, 1, 3, 3, 4, 4, 5], dtype=np.int32))
+        assert np.array_equal(output1, np.array([0, 0, 0, 4, -12, 4, -21], dtype=np.int32))
+
     @pytest.mark.parametrize(
         "dtype, opset_version",
         itertools.product(
