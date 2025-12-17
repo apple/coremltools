@@ -39,7 +39,12 @@ class divide_to_multiply(AbstractGraphPass):
             # to a floating point number. If x or y was originally an integer, and y becomes
             # a floating point number, then the original type
             # signature (with integer output) would not be preserved.
-            if op.op_type == "real_div" and op.y.val is not None and _types.is_float(op.x.dtype):
+            if (
+                op.op_type == "real_div"
+                and op.y.val is not None
+                and op.y.op.op_type == "const"
+                and _types.is_float(op.x.dtype)
+            ):
                 new_y_val = np.array(1.0, dtype=op.y.val.dtype) / op.y.val
                 if not np.isfinite(new_y_val).all():
                     continue
