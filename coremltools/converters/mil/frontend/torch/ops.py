@@ -1704,12 +1704,14 @@ def elu(context, node):
 
         x = inputs[0]
         alpha = 1 if nargs < 2 else inputs[1]
+        scale = None if nargs < 3 or context.frontend != TorchFrontend.EXECUTORCH else inputs[2]
+        return x, alpha, scale
 
-        return x, alpha
-
-    x, alpha = _parse_positional_args(context, node)
-
-    res = mb.elu(x=x, alpha=alpha, name=node.name)
+    x, alpha, scale = _parse_positional_args(context, node)
+    res = mb.elu(x=x, alpha=alpha)
+    if scale is not None:
+        res = mb.mul(x=res, y=scale)
+    res.name = node.name
     context.add(res)
 
 
@@ -5505,7 +5507,7 @@ def ones(context, node):
 
 @register_torch_op
 def ones_like(context, node):
-    def _parse_positional_args(context, node) -> Tuple[Var, Optional[Var]]:
+    def _parse_positional_args(context, node) -> Tuple[Var, Optional[str]]:
         inputs = _get_inputs(
             context,
             node,
@@ -5516,22 +5518,28 @@ def ones_like(context, node):
         dtype = None
         if len(inputs) > 1 and inputs[1] is not None:
             dtype = inputs[1]
+        if dtype is None:
+            dtype = _get_kwinputs(context, node, "dtype", default=[dtype])[0]
+        if dtype is None and node.meta is not None:
+            dtype = TORCH_DTYPE_TO_NUM[node.meta['tensor_meta'].dtype]
+        if isinstance(dtype, Var): dtype = dtype.val.item()
+        if isinstance(dtype, int): dtype = NUM_TO_DTYPE_STRING[dtype]
+        if dtype is None: dtype = types.builtin_to_string(x.dtype)
         return x, dtype
 
-    def _parse_keyword_args(context, node, dtype) -> Var:
-        dtype = _get_kwinputs(context, node, "dtype", default=[dtype])[0]
-        return dtype
-
     x, dtype = _parse_positional_args(context, node)
-    dtype = _parse_keyword_args(context, node, dtype)
 
     if is_current_opset_version_compatible_with(target.iOS16):
-        res = mb.fill_like(ref_tensor=x, value=1.0)
+        v = {
+            "fp16": np.float16(1.0),
+            "fp32": np.float32(1.0),
+            "int32": np.int32(1),
+            "bool": np.bool_(True),
+        }.get(dtype, 1.0)
+        res = mb.fill_like(ref_tensor=x, value=v)
     else:
         res = mb.fill(shape=mb.shape(x=x), value=1.0)
-        # By default use input x's dtype.
-        dtype_str = NUM_TO_DTYPE_STRING[dtype.val] if dtype is not None else types.builtin_to_string(x.dtype)
-        res = _cast_to(res, dtype_str, node.name)
+        res = _cast_to(res, dtype, node.name)
     context.add(res, node.name)
 
 
