@@ -13232,7 +13232,10 @@ class TestUnfold(TorchBaseTest):
         input_type, dynamic_shapes = None, None
         if is_dynamic_hw:
             h_coreml, w_coreml = RangeDim(min_h, 128), RangeDim(min_w, 128)
-            h_torch, w_torch = torch.export.Dim.AUTO, torch.export.Dim.AUTO
+            if platform.machine() == "x86_64":
+                h_torch, w_torch = torch.export.Dim("h", min=min_h, max=128), torch.export.Dim("w", min=min_w, max=128)
+            else:
+                h_torch, w_torch = torch.export.Dim.AUTO, torch.export.Dim.AUTO
             input_type = [ct.TensorType(name="x", shape=ct.Shape([input_shape[0], input_shape[1], h_coreml, w_coreml]))]
             dynamic_shapes = {"args": ((input_shape[0], input_shape[1], h_torch, w_torch),)}
 
