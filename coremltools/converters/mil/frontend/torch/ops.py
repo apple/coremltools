@@ -3045,7 +3045,7 @@ def _cast(context, node, dtype, dtype_name):
         # If x is a compile-time constant, directly cast it to @dtype if it's
         # not one already.
         if not isinstance(x.val, dtype):
-            res = mb.const(val=dtype(x.val), name=node.name)
+            res = mb.const(val=dtype(x.val.squeeze()), name=node.name)
         else:
             res = x
     elif len(x.shape) > 0:
