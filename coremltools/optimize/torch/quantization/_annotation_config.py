@@ -8,7 +8,7 @@ from typing import Optional as _Optional
 import torch as _torch
 import torch.ao.quantization as _aoquant
 from attr import define as _define
-from torch.ao.quantization.quantizer.quantizer import (
+from torchao.quantization.pt2e.quantizer import (
     QuantizationSpec as _TorchQuantizationSpec,
 )
 
