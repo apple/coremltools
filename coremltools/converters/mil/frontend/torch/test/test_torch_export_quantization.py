@@ -29,10 +29,11 @@ if _TORCH_VERSION < _EXPECTED_TORCH_VERSION:
     )
 
 from torch.export import export_for_training
-from torch.ao.quantization.quantize_pt2e import convert_pt2e, prepare_pt2e, prepare_qat_pt2e
-from torch.ao.quantization.quantizer.xnnpack_quantizer import (
-    XNNPACKQuantizer,
-    get_symmetric_quantization_config,
+from torchao.quantization.pt2e.quantize_pt2e import convert_pt2e, prepare_pt2e, prepare_qat_pt2e
+# TODO: need to remove this
+from torchao.testing.pt2e._xnnpack_quantizer import (
+   get_symmetric_quantization_config,
+   XNNPACKQuantizer,
 )
 
 import coremltools as ct

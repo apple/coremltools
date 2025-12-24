@@ -9,8 +9,8 @@ from typing import List as _List
 from typing import Optional as _Optional
 
 import torch as _torch
-from torch.ao.quantization.quantizer.quantizer import Quantizer as _TorchQuantizer
-from torch.ao.quantization.quantizer.xnnpack_quantizer import _get_module_name_filter
+from torchao.quantization.pt2e.quantizer import Quantizer as _TorchQuantizer
+from torchao.quantization.pt2e.quantizer import get_module_name_filter
 from torch.fx import Node as _Node
 
 import coremltools.optimize.torch.quantization._coreml_quantizer_utils as _annotation_utils
@@ -519,7 +519,7 @@ class CoreMLQuantizer(_TorchQuantizer):
     """
     Annotates all recognized patterns using ``config``.
 
-    Extends py:class:`torch.ao.quantization.quantizer.quantizer.Quantizer` to
+    Extends py:class:`torchao.quantization.pt2e.quantizer.Quantizer` to
     add support for quantization patterns supported by Core ML.
 
     Use it in conjunction with PyTorch 2.0 ``prepare_pt2e`` and ``prepare_qat_pt2e`` APIs
@@ -532,7 +532,7 @@ class CoreMLQuantizer(_TorchQuantizer):
 
                 import torch.nn as nn
                 from torch.export import export_for_training
-                from torch.ao.quantization.quantize_pt2e import convert_pt2e, prepare_qat_pt2e
+                from torchao.quantization.pt2e.quantize_pt2e import convert_pt2e, prepare_qat_pt2e
 
                 from coremltools.optimize.torch.quantization._coreml_quantizer import CoreMLQuantizer
 
@@ -600,7 +600,7 @@ class CoreMLQuantizer(_TorchQuantizer):
         module_name_list = list(self._config.module_name_configs.keys())
         for module_name, config in self._config.module_name_configs.items():
             self._annotate_all_patterns(
-                model, config, _get_module_name_filter(module_name)
+                model, config, get_module_name_filter(module_name)
             )
 
         # Next annotate all modules/operations which have type based configs

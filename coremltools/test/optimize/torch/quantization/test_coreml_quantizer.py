@@ -20,7 +20,7 @@ from coremltools.optimize.torch.quantization.quantization_config import (
 from coremltools._deps import _HAS_TORCH_EXPORT_API
 if _HAS_TORCH_EXPORT_API:
     from torch.export import export_for_training
-    from torch.ao.quantization.quantize_pt2e import (
+    from torchao.quantization.pt2e.quantize_pt2e import (
         convert_pt2e,
         prepare_pt2e,
         prepare_qat_pt2e,
@@ -184,6 +184,7 @@ def quantize_model(
 @pytest.mark.parametrize("is_qat", [True, False])
 @pytest.mark.skipif(not _HAS_TORCH_EXPORT_API or _TORCH_VERSION < _EXPECTED_TORCH_VERSION,
                     reason="This test requires PyTorch Export APIs and PyTorch >= 2.2.0.")
+@pytest.mark.skip(reason="Skipping for now due to migration of pt2e quant API to torchao, please use CoreMLQuantizer from ExecuTorch: https://github.com/pytorch/executorch/pull/16473")
 def test_weight_module_act_fusion(model_for_quant, is_qat, config):
     if _TORCH_VERSION >= "2.5.0" and config.global_config.activation_dtype == torch.quint8:
         pytest.xfail("TODO (rdar://141183574): Upgrade cto.torch for torch 2.5")
