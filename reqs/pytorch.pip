@@ -13,4 +13,4 @@ torchsr==1.0.4; platform_machine == "arm64"
 # TODO (rdar://141476729) support a more recent timm
 timm==0.6.13; platform_machine == "arm64"
 
-torchao==0.10.0; platform_machine == "arm64" and python_version >= '3.10'
+torchao==0.15.0; platform_machine == "arm64" and python_version >= '3.10'

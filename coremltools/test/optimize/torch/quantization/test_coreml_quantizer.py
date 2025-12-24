@@ -20,7 +20,7 @@ from coremltools.optimize.torch.quantization.quantization_config import (
 from coremltools._deps import _HAS_TORCH_EXPORT_API
 if _HAS_TORCH_EXPORT_API:
     from torch.export import export_for_training
-    from torch.ao.quantization.quantize_pt2e import (
+    from torchao.quantization.pt2e.quantize_pt2e import (
         convert_pt2e,
         prepare_pt2e,
         prepare_qat_pt2e,
