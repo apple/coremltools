@@ -5,7 +5,7 @@
 
 import numbers
 from collections import defaultdict
-from typing import Any, Callable, List, Optional, Tuple, Type
+from typing import Any, Callable, Sequence, List, Optional, Tuple, Type
 
 import numpy as np
 
@@ -241,7 +241,7 @@ class Builder:
 
     @staticmethod
     def placeholder(
-        shape: Tuple[Any],
+        shape: Sequence[Any],
         dtype: Optional[Type] = None,
         allow_rank0_input: Optional[bool] = False,
         name: Optional[str] = None,
