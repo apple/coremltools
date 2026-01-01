@@ -597,7 +597,23 @@ class TorchConverter:
         self.opset_version = _target(opset_version) if opset_version is not None else None
         self._prog = mil.Program()
 
+        self.src_model_has_all_fp16_weights = False
+
         if isinstance(loaded_model, torch.jit.ScriptModule):
+            # src_model_has_all_fp16_weights will be True
+            # if there are more than one trainable layers in the model
+            # and if all those trainable layers have the fp16 dtype
+            # eg: if pytorch_model.half() has been explicitly used.
+            num_trainable_layers = 0
+            num_trainable_fp16_layers = 0
+            for param in loaded_model.parameters():
+                if param.requires_grad:
+                    num_trainable_layers += 1
+                    if param.dtype == torch.float16:
+                        num_trainable_fp16_layers += 1
+            if num_trainable_layers > 0:
+                self.src_model_has_all_fp16_weights = num_trainable_layers == num_trainable_fp16_layers
+
             self.context = TranscriptionContext(frontend=TorchFrontend.TORCHSCRIPT)
             self.graph = InternalTorchIRGraph.from_torchscript(
                 torchscript=loaded_model, inputs=self.inputs, cut_at_symbols=cut_at_symbols
@@ -1301,6 +1317,11 @@ class TorchConverter:
             user_names = list(ssa_func_inputs.keys())
             internal_names = list(self.graph.inputs.keys())
             internal_names.extend(user_names[len(internal_names) :])
+            input_dtypes = []
+            for torch_name, ssa_name in zip(internal_names, user_names):
+                input_var = ssa_func.inputs[ssa_name]
+                input_dtypes.append(input_var.dtype)
+            all_fp16_inputs = all(x == types.fp16 for x in input_dtypes)
             for torch_name, ssa_name in zip(internal_names, user_names):
                 input_var = ssa_func.inputs[ssa_name]
                 if self.context.frontend == TorchFrontend.TORCHSCRIPT:
@@ -1312,7 +1333,7 @@ class TorchConverter:
                     # So here we perform the "cast input to fp32" step
                     if (
                         types.is_tensor(input_var.sym_type) or types.is_scalar(input_var.sym_type)
-                    ) and input_var.dtype == types.fp16:
+                    ) and input_var.dtype == types.fp16 and not (all_fp16_inputs and self.src_model_has_all_fp16_weights):
                         # This cast should have placeholder scope
                         with mb.scope(
                             ScopeInfo(
