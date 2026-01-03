@@ -2318,6 +2318,7 @@ class TestElementWiseUnary(TensorFlowBaseTest):
                 "cos",
                 "cosh",
                 "erf",
+                "erfc",
                 "exp",
                 "floor",
                 "inverse",
@@ -2373,6 +2374,9 @@ class TestElementWiseUnary(TensorFlowBaseTest):
 
         def clip_func(x):
             return tf.clip_by_value(x, clip_value_min=0.0, clip_value_max=5.0)
+
+        def erfc_func(x):
+            return tf.math.erfc(x)
 
         def _get_test(test_mode):
             if test_mode == "abs":
@@ -2430,6 +2434,9 @@ class TestElementWiseUnary(TensorFlowBaseTest):
                 val = random_gen(input_shape, rand_min=-4, rand_max=4)
             elif test_mode == "erf":
                 res = tf.math.erf
+                val = random_gen(input_shape, rand_min=1, rand_max=6)
+            elif test_mode == "erfc":
+                res = erfc_func
                 val = random_gen(input_shape, rand_min=1, rand_max=6)
             elif test_mode == "exp":
                 if compute_unit != ct.ComputeUnit.CPU_ONLY:
