@@ -2092,6 +2092,13 @@ def ERF(context, node):
     context.add(node.name, x)
 
 
+@register_tf_op(tf_alias=["Erfc"])
+def ERFC(context, node):
+    x = context[node.inputs[0]]
+    x = mb.sub(x=1.0, y=mb.erf(x=x), name=node.name)
+    context.add(node.name, x)
+
+
 @register_tf_op(tf_alias=["LeakyRelu"])
 def LeakyReLU(context, node):
     x = context[node.inputs[0]]
