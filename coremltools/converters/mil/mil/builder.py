@@ -241,7 +241,7 @@ class Builder:
 
     @staticmethod
     def placeholder(
-        shape: Tuple[Any],
+        shape: Tuple[Any, ...],
         dtype: Optional[Type] = None,
         allow_rank0_input: Optional[bool] = False,
         name: Optional[str] = None,
