@@ -18,6 +18,10 @@ from typing import Union as _Union
 import cattrs as _cattrs
 import torch as _torch
 import torch.ao.quantization as _aoquant
+# torchao pt2e quant flow requires importing from torchao pt2e for observer/fake_quant
+# which is not compatible with torch.ao fx quant flow
+# we can only change the import when the old fx flow is deprecated
+# import torchao.quantization.pt2e as _aoquant
 from attr import define as _define
 from attr import field as _field
 from attrs import validators as _validators

@@ -17,26 +17,22 @@ _IS_TORCH_OLDER_THAN_2_4 = tuple(map(int, _torch.__version__.split(".")[:2])) < 
 if _IS_TORCH_OLDER_THAN_2_4:
     from torch.ao.quantization.pt2e.utils import get_aten_graph_module
 else:
-    from torch.ao.quantization.pt2e.utils import _get_aten_graph_module_for_pattern
+    from torchao.quantization.pt2e.utils import _get_aten_graph_module_for_pattern
 
-from torch.ao.quantization.quantizer.quantizer import (
+from torchao.quantization.pt2e.quantizer import (
     FixedQParamsQuantizationSpec as _FixedQParamsQuantizationSpec,
 )
-from torch.ao.quantization.quantizer.quantizer import (
+from torchao.quantization.pt2e.quantizer import (
     QuantizationAnnotation as _QuantizationAnnotation,
 )
-from torch.ao.quantization.quantizer.quantizer import QuantizationSpec as _TorchQuantizationSpec
-from torch.ao.quantization.quantizer.quantizer import (
+from torchao.quantization.pt2e.quantizer import QuantizationSpec as _TorchQuantizationSpec
+from torchao.quantization.pt2e.quantizer import (
     QuantizationSpecBase as _TorchQuantizationSpecBase,
 )
-from torch.ao.quantization.quantizer.quantizer import (
+from torchao.quantization.pt2e.quantizer import (
     SharedQuantizationSpec as _SharedQuantizationSpec,
 )
-from torch.ao.quantization.quantizer.xnnpack_quantizer import _get_module_name_filter
-from torch.ao.quantization.quantizer.xnnpack_quantizer_utils import (
-    _is_annotated,
-    _mark_nodes_as_annotated,
-)
+from torchao.quantization.pt2e.quantizer import get_module_name_filter
 from torch.fx import Node as _Node
 from torch.fx.passes.utils.matcher_with_name_node_map_utils import (
     SubgraphMatcherWithNameNodeMap as _SubgraphMatcherWithNameNodeMap,
@@ -48,6 +44,27 @@ from torch.fx.passes.utils.source_matcher_utils import (
 from coremltools.optimize.torch.quantization._annotation_config import (
     AnnotationConfig as _AnnotationConfig,
 )
+
+def _is_annotated(nodes: list[_Node]):
+    """
+    Given a list of nodes (that represents an operator pattern),
+    check if any of the node is annotated, return True if any of the node
+    is annotated, otherwise return False
+    """
+    for node in nodes:
+        if (
+            "quantization_annotation" in node.meta
+            and node.meta["quantization_annotation"]._annotated
+        ):
+            return True
+    return False
+
+def _mark_nodes_as_annotated(nodes: list[_Node]):
+    for node in nodes:
+        if node is not None:
+            if "quantization_annotation" not in node.meta:
+                node.meta["quantization_annotation"] = _QuantizationAnnotation()
+            node.meta["quantization_annotation"]._annotated = True
 
 # All activations recognized for conv-act/conv-bn-act patterns
 _supported_activations = (
@@ -185,7 +202,7 @@ def get_not_object_type_or_name_filter(
     type in ``tp_list``.
     """
     object_type_filters = [get_object_type_filter(tp) for tp in tp_list]
-    module_name_list_filters = [_get_module_name_filter(m) for m in module_name_list]
+    module_name_list_filters = [get_module_name_filter(m) for m in module_name_list]
 
     def not_object_type_or_name_filter(n: _Node) -> bool:
         return not any(f(n) for f in object_type_filters + module_name_list_filters)
