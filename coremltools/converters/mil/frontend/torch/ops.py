@@ -1803,9 +1803,15 @@ def mish(context, node):
     inputs = _get_inputs(context, node, expected=1)
     x = inputs[0]
 
-    softplus = mb.softplus(x=x)
-    tanh = mb.tanh(x=softplus)
-    res = mb.mul(x=x, y=tanh, name=node.name)
+    # e = exp(x)
+    # mish = x / (1 + 2 / (e * (e + 2)))
+    e = mb.exp(x=x)
+    ep2 = mb.add(x=e, y=2.0)
+    emep2 = mb.mul(x=e, y=ep2)
+    tdemep2 = mb.real_div(x=2.0, y=emep2)
+    optdemep2 = mb.add(x=1.0, y=tdemep2)
+    res = mb.real_div(x=x, y=optdemep2, name=node.name)
+
     context.add(res)
 
 
