@@ -5707,7 +5707,7 @@ message TopKLayerParams {
  * e.g.:
  *
  * input shape = (45, 34, 10, 5)
- * axis = -2
+ * axis = -3
  * output shape = (45, 1, 10, 5), if removeDim = False (default)
  * output shape = (45, 10, 5), if removeDim = True
  *
@@ -5734,7 +5734,7 @@ message ArgMaxLayerParams {
 * e.g.:
 *
 * input shape = (45, 34, 10, 5)
-* axis = -2
+* axis = -3
 * output shape = (45, 1, 10, 5), if removeDim = False (default)
 * output shape = (45, 10, 5), if removeDim = True
 *
