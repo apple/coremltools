@@ -8207,7 +8207,7 @@ def l1_loss(context, node):
         # reduction is "sum"
         res = mb.reduce_sum(x=absolute, axes=None, name=node.name)
     else:
-        raise ValueError("Reduction is not supported")
+        raise ValueError("Unsupported reduction value: {reduction}")
     
     context.add(res)
 
