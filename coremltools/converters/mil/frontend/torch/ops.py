@@ -8178,8 +8178,37 @@ def mse_loss(context, node):
         # reduction is "sum"
         res = mb.reduce_sum(x=square, axes=None, name=node.name)
     else:
-        raise ValueError("Reduction is not supported")
+        raise ValueError(f"Unsupported reduction value: {reduction}")
 
+    context.add(res)
+
+
+@register_torch_op
+def l1_loss(context, node):
+    inputs = _get_inputs(context, node, expected=3)
+    x = inputs[0]
+    y = inputs[1]
+    reduction = inputs[2].val
+
+    diff = mb.sub(x=x, y=y)
+
+    if reduction == 0:
+        # reduction is "none"
+        res = mb.abs(x=diff, name=node.name)
+        context.add(res)
+        return
+    
+    absolute = mb.abs(x=diff)
+    if reduction == 1:
+        # reduction is "mean"
+        res = mb.reduce_mean(x=absolute, axes=None, name=node.name)
+    
+    elif reduction == 2:
+        # reduction is "sum"
+        res = mb.reduce_sum(x=absolute, axes=None, name=node.name)
+    else:
+        raise ValueError(f"Unsupported reduction value: {reduction}")
+    
     context.add(res)
 
 

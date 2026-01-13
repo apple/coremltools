@@ -11005,6 +11005,24 @@ class TestLoss(TorchBaseTest):
         self.run_compare_torch(input_shapes, Model(), backend=backend, compute_unit=compute_unit)
 
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, rank, reduction",
+        itertools.product(compute_units, backends, range(1, 4), ["none", "mean", "sum"]),
+    )
+    def test_l1_loss(self, compute_unit, backend, rank: int, reduction: str):
+        input_shape = tuple(np.random.randint(low=1, high=5, size=rank))
+
+        class Model(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.loss = nn.L1Loss(reduction=reduction)
+
+            def forward(self, x, y):
+                return self.loss(x, y)
+
+        input_shapes = [input_shape, input_shape]
+        self.run_compare_torch(input_shapes, Model(), backend=backend, compute_unit=compute_unit)
+
 class TestPad(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, rank, mode",
