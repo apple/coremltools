@@ -7543,6 +7543,66 @@ class TestStackSplitFusion:
         apply_pass_and_basic_check(prog, "common::fuse_stack_split")
         assert get_op_types_in_program(prog) == ["stack", "split"] + ["squeeze"] * 3
 
+    @staticmethod
+    def test_negative_all_outputs_feed_into_non_squeeze():
+        """
+        Test that the pass gracefully handles when ALL split outputs feed into
+        non-squeeze ops (e.g., relu). The pass should skip this pattern without crashing.
+
+        This tests the early return behavior when child_ops[0].op_type != "squeeze".
+        """
+
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(2, 5, 6)),
+                mb.TensorSpec(shape=(2, 5, 6)),
+                mb.TensorSpec(shape=(2, 5, 6)),
+            ]
+        )
+        def prog(x, y, z):
+            res = mb.stack(values=[x, y, z], axis=0)
+            a, b, c = mb.split(x=res, num_splits=3, axis=0)
+            # Feed all outputs into relu instead of squeeze
+            return mb.relu(x=a), mb.relu(x=b), mb.relu(x=c)
+
+        # Pass should not crash and should leave the graph unchanged
+        apply_pass_and_basic_check(prog, "common::fuse_stack_split")
+        assert get_op_types_in_program(prog) == ["stack", "split"] + ["relu"] * 3
+
+    @staticmethod
+    def test_multiple_squeeze_ops_correct_anchor():
+        """
+        Test that when fusing stack->split->squeeze with multiple values,
+        each squeeze op replacement uses the correct anchor_op.
+
+        This tests the fix for using squeeze_ops_and_vars tuples instead of
+        a single squeeze_op variable that gets overwritten in the loop.
+        """
+
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(4, 3)),
+                mb.TensorSpec(shape=(4, 3)),
+                mb.TensorSpec(shape=(4, 3)),
+                mb.TensorSpec(shape=(4, 3)),
+            ]
+        )
+        def prog(a, b, c, d):
+            # Stack 4 tensors
+            res = mb.stack(values=[a, b, c, d], axis=0)
+            # Split into 4 and squeeze each
+            w, x, y, z = mb.split(x=res, num_splits=4, axis=0)
+            return (
+                mb.squeeze(x=w, axes=[0]),
+                mb.squeeze(x=x, axes=[0]),
+                mb.squeeze(x=y, axes=[0]),
+                mb.squeeze(x=z, axes=[0]),
+            )
+
+        apply_pass_and_basic_check(prog, "common::fuse_stack_split")
+        # All should be fused to identity ops
+        assert get_op_types_in_program(prog) == ["identity"] * 4
+
 
 class TestScaledDotProductAttentionSlicedQ:
 

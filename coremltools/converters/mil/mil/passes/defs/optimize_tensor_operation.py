@@ -1120,11 +1120,11 @@ class fuse_stack_split(AbstractGraphPass):
 
             # check if the outputs of the split op feed only into squeeze
             split_out_vars = split_op.outputs
-            vars_to_replace = []
+            squeeze_ops_and_vars = []
 
             for val in split_out_vars:
                 if len(val.child_ops) != 1 or val.child_ops[0].op_type != "squeeze":
-                    should_fuse = False
+                    return
 
                 squeeze_op = val.child_ops[0]
                 if [
@@ -1132,13 +1132,13 @@ class fuse_stack_split(AbstractGraphPass):
                 ] != [axis]:
                     return
 
-                vars_to_replace.append(squeeze_op.outputs[0])
+                squeeze_ops_and_vars.append((squeeze_op, squeeze_op.outputs[0]))
                 ops_to_remove.append(squeeze_op)
 
-            for _input, _var in zip(values, vars_to_replace):
-                new_var = mb.identity(x=_input, before_op=squeeze_op)
+            for _input, (_squeeze_op, _var) in zip(values, squeeze_ops_and_vars):
+                new_var = mb.identity(x=_input, before_op=_squeeze_op)
                 block.replace_uses_of_var_after_op(
-                    anchor_op=squeeze_op,
+                    anchor_op=_squeeze_op,
                     old_var=_var,
                     new_var=new_var,
                 )

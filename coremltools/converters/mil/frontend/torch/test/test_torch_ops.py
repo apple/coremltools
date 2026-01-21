@@ -3667,6 +3667,65 @@ class TestLSTM(TorchBaseTest):
             backend=backend,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, num_layers, max_iterations",
+        itertools.product(
+            compute_units,
+            backends,
+            [1, 2],  # num_layers
+            [1, 2],  # max_iterations (loop count)
+        ),
+    )
+    def test_lstm_with_loop_and_multiple_layers(
+        self, compute_unit, backend, num_layers, max_iterations
+    ):
+        """
+        Test LSTM conversion when a for loop calls the LSTM multiple times.
+
+        This is a regression test for GitHub issue #2643, where the fuse_stack_split
+        optimization pass failed with "Cannot delete op with active output" error
+        when converting multi-layer LSTM (num_layers > 1) with loop iterations
+        (max_iterations > 1).
+        """
+        INPUT_SIZE = 10
+        HIDDEN_SIZE = 20
+        BATCH_SIZE = 3
+
+        class LSTMWithLoop(nn.Module):
+            def __init__(self, input_size, hidden_size, num_layers, max_iterations):
+                super().__init__()
+                self.max_iterations = max_iterations
+                self.rnn = nn.LSTM(
+                    input_size=input_size,
+                    hidden_size=hidden_size,
+                    num_layers=num_layers,
+                    batch_first=True,
+                )
+
+            def forward(self, x, h, c):
+                state = (h, c)
+                for _ in range(self.max_iterations):
+                    output, state = self.rnn(x, state)
+                return output
+
+        model = LSTMWithLoop(INPUT_SIZE, HIDDEN_SIZE, num_layers, max_iterations)
+        model.eval()
+
+        x = torch.randn(BATCH_SIZE, 1, INPUT_SIZE)
+        h = torch.randn(num_layers, BATCH_SIZE, HIDDEN_SIZE)
+        c = torch.randn(num_layers, BATCH_SIZE, HIDDEN_SIZE)
+
+        inputs = (x, h, c)
+        expected_results = model(*inputs)
+        self.run_compare_torch(
+            inputs,
+            model,
+            expected_results,
+            input_as_shape=False,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
 
 class TestRNN(TorchBaseTest):
     @pytest.mark.parametrize(
