@@ -7603,6 +7603,58 @@ class TestStackSplitFusion:
         # All should be fused to identity ops
         assert get_op_types_in_program(prog) == ["identity"] * 4
 
+    @staticmethod
+    @pytest.mark.parametrize(
+        "num_layers, max_iterations",
+        [(1, 1), (1, 2), (2, 1), (2, 2)],
+    )
+    def test_lstm_with_loop_and_multiple_layers(num_layers, max_iterations):
+        """
+        Test that fuse_stack_split doesn't crash when converting multi-layer
+        LSTM models with loops.
+
+        Regression test for GitHub issue #2643.
+        """
+        INPUT_SIZE = 10
+        HIDDEN_SIZE = 20
+        BATCH_SIZE = 3
+
+        class LSTMWithLoop(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.rnn = torch.nn.LSTM(
+                    input_size=INPUT_SIZE,
+                    hidden_size=HIDDEN_SIZE,
+                    num_layers=num_layers,
+                    batch_first=True,
+                )
+
+            def forward(self, x, h, c):
+                state = (h, c)
+                for _ in range(max_iterations):
+                    output, state = self.rnn(x, state)
+                return output
+
+        model = LSTMWithLoop()
+        model.eval()
+
+        x = torch.randn(BATCH_SIZE, 1, INPUT_SIZE)
+        h = torch.randn(num_layers, BATCH_SIZE, HIDDEN_SIZE)
+        c = torch.randn(num_layers, BATCH_SIZE, HIDDEN_SIZE)
+
+        traced = torch.jit.trace(model, (x, h, c))
+
+        # Conversion should not crash - this is the main assertion
+        ct.convert(
+            traced,
+            inputs=[
+                ct.TensorType(shape=x.shape),
+                ct.TensorType(shape=h.shape),
+                ct.TensorType(shape=c.shape),
+            ],
+            convert_to="mlprogram",
+        )
+
 
 class TestScaledDotProductAttentionSlicedQ:
 
