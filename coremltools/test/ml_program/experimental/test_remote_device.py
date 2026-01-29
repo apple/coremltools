@@ -17,6 +17,7 @@ import pytest
 
 import coremltools as ct
 from coremltools.converters.mil import Builder as mb
+
 from coremltools.models._compiled_model import CompiledMLModel
 from coremltools.models.ml_program.experimental.remote_device import (
     Device,
@@ -412,3 +413,24 @@ class TestModelRunnerApp:
                     f"STDOUT:\n{stdout}\n"
                     f"STDERR:\n{stderr}"
                 )
+
+
+class TestTensorDescriptorUInt8:
+
+    def test_uint8_dtype_conversion(self):
+        assert _TensorDescriptor._to_multi_array_dtype(np.dtype(np.uint8)) == _TensorDescriptor.DataType.UInt8
+        assert _TensorDescriptor._to_numpy_dtype(_TensorDescriptor.DataType.UInt8) == np.uint8
+
+    def test_uint8_tensor_descriptor_roundtrip(self):
+        import io
+        original = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.uint8)
+        buf = io.BytesIO()
+
+        descriptor = _TensorDescriptor.from_array(original, buf)
+        assert descriptor.data_type == _TensorDescriptor.DataType.UInt8
+        assert descriptor.shape == [2, 3]
+
+        buf.seek(0)
+        restored = descriptor.to_array(buf)
+        assert restored.dtype == np.uint8
+        assert np.array_equal(original, restored)
