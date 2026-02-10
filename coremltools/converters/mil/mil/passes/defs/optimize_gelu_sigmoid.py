@@ -20,23 +20,16 @@ class fuse_gelu_sigmoid_approximation(AbstractGraphPass):
 
     The sigmoid approximation of GELU is: ``y = x * sigmoid(1.702 * x)``
 
-    This can be represented by one of the following patterns:
-
     .. code-block::
 
-        Pattern 1: x -> mul(1.702) -> sigmoid -> mul(x) -> output
+        Input graph:
             [...] ----> mul (1.702) ---> sigmoid ---> mul ---> [...]
               |                                        ^
               |                                        |
               |----------------------------------------
 
-        Pattern 2: x -> mul(x) -> sigmoid(1.702 * x) -> output (less common)
-
-    All patterns are converted to:
-
-    .. code-block::
-
-        [...] ----> gelu (mode=SIGMOID_APPROXIMATION) ---> [...]
+        Output graph:
+            [...] ----> gelu (mode=SIGMOID_APPROXIMATION) ---> [...]
     """
 
     GELU_SIGMOID_CONST = 1.702
@@ -73,9 +66,6 @@ class fuse_gelu_sigmoid_approximation(AbstractGraphPass):
 
         Where the final mul combines x with sigmoid(1.702 * x).
         """
-        if mul_op.outputs[0] in block.outputs:
-            return False
-
         mul_x = mul_op.x
         mul_y = mul_op.y
 
@@ -110,7 +100,7 @@ class fuse_gelu_sigmoid_approximation(AbstractGraphPass):
 
         scale_mul_input = scale_mul_op.y if is_x_const else scale_mul_op.x
 
-        if scale_mul_input.name != root_var.name:
+        if scale_mul_input != root_var:
             return False
 
         if scale_mul_op.outputs[0] in block.outputs:

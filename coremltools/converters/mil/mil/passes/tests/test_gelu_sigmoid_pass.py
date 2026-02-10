@@ -4,11 +4,9 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import numpy as np
-import pytest
 
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 from coremltools.converters.mil.testing_utils import (
     apply_pass_and_basic_check,
     assert_model_is_valid,
@@ -49,7 +47,7 @@ class TestFuseGeluSigmoidApproximation:
         assert_model_is_valid(
             prog,
             {"x": (2, 3)},
-            expected_output_shapes={(2, 3)},
+            expected_output_shapes={block.outputs[0].name: (2, 3)},
         )
 
     def test_fusion_with_reversed_mul_order(self):
