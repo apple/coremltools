@@ -86,9 +86,7 @@ class TestFuseGeluSigmoidApproximation:
                 sigmoid_out = mb.sigmoid(x=scaled)
                 return mb.mul(x=x, y=sigmoid_out)
 
-            prev_prog, _, block = apply_pass_and_basic_check(
-                prog, "common::fuse_gelu_sigmoid_approximation"
-            )
+            apply_pass_and_basic_check(prog, "common::fuse_gelu_sigmoid_approximation")
 
             assert get_op_types_in_program(prog) == ["gelu"]
 
@@ -101,9 +99,7 @@ class TestFuseGeluSigmoidApproximation:
             sigmoid_out = mb.sigmoid(x=scaled)
             return mb.mul(x=x, y=sigmoid_out)
 
-        prev_prog, _, block = apply_pass_and_basic_check(
-            prog, "common::fuse_gelu_sigmoid_approximation"
-        )
+        apply_pass_and_basic_check(prog, "common::fuse_gelu_sigmoid_approximation")
 
         assert get_op_types_in_program(prog) == ["mul", "sigmoid", "mul"]
 
@@ -117,9 +113,7 @@ class TestFuseGeluSigmoidApproximation:
             gelu_approx = mb.mul(x=x, y=sigmoid_out)
             return gelu_approx, sigmoid_out
 
-        prev_prog, _, block = apply_pass_and_basic_check(
-            prog, "common::fuse_gelu_sigmoid_approximation"
-        )
+        apply_pass_and_basic_check(prog, "common::fuse_gelu_sigmoid_approximation")
 
         assert "sigmoid" in get_op_types_in_program(prog)
 
@@ -134,9 +128,7 @@ class TestFuseGeluSigmoidApproximation:
             sigmoid_out = mb.sigmoid(x=scaled)
             return mb.mul(x=x, y=sigmoid_out)
 
-        prev_prog, _, block = apply_pass_and_basic_check(
-            prog, "common::fuse_gelu_sigmoid_approximation"
-        )
+        apply_pass_and_basic_check(prog, "common::fuse_gelu_sigmoid_approximation")
 
         assert get_op_types_in_program(prog) == ["mul", "sigmoid", "mul"]
 
@@ -149,18 +141,12 @@ class TestFuseGeluSigmoidApproximation:
             sigmoid_out = mb.sigmoid(x=scaled)
             return mb.mul(x=x, y=sigmoid_out)
 
-        prev_prog, _, block = apply_pass_and_basic_check(
-            prog, "common::fuse_gelu_sigmoid_approximation"
-        )
+        apply_pass_and_basic_check(prog, "common::fuse_gelu_sigmoid_approximation")
 
         assert get_op_types_in_program(prog) == ["gelu"]
 
     def test_numerical_correctness(self):
         """Test that the fused operation produces numerically correct results."""
-        np.random.seed(42)
-        test_input = np.random.randn(2, 3).astype(np.float32)
-
-        expected_output = test_input * (1 / (1 + np.exp(-1.702 * test_input)))
 
         @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
         def prog(x):
