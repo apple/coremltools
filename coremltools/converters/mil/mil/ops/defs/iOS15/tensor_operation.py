@@ -4,7 +4,6 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import math
-import os
 
 import numpy as np
 
