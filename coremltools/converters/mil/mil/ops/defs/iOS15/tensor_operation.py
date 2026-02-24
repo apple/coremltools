@@ -598,11 +598,8 @@ class range_1d(Operation):
         # a upper bound of the size of the resulting array is set.
         if shape > MAX_SIZE_CONSTANT_FOLDING:
             return None
-        if os.environ["range_1d_flag"] == "1":
-            dtype = types.nptype_from_builtin(self.start.dtype)
-            return np.arange(start, end, step, dtype=dtype)
-        else:
-            return np.arange(start, end, step)
+        dtype = types.nptype_from_builtin(self.start.dtype)
+        return np.arange(start, end, step, dtype=dtype)
 
     def type_inference(self):
         start = self.start.sym_val
