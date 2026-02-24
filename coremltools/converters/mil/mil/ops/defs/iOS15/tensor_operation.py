@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import math
+import os
 
 import numpy as np
 
@@ -597,8 +598,11 @@ class range_1d(Operation):
         # a upper bound of the size of the resulting array is set.
         if shape > MAX_SIZE_CONSTANT_FOLDING:
             return None
-        dtype = types.nptype_from_builtin(self.start.dtype)
-        return np.arange(start, end, step, dtype=dtype)
+        if os.environ["range_1d_flag"] == "1":
+            dtype = types.nptype_from_builtin(self.start.dtype)
+            return np.arange(start, end, step, dtype=dtype)
+        else:
+            return np.arange(start, end, step)
 
     def type_inference(self):
         start = self.start.sym_val
