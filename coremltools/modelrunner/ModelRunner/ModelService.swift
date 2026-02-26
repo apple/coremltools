@@ -6,6 +6,7 @@
 
 import Foundation
 import CoreML
+import CoreVideo
 import Darwin
 
 
@@ -38,11 +39,16 @@ extension LoadedModel {
         /// or other characteristics that are not supported by the current system.
         case unsupportedOutput(details: String)
 
+        /// Indicates that image conversion failed.
+        case imageConversionFailed(details: String)
+
         /// A human-readable description of the error.
         var description: String {
             switch self {
             case .unsupportedOutput(let details):
                 return "Unsupported output: \(details)"
+            case .imageConversionFailed(let details):
+                return "Image conversion failed: \(details)"
             }
         }
     }
@@ -57,6 +63,153 @@ extension LoadedModel {
         return try mlModel.prediction(from: inputs)
     }
 
+    fileprivate func createPixelBuffer(
+        descriptor: TensorDescriptor,
+        rawPtr: UnsafeRawPointer,
+        imageConstraint: MLImageConstraint
+    ) throws -> CVPixelBuffer {
+        let shape = descriptor.shape
+        let dataPtr = rawPtr.advanced(by: descriptor.storage.offset)
+
+        let height: Int
+        let width: Int
+        let channels: Int
+
+        if shape.count == 3 {
+            height = shape[0]
+            width = shape[1]
+            channels = shape[2]
+        } else if shape.count == 2 {
+            height = shape[0]
+            width = shape[1]
+            channels = 1
+        } else {
+            throw Error.imageConversionFailed(
+                details: "Invalid tensor shape for image input. Expected [H, W] or [H, W, C], got \(shape)"
+            )
+        }
+
+        let pixelFormat: OSType
+        if channels == 1 {
+            pixelFormat = kCVPixelFormatType_OneComponent8
+        } else if channels == 3 || channels == 4 {
+            pixelFormat = kCVPixelFormatType_32BGRA
+        } else {
+            throw Error.imageConversionFailed(
+                details: "Unsupported number of channels: \(channels). Expected 1, 3, or 4."
+            )
+        }
+
+        var pixelBuffer: CVPixelBuffer?
+        let status = CVPixelBufferCreate(
+            kCFAllocatorDefault,
+            width,
+            height,
+            pixelFormat,
+            nil,
+            &pixelBuffer
+        )
+
+        guard status == kCVReturnSuccess, let buffer = pixelBuffer else {
+            throw Error.imageConversionFailed(
+                details: "Failed to create CVPixelBuffer. Status: \(status)"
+            )
+        }
+
+        CVPixelBufferLockBaseAddress(buffer, [])
+        defer { CVPixelBufferUnlockBaseAddress(buffer, []) }
+
+        guard let baseAddress = CVPixelBufferGetBaseAddress(buffer) else {
+            throw Error.imageConversionFailed(details: "Failed to get pixel buffer base address.")
+        }
+
+        let bytesPerRow = CVPixelBufferGetBytesPerRow(buffer)
+
+        if channels == 1 {
+            let srcPtr = dataPtr.assumingMemoryBound(to: UInt8.self)
+            let dstPtr = baseAddress.assumingMemoryBound(to: UInt8.self)
+            for y in 0..<height {
+                memcpy(dstPtr.advanced(by: y * bytesPerRow),
+                       srcPtr.advanced(by: y * width),
+                       width)
+            }
+        } else if channels == 3 {
+            // RGB -> BGRA
+            let srcPtr = dataPtr.assumingMemoryBound(to: UInt8.self)
+            let dstPtr = baseAddress.assumingMemoryBound(to: UInt8.self)
+            for y in 0..<height {
+                for x in 0..<width {
+                    let srcOffset = (y * width + x) * 3
+                    let dstOffset = y * bytesPerRow + x * 4
+                    dstPtr[dstOffset + 0] = srcPtr[srcOffset + 2]
+                    dstPtr[dstOffset + 1] = srcPtr[srcOffset + 1]
+                    dstPtr[dstOffset + 2] = srcPtr[srcOffset + 0]
+                    dstPtr[dstOffset + 3] = 255
+                }
+            }
+        } else if channels == 4 {
+            // RGBA -> BGRA
+            let srcPtr = dataPtr.assumingMemoryBound(to: UInt8.self)
+            let dstPtr = baseAddress.assumingMemoryBound(to: UInt8.self)
+            for y in 0..<height {
+                for x in 0..<width {
+                    let srcOffset = (y * width + x) * 4
+                    let dstOffset = y * bytesPerRow + x * 4
+                    dstPtr[dstOffset + 0] = srcPtr[srcOffset + 2]
+                    dstPtr[dstOffset + 1] = srcPtr[srcOffset + 1]
+                    dstPtr[dstOffset + 2] = srcPtr[srcOffset + 0]
+                    dstPtr[dstOffset + 3] = srcPtr[srcOffset + 3]
+                }
+            }
+        }
+
+        return buffer
+    }
+
+    fileprivate func extractPixelBufferData(_ pixelBuffer: CVPixelBuffer) throws -> (Data, [Int], [Int]) {
+        let pixelFormat = CVPixelBufferGetPixelFormatType(pixelBuffer)
+        let width = CVPixelBufferGetWidth(pixelBuffer)
+        let height = CVPixelBufferGetHeight(pixelBuffer)
+
+        CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
+        defer { CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly) }
+
+        guard let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer) else {
+            throw Error.imageConversionFailed(details: "Failed to get pixel buffer base address.")
+        }
+
+        let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
+        let srcPtr = baseAddress.assumingMemoryBound(to: UInt8.self)
+
+        if pixelFormat == kCVPixelFormatType_OneComponent8 {
+            var data = Data(count: height * width)
+            data.withUnsafeMutableBytes { dstBuffer in
+                let dstPtr = dstBuffer.baseAddress!.assumingMemoryBound(to: UInt8.self)
+                for y in 0..<height {
+                    memcpy(dstPtr.advanced(by: y * width), srcPtr.advanced(by: y * bytesPerRow), width)
+                }
+            }
+            return (data, [height, width], [width, 1])
+        } else if pixelFormat == kCVPixelFormatType_32BGRA {
+            var data = Data(count: height * width * 3)
+            data.withUnsafeMutableBytes { dstBuffer in
+                let dstPtr = dstBuffer.baseAddress!.assumingMemoryBound(to: UInt8.self)
+                for y in 0..<height {
+                    for x in 0..<width {
+                        let srcOffset = y * bytesPerRow + x * 4
+                        let dstOffset = (y * width + x) * 3
+                        dstPtr[dstOffset + 0] = srcPtr[srcOffset + 2]
+                        dstPtr[dstOffset + 1] = srcPtr[srcOffset + 1]
+                        dstPtr[dstOffset + 2] = srcPtr[srcOffset + 0]
+                    }
+                }
+            }
+            return (data, [height, width, 3], [width * 3, 3, 1])
+        } else {
+            throw Error.imageConversionFailed(details: "Unsupported pixel format: \(pixelFormat)")
+        }
+    }
+
     fileprivate func predict(inputs: [String: TensorDescriptor], storage: Data) throws -> (outputs: [String: TensorDescriptor], storage: Data, duration: UInt64) {
         var outputs = [String : TensorDescriptor]()
         var buffer = Data()
@@ -68,8 +221,19 @@ extension LoadedModel {
 
             var modelInputs = [String : MLFeatureValue]()
             for (name, descriptor) in inputs {
-                let multiArray = try MLMultiArray(descriptor: descriptor, rawPtr: rawPtr)
-                modelInputs[name] = MLFeatureValue(multiArray: multiArray)
+                if let inputDescription = mlModel.modelDescription.inputDescriptionsByName[name],
+                   inputDescription.type == .image,
+                   let imageConstraint = inputDescription.imageConstraint {
+                    let pixelBuffer = try createPixelBuffer(
+                        descriptor: descriptor,
+                        rawPtr: rawPtr,
+                        imageConstraint: imageConstraint
+                    )
+                    modelInputs[name] = MLFeatureValue(pixelBuffer: pixelBuffer)
+                } else {
+                    let multiArray = try MLMultiArray(descriptor: descriptor, rawPtr: rawPtr)
+                    modelInputs[name] = MLFeatureValue(multiArray: multiArray)
+                }
             }
 
             let (modelOutputs, predictDuration) = try measure {
@@ -80,20 +244,31 @@ extension LoadedModel {
 
             var segment = TensorStorage()
             for name in modelOutputs.featureNames {
-                guard let multiArrayValue = modelOutputs.featureValue(for: name)?.multiArrayValue else {
-                    throw Error.unsupportedOutput(details:"Incompatible output format detected for model ID '\(id)'.")
+                guard let featureValue = modelOutputs.featureValue(for: name) else {
+                    throw Error.unsupportedOutput(details: "Missing output '\(name)' for model ID '\(id)'.")
                 }
 
-                multiArrayValue.withUnsafeBytes { ptr in
-                    segment.size += ptr.count
-                    buffer.append(contentsOf: ptr)
+                if let multiArrayValue = featureValue.multiArrayValue {
+                    multiArrayValue.withUnsafeBytes { ptr in
+                        segment.size += ptr.count
+                        buffer.append(contentsOf: ptr)
+                    }
+                    let descriptor = TensorDescriptor(dataType: multiArrayValue.dataType.representation,
+                                                      shape: multiArrayValue.shape.map { $0.intValue },
+                                                      strides: multiArrayValue.strides.map { $0.intValue },
+                                                      storage: segment)
+                    outputs[name] = descriptor
+                    segment.offset = segment.size
+                } else if let pixelBuffer = featureValue.imageBufferValue {
+                    let (data, shape, strides) = try extractPixelBufferData(pixelBuffer)
+                    segment.size += data.count
+                    buffer.append(data)
+                    let descriptor = TensorDescriptor(dataType: "UInt8", shape: shape, strides: strides, storage: segment)
+                    outputs[name] = descriptor
+                    segment.offset = segment.size
+                } else {
+                    throw Error.unsupportedOutput(details: "Incompatible output format for '\(name)' in model ID '\(id)'.")
                 }
-                let descriptor = TensorDescriptor(dataType: multiArrayValue.dataType.representation,
-                                                  shape: multiArrayValue.shape.map { $0.intValue },
-                                                  strides: multiArrayValue.strides.map { $0.intValue },
-                                                  storage: segment)
-                outputs[name] = descriptor
-                segment.offset = segment.size
             }
         }
 
