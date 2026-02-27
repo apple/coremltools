@@ -232,9 +232,9 @@ def populate_native_const_model_hierarchy(graph: InternalTorchIRGraph) -> None:
 def remove_getattr_nodes(graph: InternalTorchIRGraph) -> None:
     """
     Remove the getattr nodes in the graph
+    If they are output nodes, convert them to constant nodes
     """
 
-    getattr_nodes = []
     new_nodes = []
 
     for node in graph.nodes:
@@ -243,16 +243,20 @@ def remove_getattr_nodes(graph: InternalTorchIRGraph) -> None:
             remove_getattr_nodes(block)
 
         if node.kind == "getattr":
-            getattr_nodes.append(node)
+            if node.name in graph.outputs:
+                # create and add new constant node
+                new_nodes.append(
+                        InternalTorchIRNode(
+                            inputs=[],
+                            outputs=node.outputs,
+                            kind="constant",
+                            name="internal_immediate_output_attr",
+                            attr={"value": node.parent.params[node.name].detach()}
+                        )
+                    )
         else:
             new_nodes.append(node)
 
-    # check the getattr nodes not in the outputs
-    for node in getattr_nodes:
-        if node.name in graph.outputs:
-            raise RuntimeError("{} should not be in the graph outputs.".format(node.name))
-
-    # remove the getattr nodes
     graph.nodes = new_nodes
 
 

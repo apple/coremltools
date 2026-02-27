@@ -929,6 +929,32 @@ class TestPyTorchConverterExamples:
             past_kv_len += 1
 
 
+    @staticmethod
+    def test_immediate_return_getattr_model():
+        class ImmediateReturnGetAttrModel(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.register_buffer("my_constant_output", torch.tensor([1.0, 2.0, 3.0, 4.0]))
+                self.register_buffer("my_constant_output2", torch.tensor([5.0, 6.0, 7.0, 8.0]))
+
+            def forward(self, x):
+                # x is a dummy input, not used
+                return self.my_constant_output, self.my_constant_output2
+
+        model = ImmediateReturnGetAttrModel()
+        model.eval()
+        dummy_input = torch.zeros(1)  # Dummy input for tracing
+        traced_model = torch.jit.trace(model, example_inputs=(dummy_input,))
+        mlmodel = ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(shape=(1,))],
+            convert_to='mlprogram'
+        )
+        outputs = mlmodel.predict({"x": np.zeros(1)})
+        assert "my_constant_output" in outputs
+        assert "my_constant_output2" in outputs
+
+
 ###############################################################################
 # Note: Stress tests for PyTorch input / output types
 ###############################################################################
