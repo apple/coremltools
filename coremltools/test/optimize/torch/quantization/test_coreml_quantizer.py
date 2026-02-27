@@ -20,7 +20,7 @@ from coremltools.optimize.torch.quantization.quantization_config import (
 from coremltools._deps import _HAS_TORCH_EXPORT_API
 if _HAS_TORCH_EXPORT_API:
     from torch.export import export_for_training
-    from torch.ao.quantization.quantize_pt2e import (
+    from torchao.quantization.pt2e.quantize_pt2e import (
         convert_pt2e,
         prepare_pt2e,
         prepare_qat_pt2e,
@@ -164,6 +164,10 @@ def quantize_model(
 ):
     quantizer = CoreMLQuantizer(quantization_config)
     exported_model = export_for_training(model, (data,)).module()
+    for node in exported_model.graph.nodes:
+        if "source_fn_stack" not in node.meta:
+            node.meta["source_fn_stack"] = [("dummy", nn.Module)]
+
     if is_qat:
         prepared_model = prepare_qat_pt2e(exported_model, quantizer)
     else:

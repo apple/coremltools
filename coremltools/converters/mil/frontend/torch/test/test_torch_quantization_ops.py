@@ -603,28 +603,30 @@ class TestPytorchQuantizedOps(TorchQuantizationBaseTest):
         scales = torch.transpose(y_scales_and_zeros[:, :, 0], 0, 1)
         zero_points = torch.transpose(y_scales_and_zeros[:, :, 1], 0, 1)
         block_size = (1, group_size)
+
+        quant_min, quant_max = 0, 2**4 - 1
+        mid_point = (quant_max + quant_min + 1) / 2
+        zero_points = mid_point - zero_points / scales
         y_dequant_quantized = torchao_quant.quantize_affine(
             y_dequant,
             block_size,
             scales,
-            zero_points,
+            torch.round(zero_points).to(torch.int32),
             torch.int32,
-            quant_min=0,
-            quant_max=2**4 - 1,
-            zero_point_domain=torchao_quant.ZeroPointDomain.FLOAT,
+            quant_min=quant_min,
+            quant_max=quant_max,
         )
         assert torch.equal(y_quantized, y_dequant_quantized)
 
         # The torchao dequantization utils should be able to recover the original y.
         y_dequantized_by_torchao = torchao_quant.dequantize_affine(
             y_quantized,
-            (1, group_size),
+            block_size,
             scales,
             zero_points,
             torch.int32,
-            quant_min=0,
-            quant_max=2**4 - 1,
-            zero_point_domain=torchao_quant.ZeroPointDomain.FLOAT,
+            quant_min=quant_min,
+            quant_max=quant_max,
         )
         np.testing.assert_allclose(y_dequant.numpy(), y_dequantized_by_torchao.numpy(), rtol=4e-3)
 

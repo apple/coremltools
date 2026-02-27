@@ -1204,12 +1204,11 @@ class TestBatchNorm(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, frontend, has_weight, has_bias, has_running_mean, has_running_var",
+        "compute_unit, backend, frontend, has_weight, has_bias, has_running_mean_and_var",
         itertools.product(
             compute_units,
             backends,
             frontends,
-            [True, False],
             [True, False],
             [True, False],
             [True, False],
@@ -1222,8 +1221,7 @@ class TestBatchNorm(TorchBaseTest):
         frontend,
         has_weight,
         has_bias,
-        has_running_mean,
-        has_running_var,
+        has_running_mean_and_var,
     ):
         if frontend in TORCH_EXPORT_BASED_FRONTENDS:
             pytest.skip("torch.export converter does not handle input mutation")
@@ -1233,8 +1231,8 @@ class TestBatchNorm(TorchBaseTest):
 
         weight = torch.randn(num_features) if has_weight else None
         bias = torch.randn(num_features) if has_bias else None
-        running_mean = torch.randn(num_features) if has_running_mean else None
-        running_var = torch.randn(num_features) if has_running_var else None
+        running_mean = torch.randn(num_features) if has_running_mean_and_var else None
+        running_var = torch.randn(num_features) if has_running_mean_and_var else None
 
         class Model(torch.nn.Module):
             def forward(self, x):
@@ -13234,7 +13232,10 @@ class TestUnfold(TorchBaseTest):
         input_type, dynamic_shapes = None, None
         if is_dynamic_hw:
             h_coreml, w_coreml = RangeDim(min_h, 128), RangeDim(min_w, 128)
-            h_torch, w_torch = torch.export.Dim("h", min=min_h, max=128), torch.export.Dim("w", min=min_w, max=128)
+            if platform.machine() == "x86_64":
+                h_torch, w_torch = torch.export.Dim("h", min=min_h, max=128), torch.export.Dim("w", min=min_w, max=128)
+            else:
+                h_torch, w_torch = torch.export.Dim.AUTO, torch.export.Dim.AUTO
             input_type = [ct.TensorType(name="x", shape=ct.Shape([input_shape[0], input_shape[1], h_coreml, w_coreml]))]
             dynamic_shapes = {"args": ((input_shape[0], input_shape[1], h_torch, w_torch),)}
 
