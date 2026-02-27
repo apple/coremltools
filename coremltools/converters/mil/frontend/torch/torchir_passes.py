@@ -137,17 +137,7 @@ def generate_tensor_assignment_ops(graph: InternalTorchIRGraph) -> None:
                 tensor_to_node_sequence_mapping.pop(node_input)
             node_sequence.append(node)
             tensor_to_node_sequence_mapping[node_output] = node_sequence
-
-        if node.kind == "to":
-            node_input = node.inputs[0]
-            if node_input in tensor_to_node_sequence_mapping:
-                # update the mapping
-                node_output = node.outputs[0]
-                val = tensor_to_node_sequence_mapping[node_input]
-                del tensor_to_node_sequence_mapping[node_input]
-                tensor_to_node_sequence_mapping[node_output] = val
-
-        if node.kind in ("copy_", "fill_"):
+        elif node.kind in ("copy_", "fill_"):
             node_input = node.inputs[0]
             if node_input not in tensor_to_node_sequence_mapping:
                 raise ValueError("No matching select or slice.")
@@ -179,6 +169,13 @@ def generate_tensor_assignment_ops(graph: InternalTorchIRGraph) -> None:
                 model_hierarchy=node.model_hierarchy,
             )
             graph.nodes[i] = tensor_assign_node
+        elif node.inputs:
+            node_input = node.inputs[0]
+            if node_input in tensor_to_node_sequence_mapping:
+                # update the mapping
+                node_output = node.outputs[0]
+                val = tensor_to_node_sequence_mapping[node_input]
+                tensor_to_node_sequence_mapping[node_output] = val
 
     # modify the graph outputs if it is effected by this graph pass
     for idx in range(len(graph.outputs)):
