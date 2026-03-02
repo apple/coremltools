@@ -54,6 +54,7 @@ _COMMON_PASSES: List[Text] = [
     "common::fuse_linear_bias",
     "common::fuse_gelu_tanh_approximation",
     "common::fuse_gelu_exact",
+    "common::fuse_gelu_sigmoid_approximation",
     "common::fuse_leaky_relu",
     "common::rank0_expand_dims_swap",
     "common::fuse_squeeze_expand_dims",
