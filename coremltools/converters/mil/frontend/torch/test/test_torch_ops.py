@@ -11159,6 +11159,79 @@ class TestMaskedFill(TorchBaseTest):
             converter_input_type=converter_input_type,
         )
 
+class TestMaskedScatter(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_masked_scatter_basic(self, compute_unit, backend, frontend):
+        class TestModel(nn.Module):
+            def forward(self, x):
+                mask = torch.tensor([[True, False, True], [False, True, False]])
+                source = torch.tensor([10.0, 20.0, 30.0])
+                return x.masked_scatter(mask, source)
+        self.run_compare_torch(
+            [(2,3)],
+            TestModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+    
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_masked_scatter_all_true(self, compute_unit, backend, frontend):
+        class TestModel(nn.Module):
+            def forward(self, x):
+                mask = torch.ones(2,3, dtype=torch.bool)
+                source = torch.tensor([10.0, 20.0, 30.0, 40.0, 50.0, 60.0])
+                return x.masked_scatter(mask, source)
+        self.run_compare_torch(
+            [(2,3)],
+            TestModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_masked_scatter_1d(self, compute_unit, backend, frontend):
+        class TestModel(nn.Module):
+            def forward(self, x):
+                mask = torch.tensor([False, True, False, True, True])
+                source = torch.tensor([99.0,88.0,77.0])
+                return x.masked_scatter(mask, source)
+
+        self.run_compare_torch(
+            [(5,)],
+            TestModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_masked_scatter_source_with_extras(self, compute_unit, backend, frontend):
+        class TestModel(nn.Module):
+            def forward(self, x):
+                mask = torch.tensor([[True, False], [False, True]])
+                source = torch.tensor([10.0,20.0,30.0,40.0,50.0])
+                return x.masked_scatter(mask, source)
+
+        self.run_compare_torch(
+            [(2,2)],
+            TestModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
 
 class TestMeshgrid(TorchBaseTest):
     @pytest.mark.parametrize(

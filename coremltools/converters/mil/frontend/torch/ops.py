@@ -6375,6 +6375,46 @@ def masked_fill(context, node):
     res = mb.select(cond=mask, a=value, b=x, name=node.name)
     context.add(res)
 
+@register_torch_op
+def masked_scatter(context, node):
+    """
+    """
+    inputs = _get_inputs(context, node, expected=3)
+    input_tensor = inputs[0]
+    mask = inputs[1]
+    source = inputs[2]
+
+    # Ensuring mask is boolean
+    if not types.is_bool(mask.dtype):
+        mask = mb.cast(x=mask, dtype="bool")
+
+    # Save original shape and then flatten input and mask
+    original_shape = mb.shape(x=input_tensor)
+    flat_input = mb.reshape(x=input_tensor, shape=[-1])
+    flat_mask = mb.reshape(x=mask, shape=[-1])
+
+    # Get indices where mask is True
+    indices = mb.non_zero(x=flat_mask)
+
+    # Flatten source and slice to match number of True values
+    flat_source = mb.reshape(x=source, shape=[-1])
+    num_true = mb.gather(x=mb.shape(x=indices), indices=[0], axis=0)
+    source_slice = mb.slice_by_size(
+        x=flat_source,
+        begin=[0],
+        size=mb.reshape(x=num_true, shape=[1])
+    )
+
+    # Casting source dtype to match input if needed
+    source_slice, flat_input = promote_input_dtypes([source_slice, flat_input])
+
+    # Scatter source values at True positions
+    scattered = mb.scatter_nd(data=flat_input, indices=indices, updates=source_slice, mode="update")
+
+    # Reshape back to the original shape
+    result = mb.reshape(x=scattered, shape=original_shape, name=node.name)
+    context.add(result)
+
 
 @register_torch_op(torch_alias=["meshgrid.indexing"])
 def meshgrid(context, node):
