@@ -6378,6 +6378,10 @@ def masked_fill(context, node):
 @register_torch_op
 def masked_scatter(context, node):
     """
+    Convert torch.masked_scatter to MIL ops.
+
+    Replaces elements in input where mask is True with values from source,
+    consumed sequentially. Decomposed into: flatten -> non_zero -> slice -> scatter_nd -> reshape.
     """
     inputs = _get_inputs(context, node, expected=3)
     input_tensor = inputs[0]

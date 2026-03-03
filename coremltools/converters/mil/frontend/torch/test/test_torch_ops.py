@@ -11185,7 +11185,7 @@ class TestMaskedScatter(TorchBaseTest):
     def test_masked_scatter_all_true(self, compute_unit, backend, frontend):
         class TestModel(nn.Module):
             def forward(self, x):
-                mask = torch.ones(2,3, dtype=torch.bool)
+                mask = torch.ones(2, 3)
                 source = torch.tensor([10.0, 20.0, 30.0, 40.0, 50.0, 60.0])
                 return x.masked_scatter(mask, source)
         self.run_compare_torch(
@@ -11203,7 +11203,7 @@ class TestMaskedScatter(TorchBaseTest):
         class TestModel(nn.Module):
             def forward(self, x):
                 mask = torch.tensor([False, True, False, True, True])
-                source = torch.tensor([99.0,88.0,77.0])
+                source = torch.tensor([99.0, 88.0, 77.0])
                 return x.masked_scatter(mask, source)
 
         self.run_compare_torch(
@@ -11222,7 +11222,7 @@ class TestMaskedScatter(TorchBaseTest):
         class TestModel(nn.Module):
             def forward(self, x):
                 mask = torch.tensor([[True, False], [False, True]])
-                source = torch.tensor([10.0,20.0,30.0,40.0,50.0])
+                source = torch.tensor([10.0, 20.0, 30.0, 40.0, 50.0])
                 return x.masked_scatter(mask, source)
 
         self.run_compare_torch(
