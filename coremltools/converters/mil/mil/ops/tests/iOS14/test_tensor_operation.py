@@ -3,6 +3,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import logging
 import itertools
 import platform
 
@@ -1118,6 +1119,25 @@ class TestRange1d:
 
     @ssa_fn
     def test_builder_eval(self):
+        v = mb.range_1d(start=5, end=15, step=2)
+        np.testing.assert_allclose(np.arange(5, 15, 2), v.val, atol=1e-04, rtol=1e-05)
+
+    @ssa_fn
+    def test_builder_downcast(self):
+        # this test should execute without warnings
+        # i.e. without the tensor type's "might lose precision" warning
+        # caused by numpy defaulting to the int64 type, unsupported by MIL
+        # this logging filter raises that warning to an error, failing the test
+        class LevelRaiser(logging.Filter):
+            def filter(self, record):
+                if (
+                    record.levelno == logging.WARNING
+                    and "might lose precision" in record.msg
+                ):
+                    raise Exception("mb.range_1d triggered a downcast warning")
+                return True
+
+        logging.getLogger("coremltools").addFilter(LevelRaiser())
         v = mb.range_1d(start=5, end=15, step=2)
         np.testing.assert_allclose(np.arange(5, 15, 2), v.val, atol=1e-04, rtol=1e-05)
 
