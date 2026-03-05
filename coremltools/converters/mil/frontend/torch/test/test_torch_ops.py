@@ -11185,7 +11185,7 @@ class TestMaskedScatter(TorchBaseTest):
     def test_masked_scatter_all_true(self, compute_unit, backend, frontend):
         class TestModel(nn.Module):
             def forward(self, x):
-                mask = torch.ones(2, 3)
+                mask = torch.ones(2, 3, dtype=torch.bool)
                 source = torch.tensor([10.0, 20.0, 30.0, 40.0, 50.0, 60.0])
                 return x.masked_scatter(mask, source)
         self.run_compare_torch(
