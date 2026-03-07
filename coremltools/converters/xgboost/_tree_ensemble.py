@@ -159,6 +159,7 @@ def convert_tree_ensemble(
     import os
 
     feature_map = None
+    base_score = None
     if isinstance(
         model, (_xgboost.core.Booster, _xgboost.XGBRegressor, _xgboost.XGBClassifier)
     ):
@@ -199,6 +200,11 @@ def convert_tree_ensemble(
                 model = model.get_booster()
             else:
                 model = model.booster()
+        try:
+            config = json.loads(model.save_config())
+            base_score = float(config['learner']['learner_model_param']['base_score'])
+        except (KeyError, ValueError, AttributeError):
+            pass
 
         # Xgboost sometimes has feature names in there. Sometimes does not.
         if (feature_names is None) and (model.feature_names is None):
@@ -212,6 +218,8 @@ def convert_tree_ensemble(
             # When XGboost model artifact does not have feature names
             # (seems to be the default in new Xgboost releases),
             # but the user provides them, use them as they are expecting later.
+            if not isinstance(feature_names, list):
+                feature_names = list(feature_names)
             model.feature_names=feature_names
 
         xgb_model_str = model.get_dump(with_stats=True, dump_format="json")
@@ -247,9 +255,10 @@ def convert_tree_ensemble(
             class_labels = range(n_classes)
         if n_classes == 2:
             # if we have only 2 classes we only have one sequence of estimators
-            base_prediction = [0.0]
+            base_prediction = [base_score if base_score is not None else 0.0]
         else:
-            base_prediction = [0.0 for c in range(n_classes)]
+            bs = base_score if base_score is not None else 0.0
+            base_prediction = [bs for c in range(n_classes)]
         # target here is the equivalent of output_features in scikit learn
         mlkit_tree = TreeEnsembleClassifier(feature_names, class_labels, target)
         mlkit_tree.set_default_prediction_value(base_prediction)
@@ -259,7 +268,7 @@ def convert_tree_ensemble(
             mlkit_tree.set_post_evaluation_transform("Classification_SoftMax")
     else:
         mlkit_tree = _TreeEnsembleRegressor(feature_names, target)
-        mlkit_tree.set_default_prediction_value(0.5)
+        mlkit_tree.set_default_prediction_value(base_score if base_score is not None else 0.5)
 
     for xgb_tree_id, xgb_tree_str in enumerate(xgb_model_str):
         if mode == "classifier" and n_classes > 2:
