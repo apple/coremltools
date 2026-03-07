@@ -307,3 +307,42 @@ class XGboostRegressorBostonHousingNumericTest(unittest.TestCase):
         print("Testing a total of %s cases. This could take a while" % len(args))
         for it, arg in enumerate(args):
             self._train_convert_evaluate_assert(arg)
+
+@unittest.skipIf(not _HAS_XGBOOST, "Missing xgboost. Skipping")
+class XGBoostBaseScoreTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        scikit_data = load_boston()
+        self.X = scikit_data["data"]
+        self.target = scikit_data["target"]
+        self.feature_names = scikit_data["feature_names"]
+        self.output_name = "target"        
+
+    def test_base_score_extraction(self):
+        """Verify that the converter reads base_score from the model config
+        instead of using the hardcoded default (0.5)."""
+        import json
+
+        # Train a model - XGBoost 3.x auto-estimates base_score from data
+        xgb_model = xgboost.XGBRegressor(n_estimators=5)
+        xgb_model.fit(self.X, self.target)
+
+        # Extract the actual base_score from the booster config
+        booster = xgb_model.get_booster()
+        config = json.loads(booster.save_config())
+        actual_base_score = float(
+            config['learner']['learner_model_param']['base_score']
+        )
+
+        # Convert and check the default_prediction_value matches
+        spec = xgb_converter.convert(
+            xgb_model, self.feature_names, self.output_name, force_32bit_float=False
+        )
+        tree_ensemble = spec.get_spec().treeEnsembleRegressor.treeEnsemble
+        default_value = tree_ensemble.basePredictionValue[0]
+        self.assertAlmostEqual(
+            default_value,
+            actual_base_score,
+            places=5,
+            msg="Converter should use model's actual base_score, not hardcoded 0.5",
+        )
