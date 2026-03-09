@@ -6507,6 +6507,7 @@ def meshgrid(context, node):
         "_assert_scalar",
         "_assert_tensor_metadata",
         "_local_scalar_dense",
+        "alias",
         "alias_copy",
         "clone",
         "contiguous",
