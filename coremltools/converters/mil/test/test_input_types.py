@@ -1,5 +1,8 @@
+import numpy as np
 import pytest
-from coremltools.converters.mil.input_types import RangeDim
+
+from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.input_types import RangeDim, TensorType
 
 def test_rangedim_default_within_bounds():
     dim = RangeDim(lower_bound=0, upper_bound=10, default=5)
@@ -25,3 +28,13 @@ def test_rangedim_ior_merges_bounds_and_adjusts_default():
     assert dim1.upper_bound == 10    # same here unless logic changes
     assert dim1.default >= dim1.lower_bound
     assert dim1.default <= dim1.upper_bound
+
+
+def test_tensortype_accepts_uint16_builtin_dtype():
+    t = TensorType(name="x", shape=(1, 2), dtype=types.uint16)
+    assert t.dtype == types.uint16
+
+
+def test_tensortype_accepts_uint16_numpy_dtype():
+    t = TensorType(name="x", shape=(1, 2), dtype=np.uint16)
+    assert t.dtype == types.uint16

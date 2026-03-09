@@ -238,6 +238,7 @@ class TensorType(InputType):
                 if dtype not in (
                     types.int8,
                     types.uint8,
+                    types.uint16,
                     types.fp16,
                     types.fp32,
                     types.fp64,
@@ -262,6 +263,7 @@ class TensorType(InputType):
                     np.int8,
                     np.int32,
                     np.int64,
+                    np.uint16,
                     int,
                     bool,
                     np.bool_,
