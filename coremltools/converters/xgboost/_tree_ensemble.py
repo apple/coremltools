@@ -200,11 +200,8 @@ def convert_tree_ensemble(
                 model = model.get_booster()
             else:
                 model = model.booster()
-        try:
-            config = json.loads(model.save_config())
-            base_score = float(config['learner']['learner_model_param']['base_score'])
-        except (KeyError, ValueError, AttributeError):
-            pass
+        config = json.loads(model.save_config())
+        base_score = float(config['learner']['learner_model_param']['base_score'])
 
         # Xgboost sometimes has feature names in there. Sometimes does not.
         if (feature_names is None) and (model.feature_names is None):
