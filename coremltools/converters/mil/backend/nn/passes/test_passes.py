@@ -225,3 +225,40 @@ def test_handle_unused_inputs():
     assert id_op in prog["main"].inputs["unused_input"].child_ops
 
     assert_model_is_valid(prog, {"unused_input": (1, 2)})
+
+
+def test_handle_unused_inputs_skips_state():
+    """State-typed inputs should not be wrapped in identity ops.
+
+    The identity op does not accept state types, so attempting to wrap
+    an unused state input in an identity op raises a ValueError.
+    State inputs are managed by coreml_update_state and should be
+    excluded from the unused-input handling.
+
+    Regression test for https://github.com/apple/coremltools/issues/2639
+    """
+    from coremltools.converters.mil._deployment_compatibility import AvailableTarget
+    from coremltools.converters.mil.mil import types
+
+    @mb.program(
+        input_specs=[
+            mb.TensorSpec(shape=(1, 2)),
+            mb.StateTensorSpec(shape=(1, 2), dtype=types.fp16),
+        ],
+        opset_version=AvailableTarget.iOS18,
+    )
+    def prog(x, unused_state):
+        # State input is not consumed — only the tensor input is used.
+        return mb.add(x=x, y=np.float16(1.0))
+
+    # Before the fix, this would raise:
+    #   ValueError: Op "unused_state_tmp" (op_type: identity)
+    #   Input x="unused_state" expects tensor but got state[...]
+    PASS_REGISTRY["nn_backend::handle_unused_inputs"](prog)
+
+    # Verify no identity op was inserted for the state input
+    identity_ops = prog.find_ops(op_type="identity")
+    for op in identity_ops:
+        assert op.name != "unused_state_tmp", (
+            "State input should not be wrapped in an identity op"
+        )
