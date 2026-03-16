@@ -7277,6 +7277,25 @@ class TestTo(TorchBaseTest):
             compute_unit=compute_unit,
         )
 
+    def test_cast_length_1_constant_tensor(self):
+        class TestModel(torch.nn.Module):
+            def forward(self, x):
+                b, c, h, w = x.shape
+                return x.reshape(b, c, int(h * w))
+
+        x = torch.rand(1, 2, 4, 4)
+        torch_model = export_torch_model_to_frontend(
+            TestModel().eval(),
+            (x,),
+            TorchFrontend.TORCHSCRIPT,
+        )
+        ct.convert(
+            torch_model,
+            inputs=[ct.TensorType(shape=x.shape)],
+            convert_to="neuralnetwork",
+            minimum_deployment_target=ct.target.iOS14,
+        )
+
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend",
         itertools.product(compute_units, backends, frontends),
