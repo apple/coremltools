@@ -249,7 +249,7 @@ def test_handle_unused_inputs_skips_state():
     )
     def prog(x, unused_state):
         # State input is not consumed — only the tensor input is used.
-        return mb.add(x=x, y=np.float16(1.0))
+        return mb.add(x=x, y=np.float32(1.0))
 
     # Before the fix, this would raise:
     #   ValueError: Op "unused_state_tmp" (op_type: identity)
