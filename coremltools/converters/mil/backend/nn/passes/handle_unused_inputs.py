@@ -5,12 +5,16 @@
 
 from coremltools.converters.mil.mil import Block
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
 def _handle_unused_inputs_func(f):
-    unused_inputs = [v for v_name, v in f.inputs.items() if len(v.child_ops) == 0]
+    unused_inputs = [
+        v for v_name, v in f.inputs.items()
+        if len(v.child_ops) == 0 and not types.is_state(v.sym_type)
+    ]
 
     with f:
         for v in unused_inputs:
