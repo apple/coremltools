@@ -3133,6 +3133,17 @@ def ZerosLike(context, node):
         x = mb.fill(shape=mb.shape(x=x), value=np_type(0), name=node.name)
     context.add(node.name, x)
 
+@register_tf_op
+def OnesLike(context, node):
+    x = context[node.inputs[0]]
+    if x.rank == 0:
+        np_type = types.nptype_from_builtin(x.sym_type)
+        x = mb.const(val=np_type(1), name=node.name)
+    else:
+        np_type = types.nptype_from_builtin(x.sym_type.get_primitive())
+        x = mb.fill(shape=mb.shape(x=x), value=np_type(1), name=node.name)
+    context.add(node.name, x)
+
 
 @register_tf_op
 def IsFinite(context, node):

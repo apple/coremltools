@@ -7422,6 +7422,49 @@ class TestZerosLike(TensorFlowBaseTest):
             compute_unit=compute_unit,
             backend=backend,
         )
+class TestOnesLike(TensorFlowBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, rank, dynamic",
+        itertools.product(
+            compute_units,
+            backends,
+            [rank for rank in range(5)],
+            [True, False],
+        ),
+    )
+    def test(self, compute_unit, backend, rank, dynamic):
+        if rank == 0:
+            pytest.skip('Rank 0 not supported by CoreML runtime')
+        input_shape = np.random.randint(low=2, high=4, size=rank)
+        input_value = random_gen(input_shape, rand_min=-1, rand_max=1)
+        if dynamic:
+            a, b = np.prod(input_shape[:2]), np.prod(input_shape[2:])
+            reshape_vals = np.array([a, b], dtype=np.int32)
+            reshape_input_shape = np.array([2], dtype=np.int32)
+
+            @make_tf_graph([input_shape, list(reshape_input_shape) + [tf.int32]])
+            def build_model(x, reshape):
+                x = tf.reshape(x, shape=reshape)
+                return tf.raw_ops.OnesLike(x=x)
+
+            model, inputs, outputs = build_model
+            input_values = [input_value, reshape_vals]
+        else:
+
+            @make_tf_graph([input_shape])
+            def build_model(x):
+                return tf.raw_ops.OnesLike(x=x)
+
+            model, inputs, outputs = build_model
+            input_values = [input_value]
+        input_dict = dict(zip(inputs, input_values))
+        TensorFlowBaseTest.run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            compute_unit=compute_unit,
+            backend=backend,
+        )
 
 
 class TestIsFinite(TensorFlowBaseTest):
