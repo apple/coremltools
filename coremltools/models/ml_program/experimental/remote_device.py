@@ -1930,6 +1930,7 @@ class _TensorDescriptor:
         Float32 = "Float32"
         Float64 = "Float64"
         Int32 = "Int32"
+        UInt8 = "UInt8"
 
     shape: _List[int]
     strides: _List[int]
@@ -1948,6 +1949,8 @@ class _TensorDescriptor:
             return _TensorDescriptor.DataType.Float64
         elif dtype == _np.int32:
             return _TensorDescriptor.DataType.Int32
+        elif dtype == _np.uint8:
+            return _TensorDescriptor.DataType.UInt8
         else:
             raise ValueError(f"{dtype} is not supported")
 
@@ -1963,6 +1966,8 @@ class _TensorDescriptor:
             return _np.float64
         elif dtype == _TensorDescriptor.DataType.Int32:
             return _np.int32
+        elif dtype == _TensorDescriptor.DataType.UInt8:
+            return _np.uint8
         else:
             raise ValueError(f"{dtype} is not supported")
 

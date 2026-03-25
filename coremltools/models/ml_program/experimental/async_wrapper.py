@@ -24,6 +24,13 @@ from .remote_device import Device, _RemoteMLModelService
 if _HAS_TORCH:
     from torch import Tensor
 
+_HAS_PIL = True
+try:
+    from PIL import Image as _PIL_IMAGE
+except:
+    _HAS_PIL = False
+
+
 class MLModelAsyncWrapper(ABC):
     @staticmethod
     def init_check(
@@ -386,6 +393,8 @@ class RemoteMLModelAsyncWrapper(MLModelAsyncWrapper):
         def convert_to_np_array(input: Any):
             if isinstance(input, np.ndarray):
                 return input
+            elif _HAS_PIL and isinstance(input, _PIL_IMAGE.Image):
+                return np.array(input)
             elif _HAS_TORCH and isinstance(input, Tensor):
                 return input.detach().numpy()
             else:
