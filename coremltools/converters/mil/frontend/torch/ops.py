@@ -6457,15 +6457,30 @@ def meshgrid(context, node):
         assert isinstance(tensor_inputs, (list, tuple))
         if len(tensor_inputs) < 2:
             raise ValueError("Requires >= 2 tensor inputs.")
-        if any(tensor_input.rank > 1 for tensor_input in tensor_inputs):
-            raise ValueError("meshgrid received non-1d tensor.")
 
         if indexing not in ("ij", "xy"):
             raise ValueError(f"indexing mode {indexing} not supported")
 
+    def _flatten_inputs(tensor_inputs):
+        """Flatten non-1D inputs to 1D.
+
+        PyTorch JIT tracing can produce tensors with shape (N, 1) instead of (N,)
+        for ops like torch.linspace. Since meshgrid expects 1D inputs, we reshape
+        them here.
+        """
+        flattened = []
+        for i, t in enumerate(tensor_inputs):
+            if t.rank > 1:
+                t = mb.reshape(
+                    x=t, shape=[-1], name=node.name + "_flatten_" + str(i)
+                )
+            flattened.append(t)
+        return flattened
+
     tensor_inputs, indexing = _parse_positional_args(context, node)
     indexing = _parse_keyword_args(context, node, indexing)
     _check_args(tensor_inputs, indexing)
+    tensor_inputs = _flatten_inputs(tensor_inputs)
 
     result_symbolic_shape = [tensor_input.shape[0] for tensor_input in tensor_inputs]
     result_shape = _utils.maybe_replace_symbols_with_source_tensor_shape_variables(

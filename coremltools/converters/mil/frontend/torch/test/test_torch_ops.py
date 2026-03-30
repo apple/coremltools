@@ -11312,6 +11312,54 @@ class TestMeshgrid(TorchBaseTest):
             compute_unit=compute_unit,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, indexing",
+        itertools.product(
+            compute_units,
+            backends,
+            ["ij", "xy"],
+        ),
+    )
+    def test_meshgrid_non_1d_inputs(self, compute_unit, backend, indexing):
+        """Test meshgrid where inputs become non-1D during conversion.
+
+        When a 1D tensor is divided by a 0D scalar (e.g. from a dynamic shape),
+        the MIL converter may produce a higher-rank result. The meshgrid converter
+        should flatten these to 1D before processing rather than raising an error.
+
+        This pattern occurs in deformable attention (DINO/Deformable-DETR/RF-DETR)
+        where coordinate grids are created via:
+            grid_y = torch.linspace(..., steps=h) / h
+            grid_x = torch.linspace(..., steps=w) / w
+            grid_y, grid_x = torch.meshgrid(grid_y, grid_x, indexing='ij')
+        """
+
+        class TestModel(nn.Module):
+            def forward(self, feat):
+                h, w = feat.shape[2], feat.shape[3]
+                grid_y = torch.linspace(
+                    0.5, h - 0.5, steps=h, dtype=feat.dtype, device=feat.device
+                ) / h
+                grid_x = torch.linspace(
+                    0.5, w - 0.5, steps=w, dtype=feat.dtype, device=feat.device
+                ) / w
+                grid_y, grid_x = torch.meshgrid(grid_y, grid_x, indexing=indexing)
+                return torch.stack([grid_x, grid_y], dim=-1)
+
+        inputs = (torch.randn(1, 64, 4, 6),)
+        model = TestModel().eval()
+        expected_results = model(*inputs)
+
+        self.run_compare_torch(
+            inputs,
+            model,
+            expected_results,
+            input_as_shape=False,
+            frontend=TorchFrontend.TORCHSCRIPT,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
 
 class TestAddmm(TorchBaseTest):
     @pytest.mark.parametrize(
