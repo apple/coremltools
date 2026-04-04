@@ -1807,6 +1807,9 @@ def mish(context, node):
 
     # e = exp(x)
     # mish = x / (1 + 2 / (e * (e + 2)))
+    # Clamp x to avoid -inf producing NaN (exp(-inf)=0 causes 0/0, and -inf/finite=-inf).
+    # mish(-inf) is mathematically 0; mish(-100) ≈ 0 to full precision.
+    x = mb.clip(x=x, alpha=-100.0, beta=float("inf"))
     e = mb.exp(x=x)
     ep2 = mb.add(x=e, y=2.0)
     emep2 = mb.mul(x=e, y=ep2)
