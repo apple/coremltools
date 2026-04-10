@@ -163,6 +163,12 @@ def sanitize_op_kind(op_kind: str) -> str:
     op_kind = skip_default_prefix_and_suffix_with_deliminator(op_kind, "::")
     op_kind = skip_default_prefix_and_suffix_with_deliminator(op_kind, ".")
 
+    # 4. Strip the "__name__" wrapper again. The dunder may only become visible
+    # after stripping the namespace and overload suffix above, e.g.
+    # "aten::__or__.Tensor" -> "__or__" -> "or".
+    if op_kind.startswith("__") and op_kind.endswith("__"):
+        op_kind = op_kind[2:-2]
+
     return op_kind
 
 

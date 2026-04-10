@@ -21,6 +21,39 @@ from .. import ops
 from .. import utils
 from ..converter import TranscriptionContext
 from ..internal_graph import InternalTorchIRNode
+from ..utils import sanitize_op_kind
+
+
+class TestSanitizeOpKind:
+    """Unit tests for the op-name canonicalizer used by both TorchScript and EXIR
+    frontends. The trickiest case is op overloads whose canonical name only
+    contains a "__name__" wrapper after the namespace prefix is stripped — e.g.
+    aten::__or__.Tensor must canonicalize to "or" so it resolves against the
+    same registry entry as the legacy "__or__" form.
+    """
+
+    @pytest.mark.parametrize(
+        "raw, expected",
+        [
+            # Already-canonical names round-trip.
+            ("add", "add"),
+            ("logical_or", "logical_or"),
+            # Legacy double-underscore form (single token).
+            ("__add__", "add"),
+            ("__or__", "or"),
+            # ATen / overload-suffixed forms.
+            ("aten::add.Tensor", "add"),
+            ("aten::bmm.default", "bmm"),
+            ("aten::pow.Tensor_Scalar", "pow"),
+            # Dunder hidden behind a namespace + overload suffix — the case that
+            # used to slip through and produce e.g. "__or__" as the lookup key.
+            ("aten::__or__.Tensor", "or"),
+            ("aten::__and__.Tensor", "and"),
+            ("aten::__xor__.Tensor", "xor"),
+        ],
+    )
+    def test_sanitize_op_kind(self, raw, expected):
+        assert sanitize_op_kind(raw) == expected
 
 
 class TestTorchOps:
