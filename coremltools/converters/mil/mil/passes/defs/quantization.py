@@ -428,6 +428,13 @@ class FP16ComputePrecision(CastTypeQuantization):
         2. For inifinities (abs >= 1e38), their exact values does not matter,
            so we can always downcast them to fp16 inf. For example, in attention mask
            we just want -inf to make the masked entries have 0 probability after softmax
+
+        Note: tensor consts whose finite values exceed fp16 range are clipped
+        to ``±65504`` by ``add_fp16_cast._clip_fp32_const_to_fp16_range`` before
+        this check runs, so they no longer trip case 1. Scalar consts are not
+        clipped (see that helper for the rationale), so this routine remains
+        the safety net for scalar near-inf-like constants such as the
+        ``±2e38`` sentinels used in some elementwise pipelines.
         """
         for _, inputs in op.inputs.items():
             is_list_input = isinstance(inputs, (list, tuple))
@@ -521,6 +528,9 @@ class add_fp16_cast(FP16ComputePrecision):
 
     _skip_ops_by_type: Set[Text] = set()
 
+    # Largest finite value representable in fp16.
+    _FP16_MAX: float = 65504.0
+
     @property
     def skip_ops_by_type(self):
         return self._skip_ops_by_type
@@ -528,6 +538,76 @@ class add_fp16_cast(FP16ComputePrecision):
     @skip_ops_by_type.setter
     def skip_ops_by_type(self, criteria: Text):
         self._skip_ops_by_type = set(criteria.split(","))
+
+    @classmethod
+    def _clip_fp32_const_to_fp16_range(cls, prog) -> int:
+        """Clip finite values in fp32 const ops to ``±65504`` so they survive a
+        later cast to fp16 without becoming ``±inf``.
+
+        Background: some PyTorch implementations build attention masks using
+        ``torch.finfo(torch.float32).min`` (``-3.4028e+38``) instead of
+        ``-math.inf``. That value is FINITE but well outside fp16's range, so
+        when the FP16 conversion pass casts a downstream tensor (whose values
+        were computed from this constant) to fp16 it silently clips to
+        ``-inf``. Rows where every position is masked then evaluate to
+        ``softmax(-inf - (-inf)) = NaN``, producing an all-NaN model — this is
+        the failure mode observed when converting Gemma-4 with
+        ``compute_precision=FLOAT16``.
+
+        Clipping the sentinel to ``-65504`` is mathematically equivalent for
+        the masking use case (``exp(-65504)`` underflows to ``0``) but unlike
+        ``-inf`` it survives the cast and keeps degenerate "all-masked" rows
+        well-defined.
+
+        We only touch FINITE values; genuine ``±inf`` constants (the
+        intentional sentinel form) are left alone since they cast to fp16
+        ``±inf`` cleanly.
+
+        Returns the number of constants modified (for testing/logging).
+        """
+        modified = 0
+        for func in prog.functions.values():
+            for op in list(func.operations):
+                if op.op_type != "const":
+                    continue
+                out = op.outputs[0]
+                if not out.is_tensor_or_scalar_of(dtype="fp32"):
+                    continue
+                # Only touch tensor (rank >= 1) consts. Rank-0 / scalar consts
+                # round-trip through scalar Python objects in several places in
+                # MIL and rewriting them in place is fragile; the LLM mask
+                # constants this pass is designed to fix are always tensor
+                # shaped (e.g. (1, 1, S, S) attention masks).
+                if not types.is_tensor(out.sym_type) or len(out.shape) == 0:
+                    continue
+                val = op.val.val
+                if val is None:
+                    continue
+                arr = np.asarray(val)
+                finite_mask = np.isfinite(arr)
+                if not np.any(finite_mask):
+                    continue
+                if np.abs(arr[finite_mask]).max() <= cls._FP16_MAX:
+                    continue
+                # Clip in place. We mutate the existing array rather than
+                # building a new const op so downstream uses keep their Var
+                # references.
+                clipped = arr.astype(arr.dtype, copy=True)
+                over = finite_mask & (clipped > cls._FP16_MAX)
+                under = finite_mask & (clipped < -cls._FP16_MAX)
+                clipped[over] = cls._FP16_MAX
+                clipped[under] = -cls._FP16_MAX
+                clipped = clipped.reshape(arr.shape)
+                out._sym_val.val = clipped
+                op.val._sym_val.val = clipped
+                modified += 1
+        return modified
+
+    def apply(self, prog):
+        # Pre-pass: collapse out-of-range fp32 sentinel constants to ±65504 so
+        # the rest of the fp16 cast pipeline can run unconditionally.
+        self._clip_fp32_const_to_fp16_range(prog)
+        super().apply(prog)
 
 
 @register_pass(namespace="common")

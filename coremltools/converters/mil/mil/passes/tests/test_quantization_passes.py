@@ -2271,7 +2271,10 @@ class TestFP16CastTransform:
         Input graph:
             input -> clip(-77777, 88888) -> output
 
-        Nothing gets changed due to fp16 overflow
+        ``-77777`` and ``88888`` are scalar (rank-0) constants that exceed
+        fp16's range. The clipping pre-pass intentionally skips scalar consts
+        (see ``_clip_fp32_const_to_fp16_range``), so this op falls back to the
+        legacy "skip cast on overflow" behavior and remains in fp32.
         """
 
         SHAPE = (2, 1, 3, 7, 5)
@@ -2286,6 +2289,43 @@ class TestFP16CastTransform:
         apply_pass_and_basic_check(prog, "common::add_fp16_cast")
 
         assert get_op_types_in_program(prog) == ["clip"]
+
+    def test_fp16_overflow_finfo_min_const_does_not_nan(self):
+        """
+        Regression test for the Gemma-4 (and any LLM) attention-mask NaN bug:
+        a constant of value ``torch.finfo(torch.float32).min`` (``-3.4028e+38``)
+        is FINITE but exceeds fp16's representable range. Without clipping it
+        becomes fp16 ``-inf``, which then makes ``softmax(-inf - (-inf)) = NaN``
+        for fully-masked attention rows. With the clipping pre-pass it should
+        survive as ``-65504`` in fp16, and ``exp(-65504)`` underflows to ``0``
+        which is the intended masking semantics.
+        """
+
+        SHAPE = (4,)
+        FP32_MIN = float(np.finfo(np.float32).min)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=SHAPE)])
+        def prog(x):
+            mask = mb.const(val=np.full(SHAPE, FP32_MIN, dtype=np.float32))
+            y = mb.add(x=x, y=mask)
+            return y
+
+        apply_pass_and_basic_check(prog, "common::add_fp16_cast")
+
+        const_ops = [op for op in prog.functions["main"].operations if op.op_type == "const"]
+        clipped = [
+            op for op in const_ops
+            if op.outputs[0].is_tensor_or_scalar_of(dtype="fp32")
+            and op.val.val is not None
+            and np.isclose(np.asarray(op.val.val).min(), -65504.0)
+        ]
+        assert clipped, (
+            "Expected the finfo(fp32).min constant to be clipped to -65504, "
+            f"but found const values: {[op.val.val for op in const_ops]}"
+        )
+        # Clipped value must round-trip through fp16 without becoming -inf.
+        clipped_arr = np.asarray(clipped[0].val.val)
+        assert np.isfinite(clipped_arr.astype(np.float16)).all()
 
     def test_divide_by_zero_operation(self):
         """
