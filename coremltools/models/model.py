@@ -583,6 +583,41 @@ class MLModel:
             f = self._get_function_description(self.function_name)
             self._model_input_names_set = set([i.name for i in f.input])
 
+    def _close(self):
+        """Internal: eagerly release the temporary ``.mlpackage`` directory
+        (if any) and the compiled ``.mlmodelc`` owned by the underlying
+        CoreML proxy.
+
+        ``MLModel`` instances constructed from a ``Model_pb2`` spec allocate a
+        temporary ``.mlpackage`` under ``$TMPDIR`` via ``_create_mlpackage``.
+        Historically that directory was only reclaimed at interpreter exit via
+        ``atexit``. In workflows that construct many short-lived ``MLModel``
+        objects — e.g. activation-statistics collection in
+        ``linear_quantize_activations`` — this caused tens of gigabytes of
+        leaked temp directories before the process finished.
+
+        Not part of the public API: callers should normally rely on
+        ``__del__`` instead. After ``_close`` returns, the instance is no
+        longer usable for prediction. Safe to call more than once.
+        """
+        # Drop the proxy first so CoreML's mmap of the compiled model is
+        # released before we rmtree the backing package directory.
+        self.__proxy__ = None
+        pkg = getattr(self, "package_path", None)
+        if getattr(self, "is_temp_package", False) and pkg:
+            if _os is not None and _os.path.exists(pkg):
+                _shutil.rmtree(pkg, ignore_errors=True)
+            self.package_path = None
+            self.is_temp_package = False
+
+    def __del__(self):
+        # Interpreter-shutdown-safe: swallow every exception so destruction
+        # during gc never spams stderr.
+        try:
+            self._close()
+        except Exception:
+            pass
+
     def _get_proxy_and_spec(
         self,
         filename: str,
