@@ -8382,6 +8382,34 @@ def _construct_unfold_indices(N, C, H, W, kernel_size, stride):
 
 
 @register_torch_op
+def unfold(context, node):
+    """
+    Tensor.unfold (aten::unfold): single-axis sliding window, mapped to MIL sliding_windows 
+    with a transpose to move the window dim to the trailing position.
+    """
+    inputs = _get_inputs(context, node, expected=4)
+    x = inputs[0]
+    dimension = inputs[1].val
+    size = inputs[2].val
+    step = inputs[3].val
+
+    sw = mb.sliding_windows(x=x, axis=dimension, size=size, stride=step)
+
+    # Move the window dimension (inserted at dimension+1) to the last position.
+    pos_dim = dimension + 1 if dimension >= 0 else dimension + x.rank + 1
+    rank = sw.rank
+    if pos_dim != rank - 1:
+        perm = list(range(rank))
+        perm.remove(pos_dim)
+        perm.append(pos_dim)
+        result = mb.transpose(x=sw, perm=perm, name=node.name)
+    else:
+        result = mb.identity(x=sw, name=node.name)
+
+    context.add(result)
+
+
+@register_torch_op
 def im2col(context, node):
     """
     Extract sliding local blocks from a batched input tensor (rank=4).

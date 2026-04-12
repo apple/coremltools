@@ -13379,6 +13379,58 @@ class TestUnfold(TorchBaseTest):
         )
 
 
+class TestTensorUnfold(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    @pytest.mark.parametrize(
+        "input_shape, dim, size, step",
+        [
+            ((4, 8, 16), 0, 2, 1),
+            ((4, 8, 16), 1, 3, 2),
+            ((4, 8, 16), 2, 4, 2),
+            ((4, 8, 16), -1, 3, 1),
+            ((1, 3, 8, 8), 2, 3, 1),
+        ],
+    )
+    def test_tensor_unfold(self, compute_unit, backend, frontend, input_shape, dim, size, step):
+        class Model(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.dim = dim
+                self.size = size
+                self.step = step
+
+            def forward(self, x):
+                return x.unfold(self.dim, self.size, self.step)
+
+        self.run_compare_torch(
+            input_shape,
+            Model(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_chained_unfold(self, compute_unit, backend, frontend):
+        class Model(nn.Module):
+            def forward(self, x):
+                return x.unfold(1, 3, 1).unfold(2, 3, 1)
+
+        self.run_compare_torch(
+            (4, 8, 16),
+            Model(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+
 class TestFold(TorchBaseTest):
     @staticmethod
     def construct_block_count(
