@@ -5734,17 +5734,43 @@ def bitwise_not(context, node):
     context.add(x)
 
 
-@register_torch_op(torch_alias=["and"])
-def bitwise_and(context, node):
-    inputs = _get_inputs(context, node)
+def _bitwise_as_logical_if_boolean(context, node, op_name, logical_handler):
+    """Shared body for bitwise_and/or/xor.
 
+    Core ML has no true bitwise op on integers, so we lower to the logical
+    counterpart whenever at least one operand is bool — which covers the common
+    "combine boolean masks" pattern in attention/transformer code (where
+    torch.export may produce a mixed bool/float pair). Pure non-bool inputs are
+    still rejected so we don't silently change semantics for genuine integer
+    bitwise math.
+    """
+    inputs = _get_inputs(context, node)
     input_dtypes = [i.dtype for i in inputs]
-    if all(types.is_bool(input_dtype) for input_dtype in input_dtypes):
-        logical_and(context, node)
+    if any(types.is_bool(d) for d in input_dtypes):
+        logical_handler(context, node)
     else:
         raise NotImplementedError(
-            f"The `bitwise_and` op only supports boolean input, but get {input_dtypes}."
+            f"The `{op_name}` op only supports boolean input, but get {input_dtypes}."
         )
+
+
+@register_torch_op(torch_alias=["and"])
+def bitwise_and(context, node):
+    _bitwise_as_logical_if_boolean(context, node, "bitwise_and", logical_and)
+
+
+# "or" and "xor" cover the post-sanitize form of "aten::__or__" / "aten::__xor__"
+# which torch.export emits for `tensor | tensor` / `tensor ^ tensor`. These are
+# common when building boolean attention masks (e.g. Gemma combines a causal
+# mask with a padding mask via __or__).
+@register_torch_op(torch_alias=["or"])
+def bitwise_or(context, node):
+    _bitwise_as_logical_if_boolean(context, node, "bitwise_or", logical_or)
+
+
+@register_torch_op(torch_alias=["xor"])
+def bitwise_xor(context, node):
+    _bitwise_as_logical_if_boolean(context, node, "bitwise_xor", logical_xor)
 
 
 @register_torch_op
@@ -6664,6 +6690,16 @@ def new_zeros(context, node):
 
 
 @register_torch_op
+def new_ones(context, node):
+    # tensor.new_ones(size) — same shape semantics as new_zeros, value is 1.
+    # Use _make_fill_op so float-typed shape inputs (which torch.export sometimes
+    # produces) are coerced to int32 automatically.
+    inputs = _get_inputs(context, node)
+    result = _make_fill_op(inputs[1], 1.0, node.name)
+    context.add(result)
+
+
+@register_torch_op
 def scalar_tensor(context, node):
     x = _get_inputs(context, node, expected=[1, 5])[0]
     res = mb.identity(x=x, name=node.name)
@@ -7443,7 +7479,7 @@ def _nonzero_as_tuple(context, node, x):
     context.add(result, node.name)
 
 
-@register_torch_op(torch_alias=["where.self"])
+@register_torch_op(torch_alias=["where.self", "where.scalarother"])
 def where(context, node):
     inputs = _get_inputs(context, node)
 

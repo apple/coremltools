@@ -4501,6 +4501,34 @@ class TestNewZeros(TorchBaseTest):
         )
 
 
+class TestNewOnes(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, shape",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [
+                (1,),
+                (2, 3),
+                (1, 1, 2, 5, 1),
+            ],
+        ),
+    )
+    def test_new_ones_static(self, compute_unit, backend, frontend, shape):
+        class OnesStaticModel(nn.Module):
+            def forward(self, x):
+                return x.new_ones(x.shape)
+
+        self.run_compare_torch(
+            shape,
+            OnesStaticModel().eval(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+
 class TestNewFull(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, rank",
@@ -13314,6 +13342,75 @@ class TestBitwiseAnd(TorchBaseTest):
                 compute_unit=compute_unit,
                 input_as_shape=False,
             )
+
+
+class TestBitwiseOr(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_bitwise_or(self, compute_unit, backend, frontend):
+        class TestModel(torch.nn.Module):
+            def forward(self, x, y):
+                return torch.bitwise_or(x, y)
+
+        input_shape = (2, 3)
+        input_data_x = torch.rand(*input_shape) > 0.2
+        input_data_y = torch.rand(*input_shape) < 0.8
+        self.run_compare_torch(
+            [input_data_x, input_data_y],
+            TestModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_or_operator(self, compute_unit, backend, frontend):
+        # Exercises tensor.__or__ (i.e. `x | y`) which sanitizes to "or" and
+        # is the form torch.export emits when building boolean attention masks.
+        class TestModel(torch.nn.Module):
+            def forward(self, x, y):
+                return x | y
+
+        input_shape = (2, 3)
+        input_data_x = torch.rand(*input_shape) > 0.2
+        input_data_y = torch.rand(*input_shape) < 0.8
+        self.run_compare_torch(
+            [input_data_x, input_data_y],
+            TestModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+
+class TestBitwiseXor(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_bitwise_xor(self, compute_unit, backend, frontend):
+        class TestModel(torch.nn.Module):
+            def forward(self, x, y):
+                return torch.bitwise_xor(x, y)
+
+        input_shape = (2, 3)
+        input_data_x = torch.rand(*input_shape) > 0.2
+        input_data_y = torch.rand(*input_shape) < 0.8
+        self.run_compare_torch(
+            [input_data_x, input_data_y],
+            TestModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
 
 
 class TestUnfold(TorchBaseTest):
