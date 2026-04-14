@@ -13395,6 +13395,9 @@ class TestTensorUnfold(TorchBaseTest):
         ],
     )
     def test_tensor_unfold(self, compute_unit, backend, frontend, input_shape, dim, size, step):
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("aten.unfold is not in Core ATen opset")
+
         class Model(nn.Module):
             def __init__(self):
                 super().__init__()
@@ -13418,6 +13421,9 @@ class TestTensorUnfold(TorchBaseTest):
         itertools.product(compute_units, backends, frontends),
     )
     def test_chained_unfold(self, compute_unit, backend, frontend):
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("aten.unfold is not in Core ATen opset")
+
         class Model(nn.Module):
             def forward(self, x):
                 return x.unfold(1, 3, 1).unfold(2, 3, 1)
