@@ -2292,13 +2292,13 @@ class TestFP16CastTransform:
 
     def test_fp16_overflow_finfo_min_const_does_not_nan(self):
         """
-        Regression test for the Gemma-4 (and any LLM) attention-mask NaN bug:
-        a constant of value ``torch.finfo(torch.float32).min`` (``-3.4028e+38``)
-        is FINITE but exceeds fp16's representable range. Without clipping it
-        becomes fp16 ``-inf``, which then makes ``softmax(-inf - (-inf)) = NaN``
-        for fully-masked attention rows. With the clipping pre-pass it should
-        survive as ``-65504`` in fp16, and ``exp(-65504)`` underflows to ``0``
-        which is the intended masking semantics.
+        Regression test for models that build attention masks using
+        ``torch.finfo(torch.float32).min`` (``-3.4028e+38``) as the masked-out
+        sentinel (e.g. Gemma-4). That value is FINITE but exceeds fp16's
+        representable range. Without clipping it becomes fp16 ``-inf``, which
+        then makes ``softmax(-inf - (-inf)) = NaN`` for fully-masked rows. The
+        clipping pre-pass should replace it with ``-65504`` so ``exp`` simply
+        underflows to ``0``, which is the intended masking semantics.
         """
 
         SHAPE = (4,)

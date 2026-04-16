@@ -541,29 +541,9 @@ class add_fp16_cast(FP16ComputePrecision):
 
     @classmethod
     def _clip_fp32_const_to_fp16_range(cls, prog) -> int:
-        """Clip finite values in fp32 const ops to ``±65504`` so they survive a
-        later cast to fp16 without becoming ``±inf``.
-
-        Background: some PyTorch implementations build attention masks using
-        ``torch.finfo(torch.float32).min`` (``-3.4028e+38``) instead of
-        ``-math.inf``. That value is FINITE but well outside fp16's range, so
-        when the FP16 conversion pass casts a downstream tensor (whose values
-        were computed from this constant) to fp16 it silently clips to
-        ``-inf``. Rows where every position is masked then evaluate to
-        ``softmax(-inf - (-inf)) = NaN``, producing an all-NaN model — this is
-        the failure mode observed when converting Gemma-4 with
-        ``compute_precision=FLOAT16``.
-
-        Clipping the sentinel to ``-65504`` is mathematically equivalent for
-        the masking use case (``exp(-65504)`` underflows to ``0``) but unlike
-        ``-inf`` it survives the cast and keeps degenerate "all-masked" rows
-        well-defined.
-
-        We only touch FINITE values; genuine ``±inf`` constants (the
-        intentional sentinel form) are left alone since they cast to fp16
-        ``±inf`` cleanly.
-
-        Returns the number of constants modified (for testing/logging).
+        """Clip finite fp32 tensor consts to ``±65504`` so they do not become
+        ``±inf`` after the fp16 cast. Genuine ``±inf`` values are left alone.
+        Returns the number of constants modified.
         """
         modified = 0
         for func in prog.functions.values():
