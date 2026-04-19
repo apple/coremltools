@@ -2271,10 +2271,7 @@ class TestFP16CastTransform:
         Input graph:
             input -> clip(-77777, 88888) -> output
 
-        ``-77777`` and ``88888`` are scalar (rank-0) constants that exceed
-        fp16's range. The clipping pre-pass intentionally skips scalar consts
-        (see ``_clip_fp32_const_to_fp16_range``), so this op falls back to the
-        legacy "skip cast on overflow" behavior and remains in fp32.
+        Nothing gets changed due to fp16 overflow
         """
 
         SHAPE = (2, 1, 3, 7, 5)
@@ -2294,10 +2291,10 @@ class TestFP16CastTransform:
         """
         Regression test for models that build attention masks using
         ``torch.finfo(torch.float32).min`` (``-3.4028e+38``) as the masked-out
-        sentinel (e.g. Gemma-4). That value is FINITE but exceeds fp16's
-        representable range. Without clipping it becomes fp16 ``-inf``, which
-        then makes ``softmax(-inf - (-inf)) = NaN`` for fully-masked rows. The
-        clipping pre-pass should replace it with ``-65504`` so ``exp`` simply
+        sentinel (e.g. Gemma-4). That value is finite but exceeds fp16's
+        representable range. A plain cast yields fp16 ``-inf``, which makes
+        ``softmax(-inf - (-inf)) = NaN`` for fully-masked rows. The cast-time
+        saturation should replace the cast result with ``-65504`` so ``exp``
         underflows to ``0``, which is the intended masking semantics.
         """
 
@@ -2312,20 +2309,36 @@ class TestFP16CastTransform:
 
         apply_pass_and_basic_check(prog, "common::add_fp16_cast")
 
-        const_ops = [op for op in prog.functions["main"].operations if op.op_type == "const"]
-        clipped = [
-            op for op in const_ops
-            if op.outputs[0].is_tensor_or_scalar_of(dtype="fp32")
+        # The original fp32 const must remain intact — we must not mutate
+        # values that are only used through the cast.
+        fp32_consts = [
+            op for op in prog.functions["main"].operations
+            if op.op_type == "const"
+            and op.outputs[0].is_tensor_or_scalar_of(dtype="fp32")
             and op.val.val is not None
-            and np.isclose(np.asarray(op.val.val).min(), -65504.0)
+            and np.asarray(op.val.val).shape == SHAPE
         ]
-        assert clipped, (
-            "Expected the finfo(fp32).min constant to be clipped to -65504, "
-            f"but found const values: {[op.val.val for op in const_ops]}"
+        assert fp32_consts, "Expected the original fp32 mask const to still exist"
+        assert np.isclose(np.asarray(fp32_consts[0].val.val).min(), FP32_MIN)
+
+        # The inserted fp16 cast must have had its output value saturated to
+        # ``-65504`` instead of overflowing to ``-inf``.
+        fp16_cast_vars = [
+            op.outputs[0]
+            for op in prog.functions["main"].operations
+            if op.op_type == "cast"
+            and op.outputs[0].is_tensor_or_scalar_of(dtype="fp16")
+            and op.outputs[0].val is not None
+        ]
+        saturated = [
+            var for var in fp16_cast_vars
+            if np.isclose(np.asarray(var.val).min(), -65504.0)
+        ]
+        assert saturated, (
+            "Expected the fp16 cast of finfo(fp32).min to be saturated to -65504, "
+            f"but found fp16 cast outputs: {[var.val for var in fp16_cast_vars]}"
         )
-        # Clipped value must round-trip through fp16 without becoming -inf.
-        clipped_arr = np.asarray(clipped[0].val.val)
-        assert np.isfinite(clipped_arr.astype(np.float16)).all()
+        assert np.isfinite(np.asarray(saturated[0].val)).all()
 
     def test_divide_by_zero_operation(self):
         """
