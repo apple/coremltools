@@ -19,6 +19,7 @@ import torch.nn as nn
 import coremltools as ct
 from coremltools import RangeDim, Shape, TensorType
 from coremltools._deps import _HAS_TORCH_AUDIO, _HAS_TORCH_VISION, version_lt
+from coremltools.converters.mil.backend.mil.load import BlobWriter
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.frontend.torch.utils import (
     NUM_TO_TORCH_DTYPE,
@@ -41,6 +42,7 @@ from .testing_utils import (
     ModuleWrapper,
     TorchBaseTest,
     contains_op,
+    convert_to_mlmodel,
     export_torch_model_to_frontend,
     frontends,
     generate_input_data,
@@ -7085,6 +7087,52 @@ class TestMatMul(TorchBaseTest):
         self.run_compare_torch(
             [shape_x, shape_y], model, compute_unit=compute_unit, backend=backend, frontend=frontend
         )
+
+    @pytest.mark.parametrize("frontend", frontends)
+    @pytest.mark.parametrize(
+        "convert_to, minimum_deployment_target",
+        [("neuralnetwork", None), ("mlprogram", ct.target.iOS15)],
+    )
+    def test_mm_with_int32_constant_weight(
+        self, frontend, convert_to, minimum_deployment_target
+    ):
+        class TestModel(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.register_buffer(
+                    "weight", torch.randint(low=-9, high=9, size=(4, 4), dtype=torch.int32)
+                )
+
+            def forward(self, x):
+                return torch.mm(x, self.weight)
+
+        model = TestModel().eval()
+        input_data = torch.randint(low=-9, high=9, size=(4, 4), dtype=torch.int32)
+        model_spec = export_torch_model_to_frontend(model, input_data, frontend)
+
+        if convert_to == "mlprogram" and BlobWriter is None:
+            pytest.skip("BlobWriter not loaded")
+
+        mlmodel = convert_to_mlmodel(
+            model_spec,
+            [input_data],
+            backend=(convert_to, "fp32"),
+            converter_input_type=[
+                ct.TensorType(name="x", shape=input_data.shape, dtype=np.int32)
+            ],
+            compute_unit=ct.ComputeUnit.CPU_ONLY,
+            minimum_deployment_target=minimum_deployment_target,
+        )
+
+        ops = get_op_types_in_program(mlmodel._mil_program)
+        assert "matmul" in ops
+        assert "linear" not in ops
+
+        if ct.utils._is_macos() and ct.models.model._MLModelProxy is not None:
+            output_name = mlmodel._spec.description.output[0].name
+            expected = model(input_data).numpy()
+            prediction = mlmodel.predict({"x": input_data.numpy()})[output_name]
+            np.testing.assert_array_equal(prediction.astype(np.int32), expected)
 
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend",
