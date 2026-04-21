@@ -18,21 +18,19 @@ specific MLModel instances they construct. Any other test running in
 parallel against the same shared temp dir is therefore invisible to the
 assertions here.
 """
-from __future__ import annotations
-
 import gc
 import os
 
 import numpy as np
+import torch
+import torch.nn as nn
 
 import coremltools as ct
 
 
-def _build_spec_mlmodel() -> ct.models.MLModel:
+def _build_spec_mlmodel():
     """Build a tiny mlprogram MLModel from a spec so that MLModel.__init__
     hits the `_create_mlpackage` path (i.e. the one that allocates tmp)."""
-    import torch
-    import torch.nn as nn
 
     class _Tiny(nn.Module):
         def forward(self, x):
@@ -91,7 +89,7 @@ class TestMLModelTempCleanup:
         strictly stronger than counting ``tmp*.mlpackage`` in $TMPDIR and
         doesn't race with other tests that may also be creating temp
         packages in the same directory."""
-        pkgs: list[str] = []
+        pkgs = []
         for _ in range(5):
             m = _build_spec_mlmodel()
             pkgs.append(m.package_path)
