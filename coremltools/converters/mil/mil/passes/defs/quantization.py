@@ -325,6 +325,7 @@ class CastTypeQuantization(AbstractQuantizationPass):
                             before_op=op,
                         )
                         if param_target_dtype == "fp16":
+                            self._check_overflow_to_inf(x, var)
                             self._check_underflow_to_zero(x, var)
                         Block._copy_metadata(var, x)
 
@@ -502,6 +503,28 @@ class FP16ComputePrecision(CastTypeQuantization):
                     new_var._sym_val.val = new_val[0]
                 else:
                     new_var._sym_val.val = new_val.reshape(new_var.val.shape)
+
+    def _check_overflow_to_inf(self, new_var, var):
+        # Saturate finite fp32 values that overflowed to ±inf during the fp16 cast.
+        # Motivating case: attention masks that use torch.finfo(torch.float32).min
+        # (~-3.4e38) as the masked-out sentinel. Letting that become fp16 -inf
+        # produces NaN in softmax for fully-masked rows (e.g. Gemma-4).
+        # Genuine ±inf in the original fp32 value is preserved.
+        if new_var.val is None or var.val is None:
+            return
+        original_val = np.asarray(var.val).flatten()
+        new_val = np.asarray(new_var.val).flatten().astype(np.float16, copy=True)
+        if original_val.shape != new_val.shape:
+            return
+        overflow_mask = np.isfinite(original_val) & np.isinf(new_val)
+        if not np.any(overflow_mask):
+            return
+        new_val[overflow_mask & (original_val > 0)] = np.float16(65504.0)
+        new_val[overflow_mask & (original_val < 0)] = np.float16(-65504.0)
+        if np.isscalar(new_var.val):
+            new_var._sym_val.val = new_val[0]
+        else:
+            new_var._sym_val.val = new_val.reshape(new_var.val.shape)
 
 
 @register_pass(namespace="common")
