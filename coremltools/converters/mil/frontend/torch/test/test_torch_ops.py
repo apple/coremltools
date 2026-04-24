@@ -6686,6 +6686,7 @@ class TestElementWiseUnary(TorchBaseTest):
                 "abs",
                 "acos",
                 "asin",
+                "asinh",
                 "atan",
                 "ceil",
                 "cos",
@@ -6714,6 +6715,29 @@ class TestElementWiseUnary(TorchBaseTest):
         model = ModuleWrapper(function=op_func)
         self.run_compare_torch(
             shape, model, compute_unit=compute_unit, backend=backend, frontend=frontend
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, shape",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [(1, 3, 5, 8)],
+        ),
+    )
+    def test_acosh(self, compute_unit, backend, frontend, shape):
+        # torch.acosh is only defined on x >= 1, so we need to pass inputs in
+        # that range instead of the default rand_range=(-1.0, 1.0) which would
+        # produce NaN values and break numeric comparison.
+        model = ModuleWrapper(function=torch.acosh)
+        self.run_compare_torch(
+            shape,
+            model,
+            compute_unit=compute_unit,
+            backend=backend,
+            frontend=frontend,
+            rand_range=(1.1, 5.0),
         )
 
     @pytest.mark.parametrize(
@@ -9219,6 +9243,7 @@ class TestTorchTensor(TorchBaseTest):
                 "abs",
                 "acos",
                 "asin",
+                "asinh",
                 "atan",
                 "atanh",
                 "ceil",
