@@ -186,6 +186,23 @@ class MLModelTest(unittest.TestCase):
         self.assertIsNotNone(preds)
         self.assertEqual(preds["output"], 3.1)
 
+    def test_rename_output_neural_network(self):
+        input_features = [("data", datatypes.Array(3))]
+        output_features = [("output", datatypes.Array(3))]
+        builder = NeuralNetworkBuilder(input_features, output_features)
+        builder.add_activation(
+            name="relu",
+            non_linearity="RELU",
+            input_name="data",
+            output_name="output",
+        )
+        spec = builder.spec
+        rename_feature(
+            spec, "output", "renamed_output", rename_inputs=False, rename_outputs=True
+        )
+        self.assertEqual(spec.description.output[0].name, "renamed_output")
+        self.assertEqual(spec.neuralNetwork.layers[0].output[0], "renamed_output")
+
     @unittest.skipUnless(
         _is_macos() and _macos_version() >= (10, 13), "Only supported on macOS 10.13+"
     )
