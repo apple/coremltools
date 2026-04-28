@@ -674,10 +674,10 @@ def rename_feature(
                 for index, name in enumerate(layer.input):
                     if name == current_name:
                         layer.input[index] = new_name
-                if rename_outputs:
-                    for index, name in enumerate(layer.output):
-                        if name == current_name:
-                            layer.output[index] = new_name
+            if rename_outputs:
+                for index, name in enumerate(layer.output):
+                    if name == current_name:
+                        layer.output[index] = new_name
 
         if rename_inputs:
             for preprocess_params in nn.preprocessing:
