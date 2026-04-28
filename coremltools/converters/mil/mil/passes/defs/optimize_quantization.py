@@ -1243,3 +1243,76 @@ class canonicalize_quantized_lut_pattern(AbstractGraphPass):
             force_replace=True,  # Need to force replace because it involves replacing constexpr op.
         )
         block.remove_ops([old_op1, old_op2])
+
+
+@register_pass(namespace="common")
+class normalize_affine_dequantize_int8(AbstractGraphPass):
+    """
+    Converts ``constexpr_affine_dequantize`` ops that use signed int8 quantized_data
+    with zero_point=0 (symmetric int8 quantization) to an equivalent uint8 encoding
+    with zero_point=127.  The two encodings are mathematically identical for the
+    symmetric range [-127, 127]:
+
+    .. sourcecode:: python
+
+        (int8_val - 0) * scale == (uint8_val - 127) * scale
+        where uint8_val = int8_val + 127
+
+    The CoreML GPU/ANE runtime mishandles signed int8 in ``constexpr_affine_dequantize``
+    (rdar://121298675, rdar://158618073), producing incorrect inference results when GPU or Neural Engine
+    compute units are used.  Re-encoding as uint8+127 avoids the issue.  This pass was added to fix
+    pregenerated models that already contain the int8+zp=0 encoding (rdar://158618073).
+
+    Only applies when:
+    - ``quantized_data`` dtype is int8
+    - ``zero_point`` is a broadcast-zero tensor (scalar or vector of all zeros)
+    - data values are in [-127, 127] (symmetric range; value -128 cannot be losslessly
+      converted and causes the pass to skip that op)
+    """
+
+    def apply(self, prog):
+        for f in prog.functions.values():
+            self._apply_block(f)
+
+    @block_context_manager
+    def _apply_block(self, block: Block):
+        for op in list(block.operations):
+            if op.enclosing_block is None:
+                continue
+            for b in op.blocks:
+                self._apply_block(b)
+            self._try_transform(op, block)
+
+    @staticmethod
+    def _try_transform(op: Operation, block: Block) -> bool:
+        if op.op_type != "constexpr_affine_dequantize":
+            return False
+        if op.quantized_data.dtype != types.int8:
+            return False
+        zp = op.zero_point.val
+        if not np.all(zp == 0):
+            return False
+        int8_data = op.quantized_data.val
+        # Value -128 cannot be losslessly re-encoded as uint8+127 (-128+127 = -1, wraps
+        # to 255).  True symmetric int8 quantization clips to [-127, 127] and never
+        # produces -128, so bail out if it is present to stay conservative.
+        if np.any(int8_data == np.int8(-128)):
+            return False
+        uint8_data = (int8_data.astype(np.int32) + 127).astype(np.uint8)
+        new_zp = np.full(zp.shape, 127, dtype=np.uint8)
+        new_var = mb.constexpr_affine_dequantize(
+            quantized_data=uint8_data,
+            zero_point=new_zp,
+            scale=op.scale,
+            axis=op.axis,
+            name=op.outputs[0].name,
+            before_op=op,
+        )
+        block.replace_uses_of_var_after_op(
+            anchor_op=op,
+            old_var=op.outputs[0],
+            new_var=new_var,
+            force_replace=True,
+        )
+        block.remove_ops([op])
+        return True
