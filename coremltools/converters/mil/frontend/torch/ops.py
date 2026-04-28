@@ -7074,8 +7074,16 @@ def acos(context, node):
 
 @register_torch_op
 def acosh(context, node):
+    # MIL has no native acosh op, so decompose as:
+    #     acosh(x) = log(x + sqrt(x^2 - 1))
+    # which matches torch.acosh for the valid domain x >= 1.
     inputs = _get_inputs(context, node, expected=1)
-    context.add(mb.acosh(x=inputs[0], name=node.name))
+    x = inputs[0]
+    x_squared = mb.mul(x=x, y=x)
+    inner = mb.sub(x=x_squared, y=1.0)
+    sqrt_val = mb.sqrt(x=inner)
+    sum_val = mb.add(x=x, y=sqrt_val)
+    context.add(mb.log(x=sum_val, name=node.name))
 
 
 @register_torch_op
@@ -7357,8 +7365,16 @@ def sinh(context, node):
 
 @register_torch_op
 def asinh(context, node):
+    # MIL has no native asinh op, so decompose as:
+    #     asinh(x) = log(x + sqrt(x^2 + 1))
+    # which matches torch.asinh over all reals.
     inputs = _get_inputs(context, node, expected=1)
-    context.add(mb.asinh(x=inputs[0], name=node.name))
+    x = inputs[0]
+    x_squared = mb.mul(x=x, y=x)
+    inner = mb.add(x=x_squared, y=1.0)
+    sqrt_val = mb.sqrt(x=inner)
+    sum_val = mb.add(x=x, y=sqrt_val)
+    context.add(mb.log(x=sum_val, name=node.name))
 
 
 @register_torch_op
