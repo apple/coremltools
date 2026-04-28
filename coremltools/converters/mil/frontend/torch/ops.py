@@ -1036,7 +1036,12 @@ def pixel_unshuffle(context, node):
 
 
 def _construct_matmul(x: Var, y: Var, name: Optional[str] = None) -> Var:
-    if (len(y.shape) == 2 and len(x.shape) <= 3) and (_is_const(y) or y.is_descendant_of_const):
+    if (
+        x.dtype != types.int32
+        and y.dtype != types.int32
+        and (len(y.shape) == 2 and len(x.shape) <= 3)
+        and (_is_const(y) or y.is_descendant_of_const)
+    ):
         linear_x, weight = x, y
         transposed_weight = mb.transpose(x=weight, perm=(1, 0))
         res = mb.linear(x=linear_x, weight=transposed_weight, name=name)
