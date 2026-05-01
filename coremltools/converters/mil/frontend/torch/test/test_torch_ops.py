@@ -4748,6 +4748,51 @@ class TestRandint(TorchBaseTest):
         inputs = [ct.TensorType(shape=x.shape)] if frontend == TorchFrontend.TORCHSCRIPT else None
         ct.convert(torch_model, inputs=inputs)
 
+    @pytest.mark.parametrize("frontend", frontends)
+    def test_upper_bound_is_exclusive(self, frontend):
+        # Regression test for issue #2568. torch.randint produces integers in
+        # [low, high) — the upper bound is exclusive. mb.random_uniform's upper
+        # bound is inclusive, so cast-to-int can yield exactly `high` unless we
+        # clamp. Ensure the lowering inserts a clamp op so the converted graph
+        # cannot produce values >= `high`.
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("torch._ops.aten.randint.low is not Aten Canonical")
+
+        class TestModel(nn.Module):
+            def forward(self, x):
+                return torch.randint(0, 100, (1000, 100), dtype=torch.int64) + x
+
+        model = TestModel().eval()
+        x = torch.zeros((1000, 100), dtype=torch.int64)
+        torch_model = export_torch_model_to_frontend(model, (x,), frontend)
+        inputs = (
+            [ct.TensorType(shape=x.shape, dtype=np.int32)]
+            if frontend == TorchFrontend.TORCHSCRIPT
+            else None
+        )
+        mlmodel = ct.convert(torch_model, inputs=inputs)
+
+        # Structural assertion: the lowering must wire a `minimum` clamp into
+        # the path between `random_uniform` and the model output. Walk the MIL
+        # program looking for a minimum op whose input is the cast result.
+        prog = mlmodel._mil_program
+        op_types = []
+
+        def collect(block):
+            for op in block.operations:
+                op_types.append(op.op_type)
+                for child in op.blocks:
+                    collect(child)
+
+        for func in prog.functions.values():
+            collect(func)
+
+        assert "random_uniform" in op_types, "expected random_uniform in lowered randint"
+        assert "minimum" in op_types, (
+            "expected a `minimum` clamp op in the lowered randint graph (issue #2568); "
+            "otherwise the cast can yield values equal to `high`."
+        )
+
 
 class TestRand(TorchBaseTest):
     @pytest.mark.parametrize(
