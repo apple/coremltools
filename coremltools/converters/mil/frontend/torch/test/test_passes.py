@@ -17,6 +17,7 @@ from ..internal_graph import (
 from ..torchir_passes import (
     flatten_graph_input_values,
     flatten_graph_output_values,
+    remove_getattr_nodes,
     transform_inplace_ops,
 )
 import coremltools as ct
@@ -111,6 +112,63 @@ class TestTorchPasses:
         # The last inserted tuple construct should produce the input for the
         # next op.
         np.testing.assert_equal(graph.nodes[1].outputs[0], graph.nodes[2].inputs[0])
+
+
+    @staticmethod
+    def test_remove_getattr_nodes_with_output_buffer():
+        # Regression test for #2538: when a model directly returns a buffer,
+        # the corresponding getattr appears in graph.outputs and the pass
+        # used to raise. It now replaces the getattr with a constant node
+        # holding the buffer value so conversion can proceed.
+        params = {
+            "buf_a": np.array([1.0, 2.0, 3.0], dtype=np.float32),
+            "buf_b": np.array([4.0, 5.0], dtype=np.float32),
+        }
+        graph_nodes = [
+            InternalTorchIRNode(inputs=[], outputs=["buf_a"], kind="getattr", name="buf_a"),
+            InternalTorchIRNode(inputs=[], outputs=["buf_b"], kind="getattr", name="buf_b"),
+        ]
+        graph = InternalTorchIRGraph(
+            nodes=graph_nodes,
+            params=params,
+            inputs=OrderedDict(),
+            outputs=["buf_a", "buf_b"],
+        )
+
+        remove_getattr_nodes(graph)
+
+        np.testing.assert_equal(len(graph.nodes), 2)
+        for node in graph.nodes:
+            np.testing.assert_equal(node.kind, "constant")
+        np.testing.assert_array_equal(graph.nodes[0].attr["value"], params["buf_a"])
+        np.testing.assert_array_equal(graph.nodes[1].attr["value"], params["buf_b"])
+        # Original output names are preserved.
+        np.testing.assert_equal(graph.nodes[0].outputs, ["buf_a"])
+        np.testing.assert_equal(graph.nodes[1].outputs, ["buf_b"])
+
+
+    @staticmethod
+    def test_remove_getattr_nodes_drops_intermediate():
+        # Sanity check: a getattr node that is *not* in graph.outputs should
+        # still be dropped (the consuming op handler reads from graph.params).
+        params = {"weight": np.array([1.0], dtype=np.float32)}
+        graph_nodes = [
+            InternalTorchIRNode(inputs=[], outputs=["weight"], kind="getattr", name="weight"),
+            InternalTorchIRNode(
+                inputs=["x", "weight"], outputs=["y"], kind="mul", name="y"
+            ),
+        ]
+        graph = InternalTorchIRGraph(
+            nodes=graph_nodes,
+            params=params,
+            inputs=OrderedDict([("x", torch.rand(1))]),
+            outputs=["y"],
+        )
+
+        remove_getattr_nodes(graph)
+
+        np.testing.assert_equal(len(graph.nodes), 1)
+        np.testing.assert_equal(graph.nodes[0].kind, "mul")
 
 
     @staticmethod

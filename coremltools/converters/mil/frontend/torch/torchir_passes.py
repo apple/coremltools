@@ -6,6 +6,8 @@
 from collections import OrderedDict, defaultdict
 from typing import Dict, Optional
 
+import numpy as np
+
 from coremltools import _logger as logger
 
 from .internal_graph import InternalTorchIRGraph, InternalTorchIRNode
@@ -229,30 +231,52 @@ def populate_native_const_model_hierarchy(graph: InternalTorchIRGraph) -> None:
             node.model_hierarchy = cached_model_hierarchy[child_ops[node.name][0]]
 
 
-def remove_getattr_nodes(graph: InternalTorchIRGraph) -> None:
+def remove_getattr_nodes(
+    graph: InternalTorchIRGraph,
+    params: Optional[Dict[str, "np.ndarray"]] = None,
+) -> None:
     """
-    Remove the getattr nodes in the graph
+    Remove the getattr nodes from the graph.
+
+    A getattr node typically references a buffer / parameter that is consumed
+    by another op; the consuming op handler reads the value from the
+    surrounding graph's params dict, so dropping the getattr node is safe.
+    However, when a model directly returns a buffer (e.g. forward returns
+    `self.my_constant`), the getattr appears in the graph outputs. In that
+    case, replace the getattr with a constant node holding the buffer value
+    so the conversion does not crash.
     """
 
-    getattr_nodes = []
+    if params is None:
+        params = graph.params
+
     new_nodes = []
 
     for node in graph.nodes:
 
         for block in node.blocks:
-            remove_getattr_nodes(block)
+            remove_getattr_nodes(block, params=params)
 
         if node.kind == "getattr":
-            getattr_nodes.append(node)
+            if node.name in graph.outputs:
+                if node.name not in params:
+                    raise RuntimeError(
+                        "{} appears in the graph outputs but its value was not "
+                        "found in the graph params.".format(node.name)
+                    )
+                # Replace the getattr with a constant node carrying the value.
+                new_nodes.append(
+                    InternalTorchIRNode(
+                        kind="constant",
+                        inputs=[],
+                        outputs=node.outputs,
+                        name=node.name,
+                        attr={"value": params[node.name]},
+                    )
+                )
         else:
             new_nodes.append(node)
 
-    # check the getattr nodes not in the outputs
-    for node in getattr_nodes:
-        if node.name in graph.outputs:
-            raise RuntimeError("{} should not be in the graph outputs.".format(node.name))
-
-    # remove the getattr nodes
     graph.nodes = new_nodes
 
 
