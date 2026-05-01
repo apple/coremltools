@@ -8358,11 +8358,53 @@ def diagonal(context, node):
 
     x, offset, dim1, dim2 = _parse_positional_args(context, node)
     offset, dim1, dim2 = _parse_keyword_args(context, node, offset, dim1, dim2)
+    if isinstance(offset, Var):
+        offset = offset.val
+    if isinstance(dim1, Var):
+        dim1 = dim1.val
+    if isinstance(dim2, Var):
+        dim2 = dim2.val
 
-    if offset == 0 and dim1 == 0 and dim2 == 1:
-        diagonal = mb.band_part(x=x, lower=0, upper=0, name=node.name)
+    # torch.diagonal(input, offset=0, dim1=0, dim2=1) returns the requested
+    # diagonal as a 1-D tensor (for 2-D input) by extracting elements at
+    # input[i + max(-offset, 0), i + max(offset, 0)]. The previous
+    # implementation used band_part, which only zeros out the off-diagonal
+    # entries and returns the same-shape matrix.
+    if x.rank != 2:
+        raise NotImplementedError(
+            f"diagonal currently supports 2-D input only, got rank {x.rank}"
+        )
+    if any_symbolic(x.shape):
+        raise NotImplementedError("diagonal requires a statically-shaped input")
+
+    if dim1 < 0:
+        dim1 += x.rank
+    if dim2 < 0:
+        dim2 += x.rank
+    if (dim1, dim2) == (1, 0):
+        # diagonal along (dim1=1, dim2=0) equals diagonal along (0, 1) with
+        # sign-flipped offset.
+        offset = -offset
+    elif (dim1, dim2) != (0, 1):
+        raise NotImplementedError(
+            f"diagonal supports dim1/dim2 in (0, 1) or (1, 0), got ({dim1}, {dim2})"
+        )
+
+    n, m = x.shape
+    if offset >= 0:
+        diag_len = builtins.min(n, m - offset)
+        start = offset
     else:
-        raise NotImplementedError("Only offset == 0 and dim1 == 0 and dim2 == 1 handled")
+        diag_len = builtins.min(n + offset, m)
+        start = -offset * m
+    if diag_len <= 0:
+        raise ValueError(
+            f"diagonal offset {offset} produces an empty diagonal for shape ({n}, {m})"
+        )
+
+    indices = [start + i * (m + 1) for i in range(diag_len)]
+    flat = mb.reshape(x=x, shape=[-1])
+    diagonal = mb.gather(x=flat, indices=indices, axis=0, name=node.name)
 
     context.add(diagonal)
 

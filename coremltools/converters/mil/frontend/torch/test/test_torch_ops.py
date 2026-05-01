@@ -6676,6 +6676,45 @@ class TestActivation(TorchBaseTest):
         )
 
 
+class TestDiagonal(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, shape, offset, dim1, dim2",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [(5, 5), (3, 4), (4, 3)],
+            [-2, -1, 0, 1, 2],
+            [0, 1],
+            [0, 1],
+        ),
+    )
+    def test_diagonal(self, compute_unit, backend, frontend, shape, offset, dim1, dim2):
+        # Regression test for #2565: previously diagonal returned a same-shape
+        # matrix with off-diagonal zeroed out instead of a 1-D vector.
+        if dim1 == dim2:
+            pytest.skip("dim1 must differ from dim2")
+        n, m = shape
+        eff_offset = -offset if (dim1, dim2) == (1, 0) else offset
+        diag_len = (
+            min(n, m - eff_offset) if eff_offset >= 0 else min(n + eff_offset, m)
+        )
+        if diag_len <= 0:
+            pytest.skip("offset produces empty diagonal")
+
+        class TestModel(nn.Module):
+            def forward(self, x):
+                return torch.diagonal(x, offset=offset, dim1=dim1, dim2=dim2)
+
+        self.run_compare_torch(
+            shape,
+            TestModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+
 class TestElementWiseUnary(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, shape, op_string",
