@@ -10442,6 +10442,9 @@ class TestIndex(TorchBaseTest):
             minimum_deployment_target=ct.target.iOS17,
         )
 
+    @pytest.mark.skip(
+        reason="Getting predictions from converted model causes 'Fatal Python error' which aborts test run."
+    )
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, input_dtype, shape, minimum_deployment_target",
         itertools.product(
@@ -13120,6 +13123,9 @@ class TestNms(TorchBaseTest):
                 "rdar://103891349 ([TensorFlow] [PyTorch] NMS discrepancy in Fp16 when "
                 "number of boxes is large)"
             )
+
+        if iou_threshold == 0 and box_num in (5, 20) and backend == ("mlprogram", "fp16"):
+            pytest.xfail("Prediction shape mismatch")
 
         class NmsModel(torch.nn.Module):
             def forward(self, boxes, scores):

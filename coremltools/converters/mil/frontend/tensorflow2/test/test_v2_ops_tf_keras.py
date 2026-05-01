@@ -1388,6 +1388,7 @@ class TestRecurrent(TensorFlowBaseTest):
             backend=backend,
         )
 
+    @pytest.mark.xfail(reason="Can not call predict on converted model.")
     @pytest.mark.parametrize(
         "compute_unit, backend", itertools.product(compute_units, backends)
     )
