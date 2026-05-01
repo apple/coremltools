@@ -6675,6 +6675,29 @@ class TestActivation(TorchBaseTest):
             expected_results=out,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, dtype",
+        itertools.product(
+            compute_units, backends, frontends, [np.float32, np.int32]
+        ),
+    )
+    def test_floor_divide(self, compute_unit, backend, frontend, dtype):
+        # Regression test for #2570: PyTorch's floor_divide preserves the input
+        # dtype, but the converter previously always returned fp32.
+        model = ModuleWrapper(function=torch.floor_divide)
+        x1 = torch.from_numpy(np.array([10, -10, 7, -7], dtype=dtype))
+        x2 = torch.from_numpy(np.array([3, 3, 2, 2], dtype=dtype))
+        out = torch.floor_divide(x1, x2)
+        self.run_compare_torch(
+            [x1, x2],
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+            expected_results=out,
+        )
+
 
 class TestElementWiseUnary(TorchBaseTest):
     @pytest.mark.parametrize(
