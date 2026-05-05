@@ -523,6 +523,9 @@ class TestGraphPassManagement:
             "cast",
         ]
 
+    @pytest.mark.skip(
+        reason="Loading model from second convert call causes 'Fatal Python error' which aborts test run."
+    )
     def test_pass_option_skip_const_by_size(self):
         model = self._get_test_model()
         example_input = torch.rand(1, 1, 28, 28)
