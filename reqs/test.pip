@@ -11,7 +11,7 @@ scipy==1.8.1; python_version >= '3.8' and python_version < '3.11' and platform_m
 scipy==1.9.2; python_version == '3.11' and platform_machine != "arm64"
 scipy; platform_machine == "arm64"
 
-xgboost==1.4.2; platform_machine != "arm64"
+xgboost==3.0.2; platform_machine != "arm64"
 
 # coremltools.optimize.torch
 filelock==3.6.0
