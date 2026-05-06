@@ -6631,6 +6631,51 @@ class TestActivation(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, scale",
+        itertools.product(compute_units, backends, frontends, [0.1, 3.5, 11.0]),
+    )
+    def test_mish_stability(self, compute_unit, backend, frontend, scale):
+        class MishModel(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.conv1 = nn.Conv2d(1, 16, kernel_size=3, padding="same")
+                self.act = nn.Mish()
+                self.flatten = nn.Flatten()
+                self.fc1 = nn.Linear(28 * 28 * 16, 10)
+
+            def forward(self, x):
+                x = self.act(self.conv1(x))
+                x = self.flatten(x)
+                x = self.fc1(x)
+                return x
+
+        model = MishModel().eval()
+
+        # Fixed weights: conv weight=1.0, bias=0.0
+        # Each interior conv output pixel = sum of 9 input values ≈ 9 * local_value
+        # Mish input interval ≈ [-9*scale, 9*scale]
+        #   scale=0.1  → mish interval ≈ [-0.9, 0.9]   (small values)
+        #   scale=3.5  → mish interval ≈ [-31.5, 31.5]  (covers x=-30 regime)
+        #   scale=11.0 → mish interval ≈ [-99, 99]      (covers x=-100 regime)
+        with torch.no_grad():
+            model.conv1.weight.fill_(1.0)
+            model.conv1.bias.fill_(0.0)
+            model.fc1.weight.fill_(0.01)
+            model.fc1.bias.fill_(0.0)
+
+        # Fixed input: 28x28 values from -scale to +scale
+        x = torch.linspace(-scale, scale, 28 * 28).reshape(1, 1, 28, 28)
+
+        TorchBaseTest.run_compare_torch(
+            x,
+            model,
+            input_as_shape=False,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend, shape",
         itertools.product(compute_units, backends, frontends, COMMON_SHAPES_ALL),
     )
