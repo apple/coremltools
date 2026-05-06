@@ -1683,13 +1683,13 @@ class TestPalettizeWeights:
             op_type="constexpr_lut_to_dense"
         )[0]
         assert types.builtin_to_string(palettize_op.indices.dtype) == "uint4"
-        # The per-channel-scale is represented by a quant op to do scaling.
+        # per_channel_scale is folded into the LUT entries at compile time, so
+        # no runtime constexpr_blockwise_shift_scale wrapper is emitted (see
+        # palettize_weights in _quantization_passes.py for the rationale).
         quantize_ops = mlmodel_palettized._mil_program.functions["main"].find_ops(
             op_type="constexpr_blockwise_shift_scale"
         )
-        assert len(quantize_ops) > 0
-        # Order of quant and lut op is determined by canonicalize_quantized_lut_pattern graph pass.
-        assert quantize_ops[0].outputs[0].child_ops[0].op_type == "constexpr_lut_to_dense"
+        assert len(quantize_ops) == 0
 
         if _macos_version() >= (15, 0):
             verify_model_outputs(mlmodel, mlmodel_palettized, coreml_input_values)
