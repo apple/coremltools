@@ -119,7 +119,7 @@ def _gen_random_feature_value(
     elif feature_type == "multiArrayType":
         return _gen_random_multiarray_value(type=type.multiArrayType)
 
-    elif type == "imageType":
+    elif feature_type == "imageType":
         return _gen_random_image_value(type=type.imageType)
 
     else:
