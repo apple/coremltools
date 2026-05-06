@@ -6675,6 +6675,36 @@ class TestActivation(TorchBaseTest):
             expected_results=out,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, dtype",
+        itertools.product(
+            compute_units, backends, frontends, [np.float32, np.int32]
+        ),
+    )
+    def test_floor_divide(self, compute_unit, backend, frontend, dtype):
+        model = ModuleWrapper(function=torch.floor_divide)
+        x1 = torch.from_numpy(np.array([10, -10, 7, -7], dtype=dtype))
+        x2 = torch.from_numpy(np.array([3, 3, 2, 2], dtype=dtype))
+        out = torch.floor_divide(x1, x2)
+        res = self.run_compare_torch(
+            [x1, x2],
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+            expected_results=out,
+        )
+        # Pin output dtype: numerical comparison alone passes for both the
+        # always-fp32 and dtype-preserving paths, since [3,-4,3,-4] is
+        # representable in int32 and fp32 alike.
+        output_var = res[1]._mil_program.functions["main"].outputs[0]
+        expected_dtype = types.int32 if dtype == np.int32 else types.fp32
+        assert output_var.dtype == expected_dtype, (
+            f"floor_divide output dtype: expected {expected_dtype}, "
+            f"got {output_var.dtype} (input dtype was {dtype})"
+        )
+
 
 class TestElementWiseUnary(TorchBaseTest):
     @pytest.mark.parametrize(
