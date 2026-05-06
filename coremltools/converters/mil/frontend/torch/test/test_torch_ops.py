@@ -4289,6 +4289,33 @@ class TestBoolOps(TorchBaseTest):
         )
 
 
+class TestAddSubAlpha(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, op, alpha",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            ["add", "sub"],
+            [2, 0.5, -3.0],
+        ),
+    )
+    def test_alpha(self, compute_unit, backend, frontend, op, alpha):
+        class TestModel(nn.Module):
+            def forward(self, x, y):
+                if op == "add":
+                    return torch.add(x, y, alpha=alpha)
+                return torch.sub(x, y, alpha=alpha)
+
+        self.run_compare_torch(
+            [(2, 3), (2, 3)],
+            TestModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+
 class TestFull(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, rank",
