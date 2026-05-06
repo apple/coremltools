@@ -7323,7 +7323,14 @@ def floor(context, node):
 @register_torch_op
 def reciprocal(context, node):
     inputs = _get_inputs(context, node, expected=1)
-    context.add(mb.inverse(x=inputs[0], name=node.name))
+    x = inputs[0]
+    # PyTorch's reciprocal promotes int inputs to float; mb.inverse only
+    # accepts fp16/fp32. Without this cast, common patterns like
+    # `1 / x.shape[0]` (which TorchScript traces as
+    # reciprocal(prim::NumToTensor(int))) fail to convert.
+    if types.is_int(x.dtype):
+        x = mb.cast(x=x, dtype="fp32")
+    context.add(mb.inverse(x=x, name=node.name))
 
 
 @register_torch_op

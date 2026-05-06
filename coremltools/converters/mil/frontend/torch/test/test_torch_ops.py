@@ -6676,6 +6676,35 @@ class TestActivation(TorchBaseTest):
         )
 
 
+class TestReciprocal(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_reciprocal_int_shape(self, compute_unit, backend, frontend):
+        # Regression test for #2579: TorchScript traces `16 / x.shape[0]`
+        # as reciprocal(int) -> mul(16), and reciprocal previously rejected
+        # the int input because mb.inverse only accepts fp16/fp32.
+        if frontend in TORCH_EXPORT_BASED_FRONTENDS:
+            pytest.skip("torch.export folds shape-derived constants")
+
+        class TestModel(nn.Module):
+            def forward(self, x):
+                return 16 / x.shape[0] * x
+
+        # mb.inverse uses hardware reciprocal with limited precision; loosen
+        # tolerance to accommodate fp16 backends.
+        self.run_compare_torch(
+            (2, 16, 11),
+            TestModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            atol=1e-2,
+            rtol=1e-2,
+        )
+
+
 class TestElementWiseUnary(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, shape, op_string",
