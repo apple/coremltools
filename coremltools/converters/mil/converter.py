@@ -8,6 +8,7 @@ import warnings as _warnings
 from typing import Optional, Text, Tuple
 
 import coremltools as ct
+from coremltools import _SPECIFICATION_VERSION_IOS_18, _logger as logger
 from coremltools.converters._profile_utils import _profile
 from coremltools.converters.mil import input_types
 from coremltools.converters.mil.mil import Builder as mb
@@ -302,6 +303,29 @@ def mil_convert_to_proto(
     PassPipelineManager.apply_pipeline(prog, backend_pipeline)
 
     prog._check_early_error_out_for_invalid_program()
+
+    # Models with no inputs require specification version >= iOS18; otherwise
+    # the resulting mlpackage fails to compile with
+    #   "Empty input is only valid in specification version >= 9".
+    # When the spec version was inferred from the default (i.e. user did not
+    # request an older target), bump it transparently. If the user explicitly
+    # requested a lower target, the existing `check_deployment_compatibility`
+    # at the entry point will surface the conflict.
+    spec_version = kwargs.get("specification_version")
+    if (
+        convert_to == "mlprogram"
+        and spec_version is not None
+        and spec_version < _SPECIFICATION_VERSION_IOS_18
+    ):
+        main_func = prog.functions.get(prog.default_function_name)
+        if main_func is not None and len(main_func.inputs) == 0:
+            logger.warning(
+                "Model has no inputs, which requires specification version "
+                ">= iOS18. Bumping specification version from %d to %d.",
+                spec_version,
+                _SPECIFICATION_VERSION_IOS_18,
+            )
+            kwargs["specification_version"] = _SPECIFICATION_VERSION_IOS_18
 
     backend_converter_type = converter_registry.backends.get(convert_to.lower())
     if not backend_converter_type:
