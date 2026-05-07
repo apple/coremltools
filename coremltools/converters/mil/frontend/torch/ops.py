@@ -1063,12 +1063,16 @@ def add(context, node):
     add_inputs = _get_inputs(context, node)
     assert len(node.outputs) == 1
 
-    # TODO (sberardi): 3rd param to aten::add is a scale factor, need to handle that.
-    # out=input+alpha x other
-    # rdar://60175736
-    if len(add_inputs) > 2 and add_inputs[2].val != 1:
-        raise ValueError("ADD does not support scale factor param")
     x, y = add_inputs[:2]
+    # aten::add(self, other, alpha=1) computes self + alpha * other.
+    # alpha may be passed positionally (TorchScript) or as a kwarg (torch.export).
+    alpha = add_inputs[2] if len(add_inputs) > 2 else None
+    alpha = _get_kwinputs(context, node, "alpha", default=[alpha])[0]
+    if isinstance(alpha, Var):
+        alpha = alpha.val
+    if alpha is not None and alpha != 1:
+        y, alpha_var = promote_input_dtypes([y, alpha])
+        y = mb.mul(x=y, y=alpha_var)
     if types.is_bool(x.dtype) and types.is_bool(y.dtype):
         add_node = mb.logical_or(x=x, y=y, name=node.name)
     elif types.is_complex(x.dtype) or types.is_complex(y.dtype):
@@ -2074,14 +2078,15 @@ def sub(context, node):
         x = inputs[0]
         y = inputs[1]
 
-    if len(inputs) > 2:
-        alpha = inputs[2].val
-
-        # TODO (sberardi): 3rd param to aten::sub is a scale factor, need to handle that.
-        # out=input-alpha x other
-        # rdar://60175736
-        if alpha != 1:
-            raise ValueError("SUB does not support scale factor param")
+    # aten::sub(self, other, alpha=1) computes self - alpha * other.
+    # alpha may be passed positionally (TorchScript) or as a kwarg (torch.export).
+    alpha = inputs[2] if len(inputs) > 2 else None
+    alpha = _get_kwinputs(context, node, "alpha", default=[alpha])[0]
+    if isinstance(alpha, Var):
+        alpha = alpha.val
+    if alpha is not None and alpha != 1:
+        y, alpha_var = promote_input_dtypes([y, alpha])
+        y = mb.mul(x=y, y=alpha_var)
 
     x, y = promote_input_dtypes([x, y])
     res = mb.sub(x=x, y=y, name=node.name)
