@@ -39,6 +39,11 @@ build_wheel_macos_py310:
   variables:
     PYTHON: "3.10"
 
+build_wheel_macos_py314:
+  <<: *build_macos
+  variables:
+    PYTHON: "3.14"
+
 
 #########################################################################
 ##
@@ -60,6 +65,16 @@ test_py310_coremltools_test:
     WHEEL_PATH: build/dist/*cp310*11*
     TEST_PACKAGE: coremltools.test
     PYTHON: "3.10"
+    REQUIREMENTS: reqs/test.pip
+
+test_py314_coremltools_test:
+  <<: *test_macos_pkg
+  dependencies:
+    - build_wheel_macos_py314
+  variables:
+    WHEEL_PATH: build/dist/*cp314*11*
+    TEST_PACKAGE: coremltools.test
+    PYTHON: "3.14"
     REQUIREMENTS: reqs/test.pip
 
 test_py310_pytorch_script:
