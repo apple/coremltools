@@ -6675,6 +6675,8 @@ class TestActivation(TorchBaseTest):
             expected_results=out,
         )
 
+
+class TestFloorDivide(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, dtype",
         itertools.product(
