@@ -5796,7 +5796,11 @@ def bitwise_and(context, node):
 # which torch.export emits for `tensor | tensor` / `tensor ^ tensor`. These are
 # common when building boolean attention masks (e.g. Gemma combines a causal
 # mask with a padding mask via __or__).
-@register_torch_op(torch_alias=["or"])
+#
+# "ior" is the post-sanitize form of "aten::__ior__", the in-place `|=`.
+# `sanitize_op_kind` only strips a trailing `_`, so the leading `i` in the
+# `__i<op>__` family is preserved -- the alias has to be listed explicitly.
+@register_torch_op(torch_alias=["or", "ior"])
 def bitwise_or(context, node):
     _bitwise_as_logical_if_boolean(context, node, "bitwise_or", logical_or)
 

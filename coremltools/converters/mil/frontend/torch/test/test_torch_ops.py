@@ -13754,6 +13754,32 @@ class TestBitwiseOr(TorchBaseTest):
             input_as_shape=False,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_ior_operator(self, compute_unit, backend, frontend):
+        # Regression test for issue #2584: tensor.__ior__ (i.e. `x |= y`)
+        # sanitizes to "ior", which must be registered as an alias of
+        # bitwise_or. Previously gemma-3-1b-it conversion failed with
+        # "PyTorch convert function for op '__ior__' not implemented."
+        class TestModel(torch.nn.Module):
+            def forward(self, x, y):
+                x |= y
+                return x
+
+        input_shape = (2, 3)
+        input_data_x = torch.rand(*input_shape) > 0.2
+        input_data_y = torch.rand(*input_shape) < 0.8
+        self.run_compare_torch(
+            [input_data_x, input_data_y],
+            TestModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
 
 class TestBitwiseXor(TorchBaseTest):
     @pytest.mark.parametrize(
