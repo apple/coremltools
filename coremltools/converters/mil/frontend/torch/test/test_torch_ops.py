@@ -6685,17 +6685,19 @@ class TestDiagonal(TorchBaseTest):
             frontends,
             [(5, 5), (3, 4), (4, 3)],
             [-2, -1, 0, 1, 2],
-            [0, 1],
-            [0, 1],
+            [-2, -1, 0, 1],
+            [-2, -1, 0, 1],
         ),
     )
     def test_diagonal(self, compute_unit, backend, frontend, shape, offset, dim1, dim2):
         # Regression test for #2565: previously diagonal returned a same-shape
         # matrix with off-diagonal zeroed out instead of a 1-D vector.
-        if dim1 == dim2:
-            pytest.skip("dim1 must differ from dim2")
+        # Covers negative dim1/dim2 in addition to positive ones.
+        d1, d2 = dim1 % 2, dim2 % 2
+        if d1 == d2:
+            pytest.skip("dim1 and dim2 must refer to different axes")
         n, m = shape
-        eff_offset = -offset if (dim1, dim2) == (1, 0) else offset
+        eff_offset = -offset if (d1, d2) == (1, 0) else offset
         diag_len = (
             min(n, m - eff_offset) if eff_offset >= 0 else min(n + eff_offset, m)
         )
