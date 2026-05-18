@@ -2462,6 +2462,33 @@ def pad(context, node):
             mode = mode.val
         assert mode in ("circular", "constant", "reflect", "replicate")
 
+        # MIL `mb.pad` only supports `reflect` / `replicate` when at most the
+        # final two dimensions carry non-zero padding. Forwarding a larger
+        # number of non-constant-padded dims produces a runtime model-compile
+        # error ("Padding for more than two dimensions only supports
+        # `constant` mode") instead of a clear conversion-time error. Catch
+        # this case here so the failure surface matches the rest of the
+        # converter. (Covers torch.export-decomposed ReflectionPad3d /
+        # ReplicationPad3d -> aten.pad with mode="reflect" / "replicate".)
+        if (
+            mode in ("reflect", "replicate")
+            and isinstance(pad, list)
+            and all(isinstance(p, (int, float)) for p in pad)
+        ):
+            padded_dims = sum(
+                1 for i in range(len(pad) // 2)
+                if pad[2 * i] != 0 or pad[2 * i + 1] != 0
+            )
+            if padded_dims > 2:
+                raise NotImplementedError(
+                    f"CoreML's pad operation only supports `{mode}` mode when "
+                    f"padding at most 2 dimensions, but {padded_dims} "
+                    f"dimensions have non-zero padding. This pattern is "
+                    f"produced by e.g. torch.nn.ReflectionPad3d / "
+                    f"ReplicationPad3d with non-trivial padding. Consider "
+                    f"using mode='constant' or padding fewer dimensions."
+                )
+
         if value is None:
             value = 0.0
         elif isinstance(value, Var):

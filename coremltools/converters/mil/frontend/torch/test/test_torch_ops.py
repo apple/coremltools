@@ -11184,6 +11184,33 @@ class TestPad(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
+        "mode, torch_module",
+        [
+            ("reflect", torch.nn.ReflectionPad3d),
+            ("replicate", torch.nn.ReplicationPad3d),
+        ],
+    )
+    def test_pad_reflect_replicate_3d_raises(self, mode, torch_module):
+        # Regression test for issues #2576 and #2571: MIL `mb.pad` only supports
+        # `reflect` / `replicate` when at most the final two dims carry non-zero
+        # padding. Previously this surfaced as a model-compile-time error inside
+        # `predict()`; now it must raise NotImplementedError at conversion time.
+        class Model(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.pad = torch_module(padding=2)
+
+            def forward(self, x):
+                return self.pad(x)
+
+        model = Model().eval()
+        inputs = (torch.randn(1, 6, 6, 6, 6),)
+        exported = torch.export.export(model, inputs).run_decompositions({})
+
+        with pytest.raises(NotImplementedError, match=mode):
+            ct.convert(exported)
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend, rank",
         itertools.product(compute_units, backends, frontends, range(1, 6)),
     )
