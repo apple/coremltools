@@ -101,8 +101,6 @@ def _update_tensor_range(
 ) -> None:
     tensor_min = np.min(np.array(tensor_value).flatten())
     tensor_max = np.max(np.array(tensor_value).flatten())
-    activation_stats_dict[tensor_name]["rmin"] = tensor_min
-    activation_stats_dict[tensor_name]["rmax"] = tensor_max
     if tensor_name in activation_stats_dict:
         activation_stats_dict[tensor_name]["rmin"] = min(
             tensor_min, activation_stats_dict[tensor_name]["rmin"]

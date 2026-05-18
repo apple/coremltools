@@ -2,6 +2,7 @@
 #
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+from collections import defaultdict
 
 import numpy as np
 import torch
@@ -13,7 +14,10 @@ from coremltools.optimize.coreml.experimental._post_training_quantization import
     _get_activation_calibration_stats,
 )
 from coremltools.test.optimize.coreml.test_passes import TestCompressionPasses
+from coremltools.optimize.coreml.experimental._post_training_quantization import _update_tensor_range
+from coremltools.optimize.coreml.experimental._model_debugger import ModelDebugger
 import coremltools.optimize as cto
+
 
 
 class TestActivationQuantization:
@@ -167,3 +171,82 @@ class TestGetActivationStats(TestActivationQuantization):
         # Since mlmodel has a concat with 2 inputs and 1 output, we should see at least 3 rmin/rmax pairs are identical in activation_stats.
         # If we dedup rmin/rmax pairs with identical values, the length of unique values should at least reduced by 2 compared with original one.
         assert len(activation_stats) - len(activation_stats_unique) >= 2
+
+class TestUpdateTensorRangePTQ:
+    """Regression tests for _update_tensor_range in _post_training_quantization.py."""
+
+    def _make_stats(self):
+        return defaultdict(dict)
+
+    def test_first_batch_stores_values(self):
+        stats = self._make_stats()
+        _update_tensor_range("t", np.array([3.0, 10.0]), stats)
+
+        assert stats["t"]["rmin"] == 3.0
+        assert stats["t"]["rmax"] == 10.0
+
+    def test_second_batch_wider_expands_range(self):
+        stats = self._make_stats()
+        _update_tensor_range("t", np.array([2.0, 5.0]), stats)
+        _update_tensor_range("t", np.array([-1.0, 8.0]), stats)
+        assert stats["t"]["rmin"] == -1.0
+        assert stats["t"]["rmax"] == 8.0
+    
+    def test_second_batch_narrower_does_not_overwrite(self):
+        stats = self._make_stats()
+        _update_tensor_range("t", np.array([0.0, 10.0]), stats)
+        _update_tensor_range("t", np.array([2.0, 5.0]), stats)
+        assert stats["t"]["rmin"] == 0.0, "rmin was overwritten by a narrower batch"
+        assert stats["t"]["rmax"] == 10.0, "rmax was overwritten by a narrower batch"
+    
+    def test_many_batches_accumulate_global_extremes(self):
+        stats = self._make_stats()
+        batches = [
+            np.array([3.0, 6.0]),
+            np.array([1.0, 5.0]),
+            np.array([4.0, 9.0]),
+            np.array([2.0, 7.0]),
+        ]
+        for b in batches:
+            _update_tensor_range("t", b, stats)
+        assert stats["t"]["rmin"] == 1.0
+        assert stats["t"]["rmax"] == 9.0
+
+class TestRecordIntermediateOutput:
+    """Regression tests for ModelDebugger.record_intermediate_output in _model_debugger.py."""
+
+    def _make_stats(self):
+        return defaultdict(dict)
+
+    def test_first_call_stores_values(self):
+        stats = self._make_stats()
+        ModelDebugger.record_intermediate_output(np.array([3.0, 7.0]), "t", stats)
+        assert stats["t"]["rmin"] == 3.0
+        assert stats["t"]["rmax"] == 7.0
+
+    def test_second_call_narrower_does_not_overwrite(self):
+        stats = self._make_stats()
+        ModelDebugger.record_intermediate_output(np.array([0.0, 10.0]), "t", stats)
+        ModelDebugger.record_intermediate_output(np.array([2.0, 5.0]), "t", stats)
+        assert stats["t"]["rmin"] == 0.0, "rmin was overwritten by a narrower batch"
+        assert stats["t"]["rmax"] == 10.0, "rmax was overwritten by a narrower batch"
+
+    def test_second_call_wider_expands_range(self):
+        stats = self._make_stats()
+        ModelDebugger.record_intermediate_output(np.array([2.0, 5.0]), "t", stats)
+        ModelDebugger.record_intermediate_output(np.array([-1.0, 8.0]), "t", stats)
+        assert stats["t"]["rmin"] == -1.0
+        assert stats["t"]["rmax"] == 8.0
+        
+    def test_many_calls_accumulate_global_extremes(self):
+        stats = self._make_stats()
+        batches = [
+            np.array([3.0, 6.0]),
+            np.array([1.0, 5.0]),
+            np.array([4.0, 9.0]),
+            np.array([2.0, 7.0]),
+        ]
+        for b in batches:
+            ModelDebugger.record_intermediate_output(b, "t", stats)
+        assert stats["t"]["rmin"] == 1.0
+        assert stats["t"]["rmax"] == 9.0

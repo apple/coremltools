@@ -2,6 +2,7 @@
 #
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+from collections import defaultdict
 
 import itertools
 
@@ -222,3 +223,32 @@ class TestPackUnpackBits:
             packed_data, nbits, element_num, are_packed_values_signed=is_data_signed
         )
         np.testing.assert_array_equal(restored_data, original_data)
+
+class TestUpdateTensorRange:
+    """Tests for _update_tensor_range correctness across multiple calibration batches."""
+
+    def _make_stats(self):
+        return defaultdict(dict)
+
+    def test_first_batch_stores_values(self):
+        stats = self._make_stats()
+        optimize_utils._update_tensor_range("t", np.array([3.0, 7.0]), stats)
+        assert stats["t"]["rmin"] == 3.0
+        assert stats["t"]["rmax"] == 7.0
+    
+    def test_second_batch_narrower_does_not_overwrite(self):
+        # Batch 1 establishes [0, 10]. Batch 2 is [2, 5].
+        # The accumulated range must remain [0, 10].
+        stats = self._make_stats()
+        optimize_utils._update_tensor_range("t", np.array([0.0, 10.0]), stats)
+        optimize_utils._update_tensor_range("t", np.array([2.0, 5.0]), stats)
+        assert stats["t"]["rmin"] == 0.0, "rmin was overwritten by a narrower batch"
+        assert stats["t"]["rmax"] == 10.0, "rmax was overwritten by a narrower batch"
+    
+    def test_second_batch_wider_expands_range(self):
+        # Batch 1 is [-2, 5]. Batch 2 is [-1, 8].
+        stats = self._make_stats()
+        optimize_utils._update_tensor_range("t", np.array([-2.0, 5.0]), stats)
+        optimize_utils._update_tensor_range("t", np.array([-1.0, 8.0]), stats)
+        assert stats["t"]["rmin"] == -2.0
+        assert stats["t"]["rmax"] == 8.0
