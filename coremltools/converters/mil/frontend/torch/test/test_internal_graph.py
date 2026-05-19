@@ -904,6 +904,19 @@ class TestTorchOps:
         expected_result = test_input.view(shape)
         assert np.allclose(expected_result, ssa.val)
 
+    def test_view_shape_list_with_single_element_var(self, context):
+        graph_inputs = {"input": mb.placeholder(shape=(2, 3), dtype=types.float)}
+        view_node = InternalTorchIRNode(kind="view", inputs=["input", "shape"], outputs=["output"])
+
+        with Function(inputs=graph_inputs) as ssa_func:
+            context.add(ssa_func.inputs["input"])
+            dim0 = mb.const(val=np.array([2], dtype=np.int64))
+            dim1 = mb.const(val=np.array(3, dtype=np.int64))
+            context.add([dim0, dim1], torch_name="shape")
+            ops.view(context, view_node)
+
+        assert context["output"].shape == (2, 3)
+
     @pytest.mark.parametrize(
         "input_shape, output_shape",
         itertools.product(
