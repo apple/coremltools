@@ -5647,7 +5647,15 @@ def randint(context, node):
 
     low, high, shape = _parse_positional_args(context, node)
     rand_uniform = mb.random_uniform(shape=shape, low=low, high=high)
-    rand_int = mb.cast(x=rand_uniform, dtype="int32", name=node.name)
+    rand_int = mb.cast(x=rand_uniform, dtype="int32")
+    # `torch.randint(low, high, ...)` samples integers from the half-open
+    # interval `[low, high)`, so the maximum valid value is `high - 1`. The
+    # MIL `random_uniform` op is spec'd the same way, but the runtime can
+    # occasionally return values equal to `high` (issue #2568), which then
+    # cast to `high` and exceed the torch contract. Clamp the integer output
+    # so the converter matches torch semantics regardless of that quirk.
+    high_minus_one = mb.cast(x=mb.sub(x=high, y=1.0), dtype="int32")
+    rand_int = mb.minimum(x=rand_int, y=high_minus_one, name=node.name)
     context.add(rand_int)
 
 @register_torch_op
