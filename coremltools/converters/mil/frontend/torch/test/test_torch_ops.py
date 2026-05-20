@@ -11174,8 +11174,14 @@ class TestPad(TorchBaseTest):
             input_shape = (10, 5, 5, 10)
         elif rank == 5:
             if backend[0] == "neuralnetwork":
+                # The NN backend's add_padding supports reflect/replicate only when
+                # all padding is confined to the last 2 dimensions (pad[:-4] must be
+                # all zeros). Rank-5 with pad_len=6 pads 3 spatial dims, so the D
+                # dimension's padding falls outside that window. Ranks 3 and 4 only
+                # pad 1 or 2 spatial dims respectively and do pass the check.
                 pytest.skip(
-                    "NeuralNetwork backend does not support reflect/replicate padding for >2 spatial dims"
+                    "NeuralNetwork backend only supports reflect/replicate padding on the "
+                    "last 2 dimensions; rank-5 with 3 spatial dims padded is not supported"
                 )
             pad_len = 6
             input_shape = (2, 3, 5, 5, 10)
