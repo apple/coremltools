@@ -22,6 +22,10 @@ class split_non_constant_pads(AbstractGraphPass):
     Each split step pads at most two dimensions, which CoreML supports for all
     padding modes.
 
+    **Limitation**: ``pad`` ops whose padding values are computed at runtime
+    (i.e. ``op.inputs["pad"].val is None``) are skipped. Such models will still
+    fail at CoreML runtime with the same error.
+
     .. code-block::
 
         Input:
