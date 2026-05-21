@@ -259,7 +259,7 @@ class _EfficientKMeans:
                     reduce_min_error, reduce_labels_ = _EfficientKMeans.x_c_dist(
                         X, reduce_cluster_centers_
                     ).min(dim=-1)
-                    reduce_inertia = reduce_cluster_centers_.sum()
+                    reduce_inertia = reduce_min_error.sum()
                     rmse_error = _torch.sqrt(reduce_inertia / N)
 
                     if rmse_error < self.error_bnd:
