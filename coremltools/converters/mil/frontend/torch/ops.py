@@ -2339,10 +2339,17 @@ def view(context, node):
         shape = mb.list_gather(ls=shape, indices=indices)
 
     if isinstance(shape, list) and all(
-        [isinstance(dim, Var) and len(dim.shape) == 0 for dim in shape]
+        [
+            isinstance(dim, Var)
+            and (len(dim.shape) == 0 or (len(dim.shape) == 1 and dim.shape[0] == 1))
+            for dim in shape
+        ]
     ):
         int_shape = []
         for size in shape:
+            if len(size.shape) == 1 and size.shape[0] == 1:
+                size = mb.squeeze(x=size)
+
             if size.dtype == types.int32:
                 int_size = size
             else:
