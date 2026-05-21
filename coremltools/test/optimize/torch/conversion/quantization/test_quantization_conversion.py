@@ -4,6 +4,8 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import pytest
+import torch
+import torch.nn as nn
 
 ct = pytest.importorskip("coremltools")
 import coremltools.test.optimize.torch.conversion.conversion_utils as util
@@ -54,6 +56,42 @@ def test_linear_quantizer(config, model, mnist_example_input, request):
         quantized_model,
         mnist_example_input,
         expected_ops=["constexpr_blockwise_shift_scale"],
+    )
+
+
+# endregion
+
+
+# region LinearQuantizer Conv3d
+def test_linear_quantizer_conv3d_w8a8():
+    """Regression test for https://github.com/apple/coremltools/issues/2452.
+
+    w8a8 symmetric quantization of Conv3d failed with:
+        ValueError: the `weight` should have same rank as `scale`,
+        but got (1, 1, 3, 3, 3) vs (1, 1)
+    because the per-tensor scale was not reshaped to match the 5-D weight rank.
+    """
+
+    class Conv3dModel(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.conv1 = nn.Conv3d(1, 1, kernel_size=3, padding=1)
+
+        def forward(self, x):
+            return self.conv1(x)
+
+    example_input = torch.randn(1, 1, 8, 8, 8)
+    config = LinearQuantizerConfig.from_dict(
+        {"global_config": {"quantization_scheme": "symmetric"}}
+    )
+    quantizer = LinearQuantizer(Conv3dModel().eval(), config)
+    quantized_model = get_quantized_model(quantizer, example_input)
+
+    util.convert_and_verify(
+        quantized_model,
+        example_input,
+        minimum_deployment_target=ct.target.iOS17,
+        expected_ops=["constexpr_affine_dequantize"],
     )
 
 
