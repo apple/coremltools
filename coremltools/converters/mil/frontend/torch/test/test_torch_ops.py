@@ -6697,15 +6697,23 @@ class TestFloorDivide(TorchBaseTest):
             input_as_shape=False,
             expected_results=out,
         )
-        # Pin output dtype: numerical comparison alone passes for both the
-        # always-fp32 and dtype-preserving paths, since [3,-4,3,-4] is
-        # representable in int32 and fp32 alike.
+        # Pin the output dtype. A numerical comparison alone passes even
+        # without the fix, since [3,-4,3,-4] is representable in int32 and
+        # fp32 alike; what the fix changes is that an int input now yields an
+        # int (not fp32) output. A float input must stay float, but its exact
+        # width tracks the backend compute precision (fp16 vs fp32), so only
+        # require a float type there.
         output_var = res[1]._mil_program.functions["main"].outputs[0]
-        expected_dtype = types.int32 if dtype == np.int32 else types.fp32
-        assert output_var.dtype == expected_dtype, (
-            f"floor_divide output dtype: expected {expected_dtype}, "
-            f"got {output_var.dtype} (input dtype was {dtype})"
-        )
+        if dtype == np.int32:
+            assert output_var.dtype == types.int32, (
+                "floor_divide of int inputs should produce an int32 output, got "
+                f"{types.builtin_to_string(output_var.dtype)}"
+            )
+        else:
+            assert types.is_float(output_var.dtype), (
+                "floor_divide of float inputs should produce a float output, got "
+                f"{types.builtin_to_string(output_var.dtype)}"
+            )
 
 
 class TestElementWiseUnary(TorchBaseTest):
