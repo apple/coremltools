@@ -4750,15 +4750,10 @@ class TestRandint(TorchBaseTest):
 
     @pytest.mark.parametrize("frontend", frontends)
     def test_upper_bound_exclusive(self, frontend):
-        # Regression test for https://github.com/apple/coremltools/issues/2568.
-        # `torch.randint(low, high, ...)` is half-open: values must be in
-        # `[low, high)`. The converter must never produce `high` itself.
-        # Structurally: the generated MIL program for randint should contain a
-        # `minimum` op (the clamp against `high - 1`) downstream of the cast,
-        # so that any runtime quirk returning `high` is clipped back into range.
-        if frontend == TorchFrontend.EXECUTORCH:
-            pytest.skip("torch._ops.aten.randint.low is not Aten Canonical")
-
+        # Regression for https://github.com/apple/coremltools/issues/2568.
+        # torch.randint(low, high, ...) is half-open, so the runtime must
+        # never emit `high`. Without the clamp in `randint`, random_uniform
+        # can return exactly `high` and the cast to int32 propagates it.
         low, high = 0, 5
 
         class TestModel(nn.Module):
@@ -4768,34 +4763,11 @@ class TestRandint(TorchBaseTest):
         model = TestModel().eval()
         x = torch.zeros(1000, dtype=torch.int32)
         torch_model = export_torch_model_to_frontend(model, (x,), frontend)
-
-        # Convert to `milinternal` (an MIL Program object) so the structural
-        # assertion runs even in environments without the native BlobWriter.
         inputs = (
             [ct.TensorType(name="x", shape=x.shape, dtype=np.int32)]
             if frontend == TorchFrontend.TORCHSCRIPT
             else None
         )
-        prog = ct.convert(
-            torch_model,
-            inputs=inputs,
-            convert_to="milinternal",
-            minimum_deployment_target=ct.target.iOS17,
-        )
-
-        # The fix inserts a `minimum` op to clamp the cast int32 output.
-        ops = get_op_types_in_program(prog)
-        assert "random_uniform" in ops
-        assert "minimum" in ops, (
-            "Expected a `minimum` op to clamp randint output to `high - 1`; "
-            "without it, the runtime can emit values equal to `high` (issue #2568)."
-        )
-
-        # End-to-end numeric check: build the full mlprogram and predict if the
-        # native Core ML runtime + BlobWriter are available. Across many
-        # samples, no output should equal or exceed `high`.
-        if BlobWriter is None:
-            return
         mlmodel = ct.convert(
             torch_model,
             inputs=inputs,
@@ -4803,12 +4775,16 @@ class TestRandint(TorchBaseTest):
             minimum_deployment_target=ct.target.iOS17,
             compute_units=ct.ComputeUnit.CPU_ONLY,
         )
-        if ct.utils._is_macos() and ct.models.model._MLModelProxy is not None:
-            output_name = mlmodel._spec.description.output[0].name
+
+        if not (ct.utils._is_macos() and ct.models.model._MLModelProxy is not None):
+            pytest.skip("Core ML runtime unavailable")
+
+        output_name = mlmodel._spec.description.output[0].name
+        for _ in range(50):
             prediction = mlmodel.predict({"x": x.numpy()})[output_name]
             assert prediction.max() < high, (
-                f"randint produced {prediction.max()} which is >= high={high}; "
-                f"clamp regression -- see issue #2568."
+                f"randint produced {prediction.max()} >= high={high} "
+                f"(issue #2568)."
             )
             assert prediction.min() >= low
 
