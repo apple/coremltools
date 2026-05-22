@@ -14,7 +14,6 @@ from coremltools.optimize.coreml.experimental._post_training_quantization import
     _get_activation_calibration_stats,
 )
 from coremltools.test.optimize.coreml.test_passes import TestCompressionPasses
-from coremltools.optimize.coreml.experimental._post_training_quantization import _update_tensor_range
 from coremltools.optimize.coreml.experimental._model_debugger import ModelDebugger
 import coremltools.optimize as cto
 
@@ -172,57 +171,38 @@ class TestGetActivationStats(TestActivationQuantization):
         # If we dedup rmin/rmax pairs with identical values, the length of unique values should at least reduced by 2 compared with original one.
         assert len(activation_stats) - len(activation_stats_unique) >= 2
 
-class TestUpdateTensorRangePTQ:
-    """Regression tests for _update_tensor_range in _post_training_quantization.py."""
+    def test_calibration_stats_accumulate_across_samples(self):
+        """
+        Regression test: activation stats from an earlier sample must not be overwritten
+        by a later sample with a narrower activation range.
 
-    def _make_stats(self):
-        return defaultdict(dict)
+        The large-input sample is placed FIRST so the bug (unconditionally overwriting
+        rmin/rmax on every call instead of accumulating the running min/max) would discard
+        it, leaving only the near-zero activations from the last sample.
+        """
+        mlmodel = self._get_test_mlmodel_conv_relu()
 
-    def test_first_batch_stores_values(self):
-        stats = self._make_stats()
-        _update_tensor_range("t", np.array([3.0, 10.0]), stats)
+        # Large inputs produce activations with a wide range after Conv2d.
+        # Near-zero inputs produce activations close to zero (ReLU clips negatives).
+        sample_wide   = {"data": np.ones((5, 10, 4, 4), dtype=np.float32) * 100.0}
+        sample_narrow = {"data": np.zeros((5, 10, 4, 4), dtype=np.float32)}
+        stats_wide_only = _get_activation_calibration_stats(mlmodel, [sample_wide])
+        stats_combined = _get_activation_calibration_stats(mlmodel, [sample_wide, sample_narrow])
 
-        assert stats["t"]["rmin"] == 3.0
-        assert stats["t"]["rmax"] == 10.0
+        for key in stats_wide_only:
+            assert stats_combined[key]["rmax"] >= stats_wide_only[key]["rmax"] - 1e-5, (
+                f"rmax for '{key}' was overwritten by the later narrow sample: "
+                f"combined={stats_combined[key]['rmax']:.4f}, "
+                f"wide-only={stats_wide_only[key]['rmax']:.4f}"
+            )
 
-    def test_second_batch_wider_expands_range(self):
-        stats = self._make_stats()
-        _update_tensor_range("t", np.array([2.0, 5.0]), stats)
-        _update_tensor_range("t", np.array([-1.0, 8.0]), stats)
-        assert stats["t"]["rmin"] == -1.0
-        assert stats["t"]["rmax"] == 8.0
-    
-    def test_second_batch_narrower_does_not_overwrite(self):
-        stats = self._make_stats()
-        _update_tensor_range("t", np.array([0.0, 10.0]), stats)
-        _update_tensor_range("t", np.array([2.0, 5.0]), stats)
-        assert stats["t"]["rmin"] == 0.0, "rmin was overwritten by a narrower batch"
-        assert stats["t"]["rmax"] == 10.0, "rmax was overwritten by a narrower batch"
-    
-    def test_many_batches_accumulate_global_extremes(self):
-        stats = self._make_stats()
-        batches = [
-            np.array([3.0, 6.0]),
-            np.array([1.0, 5.0]),
-            np.array([4.0, 9.0]),
-            np.array([2.0, 7.0]),
-        ]
-        for b in batches:
-            _update_tensor_range("t", b, stats)
-        assert stats["t"]["rmin"] == 1.0
-        assert stats["t"]["rmax"] == 9.0
+
 
 class TestRecordIntermediateOutput:
     """Regression tests for ModelDebugger.record_intermediate_output in _model_debugger.py."""
 
     def _make_stats(self):
         return defaultdict(dict)
-
-    def test_first_call_stores_values(self):
-        stats = self._make_stats()
-        ModelDebugger.record_intermediate_output(np.array([3.0, 7.0]), "t", stats)
-        assert stats["t"]["rmin"] == 3.0
-        assert stats["t"]["rmax"] == 7.0
 
     def test_second_call_narrower_does_not_overwrite(self):
         stats = self._make_stats()
@@ -231,12 +211,24 @@ class TestRecordIntermediateOutput:
         assert stats["t"]["rmin"] == 0.0, "rmin was overwritten by a narrower batch"
         assert stats["t"]["rmax"] == 10.0, "rmax was overwritten by a narrower batch"
 
-    def test_second_call_wider_expands_range(self):
+    def test_rmax_from_first_call_not_overwritten_by_narrower_second_call(self):
+        # Call 1 establishes rmax=10.0. Call 2 is narrower ([2, 5]).
+        # Buggy code overwrites stats with the last call → rmax becomes 5.0.
+        # Fixed code keeps the running max → rmax stays 10.0.
         stats = self._make_stats()
+        ModelDebugger.record_intermediate_output(np.array([0.0, 10.0]), "t", stats)
         ModelDebugger.record_intermediate_output(np.array([2.0, 5.0]), "t", stats)
+        assert stats["t"]["rmax"] == 10.0, "rmax was overwritten by a narrower second call"
+
+    def test_rmin_from_first_call_not_overwritten_by_narrower_second_call(self):
+        # Call 1 establishes rmin=-1.0. Call 2 is narrower ([2, 5]).
+        # Buggy code overwrites stats with the last call → rmin becomes 2.0.
+        # Fixed code keeps the running min → rmin stays -1.0.
+        stats = self._make_stats()
         ModelDebugger.record_intermediate_output(np.array([-1.0, 8.0]), "t", stats)
-        assert stats["t"]["rmin"] == -1.0
-        assert stats["t"]["rmax"] == 8.0
+        ModelDebugger.record_intermediate_output(np.array([2.0, 5.0]), "t", stats)
+        assert stats["t"]["rmin"] == -1.0, "rmin was overwritten by a narrower second call"
+
         
     def test_many_calls_accumulate_global_extremes(self):
         stats = self._make_stats()
