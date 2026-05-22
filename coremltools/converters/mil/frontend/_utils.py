@@ -5,6 +5,7 @@
 
 import itertools
 import math as math
+import string
 from typing import List, Optional, Union
 
 import numpy as np
@@ -303,7 +304,7 @@ def _expand_einsum_ellipses(equation: str, vars: List[Var]) -> str:
     ellipsis_ndim = ellipsis_ndims[0]
 
     used = {c for c in equation if c.isalpha()}
-    candidates = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    candidates = string.ascii_letters
     fresh = [c for c in candidates if c not in used]
     if ellipsis_ndim > len(fresh):
         raise ValueError(
