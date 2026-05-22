@@ -5,6 +5,7 @@
 
 import itertools
 import math as math
+import string
 from typing import List, Optional, Union
 
 import numpy as np
@@ -249,6 +250,74 @@ def _construct_gather_op(
     return result
 
 
+def _expand_einsum_ellipses(equation: str, vars: List[Var]) -> str:
+    """
+    Replace '...' in an einsum equation with fresh single-character labels so
+    the result has only named indices. Each input's ellipsis covers
+    rank - (segment_length - 3) dimensions; when several inputs use '...',
+    their lengths must match.
+    e.g.:
+    input : "...,f->...f" with input ranks 2 and 1
+    returns : "ab,f->abf"
+    """
+    if "..." not in equation:
+        return equation
+
+    input_output_strings = equation.split("->")
+    assert len(input_output_strings) == 2, "unsupported einsum equation {}".format(equation)
+    input_segments = input_output_strings[0].split(",")
+    output_segment = input_output_strings[1]
+
+    if len(input_segments) != len(vars):
+        raise ValueError(
+            "einsum equation '{}' expects {} inputs, got {}".format(
+                equation, len(input_segments), len(vars)
+            )
+        )
+
+    ellipsis_ndims = []
+    for segment, var in zip(input_segments, vars):
+        if "..." not in segment:
+            continue
+        named_count = len(segment) - 3
+        ndim = var.rank - named_count
+        if ndim < 0:
+            raise ValueError(
+                "einsum segment '{}' has more named indices than input rank {}".format(
+                    segment, var.rank
+                )
+            )
+        ellipsis_ndims.append(ndim)
+
+    if not ellipsis_ndims:
+        if "..." in output_segment:
+            raise ValueError(
+                "einsum equation '{}' has '...' on output but not on any input".format(equation)
+            )
+        return equation
+
+    if len(set(ellipsis_ndims)) != 1:
+        raise NotImplementedError(
+            "einsum equation '{}' uses ellipses of different lengths across inputs, "
+            "which is not yet supported".format(equation)
+        )
+    ellipsis_ndim = ellipsis_ndims[0]
+
+    used = {c for c in equation if c.isalpha()}
+    candidates = string.ascii_letters
+    fresh = [c for c in candidates if c not in used]
+    if ellipsis_ndim > len(fresh):
+        raise ValueError(
+            "einsum equation '{}' needs {} fresh labels for the ellipsis but only "
+            "{} are available".format(equation, ellipsis_ndim, len(fresh))
+        )
+    replacement = "".join(fresh[:ellipsis_ndim])
+
+    new_input_segments = [segment.replace("...", replacement) for segment in input_segments]
+    new_output_segment = output_segment.replace("...", replacement)
+    return ",".join(new_input_segments) + "->" + new_output_segment
+
+
 def _reverse_input_einsum_eq(equation: str) -> str:
     """
     Reverse the input order of the einsum equation
@@ -286,6 +355,7 @@ def build_einsum_mil(vars: List[Var], equation: str, name: str) -> Var:
 
     ## TODO: rdar://73851694 (Update einsum op translation to support generic cases)
     equation = equation.replace(" ", "")
+    equation = _expand_einsum_ellipses(equation, vars)
     parsed_vectors = parse_einsum_equation(equation)
 
     if len(vars) != 2:

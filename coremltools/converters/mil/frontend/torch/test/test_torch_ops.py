@@ -5852,6 +5852,30 @@ class TestEinsum(TorchBaseTest):
             expected_results=out,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+        ),
+    )
+    def test_einsum_with_ellipsis(self, compute_unit, backend, frontend):
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("ExecuTorch einsum decomposition issue")
+
+        class Einsum(nn.Module):
+            def forward(self, x, y):
+                return torch.einsum("...,f->...f", x, y)
+
+        self.run_compare_torch(
+            [(2, 3), (3,)],
+            Einsum(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
 
 class TestSqueeze(TorchBaseTest):
     @pytest.mark.parametrize(
