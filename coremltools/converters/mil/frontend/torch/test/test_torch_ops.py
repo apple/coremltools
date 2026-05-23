@@ -6697,22 +6697,23 @@ class TestFloorDivide(TorchBaseTest):
             input_as_shape=False,
             expected_results=out,
         )
-        # Pin the output dtype. A numerical comparison alone passes even
-        # without the fix, since [3,-4,3,-4] is representable in int32 and
-        # fp32 alike; what the fix changes is that an int input now yields an
-        # int (not fp32) output. A float input must stay float, but its exact
-        # width tracks the backend compute precision (fp16 vs fp32), so only
-        # require a float type there.
-        output_var = res[1]._mil_program.functions["main"].outputs[0]
+        # A numerical comparison alone passes even without the fix: [3, -4, 3, -4]
+        # is representable as int and float alike. What the fix changes is the
+        # dtype of the prediction -- an int input must now come back as ints
+        # (it was fp32 before), while a float input stays float.
+        prediction = list(res[3].values())[0]
         if dtype == np.int32:
-            assert output_var.dtype == types.int32, (
-                "floor_divide of int inputs should produce an int32 output, got "
-                f"{types.builtin_to_string(output_var.dtype)}"
-            )
+            # The ML Program backend keeps the integer output dtype after the fix
+            # (it was fp32 before). NeuralNetwork always serializes outputs as
+            # float, so the distinction is only observable on mlprogram.
+            if backend[0] == "mlprogram":
+                assert np.issubdtype(prediction.dtype, np.integer), (
+                    "floor_divide of int inputs should predict integers on "
+                    f"mlprogram, got {prediction.dtype}"
+                )
         else:
-            assert types.is_float(output_var.dtype), (
-                "floor_divide of float inputs should produce a float output, got "
-                f"{types.builtin_to_string(output_var.dtype)}"
+            assert np.issubdtype(prediction.dtype, np.floating), (
+                f"floor_divide of float inputs should predict floats, got {prediction.dtype}"
             )
 
 
