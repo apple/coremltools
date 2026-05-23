@@ -1379,13 +1379,7 @@ def _convolution(context, node):
         post_crop = [0] * pad_len
 
         if out_padding is not None and any(out_padding):
-            # `pad` was previously normalized to `None` when all-zero (the conv
-            # builder treats `None` as the all-zero default), but the
-            # output_padding handling below needs concrete values for `sum`,
-            # `.copy()`, and in-place arithmetic. Re-materialize as an
-            # explicit zero array so the zero-pad / output-padding branch
-            # raises the existing clear `ValueError` instead of a cryptic
-            # `TypeError: 'NoneType' object is not iterable` (issue #2377).
+            # Re-materialize the implicit-zero pad so the ValueError below fires (#2377).
             if pad is None:
                 pad = np.zeros(pad_len, dtype=np.int32)
             output_padding = [0] * pad_len
