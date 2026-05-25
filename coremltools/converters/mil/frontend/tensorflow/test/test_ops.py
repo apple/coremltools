@@ -5402,6 +5402,29 @@ class TestPad(TensorFlowBaseTest):
             backend=backend
         )
 
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_symmetric_unsupported(self, backend):
+        # MIL has no `symmetric` pad mode. TF `symmetric` reflects including the
+        # edge value, unlike MIL `reflect`, so it must error out rather than
+        # being silently mapped to `reflect`. See issue #2280.
+        input_shape = (1, 4)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.pad(x, paddings=[[0, 0], [2, 2]], mode="SYMMETRIC")
+
+        model, inputs, outputs = build_model
+
+        with pytest.raises(NotImplementedError, match="symmetric"):
+            ct.convert(
+                model,
+                source="tensorflow",
+                convert_to="milinternal",
+            )
+
 
 class TestPadV2(TensorFlowBaseTest):
     @pytest.mark.parametrize(
