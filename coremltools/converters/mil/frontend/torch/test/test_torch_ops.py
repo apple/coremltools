@@ -7956,7 +7956,7 @@ class TestVarStd(TorchBaseTest):
             backends,
             frontends,
             ["var", "std"],
-            [0, 1],
+            [0, 1, 2],
             [[0, 2], [1], [2]],
             [True, False],
         ),
