@@ -2069,12 +2069,6 @@ def _verify_output_correctness_of_chunks(
     pipeline_model: _Optional["_ct.models.MLModel"] = None,
 ) -> None:
     """Verifies the end-to-end output correctness of full (original) model versus chunked models"""
-    # lazy import avoids circular error
-    from coremltools.converters.mil.testing_utils import compute_snr_and_psnr
-    from coremltools.converters.mil.testing_utils import (
-        random_gen_input_feature_type as random_gen_input_feature_type,
-    )
-
     def report_correctness(original_outputs: _np.ndarray, final_outputs: _np.ndarray, log_prefix: str):
         """ Report PSNR values across two compatible tensors.
         This util is from https://github.com/apple/ml-stable-diffusion/blob/main/python_coreml_stable_diffusion/torch2coreml.py#L80,
@@ -2082,8 +2076,8 @@ def _verify_output_correctness_of_chunks(
         """
         ABSOLUTE_MIN_PSNR = 35
 
-        _, original_psnr = compute_snr_and_psnr(original_outputs, original_outputs)
-        _, final_psnr = compute_snr_and_psnr(original_outputs, final_outputs)
+        _, original_psnr = _compute_snr_and_psnr(original_outputs, original_outputs)
+        _, final_psnr = _compute_snr_and_psnr(original_outputs, final_outputs)
 
         dB_change = final_psnr - original_psnr
         _logger.info(
@@ -2102,7 +2096,7 @@ def _verify_output_correctness_of_chunks(
     # Generate inputs for first chunk and full model
     input_dict = {}
     for input_desc in full_model._spec.description.input:
-        input_dict[input_desc.name] = random_gen_input_feature_type(input_desc)
+        input_dict[input_desc.name] = _random_gen_input_feature_type(input_desc)
 
     # Generate outputs for full model
     outputs_from_full_model = full_model.predict(input_dict)
@@ -2138,6 +2132,61 @@ def _verify_output_correctness_of_chunks(
             final_outputs=final_outputs[out_name],
             log_prefix=f"{out_name}",
         )
+
+
+def _random_gen_input_feature_type(input_desc):
+    if input_desc.type.WhichOneof("Type") == "multiArrayType":
+        array_type = input_desc.type.multiArrayType
+        array_feature_type = _proto.FeatureTypes_pb2.ArrayFeatureType
+        shape = [s for s in array_type.shape]
+        if array_type.dataType == array_feature_type.FLOAT32:
+            dtype = _np.float32
+        elif array_type.dataType == array_feature_type.INT32:
+            dtype = _np.int32
+        elif array_type.dataType == array_feature_type.FLOAT16:
+            dtype = _np.float16
+        elif array_type.dataType == array_feature_type.FLOAT64:
+            dtype = _np.float64
+        else:
+            raise ValueError("unsupported type")
+        return _np.random.rand(*shape).astype(dtype)
+    elif input_desc.type.WhichOneof("Type") == "imageType":
+        from PIL import Image as _Image
+
+        image_type = input_desc.type.imageType
+        image_feature_type = _proto.FeatureTypes_pb2.ImageFeatureType
+        if image_type.colorSpace in (
+            image_feature_type.BGR,
+            image_feature_type.RGB,
+        ):
+            shape = [3, image_type.height, image_type.width]
+            x = _np.random.randint(low=0, high=256, size=shape)
+            return _Image.fromarray(_np.transpose(x, [1, 2, 0]).astype(_np.uint8))
+        elif image_type.colorSpace == image_feature_type.GRAYSCALE:
+            shape = [image_type.height, image_type.width]
+            x = _np.random.randint(low=0, high=256, size=shape)
+            return _Image.fromarray(x.astype(_np.uint8), "L")
+        elif image_type.colorSpace == image_feature_type.GRAYSCALE_FLOAT16:
+            shape = (image_type.height, image_type.width)
+            x = _np.random.rand(*shape)
+            return _Image.fromarray(x.astype(_np.float32), "F")
+        else:
+            raise ValueError("unrecognized image type")
+    else:
+        raise ValueError("unsupported type")
+
+
+def _compute_snr_and_psnr(x, y):
+    assert len(x) == len(y)
+    eps = 1e-5
+    eps2 = 1e-10
+    noise = x - y
+    noise_var = _np.sum(noise**2) / len(noise)
+    signal_energy = _np.sum(y**2) / len(y)
+    max_signal_energy = _np.amax(y**2)
+    snr = 10 * _np.log10((signal_energy + eps) / (noise_var + eps2))
+    psnr = 10 * _np.log10((max_signal_energy + eps) / (noise_var + eps2))
+    return snr, psnr
 
 
 def _get_op_idx_split_location(prog: _mil.Program) -> _Tuple[int, int, int]:

@@ -3,6 +3,7 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import builtins
 import copy
 import itertools
 import os
@@ -1502,6 +1503,43 @@ class TestMaterializeSymbolicShapeMLModel:
     reason="rdar://157488825 (Python 3.13 Unit Test Segmentation Fault)",
 )
 class TestBisectModel:
+    @staticmethod
+    def test_verify_output_correctness_does_not_import_testing_utils(monkeypatch):
+        class DummyModel:
+            def __init__(self, inputs, outputs):
+                spec = proto.Model_pb2.Model()
+                spec.description.input.extend(inputs)
+                self._spec = spec
+                self._outputs = outputs
+
+            def predict(self, input_dict):
+                return self._outputs
+
+        input_desc = proto.Model_pb2.FeatureDescription()
+        input_desc.name = "x"
+        input_desc.type.multiArrayType.shape.extend([1, 2])
+        input_desc.type.multiArrayType.dataType = (
+            proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT32
+        )
+
+        outputs = {"out": np.array([1.0, 2.0], dtype=np.float32)}
+        full_model = DummyModel([input_desc], outputs)
+        pipeline_model = DummyModel([input_desc], outputs)
+
+        real_import = builtins.__import__
+
+        def guarded_import(name, *args, **kwargs):
+            if name == "coremltools.converters.mil.testing_utils":
+                raise ModuleNotFoundError("No module named 'pytest'")
+            return real_import(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", guarded_import)
+
+        ct.models.utils._verify_output_correctness_of_chunks(
+            full_model=full_model,
+            pipeline_model=pipeline_model,
+        )
+
     @staticmethod
     def check_spec_op_type(model_path, expected_ops):
         spec = load_spec(model_path)
