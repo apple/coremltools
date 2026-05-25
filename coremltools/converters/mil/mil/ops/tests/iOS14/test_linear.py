@@ -283,6 +283,57 @@ class TestMatMul:
             backend=backend,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, shapes_and_transposes",
+        itertools.product(
+            compute_units,
+            backends,
+            [
+                # A 1-D input follows numpy.matmul: a 1-D x is treated as a row
+                # vector and a 1-D y as a column vector, and the inserted
+                # dimension is removed from the result.
+                ((4,), (10, 4, 3), False, False),  # 1-D x, batched y -> (10, 3)
+                ((4,), (2, 5, 4, 3), False, False),  # 1-D x, higher-rank batched y
+                ((10, 3, 4), (4,), False, False),  # batched x, 1-D y -> (10, 3)
+                ((2, 5, 3, 4), (4,), False, False),
+                ((4,), (4,), False, False),  # both 1-D -> scalar
+                ((4,), (4, 3), False, False),  # 1-D x, 2-D y -> (3,)
+                ((3, 4), (4,), False, False),  # 2-D x, 1-D y -> (3,)
+                ((4,), (3, 4), False, True),  # transpose_y has no effect on rank
+                ((4, 3), (4,), True, False),  # transpose_x on 2-D x, 1-D y
+                ((4,), (5, 3, 4), False, True),
+            ],
+        ),
+    )
+    def test_builder_1d_input(self, compute_unit, backend, shapes_and_transposes):
+        # Regression test for https://github.com/apple/coremltools/issues/2263
+        shape_x, shape_y, transpose_x, transpose_y = shapes_and_transposes
+        x_val = np.random.rand(*shape_x)
+        y_val = np.random.rand(*shape_y)
+        input_placeholders = {
+            "x": mb.placeholder(shape=x_val.shape),
+            "y": mb.placeholder(shape=y_val.shape),
+        }
+        input_values = {"x": x_val, "y": y_val}
+
+        def build(x, y):
+            return [mb.matmul(x=x, y=y, transpose_x=transpose_x, transpose_y=transpose_y)]
+
+        np_x = np.swapaxes(x_val, -1, -2) if transpose_x else x_val
+        np_y = np.swapaxes(y_val, -1, -2) if transpose_y else y_val
+        expected_outputs = [np.matmul(np_x, np_y)]
+        expected_output_types = [o.shape[:] + (types.fp32,) for o in expected_outputs]
+
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            compute_unit=compute_unit,
+            backend=backend,
+        )
+
 
 class TestEinsum:
     @pytest.mark.parametrize(

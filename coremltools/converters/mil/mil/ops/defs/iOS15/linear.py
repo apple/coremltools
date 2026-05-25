@@ -188,19 +188,29 @@ class matmul(Operation):
         x_shape = list(self.x.shape)
         y_shape = list(self.y.shape)
         x_rank = len(x_shape)
+        y_rank = len(y_shape)
 
         if x_rank == 1 and self.transpose_x.val:
             msg = "Op {} (matmul): x is rank 1, but transpose_x is True, which is not allowed."
             raise ValueError(msg.format(self.name))
+        if y_rank == 1 and self.transpose_y.val:
+            msg = "Op {} (matmul): y is rank 1, but transpose_y is True, which is not allowed."
+            raise ValueError(msg.format(self.name))
 
+        # Transpose only swaps the last two dims and is a no-op for rank-1 inputs.
         if self.transpose_x.val:
-            x_shape = list(x_shape)
             x_shape[-1], x_shape[-2] = x_shape[-2], x_shape[-1]
-            x_shape = tuple(x_shape)
         if self.transpose_y.val:
-            y_shape = list(y_shape)
             y_shape[-1], y_shape[-2] = y_shape[-2], y_shape[-1]
-            y_shape = tuple(y_shape)
+
+        # Follow numpy.matmul: a 1-D x is promoted to a matrix by prepending a 1,
+        # and a 1-D y is promoted by appending a 1. Both inserted dimensions are
+        # removed from the result. We track them so we drop the correct axes.
+        if x_rank == 1:
+            x_shape = [1] + x_shape
+        if y_rank == 1:
+            y_shape = y_shape + [1]
+
         if not (
             x_shape[-1] == y_shape[-2]
             or is_symbolic(x_shape[-1])
@@ -209,16 +219,18 @@ class matmul(Operation):
             msg = "Op {} (matmul): x {}, y {} are not broadcastable"
             raise ValueError(msg.format(self.name, self.x.shape, self.y.shape))
 
-        if x_rank == 1:
-            # promote shape of x to rank 2
-            x_shape = list((1,) + tuple(x_shape))
         ret_shape = list(broadcast_shapes(x_shape[:-2], y_shape[:-2]))
         ret_shape += [x_shape[-2], y_shape[-1]]
+
+        # Remove the dimensions inserted above. The prepended dim of a 1-D x lands
+        # at index -2 of ret_shape and the appended dim of a 1-D y at index -1, so
+        # drop the higher index first to keep the lower one valid.
+        if y_rank == 1:
+            del ret_shape[-1]
         if x_rank == 1:
-            # remove the first dimension of the returned shape
-            return types.tensor(x_type, tuple(ret_shape[1:]))
-        else:
-            return types.tensor(x_type, tuple(ret_shape))
+            del ret_shape[-2 if y_rank != 1 else -1]
+
+        return types.tensor(x_type, tuple(ret_shape))
 
     @precondition(allow=VALUE)
     def value_inference(self):
