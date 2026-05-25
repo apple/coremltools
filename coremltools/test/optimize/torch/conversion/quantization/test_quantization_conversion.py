@@ -77,8 +77,8 @@ def test_linear_quantizer_conv3d_w8a8():
             super().__init__()
             self.conv1 = nn.Conv3d(1, 1, kernel_size=3, padding=1)
 
-        def forward(self, x):
-            return self.conv1(x)
+        def forward(self, input_1):
+            return self.conv1(input_1)
 
     example_input = torch.randn(1, 1, 8, 8, 8)
     config = LinearQuantizerConfig.from_dict(
