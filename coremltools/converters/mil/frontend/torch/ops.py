@@ -1914,7 +1914,16 @@ def max_pool1d(context, node):
         # See: rdar://60633736 (Implement dilation for mil op max_pool)
         raise ValueError("@max_pool does not support dilation > 1")
 
-    spatial_rank = len(pad) // 2
+    spatial_rank = kernel_sizes.shape[0]
+
+    # PyTorch's MaxPool{1,2,3}d accepts unbatched input (C, *spatial); MIL's
+    # max_pool expects 2 leading (N, C) dims. Prepend the missing dims and
+    # squeeze them off after the pool. Same pattern used by _adaptive_pool2d.
+    required_rank = spatial_rank + 2
+    expand_axes = list(range(required_rank - x.rank)) if x.rank < required_rank else []
+    if expand_axes:
+        x = mb.expand_dims(x=x, axes=expand_axes)
+
     if spatial_rank > 2 and ceil_mode is True and list(strides.val) != [1] * len(strides.val):
         # since MIL does not support ceil_mode for 3D pool,
         # need to adjust padding values if ceil_mode is True
@@ -1928,9 +1937,11 @@ def max_pool1d(context, node):
         strides=strides,
         pad_type=pad_type,
         pad=pad,
-        name=node.name,
+        name=node.name + "_pool" if expand_axes else node.name,
         ceil_mode=ceil_mode if spatial_rank <= 2 else False,
     )
+    if expand_axes:
+        pool = mb.squeeze(x=pool, axes=expand_axes, name=node.name)
 
     if re.match(r"max_pool[123]d_with_indices", node.kind):
         # TODO(rdar://117038432) ([Executorch] Handle/Bind other outputs of `max_pool2d_with_indices` op during lowering)
