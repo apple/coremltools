@@ -4748,6 +4748,41 @@ class TestRandint(TorchBaseTest):
         inputs = [ct.TensorType(shape=x.shape)] if frontend == TorchFrontend.TORCHSCRIPT else None
         ct.convert(torch_model, inputs=inputs)
 
+    @pytest.mark.parametrize("frontend", frontends)
+    def test_upper_bound_is_exclusive(self, frontend):
+        # Regression test for issue #2568. torch.randint produces integers in
+        # [low, high) — the upper bound is exclusive. random_uniform's upper
+        # bound is inclusive, so before the clamp cast-to-int could emit exactly
+        # `high`. The converted model must never produce a value >= `high`.
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("torch._ops.aten.randint.low is not Aten Canonical")
+
+        class TestModel(nn.Module):
+            def forward(self, x):
+                return torch.randint(0, 100, (1000, 100), dtype=torch.int64) + x
+
+        model = TestModel().eval()
+        x = torch.zeros((1000, 100), dtype=torch.int64)
+        torch_model = export_torch_model_to_frontend(model, (x,), frontend)
+        # TorchScript needs explicit input types; exported programs carry them.
+        inputs = (
+            [ct.TensorType(shape=x.shape, dtype=np.int32)]
+            if frontend == TorchFrontend.TORCHSCRIPT
+            else None
+        )
+        mlmodel = ct.convert(torch_model, inputs=inputs)
+
+        # Over a 100k-element draw the prediction must stay within [0, high).
+        # Before the clamp, the cast could emit exactly `high` (== 100).
+        input_name = mlmodel.get_spec().description.input[0].name
+        prediction = list(
+            mlmodel.predict({input_name: x.numpy().astype(np.int32)}).values()
+        )[0]
+        assert (
+            prediction.max() < 100
+        ), f"randint emitted {prediction.max()}, must be < high (100)"
+        assert prediction.min() >= 0
+
 
 class TestRand(TorchBaseTest):
     @pytest.mark.parametrize(

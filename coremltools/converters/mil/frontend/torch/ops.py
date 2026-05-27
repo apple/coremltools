@@ -5654,7 +5654,14 @@ def randint(context, node):
 
     low, high, shape = _parse_positional_args(context, node)
     rand_uniform = mb.random_uniform(shape=shape, low=low, high=high)
-    rand_int = mb.cast(x=rand_uniform, dtype="int32", name=node.name)
+    # torch.randint yields integers in [low, high) — the upper bound is exclusive.
+    # mb.random_uniform's upper bound is inclusive, so cast-to-int can yield
+    # exactly `high`. Clamp the result to `high - 1` to match torch's semantics
+    # (issue #2568).
+    rand_int_unclipped = mb.cast(x=rand_uniform, dtype="int32")
+    high_int = mb.cast(x=high, dtype="int32")
+    high_minus_one = mb.sub(x=high_int, y=1)
+    rand_int = mb.minimum(x=rand_int_unclipped, y=high_minus_one, name=node.name)
     context.add(rand_int)
 
 @register_torch_op
