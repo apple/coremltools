@@ -2290,6 +2290,43 @@ class TestConvTranspose(TorchBaseTest):
             compute_unit=compute_unit,
         )
 
+    def test_convtranspose1d_padding_zero_output_padding_clear_error(self):
+        """Regression test for https://github.com/apple/coremltools/issues/2377.
+
+        A `ConvTranspose1d` with `padding=0` that calls `forward(..., output_size=...)`
+        in a way that implies a non-zero `output_padding` previously crashed with
+        ``TypeError: 'NoneType' object is not iterable`` because the converter
+        had normalized the all-zero `pad` to `None` and then tried to `sum`/
+        `.copy()` it. The fix materializes the implicit zeros so the
+        already-existing "padding=0 and output_padding > 0 not supported"
+        ValueError fires instead.
+        """
+
+        class SimpleUNetLike(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.conv1 = nn.Conv1d(1, 16, 3, padding=0, stride=2)
+                self.convt1 = nn.ConvTranspose1d(16, 1, 3, padding=0, stride=2)
+
+            def forward(self, x):
+                x = self.conv1(x)
+                return self.convt1(x, output_size=(1024,))
+
+        model = SimpleUNetLike().eval()
+        x = torch.randn(1, 1, 1024)
+        traced = torch.jit.trace(model, x)
+
+        with pytest.raises(
+            ValueError,
+            match=r"ConvTranspose configuration of padding=0 and output_padding > 0 not supported",
+        ):
+            ct.convert(
+                traced,
+                inputs=[ct.TensorType(name="x", shape=x.shape)],
+                convert_to="milinternal",
+                minimum_deployment_target=ct.target.iOS17,
+            )
+
 
 class TestUpsample(TorchBaseTest):
     @staticmethod

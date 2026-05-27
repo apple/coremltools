@@ -1379,6 +1379,9 @@ def _convolution(context, node):
         post_crop = [0] * pad_len
 
         if out_padding is not None and any(out_padding):
+            # Re-materialize the implicit-zero pad so the ValueError below fires (#2377).
+            if pad is None:
+                pad = np.zeros(pad_len, dtype=np.int32)
             output_padding = [0] * pad_len
             # output padding adds additional padding on one of the side of dimension
             # i.e. bottom from top-bottom,
