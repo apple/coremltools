@@ -268,8 +268,6 @@ class ModelDebugger:
     def record_intermediate_output(output_value, output_name, activation_stats_dict):
         tensor_min = np.min(output_value.flatten())
         tensor_max = np.max(output_value.flatten())
-        activation_stats_dict[output_name]["rmin"] = tensor_min
-        activation_stats_dict[output_name]["rmax"] = tensor_max
         if output_name in activation_stats_dict:
             activation_stats_dict[output_name]["rmin"] = min(
                 tensor_min, activation_stats_dict[output_name]["rmin"]
@@ -278,8 +276,7 @@ class ModelDebugger:
                 tensor_max, activation_stats_dict[output_name]["rmax"]
             )
         else:
-            activation_stats_dict[output_name]["rmin"] = tensor_min
-            activation_stats_dict[output_name]["rmax"] = tensor_max
+            activation_stats_dict[output_name] = {"rmin": tensor_min, "rmax": tensor_max}
 
     def step(
         self,

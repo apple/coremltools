@@ -101,8 +101,6 @@ def _update_tensor_range(
 ) -> None:
     tensor_min = np.min(np.array(tensor_value).flatten())
     tensor_max = np.max(np.array(tensor_value).flatten())
-    activation_stats_dict[tensor_name]["rmin"] = tensor_min
-    activation_stats_dict[tensor_name]["rmax"] = tensor_max
     if tensor_name in activation_stats_dict:
         activation_stats_dict[tensor_name]["rmin"] = min(
             tensor_min, activation_stats_dict[tensor_name]["rmin"]
@@ -111,8 +109,7 @@ def _update_tensor_range(
             tensor_max, activation_stats_dict[tensor_name]["rmax"]
         )
     else:
-        activation_stats_dict[tensor_name]["rmin"] = tensor_min
-        activation_stats_dict[tensor_name]["rmax"] = tensor_max
+        activation_stats_dict[tensor_name] = {"rmin": tensor_min, "rmax": tensor_max}
 
 
 def _combine_lists_with_common_elements(data: List[List[str]]) -> List[List[str]]:
