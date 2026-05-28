@@ -12228,6 +12228,47 @@ class TestSum(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
+        "backend, frontend",
+        itertools.product(backends, frontends),
+    )
+    def test_logsumexp_fp16_stable_decomposition(self, backend, frontend):
+        """Regression test for issue #2690: the converter must decompose
+        logsumexp into the stable form max(x)+log(sum(exp(x-max(x))))
+        instead of emitting the native ``reduce_log_sum_exp`` MIL op,
+        because the native op overflows in fp16 on Apple Neural Engine
+        at x > ~11.09.
+
+        This is a conversion-only test: it converts a small seeded model
+        using ``torch.logsumexp`` and asserts that no native
+        ``reduce_log_sum_exp`` op remains in the MIL graph.
+        """
+
+        class LogSumExpModel(nn.Module):
+            def forward(self, x):
+                return torch.logsumexp(x, dim=1, keepdim=True)
+
+        torch.manual_seed(0)
+        model = LogSumExpModel().eval()
+        x = torch.randn(1, 8)
+
+        torch_model = export_torch_model_to_frontend(model, (x,), frontend)
+        inputs = [ct.TensorType(shape=x.shape)]
+        mlmodel = ct.convert(
+            torch_model,
+            inputs=inputs,
+            convert_to=backend[0],
+            compute_precision=ct.precision.FLOAT16 if len(backend) > 1 and backend[1] == "fp16" else ct.precision.FLOAT32,
+        )
+
+        prog = mlmodel._mil_program
+        lse_ops = prog.find_ops(op_type="reduce_log_sum_exp")
+        assert len(lse_ops) == 0, (
+            f"Expected no native 'reduce_log_sum_exp' ops in the MIL graph "
+            f"after stable decomposition, but found {len(lse_ops)}. The "
+            f"converter should decompose to max(x)+log(sum(exp(x-max(x))))."
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend, keepdim",
         itertools.product(compute_units, backends, frontends, (True, False)),
     )
