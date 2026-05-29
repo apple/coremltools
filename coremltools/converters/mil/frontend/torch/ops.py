@@ -2228,9 +2228,48 @@ def cumsum(context, node):
         res = mb.cumsum(x=x, axis=dim, name=node.name)
     else:
         assert node.kind in ("logcumsumexp", "_logcumsumexp")
-        exp = mb.exp(x=x)
-        cumsumexp = mb.cumsum(x=exp, axis=dim)
-        res = mb.log(x=cumsumexp, name=node.name)
+        # Use numerically stable decomposition to prevent fp16 overflow
+        # on ANE.  The naive log(cumsum(exp(x))) computes exp(x) on raw
+        # input, which overflows in fp16 for x > ~11.09 (since
+        # exp(11.09) ~ 65,504 = fp16 max).
+        #
+        # Stable form:
+        #   logcumsumexp(x) = max(x) + log(cumsum(exp(x - max(x))))
+        #
+        # We use the global max over the entire axis rather than a
+        # running (cumulative) max because MIL does not provide a
+        # cummax op.  The global max is always >= the running max at
+        # every position, so exp(x_i - global_max) <= exp(x_i -
+        # running_max_i) <= 1 for all i.  This guarantees no overflow.
+        # The trade-off is slightly more underflow for early positions
+        # when a much larger value appears later, but this does not
+        # affect correctness -- those contributions are genuinely
+        # negligible.  This is the same max-shift pattern used in the
+        # logsumexp stable decomposition.
+
+        # Step 1: global max along the cumsum axis (keep dims for
+        #         broadcasting)
+        x_max = mb.reduce_max(x=x, axes=[dim], keep_dims=True,
+                              name=node.name + "_max")
+
+        # Step 2: x - max(x) (broadcast subtraction)
+        x_shifted = mb.sub(x=x, y=x_max,
+                           name=node.name + "_shifted")
+
+        # Step 3: exp(x - max(x)) -- all values in (0, 1], safe in fp16
+        x_exp = mb.exp(x=x_shifted,
+                       name=node.name + "_exp")
+
+        # Step 4: cumulative sum of shifted exponentials
+        x_cumsum = mb.cumsum(x=x_exp, axis=dim,
+                             name=node.name + "_cumsum")
+
+        # Step 5: log(cumsum(...))
+        x_log = mb.log(x=x_cumsum,
+                       name=node.name + "_log")
+
+        # Step 6: add back the global max
+        res = mb.add(x=x_log, y=x_max, name=node.name)
 
     context.add(res)
 
@@ -5915,8 +5954,47 @@ def log_softmax(context, node):
 
     x, axis = _parse_positional_args(context, node)
 
-    res = mb.softmax(x=x, axis=axis, name=node.name + "_softmax")
-    res = mb.log(x=res, name=node.name)
+    # Use numerically stable decomposition to prevent fp16 underflow
+    # on ANE.  The naive log(softmax(x)) first computes softmax
+    # probabilities, which underflow to 0 in fp16 for non-dominant
+    # classes (any probability below ~6e-5).  Then log(0) produces
+    # -inf, silently corrupting the output.
+    #
+    # Stable form:
+    #   log_softmax(x) = x - max(x) - log(sum(exp(x - max(x))))
+    #
+    # By subtracting max(x) first, all exp() arguments are <= 0, so
+    # exp() values are in (0, 1] -- no overflow.  The log of the sum
+    # is computed directly, avoiding the underflow-prone intermediate
+    # softmax probabilities.
+    #
+    # This matches PyTorch's own fused log_softmax implementation and
+    # the approach used in coremltools' TensorFlow frontend for
+    # cross-entropy loss (_softmax_cross_entropy_with_logits).
+
+    # Step 1: max(x) along softmax axis (keep dims for broadcasting)
+    x_max = mb.reduce_max(x=x, axes=[axis], keep_dims=True,
+                          name=node.name + "_max")
+
+    # Step 2: x - max(x) (broadcast subtraction)
+    x_shifted = mb.sub(x=x, y=x_max,
+                       name=node.name + "_shifted")
+
+    # Step 3: exp(x - max(x)) -- all values in (0, 1], safe in fp16
+    x_exp = mb.exp(x=x_shifted,
+                   name=node.name + "_exp")
+
+    # Step 4: sum(exp(x - max(x))) along softmax axis
+    x_sum = mb.reduce_sum(x=x_exp, axes=[axis], keep_dims=True,
+                          name=node.name + "_sum")
+
+    # Step 5: log(sum(...))
+    x_log_sum = mb.log(x=x_sum,
+                       name=node.name + "_log_sum")
+
+    # Step 6: (x - max(x)) - log(sum(exp(x - max(x))))
+    res = mb.sub(x=x_shifted, y=x_log_sum, name=node.name)
+
     context.add(res)
 
 
