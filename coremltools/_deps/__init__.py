@@ -102,6 +102,14 @@ except:
     _HAS_XGBOOST = False
 
 # ---------------------------------------------------------------------------------------
+_HAS_LIGHTGBM = True
+try:
+    import lightgbm
+except:
+    _HAS_LIGHTGBM = False
+MSG_LIGHTGBM_NOT_FOUND = "LightGBM not found."
+
+# ---------------------------------------------------------------------------------------
 _HAS_TF = True
 _HAS_TF_1 = False
 _HAS_TF_2 = False
