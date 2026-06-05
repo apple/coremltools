@@ -242,6 +242,11 @@ def check_connections(gd):
             assert k in control_inputs
 
 
+# Random ops are nondeterministic even when their shape input is constant, so they
+# must not be folded. Exact names (not substring) leave RandomUniformInt etc. alone. #2204
+_TF_NONDETERMINISTIC_OPS = ["RandomUniform", "RandomStandardNormal", "Multinomial"]
+
+
 def const_determined_nodes(gd, assume_variable_nodes=None):
     """
     Given a graph, extract all nodes that only depends on const nodes.
@@ -273,6 +278,8 @@ def const_determined_nodes(gd, assume_variable_nodes=None):
         elif "global" in node.op:
             vis[node.name] = False
         elif "FakeQuant" in node.op:
+            vis[node.name] = False
+        elif node.op in _TF_NONDETERMINISTIC_OPS:
             vis[node.name] = False
         elif node.name in assume_variable_nodes:
             vis[node.name] = False
