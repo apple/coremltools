@@ -283,6 +283,46 @@ class TestMatMul:
             backend=backend,
         )
 
+    @pytest.mark.parametrize(
+        "shapes_and_transposes",
+        [
+            # A 1-D input follows numpy.matmul: a 1-D x is treated as a row vector
+            # and a 1-D y as a column vector, and the inserted dimension is removed
+            # from the result.
+            ((4,), (10, 4, 3), False, False),  # 1-D x, batched y -> (10, 3)
+            ((4,), (2, 5, 4, 3), False, False),  # 1-D x, higher-rank batched y
+            ((10, 3, 4), (4,), False, False),  # batched x, 1-D y -> (10, 3)
+            ((2, 5, 3, 4), (4,), False, False),
+            ((4,), (4,), False, False),  # both 1-D -> scalar
+            ((4,), (4, 3), False, False),  # 1-D x, 2-D y -> (3,)
+            ((3, 4), (4,), False, False),  # 2-D x, 1-D y -> (3,)
+            ((4,), (3, 4), False, True),  # transpose_y on the 2-D operand
+            ((4, 3), (4,), True, False),  # transpose_x on the 2-D operand
+            ((4,), (5, 3, 4), False, True),
+        ],
+    )
+    def test_builder_1d_input_type_inference(self, shapes_and_transposes):
+        # Type-inference regression test for https://github.com/apple/coremltools/issues/2263.
+        # Only the inferred output shape is checked, not execution: the Core ML runtime does not
+        # execute a rank-1 matmul (predict raises at the framework level, see issue #2263), so a
+        # 1-D matmul cannot go through run_compare_builder. The bug was purely in type_inference,
+        # which previously dropped batch dims (e.g. inferred (1, 3) instead of (10, 3)) or raised
+        # IndexError when y was 1-D.
+        shape_x, shape_y, transpose_x, transpose_y = shapes_and_transposes
+
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=shape_x), mb.TensorSpec(shape=shape_y)],
+            opset_version=ct.target.iOS15,
+        )
+        def prog(x, y):
+            return mb.matmul(x=x, y=y, transpose_x=transpose_x, transpose_y=transpose_y)
+
+        np_x = np.swapaxes(np.empty(shape_x), -1, -2) if transpose_x else np.empty(shape_x)
+        np_y = np.swapaxes(np.empty(shape_y), -1, -2) if transpose_y else np.empty(shape_y)
+        expected_shape = np.matmul(np_x, np_y).shape
+
+        assert tuple(prog.functions["main"].outputs[0].shape) == expected_shape
+
 
 class TestEinsum:
     @pytest.mark.parametrize(
