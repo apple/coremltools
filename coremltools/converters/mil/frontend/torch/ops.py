@@ -9163,8 +9163,12 @@ def multinomial(context, node):
     if num_samples > 1 and not replacement:
         raise ValueError("When num_samples is larger than 1, only replacement=True is supported.")
     # Based on PyTorch documentations, the input to `torch.multinomial` is probability, not logit.
-    x = mb.random_categorical(x=x, size=num_samples, mode="probs", name=node.name)
-    context.add(x)
+    samples = mb.random_categorical(x=x, size=num_samples, mode="probs")
+    # `torch.multinomial` returns int64-valued indices; `mb.random_categorical` keeps the
+    # input float dtype. Without this cast the converted model emits floats where downstream
+    # ops (e.g. `gather`/`index_select`) expect integer indices, matching #2337.
+    samples = mb.cast(x=samples, dtype="int32", name=node.name)
+    context.add(samples)
 
 
 @register_torch_op
