@@ -1985,8 +1985,8 @@ def div(context, node):
         inputs = _get_inputs(context, node, expected=[2, 3])
         nargs = len(inputs)
 
-        x = mb.cast(x=inputs[0], dtype="fp32")
-        y = mb.cast(x=inputs[1], dtype="fp32")
+        x = inputs[0]
+        y = inputs[1]
         if nargs < 3:
             rounding_mode = None
         else:
@@ -2005,13 +2005,25 @@ def div(context, node):
     x, y, rounding_mode = _parse_positional_args(context, node)
     rounding_mode = _parse_keyword_args(context, node, rounding_mode)
 
+    # With a rounding mode, torch.div preserves the integer dtype when both operands
+    # are integers, e.g. torch.div(7, 2, rounding_mode="floor") -> 3 (not 3.0).
+    # Without a rounding mode torch.div always performs true division and returns a
+    # float. The arithmetic below is carried out in fp32, so the integer result must
+    # be cast back to int to match torch instead of leaking an fp32 output.
+    is_integer_output = (
+        rounding_mode is not None and types.is_int(x.dtype) and types.is_int(y.dtype)
+    )
+
+    x = mb.cast(x=x, dtype="fp32")
+    y = mb.cast(x=y, dtype="fp32")
+
     if rounding_mode is not None:
         if rounding_mode == "floor":
             # round towards negative infinity
             # e.g.:
             # values before floor: [2.6, -3.4, -3.6]
             # values after floor: [2, -4, -4]
-            res = mb.floor_div(x=x, y=y, name=node.name)
+            res = mb.floor_div(x=x, y=y)
         elif rounding_mode == "trunc":
             # round towards 0
             # e.g.:
@@ -2021,11 +2033,12 @@ def div(context, node):
             s = mb.sign(x=z)
             all_positive = mb.mul(x=z, y=s)
             all_positive_floor = mb.floor(x=all_positive)
-            res = mb.mul(x=all_positive_floor, y=s, name=node.name)
+            res = mb.mul(x=all_positive_floor, y=s)
         else:
             raise NotImplementedError(
                 'rounding mode "{}" not supported in the "div" op'.format(rounding_mode)
             )
+        res = mb.cast(x=res, dtype="int32" if is_integer_output else "fp32", name=node.name)
     else:
         res = mb.real_div(x=x, y=y, name=node.name)
 
