@@ -8116,6 +8116,8 @@ def _pad_packed_sequence(context, node):
 def log10(context, node):
     inputs = _get_inputs(context, node)
     x = inputs[0]
+    if types.is_int(x.dtype):
+        x = mb.cast(x=x, dtype="fp32")
     log_x = mb.log(x=x)
     context.add(mb.mul(x=log_x, y=1 / np.log(10.0)), node.name)
 
@@ -8124,6 +8126,8 @@ def log10(context, node):
 def log2(context, node):
     inputs = _get_inputs(context, node)
     x = inputs[0]
+    if types.is_int(x.dtype):
+        x = mb.cast(x=x, dtype="fp32")
     log_x = mb.log(x=x)
     context.add(mb.mul(x=log_x, y=1 / np.log(2.0)), node.name)
 
