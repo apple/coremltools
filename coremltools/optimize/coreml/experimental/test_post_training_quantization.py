@@ -82,7 +82,13 @@ class TestGetActivationStats(TestActivationQuantization):
         stats = {}
 
         _update_tensor_range("my_tensor", np.array([0.0, 5.0, 10.0]), stats)
+        assert stats["my_tensor"]["rmin"] == 0.0
+        assert stats["my_tensor"]["rmax"] == 10.0
+
         _update_tensor_range("my_tensor", np.array([2.0, 3.0, 5.0]), stats)
+        assert stats["my_tensor"]["rmin"] == 0.0
+        assert stats["my_tensor"]["rmax"] == 10.0
+
         _update_tensor_range("my_tensor", np.array([-1.0, 7.0, 15.0]), stats)
 
         assert stats["my_tensor"]["rmin"] == -1.0
@@ -92,7 +98,13 @@ class TestGetActivationStats(TestActivationQuantization):
         stats = {}
 
         ModelDebugger.record_intermediate_output(np.array([0.0, 5.0, 10.0]), "my_tensor", stats)
+        assert stats["my_tensor"]["rmin"] == 0.0
+        assert stats["my_tensor"]["rmax"] == 10.0
+
         ModelDebugger.record_intermediate_output(np.array([2.0, 3.0, 5.0]), "my_tensor", stats)
+        assert stats["my_tensor"]["rmin"] == 0.0
+        assert stats["my_tensor"]["rmax"] == 10.0
+
         ModelDebugger.record_intermediate_output(np.array([-1.0, 7.0, 15.0]), "my_tensor", stats)
 
         assert stats["my_tensor"]["rmin"] == -1.0
