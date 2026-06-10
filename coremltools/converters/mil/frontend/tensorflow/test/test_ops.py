@@ -3695,6 +3695,41 @@ class TestRandom(TensorFlowBaseTest):
         )
 
     @pytest.mark.parametrize(
+        "compute_unit, backend, tf_op",
+        itertools.product(compute_units, backends, ["uniform", "normal", "categorical"]),
+    )
+    def test_random_op_not_folded(self, compute_unit, backend, tf_op):
+        # A random op with a constant shape must stay in the converted model, not be
+        # folded to a const (#2204). ct.convert directly because run_compare_tf would
+        # compare TF and CoreML outputs, which differ for a nondeterministic op.
+        if tf_op == "uniform":
+            op = lambda x: x + tf.random.uniform((1, 4), minval=0.0, maxval=1.0)
+            mil_op, nn_layer = "random_uniform", "randomUniformStatic"
+        elif tf_op == "normal":
+            op = lambda x: x + tf.random.normal((1, 4), mean=0.0, stddev=1.0)
+            mil_op, nn_layer = "random_normal", "randomNormalStatic"
+        else:
+            op = lambda x: x + tf.cast(tf.random.categorical(tf.ones((1, 4)), 4), tf.float32)
+            mil_op, nn_layer = "random_categorical", "categoricalDistribution"
+
+        @make_tf_graph([[1, 4]])
+        def build_model(x):
+            return op(x)
+
+        model, _, _ = build_model
+        mlmodel = ct.convert(
+            model,
+            source="tensorflow",
+            convert_to=backend[0],
+            compute_units=compute_unit,
+            minimum_deployment_target=ct.target.iOS15 if backend[0] == "mlprogram" else None,
+        )
+        if backend[0] == "mlprogram":
+            assert TestRandom._op_count_in_mil_program(mlmodel, mil_op) == 1
+        else:
+            assert layer_counts(mlmodel._spec, nn_layer) == 1
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, low, high, rank, constant",
         itertools.product(
             compute_units,
