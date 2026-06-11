@@ -8705,6 +8705,33 @@ class TestLog10(TorchBaseTest):
             input_shape, model, compute_unit=compute_unit, backend=backend, frontend=frontend
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, dtype",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [np.int32, np.float32],
+        ),
+    )
+    def test_log10_dtype(self, compute_unit, backend, frontend, dtype):
+        SHAPE = (2, 3)
+
+        input_data = np.random.randint(1, 100, SHAPE).astype(dtype)
+        input_data = torch.from_numpy(input_data)
+        model = ModuleWrapper(torch.log10)
+        converter_input_type = [TensorType(shape=SHAPE, dtype=dtype)]
+
+        self.run_compare_torch(
+            input_data,
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+            converter_input_type=converter_input_type,
+        )
+
 
 class TestLog2(TorchBaseTest):
     @pytest.mark.parametrize(
@@ -8723,6 +8750,33 @@ class TestLog2(TorchBaseTest):
         model = Log2Model()
         self.run_compare_torch(
             input_shape, model, compute_unit=compute_unit, backend=backend, frontend=frontend
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, dtype",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [np.int32, np.float32],
+        ),
+    )
+    def test_log2_dtype(self, compute_unit, backend, frontend, dtype):
+        SHAPE = (2, 3)
+
+        input_data = np.random.randint(1, 100, SHAPE).astype(dtype)
+        input_data = torch.from_numpy(input_data)
+        model = ModuleWrapper(torch.log2)
+        converter_input_type = [TensorType(shape=SHAPE, dtype=dtype)]
+
+        self.run_compare_torch(
+            input_data,
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+            converter_input_type=converter_input_type,
         )
 
 
