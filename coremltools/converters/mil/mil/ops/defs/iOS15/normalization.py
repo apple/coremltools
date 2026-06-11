@@ -291,7 +291,7 @@ class layer_norm(Operation):
         if self.gamma is not None and not layer_norm._is_compatible_shape(list(self.gamma.shape), normalized_shape):
             raise ValueError("Expect shape {} for gamma, but get shape {} instead".format(normalized_shape, self.gamma.shape))
 
-        if self.beta is not None and not layer_norm._is_compatible_shape(list(self.gamma.shape), normalized_shape):
+        if self.beta is not None and not layer_norm._is_compatible_shape(list(self.beta.shape), normalized_shape):
             raise ValueError("Expect shape {} for beta, but get shape {} instead".format(normalized_shape, self.beta.shape))
 
         x_shape = self.x.shape

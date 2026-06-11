@@ -557,6 +557,17 @@ class TestNormalizationLayerNorm:
             backend=backend,
         )
 
+    def test_builder_rejects_invalid_beta_shape(self):
+        x = mb.placeholder(shape=(1, 3, 2))
+        gamma_val = np.ones((2,), dtype=np.float32)
+        beta_val = np.ones((3,), dtype=np.float32)
+
+        with pytest.raises(ValueError, match=r"Expect shape \[2\] for beta"):
+            with Function({"x": x}) as ssa_fun:
+                mb.layer_norm(
+                    x=ssa_fun.inputs["x"], axes=[2], gamma=gamma_val, beta=beta_val
+                )
+
     @pytest.mark.parametrize(
         "compute_unit, backend",
         itertools.product(
