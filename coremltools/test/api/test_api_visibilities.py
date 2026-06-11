@@ -176,6 +176,7 @@ class TestApiVisibilities:
             "TensorType",
             "convert",
             "libsvm",
+            "lightgbm",
             "mil",
             "sklearn",
             "xgboost",
@@ -211,6 +212,9 @@ class TestApiVisibilities:
 
     def test_converters_libsvm(self):
         _check_visible_modules(_get_visible_items(ct.converters.libsvm), ["convert"])
+
+    def test_converters_lightgbm(self):
+        _check_visible_modules(_get_visible_items(ct.converters.lightgbm), ["convert"])
 
     def test_converters_sklearn(self):
         _check_visible_modules(_get_visible_items(ct.converters.sklearn), ["convert"])

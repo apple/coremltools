@@ -13,6 +13,8 @@ scipy; platform_machine == "arm64"
 
 xgboost==1.4.2; platform_machine != "arm64"
 
+lightgbm==4.6.0
+
 # coremltools.optimize.torch
 filelock==3.6.0
 pytest-flake8==1.0.7
