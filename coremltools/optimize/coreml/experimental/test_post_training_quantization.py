@@ -11,7 +11,9 @@ import sys
 import coremltools as ct
 from coremltools.optimize.coreml.experimental._post_training_quantization import (
     _get_activation_calibration_stats,
+    _update_tensor_range,
 )
+from coremltools.optimize.coreml.experimental._model_debugger import ModelDebugger
 from coremltools.test.optimize.coreml.test_passes import TestCompressionPasses
 import coremltools.optimize as cto
 
@@ -76,6 +78,37 @@ class TestActivationQuantization:
 
 
 class TestGetActivationStats(TestActivationQuantization):
+    def test_update_tensor_range_accumulates_running_min_max(self):
+        stats = {}
+
+        _update_tensor_range("my_tensor", np.array([0.0, 5.0, 10.0]), stats)
+        assert stats["my_tensor"]["rmin"] == 0.0
+        assert stats["my_tensor"]["rmax"] == 10.0
+
+        _update_tensor_range("my_tensor", np.array([2.0, 3.0, 5.0]), stats)
+        assert stats["my_tensor"]["rmin"] == 0.0
+        assert stats["my_tensor"]["rmax"] == 10.0
+
+        _update_tensor_range("my_tensor", np.array([-1.0, 7.0, 15.0]), stats)
+
+        assert stats["my_tensor"]["rmin"] == -1.0
+        assert stats["my_tensor"]["rmax"] == 15.0
+
+    def test_record_intermediate_output_accumulates_running_min_max(self):
+        stats = {}
+
+        ModelDebugger.record_intermediate_output(np.array([0.0, 5.0, 10.0]), "my_tensor", stats)
+        assert stats["my_tensor"]["rmin"] == 0.0
+        assert stats["my_tensor"]["rmax"] == 10.0
+
+        ModelDebugger.record_intermediate_output(np.array([2.0, 3.0, 5.0]), "my_tensor", stats)
+        assert stats["my_tensor"]["rmin"] == 0.0
+        assert stats["my_tensor"]["rmax"] == 10.0
+
+        ModelDebugger.record_intermediate_output(np.array([-1.0, 7.0, 15.0]), "my_tensor", stats)
+
+        assert stats["my_tensor"]["rmin"] == -1.0
+        assert stats["my_tensor"]["rmax"] == 15.0
 
     def test_activation_quantization(self):
         """
