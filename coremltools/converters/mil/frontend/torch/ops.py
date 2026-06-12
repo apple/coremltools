@@ -8763,6 +8763,12 @@ def fft_ifftn(context, node):
 def fft_irfft(context, node):
     """Lowers torch.fft.irfft by the dialect op `complex_irfft` from complex_dialect_ops.py."""
     input_data, n, dim, norm = _get_inputs(context, node, expected=[4])
+    # torch.fft.irfft accepts a real input and treats it as a complex tensor with a zero
+    # imaginary part. The complex_irfft dialect op only takes complex64, so promote a real
+    # input to complex here before lowering.
+    if not types.is_complex(input_data.dtype):
+        imag_data = mb.fill(shape=mb.shape(x=input_data), value=0.0)
+        input_data = mb.complex(real_data=input_data, imag_data=imag_data)
     irfft_res = mb.complex_irfft(data=input_data, n=n, dim=dim, norm=norm)
     context.add(irfft_res, node.name)
 
