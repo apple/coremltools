@@ -6825,6 +6825,29 @@ class TestActivation(TorchBaseTest):
                 f"integers on mlprogram, got {prediction.dtype}"
             )
 
+    @pytest.mark.parametrize(
+        "compute_unit, frontend",
+        itertools.product(compute_units, frontends),
+    )
+    def test_floor_divide_int_inputs_preserves_int_output(self, compute_unit, frontend):
+        model = ModuleWrapper(function=torch.floor_divide)
+        x1 = torch.from_numpy(np.array([-5, -4, 4, 5], dtype=np.int32))
+        x2 = torch.from_numpy(np.array([2, 2, 2, 2], dtype=np.int32))
+        out = torch.floor_divide(x1, x2)
+        res = self.run_compare_torch(
+            [x1, x2],
+            model,
+            frontend=frontend,
+            backend=("mlprogram", "fp32"),
+            compute_unit=compute_unit,
+            input_as_shape=False,
+            expected_results=out,
+        )
+        prediction = list(res[3].values())[0]
+        assert np.issubdtype(prediction.dtype, np.integer), (
+            f"floor_divide(int, int) should predict integers on mlprogram, got {prediction.dtype}"
+        )
+
 
 class TestElementWiseUnary(TorchBaseTest):
     @pytest.mark.parametrize(
