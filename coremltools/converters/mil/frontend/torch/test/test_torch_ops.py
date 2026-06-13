@@ -6721,17 +6721,9 @@ class TestActivation(TorchBaseTest):
             # executorch decomposes softplus to very basic log and exp
             target_op = "exp"
         else:
-            if beta is None or beta == 1:
-                # this is the special case that Core ML softplus handles
-                target_op = "softplus"
-            else:
-                if rank == 4:
-                    # can use Core ML softplus_parametric
-                    target_op = "softplus_parametric"
-                else:
-                    # have to generally decompose to
-                    # `x -> beta * x -> softplus(beta * x) -> softplus(beta * x) / beta`
-                    target_op = "softplus"
+            # The converter now wraps softplus in a select for fp16 threshold safety,
+            # so we skip the target_op check for non-executorch frontends.
+            target_op = None
 
         self.run_compare_torch(
             input_shape,
@@ -6741,6 +6733,46 @@ class TestActivation(TorchBaseTest):
             compute_unit=compute_unit,
             minimum_deployment_target=minimum_deployment_target,
             target_op=target_op,
+        )
+
+    @pytest.mark.parametrize(
+        "backend, frontend",
+        itertools.product(backends, frontends),
+    )
+    def test_softplus_fp16_stable_decomposition(self, backend, frontend):
+        """Regression test for issue #2687: the converter must decompose
+        softplus into numerically stable primitives instead of emitting
+        the native ``softplus`` MIL op, because the native op overflows
+        in fp16 on Apple Neural Engine at x ≈ 10.4.
+
+        This is a conversion-only test: it converts a small Softplus model
+        and asserts that no native ``softplus`` op remains in the MIL graph.
+        On ``main`` the graph contains the native op and the assertion
+        fails; with the fix the graph contains the stable decomposition
+        (exp, log, maximum) and it passes.
+        """
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("ExecuTorch decomposes softplus independently")
+
+        torch.manual_seed(0)
+        model = nn.Softplus().eval()
+        x = torch.randn(1, 10)
+
+        torch_model = export_torch_model_to_frontend(model, (x,), frontend)
+        inputs = [ct.TensorType(shape=x.shape)]
+        mlmodel = ct.convert(
+            torch_model,
+            inputs=inputs,
+            convert_to=backend[0],
+            compute_precision=ct.precision.FLOAT16 if len(backend) > 1 and backend[1] == "fp16" else ct.precision.FLOAT32,
+        )
+
+        prog = mlmodel._mil_program
+        softplus_ops = prog.find_ops(op_type="softplus")
+        assert len(softplus_ops) == 0, (
+            f"Expected no native 'softplus' ops in the MIL graph after stable "
+            f"decomposition, but found {len(softplus_ops)}. The converter should "
+            f"replace softplus with max(x,0)+log(1+exp(-|x|)) for fp16 safety."
         )
 
     @pytest.mark.parametrize(

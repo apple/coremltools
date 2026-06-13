@@ -1775,6 +1775,23 @@ def rrelu(context, node):
     context.add(res)
 
 
+def _stable_softplus_mil(x):
+    """Numerically stable softplus: max(x, 0) + log(1 + exp(-|x|)).
+
+    Since -|x| <= 0, exp(-|x|) is always in (0, 1], so no overflow occurs
+    in any precision.  This matches the formula used by coremltools' own
+    softplus MIL op ``value_inference``.
+
+    See issue #2687 for the original fp16 overflow report.
+    """
+    abs_x = mb.abs(x=x)
+    neg_abs_x = mb.mul(x=-1.0, y=abs_x)
+    exp_val = mb.exp(x=neg_abs_x)
+    log_val = mb.log(x=mb.add(x=1.0, y=exp_val))
+    max_val = mb.maximum(x=x, y=0.0)
+    return mb.add(x=max_val, y=log_val)
+
+
 @register_torch_op
 def softplus(context, node):
     def _parse_positional_args(context, node) -> Tuple[Var]:
@@ -1795,20 +1812,20 @@ def softplus(context, node):
     x, beta, threshold = _parse_positional_args(context, node)
 
     if beta == 1:
-        # this is the special case that Core ML softplus handles
-        res = mb.softplus(x=x, name=node.name)
+        sp = _stable_softplus_mil(x)
     else:
-        if x.rank == 4:
-            # can use Core ML softplus_parametric
-            C = x.shape[1]
-            alpha_br = np.repeat(1.0 / beta, C).astype("float32")
-            beta_br = np.repeat(beta, C).astype("float32")
-            res = mb.softplus_parametric(x=x, alpha=alpha_br, beta=beta_br, name=node.name)
-        else:
-            # have to generally decompose
-            beta_mul_x = mb.mul(x=beta, y=x)
-            softplus = mb.softplus(x=beta_mul_x)
-            res = mb.real_div(x=softplus, y=beta, name=node.name)
+        # For non-unit beta: softplus(x) = (1/beta) * softplus(beta * x)
+        beta_mul_x = mb.mul(x=beta, y=x)
+        sp = mb.real_div(x=_stable_softplus_mil(beta_mul_x), y=beta)
+
+    # Apply PyTorch's threshold: for beta * x > threshold, softplus(x) ≈ x,
+    # so return x directly.  This matches PyTorch's exact behavior.
+    if beta == 1:
+        cond = mb.greater(x=x, y=threshold)
+    else:
+        beta_x = mb.mul(x=beta, y=x)
+        cond = mb.greater(x=beta_x, y=threshold)
+    res = mb.select(cond=cond, a=x, b=sp, name=node.name)
     context.add(res)
 
 
@@ -1817,8 +1834,8 @@ def mish(context, node):
     inputs = _get_inputs(context, node, expected=1)
     x = inputs[0]
 
-    softplus = mb.softplus(x=x)
-    tanh = mb.tanh(x=softplus)
+    # Mish(x) = x * tanh(softplus(x))
+    tanh = mb.tanh(x=_stable_softplus_mil(x))
     res = mb.mul(x=x, y=tanh, name=node.name)
     context.add(res)
 
