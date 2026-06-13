@@ -2036,10 +2036,7 @@ def div(context, node):
 def floor_divide(context, node):
     inputs = _get_inputs(context, node, expected=2)
     inputs = promote_input_dtypes(inputs)
-    div_res = mb.floor_div(x=inputs[0], y=inputs[1])
-    # Pytorch's floor_divide always returns fp32, even if the inputs are int
-    res = mb.cast(x=div_res, dtype='fp32', name=node.name)
-    context.add(res)
+    context.add(mb.floor_div(x=inputs[0], y=inputs[1], name=node.name))
 
 
 @register_torch_op

@@ -30,6 +30,7 @@ from coremltools.converters.mil.frontend.torch.utils import (
 from coremltools.converters.mil.mil import Operation, Program, types
 from coremltools.converters.mil.mil.var import Var
 from coremltools.converters.mil.testing_utils import (
+    assert_prog_output_type,
     einsum_equations,
     gen_input_shapes_einsum,
     get_op_types_in_program,
@@ -6797,6 +6798,29 @@ class TestActivation(TorchBaseTest):
             input_as_shape=False,
             expected_results=out,
         )
+
+    @pytest.mark.parametrize(
+        "frontend",
+        [frontend for frontend in frontends if frontend != TorchFrontend.EXECUTORCH],
+    )
+    def test_floor_divide_int_inputs_preserves_int_output(self, frontend):
+        model = ModuleWrapper(function=torch.floor_divide)
+        x1 = torch.tensor([-5, -4, 4, 5], dtype=torch.int32)
+        x2 = torch.tensor([2, 2, 2, 2], dtype=torch.int32)
+        model_spec = export_torch_model_to_frontend(model, [x1, x2], frontend)
+        inputs = None if frontend in TORCH_EXPORT_BASED_FRONTENDS else [
+            ct.TensorType(shape=x1.shape, dtype=np.int32),
+            ct.TensorType(shape=x2.shape, dtype=np.int32),
+        ]
+
+        prog = ct.convert(
+            model_spec,
+            inputs=inputs,
+            source="pytorch",
+            convert_to="milinternal",
+        )
+        assert get_op_types_in_program(prog) == ["floor_div"]
+        assert_prog_output_type(prog, expected_dtype_str="int32")
 
 
 class TestElementWiseUnary(TorchBaseTest):
