@@ -6798,6 +6798,33 @@ class TestActivation(TorchBaseTest):
             expected_results=out,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, rounding_mode",
+        itertools.product(compute_units, backends, frontends, ["floor", "trunc"]),
+    )
+    def test_div_integer_dtype(self, compute_unit, backend, frontend, rounding_mode):
+        # negative operands distinguish floor (towards -inf) from trunc (towards zero)
+        model = ModuleWrapper(function=torch.div, kwargs={"rounding_mode": rounding_mode})
+        x1 = torch.from_numpy(np.array([10, -10, 7, -7], dtype=np.int32))
+        x2 = torch.from_numpy(np.array([3, 3, 2, 2], dtype=np.int32))
+        out = torch.div(x1, x2, rounding_mode=rounding_mode)
+        res = self.run_compare_torch(
+            [x1, x2],
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+            expected_results=out,
+        )
+        # mlprogram preserves output dtype; neuralnetwork always returns float
+        if backend[0] == "mlprogram":
+            prediction = list(res[3].values())[0]
+            assert np.issubdtype(prediction.dtype, np.integer), (
+                f"div(int, int, rounding_mode={rounding_mode!r}) should predict "
+                f"integers on mlprogram, got {prediction.dtype}"
+            )
+
 
 class TestElementWiseUnary(TorchBaseTest):
     @pytest.mark.parametrize(
