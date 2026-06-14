@@ -6803,11 +6803,7 @@ class TestActivation(TorchBaseTest):
         itertools.product(compute_units, backends, frontends, ["floor", "trunc"]),
     )
     def test_div_integer_dtype(self, compute_unit, backend, frontend, rounding_mode):
-        # When a rounding mode is given, torch.div preserves the integer dtype if
-        # both operands are integers, e.g. div(7, 2, rounding_mode="floor") -> 3
-        # (not 3.0). The converter used to always cast the operands to fp32, so an
-        # all-integer division leaked an fp32 result. Use negative operands as well
-        # to cover the floor (towards -inf) vs trunc (towards 0) distinction.
+        # negative operands distinguish floor (towards -inf) from trunc (towards zero)
         model = ModuleWrapper(function=torch.div, kwargs={"rounding_mode": rounding_mode})
         x1 = torch.from_numpy(np.array([10, -10, 7, -7], dtype=np.int32))
         x2 = torch.from_numpy(np.array([3, 3, 2, 2], dtype=np.int32))
@@ -6821,11 +6817,7 @@ class TestActivation(TorchBaseTest):
             input_as_shape=False,
             expected_results=out,
         )
-        # The numerical check above passes even without the fix, since the integer
-        # quotient is exactly representable as a float too. The fix is about dtype:
-        # an all-integer division must come back as integers on the ML Program
-        # backend (it was fp32 before). NeuralNetwork always serializes outputs as
-        # float, so the distinction is only observable on mlprogram.
+        # mlprogram preserves output dtype; neuralnetwork always returns float
         if backend[0] == "mlprogram":
             prediction = list(res[3].values())[0]
             assert np.issubdtype(prediction.dtype, np.integer), (

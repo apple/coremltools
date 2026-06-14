@@ -2005,11 +2005,7 @@ def div(context, node):
     x, y, rounding_mode = _parse_positional_args(context, node)
     rounding_mode = _parse_keyword_args(context, node, rounding_mode)
 
-    # With a rounding mode, torch.div preserves the integer dtype when both operands
-    # are integers, e.g. torch.div(7, 2, rounding_mode="floor") -> 3 (not 3.0).
-    # Without a rounding mode torch.div always performs true division and returns a
-    # float. The arithmetic below is carried out in fp32, so the integer result must
-    # be cast back to int to match torch instead of leaking an fp32 output.
+    # torch.div preserves int dtype with a rounding_mode; cast back after fp32 arithmetic
     is_integer_output = (
         rounding_mode is not None and types.is_int(x.dtype) and types.is_int(y.dtype)
     )
