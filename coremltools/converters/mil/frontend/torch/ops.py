@@ -8708,6 +8708,15 @@ def view_as_real(context, node):
 
 
 @register_torch_op
+def polar(context, node):
+    abs_val, angle = _get_inputs(context, node, expected=2)
+    real = mb.mul(x=abs_val, y=mb.cos(x=angle))
+    imag = mb.mul(x=abs_val, y=mb.sin(x=angle))
+    result = mb.complex(real_data=real, imag_data=imag, name=node.name)
+    context.add(result)
+
+
+@register_torch_op
 def fft_fft(context, node):
     """Lowers torch.fft.fft by the dialect op `complex_fft` from complex_dialect_ops.py."""
     input_data, n, dim, norm = _get_inputs(context, node, expected=[4])

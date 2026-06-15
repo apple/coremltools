@@ -12869,6 +12869,34 @@ class TestComplex(TorchBaseTest):
             compute_unit=compute_unit,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+        ),
+    )
+    def test_polar(self, compute_unit, backend, frontend):
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("torch._ops.aten.polar.default is not Aten Canonical")
+
+        class PolarModel(torch.nn.Module):
+            def forward(self, abs_val, angle):
+                z = torch.polar(abs_val, angle)
+                return torch.stack([z.real, z.imag], dim=0)
+
+        abs_val = torch.tensor([1.0, 2.0, 0.5], dtype=torch.float32)
+        angle = torch.tensor([0.0, torch.pi / 4, torch.pi], dtype=torch.float32)
+        TorchBaseTest.run_compare_torch(
+            [abs_val, angle],
+            PolarModel(),
+            input_as_shape=False,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
 
 class TestReal(TorchBaseTest):
     @pytest.mark.parametrize(
