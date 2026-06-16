@@ -8094,3 +8094,33 @@ class TestIrfft(TensorFlowBaseTest):
         TensorFlowBaseTest.run_compare_tf(
             model, input_dict, outputs, compute_unit=compute_unit, backend=backend
         )
+
+
+class TestTFGraphs(TensorFlowBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend", itertools.product(compute_units, backends)
+    )
+    def test_masked_input(self, compute_unit, backend):
+
+        input_shape = [4, 10, 8]
+        val = np.random.rand(*input_shape).astype(np.float32)
+
+        @make_tf_graph([input_shape])
+        def build_model(input):
+            sliced_input = input[..., 4]
+            mask = tf.where(sliced_input > 0)
+            masked_input = tf.gather_nd(input, mask)
+            return masked_input
+
+        model, inputs, outputs = build_model
+
+        input_values = [val]
+        input_dict = dict(zip(inputs, input_values))
+        TensorFlowBaseTest.run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            compute_unit=compute_unit,
+            backend=backend,
+        )
+

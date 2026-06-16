@@ -42,7 +42,7 @@ the .mlmodel format. In particular, it can be used to:
 - Convert trained models from popular machine learning tools into Core ML format
   (.mlmodel).
 - Write models to Core ML format with a simple API.
-- Making predictions using the Core ML framework (on select platforms) to
+- Make predictions using the Core ML framework (on select platforms) to
   verify conversion.
 
 More Information
