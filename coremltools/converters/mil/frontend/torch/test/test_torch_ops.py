@@ -6826,6 +6826,47 @@ class TestActivation(TorchBaseTest):
             )
 
 
+class TestFloorDivide(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, dtype",
+        itertools.product(
+            compute_units, backends, frontends, [np.float32, np.int32]
+        ),
+    )
+    def test_floor_divide(self, compute_unit, backend, frontend, dtype):
+        model = ModuleWrapper(function=torch.floor_divide)
+        x1 = torch.from_numpy(np.array([10, -10, 7, -7], dtype=dtype))
+        x2 = torch.from_numpy(np.array([3, 3, 2, 2], dtype=dtype))
+        out = torch.floor_divide(x1, x2)
+        res = self.run_compare_torch(
+            [x1, x2],
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+            expected_results=out,
+        )
+        # A numerical comparison alone passes even without the fix: [3, -4, 3, -4]
+        # is representable as int and float alike. What the fix changes is the
+        # dtype of the prediction -- an int input must now come back as ints
+        # (it was fp32 before), while a float input stays float.
+        prediction = list(res[3].values())[0]
+        if dtype == np.int32:
+            # The ML Program backend keeps the integer output dtype after the fix
+            # (it was fp32 before). NeuralNetwork always serializes outputs as
+            # float, so the distinction is only observable on mlprogram.
+            if backend[0] == "mlprogram":
+                assert np.issubdtype(prediction.dtype, np.integer), (
+                    "floor_divide of int inputs should predict integers on "
+                    f"mlprogram, got {prediction.dtype}"
+                )
+        else:
+            assert np.issubdtype(prediction.dtype, np.floating), (
+                f"floor_divide of float inputs should predict floats, got {prediction.dtype}"
+            )
+
+
 class TestElementWiseUnary(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, shape, op_string",
