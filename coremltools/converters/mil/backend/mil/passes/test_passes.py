@@ -1185,3 +1185,96 @@ class TestPassFusePow2Sqrt:
             backend=("mlprogram", "fp32"),
             expected_output_shapes={block.outputs[0].name: x_shape},
         )
+
+
+class TestPassDecomposeConstBase2Pow:
+    """
+    Input graph:
+    input --> pow(x=2, y=input) --> output
+    Output graph:
+    input --> mul(input, log(2)) --> exp --> output
+    """
+
+    @pytest.mark.skipif(ct.utils._macos_version() < (12, 0), reason="mlprogram predict available only on macOS12+")
+    def test_decompose(self):
+        x_shape = tuple(np.random.randint(low=1, high=4, size=5))
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=x_shape)])
+        def program(x):
+            return mb.pow(x=2.0, y=x)
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            program, "mil_backend::decompose_const_base2_pow"
+        )
+
+        assert get_op_types_in_program(prev_prog) == ["pow"]
+        assert get_op_types_in_program(program) == ["mul", "exp"]
+
+        assert_model_is_valid(
+            program=program,
+            inputs={"x": x_shape},
+            backend=("mlprogram", "fp32"),
+            expected_output_shapes={block.outputs[0].name: tuple(x_shape)},
+        )
+
+    @pytest.mark.skipif(ct.utils._macos_version() < (12, 0), reason="mlprogram predict available only on macOS12+")
+    def test_no_decompose_other_base(self):
+        x_shape = tuple(np.random.randint(low=1, high=4, size=5))
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=x_shape)])
+        def program(x):
+            return mb.pow(x=3.0, y=x)
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            program, "mil_backend::decompose_const_base2_pow"
+        )
+
+        assert get_op_types_in_program(prev_prog) == ["pow"]
+        assert get_op_types_in_program(program) == ["pow"]
+
+        assert_model_is_valid(
+            program=program,
+            inputs={"x": x_shape},
+            backend=("mlprogram", "fp32"),
+            expected_output_shapes={block.outputs[0].name: tuple(x_shape)},
+        )
+
+    @pytest.mark.skipif(ct.utils._macos_version() < (12, 0), reason="mlprogram predict available only on macOS12+")
+    def test_no_decompose_non_const_base(self):
+        x_shape = tuple(np.random.randint(low=1, high=4, size=5))
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=x_shape)])
+        def program(x):
+            return mb.pow(x=x, y=2.0)
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            program, "mil_backend::decompose_const_base2_pow"
+        )
+
+        assert get_op_types_in_program(prev_prog) == ["pow"]
+        assert get_op_types_in_program(program) == ["pow"]
+
+        assert_model_is_valid(
+            program=program,
+            inputs={"x": x_shape},
+            backend=("mlprogram", "fp32"),
+            expected_output_shapes={block.outputs[0].name: tuple(x_shape)},
+        )
+
+    @pytest.mark.skipif(ct.utils._macos_version() < (12, 0), reason="mlprogram predict available only on macOS12+")
+    @pytest.mark.parametrize("compute_precision", [ct.precision.FLOAT32, ct.precision.FLOAT16])
+    def test_decompose_predict_values(self, compute_precision):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(5,), dtype=types.fp32)])
+        def program(x):
+            return mb.pow(x=2.0, y=x, name="out")
+
+        mlmodel = ct.convert(
+            program,
+            source="milinternal",
+            convert_to="mlprogram",
+            compute_precision=compute_precision,
+        )
+        x = np.array([-2.0, 0.0, 1.0, 3.0, 5.0], dtype=np.float32)
+        out = mlmodel.predict({"x": x})["out"]
+        rtol = 1e-2 if compute_precision == ct.precision.FLOAT16 else 1e-4
+        np.testing.assert_allclose(out, 2.0 ** x, rtol=rtol, atol=1e-2)
