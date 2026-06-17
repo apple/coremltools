@@ -22,20 +22,66 @@ def make_image_input(
     image_format="NHWC",
 ):
     """
-    Convert input of type multiarray to type image
+    Convert input of type multiarray to type image.
 
     Parameters
     ----------
-    TODO
+    model : MLModel
+        A Core ML model object. The model must be of type ``neuralNetwork``,
+        ``neuralNetworkClassifier``, or ``neuralNetworkRegressor``.
+
+    input_name : str or list of str
+        The name of the multiarray input feature (or list of names) to be
+        converted to an image.
+
+    is_bgr : bool, optional
+        If True, the image is treated as BGR. Otherwise, it is treated as RGB.
+        Defaults to False.
+
+    red_bias : float, optional
+        The bias value to be subtracted from the red channel. Defaults to 0.0.
+
+    blue_bias : float, optional
+        The bias value to be subtracted from the blue channel. Defaults to 0.0.
+
+    green_bias : float, optional
+        The bias value to be subtracted from the green channel. Defaults to 0.0.
+
+    gray_bias : float, optional
+        The bias value to be subtracted from the grayscale channel (used if
+        the image has 1 channel). Defaults to 0.0.
+
+    scale : float, optional
+        The scaling factor to multiply the input values by. Defaults to 1.0.
+
+    image_format : str, optional
+        The image color/layout format. Can be "NHWC" or "NCHW". Defaults to "NHWC".
 
     Returns
     -------
-    model: MLModel
-    A coreML MLModel object
+    model : MLModel
+        The modified MLModel object with the specified input(s) converted to image type.
 
     Examples
     --------
-    TODO
+    .. sourcecode:: python
+
+        import coremltools as ct
+        from coremltools.models.neural_network.utils import make_image_input
+
+        # Load a model
+        model = ct.models.MLModel("my_model.mlpackage")
+
+        # Convert a multiarray input named "input_data" to an image
+        image_model = make_image_input(
+            model,
+            input_name="input_data",
+            red_bias=123.68,
+            green_bias=116.78,
+            blue_bias=103.94,
+            scale=1.0 / 255.0,
+            image_format="NCHW",
+        )
     """
 
     spec = model.get_spec()
@@ -79,20 +125,46 @@ def make_nn_classifier(
     predicted_probabilities_output=None,
 ):
     """
-    Convert a model of type "neuralNetwork" to type "neuralNetworkClassifier"
+    Convert a model of type "neuralNetwork" to type "neuralNetworkClassifier".
 
     Parameters
     ----------
-    TODO
+    model : MLModel
+        A Core ML model object of type ``neuralNetwork`` to be converted to a classifier.
+
+    class_labels : list of str/int, or str
+        List of class labels (strings or integers) or the path to a text file
+        containing class labels (one per line).
+
+    predicted_feature_name : str, optional
+        The name of the output feature for the predicted class label. If not
+        provided, it will use the default name.
+
+    predicted_probabilities_output : str, optional
+        The name of the output feature for the class probabilities dictionary.
 
     Returns
     -------
-    model: MLModel
-    A coreML MLModel object
+    model : MLModel
+        The converted MLModel object of type ``neuralNetworkClassifier``.
 
     Examples
     --------
-    TODO
+    .. sourcecode:: python
+
+        import coremltools as ct
+        from coremltools.models.neural_network.utils import make_nn_classifier
+
+        # Load a neuralNetwork model
+        model = ct.models.MLModel("neural_network.mlpackage")
+
+        # Convert to a classifier with a list of labels
+        classifier_model = make_nn_classifier(
+            model,
+            class_labels=["cat", "dog", "bird"],
+            predicted_feature_name="classLabel",
+            predicted_probabilities_output="classLabel_probs",
+        )
     """
 
     spec = model.get_spec()
