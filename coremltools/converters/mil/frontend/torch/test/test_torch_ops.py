@@ -12566,15 +12566,16 @@ class TestCumSum(TorchBaseTest):
 
 class TestHannWindow(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, window_length, periodic",
+        "compute_unit, backend, frontend, window_length, periodic",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [1, 3, 6, 10, 12],
             [True, False],
         ),
     )
-    def test_hann_window(self, compute_unit, backend, window_length, periodic):
+    def test_hann_window(self, compute_unit, backend, frontend, window_length, periodic):
         class HannWindowModel(nn.Module):
             def forward(self, x):
                 return torch.hann_window(window_length, periodic)
@@ -12588,6 +12589,29 @@ class TestHannWindow(TorchBaseTest):
             model,
             expected_results=torch_out,
             input_as_shape=False,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+
+class TestRMSNorm(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, has_weight",
+        itertools.product(compute_units, backends, frontends, [True, False]),
+    )
+    def test_rms_norm(self, compute_unit, backend, frontend, has_weight):
+        normalized_shape = (8,)
+        weight = torch.rand(normalized_shape) if has_weight else None
+
+        class RMSNormModel(nn.Module):
+            def forward(self, x):
+                return nn.functional.rms_norm(x, normalized_shape, weight=weight, eps=1e-5)
+
+        self.run_compare_torch(
+            (2, 4, 8),
+            RMSNormModel().eval(),
+            frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
         )
