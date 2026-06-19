@@ -12593,6 +12593,58 @@ class TestHannWindow(TorchBaseTest):
         )
 
 
+class TestWindowFunctions(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, window_name, window_length, periodic",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            ["hamming", "blackman", "bartlett"],
+            [1, 3, 6, 10, 12],
+            [True, False],
+        ),
+    )
+    def test_window(self, compute_unit, backend, frontend, window_name, window_length, periodic):
+        window_op = {
+            "hamming": torch.hamming_window,
+            "blackman": torch.blackman_window,
+            "bartlett": torch.bartlett_window,
+        }[window_name]
+
+        class WindowModel(nn.Module):
+            def forward(self, x):
+                return x + window_op(window_length, periodic=periodic)
+
+        torch_in = torch.rand(window_length)
+        self.run_compare_torch(
+            torch_in,
+            WindowModel().eval(),
+            input_as_shape=False,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_hamming_window_alpha_beta(self, compute_unit, backend, frontend):
+        class HammingModel(nn.Module):
+            def forward(self, x):
+                return x + torch.hamming_window(16, periodic=True, alpha=0.5, beta=0.4)
+
+        self.run_compare_torch(
+            torch.rand(16),
+            HammingModel().eval(),
+            input_as_shape=False,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+
 class TestTrace(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, shape",
