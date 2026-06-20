@@ -13792,6 +13792,23 @@ class TestUnfold(TorchBaseTest):
         if frontend == TorchFrontend.EXECUTORCH:
             pytest.skip("ExecuTorch produces rank > 5 tensor")
 
+        if (
+            is_dynamic_hw
+            and frontend in TORCH_EXPORT_BASED_FRONTENDS
+            and Version(torch.__version__) >= Version("2.9.0")
+        ):
+            # torch 2.9's ExportedProgram.run_decompositions({}) raises
+            # "NameError: name 'L' is not defined" while interpreting the
+            # `_guards_fn` submodule that torch 2.9 generates for dynamic-shape
+            # exports carrying shape guards (here the H/W >= f(kernel, dilation,
+            # padding, stride) constraint). This is an upstream torch issue, not
+            # a converter bug; static-shape unfold and all other export ops are
+            # unaffected. Re-enable once the torch regression is resolved.
+            pytest.skip(
+                "rdar://torch-2.9 run_decompositions() NameError on _guards_fn "
+                "for guarded dynamic-shape exports"
+            )
+
         if isinstance(kernel_size, int):
             kernel_size = (kernel_size, kernel_size)
         if isinstance(dilation, int):
