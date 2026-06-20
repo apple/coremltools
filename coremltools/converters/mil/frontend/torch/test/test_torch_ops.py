@@ -13178,6 +13178,27 @@ class TestFft(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
+        "compute_unit, backend, n, dim, norm",
+        itertools.product(
+            compute_units,
+            backends,
+            [None, 1, 5],
+            [0, 1, -1],
+            [None, "forward", "backward", "ortho"],
+        ),
+    )
+    def test_fft_irfft_real_input(self, compute_unit: ct.ComputeUnit, backend, n, dim, norm):
+        # torch.fft.irfft accepts a real input (treated as complex with a zero imaginary part).
+        # The input is not wrapped with torch.complex here, unlike test_fft_basic. See GH #2130.
+        class FftModel(torch.nn.Module):
+            def forward(self, x):
+                return torch.fft.irfft(x, n=n, dim=dim, norm=norm)
+
+        TorchBaseTest.run_compare_torch(
+            (2, 3, 4), FftModel(), backend=backend, compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend",
         itertools.product(
             compute_units,
