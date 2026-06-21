@@ -200,6 +200,7 @@ _BACKEND_MIL_PASSES: List[Text] = [
     "common::const_deduplication",  # after all consts have been settled
     "common::cast_optimization",
     "common::dead_code_elimination",
+    "mil_backend::split_non_constant_pads",  # must come before sanitize_name_strings
     "mil_backend::sanitize_name_strings",
     "common::dedup_op_and_var_names",
     "nn_backend::handle_unused_inputs",  # must come after dce.

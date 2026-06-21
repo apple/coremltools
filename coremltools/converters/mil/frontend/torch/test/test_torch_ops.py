@@ -11356,7 +11356,7 @@ class TestPad(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, rank, mode",
         itertools.product(
-            compute_units, backends, frontends, range(3, 5), ["reflect", "replicate"]
+            compute_units, backends, frontends, range(3, 6), ["reflect", "replicate"]
         ),
     )
     def test_pad_reflect_replicate(self, compute_unit, backend, frontend, rank: int, mode: str):
@@ -11372,9 +11372,22 @@ class TestPad(TorchBaseTest):
         elif rank == 4:
             pad_len = 4
             input_shape = (10, 5, 5, 10)
+        elif rank == 5:
+            if backend[0] == "neuralnetwork":
+                # The NN backend's add_padding supports reflect/replicate only when
+                # all padding is confined to the last 2 dimensions (pad[:-4] must be
+                # all zeros). Rank-5 with pad_len=6 pads 3 spatial dims, so the D
+                # dimension's padding falls outside that window. Ranks 3 and 4 only
+                # pad 1 or 2 spatial dims respectively and do pass the check.
+                pytest.skip(
+                    "NeuralNetwork backend only supports reflect/replicate padding on the "
+                    "last 2 dimensions; rank-5 with 3 spatial dims padded is not supported"
+                )
+            pad_len = 6
+            input_shape = (2, 3, 5, 5, 10)
         else:
             raise NotImplementedError(
-                "Only 3D, 4D padding with non-constant padding are supported for now"
+                "Only 3D, 4D, 5D padding with non-constant padding are supported for now"
             )
         max_pad = min(input_shape[-1], input_shape[-2])
         pad = list(np.random.randint(low=0, high=max_pad, size=pad_len))
@@ -11453,6 +11466,83 @@ class TestPad(TorchBaseTest):
     def test_constant_pad_3d(self, compute_unit, backend, frontend):
         input_shape = (3, 4, 5, 6, 2)
         model = torch.nn.ConstantPad3d((5, 6, 3, 8, 2, 4), 3.5).eval()
+        self.run_compare_torch(
+            input_shape, model, backend=backend, compute_unit=compute_unit, frontend=frontend
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+        ),
+    )
+    def test_replication_pad3d(self, compute_unit, backend, frontend):
+        """Regression test for https://github.com/apple/coremltools/issues/2571.
+        ReplicationPad3d should work correctly rather than producing a model that
+        fails at CoreML runtime with 'Padding for more than two dimensions only
+        supports constant mode'."""
+        if backend[0] == "neuralnetwork":
+            pytest.skip("NeuralNetwork backend does not support replicate padding for >2 spatial dims")
+        input_shape = (1, 3, 4, 4, 4)
+        model = torch.nn.ReplicationPad3d(2).eval()
+        self.run_compare_torch(
+            input_shape, model, backend=backend, compute_unit=compute_unit, frontend=frontend
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+        ),
+    )
+    def test_replication_pad3d_asymmetric(self, compute_unit, backend, frontend):
+        """Test ReplicationPad3d with asymmetric padding (different values per side)."""
+        if backend[0] == "neuralnetwork":
+            pytest.skip("NeuralNetwork backend does not support replicate padding for >2 spatial dims")
+        input_shape = (1, 3, 4, 5, 6)
+        model = torch.nn.ReplicationPad3d((1, 2, 3, 1, 2, 3)).eval()
+        self.run_compare_torch(
+            input_shape, model, backend=backend, compute_unit=compute_unit, frontend=frontend
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+        ),
+    )
+    def test_reflection_pad3d(self, compute_unit, backend, frontend):
+        """Regression test for reflect mode: ReflectionPad3d should work correctly
+        rather than failing at CoreML runtime with 'Padding for more than two dimensions
+        only supports constant mode'."""
+        if backend[0] == "neuralnetwork":
+            pytest.skip("NeuralNetwork backend does not support reflect padding for >2 spatial dims")
+        input_shape = (1, 3, 5, 5, 5)
+        model = torch.nn.ReflectionPad3d(2).eval()
+        self.run_compare_torch(
+            input_shape, model, backend=backend, compute_unit=compute_unit, frontend=frontend
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+        ),
+    )
+    def test_reflection_pad3d_asymmetric(self, compute_unit, backend, frontend):
+        """Test ReflectionPad3d with asymmetric padding (different values per side)."""
+        if backend[0] == "neuralnetwork":
+            pytest.skip("NeuralNetwork backend does not support reflect padding for >2 spatial dims")
+        input_shape = (1, 3, 5, 6, 7)
+        model = torch.nn.ReflectionPad3d((1, 2, 1, 2, 1, 2)).eval()
         self.run_compare_torch(
             input_shape, model, backend=backend, compute_unit=compute_unit, frontend=frontend
         )
