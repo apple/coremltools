@@ -13723,6 +13723,41 @@ class TestBitwiseOr(TorchBaseTest):
             input_as_shape=False,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(compute_units, backends),
+    )
+    def test_ior_operator(self, compute_unit, backend):
+        # Regression test for issue #2584: TorchScript trace of `z |= y`
+        # records `aten::__ior__`, which sanitizes to "ior" and must be
+        # registered as an alias of bitwise_or. Previously gemma-3-1b-it
+        # conversion failed with
+        # "PyTorch convert function for op '__ior__' not implemented."
+        #
+        # Notes on scope:
+        # * Core ML inputs are immutable, so the model clones an input
+        #   before mutating it; without the clone, `run_compare_torch`
+        #   would raise the unrelated user-input-mutation guard.
+        # * torch.export decomposes `__ior__` into `clone + bitwise_or`,
+        #   so the new alias is only reachable via the TorchScript path.
+        class TestModel(torch.nn.Module):
+            def forward(self, x, y):
+                z = x.clone()
+                z |= y
+                return z
+
+        input_shape = (2, 3)
+        input_data_x = torch.rand(*input_shape) > 0.2
+        input_data_y = torch.rand(*input_shape) < 0.8
+        self.run_compare_torch(
+            [input_data_x, input_data_y],
+            TestModel(),
+            frontend=TorchFrontend.TORCHSCRIPT,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
 
 class TestBitwiseXor(TorchBaseTest):
     @pytest.mark.parametrize(
