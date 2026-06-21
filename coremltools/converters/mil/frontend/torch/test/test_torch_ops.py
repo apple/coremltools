@@ -6735,21 +6735,19 @@ class TestActivation(TorchBaseTest):
             target_op=target_op,
         )
 
-    @pytest.mark.parametrize(
-        "backend, frontend",
-        itertools.product(backends, frontends),
-    )
-    def test_softplus_fp16_stable_decomposition(self, backend, frontend):
+    @pytest.mark.parametrize("frontend", frontends)
+    def test_softplus_fp16_stable_decomposition(self, frontend):
         """Regression test for issue #2687: the converter must decompose
         softplus into numerically stable primitives instead of emitting
         the native ``softplus`` MIL op, because the native op overflows
         in fp16 on Apple Neural Engine at x ≈ 10.4.
 
         This is a conversion-only test: it converts a small Softplus model
-        and asserts that no native ``softplus`` op remains in the MIL graph.
-        On ``main`` the graph contains the native op and the assertion
-        fails; with the fix the graph contains the stable decomposition
-        (exp, log, maximum) and it passes.
+        to mlprogram with fp16 precision and asserts that no native
+        ``softplus`` op remains in the MIL graph.  On ``main`` the graph
+        contains the native op and the assertion fails; with the fix the
+        graph contains the stable decomposition (exp, log, maximum) and
+        it passes.
         """
         if frontend == TorchFrontend.EXECUTORCH:
             pytest.skip("ExecuTorch decomposes softplus independently")
@@ -6759,16 +6757,14 @@ class TestActivation(TorchBaseTest):
         x = torch.randn(1, 10)
 
         torch_model = export_torch_model_to_frontend(model, (x,), frontend)
-        inputs = [ct.TensorType(shape=x.shape)]
         mlmodel = ct.convert(
             torch_model,
-            inputs=inputs,
-            convert_to=backend[0],
-            compute_precision=ct.precision.FLOAT16 if len(backend) > 1 and backend[1] == "fp16" else ct.precision.FLOAT32,
+            inputs=[ct.TensorType(shape=x.shape)],
+            convert_to="mlprogram",
+            compute_precision=ct.precision.FLOAT16,
         )
 
-        prog = mlmodel._mil_program
-        softplus_ops = prog.find_ops(op_type="softplus")
+        softplus_ops = mlmodel._mil_program.find_ops(op_type="softplus")
         assert len(softplus_ops) == 0, (
             f"Expected no native 'softplus' ops in the MIL graph after stable "
             f"decomposition, but found {len(softplus_ops)}. The converter should "

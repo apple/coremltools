@@ -1813,18 +1813,15 @@ def softplus(context, node):
 
     if beta == 1:
         sp = _stable_softplus_mil(x)
+        cond = mb.greater(x=x, y=threshold)
     else:
         # For non-unit beta: softplus(x) = (1/beta) * softplus(beta * x)
-        beta_mul_x = mb.mul(x=beta, y=x)
-        sp = mb.real_div(x=_stable_softplus_mil(beta_mul_x), y=beta)
+        beta_x = mb.mul(x=beta, y=x)
+        sp = mb.real_div(x=_stable_softplus_mil(beta_x), y=beta)
+        cond = mb.greater(x=beta_x, y=threshold)
 
     # Apply PyTorch's threshold: for beta * x > threshold, softplus(x) ≈ x,
     # so return x directly.  This matches PyTorch's exact behavior.
-    if beta == 1:
-        cond = mb.greater(x=x, y=threshold)
-    else:
-        beta_x = mb.mul(x=beta, y=x)
-        cond = mb.greater(x=beta_x, y=threshold)
     res = mb.select(cond=cond, a=x, b=sp, name=node.name)
     context.add(res)
 
