@@ -837,8 +837,8 @@ class OptimizationConfig:
         * You can use ``coremltools.optimize.coreml.get_weights_metadata`` to get the name of the constants / op instances in the model.
     """
     global_config: Optional[OpCompressorConfig] = field(default=None)
-    op_type_configs: Optional[OpCompressorConfig] = field(default=None)
-    op_name_configs: Optional[OpCompressorConfig] = field(default=None)
+    op_type_configs: Optional[Dict[str, OpCompressorConfig]] = field(default=None)
+    op_name_configs: Optional[Dict[str, OpCompressorConfig]] = field(default=None)
 
     # The following two private attributes is aim for backward compatibility for ct.compression_utils implementation
     # They need to be removed in the future once we deprecate ct.compression_utils
