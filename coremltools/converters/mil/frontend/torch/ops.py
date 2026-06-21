@@ -5817,7 +5817,19 @@ def logical_not(context, node):
     context.add(res)
 
 
-def _avg_pool(context, node, inputs):
+def _get_avg_pool_divisor_override(inputs):
+    """Return the static, positive ``divisor_override`` value, or None if unset."""
+    if len(inputs) < 7 or inputs[6] is None or inputs[6].val is None:
+        return None
+    divisor_override = int(inputs[6].val)
+    if divisor_override <= 0:
+        raise ValueError(
+            f"divisor_override must be a positive integer, got {divisor_override}"
+        )
+    return divisor_override
+
+
+def _avg_pool(context, node, inputs, divisor_override=None):
     x = inputs[0]
 
     kernel_sizes = inputs[1]
@@ -5837,6 +5849,15 @@ def _avg_pool(context, node, inputs):
     ceil_mode = False if len(inputs) < 5 else inputs[4].val
 
     include_pad = True if len(inputs) < 6 else inputs[5].val
+
+    if divisor_override is not None:
+        # PyTorch's ``divisor_override`` replaces the pooling-region size with a
+        # fixed divisor for every window. MIL's avg_pool has no such option, so
+        # we reconstruct the window sum and rescale it to the requested divisor.
+        # Averaging over the full kernel (i.e. counting padding as zeros) makes
+        # the divisor a known constant equal to the kernel volume, so the window
+        # sum is ``avg_pool_result * num_kernel_elements``.
+        include_pad = True
 
     spatial_rank = 0 if pad is None else len(pad) // 2
     if spatial_rank > 2 and ceil_mode is True and list(strides.val) != [1] * len(strides.val):
@@ -5858,10 +5879,16 @@ def _avg_pool(context, node, inputs):
         strides=strides,
         pad_type=pad_type,
         pad=pad,
-        name=node.name,
+        name=node.name if divisor_override is None else node.name + "_avg_pool",
         exclude_padding_from_average=not include_pad,
         ceil_mode=ceil_mode if spatial_rank <= 2 else False,
     )
+
+    if divisor_override is not None:
+        num_kernel_elements = int(np.prod(kernel_sizes.val))
+        scale = np.float32(num_kernel_elements / divisor_override)
+        pool = mb.mul(x=pool, y=scale, name=node.name)
+
     context.add(pool)
 
 
@@ -5887,10 +5914,8 @@ def avg_pool2d(context, node):
             TorchFrontend.EXECUTORCH: 2,
         },
     )
-    divisor_override = None if len(inputs) < 7 else inputs[6]
-    if divisor_override is not None:
-        raise ValueError("divisor_override is not supported for avg_pool2d")
-    _avg_pool(context, node, inputs)
+    divisor_override = _get_avg_pool_divisor_override(inputs)
+    _avg_pool(context, node, inputs, divisor_override=divisor_override)
 
 
 @register_torch_op
@@ -5901,10 +5926,8 @@ def avg_pool3d(context, node):
         expected={TorchFrontend.TORCHSCRIPT : 7},
         min_expected={TorchFrontend.TORCHEXPORT: 2, TorchFrontend.EXECUTORCH: 2},
     )
-    divisor_override = None if len(inputs) < 7 else inputs[6]
-    if divisor_override is not None:
-        raise ValueError("divisor_override is not supported for avg_pool3d")
-    _avg_pool(context, node, inputs)
+    divisor_override = _get_avg_pool_divisor_override(inputs)
+    _avg_pool(context, node, inputs, divisor_override=divisor_override)
 
 
 @register_torch_op(torch_alias=["_log_softmax"])
