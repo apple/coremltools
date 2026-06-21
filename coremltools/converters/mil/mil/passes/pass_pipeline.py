@@ -30,6 +30,7 @@ _COMMON_PASSES: List[Text] = [
     # always start quantization passes with canonicalizations
     "common::int_op_canonicalization",  # ops that support int do not need dequantize -> op -> quantize sandwich
     "common::nullify_redundant_quantization_zero_point",  # canonicalize zero point
+    "common::normalize_affine_dequantize_int8",  # re-encode int8+zp=0 as uint8+zp=127 for GPU correctness (rdar://121298675, rdar://158618073)
     # quantization pass 2: remove redundancy
     # remove redundancy after canonicalization but before anything else
     "common::dequantize_quantize_pair_elimination",
@@ -191,6 +192,7 @@ _FRONTEND_TF2_PASSES: List[Text] = [
 ]
 
 _BACKEND_MIL_PASSES: List[Text] = [
+    "common::normalize_affine_dequantize_int8",  # re-encode int8+zp=0 as uint8+zp=127 before any other backend pass; also in _COMMON_PASSES to catch ops from new conversions
     "common::const_elimination",
     "mil_backend::adjust_io_to_supported_types",
     "mil_backend::insert_image_preprocessing_ops",
