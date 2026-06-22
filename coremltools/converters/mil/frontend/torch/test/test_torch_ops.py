@@ -6771,6 +6771,16 @@ class TestActivation(TorchBaseTest):
             f"replace softplus with max(x,0)+log(1+exp(-|x|)) for fp16 safety."
         )
 
+        # Positive assertion: the stable decomposition must emit at least one
+        # 'exp' op (from exp(-|x|)).  This guards against a vacuously passing
+        # test on an empty or broken graph.
+        exp_ops = mlmodel._mil_program.find_ops(op_type="exp")
+        assert len(exp_ops) >= 1, (
+            f"Expected at least one 'exp' op from the stable softplus "
+            f"decomposition, but found {len(exp_ops)}. The graph may be "
+            f"empty or the decomposition was not applied."
+        )
+
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, shape",
         itertools.product(compute_units, backends, frontends, COMMON_SHAPES_ALL),
