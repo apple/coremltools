@@ -6737,21 +6737,26 @@ class TestActivation(TorchBaseTest):
 
     @pytest.mark.parametrize("frontend", frontends)
     def test_softplus_fp16_stable_decomposition(self, frontend):
-        """Regression test for issue #2687: the converter must decompose
-        softplus into numerically stable primitives instead of emitting
-        the native ``softplus`` MIL op, because the native op overflows
-        in fp16 on Apple Neural Engine at x ≈ 10.4.
-
-        This is a conversion-only test: it converts a small Softplus model
-        to mlprogram with fp16 precision and asserts that no native
-        ``softplus`` op remains in the MIL graph.  On ``main`` the graph
-        contains the native op and the assertion fails; with the fix the
-        graph contains the stable decomposition (exp, log, maximum) and
-        it passes.
-        """
+        """Verify softplus is decomposed into overflow-safe ops for fp16 (#2687)."""
         if frontend == TorchFrontend.EXECUTORCH:
             pytest.skip("ExecuTorch decomposes softplus independently")
 
+        # Demonstrate that naive fp16 softplus (log(1+exp(x))) overflows for
+        # large x, while the stable form (max(x,0)+log(1+exp(-|x|))) does not.
+        x_val = np.float16(15.0)
+        naive = np.float16(np.log(np.float16(1.0) + np.exp(x_val)))
+        assert not np.isfinite(naive), (
+            f"Naive fp16 softplus should overflow at x=15, got {naive}"
+        )
+        stable = np.float16(
+            np.maximum(x_val, np.float16(0))
+            + np.log(np.float16(1.0) + np.exp(-np.abs(x_val)))
+        )
+        assert np.isfinite(stable) and abs(float(stable) - 15.0) < 0.5, (
+            f"Stable fp16 softplus should produce ~15.0, got {stable}"
+        )
+
+        # Verify the converter emits the stable decomposition, not the native op.
         torch.manual_seed(0)
         model = nn.Softplus().eval()
         x = torch.randn(1, 10)
@@ -6764,21 +6769,12 @@ class TestActivation(TorchBaseTest):
             compute_precision=ct.precision.FLOAT16,
         )
 
-        softplus_ops = mlmodel._mil_program.find_ops(op_type="softplus")
-        assert len(softplus_ops) == 0, (
-            f"Expected no native 'softplus' ops in the MIL graph after stable "
-            f"decomposition, but found {len(softplus_ops)}. The converter should "
-            f"replace softplus with max(x,0)+log(1+exp(-|x|)) for fp16 safety."
+        prog = mlmodel._mil_program
+        assert len(prog.find_ops(op_type="softplus")) == 0, (
+            "Native softplus op should be replaced by stable decomposition"
         )
-
-        # Positive assertion: the stable decomposition must emit at least one
-        # 'exp' op (from exp(-|x|)).  This guards against a vacuously passing
-        # test on an empty or broken graph.
-        exp_ops = mlmodel._mil_program.find_ops(op_type="exp")
-        assert len(exp_ops) >= 1, (
-            f"Expected at least one 'exp' op from the stable softplus "
-            f"decomposition, but found {len(exp_ops)}. The graph may be "
-            f"empty or the decomposition was not applied."
+        assert len(prog.find_ops(op_type="exp")) >= 1, (
+            "Stable decomposition should contain at least one exp op"
         )
 
     @pytest.mark.parametrize(
