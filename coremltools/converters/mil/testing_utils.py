@@ -23,6 +23,10 @@ from coremltools.converters.mil.mil.passes.defs.preprocess import NameSanitizer 
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 from coremltools.converters.mil.mil.scope import ScopeSource
+from coremltools.converters.mil._testing_utils import (
+    compute_snr_and_psnr,
+    random_gen_input_feature_type,
+)
 
 np.random.seed(10)
 
@@ -747,59 +751,6 @@ def assert_output_dtype(mlmodel, expected_type_str, expected_name=None, index=0)
     )
 
 
-def random_gen_input_feature_type(input_desc):
-    if input_desc.type.WhichOneof("Type") == "multiArrayType":
-        shape = [s for s in input_desc.type.multiArrayType.shape]
-        if (
-            input_desc.type.multiArrayType.dataType
-            == proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT32
-        ):
-            dtype = np.float32
-        elif (
-            input_desc.type.multiArrayType.dataType == proto.FeatureTypes_pb2.ArrayFeatureType.INT32
-        ):
-            dtype = np.int32
-        elif (
-            input_desc.type.multiArrayType.dataType
-            == proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT16
-        ):
-            dtype = np.float16
-        elif (
-            input_desc.type.multiArrayType.dataType
-            == proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT64
-        ):
-            dtype = np.float64
-        else:
-            raise ValueError("unsupported type")
-        return np.random.rand(*shape).astype(dtype)
-    elif input_desc.type.WhichOneof("Type") == "imageType":
-        if input_desc.type.imageType.colorSpace in (
-            proto.FeatureTypes_pb2.ImageFeatureType.BGR,
-            proto.FeatureTypes_pb2.ImageFeatureType.RGB,
-        ):
-            shape = [3, input_desc.type.imageType.height, input_desc.type.imageType.width]
-            x = np.random.randint(low=0, high=256, size=shape)
-            return Image.fromarray(np.transpose(x, [1, 2, 0]).astype(np.uint8))
-        elif (
-            input_desc.type.imageType.colorSpace
-            == proto.FeatureTypes_pb2.ImageFeatureType.GRAYSCALE
-        ):
-            shape = [input_desc.type.imageType.height, input_desc.type.imageType.width]
-            x = np.random.randint(low=0, high=256, size=shape)
-            return Image.fromarray(x.astype(np.uint8), "L")
-        elif (
-            input_desc.type.imageType.colorSpace
-            == proto.FeatureTypes_pb2.ImageFeatureType.GRAYSCALE_FLOAT16
-        ):
-            shape = (input_desc.type.imageType.height, input_desc.type.imageType.width)
-            x = np.random.rand(*shape)
-            return Image.fromarray(x.astype(np.float32), 'F')
-        else:
-            raise ValueError("unrecognized image type")
-    else:
-        raise ValueError('unsupported type')
-
-
 def gen_input_shapes_einsum(equation: str, dynamic: bool, backend: Tuple[str, str]):
     equation = equation.replace(" ", "")
     left = equation.split("->")[0]
@@ -862,16 +813,3 @@ def validate_minimum_deployment_target(
         pytest.skip(
             f"IOS{minimum_deployment_target} target is not runnable on this macOS {coremltoolsutils._macos_version()}"
         )
-
-
-def compute_snr_and_psnr(x, y):
-    assert len(x) == len(y)
-    eps = 1e-5
-    eps2 = 1e-10
-    noise = x - y
-    noise_var = np.sum(noise**2) / len(noise)
-    signal_energy = np.sum(y**2) / len(y)
-    max_signal_energy = np.amax(y**2)
-    snr = 10 * np.log10((signal_energy + eps) / (noise_var + eps2))
-    psnr = 10 * np.log10((max_signal_energy + eps) / (noise_var + eps2))
-    return snr, psnr

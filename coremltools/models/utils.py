@@ -35,6 +35,10 @@ from coremltools import ComputeUnit as _ComputeUnit
 from coremltools import _logger
 from coremltools import proto as _proto
 from coremltools.converters.mil import mil as _mil
+from coremltools.converters.mil._testing_utils import (
+    compute_snr_and_psnr as _compute_snr_and_psnr,
+    random_gen_input_feature_type as _random_gen_input_feature_type,
+)
 from coremltools.converters.mil.converter import mil_convert as _mil_convert
 from coremltools.converters.mil.frontend.milproto import load as _milproto_to_pymil
 from coremltools.converters.mil.mil import Builder as _mb
@@ -2132,61 +2136,6 @@ def _verify_output_correctness_of_chunks(
             final_outputs=final_outputs[out_name],
             log_prefix=f"{out_name}",
         )
-
-
-def _random_gen_input_feature_type(input_desc):
-    if input_desc.type.WhichOneof("Type") == "multiArrayType":
-        array_type = input_desc.type.multiArrayType
-        array_feature_type = _proto.FeatureTypes_pb2.ArrayFeatureType
-        shape = [s for s in array_type.shape]
-        if array_type.dataType == array_feature_type.FLOAT32:
-            dtype = _np.float32
-        elif array_type.dataType == array_feature_type.INT32:
-            dtype = _np.int32
-        elif array_type.dataType == array_feature_type.FLOAT16:
-            dtype = _np.float16
-        elif array_type.dataType == array_feature_type.FLOAT64:
-            dtype = _np.float64
-        else:
-            raise ValueError("unsupported type")
-        return _np.random.rand(*shape).astype(dtype)
-    elif input_desc.type.WhichOneof("Type") == "imageType":
-        from PIL import Image as _Image
-
-        image_type = input_desc.type.imageType
-        image_feature_type = _proto.FeatureTypes_pb2.ImageFeatureType
-        if image_type.colorSpace in (
-            image_feature_type.BGR,
-            image_feature_type.RGB,
-        ):
-            shape = [3, image_type.height, image_type.width]
-            x = _np.random.randint(low=0, high=256, size=shape)
-            return _Image.fromarray(_np.transpose(x, [1, 2, 0]).astype(_np.uint8))
-        elif image_type.colorSpace == image_feature_type.GRAYSCALE:
-            shape = [image_type.height, image_type.width]
-            x = _np.random.randint(low=0, high=256, size=shape)
-            return _Image.fromarray(x.astype(_np.uint8), "L")
-        elif image_type.colorSpace == image_feature_type.GRAYSCALE_FLOAT16:
-            shape = (image_type.height, image_type.width)
-            x = _np.random.rand(*shape)
-            return _Image.fromarray(x.astype(_np.float32), "F")
-        else:
-            raise ValueError("unrecognized image type")
-    else:
-        raise ValueError("unsupported type")
-
-
-def _compute_snr_and_psnr(x, y):
-    assert len(x) == len(y)
-    eps = 1e-5
-    eps2 = 1e-10
-    noise = x - y
-    noise_var = _np.sum(noise**2) / len(noise)
-    signal_energy = _np.sum(y**2) / len(y)
-    max_signal_energy = _np.amax(y**2)
-    snr = 10 * _np.log10((signal_energy + eps) / (noise_var + eps2))
-    psnr = 10 * _np.log10((max_signal_energy + eps) / (noise_var + eps2))
-    return snr, psnr
 
 
 def _get_op_idx_split_location(prog: _mil.Program) -> _Tuple[int, int, int]:
