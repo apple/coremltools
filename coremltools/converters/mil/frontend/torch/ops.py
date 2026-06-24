@@ -148,10 +148,11 @@ def convert_single_node(context: TranscriptionContext, node: InternalTorchIRNode
 
     scopes = []
     if context.frontend == TorchFrontend.TORCHSCRIPT:
-        scope_name, scope_type = node.get_scope_info()
+        scope_name, scope_type, module_path = node.get_scope_info()
         scopes = [
             ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=scope_type),
             ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=scope_name),
+            ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_PATH, data=module_path),
         ]
     elif context.frontend in TORCH_EXPORT_BASED_FRONTENDS:
         scopes = [

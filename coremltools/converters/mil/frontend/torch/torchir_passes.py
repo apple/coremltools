@@ -177,6 +177,7 @@ def generate_tensor_assignment_ops(graph: InternalTorchIRGraph) -> None:
                 kind=kind,
                 blocks=[],
                 model_hierarchy=node.model_hierarchy,
+                module_path=node.module_path,
             )
             graph.nodes[i] = tensor_assign_node
 
@@ -211,6 +212,7 @@ def populate_native_const_model_hierarchy(graph: InternalTorchIRGraph) -> None:
     """
 
     cached_model_hierarchy = {}
+    cached_module_path = {}
     child_ops = defaultdict(list)
 
     for node in graph.nodes:
@@ -219,14 +221,18 @@ def populate_native_const_model_hierarchy(graph: InternalTorchIRGraph) -> None:
 
     for node in graph.nodes:
         cached_model_hierarchy[node.name] = node.model_hierarchy
+        cached_module_path[node.name] = node.module_path
         for val in node.inputs:
             child_ops[val].append(node.name)
 
     for node in graph.nodes:
-        if node.kind != "constant":
+        if node.kind != "constant" or len(child_ops[node.name]) != 1:
             continue
-        if node.model_hierarchy == "" and len(child_ops[node.name]) == 1:
-            node.model_hierarchy = cached_model_hierarchy[child_ops[node.name][0]]
+        consumer = child_ops[node.name][0]
+        if node.model_hierarchy == "":
+            node.model_hierarchy = cached_model_hierarchy[consumer]
+        if node.module_path == "":
+            node.module_path = cached_module_path[consumer]
 
 
 def remove_getattr_nodes(graph: InternalTorchIRGraph) -> None:
