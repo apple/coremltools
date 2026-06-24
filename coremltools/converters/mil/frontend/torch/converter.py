@@ -1255,10 +1255,11 @@ class TorchConverter:
     def convert_const(self) -> None:
         for name, val in self.graph.params.items():
             if self.context.frontend == TorchFrontend.TORCHSCRIPT:
-                scope_name, scope_type = self.graph.params_scope[name]
+                scope_name, scope_type, module_path = self.graph.params_scope[name]
                 with mb.scope(
                     ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=scope_type),
                     ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=scope_name),
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_PATH, data=module_path),
                 ):
                     self._add_const(name, val)
             elif self.context.frontend in TORCH_EXPORT_BASED_FRONTENDS:
