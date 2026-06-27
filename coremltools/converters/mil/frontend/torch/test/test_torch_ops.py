@@ -12595,23 +12595,17 @@ class TestHannWindow(TorchBaseTest):
 
 class TestWindowFunctions(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, frontend, window_name, window_length, periodic",
+        "compute_unit, backend, frontend, window_op, window_length, periodic",
         itertools.product(
             compute_units,
             backends,
             frontends,
-            ["hamming", "blackman", "bartlett"],
+            [torch.hamming_window, torch.blackman_window, torch.bartlett_window],
             [1, 3, 6, 10, 12],
             [True, False],
         ),
     )
-    def test_window(self, compute_unit, backend, frontend, window_name, window_length, periodic):
-        window_op = {
-            "hamming": torch.hamming_window,
-            "blackman": torch.blackman_window,
-            "bartlett": torch.bartlett_window,
-        }[window_name]
-
+    def test_window(self, compute_unit, backend, frontend, window_op, window_length, periodic):
         class WindowModel(nn.Module):
             def forward(self, x):
                 return x + window_op(window_length, periodic=periodic)
