@@ -13805,7 +13805,7 @@ class TestUnfold(TorchBaseTest):
             # a converter bug; static-shape unfold and all other export ops are
             # unaffected. Re-enable once the torch regression is resolved.
             pytest.skip(
-                "rdar://torch-2.9 run_decompositions() NameError on _guards_fn "
+                "torch 2.9 run_decompositions() NameError on _guards_fn "
                 "for guarded dynamic-shape exports"
             )
 
