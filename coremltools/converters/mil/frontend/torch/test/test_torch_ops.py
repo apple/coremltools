@@ -13305,6 +13305,37 @@ class TestSTFT(TorchBaseTest):
             compute_unit=compute_unit
         )
 
+    def test_stft_large_nfft(self):
+        # Large n_fft exposes fp32 precision loss in the DFT matrix; without the
+        # mod-reduction fix the high-frequency bins are corrupted and this fails.
+        n_fft = 2048
+
+        class STFTModel(torch.nn.Module):
+            def forward(self, x):
+                window = torch.hann_window(n_fft)
+                x = torch.stft(
+                    x,
+                    n_fft=n_fft,
+                    hop_length=n_fft // 4,
+                    win_length=n_fft,
+                    window=window,
+                    center=True,
+                    normalized=False,
+                    onesided=True,
+                    return_complex=True,
+                )
+                return torch.stack([torch.real(x), torch.imag(x)], dim=0)
+
+        TorchBaseTest.run_compare_torch(
+            (4 * n_fft,),
+            STFTModel(),
+            backend=("mlprogram", "fp32"),
+            compute_unit=ct.ComputeUnit.CPU_ONLY,
+            minimum_deployment_target=ct.target.iOS16,
+            atol=2e-3,
+            rtol=0.0,
+        )
+
 
 if _HAS_TORCH_AUDIO:
 
