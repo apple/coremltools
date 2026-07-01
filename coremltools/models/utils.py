@@ -35,6 +35,10 @@ from coremltools import ComputeUnit as _ComputeUnit
 from coremltools import _logger
 from coremltools import proto as _proto
 from coremltools.converters.mil import mil as _mil
+from coremltools.converters.mil._testing_utils import (
+    compute_snr_and_psnr as _compute_snr_and_psnr,
+    random_gen_input_feature_type as _random_gen_input_feature_type,
+)
 from coremltools.converters.mil.converter import mil_convert as _mil_convert
 from coremltools.converters.mil.frontend.milproto import load as _milproto_to_pymil
 from coremltools.converters.mil.mil import Builder as _mb
@@ -2069,12 +2073,6 @@ def _verify_output_correctness_of_chunks(
     pipeline_model: _Optional["_ct.models.MLModel"] = None,
 ) -> None:
     """Verifies the end-to-end output correctness of full (original) model versus chunked models"""
-    # lazy import avoids circular error
-    from coremltools.converters.mil.testing_utils import compute_snr_and_psnr
-    from coremltools.converters.mil.testing_utils import (
-        random_gen_input_feature_type as random_gen_input_feature_type,
-    )
-
     def report_correctness(original_outputs: _np.ndarray, final_outputs: _np.ndarray, log_prefix: str):
         """ Report PSNR values across two compatible tensors.
         This util is from https://github.com/apple/ml-stable-diffusion/blob/main/python_coreml_stable_diffusion/torch2coreml.py#L80,
@@ -2082,8 +2080,8 @@ def _verify_output_correctness_of_chunks(
         """
         ABSOLUTE_MIN_PSNR = 35
 
-        _, original_psnr = compute_snr_and_psnr(original_outputs, original_outputs)
-        _, final_psnr = compute_snr_and_psnr(original_outputs, final_outputs)
+        _, original_psnr = _compute_snr_and_psnr(original_outputs, original_outputs)
+        _, final_psnr = _compute_snr_and_psnr(original_outputs, final_outputs)
 
         dB_change = final_psnr - original_psnr
         _logger.info(
@@ -2102,7 +2100,7 @@ def _verify_output_correctness_of_chunks(
     # Generate inputs for first chunk and full model
     input_dict = {}
     for input_desc in full_model._spec.description.input:
-        input_dict[input_desc.name] = random_gen_input_feature_type(input_desc)
+        input_dict[input_desc.name] = _random_gen_input_feature_type(input_desc)
 
     # Generate outputs for full model
     outputs_from_full_model = full_model.predict(input_dict)
