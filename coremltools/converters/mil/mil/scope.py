@@ -26,6 +26,11 @@ class ScopeSource(Enum):
         * If provided as str, it denotes a single scope.
         * Nested scopes are represented by a list of str.
 
+    TORCHSCRIPT_MODULE_PATH:
+        * Tokens of the innermost frame of ``node.scopeName()``. Preserves ``nn.ModuleList`` / ``nn.ModuleDict``
+        * container attribute names that ``TORCHSCRIPT_MODULE_NAME`` drops.
+        * Stored as a list of str.
+
     # Core ML converter graph passes related:
     COREMLTOOLS_GRAPH_PASS:
         * This scope traces the graph transformations (graph passes) applied on the program.
@@ -83,6 +88,7 @@ class ScopeSource(Enum):
     COREMLTOOLS_GRAPH_PASS = 2
     EXIR_STACK_TRACE = 3  # no serialization for such debug info should be allowed yet
     EXIR_DEBUG_HANDLE = 4
+    TORCHSCRIPT_MODULE_PATH = 5
 
 
 class ScopeStack(defaultdict):
@@ -220,6 +226,7 @@ class ScopeInfo:
         if self.source in (
             ScopeSource.TORCHSCRIPT_MODULE_NAME,
             ScopeSource.TORCHSCRIPT_MODULE_TYPE,
+            ScopeSource.TORCHSCRIPT_MODULE_PATH,
             ScopeSource.COREMLTOOLS_GRAPH_PASS,
         ):
             if not isinstance(self.data, list):
