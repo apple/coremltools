@@ -6,6 +6,7 @@
 # Import all frontend/backend passes to make sure they got registered.
 from coremltools.converters.mil.backend.mil.passes import (
     adjust_io_to_supported_types,
+    decompose_const_base2_pow,
     fuse_activation_silu,
     fuse_pow2_sqrt,
     insert_image_preprocessing_op,
