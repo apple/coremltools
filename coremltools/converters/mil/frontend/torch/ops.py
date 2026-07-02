@@ -3131,12 +3131,18 @@ def layer_norm(context, node):
 
 @register_torch_op
 def rms_norm(context, node):
-    # Parse Inputs
-    inputs = _get_inputs(context, node, expected=4)
+    # Parse Inputs. torch.export / ExecuTorch omit the optional weight/eps when
+    # they use defaults, so only window-style strict counts apply to TorchScript.
+    inputs = _get_inputs(
+        context,
+        node,
+        expected={TorchFrontend.TORCHSCRIPT: 4},
+        min_expected={TorchFrontend.TORCHEXPORT: 2, TorchFrontend.EXECUTORCH: 2},
+    )
     x = inputs[0]
     normalized_shape = inputs[1]
-    weight = inputs[2]
-    eps = inputs[3]
+    weight = inputs[2] if len(inputs) > 2 else None
+    eps = inputs[3] if len(inputs) > 3 else None
     axes = list(range(-len(normalized_shape.val), 0))
     # Store epsilon value to ensure ZeroDivisionError doesn't occur
     # while computing RMSNorm
@@ -8277,14 +8283,28 @@ def remainder(context, node):
     context.add(remainder_node)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["hann_window.periodic"])
 def hann_window(context, node):
-    inputs = _get_inputs(context, node, expected=[5, 6])
+    inputs = _get_inputs(
+        context,
+        node,
+        expected={TorchFrontend.TORCHSCRIPT: [5, 6]},
+        min_expected={TorchFrontend.TORCHEXPORT: 1, TorchFrontend.EXECUTORCH: 1},
+    )
     if inputs[0].val is None:
         raise NotImplementedError("variable 'window_length' not supported.")
 
+    # TorchScript passes the dtype/layout/device/pin_memory kwargs as graph inputs
+    # (5 for the default overload, 6 for `.periodic`); torch.export / ExecuTorch
+    # pass only window_length (and periodic for the `.periodic` overload). So the
+    # `periodic` flag is the 2nd positional input for the 6-arg TorchScript form or
+    # any >=2-arg export form.
     periodic = True
-    if len(inputs) == 6:
+    if context.frontend == TorchFrontend.TORCHSCRIPT:
+        has_periodic = len(inputs) == 6
+    else:
+        has_periodic = len(inputs) >= 2
+    if has_periodic:
         if inputs[1].val is None:
             raise NotImplementedError("variable 'periodic' not supported.")
         if not inputs[1].val:
