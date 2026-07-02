@@ -162,6 +162,9 @@ def _calculate_dft_matrix(
     tmp_y = mb.reshape(x=tmp_y, shape=[1, -1])
 
     base = mb.matmul(x=tmp_x, y=tmp_y)
+    # Reduce mod n_fft before scaling so angles stay in [0, 2*pi); otherwise the
+    # large raw products lose fp32 precision and corrupt high-frequency rows.
+    base = mb.mod(x=base, y=n_fft)
     base = mb.mul(x=base, y=2 * np.pi)
     base = mb.real_div(x=base, y=n_fft)
 
