@@ -7464,6 +7464,53 @@ class TestSplit(TorchBaseTest):
                     )
 
 
+class TestTensorSplit(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, sections, dim",
+        itertools.product(compute_units, backends, frontends, [2, 3], [0, -1]),
+    )
+    def test_tensor_split_sections(self, compute_unit, backend, frontend, sections, dim):
+        class TestModel(torch.nn.Module):
+            def forward(self, x):
+                return torch.tensor_split(x, sections, dim=dim)
+
+        self.run_compare_torch(
+            (10, 7), TestModel(), frontend=frontend, backend=backend, compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, indices, dim",
+        itertools.product(compute_units, backends, frontends, [[2, 5], [1, 3], [-2]], [0, -1]),
+    )
+    def test_tensor_split_indices(self, compute_unit, backend, frontend, indices, dim):
+        class TestModel(torch.nn.Module):
+            def forward(self, x):
+                return torch.tensor_split(x, indices, dim=dim)
+
+        self.run_compare_torch(
+            (10, 7), TestModel(), frontend=frontend, backend=backend, compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_tensor_split_non_monotonic_indices(self, compute_unit, backend, frontend):
+        if frontend in TORCH_EXPORT_BASED_FRONTENDS:
+            pytest.skip("torch.export decomposes tensor_split into slice ops")
+
+        class TestModel(torch.nn.Module):
+            def forward(self, x):
+                return torch.tensor_split(x, [5, 2], dim=0)
+
+        with pytest.raises(
+            NotImplementedError, match="non-monotonic indices is not supported"
+        ):
+            self.run_compare_torch(
+                (10, 7), TestModel(), frontend=frontend, backend=backend, compute_unit=compute_unit
+            )
+
+
 class TestUnbind(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, dim",
