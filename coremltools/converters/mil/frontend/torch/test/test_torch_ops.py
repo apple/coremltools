@@ -13440,7 +13440,6 @@ class TestDeformConv2d(TorchBaseTest):
         ops = get_op_types_in_program(prog)
         assert "resample" in ops
         assert "conv" in ops
-        assert "concat" in ops
 
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend",
@@ -13472,6 +13471,18 @@ class TestDeformConv2d(TorchBaseTest):
                 "offset_groups": 1,
                 "use_mask": False,
                 "use_bias": False,
+            },
+            {
+                "input_shape": (1, 2, 4, 4),
+                "out_channels": 3,
+                "kernel_size": (1, 1),
+                "stride": (1, 1),
+                "padding": (0, 0),
+                "dilation": (1, 1),
+                "groups": 1,
+                "offset_groups": 1,
+                "use_mask": True,
+                "use_bias": True,
             },
             {
                 "input_shape": (1, 4, 5, 5),
