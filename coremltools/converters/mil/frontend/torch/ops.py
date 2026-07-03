@@ -9199,6 +9199,7 @@ def torchvision_deform_conv2d(context, node):
 
     weight_1x1 = mb.transpose(x=weight, perm=[0, 2, 3, 1])
     weight_1x1 = mb.reshape(x=weight_1x1, shape=[cout, kernel_size * cin_per_group, 1, 1])
+    patches, weight_1x1 = promote_input_dtypes([patches, weight_1x1])
 
     conv_name = node.name if bias is None else node.name + "_conv"
     out = mb.conv(
@@ -9211,6 +9212,7 @@ def torchvision_deform_conv2d(context, node):
 
     if bias is not None:
         bias = mb.reshape(x=bias, shape=[1, cout, 1, 1])
+        out, bias = promote_input_dtypes([out, bias])
         out = mb.add(x=out, y=bias, name=node.name)
 
     context.add(out)
