@@ -9144,6 +9144,17 @@ def torchvision_deform_conv2d(context, node):
                 x_group = _torchvision_deform_conv2d_slice_channel_range(
                     x, channel_start, channel_end
                 )
+                # Core ML resample's constant padding is applied to the whole sample when
+                # coordinates are out of range. Deformable convolution needs per-neighbor
+                # zero padding for bilinear interpolation, so make the one-pixel border
+                # explicit and shift the sample coordinates into the padded image.
+                pad_value = np.float16(0.0) if x_group.dtype == types.fp16 else 0.0
+                x_group = mb.pad(
+                    x=x_group,
+                    pad=[0, 0, 0, 0, 1, 1, 1, 1],
+                    mode="constant",
+                    constant_val=pad_value,
+                )
 
                 offset_base = offset_group * 2 * kernel_size
                 offset_y = _torchvision_deform_conv2d_slice_channel(
@@ -9159,13 +9170,15 @@ def torchvision_deform_conv2d(context, node):
 
                 coord_y = mb.add(x=base_y, y=offset_y)
                 coord_x = mb.add(x=base_x, y=offset_x)
+                coord_y = mb.add(x=coord_y, y=1.0)
+                coord_x = mb.add(x=coord_x, y=1.0)
                 coordinates = mb.stack(values=[coord_x, coord_y], axis=-1)
                 sampled = mb.resample(
                     x=x_group,
                     coordinates=coordinates,
                     sampling_mode="bilinear",
                     padding_mode="constant",
-                    padding_value=0.0,
+                    padding_value=pad_value,
                     coordinates_mode="unnormalized",
                     # align_corners is irrelevant for unnormalized coordinates.
                     align_corners=False,
