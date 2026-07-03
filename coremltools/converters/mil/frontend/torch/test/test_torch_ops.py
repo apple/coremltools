@@ -58,6 +58,10 @@ if _HAS_TORCH_VISION:
 backends = testing_reqs.backends
 compute_units = testing_reqs.compute_units
 
+deform_conv2d_backends = [backend for backend in backends if backend[0] != "mlprogram"]
+if any(backend[0] == "mlprogram" for backend in backends):
+    deform_conv2d_backends.extend([("mlprogram", "fp16"), ("mlprogram", "fp32")])
+
 torch = pytest.importorskip("torch")
 torch.manual_seed(30)
 np.random.seed(30)
@@ -13443,7 +13447,7 @@ class TestDeformConv2d(TorchBaseTest):
 
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend",
-        itertools.product(compute_units, backends, frontends),
+        itertools.product(compute_units, deform_conv2d_backends, frontends),
     )
     @pytest.mark.parametrize(
         "config",
@@ -13596,6 +13600,20 @@ class TestDeformConv2d(TorchBaseTest):
                 inputs=converter_inputs,
             )
             self._assert_deform_conv2d_ops(prog)
+            return
+
+        if backend == ("mlprogram", "fp16"):
+            # This lowering combines several bilinear resample samples with convolution.
+            # Native fp16 execution can accumulate interpolation rounding, so fp16 tests
+            # cover conversion and graph structure while fp32 covers numerical parity.
+            model_spec = export_torch_model_to_frontend(model, input_data, frontend)
+            mlmodel = convert_to_mlmodel(
+                model_spec,
+                input_data,
+                backend=backend,
+                compute_unit=compute_unit,
+            )
+            self._assert_deform_conv2d_ops(mlmodel._mil_program)
             return
 
         res = self.run_compare_torch(
