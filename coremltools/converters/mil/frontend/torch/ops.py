@@ -9014,13 +9014,13 @@ def _torchvision_deform_conv2d_base_grids(
     stride_w: int,
     pad_h: int,
     pad_w: int,
-    kh: int,
-    kw: int,
+    kh_index: int,
+    kw_index: int,
     dilation_h: int,
     dilation_w: int,
 ) -> Tuple[np.ndarray, np.ndarray]:
-    base_y = np.arange(height, dtype=np.float32) * stride_h - pad_h + kh * dilation_h
-    base_x = np.arange(width, dtype=np.float32) * stride_w - pad_w + kw * dilation_w
+    base_y = np.arange(height, dtype=np.float32) * stride_h - pad_h + kh_index * dilation_h
+    base_x = np.arange(width, dtype=np.float32) * stride_w - pad_w + kw_index * dilation_w
     base_y = np.broadcast_to(base_y.reshape(1, height, 1), (1, height, width)).astype(
         np.float32
     )
