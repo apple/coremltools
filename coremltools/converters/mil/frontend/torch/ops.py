@@ -8888,6 +8888,126 @@ def stft(context, node):
     )
     context.add(stft_res, node.name)
 
+
+def _torchvision_roi_align_const_int(x: Var, name: str) -> int:
+    if x.val is None:
+        raise ValueError(f"torchvision::roi_align requires constant {name}.")
+    return int(x.val)
+
+
+def _torchvision_roi_align_const_float(x: Var, name: str) -> float:
+    if x.val is None:
+        raise ValueError(f"torchvision::roi_align requires constant {name}.")
+    return float(x.val)
+
+
+def _torchvision_roi_align_const_bool(x: Var, name: str) -> bool:
+    if x.val is None:
+        raise ValueError(f"torchvision::roi_align requires constant {name}.")
+    return bool(x.val)
+
+
+@register_torch_op(torch_alias=["torchvision::roi_align"])
+def torchvision_roi_align(context, node):
+    inputs = _get_inputs(context, node, expected=7)
+    x, boxes = inputs[0], inputs[1]
+    spatial_scale = _torchvision_roi_align_const_float(inputs[2], "spatial_scale")
+    pooled_height = _torchvision_roi_align_const_int(inputs[3], "pooled_height")
+    pooled_width = _torchvision_roi_align_const_int(inputs[4], "pooled_width")
+    sampling_ratio = _torchvision_roi_align_const_int(inputs[5], "sampling_ratio")
+    aligned = _torchvision_roi_align_const_bool(inputs[6], "aligned")
+
+    if x.rank != 4:
+        raise ValueError("torchvision::roi_align expects a rank-4 input tensor.")
+    if boxes.rank != 2 or boxes.shape[1] != 5:
+        raise ValueError(
+            "torchvision::roi_align currently expects boxes with shape [num_rois, 5]."
+        )
+    if pooled_height <= 0 or pooled_width <= 0:
+        raise ValueError("torchvision::roi_align expects positive pooled output dimensions.")
+    if sampling_ratio <= 0:
+        raise ValueError(
+            "torchvision::roi_align currently supports only positive constant sampling_ratio."
+        )
+
+    boxes = mb.cast(x=boxes, dtype="fp32")
+    batch_indices, x1, y1, x2, y2 = mb.split(x=boxes, num_splits=5, axis=1)
+    batch_indices = mb.squeeze(x=mb.cast(x=batch_indices, dtype="int32"), axes=[1])
+    roi_input = mb.gather(x=x, indices=batch_indices, axis=0)
+    pad_zero = np.float16(0.0) if x.dtype._width == 16 else np.float32(0.0)
+    roi_input = mb.pad(
+        x=roi_input,
+        pad=[1, 1, 1, 1],
+        mode="constant",
+        constant_val=pad_zero,
+    )
+
+    offset = 0.5 if aligned else 0.0
+    roi_start_w = mb.sub(x=mb.mul(x=x1, y=spatial_scale), y=offset)
+    roi_start_h = mb.sub(x=mb.mul(x=y1, y=spatial_scale), y=offset)
+    roi_end_w = mb.sub(x=mb.mul(x=x2, y=spatial_scale), y=offset)
+    roi_end_h = mb.sub(x=mb.mul(x=y2, y=spatial_scale), y=offset)
+
+    roi_width = mb.sub(x=roi_end_w, y=roi_start_w)
+    roi_height = mb.sub(x=roi_end_h, y=roi_start_h)
+    if not aligned:
+        roi_width = mb.maximum(x=roi_width, y=1.0)
+        roi_height = mb.maximum(x=roi_height, y=1.0)
+
+    bin_width = mb.real_div(x=roi_width, y=float(pooled_width))
+    bin_height = mb.real_div(x=roi_height, y=float(pooled_height))
+    roi_start_w = mb.expand_dims(x=roi_start_w, axes=[-1])
+    roi_start_h = mb.expand_dims(x=roi_start_h, axes=[-1])
+    bin_width = mb.expand_dims(x=bin_width, axes=[-1])
+    bin_height = mb.expand_dims(x=bin_height, axes=[-1])
+
+    pooled_w_grid = np.arange(pooled_width, dtype=np.float32).reshape(1, 1, pooled_width)
+    pooled_h_grid = np.arange(pooled_height, dtype=np.float32).reshape(1, pooled_height, 1)
+    pooled_w_zeros = np.zeros((1, 1, pooled_width), dtype=np.float32)
+    pooled_h_zeros = np.zeros((1, pooled_height, 1), dtype=np.float32)
+
+    accumulated = None
+    for y_sample in range(sampling_ratio):
+        y_offset = (y_sample + 0.5) / sampling_ratio
+        sample_y = mb.add(
+            x=roi_start_h,
+            y=mb.mul(x=bin_height, y=pooled_h_grid + y_offset),
+        )
+        sample_y = mb.add(x=sample_y, y=pooled_w_zeros)
+        sample_y = mb.add(x=sample_y, y=1.0)
+
+        for x_sample in range(sampling_ratio):
+            x_offset = (x_sample + 0.5) / sampling_ratio
+            sample_x = mb.add(
+                x=roi_start_w,
+                y=mb.mul(x=bin_width, y=pooled_w_grid + x_offset),
+            )
+            sample_x = mb.add(x=sample_x, y=pooled_h_zeros)
+            sample_x = mb.add(x=sample_x, y=1.0)
+
+            coordinates = mb.concat(
+                values=[
+                    mb.expand_dims(x=sample_x, axes=[-1]),
+                    mb.expand_dims(x=sample_y, axes=[-1]),
+                ],
+                axis=-1,
+            )
+            sampled = mb.resample(
+                x=roi_input,
+                coordinates=coordinates,
+                sampling_mode="bilinear",
+                padding_mode="constant",
+                padding_value=0.0,
+                coordinates_mode="unnormalized",
+                align_corners=False,
+            )
+            accumulated = sampled if accumulated is None else mb.add(x=accumulated, y=sampled)
+
+    context.add(
+        mb.real_div(x=accumulated, y=float(sampling_ratio * sampling_ratio), name=node.name)
+    )
+
+
 @register_torch_op(torch_alias=["torchvision::nms"])
 def torchvision_nms(context, node):
     inputs = _get_inputs(context, node, expected=3)

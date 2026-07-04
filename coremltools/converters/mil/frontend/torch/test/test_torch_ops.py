@@ -18,7 +18,12 @@ import torch.nn as nn
 
 import coremltools as ct
 from coremltools import RangeDim, Shape, TensorType
-from coremltools._deps import _HAS_TORCH_AUDIO, _HAS_TORCH_VISION, version_lt
+from coremltools._deps import (
+    _HAS_TORCH_AUDIO,
+    _HAS_TORCH_EXPORT_API,
+    _HAS_TORCH_VISION,
+    version_lt,
+)
 from coremltools.converters.mil.backend.mil.load import BlobWriter
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.frontend.torch.utils import (
@@ -13588,6 +13593,155 @@ class TestDeformConv2d(TorchBaseTest):
             rtol=1e-4,
             frontend=frontend,
         )
+
+
+@pytest.mark.skipif(not _HAS_TORCH_VISION, reason="torchvision is not available.")
+class TestRoiAlign(TorchBaseTest):
+    class RoiAlignModel(torch.nn.Module):
+        def __init__(self, output_size, spatial_scale, sampling_ratio, aligned):
+            super().__init__()
+            self.output_size = output_size
+            self.spatial_scale = spatial_scale
+            self.sampling_ratio = sampling_ratio
+            self.aligned = aligned
+
+        def forward(self, x, boxes):
+            return torchvision.ops.roi_align(
+                x,
+                boxes,
+                self.output_size,
+                spatial_scale=self.spatial_scale,
+                sampling_ratio=self.sampling_ratio,
+                aligned=self.aligned,
+            )
+
+    @staticmethod
+    def _assert_roi_align_ops(prog):
+        ops = get_op_types_in_program(prog)
+        assert "gather" in ops
+        assert "pad" in ops
+        assert "resample" in ops
+
+    @staticmethod
+    def _convert_to_milinternal(model, input_data, frontend):
+        model_spec = export_torch_model_to_frontend(model, input_data, frontend)
+        converter_inputs = None
+        if frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            converter_inputs = [ct.TensorType(shape=x.shape) for x in input_data]
+        return ct.convert(
+            model_spec,
+            source="pytorch",
+            convert_to="milinternal",
+            inputs=converter_inputs,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    @pytest.mark.parametrize(
+        "config",
+        [
+            {
+                "output_size": (2, 3),
+                "spatial_scale": 1.0,
+                "sampling_ratio": 2,
+                "aligned": True,
+                "boxes": torch.tensor(
+                    [
+                        [0.0, 1.0, 1.5, 6.0, 7.0],
+                        [1.0, 0.0, 2.0, 7.5, 7.5],
+                    ],
+                    dtype=torch.float32,
+                ),
+            },
+            {
+                "output_size": (3, 2),
+                "spatial_scale": 0.5,
+                "sampling_ratio": 1,
+                "aligned": False,
+                "boxes": torch.tensor(
+                    [
+                        [0.0, 0.0, 0.0, 12.0, 14.0],
+                        [1.0, 2.0, 4.0, 15.0, 15.0],
+                    ],
+                    dtype=torch.float32,
+                ),
+            },
+            {
+                "output_size": 2,
+                "spatial_scale": 1.0,
+                "sampling_ratio": 2,
+                "aligned": True,
+                "boxes": torch.tensor(
+                    [
+                        [0.0, 0.0, 0.0, 4.0, 4.0],
+                        [1.0, -0.25, -0.25, 3.0, 3.0],
+                    ],
+                    dtype=torch.float32,
+                ),
+            },
+        ],
+    )
+    def test_roi_align(self, compute_unit, backend, frontend, config):
+        if backend[0] == "neuralnetwork":
+            pytest.skip("roi_align lowering uses resample and is only supported for mlprogram")
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("torchvision::roi_align is not covered for ExecuTorch frontend")
+        if not hasattr(torchvision.ops, "roi_align"):
+            pytest.skip("torchvision.ops.roi_align not found.")
+
+        model = self.RoiAlignModel(
+            output_size=config["output_size"],
+            spatial_scale=config["spatial_scale"],
+            sampling_ratio=config["sampling_ratio"],
+            aligned=config["aligned"],
+        ).eval()
+        input_data = [torch.randn(2, 3, 8, 9), config["boxes"]]
+
+        if backend[0] == "mlprogram" and BlobWriter is None:
+            prog = self._convert_to_milinternal(model, input_data, frontend)
+            self._assert_roi_align_ops(prog)
+            return
+
+        res = self.run_compare_torch(
+            input_data,
+            model,
+            input_as_shape=False,
+            backend=backend,
+            compute_unit=compute_unit,
+            atol=1e-4,
+            rtol=1e-4,
+            frontend=frontend,
+        )
+        self._assert_roi_align_ops(res[1]._mil_program)
+
+    def test_roi_align_adaptive_sampling_ratio_error(self):
+        model = self.RoiAlignModel(
+            output_size=(2, 2),
+            spatial_scale=1.0,
+            sampling_ratio=-1,
+            aligned=True,
+        ).eval()
+        input_data = [
+            torch.randn(1, 2, 6, 6),
+            torch.tensor([[0.0, 1.0, 1.0, 5.0, 5.0]], dtype=torch.float32),
+        ]
+        model_spec = export_torch_model_to_frontend(
+            model,
+            input_data,
+            TorchFrontend.TORCHSCRIPT,
+        )
+        with pytest.raises(
+            ValueError,
+            match="torchvision::roi_align currently supports only positive constant sampling_ratio",
+        ):
+            ct.convert(
+                model_spec,
+                source="pytorch",
+                convert_to="milinternal",
+                inputs=[ct.TensorType(shape=x.shape) for x in input_data],
+            )
 
 
 class TestNms(TorchBaseTest):
