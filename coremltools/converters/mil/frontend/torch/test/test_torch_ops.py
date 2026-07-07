@@ -13704,13 +13704,14 @@ class TestRoiAlign(TorchBaseTest):
             self._assert_roi_align_ops(prog)
             return
 
+        atol = 1e-2 if backend == ("mlprogram", "fp16") else 1e-4
         res = self.run_compare_torch(
             input_data,
             model,
             input_as_shape=False,
             backend=backend,
             compute_unit=compute_unit,
-            atol=1e-4,
+            atol=atol,
             rtol=1e-4,
             frontend=frontend,
         )
