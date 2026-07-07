@@ -8965,6 +8965,9 @@ def torchvision_roi_align(context, node):
     pooled_h_grid = np.arange(pooled_height, dtype=np.float32).reshape(1, pooled_height, 1)
     pooled_w_zeros = np.zeros((1, 1, pooled_width), dtype=np.float32)
     pooled_h_zeros = np.zeros((1, pooled_height, 1), dtype=np.float32)
+    roi_input_shape = mb.shape(x=roi_input)
+    hpad = mb.cast(x=_utils.pymil_value_at(roi_input_shape, 2), dtype="fp32")
+    wpad = mb.cast(x=_utils.pymil_value_at(roi_input_shape, 3), dtype="fp32")
 
     accumulated = None
     for y_sample in range(sampling_ratio):
@@ -8985,6 +8988,11 @@ def torchvision_roi_align(context, node):
             sample_x = mb.add(x=sample_x, y=pooled_h_zeros)
             sample_x = mb.add(x=sample_x, y=1.0)
 
+            sample_y = mb.real_div(x=sample_y, y=mb.sub(x=hpad, y=1.0))
+            sample_x = mb.real_div(x=sample_x, y=mb.sub(x=wpad, y=1.0))
+            sample_y = mb.sub(x=mb.mul(x=sample_y, y=2.0), y=1.0)
+            sample_x = mb.sub(x=mb.mul(x=sample_x, y=2.0), y=1.0)
+
             coordinates = mb.concat(
                 values=[
                     mb.expand_dims(x=sample_x, axes=[-1]),
@@ -8998,8 +9006,8 @@ def torchvision_roi_align(context, node):
                 sampling_mode="bilinear",
                 padding_mode="constant",
                 padding_value=0.0,
-                coordinates_mode="unnormalized",
-                align_corners=False,
+                coordinates_mode="normalized_minus_one_to_one",
+                align_corners=True,
             )
             accumulated = sampled if accumulated is None else mb.add(x=accumulated, y=sampled)
 
