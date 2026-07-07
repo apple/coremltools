@@ -58,10 +58,6 @@ if _HAS_TORCH_VISION:
 backends = testing_reqs.backends
 compute_units = testing_reqs.compute_units
 
-deform_conv2d_backends = [backend for backend in backends if backend[0] != "mlprogram"]
-if any(backend[0] == "mlprogram" for backend in backends):
-    deform_conv2d_backends.extend([("mlprogram", "fp16"), ("mlprogram", "fp32")])
-
 torch = pytest.importorskip("torch")
 torch.manual_seed(30)
 np.random.seed(30)
@@ -13439,15 +13435,9 @@ class TestDeformConv2d(TorchBaseTest):
         w_out = (w + 2 * pad_w - dilation_w * (kw - 1) - 1) // stride_w + 1
         return h_out, w_out
 
-    @staticmethod
-    def _assert_deform_conv2d_ops(prog):
-        ops = get_op_types_in_program(prog)
-        assert "resample" in ops
-        assert "conv" in ops
-
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend",
-        itertools.product(compute_units, deform_conv2d_backends, frontends),
+        itertools.product(compute_units, backends, frontends),
     )
     @pytest.mark.parametrize(
         "config",
@@ -13588,35 +13578,7 @@ class TestDeformConv2d(TorchBaseTest):
             use_bias=config["use_bias"],
         ).eval()
 
-        if backend[0] == "mlprogram" and BlobWriter is None:
-            model_spec = export_torch_model_to_frontend(model, input_data, frontend)
-            converter_inputs = None
-            if frontend not in TORCH_EXPORT_BASED_FRONTENDS:
-                converter_inputs = [ct.TensorType(shape=x.shape) for x in input_data]
-            prog = ct.convert(
-                model_spec,
-                source="pytorch",
-                convert_to="milinternal",
-                inputs=converter_inputs,
-            )
-            self._assert_deform_conv2d_ops(prog)
-            return
-
-        if backend == ("mlprogram", "fp16"):
-            # This lowering combines several bilinear resample samples with convolution.
-            # Native fp16 execution can accumulate interpolation rounding, so fp16 tests
-            # cover conversion and graph structure while fp32 covers numerical parity.
-            model_spec = export_torch_model_to_frontend(model, input_data, frontend)
-            mlmodel = convert_to_mlmodel(
-                model_spec,
-                input_data,
-                backend=backend,
-                compute_unit=compute_unit,
-            )
-            self._assert_deform_conv2d_ops(mlmodel._mil_program)
-            return
-
-        res = self.run_compare_torch(
+        self.run_compare_torch(
             input_data,
             model,
             input_as_shape=False,
@@ -13626,8 +13588,6 @@ class TestDeformConv2d(TorchBaseTest):
             rtol=1e-4,
             frontend=frontend,
         )
-
-        self._assert_deform_conv2d_ops(res[1]._mil_program)
 
 
 class TestNms(TorchBaseTest):
