@@ -9172,6 +9172,14 @@ def torchvision_deform_conv2d(context, node):
                 coord_x = mb.add(x=base_x, y=offset_x)
                 coord_y = mb.add(x=coord_y, y=1.0)
                 coord_x = mb.add(x=coord_x, y=1.0)
+
+                x_group_shape = mb.shape(x=x_group)
+                hpad = mb.cast(x=_utils.pymil_value_at(x_group_shape, 2), dtype="fp32")
+                wpad = mb.cast(x=_utils.pymil_value_at(x_group_shape, 3), dtype="fp32")
+                coord_y = mb.real_div(x=coord_y, y=mb.sub(x=hpad, y=1.0))
+                coord_x = mb.real_div(x=coord_x, y=mb.sub(x=wpad, y=1.0))
+                coord_y = mb.sub(x=mb.mul(x=coord_y, y=2.0), y=1.0)
+                coord_x = mb.sub(x=mb.mul(x=coord_x, y=2.0), y=1.0)
                 coordinates = mb.stack(values=[coord_x, coord_y], axis=-1)
                 sampled = mb.resample(
                     x=x_group,
@@ -9179,9 +9187,8 @@ def torchvision_deform_conv2d(context, node):
                     sampling_mode="bilinear",
                     padding_mode="constant",
                     padding_value=pad_value,
-                    coordinates_mode="unnormalized",
-                    # align_corners is irrelevant for unnormalized coordinates.
-                    align_corners=False,
+                    coordinates_mode="normalized_minus_one_to_one",
+                    align_corners=True,
                 )
 
                 if use_mask:
