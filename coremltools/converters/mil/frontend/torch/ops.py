@@ -1787,8 +1787,8 @@ def softplus(context, node):
         nargs = len(inputs)
 
         x = inputs[0]
-        beta = float(inputs[1].val) if nargs > 1 else 1.0
-        threshold = float(inputs[2].val) if nargs > 2 else 20.0
+        beta = float(np.asarray(inputs[1].val).item()) if nargs > 1 else 1.0
+        threshold = float(np.asarray(inputs[2].val).item()) if nargs > 2 else 20.0
 
         return x, beta, threshold
 
@@ -2482,7 +2482,7 @@ def pad(context, node):
             value = 0.0
         elif isinstance(value, Var):
             assert value.val is not None
-            value = float(value.val)
+            value = float(np.asarray(value.val).item())
 
         return pad, mode, value
 
@@ -3073,7 +3073,7 @@ def _cast(context, node, dtype, dtype_name):
         # If x is a compile-time constant, directly cast it to @dtype if it's
         # not one already.
         if not isinstance(x.val, dtype):
-            res = mb.const(val=dtype(x.val.squeeze()), name=node.name)
+            res = mb.const(val=dtype(np.asarray(x.val).item()), name=node.name)
         else:
             res = x
     elif len(x.shape) > 0:
@@ -3988,7 +3988,7 @@ def upsample_linear1d(context, node):
 
         x = inputs[0]
         output_size = inputs[1]
-        align_corners = bool(inputs[2].val)
+        align_corners = bool(np.asarray(inputs[2].val).item())
 
         if context.frontend == TorchFrontend.TORCHSCRIPT:
             scales = None if nargs < 4 else inputs[3]
@@ -4095,7 +4095,7 @@ def upsample_bilinear2d(context, node):
 
         x = inputs[0]
         output_size = inputs[1]
-        align_corners = bool(inputs[2].val)
+        align_corners = bool(np.asarray(inputs[2].val).item())
 
         if context.frontend == TorchFrontend.TORCHSCRIPT:
             if nargs == 4:
@@ -4730,7 +4730,7 @@ def getitem(context, node):
     assert inputs[1].val is not None, "Only static item selection supported"
 
     try:
-        index = int(inputs[1].val)
+        index = int(np.asarray(inputs[1].val).item())
     except:
         raise AssertionError(
             f"Index into python list/tuple needs to be integer. Provided value: {inputs[1].val}"
@@ -7458,7 +7458,7 @@ def threshold(context, node):
 
     mul_node = mb.linear_activation(
         x=gt_node_32,
-        alpha=float(threshold_val.val - alpha.val),
+        alpha=float(np.asarray(threshold_val.val - alpha.val).item()),
         beta=0.,
         name=node.name + '_mul'
     )

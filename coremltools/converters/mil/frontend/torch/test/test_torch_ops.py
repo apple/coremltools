@@ -7554,6 +7554,41 @@ class TestTo(TorchBaseTest):
         "compute_unit, backend, frontend",
         itertools.product(compute_units, backends, frontends),
     )
+    def test_cast_scalar_from_shape(self, compute_unit, backend, frontend):
+        """Test that int() on a (1,)-shaped tensor doesn't crash.
+
+        Reproduces the numpy 2.x bug where int(np.array([value])) raises
+        TypeError: only 0-dimensional arrays can be converted to Python scalars.
+        This happens when PyTorch tracing produces shape elements as (1,)-shaped
+        tensors that are then converted to int via the _int op (e.g., YOLO's
+        attention module computing N = H * W and using it in view()).
+        """
+
+        class TestModel(torch.nn.Module):
+            def forward(self, x):
+                # Simulate what YOLO's attention module does:
+                # extract shape elements, multiply, and use in reshape
+                h = x.shape[2]
+                w = x.shape[3]
+                n = h * w
+                # Force int conversion — during tracing this produces a _int op
+                # on a (1,)-shaped tensor, which triggers the bug
+                n_int = int(n)
+                return x.reshape(x.shape[0], x.shape[1], n_int)
+
+        model = TestModel()
+        self.run_compare_torch(
+            [(1, 3, 20, 20)],
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
     def test_to_uint8(self, compute_unit, backend, frontend):
         class TestModel(torch.nn.Module):
             def forward(self, input_data):
@@ -11396,7 +11431,7 @@ class TestPad(TorchBaseTest):
 
         if rank > 5:
             raise NotImplementedError("Only supports < 6D constant padding")
-        val = float(np.random.random(1))
+        val = float(np.random.random(1).item())
         input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
         pad_dims = np.random.randint(low=1, high=rank + 1)
         pad = list(np.random.randint(low=0, high=10, size=pad_dims * 2))

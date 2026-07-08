@@ -134,8 +134,8 @@ class resize_nearest_neighbor(Operation):
             )
 
         ret_shape = list(self.x.shape)
-        ret_shape[-1] = int(self.target_size_width.val)
-        ret_shape[-2] = int(self.target_size_height.val)
+        ret_shape[-1] = int(np.asarray(self.target_size_width.val).item())
+        ret_shape[-2] = int(np.asarray(self.target_size_height.val).item())
         return types.tensor(self.x.dtype, ret_shape)
 
 
