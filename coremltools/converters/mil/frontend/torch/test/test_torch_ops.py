@@ -11191,8 +11191,8 @@ class TestPad(TorchBaseTest):
         ],
     )
     def test_pad_reflect_replicate_3d_raises(self, mode, torch_module):
-        # Regression test for issues #2576 and #2571: padding more than two
-        # dimensions only supports constant mode. Previously a `reflect` /
+        # Regression test for issues #2576 and #2571: Padding for more than two
+        # dimensions only supports "constant" mode. Previously a `reflect` /
         # `replicate` pad on >2 dims surfaced as a Core ML Framework
         # model-compile error inside `predict()`; now it must raise
         # NotImplementedError at conversion time with the same message.
@@ -11210,7 +11210,7 @@ class TestPad(TorchBaseTest):
 
         with pytest.raises(
             NotImplementedError,
-            match="Padding for more than two dimensions only supports constant mode",
+            match='Padding for more than two dimensions only supports "constant" mode',
         ):
             ct.convert(exported)
 

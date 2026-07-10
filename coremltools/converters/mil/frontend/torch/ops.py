@@ -2480,7 +2480,7 @@ def pad(context, node):
             )
             if padded_dims > 2:
                 raise NotImplementedError(
-                    "Padding for more than two dimensions only supports constant mode"
+                    'Padding for more than two dimensions only supports "constant" mode'
                 )
 
         if value is None:
