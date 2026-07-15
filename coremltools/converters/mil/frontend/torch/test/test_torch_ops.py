@@ -13383,6 +13383,213 @@ if _HAS_TORCH_AUDIO:
                 atol=1e-4,
             )
 
+
+@pytest.mark.skipif(not _HAS_TORCH_VISION, reason="TorchVision not found.")
+class TestDeformConv2d(TorchBaseTest):
+    class DeformConv2dModel(torch.nn.Module):
+        def __init__(
+            self,
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride,
+            padding,
+            dilation,
+            groups,
+            use_mask,
+            use_bias,
+        ):
+            super().__init__()
+            self.stride = stride
+            self.padding = padding
+            self.dilation = dilation
+            self.use_mask = use_mask
+            self.weight = torch.nn.Parameter(
+                torch.rand(out_channels, in_channels // groups, *kernel_size)
+            )
+            if use_bias:
+                self.bias = torch.nn.Parameter(torch.rand(out_channels))
+            else:
+                self.bias = None
+
+        def forward(self, x, offset, mask=None):
+            return torchvision.ops.deform_conv2d(
+                x,
+                offset,
+                self.weight,
+                self.bias,
+                stride=self.stride,
+                padding=self.padding,
+                dilation=self.dilation,
+                mask=mask if self.use_mask else None,
+            )
+
+    @staticmethod
+    def _output_spatial(input_shape, kernel_size, stride, padding, dilation):
+        _, _, h, w = input_shape
+        kh, kw = kernel_size
+        stride_h, stride_w = stride
+        pad_h, pad_w = padding
+        dilation_h, dilation_w = dilation
+        h_out = (h + 2 * pad_h - dilation_h * (kh - 1) - 1) // stride_h + 1
+        w_out = (w + 2 * pad_w - dilation_w * (kw - 1) - 1) // stride_w + 1
+        return h_out, w_out
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    @pytest.mark.parametrize(
+        "config",
+        [
+            {
+                "input_shape": (2, 3, 5, 5),
+                "out_channels": 5,
+                "kernel_size": (3, 3),
+                "stride": (1, 1),
+                "padding": (0, 0),
+                "dilation": (1, 1),
+                "groups": 1,
+                "offset_groups": 1,
+                "use_mask": True,
+                "use_bias": True,
+            },
+            {
+                "input_shape": (1, 3, 5, 5),
+                "out_channels": 4,
+                "kernel_size": (3, 3),
+                "stride": (1, 1),
+                "padding": (0, 0),
+                "dilation": (1, 1),
+                "groups": 1,
+                "offset_groups": 1,
+                "use_mask": False,
+                "use_bias": False,
+            },
+            {
+                "input_shape": (1, 2, 4, 4),
+                "out_channels": 3,
+                "kernel_size": (1, 1),
+                "stride": (1, 1),
+                "padding": (0, 0),
+                "dilation": (1, 1),
+                "groups": 1,
+                "offset_groups": 1,
+                "use_mask": True,
+                "use_bias": True,
+            },
+            {
+                "input_shape": (1, 4, 5, 5),
+                "out_channels": 8,
+                "kernel_size": (3, 3),
+                "stride": (1, 1),
+                "padding": (0, 0),
+                "dilation": (1, 1),
+                "groups": 2,
+                "offset_groups": 1,
+                "use_mask": True,
+                "use_bias": True,
+            },
+            {
+                "input_shape": (1, 4, 5, 5),
+                "out_channels": 6,
+                "kernel_size": (3, 3),
+                "stride": (1, 1),
+                "padding": (0, 0),
+                "dilation": (1, 1),
+                "groups": 1,
+                "offset_groups": 2,
+                "use_mask": True,
+                "use_bias": True,
+            },
+            {
+                "input_shape": (1, 4, 5, 5),
+                "out_channels": 8,
+                "kernel_size": (3, 3),
+                "stride": (1, 1),
+                "padding": (0, 0),
+                "dilation": (1, 1),
+                "groups": 2,
+                "offset_groups": 2,
+                "use_mask": True,
+                "use_bias": True,
+            },
+            {
+                "input_shape": (1, 3, 6, 7),
+                "out_channels": 4,
+                "kernel_size": (2, 3),
+                "stride": (2, 1),
+                "padding": (1, 2),
+                "dilation": (2, 1),
+                "groups": 1,
+                "offset_groups": 1,
+                "use_mask": True,
+                "use_bias": True,
+            },
+        ],
+    )
+    def test_deform_conv2d(self, compute_unit, backend, frontend, config):
+        if backend[0] == "neuralnetwork":
+            pytest.skip(
+                "deform_conv2d lowering uses resample and is only supported for mlprogram"
+            )
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("torchvision::deform_conv2d is not covered for ExecuTorch")
+        if not hasattr(torchvision.ops, "deform_conv2d"):
+            pytest.skip("torchvision.ops.deform_conv2d not found.")
+
+        input_shape = config["input_shape"]
+        kernel_size = config["kernel_size"]
+        h_out, w_out = self._output_spatial(
+            input_shape,
+            kernel_size,
+            config["stride"],
+            config["padding"],
+            config["dilation"],
+        )
+        offset_shape = (
+            input_shape[0],
+            2 * config["offset_groups"] * kernel_size[0] * kernel_size[1],
+            h_out,
+            w_out,
+        )
+
+        x = torch.randn(input_shape)
+        offset = 0.2 * torch.randn(offset_shape)
+        input_data = [x, offset]
+        if config["use_mask"]:
+            mask_shape = (
+                input_shape[0],
+                config["offset_groups"] * kernel_size[0] * kernel_size[1],
+                h_out,
+                w_out,
+            )
+            input_data.append(torch.rand(mask_shape))
+
+        model = self.DeformConv2dModel(
+            in_channels=input_shape[1],
+            out_channels=config["out_channels"],
+            kernel_size=kernel_size,
+            stride=config["stride"],
+            padding=config["padding"],
+            dilation=config["dilation"],
+            groups=config["groups"],
+            use_mask=config["use_mask"],
+            use_bias=config["use_bias"],
+        ).eval()
+
+        self.run_compare_torch(
+            input_data,
+            model,
+            input_as_shape=False,
+            backend=backend,
+            compute_unit=compute_unit,
+            atol=1e-4,
+            rtol=1e-4,
+            frontend=frontend,
+        )
+
+
 class TestNms(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, box_num, iou_threshold, dynamic_input, minimum_deployment_target",
