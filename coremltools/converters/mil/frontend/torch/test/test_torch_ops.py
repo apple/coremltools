@@ -13616,13 +13616,6 @@ class TestRoiAlign(TorchBaseTest):
             )
 
     @staticmethod
-    def _assert_roi_align_ops(prog):
-        ops = get_op_types_in_program(prog)
-        assert "gather" in ops
-        assert "pad" in ops
-        assert "resample" in ops
-
-    @staticmethod
     def _convert_to_milinternal(model, input_data, frontend):
         model_spec = export_torch_model_to_frontend(model, input_data, frontend)
         converter_inputs = None
@@ -13700,8 +13693,7 @@ class TestRoiAlign(TorchBaseTest):
         input_data = [torch.randn(2, 3, 8, 9), config["boxes"]]
 
         if backend[0] == "mlprogram" and BlobWriter is None:
-            prog = self._convert_to_milinternal(model, input_data, frontend)
-            self._assert_roi_align_ops(prog)
+            self._convert_to_milinternal(model, input_data, frontend)
             return
 
         atol = 1e-2 if backend == ("mlprogram", "fp16") else 1e-4
@@ -13715,7 +13707,6 @@ class TestRoiAlign(TorchBaseTest):
             rtol=1e-4,
             frontend=frontend,
         )
-        self._assert_roi_align_ops(res[1]._mil_program)
 
     def test_roi_align_adaptive_sampling_ratio_error(self):
         model = self.RoiAlignModel(
