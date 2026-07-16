@@ -211,6 +211,21 @@ class TestCumSum:
         np.testing.assert_allclose(np.cumsum(x_val, axis=0), v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
+    def test_builder_eval_exclusive(self):
+        # Constant folding an exclusive cumsum used to crash (the data array was passed as
+        # np.zeros' dtype) and never produced the exclusive prefix sum. Cover every
+        # axis/reverse combination against the numpy ground truth.
+        x_val = random_gen(shape=(2, 3, 4), rand_min=-100, rand_max=100)
+        for axis in range(x_val.ndim):
+            for reverse in (False, True):
+                v = mb.cumsum(x=x_val, axis=axis, exclusive=True, reverse=reverse)
+                data = np.flip(x_val, axis=axis) if reverse else x_val
+                expected = np.cumsum(data, axis=axis) - data  # exclusive = inclusive - self
+                if reverse:
+                    expected = np.flip(expected, axis=axis)
+                np.testing.assert_allclose(expected, v.val, atol=1e-04, rtol=1e-05)
+
+    @ssa_fn
     def test_invalid_arg(self):
         x_val = random_gen(shape=(1, 2, 3, 4, 5), rand_min=-100, rand_max=100)
         with pytest.raises(ValueError):
