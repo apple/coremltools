@@ -1355,9 +1355,11 @@ class TestNoopElimination:
         elif op_type in {"real_div"}:
             if pos == "y" and (val == 1.0 or val == [1.0, 1.0, 1.0, 1.0]):
                 new_program = ["relu"]
-        elif op_type in {"pow", "floor_div"}:
+        elif op_type in {"pow"}:
             if pos == "y" and (val == 1.0 or val == [1.0, 1.0, 1.0, 1.0]):
                 new_program = ["relu"]
+        # floor_div(x, 1) == floor(x) is a no-op only for integer x; the fp32 input here
+        # keeps it (integer removal is covered by test_floor_div_elimination_by_dtype).
         elif op_type in {"sub"}:
             if pos == "y" and (val == 0.0 or val == [0.0, 0.0, 0.0, 0.0]):
                 new_program = ["relu"]
@@ -1369,6 +1371,28 @@ class TestNoopElimination:
             {"x": (2, 4)},
             expected_output_shapes={block.outputs[0].name: (2, 4)},
         )
+
+    @pytest.mark.parametrize(
+        "dtype, one, expected",
+        [
+            (types.int32, 1, ["add"]),
+            (types.fp32, 1.0, ["floor_div", "add"]),
+        ],
+    )
+    def test_floor_div_elimination_by_dtype(self, dtype, one, expected):
+        # floor_div(x, 1) == floor(x) is a no-op only when x is integral. It must be
+        # removed for integer inputs but kept for float inputs -- dropping it there
+        # would remove the floor and silently change the result. (add x, 1 is a
+        # non-eliminable consumer that accepts both int and float and keeps floor_div
+        # interior so the pass is allowed to remove it.)
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4), dtype=dtype)])
+        def prog(x):
+            r1 = mb.floor_div(x=x, y=one)
+            return mb.add(x=r1, y=one)
+
+        prev_prog, _, _ = apply_pass_and_basic_check(prog, "common::noop_elimination")
+        assert get_op_types_in_program(prev_prog) == ["floor_div", "add"]
+        assert get_op_types_in_program(prog) == expected
 
     def test_elementwise_broadcast(self):
         @mb.program(input_specs=[mb.TensorSpec(shape=[4])])
