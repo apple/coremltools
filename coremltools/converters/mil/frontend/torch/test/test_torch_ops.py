@@ -3468,6 +3468,58 @@ class TestMaxPool(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, input_shape, kernel_size, stride, padding, ceil_mode",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [(1, 3, 15, 15), (1, 1, 8, 8)],
+            [2, 3],
+            [1, 2],
+            [0, 1],
+            [True, False],
+        ),
+    )
+    def test_max_pool2d_return_indices(
+        self,
+        compute_unit,
+        backend,
+        frontend,
+        input_shape,
+        kernel_size,
+        stride,
+        padding,
+        ceil_mode,
+    ):
+        if padding > kernel_size / 2:
+            return
+        # The indices are recovered from an argmax over the pooled windows, so a
+        # fp16 backend can rank two near-equal window elements differently from
+        # the fp32 torch reference. Only the fp32 path is bit-exact for indices.
+        if backend[1] == "fp16":
+            pytest.skip("indices require fp32 to match torch's argmax tie-breaking")
+
+        class Model(nn.Module):
+            def forward(self, x):
+                return nn.functional.max_pool2d(
+                    x,
+                    kernel_size=kernel_size,
+                    stride=stride,
+                    padding=padding,
+                    ceil_mode=ceil_mode,
+                    return_indices=True,
+                )
+
+        self.run_compare_torch(
+            input_shape,
+            Model(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            minimum_deployment_target=ct.target.iOS17,
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend",
         itertools.product(compute_units, backends, frontends),
     )
