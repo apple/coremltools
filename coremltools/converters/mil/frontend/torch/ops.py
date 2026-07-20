@@ -8312,6 +8312,95 @@ def hann_window(context, node):
     context.add(sin_sq)
 
 
+def _compute_window(kind: str, window_length: int, periodic: bool,
+                    alpha: float = 0.54, beta: float = 0.46) -> np.ndarray:
+    """
+    Materialize a torch window function (Hamming/Blackman/Bartlett) as a constant.
+
+    window_length / periodic / alpha / beta are all known at conversion time, so the
+    (data-independent) window is computed here. torch builds a symmetric window of
+    length ``window_length + 1`` for the periodic case and drops the final sample.
+    """
+    if window_length <= 0:
+        return np.zeros((0,), dtype=np.float32)
+    if window_length == 1:
+        return np.ones((1,), dtype=np.float32)
+    m = window_length + 1 if periodic else window_length
+    n = np.arange(m, dtype=np.float64)
+    denom = m - 1
+    if kind == "hamming":
+        w = alpha - beta * np.cos(2.0 * np.pi * n / denom)
+    elif kind == "blackman":
+        w = 0.42 - 0.5 * np.cos(2.0 * np.pi * n / denom) + 0.08 * np.cos(4.0 * np.pi * n / denom)
+    elif kind == "bartlett":
+        w = 1.0 - np.abs(2.0 * n / denom - 1.0)
+    else:
+        raise ValueError(f"Unknown window kind: {kind}")
+    if periodic:
+        w = w[:-1]
+    return w.astype(np.float32)
+
+
+def _parse_window_inputs(context, node, n_optional: int, defaults: list):
+    """
+    Parse a torch window op into (window_length, [optional params]).
+
+    The optional params are ``periodic`` (plus ``alpha``/``beta`` for Hamming).
+    TorchScript additionally carries the dtype/layout/device/pin_memory kwargs as the
+    trailing four graph inputs; torch.export / ExecuTorch pass only the positional
+    params, so we count the inputs accordingly.
+    """
+    inputs = _get_inputs(context, node, min_expected=1)
+    if inputs[0].val is None:
+        raise NotImplementedError("variable 'window_length' not supported.")
+    window_length = int(inputs[0].val)
+    if context.frontend == TorchFrontend.TORCHSCRIPT:
+        n_present = len(inputs) - 1 - 4  # drop window_length + dtype/layout/device/pin_memory
+    else:
+        n_present = len(inputs) - 1
+    # NOTE: builtin min/max are shadowed by the aten::min/max op handlers in this
+    # module, so clamp explicitly rather than calling min()/max().
+    if n_present < 0:
+        n_present = 0
+    elif n_present > n_optional:
+        n_present = n_optional
+    params = list(defaults)
+    for i in range(n_present):
+        var = inputs[1 + i]
+        if var is not None and var.val is not None:
+            params[i] = var.val
+    return window_length, params
+
+
+@register_torch_op(
+    torch_alias=[
+        "hamming_window.periodic",
+        "hamming_window.periodic_alpha",
+        "hamming_window.periodic_alpha_beta",
+    ]
+)
+def hamming_window(context, node):
+    window_length, (periodic, alpha, beta) = _parse_window_inputs(
+        context, node, n_optional=3, defaults=[True, 0.54, 0.46]
+    )
+    window = _compute_window("hamming", window_length, bool(periodic), float(alpha), float(beta))
+    context.add(mb.const(val=window, name=node.name))
+
+
+@register_torch_op(torch_alias=["blackman_window.periodic"])
+def blackman_window(context, node):
+    window_length, (periodic,) = _parse_window_inputs(context, node, n_optional=1, defaults=[True])
+    window = _compute_window("blackman", window_length, bool(periodic))
+    context.add(mb.const(val=window, name=node.name))
+
+
+@register_torch_op(torch_alias=["bartlett_window.periodic"])
+def bartlett_window(context, node):
+    window_length, (periodic,) = _parse_window_inputs(context, node, n_optional=1, defaults=[True])
+    window = _compute_window("bartlett", window_length, bool(periodic))
+    context.add(mb.const(val=window, name=node.name))
+
+
 @register_torch_op
 def mse_loss(context, node):
     inputs = _get_inputs(context, node, expected=3)
