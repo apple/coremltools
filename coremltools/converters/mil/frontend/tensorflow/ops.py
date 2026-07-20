@@ -2146,7 +2146,14 @@ def Sigmoid(context, node):
 @register_tf_op
 def Softplus(context, node):
     x = context[node.inputs[0]]
-    x = mb.softplus(x=x, name=node.name)
+    # Numerically stable softplus: max(x, 0) + log(1 + exp(-|x|)).
+    # Since -|x| <= 0, exp(-|x|) is always in (0, 1], so no overflow occurs
+    # in any precision.  This avoids fp16 overflow on the Apple Neural Engine
+    # at x > ~10.4 (see issues #2687, #2747).
+    abs_x = mb.abs(x=x)
+    exp_val = mb.exp(x=mb.mul(x=-1.0, y=abs_x))
+    log_val = mb.log(x=mb.add(x=1.0, y=exp_val))
+    x = mb.add(x=mb.maximum(x=x, y=0.0), y=log_val, name=node.name)
     context.add(node.name, x)
 
 

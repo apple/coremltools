@@ -433,6 +433,62 @@ class TestActivation(TensorFlowBaseTest):
         )
 
     @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            [ct.ComputeUnit.CPU_ONLY, ct.ComputeUnit.ALL],
+            backends,
+        ),
+    )
+    def test_softplus_large_values(self, compute_unit, backend):
+        """Verify softplus produces correct output for large inputs and uses
+        the stable decomposition instead of the native op (#2747).
+
+        The native mb.softplus op overflows in fp16 on some ANE hardware for
+        x > ~10.4 (exp(x) exceeds 65504). The stable decomposition
+        max(x, 0) + log(1 + exp(-|x|)) avoids this since exp(-|x|) is in (0, 1].
+
+        This test verifies two things:
+        1. The converter emits the stable decomposition (no native softplus op).
+        2. The output is numerically correct for large inputs (x=15, x=20).
+
+        Note: On newer hardware (M4+), the native softplus may produce correct
+        results even in fp16 due to higher internal precision, so the runtime
+        output check alone may not catch a regression. The MIL op check ensures
+        the decomposition is emitted regardless of hardware behavior.
+        """
+        input_shape = (1, 6)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.math.softplus(x)
+
+        model, inputs, outputs = build_model
+        # Values chosen to overflow naive fp16 softplus: exp(15) ~ 3.3M, exp(20) ~ 485M.
+        # With the stable decomposition, exp(-|x|) is always in (0, 1], so no overflow.
+        input_values = [np.array([[15.0, 20.0, -5.0, 0.0, 1.0, 10.5]], dtype=np.float32)]
+        input_dict = dict(zip(inputs, input_values))
+
+        results = self.run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            compute_unit=compute_unit,
+            backend=backend,
+        )
+
+        # Verify the stable decomposition is emitted, not the native softplus op.
+        # This is the reliable signal across all hardware: even on ANE chips where
+        # native softplus doesn't overflow (e.g. M4), we must still emit the
+        # decomposition to protect users on hardware where it does (e.g. M1/M2).
+        mlmodel = results[1]
+        prog = mlmodel._mil_program
+        softplus_ops = prog.find_ops(op_type="softplus")
+        assert len(softplus_ops) == 0, (
+            "Native softplus op should be replaced by stable decomposition "
+            "(exp + abs + log + max), but found a softplus op in the MIL program"
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, rank_and_axes",
         itertools.product(
             compute_units,
