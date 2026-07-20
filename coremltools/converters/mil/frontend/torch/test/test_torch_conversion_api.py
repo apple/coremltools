@@ -32,6 +32,7 @@ from coremltools.converters.mil.frontend.torch.torch_op_registry import (
     TorchOpsRegistry,
     register_torch_op,
 )
+from coremltools.converters.mil.mil.scope import ScopeSource
 from coremltools.converters.mil.mil.types import builtin_to_string
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 from coremltools.converters.mil.testing_reqs import backends
@@ -161,6 +162,48 @@ class TestTorchScriptValidation:
 
         current_date = str(date.today())
         assert mlmodel.user_defined_metadata[_METADATA_CONVERSION_DATE] == current_date
+
+
+@pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
+class TestTorchScriptScopes:
+    @staticmethod
+    @pytest.mark.parametrize("backend", backends)
+    def test_module_path_preserves_modulelist_names(backend):
+        class TwoLists(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.layers_a = nn.ModuleList([nn.Linear(3, 3)])
+                self.layers_b = nn.ModuleList([nn.Linear(3, 3)])
+
+            def forward(self, x):
+                return self.layers_a[0](x) + self.layers_b[0](x)
+
+        model = TwoLists().eval()
+        traced = torch.jit.trace(model, torch.rand(1, 3))
+        mlmodel = ct.convert(
+            traced,
+            source="pytorch",
+            inputs=[ct.TensorType(shape=(1, 3))],
+            convert_to=backend[0],
+        )
+
+        ops = mlmodel._mil_program.functions["main"].operations
+        linear_ops = [op for op in ops if op.op_type == "linear"]
+        assert len(linear_ops) == 2
+
+        # MODULE_PATH keeps each ModuleList container's attribute name + index.
+        assert sorted(
+            op.scopes[ScopeSource.TORCHSCRIPT_MODULE_PATH] for op in linear_ops
+        ) == [["layers_a", "0"], ["layers_b", "0"]]
+
+        # MODULE_NAME drops the container name.
+        assert sorted(
+            op.scopes[ScopeSource.TORCHSCRIPT_MODULE_NAME][:-1] for op in linear_ops
+        ) == [["0"], ["0"]]
+
+        assert {
+            tuple(op.scopes.get(ScopeSource.TORCHSCRIPT_MODULE_PATH, [])) for op in ops
+        } == {("layers_a", "0"), ("layers_b", "0"), ()}
 
 
 @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
