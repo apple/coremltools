@@ -3517,6 +3517,37 @@ class TestMaxPool(TorchBaseTest):
             torch_export_dynamic_shapes=torch_export_dynamic_shapes,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, ndim, ceil_mode",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [1, 2, 3],
+            [False, True],
+        ),
+    )
+    def test_max_pool_unbatched_input(self, compute_unit, backend, frontend, ndim, ceil_mode):
+        # PyTorch's MaxPool{1,2,3}d accepts both batched (N, C, *spatial) and
+        # unbatched (C, *spatial) input. Prior to #2148 the unbatched case
+        # failed conversion with `input_shape (length ...) ... divided by two
+        # must all be the same length` because the converter passed the
+        # lower-rank tensor straight to MIL's max_pool, which assumes 2 leading
+        # (N, C) dims.
+        input_shape = (3,) + (7,) * ndim
+        model = {
+            1: nn.MaxPool1d,
+            2: nn.MaxPool2d,
+            3: nn.MaxPool3d,
+        }[ndim](kernel_size=3, stride=2, padding=1, ceil_mode=ceil_mode)
+        self.run_compare_torch(
+            input_shape,
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
 
 class TestMaximumMinimum(TorchBaseTest):
     @pytest.mark.parametrize(
