@@ -3192,6 +3192,111 @@ class TestAvgPool(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
+        ",".join(
+            [
+                "compute_unit",
+                "backend",
+                "frontend",
+                "input_shape",
+                "kernel_size",
+                "stride",
+                "padding",
+                "divisor_override",
+            ]
+        ),
+        [
+            (compute_unit, backend, frontend, *param)
+            for compute_unit, backend, frontend, param in itertools.product(
+                compute_units,
+                backends,
+                frontends,
+                [
+                    ((1, 3, 6, 6), 2, 2, 0, 3),
+                    ((1, 3, 6, 6), 3, 3, 0, 5),
+                    ((1, 3, 8, 8), 2, 2, 1, 7),
+                    ((1, 3, 8, 8), 2, 1, 0, 2),
+                ],
+            )
+        ],
+    )
+    def test_avg_pool2d_divisor_override(
+        self,
+        compute_unit,
+        backend,
+        frontend,
+        input_shape,
+        kernel_size,
+        stride,
+        padding,
+        divisor_override,
+    ):
+        model = nn.AvgPool2d(
+            kernel_size,
+            stride,
+            padding,
+            divisor_override=divisor_override,
+        )
+        self.run_compare_torch(
+            input_shape,
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
+        ",".join(
+            [
+                "compute_unit",
+                "backend",
+                "frontend",
+                "input_shape",
+                "kernel_size",
+                "stride",
+                "padding",
+                "divisor_override",
+            ]
+        ),
+        [
+            (compute_unit, backend, frontend, *param)
+            for compute_unit, backend, frontend, param in itertools.product(
+                compute_units,
+                backends,
+                frontends,
+                [
+                    ((1, 3, 6, 6, 6), 2, 2, 0, 3),
+                    ((1, 3, 6, 6, 6), 3, 3, 0, 5),
+                    ((1, 3, 8, 8, 8), 2, 1, 0, 2),
+                ],
+            )
+        ],
+    )
+    def test_avg_pool3d_divisor_override(
+        self,
+        compute_unit,
+        backend,
+        frontend,
+        input_shape,
+        kernel_size,
+        stride,
+        padding,
+        divisor_override,
+    ):
+        model = nn.AvgPool3d(
+            kernel_size,
+            stride,
+            padding,
+            divisor_override=divisor_override,
+        )
+        self.run_compare_torch(
+            input_shape,
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend",
         itertools.product(compute_units, backends, frontends),
     )
