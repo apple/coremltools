@@ -6540,6 +6540,63 @@ class TestActivation(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, shape",
+        itertools.product(compute_units, backends, frontends, COMMON_SHAPES_ALL),
+    )
+    def test_log_softmax(self, compute_unit, backend, frontend, shape):
+        model = ModuleWrapper(function=torch.nn.functional.log_softmax, kwargs={"dim": -1})
+        self.run_compare_torch(
+            shape, model, frontend=frontend, backend=backend, compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_log_softmax_fp16_stable_decomposition(self, backend):
+        """Regression test for issue #2728: the converter must decompose
+        log_softmax into the stable form x-max(x)-log(sum(exp(x-max(x))))
+        instead of emitting softmax followed by log, because the naive
+        path underflows in fp16 on Apple Neural Engine when one class
+        dominates (softmax outputs below ~6e-5 flush to 0, then log(0)
+        produces -inf).
+
+        This is a conversion-only test: it converts a small seeded model
+        and asserts the MIL graph contains ``reduce_max`` (from the stable
+        decomposition) and no ``softmax`` op.
+        """
+
+        class LogSoftmaxModel(nn.Module):
+            def forward(self, x):
+                return torch.nn.functional.log_softmax(x, dim=1)
+
+        torch.manual_seed(0)
+        model = LogSoftmaxModel().eval()
+        x = torch.randn(1, 8)
+
+        torch_model = torch.jit.trace(model, x)
+        inputs = [ct.TensorType(shape=x.shape)]
+        mlmodel = ct.convert(
+            torch_model,
+            inputs=inputs,
+            convert_to=backend[0],
+            compute_precision=ct.precision.FLOAT16 if len(backend) > 1 and backend[1] == "fp16" else ct.precision.FLOAT32,
+        )
+
+        prog = mlmodel._mil_program
+        softmax_ops = prog.find_ops(op_type="softmax")
+        assert len(softmax_ops) == 0, (
+            f"Expected no 'softmax' ops in the MIL graph after stable "
+            f"decomposition of log_softmax, but found {len(softmax_ops)}. "
+            f"The converter should use x-max(x)-log(sum(exp(x-max(x))))."
+        )
+        reduce_max_ops = prog.find_ops(op_type="reduce_max")
+        assert len(reduce_max_ops) > 0, (
+            "Expected at least one 'reduce_max' op in the MIL graph as "
+            "part of the stable log_softmax decomposition, but found none."
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend, range_val",
         itertools.product(
             compute_units, backends, frontends, [(-1.0, 1.0), (0.0, 0.1), (1.0, 3.0), (-1.0, 6.0)]
@@ -12566,6 +12623,46 @@ class TestCumSum(TorchBaseTest):
         model = ModuleWrapper(function=torch.logcumsumexp, kwargs={"dim": axis})
         self.run_compare_torch(
             input_shape, model, frontend=frontend, backend=backend, compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_logcumsumexp_fp16_stable_decomposition(self, backend):
+        """Regression test for issue #2729: the converter must decompose
+        logcumsumexp into a stable form using cumulative-max shifting
+        instead of the naive log(cumsum(exp(x))), because exp(x)
+        overflows in fp16 on Apple Neural Engine for x > ~11.09.
+
+        This is a conversion-only test: it converts a small seeded model
+        and asserts the MIL graph contains ``reduce_max`` (from the
+        stable max-shift decomposition).
+        """
+
+        class LogCumSumExpModel(nn.Module):
+            def forward(self, x):
+                return torch.logcumsumexp(x, dim=1)
+
+        torch.manual_seed(0)
+        model = LogCumSumExpModel().eval()
+        x = torch.randn(1, 8)
+
+        torch_model = torch.jit.trace(model, x)
+        inputs = [ct.TensorType(shape=x.shape)]
+        mlmodel = ct.convert(
+            torch_model,
+            inputs=inputs,
+            convert_to=backend[0],
+            compute_precision=ct.precision.FLOAT16 if len(backend) > 1 and backend[1] == "fp16" else ct.precision.FLOAT32,
+        )
+
+        prog = mlmodel._mil_program
+        reduce_max_ops = prog.find_ops(op_type="reduce_max")
+        assert len(reduce_max_ops) > 0, (
+            "Expected at least one 'reduce_max' op in the MIL graph as "
+            "part of the stable logcumsumexp decomposition, but found "
+            "none. The converter should shift by cumulative max before exp()."
         )
 
 
