@@ -12571,15 +12571,16 @@ class TestCumSum(TorchBaseTest):
 
 class TestHannWindow(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, window_length, periodic",
+        "compute_unit, backend, frontend, window_length, periodic",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [1, 3, 6, 10, 12],
             [True, False],
         ),
     )
-    def test_hann_window(self, compute_unit, backend, window_length, periodic):
+    def test_hann_window(self, compute_unit, backend, frontend, window_length, periodic):
         class HannWindowModel(nn.Module):
             def forward(self, x):
                 return torch.hann_window(window_length, periodic)
@@ -12593,6 +12594,29 @@ class TestHannWindow(TorchBaseTest):
             model,
             expected_results=torch_out,
             input_as_shape=False,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+
+class TestRMSNorm(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, has_weight",
+        itertools.product(compute_units, backends, frontends, [True, False]),
+    )
+    def test_rms_norm(self, compute_unit, backend, frontend, has_weight):
+        normalized_shape = (8,)
+        weight = torch.rand(normalized_shape) if has_weight else None
+
+        class RMSNormModel(nn.Module):
+            def forward(self, x):
+                return nn.functional.rms_norm(x, normalized_shape, weight=weight, eps=1e-5)
+
+        self.run_compare_torch(
+            (2, 4, 8),
+            RMSNormModel().eval(),
+            frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
         )
@@ -14172,6 +14196,23 @@ class TestUnfold(TorchBaseTest):
     ):
         if frontend == TorchFrontend.EXECUTORCH:
             pytest.skip("ExecuTorch produces rank > 5 tensor")
+
+        if (
+            is_dynamic_hw
+            and frontend in TORCH_EXPORT_BASED_FRONTENDS
+            and Version(torch.__version__) >= Version("2.9.0")
+        ):
+            # torch 2.9's ExportedProgram.run_decompositions({}) raises
+            # "NameError: name 'L' is not defined" while interpreting the
+            # `_guards_fn` submodule that torch 2.9 generates for dynamic-shape
+            # exports carrying shape guards (here the H/W >= f(kernel, dilation,
+            # padding, stride) constraint). This is an upstream torch issue, not
+            # a converter bug; static-shape unfold and all other export ops are
+            # unaffected. Re-enable once the torch regression is resolved.
+            pytest.skip(
+                "torch 2.9 run_decompositions() NameError on _guards_fn "
+                "for guarded dynamic-shape exports"
+            )
 
         if isinstance(kernel_size, int):
             kernel_size = (kernel_size, kernel_size)
