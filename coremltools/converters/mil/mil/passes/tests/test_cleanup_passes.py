@@ -15,11 +15,14 @@ import coremltools as ct
 from coremltools.converters.mil import mil
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, Symbol, get_new_symbol, types
+from coremltools.converters.mil.mil.ops.tests.iOS14 import backends
+from coremltools.converters.mil.mil.ops.tests.testing_utils import run_compare_builder
 from coremltools.converters.mil.mil.passes.defs.cleanup import topological_reorder
 from coremltools.converters.mil.mil.passes.defs.cleanup.remove_redundant_ops import (
     remove_redundant_ops,
 )
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
+from coremltools.converters.mil.testing_reqs import compute_units
 from coremltools.converters.mil.testing_utils import (
     apply_pass_and_basic_check,
     assert_model_is_valid,
@@ -1393,6 +1396,35 @@ class TestNoopElimination:
         prev_prog, _, _ = apply_pass_and_basic_check(prog, "common::noop_elimination")
         assert get_op_types_in_program(prev_prog) == ["floor_div", "add"]
         assert get_op_types_in_program(prog) == expected
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(compute_units, backends),
+    )
+    def test_floor_div_float_prediction_is_floored(self, compute_unit, backend):
+        # End-to-end guard that the fp32 floor_div is not silently dropped by
+        # noop_elimination. floor_div(x, 1) == floor(x) for a float input, so removing
+        # it as a "no-op" changes the numeric output. Here add(_, 1) is a non-eliminable
+        # consumer that keeps the floor_div interior, so the pass is free to remove it:
+        # with the fix the floor survives and the model returns floor(x) + 1; without it
+        # the floor_div is eliminated and the model would return x + 1 instead.
+        x = np.array([[2.7, -1.3, 0.5, 4.9], [1.1, 3.6, -2.8, 0.0]], dtype=np.float32)
+        expected_outputs = np.floor(x) + 1.0
+
+        def build(x):
+            return mb.add(x=mb.floor_div(x=x, y=1.0), y=1.0)
+
+        input_placeholders = {"x": mb.placeholder(shape=x.shape)}
+        input_values = {"x": x}
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types=(2, 4, types.fp32),
+            expected_outputs=expected_outputs,
+            compute_unit=compute_unit,
+            backend=backend,
+        )
 
     def test_elementwise_broadcast(self):
         @mb.program(input_specs=[mb.TensorSpec(shape=[4])])
