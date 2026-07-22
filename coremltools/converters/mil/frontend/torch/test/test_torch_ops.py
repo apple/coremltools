@@ -6726,17 +6726,9 @@ class TestActivation(TorchBaseTest):
             # executorch decomposes softplus to very basic log and exp
             target_op = "exp"
         else:
-            if beta is None or beta == 1:
-                # this is the special case that Core ML softplus handles
-                target_op = "softplus"
-            else:
-                if rank == 4:
-                    # can use Core ML softplus_parametric
-                    target_op = "softplus_parametric"
-                else:
-                    # have to generally decompose to
-                    # `x -> beta * x -> softplus(beta * x) -> softplus(beta * x) / beta`
-                    target_op = "softplus"
+            # The converter now wraps softplus in a select for fp16 threshold safety,
+            # so we skip the target_op check for non-executorch frontends.
+            target_op = None
 
         self.run_compare_torch(
             input_shape,
@@ -6746,6 +6738,48 @@ class TestActivation(TorchBaseTest):
             compute_unit=compute_unit,
             minimum_deployment_target=minimum_deployment_target,
             target_op=target_op,
+        )
+
+    @pytest.mark.parametrize("frontend", frontends)
+    def test_softplus_fp16_stable_decomposition(self, frontend):
+        """Verify softplus is decomposed into overflow-safe ops for fp16 (#2687)."""
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("ExecuTorch decomposes softplus independently")
+
+        # Demonstrate that naive fp16 softplus (log(1+exp(x))) overflows for
+        # large x, while the stable form (max(x,0)+log(1+exp(-|x|))) does not.
+        x_val = np.float16(15.0)
+        naive = np.float16(np.log(np.float16(1.0) + np.exp(x_val)))
+        assert not np.isfinite(naive), (
+            f"Naive fp16 softplus should overflow at x=15, got {naive}"
+        )
+        stable = np.float16(
+            np.maximum(x_val, np.float16(0))
+            + np.log(np.float16(1.0) + np.exp(-np.abs(x_val)))
+        )
+        assert np.isfinite(stable) and abs(float(stable) - 15.0) < 0.5, (
+            f"Stable fp16 softplus should produce ~15.0, got {stable}"
+        )
+
+        # Verify the converter emits the stable decomposition, not the native op.
+        torch.manual_seed(0)
+        model = nn.Softplus().eval()
+        x = torch.randn(1, 10)
+
+        torch_model = export_torch_model_to_frontend(model, (x,), frontend)
+        mlmodel = ct.convert(
+            torch_model,
+            inputs=[ct.TensorType(shape=x.shape)],
+            convert_to="mlprogram",
+            compute_precision=ct.precision.FLOAT16,
+        )
+
+        prog = mlmodel._mil_program
+        assert len(prog.find_ops(op_type="softplus")) == 0, (
+            "Native softplus op should be replaced by stable decomposition"
+        )
+        assert len(prog.find_ops(op_type="exp")) >= 1, (
+            "Stable decomposition should contain at least one exp op"
         )
 
     @pytest.mark.parametrize(
