@@ -6540,6 +6540,50 @@ class TestActivation(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, shape",
+        itertools.product(compute_units, backends, frontends, COMMON_SHAPES_ALL),
+    )
+    def test_log_softmax(self, compute_unit, backend, frontend, shape):
+        model = nn.LogSoftmax().eval()
+        self.run_compare_torch(
+            shape, model, frontend=frontend, backend=backend, compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_log_softmax_large_values(self, compute_unit, backend, frontend):
+        """Verify log_softmax produces correct output for large inputs (#2728).
+
+        The naive decomposition softmax -> log overflows in fp16 on the
+        Apple Neural Engine when one class dominates: softmax probabilities
+        for non-dominant classes underflow to 0, producing -inf.
+        The stable decomposition x - reduce_log_sum_exp(x) avoids this.
+        """
+        input_shape = (2, 10, 4, 5)
+
+        class LogSoftmaxModel(nn.Module):
+            def __init__(self, dim):
+                super().__init__()
+                self.dim = dim
+
+            def forward(self, x):
+                return torch.log_softmax(x, dim=self.dim)
+
+        model = LogSoftmaxModel(dim=-1).eval()
+        # Values chosen to create dominant classes: scale by 15 so
+        # exp(15) ~ 3.3M, causing fp16 overflow in naive softmax.
+        input_values = torch.randn(*input_shape) * 15.0
+        self.run_compare_torch(
+            input_values,
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            frontend=frontend,
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend, range_val",
         itertools.product(
             compute_units, backends, frontends, [(-1.0, 1.0), (0.0, 0.1), (1.0, 3.0), (-1.0, 6.0)]
@@ -12566,6 +12610,43 @@ class TestCumSum(TorchBaseTest):
         model = ModuleWrapper(function=torch.logcumsumexp, kwargs={"dim": axis})
         self.run_compare_torch(
             input_shape, model, frontend=frontend, backend=backend, compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, axis",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [-1, 0, 1],
+        ),
+    )
+    def test_logcumsumexp_large_values(self, compute_unit, backend, frontend, axis):
+        """Verify logcumsumexp produces correct output for large inputs (#2729).
+
+        The naive decomposition exp -> cumsum -> log overflows in fp16 on the
+        Apple Neural Engine for x > ~10.4 (exp(x) exceeds 65504). The stable
+        decomposition shifts by the global max along the dim before exp.
+        """
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("torch._ops.aten.logcumsumexp.default is not Aten Canonical")
+
+        input_shape = (4, 6, 3, 5)
+
+        class LogCumSumExpModel(nn.Module):
+            def forward(self, x):
+                return torch.logcumsumexp(x, dim=axis)
+
+        model = LogCumSumExpModel().eval()
+        # Values chosen to overflow naive fp16: exp(15) ~ 3.3M, exp(20) ~ 485M.
+        # With the stable decomposition, exp(x - max(x)) is always in (0, 1].
+        input_values = torch.randn(*input_shape) * 15.0
+        self.run_compare_torch(
+            input_values,
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            frontend=frontend,
         )
 
 

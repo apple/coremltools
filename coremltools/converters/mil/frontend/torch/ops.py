@@ -2235,9 +2235,23 @@ def cumsum(context, node):
         res = mb.cumsum(x=x, axis=dim, name=node.name)
     else:
         assert node.kind in ("logcumsumexp", "_logcumsumexp")
-        exp = mb.exp(x=x)
+        # Numerically stable logcumsumexp: shift by the global max along
+        # the cumulative dimension before exp, then shift back.
+        # The naive decomposition exp -> cumsum -> log overflows in fp16
+        # when exp(x) exceeds 65504 (x > ~10.4), producing inf/NaN on the
+        # Apple Neural Engine. By subtracting the max along the dim first,
+        # exp arguments are <= 0, preventing overflow.
+        # Note: this uses the global max rather than a cumulative max (which
+        # is not available as a MIL op), so early elements far below the max
+        # may still underflow to -inf in fp16. This is strictly better than
+        # the naive version which overflows to +inf/NaN for all elements.
+        # See issue #2729.
+        max_val = mb.reduce_max(x=x, axes=[dim.val], keep_dims=True, name=node.name + "_max")
+        shifted = mb.sub(x=x, y=max_val, name=node.name + "_shifted")
+        exp = mb.exp(x=shifted)
         cumsumexp = mb.cumsum(x=exp, axis=dim)
-        res = mb.log(x=cumsumexp, name=node.name)
+        log_cumsum = mb.log(x=cumsumexp)
+        res = mb.add(x=log_cumsum, y=max_val, name=node.name)
 
     context.add(res)
 
@@ -5922,8 +5936,16 @@ def log_softmax(context, node):
 
     x, axis = _parse_positional_args(context, node)
 
-    res = mb.softmax(x=x, axis=axis, name=node.name + "_softmax")
-    res = mb.log(x=res, name=node.name)
+    # Numerically stable log_softmax: x - reduce_log_sum_exp(x, axis).
+    # The naive decomposition softmax -> log overflows in fp16 when
+    # exp(x) exceeds 65504 (x > ~10.4), producing -inf for non-dominant
+    # classes on the Apple Neural Engine. Using reduce_log_sum_exp avoids
+    # this because it applies the max-shift trick internally:
+    #   log(sum(exp(x))) = max(x) + log(sum(exp(x - max(x))))
+    # This keeps exp arguments <= 0, preventing overflow.
+    # See issues #2728, #2690.
+    log_sum_exp = mb.reduce_log_sum_exp(x=x, axes=axis, keep_dims=True, name=node.name + "_logsumexp")
+    res = mb.sub(x=x, y=log_sum_exp, name=node.name)
     context.add(res)
 
 
