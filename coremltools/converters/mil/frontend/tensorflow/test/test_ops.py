@@ -440,17 +440,7 @@ class TestActivation(TensorFlowBaseTest):
         ),
     )
     def test_softplus_large_values(self, compute_unit, backend):
-        """Verify softplus produces correct output for large inputs (#2747).
-
-        The native mb.softplus op overflows in fp16 on some ANE hardware for
-        x > ~10.4 (exp(x) exceeds 65504). The stable decomposition
-        max(x, 0) + log(1 + exp(-|x|)) avoids this since exp(-|x|) is in (0, 1].
-
-        Note: On CPU, the native softplus produces correct output regardless of
-        this fix because CPU uses fp32. The overflow only manifests on the ANE
-        with fp16 compute. This test verifies the output is correct for large
-        values that would overflow naive fp16 softplus.
-        """
+        """Verify softplus produces correct output for large inputs (#2747)."""
         input_shape = (1, 6)
 
         @make_tf_graph([input_shape])
@@ -458,8 +448,6 @@ class TestActivation(TensorFlowBaseTest):
             return tf.math.softplus(x)
 
         model, inputs, outputs = build_model
-        # Values chosen to overflow naive fp16 softplus: exp(15) ~ 3.3M, exp(20) ~ 485M.
-        # With the stable decomposition, exp(-|x|) is always in (0, 1], so no overflow.
         input_values = [np.array([[15.0, 20.0, -5.0, 0.0, 1.0, 10.5]], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
 
@@ -469,6 +457,65 @@ class TestActivation(TensorFlowBaseTest):
             outputs,
             compute_unit=compute_unit,
             backend=backend,
+        )
+
+    def test_softplus_stable_decomposition(self):
+        """Verify softplus is decomposed into overflow-safe ops for fp16 (#2747).
+
+        The native ``mb.softplus`` op overflows in fp16 on the Apple Neural Engine
+        for x > ~10.4 (exp(x) exceeds 65504).  The stable decomposition
+        ``max(x, 0) + log(1 + exp(-|x|))`` avoids this because exp(-|x|) is
+        always in (0, 1].
+
+        On CPU the native op produces correct output regardless of this fix
+        (the CPU runtime computes in fp32 internally even when the model uses
+        fp16 compute precision — verified empirically).  The overflow only
+        manifests on the ANE, which CI cannot exercise.  We therefore:
+
+        1. Demonstrate the fp16 overflow mathematically with numpy (the same
+           arithmetic the ANE uses), proving the naive formula is unsafe.
+        2. Assert the converter emits the stable decomposition (no native
+           ``softplus`` ops, at least one ``exp`` op), which is the same
+           approach used in PR #2725 for the PyTorch frontend.
+        """
+        # --- 1. Numpy proof: naive fp16 softplus overflows for x > ~10.4 ---
+        x_val = np.float16(15.0)
+        naive = np.log(np.float16(1.0) + np.exp(x_val))
+        assert not np.isfinite(naive), (
+            f"Naive fp16 softplus(15) should overflow to inf, got {naive}"
+        )
+        stable = np.maximum(x_val, np.float16(0.0)) + np.log(
+            np.float16(1.0) + np.exp(-np.abs(x_val))
+        )
+        assert np.isfinite(stable) and stable == np.float16(15.0), (
+            f"Stable fp16 softplus(15) should be 15.0, got {stable}"
+        )
+
+        # --- 2. Conversion-only graph assertion ---
+        input_shape = (1, 6)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.math.softplus(x)
+
+        model, inputs, outputs = build_model
+        mlmodel = ct.convert(
+            model,
+            inputs=[ct.TensorType(name=inputs[0], shape=input_shape, dtype=np.float32)],
+            compute_precision=ct.precision.FLOAT16,
+            convert_to="mlprogram",
+        )
+        prog = mlmodel._mil_program
+        softplus_ops = prog.find_ops(op_type="softplus")
+        assert len(softplus_ops) == 0, (
+            f"Expected no native 'softplus' ops after stable decomposition, "
+            f"but found {len(softplus_ops)}. The converter should replace "
+            f"softplus with max(x,0)+log(1+exp(-|x|)) for fp16 safety."
+        )
+        exp_ops = prog.find_ops(op_type="exp")
+        assert len(exp_ops) >= 1, (
+            "Expected at least one 'exp' op from the stable decomposition, "
+            "but found none."
         )
 
     @pytest.mark.parametrize(
