@@ -192,6 +192,30 @@ class TestScriptedModels(TorchBaseTest):
             model.input_size, model, backend=backend, compute_unit=compute_unit, use_scripting=True
         )
 
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
+    def test_if_branches_with_mismatched_dtype(self, compute_unit, backend):
+        # True branch divides two int64 tensors -> int result; false branch
+        # involves a float tensor -> float result. PyTorch allows an `if` to
+        # return different dtypes per branch, but this used to crash the
+        # converter since MIL's cond requires both branches to agree on dtype.
+        class TestNet(nn.Module):
+            input_size = (1,)
+
+            def forward(self, x):
+                n = x.sum()
+                b = torch.tensor(2, dtype=torch.int64)
+                if n.item() > 0:
+                    r = torch.div(n.to(torch.int64), b, rounding_mode="trunc")
+                else:
+                    r = torch.div(n, b, rounding_mode="trunc")
+                return x + r.float()
+
+        model = TestNet().eval()
+
+        self.run_compare_torch(
+            model.input_size, model, backend=backend, compute_unit=compute_unit, use_scripting=True
+        )
+
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend", itertools.product(compute_units, backends, frontends)
     )
