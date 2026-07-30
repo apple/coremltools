@@ -7274,6 +7274,33 @@ class TestTril(TorchBaseTest):
         )
 
 
+class TestDiagonal(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, shape, offset",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [(5, 5), (3, 6), (6, 3), (4, 4), (2, 7)],
+            [0, 1, 2, -1, -2],
+        ),
+    )
+    def test_diagonal(self, compute_unit, backend, frontend, shape, offset):
+        # torch.diagonal extracts the requested diagonal as a 1-D vector, so the
+        # converter must gather those elements rather than masking the
+        # off-diagonal entries (which would keep the input's 2-D shape).
+        model = ModuleWrapper(torch.diagonal, {"offset": offset})
+        input_data = torch.randn(shape)
+        self.run_compare_torch(
+            input_data,
+            model,
+            input_as_shape=False,
+            compute_unit=compute_unit,
+            backend=backend,
+            frontend=frontend,
+        )
+
+
 class TestMatMul(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend",

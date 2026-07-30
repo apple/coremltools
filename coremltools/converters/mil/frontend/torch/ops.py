@@ -8392,10 +8392,54 @@ def diagonal(context, node):
     x, offset, dim1, dim2 = _parse_positional_args(context, node)
     offset, dim1, dim2 = _parse_keyword_args(context, node, offset, dim1, dim2)
 
-    if offset == 0 and dim1 == 0 and dim2 == 1:
-        diagonal = mb.band_part(x=x, lower=0, upper=0, name=node.name)
+    # Normalize the scalar args to python ints.
+    offset = offset.val if isinstance(offset, Var) else offset
+    dim1 = dim1.val if isinstance(dim1, Var) else dim1
+    dim2 = dim2.val if isinstance(dim2, Var) else dim2
+
+    rank = x.rank
+    # Normalize negative dims to their positive counterparts.
+    if dim1 < 0:
+        dim1 += rank
+    if dim2 < 0:
+        dim2 += rank
+
+    # torch.diagonal returns the requested diagonal as a 1-D vector (not a
+    # matrix with the off-diagonal zeroed out). Only the 2-D main-diagonal
+    # axes (dim1 == 0, dim2 == 1) are supported here.
+    if rank != 2 or dim1 != 0 or dim2 != 1:
+        raise NotImplementedError(
+            "torch.diagonal is only supported for rank-2 inputs with "
+            "dim1 == 0 and dim2 == 1"
+        )
+
+    shape = x.shape
+    if any(is_symbolic(s) for s in shape):
+        raise NotImplementedError(
+            "torch.diagonal is not supported for dynamically-shaped inputs"
+        )
+
+    n_rows, n_cols = int(shape[0]), int(shape[1])
+    # NOTE: `min`/`max` are shadowed by torch-op converter functions defined in
+    # this module, so we clamp explicitly instead of using the builtins.
+    if offset >= 0:
+        length = n_cols - offset
+        if length > n_rows:
+            length = n_rows
     else:
-        raise NotImplementedError("Only offset == 0 and dim1 == 0 and dim2 == 1 handled")
+        length = n_rows + offset
+        if length > n_cols:
+            length = n_cols
+    if length < 0:
+        length = 0
+
+    if offset >= 0:
+        indices = [[i, i + offset] for i in range(length)]
+    else:
+        indices = [[i - offset, i] for i in range(length)]
+
+    indices = np.array(indices, dtype=np.int32).reshape(-1, 2)
+    diagonal = mb.gather_nd(x=x, indices=indices, name=node.name)
 
     context.add(diagonal)
 
