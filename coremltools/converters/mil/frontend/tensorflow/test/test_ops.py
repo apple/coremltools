@@ -433,6 +433,45 @@ class TestActivation(TensorFlowBaseTest):
         )
 
     @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            [ct.ComputeUnit.CPU_ONLY, ct.ComputeUnit.ALL],
+            backends,
+        ),
+    )
+    def test_softplus_large_values(self, compute_unit, backend):
+        """Verify softplus produces correct output for large inputs (#2747).
+
+        The native mb.softplus op overflows in fp16 on some ANE hardware for
+        x > ~10.4 (exp(x) exceeds 65504). The stable decomposition
+        max(x, 0) + log(1 + exp(-|x|)) avoids this since exp(-|x|) is in (0, 1].
+
+        Note: On CPU, the native softplus produces correct output regardless of
+        this fix because CPU uses fp32. The overflow only manifests on the ANE
+        with fp16 compute. This test verifies the output is correct for large
+        values that would overflow naive fp16 softplus.
+        """
+        input_shape = (1, 6)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.math.softplus(x)
+
+        model, inputs, outputs = build_model
+        # Values chosen to overflow naive fp16 softplus: exp(15) ~ 3.3M, exp(20) ~ 485M.
+        # With the stable decomposition, exp(-|x|) is always in (0, 1], so no overflow.
+        input_values = [np.array([[15.0, 20.0, -5.0, 0.0, 1.0, 10.5]], dtype=np.float32)]
+        input_dict = dict(zip(inputs, input_values))
+
+        self.run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            compute_unit=compute_unit,
+            backend=backend,
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, rank_and_axes",
         itertools.product(
             compute_units,
