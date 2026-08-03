@@ -6,6 +6,7 @@
 
 import numpy as np
 
+from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
@@ -111,7 +112,14 @@ class noop_elimination(AbstractGraphPass):
                 return _remove_elementwise_binary(op, 0, 0)
             elif op.op_type in {"mul"}:
                 return _remove_elementwise_binary(op, 1, 1)
-            elif op.op_type in {"floor_div", "pow", "real_div"}:
+            elif op.op_type in {"pow", "real_div"}:
+                return _remove_elementwise_binary(op, None, 1)
+            elif op.op_type in {"floor_div"}:
+                # floor_div(x, 1) == floor(x), which only equals x when x is already
+                # integral; removing it for a float input drops the floor and changes
+                # the result, so restrict this no-op to integer inputs.
+                if not types.is_int(op.x.dtype):
+                    return False
                 return _remove_elementwise_binary(op, None, 1)
             elif op.op_type in {"sub"}:
                 return _remove_elementwise_binary(op, None, 0)
