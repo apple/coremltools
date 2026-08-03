@@ -4,7 +4,6 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import numpy as np
-from PIL import Image
 
 from coremltools import proto
 
@@ -36,6 +35,9 @@ def random_gen_input_feature_type(input_desc):
             raise ValueError("unsupported type")
         return np.random.rand(*shape).astype(dtype)
     elif input_desc.type.WhichOneof("Type") == "imageType":
+        # Lazily import PIL, so it does not become a hard dependency.
+        from PIL import Image
+
         if input_desc.type.imageType.colorSpace in (
             proto.FeatureTypes_pb2.ImageFeatureType.BGR,
             proto.FeatureTypes_pb2.ImageFeatureType.RGB,

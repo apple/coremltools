@@ -20,7 +20,7 @@ from coremltools.converters.mil.frontend import _utils
 from coremltools.converters.mil.frontend.milproto.load import TranscriptionContext
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Symbol, types
-from coremltools.converters.mil.mil.block import is_current_opset_version_compatible_with
+from coremltools.converters.mil.mil.block import Block, is_current_opset_version_compatible_with
 from coremltools.converters.mil.mil.ops.defs._utils import (
     MAX_SIZE_CONSTANT_FOLDING,
     promote_input_dtypes,
@@ -4653,20 +4653,55 @@ def _if(context, node):
     true_block = node.blocks[0]
     false_block = node.blocks[1]
 
-    def _true_path():
-        res = convert_block(context, true_block, [])
-        return tuple(res)
+    # Build both blocks ourselves (instead of letting mb.cond build them lazily
+    # through _true_fn/_false_fn) so we can reconcile dtype mismatches between
+    # the two branches before MIL's cond op checks type consistency. PyTorch's
+    # prim::If allows each branch to return a Tensor of a different dtype.
+    dummy_op = mb.const(val=0.0)._op
+    with Block(outer_op=dummy_op, name=Block._get_new_name()) as true_mil_block:
+        true_ret_vars = list(convert_block(context, true_block, []))
+    with Block(outer_op=dummy_op, name=Block._get_new_name()) as false_mil_block:
+        false_ret_vars = list(convert_block(context, false_block, []))
 
-    def _false_path():
-        res = convert_block(context, false_block, [])
-        return tuple(res)
+    for i, (vt, vf) in enumerate(zip(true_ret_vars, false_ret_vars)):
+        if types.is_compatible_type(vt.sym_type, vf.sym_type):
+            continue
+        if not (types.is_tensor(vt.sym_type) or types.is_scalar(vt.sym_type)):
+            continue
+        if not (types.is_tensor(vf.sym_type) or types.is_scalar(vf.sym_type)):
+            continue
+        if vt.shape != vf.shape:
+            continue
+        promoted_dtype = types.promote_types(vt.dtype, vf.dtype)
+        if vt.dtype != promoted_dtype:
+            with true_mil_block:
+                true_ret_vars[i] = mb.cast(x=vt, dtype=builtin_to_string(promoted_dtype))
+        if vf.dtype != promoted_dtype:
+            with false_mil_block:
+                false_ret_vars[i] = mb.cast(x=vf, dtype=builtin_to_string(promoted_dtype))
+
+    true_mil_block.set_outputs(true_ret_vars)
+    false_mil_block.set_outputs(false_ret_vars)
+
+    def _dummy_true_fn(*args):
+        return None
+
+    def _dummy_false_fn(*args):
+        return None
 
     cond = mb.cond(
-        pred=condition, _true_fn=_true_path, _false_fn=_false_path, name=name
+        pred=condition,
+        _true_fn=_dummy_true_fn,
+        _false_fn=_dummy_false_fn,
+        _existing_blocks=[true_mil_block, false_mil_block],
+        name=name,
     )
     # If the condition only returns one item, wrap it in a tuple.
     if not isinstance(cond, (tuple, list)):
         cond = (cond,)
+
+    for block in (true_mil_block, false_mil_block):
+        block.outer_op = cond[0].op
 
     # Make sure the condition returned the expected number of outputs.
     assert len(cond) == len(node.outputs)

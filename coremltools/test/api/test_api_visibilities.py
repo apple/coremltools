@@ -353,5 +353,5 @@ class TestApiVisibilities:
         )
 
     def test_package_version_is_legal(self):
-        version_regex = re.compile("^\d+(\.\d+)*((a|b|rc)\d+)?$")
+        version_regex = re.compile("^\d+(\.\d+)*((a|b|rc)\d+)?(\.dev\d+)?$")
         assert version_regex.match(ct.__version__)
