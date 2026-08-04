@@ -7469,7 +7469,9 @@ def reciprocal(context, node):
     # reciprocal(prim::NumToTensor(int))) fail to convert.
     if types.is_int(x.dtype):
         x = mb.cast(x=x, dtype="fp32")
-    context.add(mb.inverse(x=x, name=node.name))
+    # torch.reciprocal is exactly 1 / x, so opt out of the stability epsilon
+    # (default 1e-4) that mb.inverse would otherwise add to the input.
+    context.add(mb.inverse(x=x, epsilon=0.0, name=node.name))
 
 
 @register_torch_op
