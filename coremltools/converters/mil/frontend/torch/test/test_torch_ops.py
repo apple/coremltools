@@ -759,6 +759,43 @@ class TestNarrow(TorchBaseTest):
                         compute_unit=compute_unit,
                     )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, shape",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            COMMON_SHAPES,
+        ),
+    )
+    def test_narrow_negative_start(self, compute_unit, backend, frontend, shape):
+        """A negative start counts from the end of the dim, e.g. the last
+        element of the last dim is narrow(x, -1, -1, 1)."""
+
+        class Model(torch.nn.Module):
+            def __init__(self, dim, start, length):
+                super().__init__()
+                self.dim = dim
+                self.start = start
+                self.length = length
+
+            def forward(self, x):
+                return torch.narrow(x, self.dim, self.start, self.length)
+
+        for cur_dim in range(len(shape)):
+            for cur_start in range(-shape[cur_dim], 0):
+                for cur_length in range(1, -cur_start + 1):
+
+                    m = Model(cur_dim, cur_start, cur_length)
+
+                    TorchBaseTest.run_compare_torch(
+                        shape,
+                        m,
+                        frontend=frontend,
+                        backend=backend,
+                        compute_unit=compute_unit,
+                    )
+
 
 class TestWeightNorm(TorchBaseTest):
     @pytest.mark.parametrize(
