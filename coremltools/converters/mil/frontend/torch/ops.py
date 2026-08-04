@@ -7263,7 +7263,10 @@ def atan2(context, node):
     x_equal_0 = mb.equal(x=x, y=0.0)
 
     # combined logical expressions
-    ygreater0_and_xless0 = mb.logical_and(x=y_greater_0, y=x_less_0)
+    # y == 0 belongs to the upper half plane, i.e. torch.atan2(0, x) is pi for x < 0,
+    # so the rotation by pi has to cover y >= 0 rather than y > 0
+    y_greater_equal_0 = mb.greater_equal(x=y, y=0.0)
+    ygreater0_and_xless0 = mb.logical_and(x=y_greater_equal_0, y=x_less_0)
     yless0_and_xless0 = mb.logical_and(x=y_less_0, y=x_less_0)
     ygreater0_and_xequal0 = mb.logical_and(x=y_greater_0, y=x_equal_0)
     yless0_and_xequal0 = mb.logical_and(x=y_less_0, y=x_equal_0)
@@ -7284,11 +7287,16 @@ def atan2(context, node):
 
     # if -1e-8 < x < 1e-8, x += 2e-8 to avoid y / 0
     # this shift makes atan2(0, 0) = 0, which is consistent with PyTorch torch.atan2
+    # the shift follows the sign of x, since flipping a tiny negative x to positive would
+    # move atan(y / x_safe) into the other half plane while the quadrant coefficients
+    # above still correct for x < 0
     x0left = mb.greater(x=x, y=-1e-8)
     x0right = mb.less(x=x, y=1e-8)
     x0 = mb.logical_and(x=x0left, y=x0right)
     x0numeric = mb.cast(x=x0, dtype="fp32")
-    safe_shift = mb.mul(x=x0numeric, y=2e-8)
+    x_less_0_numeric = mb.cast(x=x_less_0, dtype="fp32")
+    shift_sign = mb.sub(x=1.0, y=mb.mul(x=x_less_0_numeric, y=2.0))
+    safe_shift = mb.mul(x=mb.mul(x=x0numeric, y=2e-8), y=shift_sign)
     x_safe = mb.add(x=x, y=safe_shift)
 
     # compute atan(y / x)
