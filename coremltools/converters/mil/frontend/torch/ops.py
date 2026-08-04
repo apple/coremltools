@@ -7340,6 +7340,20 @@ def clamp(context, node):
     context.add(res, node.name)
 
 
+def _zero_out_band(x: Var, lower: int, upper: int) -> Var:
+    """
+    Zero out the ``band_part(lower, upper)`` band of ``x``, keeping everything else.
+
+    The obvious ``x - band_part(x, lower, upper)`` evaluates to NaN wherever ``x`` holds
+    +/-inf, so select against a mask instead, which does not depend on the values of x.
+    """
+    in_band = mb.band_part(
+        x=mb.fill(shape=mb.shape(x=x), value=1.0), lower=lower, upper=upper
+    )
+    zero = mb.cast(x=mb.const(val=0), dtype=builtin_to_string(x.dtype))
+    return mb.select(cond=mb.cast(x=in_band, dtype="bool"), a=zero, b=x)
+
+
 @register_torch_op
 def triu(context, node):
     assert context.frontend != TorchFrontend.EXECUTORCH, "triu is not a core aten op"
@@ -7359,16 +7373,7 @@ def triu(context, node):
     if diagonal <= 0:
         res = mb.band_part(x=x, lower=-diagonal, upper=-1)
     else:
-        y = mb.band_part(x=x, lower=-1, upper=diagonal - 1)
-        use_bool = False
-        if types.is_bool(x.dtype):
-            # The `mb.sub` op doesn't support bool.
-            use_bool = True
-            x = mb.cast(x=x, dtype="int32")
-            y = mb.cast(x=y, dtype="int32")
-        res = mb.sub(x=x, y=y)
-        if use_bool:
-            res = mb.cast(x=res, dtype="bool")
+        res = _zero_out_band(x, lower=-1, upper=diagonal - 1)
     context.add(res, node.name)
 
 
@@ -7391,16 +7396,7 @@ def tril(context, node):
     if diagonal >= 0:
         res = mb.band_part(x=x, lower=-1, upper=diagonal)
     else:
-        y = mb.band_part(x=x, lower=-diagonal - 1, upper=-1)
-        use_bool = False
-        if types.is_bool(x.dtype):
-            # The `mb.sub` op doesn't support bool.
-            use_bool = True
-            x = mb.cast(x=x, dtype="int32")
-            y = mb.cast(x=y, dtype="int32")
-        res = mb.sub(x=x, y=y)
-        if use_bool:
-            res = mb.cast(x=res, dtype="bool")
+        res = _zero_out_band(x, lower=-diagonal - 1, upper=-1)
     context.add(res, node.name)
 
 

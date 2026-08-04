@@ -7265,6 +7265,24 @@ class TestTriu(TorchBaseTest):
             frontend=frontend,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_triu_infinite_input(self, compute_unit, backend, frontend):
+        # The dropped triangle has to be zeroed rather than subtracted away, otherwise
+        # +/-inf elements turn into NaN.
+        model = ModuleWrapper(torch.triu, {"diagonal": 1})
+        input_data = torch.full((4, 4), float("-inf"))
+        self.run_compare_torch(
+            input_data,
+            model,
+            input_as_shape=False,
+            compute_unit=compute_unit,
+            backend=backend,
+            frontend=frontend,
+        )
+
 
 class TestTril(TorchBaseTest):
     @pytest.mark.parametrize(
@@ -7288,6 +7306,24 @@ class TestTril(TorchBaseTest):
             input_data = torch.randint(low=-10, high=10, size=shape)
         elif dtype == torch.bool:
             input_data = torch.randint(low=0, high=2, size=shape).to(torch.bool)
+        self.run_compare_torch(
+            input_data,
+            model,
+            input_as_shape=False,
+            compute_unit=compute_unit,
+            backend=backend,
+            frontend=frontend,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_tril_infinite_input(self, compute_unit, backend, frontend):
+        # The dropped triangle has to be zeroed rather than subtracted away, otherwise
+        # +/-inf elements turn into NaN.
+        model = ModuleWrapper(torch.tril, {"diagonal": -1})
+        input_data = torch.full((4, 4), float("-inf"))
         self.run_compare_torch(
             input_data,
             model,
