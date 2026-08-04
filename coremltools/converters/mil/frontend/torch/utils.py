@@ -145,6 +145,7 @@ def sanitize_op_kind(op_kind: str) -> str:
                 "tensor_mode",
                 "scalar",
                 "tensor_scalar",
+                "tensor_tensor",
             }
             and len(split) - start > 1
             else len(split)
