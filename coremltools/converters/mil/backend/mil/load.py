@@ -1050,6 +1050,77 @@ class CoreMLProtoExporter:
         return model
 
 
+def _validate_no_state_write_aliased_with_output(prog: Program) -> None:
+    """Reject programs whose model output Var also feeds a state write.
+
+    The pattern that triggers this comes from a forward like::
+
+        merged = self.cache + x
+        self.cache[:] = merged
+        return merged
+
+    After conversion, ``merged`` is a model output AND is consumed by the
+    ``slice_update`` op whose result feeds ``coreml_update_state``. Loading
+    such a model in the Core ML runtime currently crashes with a
+    segmentation fault (no Python traceback), so the converter rejects it
+    here instead with a clear error and workaround.
+    """
+    for func_name, func in prog.functions.items():
+        output_var_ids = {id(v) for v in func.outputs}
+        for op in func.operations:
+            if op.op_type != "coreml_update_state":
+                continue
+            value_var = op.inputs.get("value")
+            if value_var is None:
+                continue
+            # Walk back from the value of the state write to see whether
+            # any of its source Vars is also exposed as a model output.
+            offending = _find_aliased_output(value_var, output_var_ids)
+            if offending is None:
+                continue
+            state_var = op.inputs.get("state")
+            state_name = state_var.name if state_var is not None else "<state>"
+            raise ValueError(
+                "Function {!r} has a model output {!r} that is also a "
+                "source of the value written into state {!r}. Loading "
+                "this model in the Core ML runtime currently crashes "
+                "with a segmentation fault, so the converter rejects it "
+                "here instead. Workaround: return a tensor that does not "
+                "feed the state-write chain, e.g. "
+                "`return value.sum(dim=-1, keepdim=True)` or "
+                "`return value * other_tensor`.".format(
+                    func_name, offending.name, state_name
+                )
+            )
+
+
+def _find_aliased_output(start_var, output_var_ids, max_depth: int = 32):
+    """Return the first ancestor of ``start_var`` whose id is in
+    ``output_var_ids``, or ``None`` if no such ancestor exists within
+    ``max_depth`` hops backwards through the op graph."""
+    seen: set = set()
+    stack = [(start_var, 0)]
+    while stack:
+        var, depth = stack.pop()
+        if id(var) in output_var_ids:
+            return var
+        if id(var) in seen or depth >= max_depth:
+            continue
+        seen.add(id(var))
+        producing_op = getattr(var, "op", None)
+        if producing_op is None:
+            continue
+        for input_value in producing_op.inputs.values():
+            # Inputs may be a Var or a list of Vars; handle both.
+            if hasattr(input_value, "op"):
+                stack.append((input_value, depth + 1))
+            elif isinstance(input_value, (list, tuple)):
+                for entry in input_value:
+                    if hasattr(entry, "op"):
+                        stack.append((entry, depth + 1))
+    return None
+
+
 def load(
     prog: Program,
     weights_dir: str,
@@ -1059,6 +1130,8 @@ def load(
 ) -> "proto.Model_pb2.Model":
     if prog.default_function_name not in prog.functions:
         raise ValueError(f"Default function {prog.default_function_name} not found in program")
+
+    _validate_no_state_write_aliased_with_output(prog)
 
     # if user has specified "mil_input_types.ClassifierConfig", then add the "classify" op to the prog
     classifier_config = kwargs.get("classifier_config", None)
