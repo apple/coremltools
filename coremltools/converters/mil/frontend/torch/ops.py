@@ -2378,6 +2378,63 @@ def view(context, node):
     context.add(view)
 
 
+def _lower_pad(x: Var, pad, mode: str, value: float, name: str) -> Var:
+    """
+    Build the ``mb.pad`` op(s) implementing a torch pad, decomposing when needed.
+
+    Core ML accepts ``reflect`` / ``replicate`` padding only when every non-zero pad
+    lies in the last two dimensions, while torch has no such restriction, e.g.
+    ``torch.nn.ReflectionPad3d`` / ``torch.nn.ReplicationPad3d`` pad three dimensions.
+    Both modes map each output index to an input index per axis independently, so
+    padding several axes at once is equivalent to padding them one after another. That
+    lets an unsupported pad be lowered as a sequence of supported ones, each moving the
+    axis it pads to the end. Without this, conversion succeeds but the resulting model
+    fails to load with
+    "Padding for more than two dimensions only supports `constant` mode".
+    """
+
+    def _pad(x: Var, pad, is_last: bool) -> Var:
+        kwargs = {"name": name} if is_last else {}
+        return mb.pad(x=x, pad=pad, mode=mode, constant_val=value, **kwargs)
+
+    if mode not in ("reflect", "replicate") or not isinstance(pad, list):
+        return _pad(x, pad, True)
+
+    # ``pad`` describes the last ``len(pad) // 2`` dimensions of ``x``
+    offset = x.rank - len(pad) // 2
+
+    def _pad_of(axis: int) -> List[int]:
+        return pad[2 * (axis - offset) : 2 * (axis - offset) + 2]
+
+    padded_axes = [axis for axis in range(offset, x.rank) if any(_pad_of(axis))]
+    leading_axes = [axis for axis in padded_axes if axis < x.rank - 2]
+    if not leading_axes:
+        return _pad(x, pad, True)
+
+    # Pad the last two dimensions in one op, then each remaining axis on its own,
+    # transposed to the end so that Core ML sees a last-dimension-only pad.
+    steps = []
+    if any(axis >= x.rank - 2 for axis in padded_axes):
+        trailing_pad = [0] * len(pad)
+        trailing_pad[-4:] = pad[-4:]
+        steps.append((None, trailing_pad))
+    for axis in leading_axes:
+        steps.append(([i for i in range(x.rank) if i != axis] + [axis], _pad_of(axis)))
+
+    res = x
+    for step_index, (perm, step_pad) in enumerate(steps):
+        is_last = step_index == len(steps) - 1
+        if perm is None:
+            res = _pad(res, step_pad, is_last)
+        else:
+            inverse_perm = [perm.index(axis) for axis in range(x.rank)]
+            res = mb.transpose(x=res, perm=perm)
+            res = _pad(res, step_pad, False)
+            kwargs = {"name": name} if is_last else {}
+            res = mb.transpose(x=res, perm=inverse_perm, **kwargs)
+    return res
+
+
 @register_torch_op(torch_alias=["constant_pad_nd"])
 def pad(context, node):
     def _parse_positional_args(context, node) -> Tuple[Var]:
@@ -2493,13 +2550,13 @@ def pad(context, node):
 
     if types.is_complex(x.dtype):
         real, imag = (
-            mb.pad(x=x, pad=pad, mode=mode, constant_val=value, name=node.name)
+            _lower_pad(x, pad, mode, value, node.name)
             for x in (mb.complex_real(data=x), mb.complex_imag(data=x))
         )
         res = mb.complex(real_data=real, imag_data=imag, name=node.name)
     else:
         x, value = promote_input_dtypes([x, value])
-        res = mb.pad(x=x, pad=pad, mode=mode, constant_val=value, name=node.name)
+        res = _lower_pad(x, pad, mode, value, node.name)
     context.add(res)
 
 
