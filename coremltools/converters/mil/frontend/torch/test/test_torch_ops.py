@@ -12549,6 +12549,34 @@ class TestSum(TorchBaseTest):
             input_as_shape=False,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, input_dtype",
+        itertools.product(compute_units, backends, frontends, [torch.int32, torch.float32]),
+    )
+    def test_all_any_non_bool(self, compute_unit, backend, frontend, input_dtype):
+        # torch treats every non-zero element as true, so all / any must not compare
+        # magnitudes: [-1, 0] is not all-true even though its minimum is not the largest
+        # value, and [-1, 0] is any-true even though its maximum is 0
+        class TestModel(nn.Module):
+            def forward(self, x):
+                return torch.all(x, dim=1), torch.any(x, dim=1)
+
+        if input_dtype == torch.int32:
+            input_data = torch.tensor([[-1, 0, 3], [-1, -2, -3], [0, 0, 0]], dtype=torch.int32)
+        else:
+            input_data = torch.tensor(
+                [[0.5, 0.5, 0.5], [-0.5, 0.0, 0.5], [0.0, 0.0, 0.0]], dtype=torch.float32
+            )
+
+        self.run_compare_torch(
+            input_data,
+            TestModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
 
 class TestCumSum(TorchBaseTest):
     @pytest.mark.parametrize(
