@@ -1118,14 +1118,17 @@ def addmm(context, node):
     if isinstance(alpha, Var):
         alpha = alpha.val
 
+    # beta and alpha are torch scalars, so they may be ints even for float tensors
     if beta != 1.0:
         # Apply beta scaling factor to the input.
+        x, beta = promote_input_dtypes([x, beta])
         x = mb.mul(x=x, y=beta)
 
     matmul = mb.matmul(x=mat1, y=mat2)
 
     if alpha != 1.0:
         # Apply alpha scaling factor to the matrix multiplicaiton
+        alpha, matmul = promote_input_dtypes([alpha, matmul])
         matmul = mb.mul(x=alpha, y=matmul)
 
     result = mb.add(x=x, y=matmul, name=node.name)
@@ -1170,6 +1173,8 @@ def baddbmm(context, node):
 
     if alpha != 1.0:
         # Apply scaling factor alpha to the input.
+        # alpha is a torch scalar, so it may be an int even for float tensors
+        alpha, batch1 = promote_input_dtypes([alpha, batch1])
         batch1 = mb.mul(x=alpha, y=batch1, name=batch1.name + "_scaled")
         context.add(batch1)
 

@@ -11776,8 +11776,9 @@ class TestAddmm(TorchBaseTest):
             backends,
             frontends,
             ((2, 2, 2), (4, 5, 9)),
-            (1.0, 2.0),
-            (1.0, 3.0),
+            # beta and alpha may be given as ints
+            (1.0, 2.0, 2),
+            (1.0, 3.0, 3),
         ),
     )
     def test_addmm(self, compute_unit, backend, frontend, shapes, beta, alpha):
@@ -11822,16 +11823,17 @@ class TestAddmm(TorchBaseTest):
 
 class TestBaddbmm(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, frontend, shapes, beta",
+        "compute_unit, backend, frontend, shapes, beta, alpha",
         itertools.product(
             compute_units,
             backends,
             frontends,
             [(2, 4, 6, 8), (4, 12, 6, 16)],
             [0.0, 0.5, 1.0, 2],
+            [1.0, 3],
         ),
     )
-    def test_baddbmm(self, compute_unit, backend, frontend, shapes, beta):
+    def test_baddbmm(self, compute_unit, backend, frontend, shapes, beta, alpha):
         B, N, M, P = shapes
 
         # input shape: any shape broadcastable to (B, N, P)
@@ -11845,7 +11847,7 @@ class TestBaddbmm(TorchBaseTest):
                 self.batch2 = torch.randn(B, M, P)
 
             def forward(self, x):
-                return torch.baddbmm(x, self.batch1, self.batch2, beta=beta)
+                return torch.baddbmm(x, self.batch1, self.batch2, beta=beta, alpha=alpha)
 
         model = BaddbmmModel()
         # Makes it broadcastable to (B, N, P).
