@@ -781,8 +781,16 @@ def narrow(context, node):
     end = list(x.shape)
     end[dim.val] = start.val + length.val
 
+    # torch.narrow accepts a negative start, which counts from the end of the
+    # dim. Such a slice reaches the end of the dim exactly when start + length
+    # is 0, which slice_by_index would read as the absolute index 0 and turn
+    # into an empty slice, so mask that end off instead.
+    end_mask = [False] * len(x.shape)
+    if start.val < 0 and end[dim.val] == 0:
+        end_mask[dim.val] = True
+
     context.add(
-        mb.slice_by_index(x=x, begin=begin, end=end, name=node.name)
+        mb.slice_by_index(x=x, begin=begin, end=end, end_mask=end_mask, name=node.name)
     )
 
 
