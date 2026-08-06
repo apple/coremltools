@@ -7245,6 +7245,47 @@ class TestAtan2(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_atan2_y0_xnegative(self, compute_unit, backend, frontend):
+        # torch.atan2(0, x) is pi for x < 0, so the quadrant correction has to cover
+        # y == 0 as well, not only y > 0
+        model = ModuleWrapper(function=torch.atan2)
+        y = torch.tensor([0.0, 0.0, 0.0])
+        x = torch.tensor([-1.0, -3.0, -0.5])
+        self.run_compare_torch(
+            (y, x),
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_atan2_x_tiny_negative(self, compute_unit, backend, frontend):
+        # x is shifted away from 0 to avoid dividing by it; the shift has to keep the
+        # sign of x, otherwise atan(y / x_safe) lands in the wrong half plane while the
+        # quadrant correction still assumes x < 0, and the result is off by pi
+        if backend[1] == "fp16":
+            pytest.skip("1e-9 is not representable in fp16, it flushes to 0")
+        model = ModuleWrapper(function=torch.atan2)
+        y = torch.tensor([1.0, -1.0, 0.0])
+        x = torch.tensor([-1e-9, -1e-9, -1e-9])
+        self.run_compare_torch(
+            (y, x),
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend, rank",
         itertools.product(compute_units, backends, frontends, range(1, 6)),
     )
