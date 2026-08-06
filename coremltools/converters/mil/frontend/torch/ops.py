@@ -8522,8 +8522,12 @@ def roll(context, node):
 
     for s, i in zip(shift, dims):
         dim = _utils.pymil_value_at(shape, i)
-        s = mb.mod(x=s, y=dim)
-        start_idx = mb.sub(x=dim, y=s)
+        # The sign of mod with a negative dividend is backend dependent, so keep both
+        # operands non-negative: rolling right by s is rolling left by -s.
+        if s < 0:
+            start_idx = mb.mod(x=int(-s), y=dim)
+        else:
+            start_idx = mb.sub(x=dim, y=mb.mod(x=int(s), y=dim))
         indices0 = mb.range_1d(end=dim, start=start_idx, step=1)
         indices1 = mb.range_1d(end=start_idx, start=0, step=1)
         indices = mb.concat(values=[indices0, indices1], axis=0)

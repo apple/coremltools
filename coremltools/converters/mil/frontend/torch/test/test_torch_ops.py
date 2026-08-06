@@ -12768,6 +12768,26 @@ class TestRoll(TorchBaseTest):
         model = ModuleWrapper(torch.roll, kwargs={"shifts": shifts, "dims": dims})
         self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, shifts",
+        itertools.product(compute_units, backends, [-1, -5, -8, 3]),
+    )
+    def test_roll_dynamic_dim(self, compute_unit, backend, shifts):
+        # With a symbolic dim the shift is normalized at runtime, where mod of a
+        # negative dividend does not follow numpy's sign convention.
+        upper_bound = 10 if backend[0] == "mlprogram" else -1
+        converter_input_type = [
+            TensorType(shape=(3, RangeDim(default=5, upper_bound=upper_bound)), dtype=np.float32)
+        ]
+        model = ModuleWrapper(torch.roll, kwargs={"shifts": shifts, "dims": 1})
+        self.run_compare_torch(
+            (3, 5),
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            converter_input_type=converter_input_type,
+        )
+
 
 class TestArgmax(TorchBaseTest):
     @pytest.mark.parametrize(
