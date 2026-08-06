@@ -14335,6 +14335,32 @@ class TestBitwiseOr(TorchBaseTest):
             input_as_shape=False,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(compute_units, backends),
+    )
+    def test_ior_operator(self, compute_unit, backend):
+        # Regression test for #2584. TorchScript records `z |= y` as
+        # `aten::__ior__`, which sanitizes to "ior". The clone is needed
+        # because Core ML rejects mutating a model input.
+        class TestModel(torch.nn.Module):
+            def forward(self, x, y):
+                z = x.clone()
+                z |= y
+                return z
+
+        input_shape = (2, 3)
+        input_data_x = torch.rand(*input_shape) > 0.2
+        input_data_y = torch.rand(*input_shape) < 0.8
+        self.run_compare_torch(
+            [input_data_x, input_data_y],
+            TestModel(),
+            frontend=TorchFrontend.TORCHSCRIPT,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
 
 class TestBitwiseXor(TorchBaseTest):
     @pytest.mark.parametrize(
