@@ -2192,6 +2192,13 @@ def mean(context, node):
 
     node_kind = node.kind.split(".")[0]
     if node_kind in ("all", "any"):
+        # torch treats every non-zero element as true, so casting to int32 and reducing
+        # with min / max would be wrong for non-boolean input: it truncates values in
+        # (-1, 1) to 0 and makes reduce_min / reduce_max compare magnitudes instead of
+        # truthiness
+        if not types.is_bool(x.dtype):
+            x, zero = promote_input_dtypes([x, mb.const(val=0)])
+            x = mb.not_equal(x=x, y=zero)
         x = mb.cast(x=x, dtype="int32")
         kwargs["x"] = x
         if node_kind == "all":
