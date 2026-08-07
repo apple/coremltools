@@ -870,6 +870,10 @@ class fuse_conv_scale(AbstractGraphPass):
 
     @staticmethod
     def _try_to_transform(conv_op, scale_op):
+        # real_div is not commutative, so const / conv cannot be folded into the weights
+        if scale_op.op_type == "real_div" and scale_op.x is not conv_op.outputs[0]:
+            return False
+
         # get the scale
         if scale_op.x.val is None and scale_op.y.val is None:
             return False
