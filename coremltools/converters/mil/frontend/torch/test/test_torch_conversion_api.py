@@ -462,7 +462,9 @@ class TestPyTorchConverterExamples:
         return traced_model, example_input
 
     @staticmethod
-    def _convert_classifier_model(traced_model, example_input, class_type, backend="mlprogram"):
+    def _convert_classifier_model(
+        traced_model, example_input, class_type, backend="mlprogram", input_shape=None
+    ):
         label = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
         if class_type == "str":
             label = list(map(lambda x: str(x), label))
@@ -474,12 +476,31 @@ class TestPyTorchConverterExamples:
             inputs=[
                 ct.TensorType(
                     name="input",
-                    shape=example_input.shape,
+                    shape=example_input.shape if input_shape is None else input_shape,
                     dtype=example_input.numpy().dtype,
                 )
             ],
             classifier_config=classifier_config,
         )
+
+    @staticmethod
+    def test_torch_classifier_rejects_symbolic_probabilities():
+        class Net(torch.nn.Module):
+            def forward(self, probabilities):
+                return torch.relu(probabilities)
+
+        example_input = torch.rand(1, 10)
+        traced_model = torch.jit.trace(Net().eval(), example_input)
+        input_shape = ct.EnumeratedShapes(
+            shapes=[(1, 10), (4, 10), (8, 10)]
+        )
+
+        with pytest.raises(
+            ValueError, match="Classifier probabilities must have a fully known shape"
+        ):
+            TestPyTorchConverterExamples._convert_classifier_model(
+                traced_model, example_input, "str", input_shape=input_shape
+            )
 
     @staticmethod
     def test_torch_classifier():
