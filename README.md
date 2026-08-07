@@ -35,6 +35,11 @@ To install it use `pip` or the Python package manager of your choice.
 pip install coremltools
 ```
 
+To install the latest dev release:
+```shell
+pip install coremltools==9.1.dev1
+```
+
 ## Core ML
 
 [Core ML](https://developer.apple.com/documentation/coreml) is an Apple framework to integrate machine learning models into your app. Core ML provides a unified representation for all models. Your app uses Core ML APIs and user data to make predictions, and to fine-tune models, all on the user’s device. Core ML optimizes on-device performance by leveraging the CPU, GPU, and Neural Engine while minimizing its memory footprint and power consumption. Running a model strictly on the user’s device removes any need for a network connection, which helps keep the user’s data private and your app responsive.
