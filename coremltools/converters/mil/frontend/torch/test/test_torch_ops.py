@@ -11616,7 +11616,7 @@ class TestPad(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, rank, mode",
         itertools.product(
-            compute_units, backends, frontends, range(3, 5), ["reflect", "replicate"]
+            compute_units, backends, frontends, range(3, 6), ["reflect", "replicate"]
         ),
     )
     def test_pad_reflect_replicate(self, compute_unit, backend, frontend, rank: int, mode: str):
@@ -11632,13 +11632,55 @@ class TestPad(TorchBaseTest):
         elif rank == 4:
             pad_len = 4
             input_shape = (10, 5, 5, 10)
+        elif rank == 5:
+            pad_len = 6
+            input_shape = (2, 3, 5, 5, 10)
         else:
             raise NotImplementedError(
-                "Only 3D, 4D padding with non-constant padding are supported for now"
+                "Only 3D, 4D, 5D padding with non-constant padding are supported for now"
             )
         max_pad = min(input_shape[-1], input_shape[-2])
         pad = list(np.random.randint(low=0, high=max_pad, size=pad_len))
         model = ModuleWrapper(function=torch.nn.functional.pad, kwargs={"pad": pad, "mode": mode})
+        self.run_compare_torch(
+            input_shape, model, backend=backend, compute_unit=compute_unit, frontend=frontend
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, torch_module, padding",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [torch.nn.ReflectionPad3d, torch.nn.ReplicationPad3d],
+            [2, (1, 2, 1, 2, 1, 2)],
+        ),
+    )
+    def test_pad_reflect_replicate_3d(
+        self, compute_unit, backend, frontend, torch_module, padding
+    ):
+        # Regression test for issues #2571 and #2576: these pad three dimensions, which
+        # Core ML supports only in "constant" mode, so the converted model used to fail
+        # to load with "Padding for more than two dimensions only supports `constant`
+        # mode".
+        input_shape = (1, 3, 5, 6, 7)
+        model = torch_module(padding).eval()
+        self.run_compare_torch(
+            input_shape, model, backend=backend, compute_unit=compute_unit, frontend=frontend
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, mode",
+        itertools.product(compute_units, backends, frontends, ["reflect", "replicate"]),
+    )
+    def test_pad_reflect_replicate_leading_dims(self, compute_unit, backend, frontend, mode):
+        # Two padded dimensions, but neither of them is one of the last two: Core ML
+        # requires all non-zero non-constant padding to be in the last two dimensions.
+        input_shape = (3, 4, 5, 6)
+        model = ModuleWrapper(
+            function=torch.nn.functional.pad,
+            kwargs={"pad": [0, 0, 1, 2, 2, 1], "mode": mode},
+        )
         self.run_compare_torch(
             input_shape, model, backend=backend, compute_unit=compute_unit, frontend=frontend
         )
