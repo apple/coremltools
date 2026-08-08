@@ -50,6 +50,9 @@ _COMMON_PASSES: List[Text] = [
     "common::loop_invariant_elimination",
     "common::remove_symbolic_reshape",
     "common::noop_elimination",
+    # Apply attention slicing early to reduce memory allocation for static sequence lengths.
+    # This pass replaces scaled_dot_product_attention with a memory-efficient sliced implementation.
+    "common::scaled_dot_product_attention_sliced_q",
     "common::fuse_matmul_weight_bias",
     "common::fuse_linear_bias",
     "common::fuse_gelu_tanh_approximation",
