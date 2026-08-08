@@ -446,7 +446,18 @@ class inverse(Operation):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.asarray(np.reciprocal(self.x.val + self.epsilon.val))
+        x_val = self.x.val
+        epsilon_val = self.epsilon.val
+
+        # ✅ New check for unsupported int types
+        if np.issubdtype(x_val.dtype, np.integer):
+            raise ValueError(
+                f"CoreML 'inverse' op does not support integer types. "
+                f"Got input dtype: {x_val.dtype}. Please cast input to float32 or use float constants."
+            )
+
+        return np.asarray(np.reciprocal(x_val + epsilon_val))
+
 
 
 @register_op
