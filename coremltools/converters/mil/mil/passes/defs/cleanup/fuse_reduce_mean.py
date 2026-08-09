@@ -89,6 +89,13 @@ class fuse_reduce_mean(AbstractGraphPass):
         else:
             return False
 
+        # `_check_var_scalar_value` accepts any size-1 tensor, including one whose rank
+        # exceeds the reduce_sum output's, e.g. a shape (1, 1, 1) const. The mul /
+        # real_div then broadcasts the rank up, which reduce_mean would not do, so the
+        # rewrite would change the output shape.
+        if child_op.outputs[0].shape != reduce_sum_op.outputs[0].shape:
+            return False
+
         ops_to_remove.append(child_op)
 
         # remove all the ops, and replace with a reduce_mean op
