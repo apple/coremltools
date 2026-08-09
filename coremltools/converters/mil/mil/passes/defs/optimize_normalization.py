@@ -11,6 +11,7 @@ from coremltools import _logger as logger
 from coremltools.converters.mil.mil import Block
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Operation, Program, Var
+from coremltools.converters.mil.mil.ops.defs.iOS15.normalization import layer_norm
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import (
     _check_no_output_connection,
@@ -178,13 +179,26 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
         gamma_rank = gamma_var.rank if gamma_var is not None else -1
         beta_rank = beta_var.rank if beta_var is not None else -1
 
+        # layer_norm requires gamma and beta to have shape x.shape[axes] exactly. A gamma
+        # that only broadcasts over those dims has the right rank but the wrong shape, and
+        # cannot be folded into the op.
+        normalized_shape = [reduce_op.x.shape[a] for a in negative_axes]
+        has_normalized_shape_affine = (
+            gamma_var is not None
+            and beta_var is not None
+            and layer_norm._is_compatible_shape(list(gamma_var.shape), normalized_shape)
+            and layer_norm._is_compatible_shape(list(beta_var.shape), normalized_shape)
+        )
+
         if gamma_rank == len(axes) and beta_rank == len(axes):
             # axes for layer_norm must be [-1] or [-1, -2] or [-1, -2, -3] and so on
             if negative_axes == list(range(-len(negative_axes), 0)):
-                is_layernorm = True
+                is_layernorm = has_normalized_shape_affine
 
         if rank == 4 and negative_axes == [-3]:
-            is_layernorm = (gamma_var is None and beta_var is None) or (gamma_rank == 1 and beta_rank == 1)
+            is_layernorm = (gamma_var is None and beta_var is None) or (
+                gamma_rank == 1 and beta_rank == 1 and has_normalized_shape_affine
+            )
 
             if gamma_var:
                 ops_to_remove.append(gamma_var.op)
@@ -199,9 +213,13 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
                 beta_var = None
 
         if rank == 4 and (negative_axes == [-2, -1] or negative_axes == [-3, -2]):
+            # instance_norm's gamma and beta are per channel, so they must be C long.
+            # A rank 1 squeezed shape is not enough: a gamma broadcasting over a spatial
+            # dim also squeezes to rank 1, and fusing it moves it onto the channel axis.
+            channel = reduce_op.x.shape[-1 if negative_axes == [-3, -2] else -3]
             if (
-                len(np.squeeze(gamma_var.val).shape) == 1
-                and len(np.squeeze(beta_var.val).shape) == 1
+                np.squeeze(gamma_var.val).shape == (channel,)
+                and np.squeeze(beta_var.val).shape == (channel,)
             ):
                 is_instancenorm = True
             if negative_axes == [-3, -2]:
