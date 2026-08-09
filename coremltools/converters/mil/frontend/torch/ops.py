@@ -1812,8 +1812,9 @@ def softplus(context, node):
         # this is the special case that Core ML softplus handles
         res = mb.softplus(x=x, name=node.name)
     else:
-        if x.rank == 4:
-            # can use Core ML softplus_parametric
+        if x.rank == 4 and not is_symbolic(x.shape[1]):
+            # can use Core ML softplus_parametric, whose alpha and beta are per channel
+            # and so need the channel count at conversion time
             C = x.shape[1]
             alpha_br = np.repeat(1.0 / beta, C).astype("float32")
             beta_br = np.repeat(beta, C).astype("float32")
@@ -5990,7 +5991,6 @@ def nll_loss(context, node):
     reduction = reduction_mapping[reduction.val]
 
     # compute the weights loss
-    batch_size = x.shape[0]
     class_num = x.shape[1]
 
     # only support weight and ignore_index both None
@@ -6014,8 +6014,9 @@ def nll_loss(context, node):
     elif reduction == "sum":
         out = mb.reduce_sum(x=loss, axes=[0], keep_dims=False, name=node.name)
     elif reduction == "mean":
-        out = mb.real_div(x=loss, y=np.float32(batch_size))
-        out = mb.reduce_sum(x=out, axes=[0], keep_dims=False, name=node.name)
+        # dividing by the batch size and then summing needs the batch size as a
+        # constant, which it is not under a flexible input shape
+        out = mb.reduce_mean(x=loss, axes=[0], keep_dims=False, name=node.name)
     else:
         raise NotImplementedError("Unsupported reduction type for NLLLoss.")
 
