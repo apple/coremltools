@@ -3108,6 +3108,25 @@ def _int(context, node):
     _cast(context, node, int, "int32")
 
 
+def _normalized_shape_rank(normalized_shape: Union[Var, List[Var], Tuple[Var]]) -> int:
+    """
+    Number of trailing axes a normalization op normalizes over.
+
+    ``normalized_shape`` is a const Var holding the trailing dims when they are
+    static, but a shape derived from a flexible input, e.g.
+    ``F.layer_norm(x, x.shape[-1:])``, is a ``prim::ListConstruct`` of symbolic
+    sizes, which binds to a python list of Vars with no ``.val``. Only the count
+    of trailing axes matters here -- torch requires ``normalized_shape`` to match
+    the trailing dims of ``x`` -- so read the count without the values.
+    """
+    if isinstance(normalized_shape, (list, tuple)):
+        return len(normalized_shape)
+    if normalized_shape.val is None:
+        # a 1-D shape tensor whose sizes are only known at runtime
+        return normalized_shape.shape[0]
+    return len(np.atleast_1d(normalized_shape.val))
+
+
 @register_torch_op(torch_alias=["native_layer_norm"])
 def layer_norm(context, node):
     def _parse_positional_args(context, node) -> Tuple[Var]:
@@ -3130,7 +3149,7 @@ def layer_norm(context, node):
 
     layer_norm = mb.layer_norm(
         x=x,
-        axes=list(range(-len(normalized_shape.val), 0)),
+        axes=list(range(-_normalized_shape_rank(normalized_shape), 0)),
         gamma=weight,
         beta=bias,
         epsilon=eps,
@@ -3151,7 +3170,7 @@ def rms_norm(context, node):
     normalized_shape = inputs[1]
     weight = inputs[2]
     eps = inputs[3]
-    axes = list(range(-len(normalized_shape.val), 0))
+    axes = list(range(-_normalized_shape_rank(normalized_shape), 0))
     # Store epsilon value to ensure ZeroDivisionError doesn't occur
     # while computing RMSNorm
     eps_val = eps.val if eps is not None else 1e-5

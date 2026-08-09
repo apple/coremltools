@@ -5187,6 +5187,45 @@ class TestLayerNorm(TorchBaseTest):
             input_shape, model, compute_unit=compute_unit, backend=backend, frontend=frontend
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, normalized_rank",
+        itertools.product(compute_units, backends, frontends, [1, 2]),
+    )
+    def test_layer_norm_dynamic_normalized_shape(
+        self, compute_unit, backend, frontend, normalized_rank
+    ):
+        """
+        ``F.layer_norm(x, x.shape[-k:])`` over a flexible dimension. Such a
+        normalized_shape comes from a ``prim::ListConstruct`` of symbolic sizes,
+        which binds to a python list of Vars rather than to a const Var, so only
+        its length may be read.
+        """
+        if backend[0] == "neuralnetwork":
+            pytest.skip("nn backend does not support a dynamic shape input for layer_norm")
+
+        class Model(nn.Module):
+            def forward(self, x):
+                return torch.nn.functional.layer_norm(x, x.shape[-normalized_rank:])
+
+        input_shape = (2, 4, 8)
+        input_type = ct.TensorType(
+            shape=ct.Shape([input_shape[0], input_shape[1], ct.RangeDim(2, 64)])
+        )
+        torch_export_dynamic_shapes = None
+        if frontend in TORCH_EXPORT_BASED_FRONTENDS:
+            last_dim = torch.export.Dim(name="last_dim", min=2, max=64)
+            torch_export_dynamic_shapes = {"x": {2: last_dim}}
+
+        self.run_compare_torch(
+            [input_shape],
+            Model().eval(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            converter_input_type=[input_type],
+            torch_export_dynamic_shapes=torch_export_dynamic_shapes,
+        )
+
 
 class TestPixelShuffle(TorchBaseTest):
     @pytest.mark.parametrize(
