@@ -650,6 +650,33 @@ class TestCross(TorchBaseTest):
             compute_unit=compute_unit,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, shape",
+        itertools.product(
+            compute_units, backends, frontends, [(2, 3), (3, 4), (3, 3), (2, 3, 4)]
+        ),
+    )
+    def test_cross_default_dim(self, compute_unit, backend, frontend, shape):
+        """dim is optional; omitted, torch takes the first dim of size 3."""
+
+        class CrossModel(nn.Module):
+            def forward(self, x, y):
+                return torch.cross(x, y)
+
+        x = generate_input_data(shape)
+        y = generate_input_data(shape)
+        model = CrossModel().eval()
+        torch_out = model(x, y)
+        self.run_compare_torch(
+            (x, y),
+            model,
+            expected_results=torch_out,
+            input_as_shape=False,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
 
 class TestNormalize(TorchBaseTest):
     @pytest.mark.parametrize(

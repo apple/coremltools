@@ -632,6 +632,20 @@ def cross(context, node):
     y = inputs[1]
     dim = inputs[2]
 
+    if dim is None or dim.val is None:
+        # dim is optional in aten::cross. Omitted, torch takes the first dim of size 3,
+        # which is not dim 0 in general.
+        dim = None
+        for axis, size in enumerate(x.shape):
+            if not is_symbolic(size) and size == 3:
+                dim = axis
+                break
+        if dim is None:
+            raise ValueError(
+                f"torch.cross expects a dimension of size 3, but got shape {x.shape} "
+                f"for node {node.name}"
+            )
+
     x1 = mb.gather(x=x, indices=[1, 2, 0], axis=dim, name="x1")
     x2 = mb.gather(x=x, indices=[2, 0, 1], axis=dim, name="x2")
     y1 = mb.gather(x=y, indices=[1, 2, 0], axis=dim, name="y1")
