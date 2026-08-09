@@ -492,6 +492,33 @@ class TestArgSort(TorchBaseTest):
             compute_unit=compute_unit,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, axis, descending, stable",
+        itertools.product(
+            compute_units, backends, frontends, [-1, 0], [True, False], [True, False]
+        ),
+    )
+    def test_argsort_stable(self, compute_unit, backend, frontend, axis, descending, stable):
+        # Passing `stable` at all -- even the semantically default `stable=False`
+        # -- makes torch emit aten::argsort.stable, which inserts an argument
+        # ahead of dim.
+        if frontend == TorchFrontend.EXECUTORCH:
+            # argsort.stable is composite implicit, so the core ATen
+            # decomposition rewrites it to sort.stable
+            pytest.xfail("torch._ops.aten.sort.stable is not in Core ATen opset")
+
+        model = ModuleWrapper(
+            function=torch.argsort,
+            kwargs={"dim": axis, "descending": descending, "stable": stable},
+        )
+        TorchBaseTest.run_compare_torch(
+            (2, 3, 4),
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
 
 class TestSort(TorchBaseTest):
     @pytest.mark.parametrize(
@@ -509,6 +536,31 @@ class TestSort(TorchBaseTest):
         model = ModuleWrapper(function=torch.sort, kwargs={"dim": axis, "descending": descending})
         TorchBaseTest.run_compare_torch(
             shape,
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, axis, descending, stable",
+        itertools.product(
+            compute_units, backends, frontends, [-1, 0], [True, False], [True, False]
+        ),
+    )
+    def test_sort_stable(self, compute_unit, backend, frontend, axis, descending, stable):
+        # Passing `stable` at all -- even the semantically default `stable=False`
+        # -- makes torch emit aten::sort.stable, which inserts an argument ahead
+        # of dim.
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.xfail("torch._ops.aten.sort.stable is not in Core ATen opset")
+
+        model = ModuleWrapper(
+            function=torch.sort,
+            kwargs={"dim": axis, "descending": descending, "stable": stable},
+        )
+        TorchBaseTest.run_compare_torch(
+            (2, 3, 4),
             model,
             frontend=frontend,
             backend=backend,
