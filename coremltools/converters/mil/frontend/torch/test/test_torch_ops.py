@@ -7752,6 +7752,53 @@ class TestUnbind(TorchBaseTest):
             input_shape, model, compute_unit=compute_unit, backend=backend, frontend=frontend
         )
 
+    @staticmethod
+    def test_unbind_dynamic_dim_is_rejected():
+        """The unbound dim decides how many outputs there are, so it cannot be dynamic."""
+
+        class Model(nn.Module):
+            def forward(self, x):
+                return torch.cat(torch.unbind(x, dim=0), dim=0)
+
+        traced = torch.jit.trace(Model().eval(), torch.rand(3, 4))
+        with pytest.raises(ValueError, match="how many outputs there are"):
+            ct.convert(
+                traced,
+                inputs=[ct.TensorType(name="x", shape=(ct.RangeDim(2, 8), 4))],
+                minimum_deployment_target=ct.target.iOS17,
+            )
+
+
+class TestChunk(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, chunks",
+        itertools.product(compute_units, backends, frontends, [2, 3]),
+    )
+    def test_chunk(self, compute_unit, backend, frontend, chunks):
+        class Model(nn.Module):
+            def forward(self, x):
+                return torch.cat(torch.chunk(x, chunks, dim=0), dim=0)
+
+        self.run_compare_torch(
+            (7, 4), Model(), compute_unit=compute_unit, backend=backend, frontend=frontend
+        )
+
+    @staticmethod
+    def test_chunk_dynamic_dim_is_rejected():
+        """The chunked dim decides how many chunks there are, so it cannot be dynamic."""
+
+        class Model(nn.Module):
+            def forward(self, x):
+                return torch.cat(torch.chunk(x, 3, dim=0), dim=0)
+
+        traced = torch.jit.trace(Model().eval(), torch.rand(7, 4))
+        with pytest.raises(ValueError, match="how many chunks there are"):
+            ct.convert(
+                traced,
+                inputs=[ct.TensorType(name="x", shape=(ct.RangeDim(2, 16), 4))],
+                minimum_deployment_target=ct.target.iOS17,
+            )
+
 
 class TestTranspose(TorchBaseTest):
     @pytest.mark.parametrize(
