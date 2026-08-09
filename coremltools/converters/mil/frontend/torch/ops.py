@@ -2138,8 +2138,17 @@ def mean(context, node):
 
         if context.frontend == TorchFrontend.TORCHSCRIPT:
             x = inputs[0]
-            dim = inputs[1] if nargs > 1 else None
-            keepdim = inputs[2] if nargs > 2 else False
+            if nargs == 2:
+                # TorchScript reports one node kind for both
+                #   aten::sum(self, *, dtype)                        -> 2 inputs
+                #   aten::sum.dim_IntList(self, dim, keepdim, dtype) -> 4 inputs
+                # (and likewise for mean). Only the second has a dim, so at 2 inputs
+                # position 1 is the dtype, which reduces over the whole tensor.
+                dim = None
+                keepdim = False
+            else:
+                dim = inputs[1] if nargs > 1 else None
+                keepdim = inputs[2] if nargs > 2 else False
         else:
             if node.kind in ("mean", "sum", "all", "any"):
                 x = inputs[0]
@@ -5699,12 +5708,18 @@ def new_full(context, node):
 def randint(context, node):
     def _parse_positional_args(context, node) -> Tuple[Var]:
         inputs = _get_inputs(context, node, min_expected=2)
-        if context.frontend == TorchFrontend.TORCHSCRIPT or node.kind == "randint.low":
+        # TorchScript reports the node kind `randint` for both
+        #   aten::randint(high, size, *, dtype, layout, device, pin_memory) -> 6 inputs
+        #   aten::randint.low(low, high, size, *, dtype, ...)               -> 7 inputs
+        # which differ only by the extra leading `low`, so tell them apart by arity.
+        has_low = node.kind == "randint.low" or (
+            context.frontend == TorchFrontend.TORCHSCRIPT and len(inputs) >= 7
+        )
+        if has_low:
             low = mb.cast(x=inputs[0], dtype="fp32")
             high = mb.cast(x=inputs[1], dtype="fp32")
             shape = inputs[2].val
         else:
-            assert node.kind == "randint"
             low = 0.0
             high = mb.cast(x=inputs[0], dtype="fp32")
             shape = inputs[1].val
@@ -7490,10 +7505,27 @@ def log1p(context, node):
     context.add(mb.log(x=x, epsilon=1.0, name=node.name))
 
 
-@register_torch_op(torch_alias=["round"])
+@register_torch_op(torch_alias=["round", "round.decimals"])
 def _round(context, node):
-    inputs = _get_inputs(context, node, expected=1)
-    context.add(mb.round(x=inputs[0], name=node.name))
+    # TorchScript reports the node kind `round` for both
+    #   aten::round(self)                  -> 1 input
+    #   aten::round.decimals(self, decimals) -> 2 inputs
+    inputs = _get_inputs(context, node, min_expected=1)
+    x = inputs[0]
+    decimals = inputs[1] if len(inputs) > 1 else None
+    decimals = _get_kwinputs(context, node, "decimals", default=[decimals])[0]
+    if decimals is not None and isinstance(decimals, Var):
+        decimals = decimals.val
+
+    if decimals is None or decimals == 0:
+        context.add(mb.round(x=x, name=node.name))
+        return
+
+    # torch rounds to `decimals` places, i.e. round(x * 10**d) / 10**d
+    scale = np.float32(10.0**decimals)
+    scaled = mb.mul(x=x, y=scale)
+    rounded = mb.round(x=scaled)
+    context.add(mb.real_div(x=rounded, y=scale, name=node.name))
 
 
 @register_torch_op
