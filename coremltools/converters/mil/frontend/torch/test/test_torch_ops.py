@@ -2727,6 +2727,84 @@ class TestUpsample(TorchBaseTest):
                     assert len(layer.upsample.fractionalScalingFactor) == 0
 
     @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, output_size, align_corners",
+        itertools.product(
+            compute_units, backends, frontends, [(4, 4), (16, 20)], [True, False]
+        ),
+    )
+    def test_upsample_bilinear2d_with_output_size_dynamic(
+        self, compute_unit, backend, frontend, output_size, align_corners
+    ):
+        """
+        A fixed output size over an input whose spatial dims are only known at run
+        time. There is no constant scale factor to derive here, so this needs the
+        iOS 17 resize op, which takes the target size directly.
+        """
+        if backend[0] == "neuralnetwork":
+            pytest.skip("the iOS17 resize op needs the mlprogram backend")
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.xfail("executorch incorrectly propagates dynamic shape")
+
+        input_shape = (1, 3, 9, 22)
+
+        if frontend in TORCH_EXPORT_BASED_FRONTENDS:
+
+            class Model(nn.Module):
+                def __init__(self, size, align_corners):
+                    super().__init__()
+                    self.size = size
+                    self.align_corners = align_corners
+
+                def forward(self, args):
+                    return nn.functional.interpolate(
+                        args,
+                        size=self.size,
+                        mode="bilinear",
+                        align_corners=self.align_corners,
+                    )
+
+            model = Model(output_size, align_corners)
+            converter_input_type = None
+            torch_export_dynamic_shapes = {
+                "args": {
+                    2: torch.export.Dim(name="height", min=2, max=30),
+                    3: torch.export.Dim(name="width", min=2, max=30),
+                }
+            }
+        else:
+            model = ModuleWrapper(
+                nn.functional.interpolate,
+                {
+                    "size": output_size,
+                    "mode": "bilinear",
+                    "align_corners": align_corners,
+                },
+            )
+            converter_input_type = [
+                TensorType(
+                    shape=(
+                        1,
+                        3,
+                        RangeDim(default=9, upper_bound=30),
+                        RangeDim(default=22, upper_bound=30),
+                    ),
+                    dtype=np.float32,
+                )
+            ]
+            torch_export_dynamic_shapes = None
+
+        self.run_compare_torch(
+            input_shape,
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            converter_input_type=converter_input_type,
+            torch_export_dynamic_shapes=torch_export_dynamic_shapes,
+            minimum_deployment_target=ct.target.iOS17,
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend, scales_h, scales_w, align_corners, recompute_scale_factor",
         itertools.product(
             compute_units,
