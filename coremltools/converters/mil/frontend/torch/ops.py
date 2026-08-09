@@ -1603,13 +1603,25 @@ def prelu(context, node):
         alpha = alpha.val
         alpha = np.ones((x.shape[1],)) * alpha
 
-    if x.rank <= 2:
-        axes = [1, 2] if x.rank == 1 else [2]
+    # mb.prelu accepts a per-channel alpha only when x is rank 4. For rank 3 it
+    # additionally requires every alpha value to be identical, which
+    # torch.nn.PReLU(num_parameters=C) does not satisfy. prelu is elementwise, so
+    # expand rank 2 and rank 3 input out to rank 4 rather than to the rank 3
+    # minimum: same result, and inside what mb.prelu supports.
+    axes = None
+    if x.rank == 1:
+        axes = [1, 2]
+    elif x.rank == 2:
+        axes = [2, 3]
+    elif x.rank == 3:
+        axes = [3]
+
+    if axes is None:
+        res = mb.prelu(x=x, alpha=alpha, name=node.name)
+    else:
         x = mb.expand_dims(x=x, axes=axes)
         x = mb.prelu(x=x, alpha=alpha)
         res = mb.squeeze(x=x, axes=axes, name=node.name)
-    else:
-        res = mb.prelu(x=x, alpha=alpha, name=node.name)
 
     context.add(res)
 
