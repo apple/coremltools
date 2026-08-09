@@ -3404,13 +3404,9 @@ def gru(context, node):
     inputs = _get_inputs(context, node, expected=9)
 
     _input = inputs[0]
-    h0 = inputs[1]
-    weights_list = inputs[2]
-    has_bias = inputs[3].val
-    num_layers = inputs[4].val
-    dropout = inputs[5]
-    bidirectional = inputs[7].val
-    batch_first = inputs[8].val
+    h0, weights_list, has_bias, num_layers, dropout, bidirectional, batch_first = _parse_rnn_args(
+        inputs
+    )
 
     # For each layer of GRU, the layout of the weights list is [Wi, Wh, bi, bh] with has_bias == True,
     # and is [Wi, Wh] with bias == False.
@@ -3548,6 +3544,40 @@ def gru(context, node):
     context.add(h, state_output_name)
 
 
+def _parse_rnn_args(inputs: List[Var]) -> Tuple:
+    """
+    Read the arguments shared by the single-hidden-state recurrent ops (gru,
+    rnn_tanh, rnn_relu), from either of the two torch schemas.
+
+    The packed-sequence schema inserts ``batch_sizes`` ahead of ``hx``, e.g. for gru::
+
+        aten::gru.input(Tensor input, Tensor hx, Tensor[] params, bool has_biases,
+                        int num_layers, float dropout, bool train, bool bidirectional,
+                        bool batch_first)
+        aten::gru.data(Tensor data, Tensor batch_sizes, Tensor hx, Tensor[] params,
+                       bool has_biases, int num_layers, float dropout, bool train,
+                       bool bidirectional)
+
+    Both bind 9 inputs, so the arity cannot tell them apart. The weight list is a
+    ``Tensor[]``, which binds to a python list, while every argument that could take
+    its place is a single Var -- so where that list lands identifies the schema.
+    """
+    has_batch_sizes = not isinstance(inputs[2], Iterable)
+    offset = 1 if has_batch_sizes else 0
+
+    h0 = inputs[1 + offset]
+    weights_list = inputs[2 + offset]
+    has_bias = inputs[3 + offset].val
+    num_layers = inputs[4 + offset].val
+    dropout = inputs[5 + offset]
+    bidirectional = inputs[7 + offset].val
+    # a packed sequence carries no batch_first argument: the output of
+    # _pack_padded_sequence is always laid out batch first
+    batch_first = True if has_batch_sizes else inputs[8].val
+
+    return h0, weights_list, has_bias, num_layers, dropout, bidirectional, batch_first
+
+
 def _add_simple_rnn(context, node, activation):
     inputs = _get_inputs(context, node, expected=9)
 
@@ -3561,13 +3591,9 @@ def _add_simple_rnn(context, node, activation):
     (2) h0: (num_layers, B, H)
     '''
     _input = inputs[0]
-    h0 = inputs[1]
-    weights_list = inputs[2]
-    has_bias = inputs[3].val
-    num_layers = inputs[4].val
-    dropout = inputs[5]
-    bidirectional = inputs[7].val
-    batch_first = inputs[8].val
+    h0, weights_list, has_bias, num_layers, dropout, bidirectional, batch_first = _parse_rnn_args(
+        inputs
+    )
 
     # We only support uni-directional simple RNN now
     if bidirectional:

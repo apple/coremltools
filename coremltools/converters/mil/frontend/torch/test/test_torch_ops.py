@@ -4002,6 +4002,59 @@ class TestLSTMWithPackedSequence(TorchBaseTest):
         )
 
 
+class TestRNNWithPackedSequence(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, nonlinearity, RNN_batch_first",
+        itertools.product(compute_units, backends, ["tanh", "relu"], [True, False]),
+    )
+    def test_rnn(self, compute_unit, backend, nonlinearity, RNN_batch_first):
+        """
+        A PackedSequence makes torch pick aten::rnn_tanh.data / aten::rnn_relu.data,
+        which insert batch_sizes ahead of hx. Both schemas bind 9 inputs, so the
+        arity does not distinguish them and every later argument has to be read at
+        the shifted offset.
+        """
+        from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
+
+        input_size = 4
+        hidden_size = 6
+
+        class Encoder(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.rnn = torch.nn.RNN(
+                    input_size=input_size,
+                    hidden_size=hidden_size,
+                    num_layers=1,
+                    nonlinearity=nonlinearity,
+                    batch_first=RNN_batch_first,
+                    bidirectional=False,
+                )
+
+            def forward(self, batch_in, seq_lengths):
+                packed_input = pack_padded_sequence(batch_in, seq_lengths, batch_first=True)
+                output_packed, _ = self.rnn(packed_input)
+                output, _ = pad_packed_sequence(output_packed, batch_first=True)
+                return output
+
+        model = Encoder()
+        model.eval()
+
+        _input = torch.randn(3, 10, input_size)
+        seq_lengths = torch.tensor([10, 5, 1], dtype=torch.int32)
+
+        inputs = (_input, seq_lengths)
+        expected_results = model(*inputs)
+        self.run_compare_torch(
+            inputs,
+            model,
+            expected_results,
+            input_as_shape=False,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+
 # Workaround for GitHub Issue #824
 # i.e. the return h_n/c_n for a converted BLSTM are mangled.
 # Therefore, just look at output 'y' (for now) which is correct.
