@@ -182,19 +182,19 @@ class NameSanitizer:
             if new_name.startswith("_"):
                 new_name = "var" + new_name
 
-        if new_name == name:
+        if new_name == name and name not in self.all_names:
             # return if nothing has changed
             self.all_names.add(name)
             return name
         else:
-            # name has changed
-            # make sure it is unique, then return
+            # Either the name has changed, or it is already taken by another name that got
+            # sanitized into it (for example "a/b" -> "a_b" makes a subsequent, already valid,
+            # "a_b" a duplicate). Either way, make it unique before returning.
             if new_name in self.all_names:
                 idx = 0
-                new_name += "_" + str(idx)
-                while new_name in self.all_names:
+                while new_name + "_" + str(idx) in self.all_names:
                     idx += 1
-                    new_name += "_" + str(idx)
+                new_name += "_" + str(idx)
             # now we have a unique name
             self.all_names.add(new_name)
             return new_name

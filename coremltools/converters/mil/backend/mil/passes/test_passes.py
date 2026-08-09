@@ -903,6 +903,24 @@ class TestSanitizerPass:
         assert block.find_ops(op_type="relu")[1].name == "op_1"
         assert block.find_ops(op_type="add")[0].name == "op_3"
 
+    def test_sanitize_output_name_colliding_with_valid_name(self):
+        """
+        The first output's name, "out/1", gets sanitized into "out_1", which is exactly
+        the (already valid) name of the second output. The two model outputs must still
+        end up with distinct names.
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 3, 20))])
+        def prog(x):
+            y1 = mb.relu(x=x, name="out/1")
+            y2 = mb.relu(x=x, name="out_1")
+            return y1, y2
+
+        PASS_REGISTRY["mil_backend::sanitize_name_strings"](prog)
+        output_names = [var.name for var in prog.functions["main"].outputs]
+        assert output_names[0] == "out_1"
+        assert len(set(output_names)) == len(output_names)
+
     def test_sanitize_var_names_with_two_functions(self):
         """
         Input:
