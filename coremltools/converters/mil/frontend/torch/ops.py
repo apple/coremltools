@@ -5724,8 +5724,11 @@ def randint(context, node):
 
 @register_torch_op
 def rand(context, node):
-    shape, _, dtype, _, _ = _get_inputs(context, node)
-    dtype = NUM_TO_DTYPE_STRING[TORCH_DTYPE_TO_NUM[dtype.val]] if dtype else "fp32"
+    # aten::rand(size, *, dtype, layout, device, pin_memory). The dtype is at
+    # position 1; position 2 is the layout, which torch always leaves as None here,
+    # so reading it made the requested dtype unreachable.
+    shape, dtype, _, _, _ = _get_inputs(context, node)
+    dtype = NUM_TO_DTYPE_STRING[dtype.val] if dtype is not None and dtype.val is not None else "fp32"
     low, high = mb.cast(x=0.0, dtype=dtype), mb.cast(x=1.0, dtype=dtype)
     rand_uniform = mb.random_uniform(shape=shape, low=low, high=high)
     context.add(rand_uniform, node.name)
