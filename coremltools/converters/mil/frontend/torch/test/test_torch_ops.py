@@ -7261,6 +7261,27 @@ class TestElementWiseUnary(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_reciprocal_small_input(self, compute_unit, backend, frontend):
+        # mb.inverse adds a stability epsilon (1e-4 by default) that torch does
+        # not, which dominates the result once the input gets small.
+        input_data = torch.tensor([[0.25, 0.5, 1.0, 2.0]])
+        model = ModuleWrapper(function=torch.reciprocal)
+        mlmodel = self.run_compare_torch(
+            input_data,
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+        inverse_ops = mlmodel[1]._mil_program.find_ops(op_type="inverse")
+        assert len(inverse_ops) == 1
+        assert inverse_ops[0].epsilon.val == 0
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend, dtype",
         itertools.product(
             compute_units,
