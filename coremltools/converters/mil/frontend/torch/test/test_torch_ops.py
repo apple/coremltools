@@ -6534,6 +6534,31 @@ class TestActivation(TorchBaseTest):
             assert len(prog.find_ops(op_type="prelu")) == 0
 
     @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, shape",
+        itertools.product(compute_units, backends, frontends, [(2, 3), (2, 3, 4)]),
+    )
+    def test_prelu_per_channel_alpha(self, compute_unit, backend, frontend, shape):
+        """
+        ``nn.PReLU(num_parameters=C)`` learns one alpha per channel. ``mb.prelu``
+        only accepts such an alpha when its input is rank 4, so rank 2 and rank 3
+        input has to be expanded out to rank 4 rather than to the rank 3 minimum.
+        ``test_prelu`` above never covers this because it initializes every channel
+        to the same alpha.
+        """
+        num_parameters = shape[1]
+        model = nn.PReLU(num_parameters).eval()
+        with torch.no_grad():
+            model.weight.copy_(torch.linspace(0.1, 0.5, num_parameters))
+
+        self.run_compare_torch(
+            shape,
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend, shape, alpha, minimum_deployment_target",
         itertools.product(
             compute_units,
