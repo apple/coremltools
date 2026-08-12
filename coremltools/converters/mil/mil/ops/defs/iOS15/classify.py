@@ -66,11 +66,13 @@ class classify(Operation):
             msg = "Type of elements in 'classes' in the op 'classify' must be either str or int64. Instead it is {}."
             raise ValueError(msg.format(classes_elem_type.__type_info__()))
 
+        if any_symbolic(self.probabilities.shape):
+            raise ValueError("Classifier probabilities must have a fully known shape.")
+
         # check that the size of "classes" is compatible with the size of "probabilities"
-        if not any_symbolic(self.probabilities.shape):
-            size = np.prod(self.probabilities.shape)
-            if len(self.classes.val) != size:
-                msg = "In op 'classify', number of classes must match the size of the tensor corresponding to 'probabilities'."
-                raise ValueError(msg)
+        size = np.prod(self.probabilities.shape)
+        if len(self.classes.val) != size:
+            msg = "In op 'classify', number of classes must match the size of the tensor corresponding to 'probabilities'."
+            raise ValueError(msg)
 
         return classes_elem_type, types.dict(classes_elem_type, types.double)
