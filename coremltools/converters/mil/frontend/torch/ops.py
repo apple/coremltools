@@ -2134,6 +2134,8 @@ def sub(context, node):
         "mean.dim",
         "sum",
         "sum.dim_intlist",
+        "prod",
+        "prod.dim_int",
         "logsumexp",
         "all",
         "all.dim",
@@ -2153,7 +2155,7 @@ def mean(context, node):
             dim = inputs[1] if nargs > 1 else None
             keepdim = inputs[2] if nargs > 2 else False
         else:
-            if node.kind in ("mean", "sum", "all", "any"):
+            if node.kind in ("mean", "sum", "prod", "all", "any"):
                 x = inputs[0]
                 dim = None
                 keepdim = None
@@ -2216,6 +2218,8 @@ def mean(context, node):
             reduction_op_type = "reduce_mean"
         elif node_kind == "sum":
             reduction_op_type = "reduce_sum"
+        elif node_kind == "prod":
+            reduction_op_type = "reduce_prod"
         else:
             assert node_kind == "logsumexp"
             reduction_op_type = "reduce_log_sum_exp"
