@@ -14406,6 +14406,52 @@ class TestBitwiseAnd(TorchBaseTest):
             )
 
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_and_operator(self, compute_unit, backend, frontend):
+        class TestModel(torch.nn.Module):
+            def forward(self, x, y):
+                return x & y
+
+        input_shape = (2, 3)
+        input_data_x = torch.rand(*input_shape) > 0.2
+        input_data_y = torch.rand(*input_shape) < 0.8
+        self.run_compare_torch(
+            [input_data_x, input_data_y],
+            TestModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_iand_operator(self, compute_unit, backend, frontend):
+        # Exercises tensor.__iand__ (i.e. `x &= y`) which sanitizes to "iand"
+        class TestModel(torch.nn.Module):
+            def forward(self, x, y):
+                x = x.clone()
+                x &= y
+                return x
+
+        input_shape = (2, 3)
+        input_data_x = torch.rand(*input_shape) > 0.2
+        input_data_y = torch.rand(*input_shape) < 0.8
+        self.run_compare_torch(
+            [input_data_x, input_data_y],
+            TestModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+
 class TestBitwiseOr(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend",
@@ -14451,6 +14497,31 @@ class TestBitwiseOr(TorchBaseTest):
             input_as_shape=False,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_ior_operator(self, compute_unit, backend, frontend):
+        # Exercises tensor.__ior__ (i.e. `x |= y`) which sanitizes to "ior" and
+        # is emitted in in-place boolean attention masks.
+        class TestModel(torch.nn.Module):
+            def forward(self, x, y):
+                x = x.clone()
+                x |= y
+                return x
+
+        input_shape = (2, 3)
+        input_data_x = torch.rand(*input_shape) > 0.2
+        input_data_y = torch.rand(*input_shape) < 0.8
+        self.run_compare_torch(
+            [input_data_x, input_data_y],
+            TestModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
 
 class TestBitwiseXor(TorchBaseTest):
     @pytest.mark.parametrize(
@@ -14461,6 +14532,52 @@ class TestBitwiseXor(TorchBaseTest):
         class TestModel(torch.nn.Module):
             def forward(self, x, y):
                 return torch.bitwise_xor(x, y)
+
+        input_shape = (2, 3)
+        input_data_x = torch.rand(*input_shape) > 0.2
+        input_data_y = torch.rand(*input_shape) < 0.8
+        self.run_compare_torch(
+            [input_data_x, input_data_y],
+            TestModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_xor_operator(self, compute_unit, backend, frontend):
+        # Exercises tensor.__xor__ (i.e. `x ^ y`) which sanitizes to "xor"
+        class TestModel(torch.nn.Module):
+            def forward(self, x, y):
+                return x ^ y
+
+        input_shape = (2, 3)
+        input_data_x = torch.rand(*input_shape) > 0.2
+        input_data_y = torch.rand(*input_shape) < 0.8
+        self.run_compare_torch(
+            [input_data_x, input_data_y],
+            TestModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_ixor_operator(self, compute_unit, backend, frontend):
+        # Exercises tensor.__ixor__ (i.e. `x ^= y`) which sanitizes to "ixor"
+        class TestModel(torch.nn.Module):
+            def forward(self, x, y):
+                x = x.clone()
+                x ^= y
+                return x
 
         input_shape = (2, 3)
         input_data_x = torch.rand(*input_shape) > 0.2
