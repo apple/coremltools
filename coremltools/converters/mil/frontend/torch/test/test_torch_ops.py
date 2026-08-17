@@ -1423,6 +1423,27 @@ class TestInstanceNorm(TorchBaseTest):
             compute_unit=compute_unit,
         )
 
+    @pytest.mark.parametrize("frontend", frontends)
+    @pytest.mark.parametrize("track_running_stats", [False, True])
+    def test_instancenorm_3d(self, frontend, track_running_stats):
+        # Regression test for https://github.com/apple/coremltools/issues/2666:
+        # exporting InstanceNorm3d with track_running_stats=True via torch.export
+        # used to fail with "Unsupported fx node alias, kind alias".
+        # Core ML's runtime only supports rank-3 and rank-4 instance_norm, so
+        # this conversion-only test intentionally targets MIL rather than prediction.
+        input_data = torch.rand(2, 5, 4, 5, 5)
+        model = nn.InstanceNorm3d(5, track_running_stats=track_running_stats)
+        model_spec = export_torch_model_to_frontend(model, input_data, frontend)
+        converter_inputs = None
+        if frontend not in TORCH_EXPORT_BASED_FRONTENDS:
+            converter_inputs = [ct.TensorType(shape=input_data.shape)]
+        ct.convert(
+            model_spec,
+            source="pytorch",
+            convert_to="milinternal",
+            inputs=converter_inputs,
+        )
+
 
 class TestGroupNorm(TorchBaseTest):
     @pytest.mark.parametrize(
