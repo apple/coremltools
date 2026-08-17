@@ -12781,6 +12781,53 @@ class TestSum(TorchBaseTest):
             input_as_shape=False,
         )
 
+    @staticmethod
+    def _non_bool_input(input_dtype):
+        # Rows are all-true, mixed and all-false. The float row [0.5, 0.5, 0.5] is
+        # all-true but truncates to zero, and the int row [-1, -2, -3] is all-true
+        # but has a negative minimum and maximum.
+        if input_dtype == torch.int32:
+            return torch.tensor([[3, 2, 1], [-1, 0, 3], [0, 0, 0]], dtype=torch.int32)
+        return torch.tensor(
+            [[0.5, 0.5, 0.5], [-0.5, 0.0, 0.5], [0.0, 0.0, 0.0]], dtype=torch.float32
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, input_dtype",
+        itertools.product(compute_units, backends, frontends, [torch.int32, torch.float32]),
+    )
+    def test_all_non_bool(self, compute_unit, backend, frontend, input_dtype):
+        class TestModel(nn.Module):
+            def forward(self, x):
+                return torch.all(x, dim=1)
+
+        self.run_compare_torch(
+            self._non_bool_input(input_dtype),
+            TestModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, input_dtype",
+        itertools.product(compute_units, backends, frontends, [torch.int32, torch.float32]),
+    )
+    def test_any_non_bool(self, compute_unit, backend, frontend, input_dtype):
+        class TestModel(nn.Module):
+            def forward(self, x):
+                return torch.any(x, dim=1)
+
+        self.run_compare_torch(
+            self._non_bool_input(input_dtype),
+            TestModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
 
 class TestCumSum(TorchBaseTest):
     @pytest.mark.parametrize(
