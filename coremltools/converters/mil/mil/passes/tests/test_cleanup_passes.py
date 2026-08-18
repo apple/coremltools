@@ -2473,6 +2473,63 @@ class TestRemoveRedundantOps:
         assert get_op_types_in_program(prog) == ["cos"] + ["leaky_relu"] * 3 + ["sin"]
         assert graph_pass._num_of_visited_ops == 13
 
+    def test_read_state_around_update_is_not_redundant(self):
+        """
+        The two read_state ops have identical inputs but observe different values,
+        because the state is written to in between. Neither may be removed.
+        """
+
+        @mb.program(
+            input_specs=[
+                mb.StateTensorSpec((2, 3), dtype=types.fp16),
+                mb.TensorSpec((2, 3), dtype=types.fp16),
+            ],
+            opset_version=ct.target.iOS18,
+        )
+        def prog(state, x):
+            before = mb.read_state(input=state)
+            mb.coreml_update_state(state=state, value=x)
+            after = mb.read_state(input=state)
+            return mb.add(x=before, y=after)
+
+        apply_pass_and_basic_check(prog, "common::remove_redundant_ops")
+
+        assert get_op_types_in_program(prog) == [
+            "read_state",
+            "coreml_update_state",
+            "read_state",
+            "add",
+        ]
+        add_op = prog.functions["main"].find_ops(op_type="add")[0]
+        assert add_op.x is not add_op.y
+
+    def test_repeated_coreml_update_state_is_not_redundant(self):
+        """
+        The first and the last coreml_update_state have identical inputs, but a
+        different value is written to the same state in between, so removing the
+        last one would leave the state holding the wrong value.
+        """
+
+        @mb.program(
+            input_specs=[
+                mb.StateTensorSpec((2, 3), dtype=types.fp16),
+                mb.TensorSpec((2, 3), dtype=types.fp16),
+                mb.TensorSpec((2, 3), dtype=types.fp16),
+            ],
+            opset_version=ct.target.iOS18,
+        )
+        def prog(state, x, y):
+            mb.coreml_update_state(state=state, value=x)
+            mb.coreml_update_state(state=state, value=y)
+            mb.coreml_update_state(state=state, value=x)
+            return mb.read_state(input=state)
+
+        apply_pass_and_basic_check(prog, "common::remove_redundant_ops")
+
+        assert get_op_types_in_program(prog) == ["coreml_update_state"] * 3 + ["read_state"]
+        update_ops = prog.functions["main"].find_ops(op_type="coreml_update_state")
+        assert [op.value.name for op in update_ops] == ["x", "y", "x"]
+
 
 class TestRemoveSymbolicReshape:
     def test_remove_symbolic_reshape(self):
