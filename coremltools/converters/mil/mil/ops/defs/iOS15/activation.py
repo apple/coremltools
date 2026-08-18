@@ -616,6 +616,6 @@ class thresholded_relu(activation_with_alpha):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        y = self.x.val
+        y = np.copy(self.x.val)
         y[y < self.alpha.val] = 0
         return y
