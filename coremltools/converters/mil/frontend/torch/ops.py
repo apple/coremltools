@@ -4247,6 +4247,264 @@ def upsample_bilinear2d(context, node):
     context.add(upsample_bilinear)
 
 
+def _bicubic_compute_output_size(input_shape, scales_h, scales_w):
+    """Reproduce torch's compute_output_size from scale factors (recompute=False)."""
+    in_h, in_w = input_shape[-2], input_shape[-1]
+    out_h = int(np.floor(in_h * scales_h))
+    out_w = int(np.floor(in_w * scales_w))
+    return [out_h, out_w]
+
+
+def _cubic_convolution1(x, a):
+    """Keys cubic weight for |x| <= 1."""
+    return ((a + 2) * x - (a + 3)) * x * x + 1.0
+
+
+def _cubic_convolution2(x, a):
+    """Keys cubic weight for 1 < |x| < 2."""
+    return ((a * x - 5 * a) * x + 8 * a) * x - 4 * a
+
+
+def _cubic_keys_indices_weights(in_size, out_size, scale, align_corners):
+    """
+    Plain bicubic (antialias=False), Keys coefficient a=-0.75.
+    Matches ATen area_pixel_compute_source_index + cubic_interp1d.
+    """
+    a = -0.75
+    indices = np.zeros((out_size, 4), dtype=np.int32)
+    weights = np.zeros((out_size, 4), dtype=np.float64)
+    for i in range(out_size):
+        if align_corners:
+            src = scale * i
+        else:
+            src = scale * (i + 0.5) - 0.5
+        in_idx = int(np.floor(src))
+        t = src - in_idx
+        tap_idx = np.array([in_idx - 1, in_idx, in_idx + 1, in_idx + 2])
+        indices[i] = np.clip(tap_idx, 0, in_size - 1)
+        weights[i] = [
+            _cubic_convolution2(t + 1, a),
+            _cubic_convolution1(t, a),
+            _cubic_convolution1(1 - t, a),
+            _cubic_convolution2(2 - t, a),
+        ]
+    return indices, weights.astype(np.float32)
+
+
+def _cubic_aa_filter(x, a=-0.5):
+    """ATen HelperInterpCubic::aa_filter (PIL-compatible Keys, a=-0.5)."""
+    x = np.abs(x)
+    if x < 1.0:
+        return _cubic_convolution1(x, a)
+    if x < 2.0:
+        return _cubic_convolution2(x, a)
+    return 0.0
+
+
+def _cubic_aa_indices_weights(in_size, out_size, scale):
+    """
+    Antialiased bicubic (_aa), matching ATen _compute_indices_min_size_weights_aa:
+    variable tap count, per-position normalization, a=-0.5.
+    """
+    a = -0.5
+    interp_size = 4
+    support = (interp_size * 0.5) * scale if scale >= 1.0 else interp_size * 0.5
+    max_interp_size = int(np.ceil(support)) * 2 + 1
+    invscale = 1.0 / scale if scale >= 1.0 else 1.0
+
+    indices = np.zeros((out_size, max_interp_size), dtype=np.int32)
+    weights = np.zeros((out_size, max_interp_size), dtype=np.float64)
+
+    for i in range(out_size):
+        center = scale * (i + 0.5)
+        xmin = builtins.max(int(center - support + 0.5), 0)
+        xsize = builtins.min(int(center + support + 0.5), in_size) - xmin
+        xsize = builtins.min(xsize, max_interp_size)
+        total_w = 0.0
+        for j in range(xsize):
+            w = _cubic_aa_filter((j + xmin - center + 0.5) * invscale, a)
+            weights[i, j] = w
+            total_w += w
+        if total_w != 0.0:
+            weights[i, :xsize] /= total_w
+        indices[i, :xsize] = np.clip(xmin + np.arange(xsize), 0, in_size - 1)
+    return indices, weights.astype(np.float32)
+
+
+@register_torch_op(
+    torch_alias=[
+        "upsample_bicubic2d.vec",
+        "_upsample_bicubic2d_aa",
+        "_upsample_bicubic2d_aa.vec",
+    ],
+)
+def upsample_bicubic2d(context, node):
+    """
+    PyTorch bicubic 2d upsampling with optional antialiasing.
+
+    The ATen implementations use a separable cubic convolution kernel. We mirror
+    them exactly with a decomposition into existing MIL ops (gather + broadcast
+    mul + reduce_sum), one pass per spatial axis.
+
+    Two kernels are needed because ``_aa`` differs from plain bicubic even on
+    upsampling (Keys coefficient a=-0.5 vs -0.75, variable tap count, and
+    per-position weight normalization):
+    - plain:  ``upsample_bicubic2d`` / ``upsample_bicubic2d.vec`` (a=-0.75)
+    - ``_aa``: ``_upsample_bicubic2d_aa`` / ``_upsample_bicubic2d_aa.vec`` (a=-0.5)
+      emitted by torchvision ``Resize(..., BICUBIC)`` (default antialias=True)
+    """
+
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected={TorchFrontend.TORCHSCRIPT: (4, 5)},
+            min_expected={TorchFrontend.TORCHEXPORT: 3, TorchFrontend.EXECUTORCH: 3},
+        )
+        nargs = len(inputs)
+
+        x = inputs[0]
+        output_size = inputs[1]
+        align_corners = bool(inputs[2].val)
+
+        if context.frontend == TorchFrontend.TORCHSCRIPT:
+            if nargs == 4:
+                scale_factors = inputs[3]
+                if scale_factors is None:
+                    scales_h = None
+                    scales_w = None
+                else:
+                    scales_h = scale_factors.val[0]
+                    scales_w = scale_factors.val[1]
+            else:
+                assert nargs == 5, "upsample_bicubic2d expects 4 or 5 inputs"
+                scales_h = inputs[3]
+                scales_w = inputs[4]
+        else:
+            suffix = node.kind.split(".")[-1]
+            if suffix == "vec":
+                scale_factors = None if nargs < 4 else inputs[3]
+                if scale_factors is None:
+                    scales_h = None
+                    scales_w = None
+                else:
+                    scales_h = scale_factors[0]
+                    scales_w = scale_factors[1]
+            else:
+                scales_h = None if nargs < 4 else inputs[3]
+                scales_w = None if nargs < 5 else inputs[4]
+
+        return x, output_size, align_corners, scales_h, scales_w
+
+    def _parse_keyword_args(context, node, scales_h, scales_w) -> Tuple[Var]:
+        scales_h = _get_kwinputs(context, node, "scales_h", default=[scales_h])[0]
+        scales_w = _get_kwinputs(context, node, "scales_w", default=[scales_w])[0]
+        return scales_h, scales_w
+
+    def _translate_torch_args(x, output_size, align_corners, scales_h, scales_w) -> Tuple[Var]:
+        if isinstance(output_size, Var) and output_size.val is not None:
+            # output_size specified (recompute_scale_factor = True)
+            output_size = [int(v) for v in output_size.val]
+        else:
+            output_size = None
+
+        if scales_h is not None and scales_w is not None:
+            # recompute_scale_factor = False: scale factors provided directly
+            if isinstance(scales_h, Var):
+                scales_h = scales_h.val
+            if isinstance(scales_w, Var):
+                scales_w = scales_w.val
+            if scales_h is None or scales_w is None:
+                raise NotImplementedError(
+                    f"Dynamic scale factors are not supported for the upsample op {node.name}"
+                )
+            if output_size is None:
+                output_size = _bicubic_compute_output_size(x.shape, scales_h, scales_w)
+
+        if output_size is None:
+            raise NotImplementedError(
+                "Dynamic output size is not supported for upsample_bicubic2d "
+                f"for the op {node.name}"
+            )
+        return output_size, scales_h, scales_w
+
+    def _cubic_weights(
+        x: Var,
+        output_size,
+        scales_h,
+        scales_w,
+        align_corners: bool,
+        antialias: bool,
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """Compute per-axis gather indices + weights as fp32/int32 constant arrays."""
+        in_h, in_w = x.shape[-2], x.shape[-1]
+
+        def _area_pixel_scale(in_size, out_size, scale):
+            if align_corners:
+                return (in_size - 1) / (out_size - 1) if out_size > 1 else 0.0
+            if scale is not None:
+                # scale factor is a multiplier: scale = 1 / scale_factor
+                return 1.0 / scale
+            return in_size / out_size
+
+        scale_h = _area_pixel_scale(in_h, output_size[0], scales_h)
+        scale_w = _area_pixel_scale(in_w, output_size[1], scales_w)
+
+        if antialias:
+            idx_h, wts_h = _cubic_aa_indices_weights(in_h, output_size[0], scale_h)
+            idx_w, wts_w = _cubic_aa_indices_weights(in_w, output_size[1], scale_w)
+        else:
+            idx_h, wts_h = _cubic_keys_indices_weights(in_h, output_size[0], scale_h, align_corners)
+            idx_w, wts_w = _cubic_keys_indices_weights(in_w, output_size[1], scale_w, align_corners)
+        return idx_h, wts_h, idx_w, wts_w
+
+    def _apply_1d_pass(
+        x: Var, indices: np.ndarray, weights: np.ndarray, axis: int, name: Optional[str] = None
+    ) -> Var:
+        # gather per tap: output (..., out_size, taps)
+        gathered = [
+            mb.gather(x=x, indices=mb.const(val=indices[:, i]), axis=axis)
+            for i in range(indices.shape[1])
+        ]
+        stacked = mb.stack(values=gathered, axis=-1)
+        # broadcast weights to (..., out_size, taps)
+        weight_shape = [1] * stacked.rank
+        weight_shape[axis] = weights.shape[0]
+        weight_shape[-1] = weights.shape[1]
+        weight_const = mb.const(val=weights.reshape(weight_shape))
+        weighted = mb.mul(x=stacked, y=weight_const)
+        reduce_kwargs = {"x": weighted, "axes": [-1]}
+        if name is not None:
+            reduce_kwargs["name"] = name
+        return mb.reduce_sum(**reduce_kwargs)
+
+    x, output_size, align_corners, scales_h, scales_w = _parse_positional_args(context, node)
+
+    if is_symbolic(x.shape[-2]) or is_symbolic(x.shape[-1]):
+        raise NotImplementedError(
+            "Dynamic input spatial shapes are not supported for upsample_bicubic2d "
+            f"for the op {node.name}"
+        )
+
+    scales_h, scales_w = _parse_keyword_args(context, node, scales_h, scales_w)
+    output_size, scales_h, scales_w = _translate_torch_args(
+        x, output_size, align_corners, scales_h, scales_w
+    )
+
+    if x.dtype not in (types.fp16, types.fp32):
+        x = mb.cast(x=x, dtype="fp32")
+
+    antialias = "aa" in node.kind
+    idx_h, wts_h, idx_w, wts_w = _cubic_weights(
+        x, output_size, scales_h, scales_w, align_corners, antialias
+    )
+
+    # horizontal pass along width, then vertical pass along height
+    intermediate = _apply_1d_pass(x, idx_w, wts_w, axis=3)
+    result = _apply_1d_pass(intermediate, idx_h, wts_h, axis=2, name=node.name)
+    context.add(result)
+
+
 @register_torch_op(torch_alias=["upsample_nearest1d.vec"])
 def upsample_nearest1d(context, node):
     """

@@ -2859,6 +2859,144 @@ class TestUpsample(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, output_size, align_corners",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [(10, 20), (3, 3)],
+            [True, False],
+        ),
+    )
+    def test_upsample_bicubic2d_with_output_size(
+        self, compute_unit, backend, frontend, output_size, align_corners
+    ):
+        input_shape = (1, 3, 8, 8)
+        model = ModuleWrapper(
+            nn.functional.interpolate,
+            {
+                "size": output_size,
+                "mode": "bicubic",
+                "align_corners": align_corners,
+            },
+        )
+        self.run_compare_torch(
+            input_shape,
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, scales_h, scales_w, align_corners, recompute_scale_factor",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [2, 0.5],
+            [3, 0.5],
+            [True, False],
+            [True, False],
+        ),
+    )
+    def test_upsample_bicubic2d_with_scales(
+        self,
+        compute_unit,
+        backend,
+        frontend,
+        scales_h,
+        scales_w,
+        align_corners,
+        recompute_scale_factor,
+    ):
+        input_shape = (1, 3, 8, 16)
+        model = ModuleWrapper(
+            nn.functional.interpolate,
+            {
+                "scale_factor": (scales_h, scales_w),
+                "mode": "bicubic",
+                "align_corners": align_corners,
+                "recompute_scale_factor": recompute_scale_factor,
+            },
+        )
+        self.run_compare_torch(
+            input_shape,
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, output_size, align_corners",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [(10, 20), (3, 3)],
+            [True, False],
+        ),
+    )
+    def test_upsample_bicubic2d_antialias_with_output_size(
+        self, compute_unit, backend, frontend, output_size, align_corners
+    ):
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("torch._ops.aten._upsample_bicubic2d_aa.default is not Aten Canonical")
+
+        input_shape = (1, 3, 8, 8)
+        model = ModuleWrapper(
+            nn.functional.interpolate,
+            {
+                "size": output_size,
+                "mode": "bicubic",
+                "align_corners": align_corners,
+                "antialias": True,
+            },
+        )
+        self.run_compare_torch(
+            input_shape,
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, scales_h, scales_w",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [2, 0.5],
+            [3, 0.5],
+        ),
+    )
+    def test_upsample_bicubic2d_antialias_with_scales(
+        self, compute_unit, backend, frontend, scales_h, scales_w
+    ):
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("torch._ops.aten._upsample_bicubic2d_aa.default is not Aten Canonical")
+
+        input_shape = (1, 3, 8, 16)
+        model = ModuleWrapper(
+            nn.functional.interpolate,
+            {
+                "scale_factor": (scales_h, scales_w),
+                "mode": "bicubic",
+                "align_corners": False,
+                "antialias": True,
+            },
+        )
+        self.run_compare_torch(
+            input_shape,
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend, output_size",
         itertools.product(compute_units, backends, frontends, [10, 170]),
     )
