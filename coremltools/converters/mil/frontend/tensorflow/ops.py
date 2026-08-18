@@ -2146,7 +2146,17 @@ def Sigmoid(context, node):
 @register_tf_op
 def Softplus(context, node):
     x = context[node.inputs[0]]
-    x = mb.softplus(x=x, name=node.name)
+    # Numerically stable decomposition: max(x, 0) + log(1 + exp(-|x|)).
+    # The native `mb.softplus` op (log(1 + exp(x))) overflows in fp16 when
+    # routed to the Apple Neural Engine for x gtr ~10.4 (see issue #2747,
+    # and #2687 / #2725 for the analogous PyTorch-frontend fix). Since
+    # -|x| <= 0, exp(-|x|) is always in (0, 1], so this form cannot overflow.
+    abs_x = mb.abs(x=x)
+    neg_abs_x = mb.mul(x=-1.0, y=abs_x)
+    exp_val = mb.exp(x=neg_abs_x)
+    log_val = mb.log(x=mb.add(x=1.0, y=exp_val))
+    max_val = mb.maximum(x=x, y=0.0)
+    x = mb.add(x=max_val, y=log_val, name=node.name)
     context.add(node.name, x)
 
 

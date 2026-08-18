@@ -432,6 +432,57 @@ class TestActivation(TensorFlowBaseTest):
             backend=backend,
         )
 
+    def test_softplus_fp16_numerically_stable(self):
+        """The naive softplus formula log(1 + exp(x)) overflows in fp16 for
+        x > ~10.4, which previously caused output collapse to 0 when the TF
+        frontend's native softplus op was routed to the Apple Neural Engine
+        (#2747, #2687). The converter now emits the decomposition
+        max(x, 0) + log(1 + exp(-|x|)) instead, which cannot overflow in any
+        precision since exp(-|x|) is always in (0, 1].
+
+        This is a pure-arithmetic check, independent of hardware or compute
+        unit routing: on CPU the native op does not overflow either (CPU
+        computes internally in fp32 regardless of the model's declared
+        precision), so a converted-model runtime comparison cannot exercise
+        this regression outside of Neural-Engine fp16 execution, which is
+        not available in CI.
+        """
+        x = np.float16(15.0)
+        naive = np.float16(np.log(np.float16(1.0) + np.exp(x)))
+        assert not np.isfinite(naive), f"expected naive fp16 softplus to overflow, got {naive}"
+
+        stable = np.float16(
+            np.maximum(x, np.float16(0)) + np.log(np.float16(1.0) + np.exp(-np.abs(x)))
+        )
+        assert np.isfinite(stable), f"stable decomposition should not overflow, got {stable}"
+        assert abs(float(stable) - 15.0) < 0.01, f"expected ~15.0, got {stable}"
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, rank",
+        itertools.product(compute_units, backends, [rank for rank in range(1, 6)]),
+    )
+    def test_softplus_large_values(self, compute_unit, backend, rank):
+        """Regression test for #2747: softplus should stay accurate for large
+        positive and negative inputs, where the previous native-op formula
+        would overflow in fp16 on the Neural Engine."""
+        input_shape = np.random.randint(low=1, high=4, size=rank)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.math.softplus(x)
+
+        model, inputs, outputs = build_model
+
+        input_values = [random_gen(input_shape, -30.0, 30.0)]
+        input_dict = dict(zip(inputs, input_values))
+        self.run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            compute_unit=compute_unit,
+            backend=backend,
+        )
+
     @pytest.mark.parametrize(
         "compute_unit, backend, rank_and_axes",
         itertools.product(
