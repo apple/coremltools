@@ -780,10 +780,25 @@ class _TransposeOptimization:
         "sigmoid",
         "sigmoid_hard",
         "softplus",
-        "softplus_parametric",
         "softsign",
         "thresholded_relu",
     }
+
+    @staticmethod
+    def _is_unary_like_op(op) -> bool:
+        """
+        Whether ``Transpose(op(x)) == op(Transpose(x))`` holds for this particular op.
+
+        Most of the op types in ``_UNARY_LIKE_OP_TYPES`` qualify unconditionally, but
+        ``pow`` is an elementwise binary op whose exponent broadcasts against ``x``.
+        A transpose may only be passed through it when the exponent broadcasts the same
+        way for every ordering of the axes, i.e. when all of its dims are 1.
+        """
+        if op.op_type not in _TransposeOptimization._UNARY_LIKE_OP_TYPES:
+            return False
+        if op.op_type == "pow":
+            return op.y.rank <= op.x.rank and all(dim == 1 for dim in op.y.shape)
+        return True
 
     def __init__(self, block):
         self.block = block
@@ -1008,7 +1023,7 @@ class _TransposeOptimization:
 
         if op in self.output_sink_ops:
             self._visit_materialize_op(op)
-        elif op.op_type in self._UNARY_LIKE_OP_TYPES:
+        elif self._is_unary_like_op(op):
             self._visit_unary_like_op(op)
         elif op.op_type in self._AXIS_UPDATE_OPS:
             self._visit_axis_update_op(op)
