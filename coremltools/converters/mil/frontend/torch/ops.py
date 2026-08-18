@@ -6549,6 +6549,13 @@ def unbind(context, node):
     if isinstance(dim, Var):
         dim = dim.val
 
+    if is_symbolic(x.shape[dim]):
+        raise ValueError(
+            f"unbind on dim {dim} of node {node.name} needs that dim to be known at "
+            "conversion time, because it decides how many outputs there are, but it is "
+            "dynamic. Use a fixed size for that dim."
+        )
+
     split_sizes = [1] * x.shape[dim]
     if len(split_sizes) == 1:
         res = [mb.squeeze(x=x, axes=[dim])]
@@ -6659,6 +6666,13 @@ def constantchunk(context, node):
     dim = node.attr["dim"]
 
     total = x.shape[dim]
+    if is_symbolic(total):
+        raise ValueError(
+            f"chunk on dim {dim} of node {node.name} needs that dim to be known at "
+            "conversion time, because it decides how many chunks there are, but it is "
+            "dynamic. Use a fixed size for that dim, or torch.split with an explicit "
+            "split size."
+        )
     size = int(_math.ceil(float(total) / float(chunks)))
     split_sizes = [size] * int(_math.floor(total / size))
     remainder = total - sum(split_sizes)
