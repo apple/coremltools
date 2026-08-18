@@ -5102,6 +5102,35 @@ class TestRand(TorchBaseTest):
 
         self.run_compare_torch(shape, TestModel(), backend=backend, compute_unit=compute_unit)
 
+    @pytest.mark.parametrize(
+        "dtype, expected_dtype",
+        [
+            (None, "fp32"),
+            (torch.float16, "fp16"),
+            (torch.float32, "fp32"),
+            (torch.float64, "fp32"),
+        ],
+    )
+    def test_rand_dtype(self, dtype, expected_dtype):
+        """The requested dtype is the argument right after the size in aten::rand."""
+
+        class TestModel(nn.Module):
+            def forward(self, x):
+                y = torch.rand((2, 3)) if dtype is None else torch.rand((2, 3), dtype=dtype)
+                return x + y.to(x.dtype)
+
+        traced = torch.jit.trace(TestModel().eval(), torch.rand(2, 3))
+        prog = ct.convert(
+            traced,
+            inputs=[ct.TensorType(name="x", shape=(2, 3))],
+            convert_to="milinternal",
+            minimum_deployment_target=ct.target.iOS17,
+            compute_precision=ct.precision.FLOAT32,
+        )
+        random_uniform_ops = prog.functions["main"].find_ops(op_type="random_uniform")
+        assert len(random_uniform_ops) == 1
+        assert types.builtin_to_string(random_uniform_ops[0].outputs[0].dtype) == expected_dtype
+
 
 class TestRandLike(TorchBaseTest):
     @pytest.mark.parametrize(
