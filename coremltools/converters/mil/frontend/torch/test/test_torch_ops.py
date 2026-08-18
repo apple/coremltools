@@ -812,6 +812,33 @@ class TestNarrow(TorchBaseTest):
                     )
 
     @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_narrow_dynamic_batch(self, compute_unit, backend, frontend):
+        """Narrowing one dim must not depend on the size of the other dims."""
+
+        class Model(torch.nn.Module):
+            def forward(self, x):
+                return torch.narrow(x, 2, 1, 2)
+
+        lower_bound = 2
+        upper_bound_coreml = 10 if backend[0] == "mlprogram" else -1
+        upper_bound_torch = None if upper_bound_coreml == -1 else upper_bound_coreml
+        batch_coreml = RangeDim(default=4, lower_bound=lower_bound, upper_bound=upper_bound_coreml)
+        batch_torch = torch.export.Dim(name="batch", min=lower_bound, max=upper_bound_torch)
+
+        self.run_compare_torch(
+            (4, 3, 5),
+            Model(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            converter_input_type=[TensorType(shape=(batch_coreml, 3, 5), dtype=np.float32)],
+            torch_export_dynamic_shapes={"x": {0: batch_torch}},
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend, shape",
         itertools.product(
             compute_units,
@@ -1554,6 +1581,40 @@ class TestGroupNorm(TorchBaseTest):
 
         self.run_compare_torch(
             (6, group_features[1], 10, 10),
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            converter_input_type=converter_input_type,
+            torch_export_dynamic_shapes=torch_export_dynamic_shapes,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, group_features, rank",
+        itertools.product(compute_units, backends, frontends, [(16, 32), (1, 1)], [2, 3, 4]),
+    )
+    def test_groupnorm_dynamic_batch(
+        self, compute_unit, backend, frontend, group_features, rank
+    ):
+        """Only the batch dim is dynamic; the rest of the shape is static."""
+        model = nn.GroupNorm(group_features[0], group_features[1])
+
+        lower_bound = 2
+        upper_bound_coreml = 10 if backend[0] == "mlprogram" else -1
+        upper_bound_torch = None if upper_bound_coreml == -1 else upper_bound_coreml
+        batch_coreml = RangeDim(default=6, lower_bound=lower_bound, upper_bound=upper_bound_coreml)
+        batch_torch = torch.export.Dim(name="batch", min=lower_bound, max=upper_bound_torch)
+
+        spatial_shape = (5,) * (rank - 2)
+        converter_input_type = [
+            TensorType(
+                shape=(batch_coreml, group_features[1]) + spatial_shape, dtype=np.float32
+            )
+        ]
+        torch_export_dynamic_shapes = {"input": {0: batch_torch}}
+
+        self.run_compare_torch(
+            (6, group_features[1]) + spatial_shape,
             model,
             frontend=frontend,
             backend=backend,

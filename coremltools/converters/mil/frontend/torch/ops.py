@@ -778,14 +778,18 @@ def narrow(context, node):
     begin = [0] * len(x.shape)
     begin[dim.val] = start.val
 
-    end = list(x.shape)
+    # Only the narrowed dim has an end worth stating. Masking every other dim off
+    # keeps the slice independent of x.shape, which may hold symbols under a
+    # flexible input shape and cannot be baked into a constant.
+    end = [0] * len(x.shape)
+    end_mask = [True] * len(x.shape)
     end[dim.val] = start.val + length.val
+    end_mask[dim.val] = False
 
     # torch.narrow accepts a negative start, which counts from the end of the
     # dim. Such a slice reaches the end of the dim exactly when start + length
     # is 0, which slice_by_index would read as the absolute index 0 and turn
     # into an empty slice, so mask that end off instead.
-    end_mask = [False] * len(x.shape)
     if start.val < 0 and end[dim.val] == 0:
         end_mask[dim.val] = True
 
@@ -2878,15 +2882,21 @@ def instance_norm(context, node):
 def _group_norm_impl(x: Var, num_groups: int, weight: Var, bias: Var, eps: float) -> Var:
     n, c = x.shape[0], x.shape[1]  # at minimum (N, C) required
     num_groups = builtins.min(num_groups, c)
-    new_shape = [n, num_groups, c // num_groups]
     # optimization for non symbolic shapes. This get rids of 3 mil ops that required on dynamic shapes
-    if not any_symbolic(x.shape[2:]):
+    # Any symbolic dim has to be read from the input shape at run time, including the
+    # batch dim, which cannot be baked into a constant shape either.
+    if not any_symbolic(x.shape):
+        new_shape = [n, num_groups, c // num_groups]
         new_shape += [*x.shape[2:]]  # adds remaining dims
         input_shape = [*x.shape]  # n, c, *
     else:
         input_shape = mb.shape(x=x)
-        input_shape_sliced = mb.slice_by_size(x=input_shape, begin=[2], size=[-1])  # x_shape[2:]
-        new_shape = mb.concat(values=[new_shape, input_shape_sliced], axis=0)
+        batch_sliced = mb.slice_by_size(x=input_shape, begin=[0], size=[1])  # x_shape[:1]
+        new_shape_values = [batch_sliced, [num_groups, c // num_groups]]
+        if x.rank > 2:
+            # x_shape[2:]
+            new_shape_values.append(mb.slice_by_size(x=input_shape, begin=[2], size=[-1]))
+        new_shape = mb.concat(values=new_shape_values, axis=0)
 
     num_extra_axes = len(x.shape[2:])
     axes_ = [int(i) for i in range(2, 2 + num_extra_axes + 1)]
