@@ -4762,6 +4762,34 @@ class TestGuardNegativeGatherIndices:
             minimum_deployment_target=opset_version,
         )
 
+    @pytest.mark.parametrize("batch_dims", [0, 1])
+    def test_guard_negative_gather_nd_indices_with_batch_dims(self, batch_dims):
+        """
+        gather_nd's indices address x starting at dimension batch_dims, so a negative
+        index must be offset by x.shape[batch_dims + j], not x.shape[j].
+        """
+        x_val = np.arange(2 * 5 * 3).reshape(2, 5, 3).astype(np.float32)
+        if batch_dims == 0:
+            x_val = x_val[0]
+            indices_val = np.array([[-1], [0]], dtype=np.int32)
+        else:
+            indices_val = np.array([[[-1], [0]], [[-1], [1]]], dtype=np.int32)
+
+        @mb.program(input_specs=[], opset_version=ct.target.iOS17)
+        def prog():
+            return mb.gather_nd(x=x_val, indices=indices_val, batch_dims=batch_dims)
+
+        PASS_REGISTRY["common::guard_negative_gather_indices"](prog)
+        block = prog.functions["main"]
+
+        # The dimension the negative index is measured against is x.shape[batch_dims],
+        # which is 5 in both parametrizations, so -1 must become 4.
+        assert block.find_ops(op_type="slice_by_size")[0].begin.val.tolist() == [batch_dims]
+        rewritten = block.find_ops(op_type="gather_nd")[0].indices.val
+        np.testing.assert_array_equal(
+            rewritten, np.where(indices_val < 0, indices_val + 5, indices_val)
+        )
+
 
 class TestReplaceStackReshape(unittest.TestCase):
     def test_with_interleave(self):
