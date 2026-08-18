@@ -2889,6 +2889,9 @@ class TestUpsample(TorchBaseTest):
     def test_upsample_bicubic2d_antialias_with_output_size(
         self, compute_unit, backend, frontend, output_size, align_corners
     ):
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("torch._ops.aten._upsample_bicubic2d_aa.default is not Aten Canonical")
+
         input_shape = (1, 3, 8, 8)
         model = ModuleWrapper(
             nn.functional.interpolate,
@@ -2920,6 +2923,9 @@ class TestUpsample(TorchBaseTest):
     def test_upsample_bicubic2d_antialias_with_scales(
         self, compute_unit, backend, frontend, scales_h, scales_w
     ):
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("torch._ops.aten._upsample_bicubic2d_aa.default is not Aten Canonical")
+
         input_shape = (1, 3, 8, 16)
         model = ModuleWrapper(
             nn.functional.interpolate,
