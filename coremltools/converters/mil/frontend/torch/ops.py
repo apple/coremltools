@@ -6970,20 +6970,29 @@ def amin(context, node):
     _add_amax_amin(context, node, mb.reduce_min)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["argsort.stable"])
 def argsort(context, node):
     def _parse_positional_args(context, node) -> Tuple[Var]:
         inputs = _get_inputs(
             context,
             node,
-            expected={TorchFrontend.TORCHSCRIPT: 3},
+            expected={TorchFrontend.TORCHSCRIPT: (3, 4)},
             min_expected={TorchFrontend.TORCHEXPORT: 1, TorchFrontend.EXECUTORCH: 1},
         )
         nargs = len(inputs)
 
         x = inputs[0]
-        dim = inputs[1] if nargs > 1 else -1
-        descending = inputs[2] if nargs > 2 else False
+        # torch has two schemas here, and the second one inserts an argument
+        # ahead of dim, e.g. for sort:
+        #     aten::sort(Tensor self, int dim=-1, bool descending=False)
+        #     aten::sort.stable(Tensor self, *, bool? stable, int dim=-1,
+        #                       bool descending=False)
+        # torch picks the .stable overload as soon as `stable` is passed at all,
+        # including the semantically default `stable=False`, so dim and
+        # descending have to be read at the matching offset.
+        dim_index = 2 if nargs == 4 else 1
+        dim = inputs[dim_index] if nargs > dim_index else -1
+        descending = inputs[dim_index + 1] if nargs > dim_index + 1 else False
 
         return x, dim, descending
 
@@ -7000,20 +7009,29 @@ def argsort(context, node):
     context.add(argsort)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["sort.stable"])
 def sort(context, node):
     def _parse_positional_args(context, node) -> Tuple[Var]:
         inputs = _get_inputs(
             context,
             node,
-            expected={TorchFrontend.TORCHSCRIPT: 3},
+            expected={TorchFrontend.TORCHSCRIPT: (3, 4)},
             min_expected={TorchFrontend.TORCHEXPORT: 1, TorchFrontend.EXECUTORCH: 1},
         )
         nargs = len(inputs)
 
         x = inputs[0]
-        dim = inputs[1] if nargs > 1 else -1
-        descending = inputs[2] if nargs > 2 else False
+        # torch has two schemas here, and the second one inserts an argument
+        # ahead of dim, e.g. for sort:
+        #     aten::sort(Tensor self, int dim=-1, bool descending=False)
+        #     aten::sort.stable(Tensor self, *, bool? stable, int dim=-1,
+        #                       bool descending=False)
+        # torch picks the .stable overload as soon as `stable` is passed at all,
+        # including the semantically default `stable=False`, so dim and
+        # descending have to be read at the matching offset.
+        dim_index = 2 if nargs == 4 else 1
+        dim = inputs[dim_index] if nargs > dim_index else -1
+        descending = inputs[dim_index + 1] if nargs > dim_index + 1 else False
 
         return x, dim, descending
 
