@@ -725,24 +725,33 @@ def rename_feature(
             raise ValueError("Input/output names for ML Program must be of the format [a-zA-Z_][a-zA-Z0-9_]*. "
                              "That is, it must start with a letter and only contain numerals, underscore or letters. "
                              "Provided feature name, \"{}\" does not satisfy these requirements.".format(new_name))
+        def rename_in_block(block):
+            for i, out_name in enumerate(block.outputs):
+                if out_name == current_name:
+                    block.outputs[i] = new_name
+            for op in block.operations:
+                for argument in op.inputs.values():
+                    for binding in argument.arguments:
+                        if binding.HasField("name"):
+                            if binding.name == current_name:
+                                binding.name = new_name
+                for name_value_type in op.outputs:
+                    if name_value_type.name == current_name:
+                        name_value_type.name = new_name
+                # Control flow operations such as cond and while_loop hold nested blocks,
+                # and those blocks reference outer vars by name. Leaving them behind makes
+                # the renamed model fail to parse with "Input '<old name>' ... does not
+                # resolve".
+                for nested_block in op.blocks:
+                    rename_in_block(nested_block)
+
         mil = spec.mlProgram
         for function in mil.functions.values():
             for name_value_type in function.inputs:
                 if name_value_type.name == current_name:
                     name_value_type.name = new_name
             for block in function.block_specializations.values():
-                for i, out_name in enumerate(block.outputs):
-                    if out_name == current_name:
-                        block.outputs[i] = new_name
-                for op in block.operations:
-                    for argument in op.inputs.values():
-                        for binding in argument.arguments:
-                            if binding.HasField("name"):
-                                if binding.name == current_name:
-                                    binding.name = new_name
-                    for name_value_type in op.outputs:
-                        if name_value_type.name == current_name:
-                            name_value_type.name = new_name
+                rename_in_block(block)
 
 
 def _sanitize_value(x):
