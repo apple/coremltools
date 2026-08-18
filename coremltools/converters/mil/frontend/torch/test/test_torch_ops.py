@@ -3557,6 +3557,47 @@ class TestAdaptiveAvgPool(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, input_shape",
+        itertools.product(compute_units, backends, frontends, [(1, 64, 8), (20, 10)]),
+    )
+    def test_adaptive_avg_pool1d_output_size_1(
+        self, compute_unit, backend, frontend, input_shape
+    ):
+        # Output size 1 is plain global pooling, and unlike the other output sizes it
+        # does not need the pooled dimension to be known.
+        model = nn.AdaptiveAvgPool1d(1)
+        self.run_compare_torch(
+            input_shape,
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_adaptive_avg_pool1d_symbolic_input(self, compute_unit, backend, frontend):
+        if frontend in TORCH_EXPORT_BASED_FRONTENDS:
+            pytest.skip("torch.export decomposes AdaptiveAvgPool1d(1) into a mean op")
+
+        model = nn.AdaptiveAvgPool1d(1)
+        input_shape = (1, 64, 8)
+        upper_bound_coreml = 20 if backend[0] == "mlprogram" else -1
+        converter_input_type = [
+            TensorType(shape=(1, 64, RangeDim(upper_bound=upper_bound_coreml)), dtype=np.float32)
+        ]
+        self.run_compare_torch(
+            input_shape,
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            converter_input_type=converter_input_type,
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend, output_size, magnification, delta, depth, n",
         itertools.product(
             compute_units,

@@ -2559,6 +2559,24 @@ def _adaptive_pool1d(context, node, reduce_op):
     assert len(inputs[1].val) == 1
     out_length = inputs[1].val[0]
 
+    if out_length == 1:
+        # Represent an output length of 1 with a global reduce op. This mirrors the
+        # output size == (1, 1) case of _adaptive_pool2d, and is the only form that
+        # also works when the pooled dimension is symbolic.
+        context.add(reduce_op(x=x, axes=[-1], keep_dims=True, name=node.name))
+        return
+
+    if x.shape is None or any_symbolic(x.shape):
+        # The slicing below indexes the input with concrete positions, so a symbolic
+        # shape would otherwise surface as a sympy "Cannot convert expression to
+        # float" TypeError. _adaptive_pool2d reports the same situation this way.
+        raise ValueError(
+            "Adaptive pooling is only supported when input tensor size is known or "
+            "output size == 1. Received: input size == {}, output size == {}".format(
+                x.shape_str(), out_length
+            )
+        )
+
     if len(x.shape) == 3:
         # 3D input
         begin_prefix = [0, 0]
