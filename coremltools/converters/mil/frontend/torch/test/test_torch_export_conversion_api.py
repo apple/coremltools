@@ -333,6 +333,31 @@ class TestTorchExportConversionAPI(TorchBaseTest):
         )
         assert mlmodel.user_defined_metadata[_METADATA_SOURCE_DIALECT] == dialect_name
 
+    @pytest.mark.parametrize("frontend", frontends)
+    def test_no_input_model_requires_ios18(self, frontend):
+        # Regression test for #2578: a model with no inputs requires
+        # specification version >= iOS18, otherwise the produced mlpackage
+        # fails to compile with "Empty input is only valid in specification
+        # version >= 9". Verify both the happy path (iOS18 succeeds) and the
+        # error path (lower target raises a clear ValueError pointing the
+        # user at minimum_deployment_target).
+        class Model(torch.nn.Module):
+            def forward(self):
+                return torch.ones(5, 5)
+
+        exported_model = export_torch_model_to_frontend(Model().eval(), (), frontend)
+
+        # Default target (iOS15) must fail with an actionable error message.
+        with pytest.raises(ValueError, match=r"minimum_deployment_target=ct\.target\.iOS18"):
+            ct.convert(exported_model)
+
+        # Explicit iOS18 target must succeed and produce a runnable mlpackage.
+        mlmodel = ct.convert(exported_model, minimum_deployment_target=ct.target.iOS18)
+        spec = mlmodel.get_spec()
+        assert len(spec.description.input) == 0
+        assert spec.specificationVersion >= ct.target.iOS18.value
+        verify_prediction(mlmodel)
+
 
 @pytest.mark.skipif((version_info.major, version_info.minor) == (3, 13), reason="rdar://158079341")
 class TestExecuTorchExamples(TorchBaseTest):
