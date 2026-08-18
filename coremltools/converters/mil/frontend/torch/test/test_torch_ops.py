@@ -4837,6 +4837,24 @@ class TestRandint(TorchBaseTest):
         )
 
     @pytest.mark.parametrize("frontend", frontends)
+    def test_randint_no_low(self, frontend):
+        """
+        aten::randint(high, size, ...) and aten::randint.low(low, high, size, ...)
+        share the node kind `randint` under TorchScript and differ only by the extra
+        leading `low`, so the single argument form must not be read as `low`.
+        """
+
+        class TestModel(nn.Module):
+            def forward(self, x):
+                return torch.randint(10, (2, 3))
+
+        model = TestModel().eval()
+        x = torch.randn((1, 3))
+        torch_model = export_torch_model_to_frontend(model, (x,), frontend)
+        inputs = [ct.TensorType(shape=x.shape)] if frontend == TorchFrontend.TORCHSCRIPT else None
+        ct.convert(torch_model, inputs=inputs)
+
+    @pytest.mark.parametrize("frontend", frontends)
     def test_tuple_input(self, frontend):
         if frontend == TorchFrontend.EXECUTORCH:
             pytest.skip("torch._ops.aten.randint.low is not Aten Canonical")
@@ -7051,6 +7069,29 @@ class TestElementWiseUnary(TorchBaseTest):
         model = ModuleWrapper(function=op_func)
         self.run_compare_torch(
             shape, model, compute_unit=compute_unit, backend=backend, frontend=frontend
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, decimals",
+        itertools.product(compute_units, backends, frontends, [0, 1, 2, -1]),
+    )
+    def test_round_decimals(self, compute_unit, backend, frontend, decimals):
+        """
+        aten::round(self) and aten::round.decimals(self, decimals) share the node kind
+        `round` under TorchScript.
+        """
+
+        class Model(nn.Module):
+            def forward(self, x):
+                return torch.round(x, decimals=decimals)
+
+        self.run_compare_torch(
+            (1, 3, 5, 8),
+            Model(),
+            compute_unit=compute_unit,
+            backend=backend,
+            frontend=frontend,
+            rand_range=(-20.0, 20.0),
         )
 
     @pytest.mark.parametrize(
@@ -12610,6 +12651,29 @@ class TestSum(TorchBaseTest):
             model,
             expected_results=expected_results,
             input_as_shape=False,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, op",
+        itertools.product(compute_units, backends, frontends, [torch.sum, torch.mean]),
+    )
+    def test_sum_mean_dtype(self, compute_unit, backend, frontend, op):
+        """
+        aten::sum(self, dtype) and aten::sum.dim_IntList(self, dim, keepdim, dtype)
+        share the node kind `sum` under TorchScript, so the dtype must not be read
+        as a dim.
+        """
+
+        class Model(nn.Module):
+            def forward(self, x):
+                return op(x, dtype=torch.float32)
+
+        self.run_compare_torch(
+            (5, 4),
+            Model(),
             frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
