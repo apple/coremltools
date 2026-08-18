@@ -5852,21 +5852,22 @@ def _bitwise_as_logical_if_boolean(context, node, op_name, logical_handler):
         )
 
 
-@register_torch_op(torch_alias=["and"])
+@register_torch_op(torch_alias=["and", "iand"])
 def bitwise_and(context, node):
     _bitwise_as_logical_if_boolean(context, node, "bitwise_and", logical_and)
 
 
-# "or" and "xor" cover the post-sanitize form of "aten::__or__" / "aten::__xor__"
-# which torch.export emits for `tensor | tensor` / `tensor ^ tensor`. These are
-# common when building boolean attention masks (e.g. Gemma combines a causal
-# mask with a padding mask via __or__).
-@register_torch_op(torch_alias=["or"])
+# "or", "ior" and "xor", "ixor" cover the post-sanitize form of
+# "aten::__or__" / "aten::__ior__" / "aten::__xor__" / "aten::__ixor__"
+# which torch.export/torchscript emits for `tensor | tensor`, `tensor |= tensor`,
+# `tensor ^ tensor`, `tensor ^= tensor`. These are common when building boolean
+# attention masks (e.g. Gemma combines a causal mask with a padding mask).
+@register_torch_op(torch_alias=["or", "ior"])
 def bitwise_or(context, node):
     _bitwise_as_logical_if_boolean(context, node, "bitwise_or", logical_or)
 
 
-@register_torch_op(torch_alias=["xor"])
+@register_torch_op(torch_alias=["xor", "ixor"])
 def bitwise_xor(context, node):
     _bitwise_as_logical_if_boolean(context, node, "bitwise_xor", logical_xor)
 
