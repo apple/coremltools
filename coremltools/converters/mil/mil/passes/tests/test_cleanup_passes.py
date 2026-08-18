@@ -358,6 +358,69 @@ class TestConstDeduplication:
         # bias will be deduplicated only when q and k have same weight key
         assert_op_count_match(prog, expect=2 if q_bias_key == k_bias_key else 3, op=constexpr_op)
 
+    @staticmethod
+    def _prog_with_two_dequantized_weights(scale_q, scale_k):
+        """Two constexpr_affine_dequantize that differ only in their scale."""
+        ENCODING_DIM = 4
+        EMBEDDING_DIM = len(scale_q)
+        quantized_data = np.arange(
+            -(EMBEDDING_DIM * ENCODING_DIM) // 2,
+            EMBEDDING_DIM * ENCODING_DIM - (EMBEDDING_DIM * ENCODING_DIM) // 2,
+            dtype=np.int8,
+        ).reshape(EMBEDDING_DIM, ENCODING_DIM)
+        zero_point = np.zeros((EMBEDDING_DIM,), dtype=np.int8)
+
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=(2, ENCODING_DIM))],
+            opset_version=ct.target.iOS16,
+        )
+        def prog(x):
+            weight_q = mb.constexpr_affine_dequantize(
+                quantized_data=quantized_data, zero_point=zero_point, scale=scale_q, axis=0
+            )
+            weight_k = mb.constexpr_affine_dequantize(
+                quantized_data=quantized_data, zero_point=zero_point, scale=scale_k, axis=0
+            )
+            return mb.add(x=mb.linear(x=x, weight=weight_q), y=mb.linear(x=x, weight=weight_k))
+
+        return prog
+
+    def test_constexpr_deduplication_distinct_small_values(self):
+        """
+        constexpr inputs below the threshold are compared by value, not by the way numpy
+        happens to render them. These two scales are adjacent fp32 values, and both
+        render as "0.0001".
+        """
+        scale_q = np.full((32,), np.float32(9.999999747378752e-05))
+        scale_k = np.full((32,), np.nextafter(scale_q[0], np.float32(1)))
+        assert not np.array_equal(scale_q, scale_k)
+        assert str(scale_q) == str(scale_k)
+
+        prog = self._prog_with_two_dequantized_weights(scale_q, scale_k)
+        graph_pass = PASS_REGISTRY["common::const_deduplication"]
+        # keep the 32 element scales below the threshold, so they take the by value path
+        graph_pass.const_threshold = 100
+        apply_pass_and_basic_check(prog, graph_pass)
+        assert_op_count_match(prog, expect=2, op="constexpr_affine_dequantize")
+
+    def test_constexpr_deduplication_ignores_numpy_printoptions(self):
+        """
+        np.printoptions is process wide state that any code in the process can change, so
+        it must not decide whether two constexpr ops are the same.
+        """
+        scale_q = np.arange(32, dtype=np.float32) / 100 + 0.5
+        scale_k = scale_q.copy()
+        scale_k[5:25] = 9.75
+
+        graph_pass = PASS_REGISTRY["common::const_deduplication"]
+        # keep the 32 element scales below the threshold, so they take the by value path
+        graph_pass.const_threshold = 100
+        with np.printoptions(threshold=10):
+            assert str(scale_q) == str(scale_k)
+            prog = self._prog_with_two_dequantized_weights(scale_q, scale_k)
+            apply_pass_and_basic_check(prog, graph_pass)
+        assert_op_count_match(prog, expect=2, op="constexpr_affine_dequantize")
+
     def test_const_deduplication_as_outputs(self):
         """
         If the duplicated constants are block outputs, we should not remove them.
