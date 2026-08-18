@@ -467,6 +467,35 @@ class TestNLLLoss(TorchBaseTest):
         assert "gather" not in ops and "gather_nd" not in ops
         assert "one_hot" in ops
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, reduction",
+        itertools.product(compute_units, backends, ["none", "sum", "mean"]),
+    )
+    def test_nllloss_dynamic_batch(self, compute_unit, backend, reduction):
+        """The mean reduction must not need the batch size as a constant."""
+
+        class NLLLossModel(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.loss = nn.NLLLoss(reduction=reduction)
+
+            def forward(self, x):
+                target = torch.zeros(x.shape[0], dtype=torch.long)
+                return self.loss(x, target)
+
+        model = NLLLossModel()
+        batch_coreml = RangeDim(
+            default=3, lower_bound=2, upper_bound=10 if backend[0] == "mlprogram" else -1
+        )
+
+        self.run_compare_torch(
+            (3, 5),
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            converter_input_type=[TensorType(shape=(batch_coreml, 5), dtype=np.float32)],
+        )
+
 
 class TestArgSort(TorchBaseTest):
     @pytest.mark.parametrize(
@@ -7057,6 +7086,37 @@ class TestActivation(TorchBaseTest):
             compute_unit=compute_unit,
             minimum_deployment_target=minimum_deployment_target,
             target_op=target_op,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_softplus_beta_dynamic_channel(self, compute_unit, backend, frontend):
+        """
+        softplus_parametric needs the channel count at conversion time, so a rank 4
+        input with a dynamic channel dim has to fall back to the decomposition.
+        """
+        model = nn.Softplus(beta=2).eval()
+
+        lower_bound = 2
+        upper_bound_coreml = 10 if backend[0] == "mlprogram" else -1
+        upper_bound_torch = None if upper_bound_coreml == -1 else upper_bound_coreml
+        channel_coreml = RangeDim(
+            default=3, lower_bound=lower_bound, upper_bound=upper_bound_coreml
+        )
+        channel_torch = torch.export.Dim(name="channel", min=lower_bound, max=upper_bound_torch)
+
+        self.run_compare_torch(
+            (2, 3, 4, 5),
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            converter_input_type=[
+                TensorType(shape=(2, channel_coreml, 4, 5), dtype=np.float32)
+            ],
+            torch_export_dynamic_shapes={"input": {1: channel_torch}},
         )
 
     @pytest.mark.parametrize(
