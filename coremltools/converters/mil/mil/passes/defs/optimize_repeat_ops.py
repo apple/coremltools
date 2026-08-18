@@ -240,6 +240,20 @@ class merge_consecutive_reshapes(AbstractGraphPass):
             self._merge_consecutive_reshapes_block(f)
 
     @staticmethod
+    def _shape_inherits_input_dims(reshape_op) -> bool:
+        """
+        Whether ``reshape_op``'s shape contains a ``0``, which means "inherit the
+        corresponding dimension from *this* reshape's input".
+
+        Returns False when the shape is not known at compile time, in which case we
+        cannot tell.
+        """
+        shape = reshape_op.shape.sym_val
+        if shape is None:
+            return False
+        return any(dim == 0 for dim in shape)
+
+    @staticmethod
     def _match_pattern(reshape_op):
         """
         Given a ``reshape`` op,
@@ -264,6 +278,13 @@ class merge_consecutive_reshapes(AbstractGraphPass):
                 break
 
             op = op.outputs[0].child_ops[0]
+
+        # The merged reshape takes its shape from the last op of the sequence but its
+        # input from the first one. A trailing ``0`` would then inherit a dimension from
+        # a different tensor than it originally did, silently changing the output shape,
+        # so drop such ops from the end of the sequence.
+        while len(res) > 1 and merge_consecutive_reshapes._shape_inherits_input_dims(res[-1]):
+            res.pop()
 
         return res
 
