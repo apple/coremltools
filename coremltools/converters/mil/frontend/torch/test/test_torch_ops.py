@@ -7431,6 +7431,7 @@ class TestAtan2(TorchBaseTest):
             input_as_shape=False,
         )
 
+
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend",
         itertools.product(compute_units, backends, frontends),
@@ -7477,6 +7478,57 @@ class TestAtan2(TorchBaseTest):
                 backend=backend,
                 compute_unit=compute_unit,
             )
+
+
+class TestDeg2Rad(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, rank",
+        itertools.product(compute_units, backends, frontends, range(1, 5)),
+    )
+    def test_deg2rad(self, compute_unit, backend, frontend, rank):
+        model = ModuleWrapper(function=torch.deg2rad)
+        input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
+        self.run_compare_torch(
+            input_shape,
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+
+class TestRad2Deg(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, rank",
+        itertools.product(compute_units, backends, frontends, range(1, 5)),
+    )
+    def test_rad2deg(self, compute_unit, backend, frontend, rank):
+        model = ModuleWrapper(function=torch.rad2deg)
+        input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
+        self.run_compare_torch(
+            input_shape,
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+
+class TestHypot(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, rank",
+        itertools.product(compute_units, backends, frontends, range(1, 5)),
+    )
+    def test_hypot(self, compute_unit, backend, frontend, rank):
+        model = ModuleWrapper(function=torch.hypot)
+        input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
+        self.run_compare_torch(
+            [input_shape, input_shape],
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
 
 
 class TestTriu(TorchBaseTest):

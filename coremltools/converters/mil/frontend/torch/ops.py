@@ -7365,6 +7365,30 @@ def atanh(context, node):
     inputs = _get_inputs(context, node, expected=1)
     context.add(mb.atanh(x=inputs[0], name=node.name))
 
+@register_torch_op
+def deg2rad(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    scale = _math.pi / 180.0
+    context.add(mb.mul(x=inputs[0], y=scale, name=node.name))
+
+
+@register_torch_op
+def rad2deg(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    scale = 180.0 / _math.pi
+    context.add(mb.mul(x=inputs[0], y=scale, name=node.name))
+
+
+@register_torch_op
+def hypot(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    x, y = inputs
+    x, y = promote_input_dtypes([x, y])
+    x_sq = mb.mul(x=x, y=x)
+    y_sq = mb.mul(x=y, y=y)
+    sum_sq = mb.add(x=x_sq, y=y_sq)
+    context.add(mb.sqrt(x=sum_sq, name=node.name))
+
 
 @register_torch_op
 def ceil(context, node):
