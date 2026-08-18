@@ -12668,6 +12668,48 @@ class TestSum(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, input_dtype",
+        itertools.product(
+            compute_units, backends, frontends, [torch.int32, torch.float32]
+        ),
+    )
+    def test_prod(self, compute_unit, backend, frontend, input_dtype):
+        model = ModuleWrapper(function=torch.prod)
+
+        input_data = torch.arange(1, 7).reshape(2, 3).to(input_dtype)
+        expected_results = model(input_data)
+
+        TorchBaseTest.run_compare_torch(
+            input_data,
+            model,
+            expected_results=expected_results,
+            input_as_shape=False,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, dim, keepdim",
+        itertools.product(compute_units, backends, frontends, (0, -1), (True, False)),
+    )
+    def test_prod_dim(self, compute_unit, backend, frontend, dim, keepdim):
+        class Model(nn.Module):
+            def forward(self, x):
+                return torch.prod(x, dim=dim, keepdim=keepdim)
+
+        model = Model()
+        shape = (2, 3, 4)
+
+        self.run_compare_torch(
+            shape,
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend, shape, dim",
         itertools.product(
             compute_units,
