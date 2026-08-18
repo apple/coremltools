@@ -4175,6 +4175,39 @@ def upsample_bilinear2d(context, node):
 
     x, output_size, align_corners, scales_h, scales_w = _parse_positional_args(context, node)
     scales_h, scales_w = _parse_keyword_args(context, node, scales_h, scales_w)
+
+    # mb.upsample_bilinear resizes by a constant scale factor, which cannot be
+    # derived from a target output size while the source spatial dims are only
+    # known at runtime -- dividing by them raises out of sympy. The iOS 17 resize
+    # op takes the target size directly, so it can express this case.
+    if (
+        x.rank == 4
+        and any_symbolic(x.shape[-2:])
+        and scales_h is None
+        and scales_w is None
+        and isinstance(output_size, Var)
+        and output_size.val is not None
+        and len(np.atleast_1d(output_size.val)) == 2
+    ):
+        if not is_current_opset_version_compatible_with(target.iOS17):
+            raise NotImplementedError(
+                "Resizing an input with a symbolic height or width to a fixed output "
+                f"size, as the upsample op {node.name} does, needs "
+                "minimum_deployment_target >= ct.target.iOS17."
+            )
+        context.add(
+            mb.resize(
+                x=x,
+                shape=np.array(output_size.val, dtype=np.int32),
+                resized_dims=np.uint32(2),
+                interpolation_mode="LINEAR",
+                # Core ML's UNALIGN_CORNERS is torch's align_corners=False
+                sampling_mode="ALIGN_CORNERS" if align_corners else "UNALIGN_CORNERS",
+                name=node.name,
+            )
+        )
+        return
+
     scales_h, scales_w = _translate_torch_args(x, output_size, align_corners, scales_h, scales_w)
 
     if scales_h is not None and scales_w is not None:
