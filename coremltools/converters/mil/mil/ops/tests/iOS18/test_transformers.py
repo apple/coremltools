@@ -100,6 +100,95 @@ class TestScaledDotProductAttention:
             rtol=1e-6 if float_dtype == np.float32 else 1e-3,
         )
 
+    @staticmethod
+    def _const_query_key_value_with_mask_placeholder(mask_dtype):
+        """
+        Const query / key / value, plus a mask that attends to the first key position
+        only. Every key position carries a very different value, so ignoring the mask
+        gives a result far away from honoring it.
+        """
+        S, L, E, EV = 5, 7, 16, 32
+        np.random.seed(0)
+        query = np.random.rand(2, L, E).astype(np.float32)
+        key = np.random.rand(2, S, E).astype(np.float32)
+        value = np.zeros((2, S, EV), dtype=np.float32)
+        value[:, 0, :] = 100.0
+
+        mask = np.zeros((1, 1, S), dtype=mask_dtype)
+        if mask_dtype is bool:
+            mask[:, :, 0] = True
+        else:
+            mask[:, :, 1:] = -np.inf
+        return query, key, value, mask
+
+    @pytest.mark.parametrize(
+        "mask_dtype",
+        (bool, np.float32),
+    )
+    def test_builder_eval_non_const_mask(self, mask_dtype):
+        """
+        ``attn_mask`` changes the result, so when only ``attn_mask`` is non const there is
+        nothing to const fold to.
+        """
+        query, key, value, mask = self._const_query_key_value_with_mask_placeholder(mask_dtype)
+
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(
+                    shape=mask.shape, dtype=types.numpy_type_to_builtin_type(mask_dtype)
+                )
+            ],
+            opset_version=ct.target.iOS18,
+        )
+        def prog(mask):
+            return mb.scaled_dot_product_attention(
+                query=query,
+                key=key,
+                value=value,
+                attn_mask=mask,
+            )
+
+        attention = prog.functions["main"].find_ops(op_type="scaled_dot_product_attention")[0]
+        assert attention.outputs[0].val is None
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, mask_dtype",
+        itertools.product(compute_units, backends, (bool, np.float32)),
+    )
+    def test_builder_to_backend_non_const_mask(self, compute_unit, backend, mask_dtype):
+        """
+        End to end counterpart of ``test_builder_eval_non_const_mask``. The attention
+        feeds another op so that a const folded attention would be propagated into the
+        model by ``const_elimination``.
+        """
+        query, key, value, mask = self._const_query_key_value_with_mask_placeholder(mask_dtype)
+
+        def build(mask):
+            attention = mb.scaled_dot_product_attention(
+                query=query,
+                key=key,
+                value=value,
+                attn_mask=mask,
+            )
+            return mb.mul(x=attention, y=np.float32(2.0))
+
+        attention_torch = 2.0 * self._torch_scaled_dot_product_attention(query, key, value, mask)
+        run_compare_builder(
+            build,
+            {
+                "mask": mb.placeholder(
+                    shape=mask.shape, dtype=types.numpy_type_to_builtin_type(mask_dtype)
+                )
+            },
+            {"mask": mask},
+            expected_output_types=[attention_torch.shape + (types.fp32,)],
+            expected_outputs=[attention_torch],
+            compute_unit=compute_unit,
+            backend=backend,
+            atol=1e-6 if backend.precision == "fp32" else 1e-3,
+            rtol=1e-6 if backend.precision == "fp32" else 1e-3,
+        )
+
     @pytest.mark.parametrize(
         "compute_unit, backend, batches, float_dtype, mask_dtype",
         itertools.product(

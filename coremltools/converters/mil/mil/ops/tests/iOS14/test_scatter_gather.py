@@ -187,6 +187,94 @@ class TestScatterAlongAxis:
             rtol=1e-05,
         )
 
+    # data / indices / updates shared by the ``mode`` tests below. Index 0 of the last
+    # axis is written twice so that the accumulating modes are distinguishable from a
+    # plain overwrite.
+    _MODE_DATA = np.array([[1.0, 2.0, 3.0]], dtype=np.float32)
+    _MODE_INDICES = np.array([[0, 0, 2]], dtype=np.int32)
+    _MODE_UPDATES = np.array([[10.0, 100.0, 30.0]], dtype=np.float32)
+
+    @staticmethod
+    def _reference_scatter_along_axis(data, indices, updates, axis, mode):
+        """Straightforward transcription of the op definition, for axis == 1."""
+        assert axis == 1
+        output = np.copy(data)
+        for i in range(indices.shape[0]):
+            for j in range(indices.shape[1]):
+                k = indices[i, j]
+                if mode == "update":
+                    output[i, k] = updates[i, j]
+                elif mode == "add":
+                    output[i, k] += updates[i, j]
+                elif mode == "sub":
+                    output[i, k] -= updates[i, j]
+                elif mode == "mul":
+                    output[i, k] *= updates[i, j]
+                elif mode == "div":
+                    output[i, k] /= updates[i, j]
+                elif mode == "max":
+                    output[i, k] = max(output[i, k], updates[i, j])
+                else:
+                    assert mode == "min"
+                    output[i, k] = min(output[i, k], updates[i, j])
+        return output
+
+    @pytest.mark.parametrize(
+        "backend, mode",
+        itertools.product(backends, ["update", "add", "sub", "mul", "div", "max", "min"]),
+    )
+    def test_builder_eval_mode(self, backend, mode):
+        """The const folded value must honor ``mode``, not silently overwrite."""
+        data, indices, updates = self._MODE_DATA, self._MODE_INDICES, self._MODE_UPDATES
+
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=(1,), dtype=types.fp32)],
+            opset_version=backend.opset_version,
+        )
+        def prog(x):
+            return mb.scatter_along_axis(
+                data=data, indices=indices, updates=updates, axis=1, mode=mode
+            )
+
+        scatter_op = prog.functions["main"].find_ops(op_type="scatter_along_axis")[0]
+        np.testing.assert_allclose(
+            self._reference_scatter_along_axis(data, indices, updates, 1, mode),
+            scatter_op.outputs[0].val,
+            atol=1e-04,
+            rtol=1e-05,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, mode",
+        itertools.product(
+            compute_units, backends, ["update", "add", "sub", "mul", "div", "max", "min"]
+        ),
+    )
+    def test_builder_to_backend_mode(self, compute_unit, backend, mode):
+        """The runtime result for each ``mode``, which the const folding must reproduce."""
+        data, indices, updates = self._MODE_DATA, self._MODE_INDICES, self._MODE_UPDATES
+
+        input_placeholders = {
+            "data": mb.placeholder(shape=data.shape),
+            "updates": mb.placeholder(shape=updates.shape),
+        }
+        input_values = {"data": data, "updates": updates}
+
+        def build(data, updates):
+            return mb.scatter_along_axis(
+                data=data, indices=indices, updates=updates, axis=1, mode=mode
+            )
+
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            (1, 3, types.fp32),
+            self._reference_scatter_along_axis(data, indices, updates, 1, mode),
+            compute_unit=compute_unit,
+            backend=backend,
+        )
+
     @staticmethod
     def _test_builder_to_backend_programmatic(
         compute_unit, backend, rank_axis, force_non_negative_indices
