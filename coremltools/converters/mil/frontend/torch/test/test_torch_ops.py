@@ -6481,6 +6481,41 @@ class TestUnflatten(TorchBaseTest):
             compute_unit=compute_unit,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, size_position",
+        itertools.product(compute_units, backends, ["first", "last"]),
+    )
+    def test_unflatten_size_read_from_input_shape(self, compute_unit, backend, size_position):
+        """
+        ``torch.unflatten(x, 0, (x.shape[0], 1))`` reads a size off the input, so the
+        unflattened size comes from a ``prim::ListConstruct`` of run-time values and
+        binds to a python list of Vars rather than to a single const Var.
+
+        ``test_unflatten`` above cannot reach this: it builds ``nn.Unflatten`` from a
+        python list fixed at construction time, so its sizes are always const.
+
+        Splitting into ``(n, 1)`` / ``(1, n)`` keeps the product equal to the split
+        dimension for every size the RangeDim admits.
+        """
+
+        class Model(nn.Module):
+            def forward(self, x):
+                if size_position == "first":
+                    return torch.unflatten(x, 0, (x.shape[0], 1))
+                return torch.unflatten(x, 0, (1, x.shape[0]))
+
+        self.run_compare_torch(
+            (3, 4),
+            Model().eval(),
+            # torch.export resolves the size symbolically instead of emitting a list
+            frontend=TorchFrontend.TORCHSCRIPT,
+            backend=backend,
+            compute_unit=compute_unit,
+            converter_input_type=[
+                ct.TensorType(shape=(ct.RangeDim(lower_bound=1, upper_bound=10), 4))
+            ],
+        )
+
 
 class TestGather(TorchBaseTest):
     @pytest.mark.parametrize(

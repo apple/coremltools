@@ -887,6 +887,17 @@ def unflatten(context, node):
     if dim < 0:
         dim += x.rank
 
+    if isinstance(unflattened_size_var, (list, tuple)):
+        # A size read off the input, e.g. x.unflatten(1, (2, x.shape[1] // 2)), comes
+        # from a prim::ListConstruct whose elements are only known at run time, so it
+        # binds to a python list of scalar Vars instead of to a single const Var.
+        # Stack them into the rank 1 shape tensor that concat needs.
+        unflattened_size_var = mb.concat(
+            values=[mb.expand_dims(x=mb.cast(x=size, dtype="int32"), axes=[0])
+                    for size in unflattened_size_var],
+            axis=0,
+        )
+
     x_shape = mb.shape(x=x)
     pre_shape = mb.slice_by_index(x=x_shape, begin=[0], end=[dim])
     post_shape = mb.slice_by_index(x=x_shape, begin=[dim + 1], end=[len(x.shape)])
