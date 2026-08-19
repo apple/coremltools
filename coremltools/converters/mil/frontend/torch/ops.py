@@ -3201,20 +3201,25 @@ def rms_norm(context, node):
     # - Prevents FP16 overflow on ANE.
     # - Maintains ANE placement (avoiding CPU/GPU fallback).
     #
-    # Trade-offs:
-    # - May introduce slight numerical differences compared
-    #   to the standard operation due to the division
-    #   and rescaling operations.
-    # - Maximum relative error is typically < 0.1% in practice.
-    #
-    # Note: For applications requiring exact PyTorch parity,
-    # consider using CPU/GPU compute units.
+    # The rescale is algebraically exact because epsilon is rescaled together
+    # with the input (see below):
+    #   sqrt(mean((x/m)^2) + eps/m^2) * m == sqrt(mean(x^2) + eps)
+    # so the only differences vs the standard formulation are floating-point
+    # rounding in the extra division/multiplication.
 
     max_val_tensor = mb.reduce_max(
         x=mb.abs(x=x, name=node.name + "_abs"),
         axes=axes,
         keep_dims=True,
         name=node.name + "_max_val"
+        )
+    # Clamp the scale to >= 1: inputs with max|x| <= 1 cannot overflow fp16
+    # when squared (so no rescale is needed), and the clamp prevents a 0/0
+    # (NaN) on all-zero rows, where the reduce_max above is 0.
+    max_val_tensor = mb.maximum(
+        x=max_val_tensor,
+        y=1.0,
+        name=node.name + "_max_val_clamped"
         )
     x_scaled = mb.real_div(x=x, y=max_val_tensor, name=node.name + "_scale")
     x_scale_squared = mb.square(x=x_scaled, name=node.name + "_square")
@@ -3224,9 +3229,18 @@ def rms_norm(context, node):
         keep_dims=True,
         name=node.name + "_mean_squared"
         )
+    # Rescale epsilon by 1/m^2 to match the rescaled input. Adding the raw
+    # epsilon here would compute sqrt(mean(x^2) + eps * m^2) after the
+    # scale-back, inflating the effective epsilon by m^2 — a large error for
+    # spiky activations (max|x| >> rms(x)) at any compute precision.
+    eps_scaled = mb.real_div(
+        x=eps_val,
+        y=mb.square(x=max_val_tensor, name=node.name + "_max_val_sq"),
+        name=node.name + "_eps_scaled"
+        )
     mean_plus_eps = mb.add(
         x=mean_squared,
-        y=eps_val,
+        y=eps_scaled,
         name=node.name + "_add_eps"
         )
     rms = mb.sqrt(x=mean_plus_eps, name=node.name + "_rms")
