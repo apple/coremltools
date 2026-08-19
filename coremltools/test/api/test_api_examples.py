@@ -687,6 +687,22 @@ class TestMLModelStructure:
                 layer.type in VALID_OPERATORS
             ), f"Expected layer type to be one of {', '.join(VALID_OPERATORS)}, but got '{layer.type}'."
 
+    def test_uncompiled_model_path_raises(self, tmp_path):
+        # An uncompiled .mlpackage path used to abort the process with SIGABRT.
+        model = TestMLModelStructure._get_test_model(type="mlprogram")
+        package_path = str(tmp_path / "model.mlpackage")
+        model.save(package_path)
+        with pytest.raises(ValueError, match="not a compiled model directory"):
+            MLModelStructure.load_from_path(package_path)
+
+    def test_missing_model_path_raises(self, tmp_path):
+        with pytest.raises(ValueError, match="does not exist or is not a directory"):
+            MLModelStructure.load_from_path(str(tmp_path / "no-such-model.mlmodelc"))
+
+    def test_non_string_model_path_raises(self):
+        with pytest.raises(TypeError, match='must be of type "str"'):
+            MLModelStructure.load_from_path(None)
+
 
 @pytest.mark.skipif(
     ct.utils._macos_version() < (14, 4),
@@ -748,6 +764,22 @@ class TestMLComputePlan:
             assert len(compute_device_usage.supported_compute_devices) > 0
             for compute_device in compute_device_usage.supported_compute_devices:
                 assert isinstance(compute_device, MLComputeDevice)
+
+    def test_uncompiled_model_path_raises(self, tmp_path):
+        # An uncompiled .mlpackage path used to abort the process with SIGABRT.
+        model = TestMLModelStructure._get_test_model(type="mlprogram")
+        package_path = str(tmp_path / "model.mlpackage")
+        model.save(package_path)
+        with pytest.raises(ValueError, match="not a compiled model directory"):
+            MLComputePlan.load_from_path(package_path)
+
+    def test_missing_model_path_raises(self, tmp_path):
+        with pytest.raises(ValueError, match="does not exist or is not a directory"):
+            MLComputePlan.load_from_path(str(tmp_path / "no-such-model.mlmodelc"))
+
+    def test_non_string_model_path_raises(self):
+        with pytest.raises(TypeError, match='must be of type "str"'):
+            MLComputePlan.load_from_path(None)
 
 
 @pytest.mark.skipif(
