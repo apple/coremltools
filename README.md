@@ -1,6 +1,7 @@
 [![Build Status](https://img.shields.io/gitlab/pipeline/coremltools1/coremltools/main)](https://gitlab.com/coremltools1/coremltools/-/pipelines?page=1&scope=branches&ref=main)
 [![PyPI Release](https://img.shields.io/pypi/v/coremltools.svg)](#)
 [![Python Versions](https://img.shields.io/pypi/pyversions/coremltools.svg)](#)
+[![inspect.software](https://raw.githubusercontent.com/inspect-software/badges/main/v1/a/apple/coremltools.svg)](https://inspect.software/software/apple/coremltools)
 
 [Core ML Tools](https://apple.github.io/coremltools/docs-guides/source/overview-coremltools.html)
 =======================
