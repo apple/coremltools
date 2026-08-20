@@ -12,3 +12,4 @@ You can convert a model trained in `PyTorch <https://pytorch.org>`_ to the Core 
    convert-a-torchvision-model-from-pytorch.md
    convert-a-pytorch-segmentation-model.md
    convert-openelm.md
+   convert-llm-with-prefill-decode-multifunction.md
