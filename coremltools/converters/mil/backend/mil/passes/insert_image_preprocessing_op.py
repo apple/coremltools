@@ -45,9 +45,24 @@ def _insert_image_preprocessing_ops(block):
             last_output = input_var
             input_nptype = nptype_from_builtin(type(last_output.dtype()))
             if input_type.scale != 1:
+                scale_arr = np.array(input_type.scale, dtype=input_nptype)
+                # For per-channel scale (a list) on RGB/BGR images, the array
+                # has shape `(3,)` and would otherwise try to broadcast against
+                # the last axis of the channel-first input. Reshape to the same
+                # broadcast layout used by `bias` below.
+                if scale_arr.ndim > 0 and input_type.color_layout not in (
+                    _input_types.ColorLayout.GRAYSCALE,
+                    _input_types.ColorLayout.GRAYSCALE_FLOAT16,
+                ):
+                    if len(last_output.shape) == 3:
+                        scale_arr = scale_arr.reshape([3, 1, 1])
+                    elif len(last_output.shape) == 4:
+                        scale_arr = scale_arr.reshape([1, 3, 1, 1])
+                    else:
+                        raise TypeError("Unsupported rank for image input type.")
                 last_output = mb.mul(
                     x=last_output,
-                    y=np.array(input_type.scale, dtype=input_nptype),
+                    y=scale_arr,
                     name=input_var.name + "__scaled__",
                 )
             if has_bias:
