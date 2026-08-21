@@ -65,4 +65,33 @@
     return self;
 }
 
+- (void)dealloc {
+    // `m_array` owns a reference to a Python object, but the lifetime of this
+    // Objective-C object is controlled by Core ML, not by Python. Core ML does
+    // not necessarily release the input feature values before
+    // `-predictionFromFeatures:...` returns: the MLE5 engine keeps its input
+    // ports bound after a prediction and unbinds them asynchronously on one of
+    // its own dispatch queues (`-[MLE5ExecutionStream resetAfterLingering:]`
+    // running on com.apple.coreml.MLE5ExecutionStream.resetQueue).
+    //
+    // On that path the compiler generated `.cxx_destruct` would destroy
+    // `m_array` -- and therefore `Py_DECREF` the numpy array -- from a thread
+    // that holds neither the GIL nor a Python thread state, which races with
+    // the interpreter and corrupts the Python heap. So drop the reference here,
+    // with the GIL held, and leave `.cxx_destruct` a no-op.
+    PyObject *array = m_array.release().ptr();
+    if (array == NULL) {
+        return;
+    }
+
+    if (!Py_IsInitialized()) {
+        // The interpreter is already gone; everything it owned went with it.
+        return;
+    }
+
+    PyGILState_STATE gilState = PyGILState_Ensure();
+    Py_DECREF(array);
+    PyGILState_Release(gilState);
+}
+
 @end
