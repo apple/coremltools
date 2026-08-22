@@ -175,7 +175,7 @@ compressed_mlmodel = cto.coreml.palettize_weights(mlmodel, config)
 
 ## Bisect Model
 
-In certain scenarios, you may want to break a large Core ML model into two smaller models. For instance, if you are deploying a model to run on neural engine on an iPhone, it cannot be larger than 1 GB. If you are working with, say, [Stable Diffusion](https://github.com/apple/ml-stable-diffusion) 1.5 model which is 1.72 GB large (Float 16 precision), then it needs to be broken up into two chunks, each less than 1 GB. The utility `ct.models.utils.bisect_model` will allow you to do exactly that. When using this API, you can also opt-in to package the two chunks of the model into a pipeline model, so that its still a single mlpackage file, with the two models arranged in a sequential manner.
+In certain scenarios, you may want to break a large Core ML model into two smaller models. For instance, if you are deploying a model to run on neural engine on an iPhone, it cannot be larger than 2 GB. If you are working with any model larger than 2GB, then it needs to be broken up into two chunks, each less than 2 GB. The utility `ct.models.utils.bisect_model` will allow you to do exactly that. When using this API, you can also opt-in to package the two chunks of the model into a pipeline model, so that its still a single mlpackage file, with the two models arranged in a sequential manner.
 
 The example below shows how to bisect a model, test the accuracy, and save them on disk.
 
