@@ -625,6 +625,102 @@ def outer(context, node):
     context.add(res)
 
 
+@register_torch_op(torch_alias=["_cdist_forward"])
+def cdist(context, node):
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected={TorchFrontend.TORCHSCRIPT: 4},
+            min_expected={TorchFrontend.TORCHEXPORT: 2, TorchFrontend.EXECUTORCH: 2},
+        )
+        nargs = len(inputs)
+
+        x1 = inputs[0]
+        x2 = inputs[1]
+        p = inputs[2] if nargs > 2 else 2.0
+        compute_mode = inputs[3] if nargs > 3 else None
+
+        return x1, x2, p, compute_mode
+
+    def _parse_keyword_args(context, node, p, compute_mode) -> Tuple[Var]:
+        p = _get_kwinputs(context, node, "p", default=[p])[0]
+        compute_mode = _get_kwinputs(context, node, "compute_mode", default=[compute_mode])[0]
+        return p, compute_mode
+
+    def _translate_torch_args(p, compute_mode) -> Tuple[float, Optional[int]]:
+        if isinstance(p, Var):
+            p = p.val
+        if isinstance(compute_mode, Var):
+            compute_mode = compute_mode.val
+
+        p = float(p)
+        if p < 0.0 or _math.isnan(p):
+            raise ValueError("cdist only supports non-negative p values")
+        if compute_mode not in (None, 0, 1, 2):
+            raise ValueError(f"Unsupported cdist compute_mode: {compute_mode}")
+        return p, compute_mode
+
+    def _use_matrix_multiplication(x1, x2, p, compute_mode) -> bool:
+        if p != 2.0 or compute_mode == 2:
+            return False
+        if compute_mode == 1:
+            return True
+
+        num_x1_points = x1.shape[-2]
+        num_x2_points = x2.shape[-2]
+        if is_symbolic(num_x1_points) or is_symbolic(num_x2_points):
+            return True
+        return num_x1_points > 25 or num_x2_points > 25
+
+    def _euclidean_distance_with_matmul(x1, x2):
+        x1_squared = mb.reduce_sum(x=mb.mul(x=x1, y=x1), axes=[-1], keep_dims=True)
+        x2_squared = mb.reduce_sum(x=mb.mul(x=x2, y=x2), axes=[-1], keep_dims=True)
+        cross_product = mb.matmul(x=x1, y=x2, transpose_y=True)
+        squared_distance = mb.add(
+            x=mb.sub(x=x1_squared, y=mb.mul(x=cross_product, y=2.0)),
+            y=mb.transpose(x=x2_squared, perm=[*range(x2.rank - 2), x2.rank - 1, x2.rank - 2]),
+        )
+        squared_distance = mb.maximum(x=squared_distance, y=0.0)
+        return mb.sqrt(x=squared_distance, name=node.name)
+
+    def _pairwise_distance(x1, x2, p):
+        x1 = mb.expand_dims(x=x1, axes=[-2])
+        x2 = mb.expand_dims(x=x2, axes=[-3])
+        difference = mb.abs(x=mb.sub(x=x1, y=x2))
+
+        if p == 0.0:
+            nonzero = mb.not_equal(x=difference, y=0.0)
+            nonzero = mb.cast(x=nonzero, dtype=builtin_to_string(x1.dtype))
+            return mb.reduce_sum(x=nonzero, axes=[-1], name=node.name)
+        # TorchScript's float constant conversion represents infinity as the
+        # largest finite fp32 value.
+        if p > VALUE_CLOSE_TO_INFINITY:
+            return mb.reduce_max(x=difference, axes=[-1], name=node.name)
+        if p == 1.0:
+            return mb.reduce_sum(x=difference, axes=[-1], name=node.name)
+        if p == 2.0:
+            return mb.reduce_l2_norm(x=difference, axes=[-1], name=node.name)
+
+        difference, exponent = promote_input_dtypes([difference, p])
+        powered_difference = mb.pow(x=difference, y=exponent)
+        summed_difference = mb.reduce_sum(x=powered_difference, axes=[-1])
+        return mb.pow(x=summed_difference, y=1.0 / p, name=node.name)
+
+    x1, x2, p, compute_mode = _parse_positional_args(context, node)
+    p, compute_mode = _parse_keyword_args(context, node, p, compute_mode)
+    p, compute_mode = _translate_torch_args(p, compute_mode)
+
+    if x1.rank < 2 or x2.rank < 2:
+        raise ValueError("cdist only supports input tensors with rank >= 2")
+
+    if _use_matrix_multiplication(x1, x2, p, compute_mode):
+        res = _euclidean_distance_with_matmul(x1, x2)
+    else:
+        res = _pairwise_distance(x1, x2, p)
+    context.add(res)
+
+
 @register_torch_op
 def cross(context, node):
     inputs = _get_inputs(context, node, expected=3)

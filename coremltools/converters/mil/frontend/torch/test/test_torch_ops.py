@@ -675,6 +675,114 @@ class TestOuter(TorchBaseTest):
         )
 
 
+class TestCdist(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, shapes, p",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [((3, 4), (5, 4)), ((2, 3, 4), (1, 5, 4))],
+            [0.0, 0.5, 1.0, 2.0, 3.0, float("inf")],
+        ),
+    )
+    def test_cdist(self, compute_unit, backend, frontend, shapes, p):
+        model = ModuleWrapper(function=torch.cdist, kwargs={"p": p})
+        input1 = generate_input_data(shapes[0], rand_range=(-2.0, 2.0))
+        input2 = generate_input_data(shapes[1], rand_range=(-2.0, 2.0))
+
+        self.run_compare_torch(
+            (input1, input2),
+            model,
+            input_as_shape=False,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            atol=1e-3,
+            rtol=1e-4,
+        )
+
+    @pytest.mark.parametrize(
+        "frontend, compute_mode, point_counts",
+        itertools.product(
+            frontends,
+            [
+                "use_mm_for_euclid_dist_if_necessary",
+                "use_mm_for_euclid_dist",
+                "donot_use_mm_for_euclid_dist",
+            ],
+            [(3, 5), (26, 5)],
+        ),
+    )
+    def test_cdist_compute_mode(self, frontend, compute_mode, point_counts):
+        expect_matmul = compute_mode == "use_mm_for_euclid_dist" or (
+            compute_mode == "use_mm_for_euclid_dist_if_necessary" and max(point_counts) > 25
+        )
+        model = ModuleWrapper(function=torch.cdist, kwargs={"compute_mode": compute_mode})
+        input1 = generate_input_data((point_counts[0], 4), rand_range=(-2.0, 2.0))
+        input2 = generate_input_data((point_counts[1], 4), rand_range=(-2.0, 2.0))
+
+        _, mlmodel, _, _, _, _ = self.run_compare_torch(
+            (input1, input2),
+            model,
+            input_as_shape=False,
+            frontend=frontend,
+            backend=("neuralnetwork", "fp32"),
+        )
+
+        op_types = get_op_types_in_program(mlmodel._mil_program)
+        assert ("matmul" in op_types) == expect_matmul
+
+    @pytest.mark.parametrize("frontend", frontends)
+    def test_cdist_identical_points(self, frontend):
+        model = ModuleWrapper(
+            function=torch.cdist,
+            kwargs={"compute_mode": "use_mm_for_euclid_dist"},
+        )
+        input_data = torch.tensor([[1.0, -2.0, 3.0], [0.5, 4.0, -1.0]])
+
+        self.run_compare_torch(
+            (input_data, input_data.clone()),
+            model,
+            expected_results=torch.cdist(input_data, input_data),
+            input_as_shape=False,
+            frontend=frontend,
+            backend=("neuralnetwork", "fp32"),
+            atol=1e-5,
+            rtol=1e-5,
+        )
+
+    @pytest.mark.parametrize("frontend", frontends)
+    def test_cdist_dynamic_point_counts(self, frontend):
+        class Model(nn.Module):
+            def forward(self, x1, x2):
+                # Keep torch.export from specializing on cdist's 25-point heuristic.
+                return torch.cdist(x1, x2, compute_mode="use_mm_for_euclid_dist")
+
+        input1 = generate_input_data((4, 3), rand_range=(-2.0, 2.0))
+        input2 = generate_input_data((6, 3), rand_range=(-2.0, 2.0))
+        converter_input_type = [
+            TensorType(shape=(RangeDim(default=4, upper_bound=50), 3)),
+            TensorType(shape=(RangeDim(default=6, upper_bound=50), 3)),
+        ]
+        torch_export_dynamic_shapes = {
+            "x1": {0: torch.export.Dim("x1_points", min=2, max=50)},
+            "x2": {0: torch.export.Dim("x2_points", min=2, max=50)},
+        }
+
+        _, mlmodel, _, _, _, _ = self.run_compare_torch(
+            (input1, input2),
+            Model(),
+            input_as_shape=False,
+            frontend=frontend,
+            backend=("neuralnetwork", "fp32"),
+            converter_input_type=converter_input_type,
+            torch_export_dynamic_shapes=torch_export_dynamic_shapes,
+        )
+
+        assert "matmul" in get_op_types_in_program(mlmodel._mil_program)
+
+
 class TestCross(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, shape_dim",
