@@ -13353,6 +13353,45 @@ class TestStack(TorchBaseTest):
             )
 
     @pytest.mark.parametrize(
+        "compute_unit, backend, frontend", itertools.product(compute_units, backends, frontends)
+    )
+    def test_stack_input_types_promotion(self, compute_unit, backend, frontend):
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("executorch does not allow mixed dtypes")
+
+        class StackModel(torch.nn.Module):
+            def forward(self, x, y):
+                return torch.stack((x, y), dim=-1)
+
+        input_data_x = torch.randint(low=0, high=10, size=(2, 3), dtype=torch.int32)
+        input_data_y = torch.rand(2, 3)
+        self.run_compare_torch(
+            [input_data_x, input_data_y],
+            StackModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend", itertools.product(compute_units, backends, frontends)
+    )
+    def test_stack_constant_type_promotion(self, compute_unit, backend, frontend):
+        class StackModel(torch.nn.Module):
+            def forward(self, x):
+                y = torch.zeros((2, 3), dtype=torch.int32)
+                return torch.stack((x, y))
+
+        self.run_compare_torch(
+            (2, 3),
+            StackModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend, dim, default_dynamic_size",
         itertools.product(
             compute_units,

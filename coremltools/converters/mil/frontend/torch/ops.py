@@ -3063,7 +3063,7 @@ def stack(context, node):
     if len(tensors) == 1:
         res = mb.expand_dims(x=tensors[0], axes=[dim], name=node.name)
     else:
-        res = mb.stack(values=tensors, axis=dim, name=node.name)
+        res = mb.stack(values=promote_input_dtypes(tensors), axis=dim, name=node.name)
     context.add(res)
 
 
