@@ -16034,6 +16034,105 @@ class TestNanToNum(TorchBaseTest):
         )
 
 
+class TestNonFinitePredicates(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, predicate",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            ["isinf", "isfinite", "isposinf", "isneginf"],
+        ),
+    )
+    def test_float_extremes(self, compute_unit, backend, frontend, predicate):
+        model = ModuleWrapper(getattr(torch, predicate))
+        finfo = torch.finfo(torch.float32)
+        input_data = torch.tensor(
+            [
+                0.0,
+                -0.0,
+                1.0,
+                -1.0,
+                finfo.tiny,
+                -finfo.tiny,
+                finfo.max,
+                finfo.min,
+                float("inf"),
+                -float("inf"),
+                float("nan"),
+            ],
+            dtype=torch.float32,
+        )
+        self.run_compare_torch(
+            input_data,
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+    @pytest.mark.parametrize(
+        "frontend, predicate, dtype",
+        itertools.product(
+            frontends,
+            ["isinf", "isfinite", "isposinf", "isneginf"],
+            [torch.float16, torch.int32, torch.bool],
+        ),
+    )
+    def test_input_dtype(self, frontend, predicate, dtype):
+        model = ModuleWrapper(getattr(torch, predicate))
+        if dtype == torch.float16:
+            finfo = torch.finfo(dtype)
+            input_data = torch.tensor(
+                [finfo.max, finfo.min, float("inf"), -float("inf"), float("nan")],
+                dtype=dtype,
+            )
+            minimum_deployment_target = ct.target.iOS16
+        elif dtype == torch.int32:
+            iinfo = torch.iinfo(dtype)
+            input_data = torch.tensor([iinfo.min, -1, 0, 1, iinfo.max], dtype=dtype)
+            minimum_deployment_target = None
+        else:
+            input_data = torch.tensor([False, True], dtype=dtype)
+            minimum_deployment_target = None
+
+        self.run_compare_torch(
+            input_data,
+            model,
+            frontend=frontend,
+            backend=("mlprogram", "fp32"),
+            compute_unit=ct.ComputeUnit.CPU_ONLY,
+            input_as_shape=False,
+            minimum_deployment_target=minimum_deployment_target,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, predicate",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            ["isinf", "isfinite"],
+        ),
+    )
+    def test_complex(self, compute_unit, backend, frontend, predicate):
+        class ComplexModel(nn.Module):
+            def forward(self, real, imag):
+                return getattr(torch, predicate)(torch.complex(real, imag))
+
+        real = torch.tensor([float("inf"), 0.0, float("nan"), 1.0, -float("inf")])
+        imag = torch.tensor([0.0, -float("inf"), 0.0, 2.0, float("nan")])
+        self.run_compare_torch(
+            (real, imag),
+            ComplexModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+
 class TestCumprod(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, axis",

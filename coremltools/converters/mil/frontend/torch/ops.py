@@ -10077,6 +10077,76 @@ def linalg_inv(context, node):
     context.add(mb.const(val=np.linalg.inv(x.val), name=node.name))
 
 
+def _construct_non_finite_predicate(x: Var, predicate: str, name: str) -> Var:
+    """Construct a MIL boolean mask for a PyTorch non-finite predicate."""
+    if types.is_complex(x.dtype):
+        if predicate not in {"isinf", "isfinite"}:
+            raise NotImplementedError(f"Torch `{predicate}` does not support complex inputs")
+        real_mask = _construct_non_finite_predicate(
+            mb.complex_real(data=x), predicate, name + "_real"
+        )
+        imag_mask = _construct_non_finite_predicate(
+            mb.complex_imag(data=x), predicate, name + "_imag"
+        )
+        combine = mb.logical_or if predicate == "isinf" else mb.logical_and
+        return combine(x=real_mask, y=imag_mask, name=name)
+
+    if types.is_bool(x.dtype):
+        inverse = mb.logical_not(x=x)
+        combine = mb.logical_or if predicate == "isfinite" else mb.logical_and
+        return combine(x=x, y=inverse, name=name)
+
+    if types.is_int(x.dtype):
+        # PyTorch defines integer tensors as entirely finite.
+        comparison = mb.equal if predicate == "isfinite" else mb.not_equal
+        return comparison(x=x, y=x, name=name)
+
+    infinity = nptype_from_builtin(x.dtype)(np.inf)
+    if predicate == "isposinf":
+        return mb.equal(x=x, y=infinity, name=name)
+    if predicate == "isneginf":
+        return mb.equal(x=x, y=-infinity, name=name)
+
+    pos_inf_mask = mb.equal(x=x, y=infinity)
+    neg_inf_mask = mb.equal(x=x, y=-infinity)
+    if predicate == "isinf":
+        return mb.logical_or(x=pos_inf_mask, y=neg_inf_mask, name=name)
+
+    # A finite value is neither NaN nor either signed infinity. Explicit
+    # comparisons preserve large finite fp32 inputs under fp16 compute precision.
+    inf_mask = mb.logical_or(x=pos_inf_mask, y=neg_inf_mask)
+    not_nan_mask = mb.equal(x=x, y=x)
+    return mb.logical_and(
+        x=not_nan_mask,
+        y=mb.logical_not(x=inf_mask),
+        name=name,
+    )
+
+
+@register_torch_op
+def isinf(context, node):
+    x = _get_inputs(context, node, expected=1)[0]
+    context.add(_construct_non_finite_predicate(x, "isinf", node.name))
+
+
+@register_torch_op
+def isfinite(context, node):
+    x = _get_inputs(context, node, expected=1)[0]
+    context.add(_construct_non_finite_predicate(x, "isfinite", node.name))
+
+
+@register_torch_op
+def isposinf(context, node):
+    x = _get_inputs(context, node, expected=1)[0]
+    context.add(_construct_non_finite_predicate(x, "isposinf", node.name))
+
+
+@register_torch_op
+def isneginf(context, node):
+    x = _get_inputs(context, node, expected=1)[0]
+    context.add(_construct_non_finite_predicate(x, "isneginf", node.name))
+
+
 @register_torch_op
 def isnan(context, node):
     x = _get_inputs(context, node, expected=1)[0]
