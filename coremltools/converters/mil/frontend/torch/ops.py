@@ -10091,12 +10091,12 @@ def _construct_non_finite_predicate(x: Var, predicate: str, name: str) -> Var:
         combine = mb.logical_or if predicate == "isinf" else mb.logical_and
         return combine(x=real_mask, y=imag_mask, name=name)
 
-    if types.is_bool(x.dtype):
+    elif types.is_bool(x.dtype):
         inverse = mb.logical_not(x=x)
         combine = mb.logical_or if predicate == "isfinite" else mb.logical_and
         return combine(x=x, y=inverse, name=name)
 
-    if types.is_int(x.dtype):
+    elif types.is_int(x.dtype):
         # PyTorch defines integer tensors as entirely finite.
         comparison = mb.equal if predicate == "isfinite" else mb.not_equal
         return comparison(x=x, y=x, name=name)
