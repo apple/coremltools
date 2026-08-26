@@ -16117,6 +16117,9 @@ class TestNonFinitePredicates(TorchBaseTest):
         ),
     )
     def test_complex(self, compute_unit, backend, frontend, predicate):
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("torch._ops.aten.complex.default is not Aten Canonical")
+
         class ComplexModel(nn.Module):
             def forward(self, real, imag):
                 return getattr(torch, predicate)(torch.complex(real, imag))
