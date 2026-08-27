@@ -6648,6 +6648,23 @@ class TestGather(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, axis",
+        itertools.product(compute_units, backends, frontends, (0, 1, 2)),
+    )
+    def test_gather_indices_smaller_than_input(self, compute_unit, backend, frontend, axis):
+        """torch.gather allows indices to be smaller than the input off the gathered axis."""
+        params_shape = (3, 4, 5)
+        indices_shape = tuple(d if i == axis else d - 1 for i, d in enumerate(params_shape))
+        indices = np.random.randint(0, params_shape[axis], size=indices_shape)
+        model = ModuleWrapper(
+            function=torch.gather,
+            kwargs={"dim": axis, "index": torch.from_numpy(indices)},
+        )
+        self.run_compare_torch(
+            [params_shape], model, compute_unit=compute_unit, backend=backend, frontend=frontend
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend, input_enumerated_shape",
         itertools.product(compute_units, backends, frontends, (True, False)),
     )

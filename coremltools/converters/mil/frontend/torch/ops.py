@@ -7464,7 +7464,24 @@ def append(context, node):
 @register_torch_op
 def gather(context, node):
     inputs = _get_inputs(context, node)
-    res = mb.gather_along_axis(x=inputs[0], indices=inputs[2], axis=inputs[1], name=node.name)
+    x, dim, indices = inputs[0], inputs[1], inputs[2]
+
+    # torch.gather only requires indices.size(d) <= x.size(d) for every d other than dim, and
+    # reads just x[..., i_d, ...] for i_d < indices.size(d) there. mb.gather_along_axis asserts
+    # the two sizes are equal, so trim x down to the index size wherever it is longer.
+    axis = dim.val if dim.val >= 0 else dim.val + x.rank
+    size = [-1] * x.rank
+    trim_needed = False
+    for d in range(x.rank):
+        if d == axis or is_symbolic(x.shape[d]) or is_symbolic(indices.shape[d]):
+            continue
+        if indices.shape[d] < x.shape[d]:
+            size[d] = indices.shape[d]
+            trim_needed = True
+    if trim_needed:
+        x = mb.slice_by_size(x=x, begin=[0] * x.rank, size=size)
+
+    res = mb.gather_along_axis(x=x, indices=indices, axis=dim, name=node.name)
     context.add(res)
 
 
