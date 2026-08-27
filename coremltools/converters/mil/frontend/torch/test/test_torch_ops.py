@@ -7472,6 +7472,37 @@ class TestElementWiseUnary(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, bound",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            ["min", "max"],
+        ),
+    )
+    def test_clamp_int_input_single_bound(self, compute_unit, backend, frontend, bound):
+        # torch.clamp keeps the integer dtype when the given bounds are integers,
+        # so the omitted bound must not turn the op into fp32. Values above 2 ** 24
+        # are not representable in fp32 and would come back rounded.
+        params_dict = {bound: 0}
+        input_data = torch.tensor(
+            [[16777217, 16777219, 2000000001], [-16777217, 123456789, 5]], dtype=torch.int32
+        )
+        model = ModuleWrapper(torch.clamp, params_dict)
+        mlmodel = self.run_compare_torch(
+            input_data,
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+            converter_input_type=[TensorType(shape=input_data.shape, dtype=np.int32)],
+        )[1]
+        if backend[0] == "mlprogram":
+            output = mlmodel._mil_program.functions["main"].outputs[0]
+            assert types.builtin_to_string(output.dtype) == "int32"
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend",
         itertools.product(
             compute_units,

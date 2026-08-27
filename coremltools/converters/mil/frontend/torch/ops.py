@@ -7748,8 +7748,21 @@ def ceil(context, node):
 def clamp(context, node):
     inputs = _get_inputs(context, node, expected=[1,2,3])
     x = inputs[0]
-    min_val = inputs[1] if (len(inputs) > 1 and inputs[1]) else mb.const(val=np.finfo(np.float32).min)
-    max_val = inputs[2] if (len(inputs) > 2 and inputs[2]) else mb.const(val=np.finfo(np.float32).max)
+    # An omitted bound is replaced by the extreme value of x's own dtype. Using a float
+    # sentinel for an integer x would promote the whole op, and torch.clamp keeps the
+    # integer dtype unless a bound is itself a float.
+    x_range = types.type_mapping.builtin_to_range(x.dtype)
+    x_nptype = nptype_from_builtin(x.dtype)
+    min_val = (
+        inputs[1]
+        if (len(inputs) > 1 and inputs[1])
+        else mb.const(val=x_nptype(x_range.low))
+    )
+    max_val = (
+        inputs[2]
+        if (len(inputs) > 2 and inputs[2])
+        else mb.const(val=x_nptype(x_range.high))
+    )
     x, min_val, max_val = promote_input_dtypes([x, min_val, max_val])
 
     if min_val.val is not None and max_val.val is not None and min_val.val >= max_val.val:
