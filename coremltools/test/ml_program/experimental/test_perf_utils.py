@@ -140,6 +140,53 @@ class TestMLModelBenchmarker:
 
     @staticmethod
     @pytest.mark.asyncio
+    @pytest.mark.parametrize("set_submodel_names", [True, False])
+    async def test_benchmark_operation_execution_pipeline(set_submodel_names: bool):
+        # The sub-model names are optional in the spec, and the framework falls back to
+        # naming them by position, so both spellings have to reach the same paths.
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3,))])
+        def first(x):
+            return mb.relu(x=x, name="relu_op")
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3,))])
+        def second(x):
+            return mb.mul(x=x, y=2.0, name="mul_op")
+
+        first_model = ct.convert(
+            first, convert_to="mlprogram", compute_precision=ct.precision.FLOAT32
+        )
+        second_model = ct.convert(
+            second, convert_to="mlprogram", compute_precision=ct.precision.FLOAT32
+        )
+
+        second_spec = second_model.get_spec()
+        ct.utils.rename_feature(
+            second_spec,
+            second_spec.description.input[0].name,
+            first_model.get_spec().description.output[0].name,
+        )
+        second_model = ct.models.MLModel(second_spec, weights_dir=second_model.weights_dir)
+
+        pipeline = ct.utils.make_pipeline(first_model, second_model)
+        if set_submodel_names:
+            pipeline_spec = pipeline.get_spec()
+            del pipeline_spec.pipeline.names[:]
+            pipeline_spec.pipeline.names.extend(["first_stage", "second_stage"])
+            pipeline = ct.models.MLModel(pipeline_spec, weights_dir=pipeline.weights_dir)
+
+        benchmarker = MLModelBenchmarker(model=pipeline)
+        execution_infos = await benchmarker.benchmark_operation_execution(
+            iterations=1,
+            warmup=False,
+        )
+
+        # Operations from both sub-models have to be reported.
+        op_types = {execution_info.spec.type for execution_info in execution_infos}
+        assert "relu" in op_types
+        assert "mul" in op_types
+
+    @staticmethod
+    @pytest.mark.asyncio
     async def test_benchmark_predict_with_int32_inputs():
         prog = TestMLModelBenchmarker.get_test_model_with_int32_inputs()
         mlmodel = ct.convert(prog, convert_to="mlprogram", compute_precision=ct.precision.FLOAT32)
