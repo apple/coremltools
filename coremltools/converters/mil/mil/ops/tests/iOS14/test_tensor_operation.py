@@ -1727,6 +1727,46 @@ class TestConcat:
             backend=backend,
         )
 
+    @pytest.mark.parametrize("axis", [0, 1, -1, -2])
+    def test_builder_eval_interleave(self, axis):
+        """Constant folding must honor the interleave option."""
+        val1 = np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]], dtype=np.float32)
+        val2 = np.array([[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]], dtype=np.float32)
+
+        @mb.program(input_specs=[])
+        def prog():
+            return mb.concat(values=[val1, val2], axis=axis, interleave=True)
+
+        expected = np.empty(
+            [2 * d if i == axis % 2 else d for i, d in enumerate(val1.shape)], np.float32
+        )
+        index = [slice(None), slice(None)]
+        index[axis % 2] = slice(0, None, 2)
+        expected[tuple(index)] = val1
+        index[axis % 2] = slice(1, None, 2)
+        expected[tuple(index)] = val2
+
+        output = prog.functions["main"].outputs[0]
+        assert output.shape == expected.shape
+        np.testing.assert_allclose(output.val, expected, atol=1e-04, rtol=1e-05)
+
+    def test_builder_eval_interleave_docstring_example(self):
+        """The example spelled out in the concat op's docstring."""
+        val1 = np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]], dtype=np.float32)
+        val2 = np.array([[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]], dtype=np.float32)
+
+        @mb.program(input_specs=[])
+        def prog():
+            return mb.concat(values=[val1, val2], axis=0, interleave=True)
+
+        expected = np.array(
+            [[1.0, 2.0], [7.0, 8.0], [3.0, 4.0], [9.0, 10.0], [5.0, 6.0], [11.0, 12.0]],
+            dtype=np.float32,
+        )
+        np.testing.assert_allclose(
+            prog.functions["main"].outputs[0].val, expected, atol=1e-04, rtol=1e-05
+        )
+
     def test_builder_eval_different_dtypes_error_out(self):
         """If the input to the concat op has different dtypes, it will error out."""
         with pytest.raises(
