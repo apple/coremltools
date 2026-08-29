@@ -1210,6 +1210,17 @@ class TestSliceBySize:
         np.testing.assert_allclose(x[:, 1:, :3], v_2.val, atol=1e-04, rtol=1e-05)
         np.testing.assert_allclose(x[:, -2:, :3], v_3.val, atol=1e-04, rtol=1e-05)
 
+    @ssa_fn
+    def test_builder_eval_zero_size(self):
+        """
+        Only -1 means "the rest of the dimension"; a 0 size is an empty slice, which is
+        what the type inference already reports.
+        """
+        x = np.array(list(range(24))).reshape(2, 3, 4)
+        v = mb.slice_by_size(x=x, begin=(0, 1, 0), size=(-1, 0, 3))
+        assert v.shape == (2, 0, 3)
+        assert v.val.shape == (2, 0, 3)
+
 
 class TestSpaceToDepth:
     @pytest.mark.parametrize(
@@ -1301,6 +1312,34 @@ class TestSqueeze:
         assert v.shape == ()
         assert type(v.val) == np.float32
         assert np.isclose(np.squeeze(x), v.val)
+
+    @ssa_fn
+    def test_builder_eval_rank_0_from_higher_rank(self):
+        """A zero rank result must be a scalar, whatever the rank of the input was."""
+        for shape in [(1,), (1, 1), (1, 1, 1)]:
+            x = np.full(shape, 5.0, dtype=np.float32)
+            v = mb.squeeze(x=x)
+            assert v.shape == ()
+            assert type(v.val) == np.float32
+            assert np.isclose(np.squeeze(x), v.val)
+
+    @ssa_fn
+    def test_builder_eval_non_single_element_dim(self):
+        """
+        The const folded value must follow the same "ignore non single dimensions"
+        rule that the type inference and the runtime follow.
+        """
+        x = np.arange(2 * 3 * 4, dtype=np.int32).reshape(2, 3, 4)
+        for axes in [(-1,), (-2, 0), (0, 1, 2)]:
+            v = mb.squeeze(x=x, axes=axes)
+            assert v.shape == x.shape
+            np.testing.assert_array_equal(x, v.val)
+
+        # Mixing squeezable and non squeezable axes only drops the squeezable ones.
+        y = np.arange(2 * 3, dtype=np.int32).reshape(1, 2, 1, 3)
+        v = mb.squeeze(x=y, axes=(0, 1, 2))
+        assert v.shape == (2, 3)
+        np.testing.assert_array_equal(y.reshape(2, 3), v.val)
 
     @staticmethod
     def test_squeeze_value_inference_is_inplace():

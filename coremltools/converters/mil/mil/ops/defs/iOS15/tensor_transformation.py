@@ -670,7 +670,9 @@ class slice_by_size(Operation):
                 if is_symbolic(self.x.shape[i]):
                     return None
                 begin_val += self.x.shape[i]
-            if self.size.val[i] > 0:
+            if self.size.val[i] != -1:
+                # As in type_inference, -1 is the only value that means "the rest of
+                # the dimension"; every other size is taken literally.
                 slices.append(slice(begin_val, begin_val + self.size.val[i]))
             else:
                 slices.append(slice(begin_val, None, None))
@@ -941,8 +943,13 @@ class squeeze(Operation):
         if self.axes is None:
             val = np.squeeze(self.x.val)
         else:
-            val = np.squeeze(self.x.val, axis=tuple(self.axes.val))
-        return val if val.shape != () else self.x.val[0]
+            axes = [axis if axis >= 0 else axis + self.x.rank for axis in self.axes.val]
+            # As in type_inference, an axis whose size is not 1 is ignored rather than
+            # raising, which is the PyTorch behavior this op documents.
+            axes = tuple(axis for axis in axes if self.x.val.shape[axis] == 1)
+            val = np.squeeze(self.x.val, axis=axes)
+        # A zero rank result must be returned as a scalar, not as a zero rank array.
+        return val if val.shape != () else val[()]
 
 @register_op
 class transpose(Operation):
