@@ -307,9 +307,18 @@ class materialize_symbolic_shape_program(AbstractGraphPass):
                                     ), "Only const may be absent from context"
                                     # The consts across function should share the same file value while lowering into milproto,
                                     # so we assign the weight_id, if not presented.
+                                    # A const name is only unique within a function, so the
+                                    # source function name has to be part of the weight_id:
+                                    # 2 source functions may own same-named consts that hold
+                                    # different values, and sharing a weight file value among
+                                    # those would corrupt the model. Note that this only affects
+                                    # the weight_id we invent here, so consts that got a weight_id
+                                    # elsewhere (e.g. by ``const_deduplication``) keep sharing
+                                    # their file value across functions.
                                     if source_input_var.op.weight_id is None:
                                         source_input_var.op.weight_id = (
-                                            f"const_{source_input_var.name}_weight_id"
+                                            f"const_{self.source_function_name}_"
+                                            f"{source_input_var.name}_weight_id"
                                         )
                                     context[source_input_var.name] = self._copy_construct_const_var(
                                         source_input_var
