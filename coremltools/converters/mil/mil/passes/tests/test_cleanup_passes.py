@@ -1194,6 +1194,56 @@ class TestReduceMeanFusion:
         PASS_REGISTRY[pass_name](prog)
         assert get_op_types_in_program(prog) == ["reduce_sum", "real_div", "mul", "add"]
 
+    def test_invalid_pattern_rank_raising_mul(self):
+        """
+        The multiplier holds a single value but has a higher rank than reduce_sum's
+        output, so the mul broadcasts the rank up. reduce_mean would not, so fusing
+        would change the model's output shape.
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            x1 = mb.reduce_sum(x=x, axes=[1], keep_dims=False)
+            return mb.mul(x=x1, y=np.array([[[1.0 / 3]]], dtype=np.float32))
+
+        assert prog.functions["main"].outputs[0].shape == (1, 1, 2)
+
+        pass_name = "common::fuse_reduce_mean"
+        PASS_REGISTRY[pass_name](prog)
+        assert get_op_types_in_program(prog) == ["reduce_sum", "mul"]
+        assert prog.functions["main"].outputs[0].shape == (1, 1, 2)
+
+    def test_invalid_pattern_rank_raising_real_div(self):
+        """Same as above, through the real_div branch."""
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            x1 = mb.reduce_sum(x=x, axes=[1], keep_dims=False)
+            return mb.real_div(x=x1, y=np.array([[[3.0]]], dtype=np.float32))
+
+        assert prog.functions["main"].outputs[0].shape == (1, 1, 2)
+
+        pass_name = "common::fuse_reduce_mean"
+        PASS_REGISTRY[pass_name](prog)
+        assert get_op_types_in_program(prog) == ["reduce_sum", "real_div"]
+        assert prog.functions["main"].outputs[0].shape == (1, 1, 2)
+
+    def test_valid_pattern_size_one_tensor_multiplier(self):
+        """
+        A size-1 multiplier that does not raise the rank still broadcasts to the same
+        shape, so it must keep fusing.
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            x1 = mb.reduce_sum(x=x, axes=[1], keep_dims=False)
+            return mb.mul(x=x1, y=np.array([1.0 / 3], dtype=np.float32))
+
+        pass_name = "common::fuse_reduce_mean"
+        PASS_REGISTRY[pass_name](prog)
+        assert get_op_types_in_program(prog) == ["reduce_mean"]
+        assert prog.functions["main"].outputs[0].shape == (2,)
+
 
 class TestLoopInvariantElimination:
     def test_loop_invariant_elimination1(self):
