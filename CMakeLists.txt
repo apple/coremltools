@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10.2)
+cmake_minimum_required(VERSION 3.14)
 
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
@@ -34,12 +34,13 @@ endif()
 add_subdirectory(deps)
 add_subdirectory(mlmodel)
 
-find_package(PythonInterp)
-find_package(PythonLibs)
+set(Python3_FIND_VIRTUALENV FIRST)
+find_package(Python3 REQUIRED COMPONENTS Interpreter Development NumPy)
 
-message("Found python at ${PYTHON_EXECUTABLE}")
-message("Found python version ${PYTHON_VERSION_STRING}")
-message("Found python includes ${PYTHON_INCLUDE_DIRS}")
+message("Found python at ${Python3_EXECUTABLE}")
+message("Found python version ${Python3_VERSION}")
+message("Found python includes ${Python3_INCLUDE_DIRS}")
+message("Found numpy includes ${Python3_NumPy_INCLUDE_DIRS}")
 
 include_directories(
   .
@@ -47,7 +48,8 @@ include_directories(
   deps/pybind11/include
   deps/nlohmann
   mlmodel/src
-  ${PYTHON_INCLUDE_DIRS}
+  ${Python3_INCLUDE_DIRS}
+  ${Python3_NumPy_INCLUDE_DIRS}
   )
 
 if(APPLE)
@@ -133,21 +135,6 @@ find_library(CORE_ML CoreML)
 find_library(FOUNDATION Foundation)
 
 if (APPLE AND CORE_VIDEO AND CORE_ML AND FOUNDATION)
-  execute_process(
-      COMMAND ${PYTHON_EXECUTABLE} -c "import numpy; print(numpy.get_include())"
-      RESULT_VARIABLE NUMPY_INCLUDE_STATUS
-      OUTPUT_VARIABLE NUMPY_INCLUDE
-  )
-
-  if("${NUMPY_INCLUDE}" STREQUAL "" OR NOT NUMPY_INCLUDE_STATUS EQUAL 0)
-      message(FATAL_ERROR "Could not find numpy include path. Exit code: ${NUMPY_INCLUDE_STATUS}")
-  endif()
-  message("Found numpy include path at ${NUMPY_INCLUDE}")
-
-  include_directories(
-    ${NUMPY_INCLUDE}
-  )
-
   add_library(coremlpython
     SHARED
     coremlpython/CoreMLPython.mm
@@ -195,7 +182,7 @@ endif()
 # Build kmeans-1d
 set(KMEANS_DIR "${PROJECT_SOURCE_DIR}/deps/kmeans1d")
 execute_process(
-  COMMAND python3 setup.py build_ext --inplace
+  COMMAND ${Python3_EXECUTABLE} setup.py build_ext --inplace
   WORKING_DIRECTORY ${KMEANS_DIR}
   RESULT_VARIABLE KMEANS1D_BUILD_STATUS
 )
@@ -221,7 +208,7 @@ execute_process(
 )
 
 
-set(PYTHON_TAG "cp${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}")
+set(PYTHON_TAG "cp${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR}")
 if(APPLE)
   execute_process(COMMAND uname -m OUTPUT_VARIABLE HARDWARE_NAME OUTPUT_STRIP_TRAILING_WHITESPACE)
   if(${HARDWARE_NAME} MATCHES "x86_64")
@@ -252,7 +239,7 @@ set(plat_targets "")
 foreach(platform IN ITEMS ${PLAT_NAME})
   add_custom_target(dist_${platform}
     COMMENT "Building dist for platform ${platform}..."
-    COMMAND ${PYTHON_EXECUTABLE}
+    COMMAND ${Python3_EXECUTABLE}
       ${CMAKE_SOURCE_DIR}/setup.py
       bdist_wheel
       --plat-name=${platform}
@@ -268,18 +255,18 @@ endforeach()
 add_custom_target(dist DEPENDS ${plat_targets})
 
 add_custom_target(pip_install_dev
-  COMMAND pip install -e ${PROJECT_SOURCE_DIR}
+  COMMAND ${Python3_EXECUTABLE} -m pip install -e ${PROJECT_SOURCE_DIR}
   DEPENDS "coremlpython"
 )
 
 add_custom_target(pytest
-  COMMAND pytest -r fs ${PROJECT_SOURCE_DIR}/coremltools/test/ --timeout=600
+  COMMAND ${Python3_EXECUTABLE} -m pytest -r fs ${PROJECT_SOURCE_DIR}/coremltools/test/ --timeout=600
   DEPENDS pip_install_dev
   USES_TERMINAL
 )
 
 add_custom_target(pytest_no_slow
-  COMMAND pytest -r fs -m '"no slow"' ${PROJECT_SOURCE_DIR}/coremltools/test/
+  COMMAND ${Python3_EXECUTABLE} -m pytest -r fs -m '"no slow"' ${PROJECT_SOURCE_DIR}/coremltools/test/
   DEPENDS pip_install_dev
   USES_TERMINAL
 )
