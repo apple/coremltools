@@ -947,12 +947,14 @@ class TorchConverter:
         zero_point: Optional[np.ndarray] = None
         if compression_info.zero_point is not None:
             zero_point = compression_info.zero_point.detach().numpy()
-        # For conv/conv_transpose, the weight has rank=4, so we auto-expand scale and zero-point if
-        # it only has two elements.
-        if len(weight.shape) == 4 and len(scale.shape) == 2:
-            scale = np.expand_dims(np.expand_dims(scale, axis=-1), axis=-1)
-            if zero_point is not None:
-                zero_point = np.expand_dims(np.expand_dims(zero_point, axis=-1), axis=-1)
+        # For conv/conv_transpose, the weight has rank >= 4 (rank=4 for Conv2d, rank=5 for Conv3d),
+        # so we auto-expand scale and zero-point if it only has two elements.
+        if len(weight.shape) >= 4 and len(scale.shape) == 2:
+            n_expand = len(weight.shape) - len(scale.shape)
+            for _ in range(n_expand):
+                scale = np.expand_dims(scale, axis=-1)
+                if zero_point is not None:
+                    zero_point = np.expand_dims(zero_point, axis=-1)
 
         if compressed_var is not None and compressed_var.op.op_type == "constexpr_lut_to_dense":
             # The quantization on lut could lead to extra two dims at the end.
