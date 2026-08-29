@@ -1955,6 +1955,74 @@ class TransposeOptimizationPass(unittest.TestCase):
         )
 
 
+    def test_no_fusion_pow_with_broadcasting_exponent(self):
+        """
+        Input graph:
+        input --> transpose(perm=[1,0]) --> pow(y=[1,2,3]) --> transpose(perm=[1,0]) --> out
+
+        The exponent broadcasts along the last axis of pow's input, so it selects a
+        different element of x once the transposes are cancelled. The transposes must
+        therefore be kept.
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3, 3))])
+        def prog(x):
+            x = mb.transpose(x=x, perm=[1, 0])
+            x = mb.pow(x=x, y=np.array([1.0, 2.0, 3.0], dtype=np.float32))
+            x = mb.transpose(x=x, perm=[1, 0])
+            return x
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, "common::reduce_transposes")
+
+        self.assertEqual(get_op_types_in_program(prev_prog), ["transpose", "pow", "transpose"])
+        self.assertEqual(get_op_types_in_program(prog), ["transpose", "pow", "transpose"])
+
+    def test_fusion_pow_with_scalar_exponent(self):
+        """
+        A scalar exponent broadcasts the same way for every ordering of the axes, so
+        the transposes around pow can still be cancelled.
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3, 4))])
+        def prog(x):
+            x = mb.transpose(x=x, perm=[1, 0])
+            x = mb.pow(x=x, y=np.float32(2.0))
+            x = mb.transpose(x=x, perm=[1, 0])
+            return x
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, "common::reduce_transposes")
+
+        self.assertEqual(get_op_types_in_program(prev_prog), ["transpose", "pow", "transpose"])
+        self.assertEqual(get_op_types_in_program(prog), ["pow"])
+
+    def test_no_fusion_softplus_parametric(self):
+        """
+        softplus_parametric's alpha/beta are indexed by axis 1 of its input, so passing
+        a transpose that moves axis 1 through it changes which channel each parameter
+        applies to. The transposes must be kept.
+        """
+        alpha = np.array([1.0, 2.0, 3.0, 4.0], dtype=np.float32)
+        beta = np.ones(4, dtype=np.float32)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 4, 4, 2))])
+        def prog(x):
+            x = mb.transpose(x=x, perm=[0, 2, 1, 3])
+            x = mb.softplus_parametric(x=x, alpha=alpha, beta=beta)
+            x = mb.transpose(x=x, perm=[0, 2, 1, 3])
+            return x
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, "common::reduce_transposes")
+
+        self.assertEqual(
+            get_op_types_in_program(prev_prog),
+            ["transpose", "softplus_parametric", "transpose"],
+        )
+        self.assertEqual(
+            get_op_types_in_program(prog),
+            ["transpose", "softplus_parametric", "transpose"],
+        )
+
+
 class TestTransposePassUtilityMethods:
     @staticmethod
     @pytest.mark.parametrize("rank", [1, 2, 3, 4, 5])
