@@ -55,6 +55,20 @@ class TestClampedReLU:
         y = np.minimum(np.minimum(x_val, 0) * 2.0, 1.0)
         np.testing.assert_allclose(x + y, v.val, atol=1e-04, rtol=1e-05)
 
+    @ssa_fn
+    def test_builder_eval_negative_beta(self):
+        """
+        Constant folding must agree with the runtime contract
+        ``f(x) = min((x >= 0 ? x : alpha * x), beta)`` for a negative beta too.
+        The alpha / beta combinations here match the ones the neural network backend
+        test for this layer already covers (test_numpy_nn_layers.test_clamped_relu_cpu).
+        """
+        x_val = np.arange(-20, 20, dtype=np.float32)
+        for alpha, beta in itertools.product([0.0, 2.0, -3.0], [7.0, -8.0]):
+            v = mb.clamped_relu(x=x_val, alpha=alpha, beta=beta)
+            expected = np.minimum(beta, np.where(x_val >= 0, x_val, x_val * alpha))
+            np.testing.assert_allclose(expected, v.val, atol=1e-04, rtol=1e-05)
+
     @pytest.mark.parametrize(
         "compute_unit, backend, dim, alpha, beta",
         itertools.product(compute_units, backends, [2, 4, 8], [2.0, 3.0], [4.0, 5.0]),
