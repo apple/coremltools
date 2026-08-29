@@ -297,6 +297,36 @@ class TestScatterNd:
             expected_error_msg = expected_error_msg
         assert any(err in str(excinfo.value) for err in expected_error_msg)
 
+    @pytest.mark.parametrize("backend", backends)
+    def test_ios17_indices_shorter_than_rank(self, backend):
+        """
+        indices' last axis addresses the leading indices.shape[-1] dims of data, which is
+        fewer than data's rank in general.
+        """
+        data = np.zeros((2, 3, 4), dtype=np.float32)
+        updates = np.ones((2, 4), dtype=np.float32)
+
+        def build(indices_val):
+            def prog(x):
+                return mb.scatter_nd(
+                    data=data,
+                    indices=np.array(indices_val, dtype=np.int32),
+                    updates=updates,
+                    validate_indices=True,
+                )
+
+            return mb.program(
+                input_specs=[mb.TensorSpec(shape=(1,), dtype=types.fp32)],
+                opset_version=backend.opset_version,
+            )(prog)
+
+        # 0, 1 are in bounds for dim 0 (2 long) and 1, 2 for dim 1 (3 long)
+        program = build([[0, 1], [1, 2]])
+        assert len(program.functions["main"].find_ops(op_type="scatter_nd")) == 1
+
+        with pytest.raises(IndexError, match="Indices is out of bounds for `scatter_nd` node"):
+            build([[0, 1], [1, 3]])
+
 
 class TestGather(_TestGatherIOS16):
     @pytest.mark.parametrize(
@@ -466,3 +496,51 @@ class TestGatherNd(_TestGatherNdIOS16):
                 input_specs=[mb.TensorSpec(shape=(1,), dtype=types.fp32)],
                 opset_version=backend.opset_version,
             )(prog)
+
+    @pytest.mark.parametrize("backend", backends)
+    def test_builder_valid_indices_index_depth_below_rank(self, backend):
+        """
+        indices' last axis addresses indices.shape[-1] dims of x starting at batch_dims,
+        which is fewer than x's rank in general.
+        """
+        params = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
+
+        def prog(x):
+            # batch dim is 2 long and the indexed dim is 3 long, so 2 is in bounds
+            return mb.gather_nd(
+                x=params,
+                indices=np.array([[1], [2]], dtype=np.int32),
+                batch_dims=1,
+                validate_indices=True,
+            )
+
+        program = mb.program(
+            input_specs=[mb.TensorSpec(shape=(1,), dtype=types.fp32)],
+            opset_version=backend.opset_version,
+        )(prog)
+        assert len(program.functions["main"].find_ops(op_type="gather_nd")) == 1
+
+    @pytest.mark.parametrize("backend", backends)
+    def test_builder_indices_shorter_than_rank(self, backend):
+        """An index depth below the rank must not be compared against the whole shape."""
+        params = np.arange(24, dtype=np.float32).reshape(2, 3, 4)
+
+        def build(indices_val):
+            def prog(x):
+                return mb.gather_nd(
+                    x=params,
+                    indices=np.array(indices_val, dtype=np.int32),
+                    validate_indices=True,
+                )
+
+            return mb.program(
+                input_specs=[mb.TensorSpec(shape=(1,), dtype=types.fp32)],
+                opset_version=backend.opset_version,
+            )(prog)
+
+        # 0, 1 are in bounds for dim 0 (2 long) and 1, 2 for dim 1 (3 long)
+        program = build([[0, 1], [1, 2]])
+        assert len(program.functions["main"].find_ops(op_type="gather_nd")) == 1
+
+        with pytest.raises(IndexError, match="Indices is out of bounds for `gather_nd` node"):
+            build([[0, 3]])
