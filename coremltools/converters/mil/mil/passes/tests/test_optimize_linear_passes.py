@@ -9,7 +9,9 @@ import itertools
 import numpy as np
 import pytest
 
+import coremltools as ct
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 from coremltools.converters.mil.testing_reqs import backends
 from coremltools.converters.mil.testing_utils import (
@@ -322,3 +324,81 @@ class TestFuseTransposeMatmul:
             {"x": X_SHAPE, "y": Y_SHAPE},
             expected_output_shapes={block.outputs[0].name: output_shape},
         )
+
+    @pytest.mark.parametrize("opset_version", [ct.target.iOS16, ct.target.iOS18])
+    def test_not_fuse_transpose_of_quantized_weight(self, opset_version):
+        """
+        A transpose of a quantization constexpr is left alone, so that
+        ``merge_affine_dequantize_with_consecutive_ops`` can fold it into the compressed
+        weight instead. Folding it into the weight removes the same op, and keeps the
+        quantized weight in the same matmul orientation as an equivalent dense const, which
+        ``const_elimination`` folds long before this pass ever sees it.
+        """
+        X_SHAPE = (1, 4)
+        W_SHAPE = (4, 3)  # [K, N], transposed to [N, K] before the matmul
+
+        is_ios18 = opset_version == ct.target.iOS18
+
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=X_SHAPE, dtype=types.fp16 if is_ios18 else types.fp32)
+            ],
+            opset_version=opset_version,
+        )
+        def prog(x):
+            if is_ios18:
+                weight = mb.constexpr_blockwise_shift_scale(
+                    data=np.random.randint(-8, 8, W_SHAPE).astype(np.int8),
+                    scale=np.random.rand(1, W_SHAPE[1]).astype(np.float16) + 0.1,
+                )
+            else:
+                weight = mb.constexpr_affine_dequantize(
+                    quantized_data=np.random.randint(-8, 8, W_SHAPE).astype(np.int8),
+                    axis=1,
+                    scale=np.random.rand(W_SHAPE[1]).astype(np.float32) + 0.1,
+                    zero_point=np.zeros(W_SHAPE[1], dtype=np.int8),
+                )
+            return mb.matmul(x=x, y=mb.transpose(x=weight, perm=(1, 0)), transpose_y=True)
+
+        constexpr_op_type = get_op_types_in_program(prog)[0]
+        prev_prog, _, _ = apply_pass_and_basic_check(prog, "common::fuse_transpose_matmul")
+        apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+        assert get_op_types_in_program(prev_prog) == [constexpr_op_type, "transpose", "matmul"]
+        assert get_op_types_in_program(prog) == [constexpr_op_type, "transpose", "matmul"]
+
+        # ... and the merge pass does fold it, into the weight rather than into the flag
+        apply_pass_and_basic_check(
+            prog, "common::merge_affine_dequantize_with_consecutive_ops"
+        )
+        assert get_op_types_in_program(prog) == [constexpr_op_type, "matmul"]
+        matmul = prog.find_ops(op_type="matmul", exactly_one=True)[0]
+        assert matmul.transpose_y.val
+        assert matmul.y.shape == (W_SHAPE[1], W_SHAPE[0])
+
+    def test_fuse_transpose_of_unsupported_constexpr(self):
+        """
+        ``merge_affine_dequantize_with_consecutive_ops`` cannot fold shape ops into a
+        ``constexpr_lut_to_dense``, so this pass must keep fusing those transposes.
+        """
+        X_SHAPE = (1, 4)
+
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=X_SHAPE, dtype=types.fp16)],
+            opset_version=ct.target.iOS18,
+        )
+        def prog(x):
+            weight = mb.constexpr_lut_to_dense(
+                indices=np.arange(12).reshape(4, 3).astype(types.np_uint4_dtype),
+                lut=np.arange(16).reshape(1, 1, 16, 1).astype(np.float16),
+            )
+            return mb.matmul(x=x, y=mb.transpose(x=weight, perm=(1, 0)), transpose_y=True)
+
+        prev_prog, _, _ = apply_pass_and_basic_check(prog, "common::fuse_transpose_matmul")
+        apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+        assert get_op_types_in_program(prev_prog) == [
+            "constexpr_lut_to_dense",
+            "transpose",
+            "matmul",
+        ]
+        assert get_op_types_in_program(prog) == ["constexpr_lut_to_dense", "matmul"]
+        assert not prog.find_ops(op_type="matmul", exactly_one=True)[0].transpose_y.val
