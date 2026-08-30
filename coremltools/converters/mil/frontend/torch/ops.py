@@ -6290,6 +6290,15 @@ def _avg_pool(context, node, inputs):
                 raise ValueError('pool3D with ceil mode=True and include_pad=True not supported')
         pad = new_pad
 
+    exclude_padding_from_average = not include_pad
+    if ceil_mode and include_pad and (pad is None or not np.any(pad)):
+        # count_include_pad only governs the explicit padding, and there is none here.
+        # It does not cover the zeros ceil_mode appends past the input edge: torch divides
+        # such a window by the elements actually inside the input, while MIL would divide
+        # by the full kernel. Excluding padding is the same thing when there is no explicit
+        # padding to exclude, and it gives the trailing windows torch's divisor.
+        exclude_padding_from_average = True
+
     pool = mb.avg_pool(
         x=x,
         kernel_sizes=kernel_sizes,
@@ -6297,7 +6306,7 @@ def _avg_pool(context, node, inputs):
         pad_type=pad_type,
         pad=pad,
         name=node.name,
-        exclude_padding_from_average=not include_pad,
+        exclude_padding_from_average=exclude_padding_from_average,
         ceil_mode=ceil_mode if spatial_rank <= 2 else False,
     )
     context.add(pool)

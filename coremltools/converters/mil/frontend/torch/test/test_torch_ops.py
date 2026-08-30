@@ -3385,6 +3385,9 @@ class TestAvgPool(TorchBaseTest):
                     ((1, 3, 10), 1, 2, 1, True, True),
                     ((1, 3, 10), 3, 2, 0, True, False),
                     ((1, 3, 10), 1, 1, 1, True, True),
+                    # ceil_mode with no explicit padding: the trailing window hangs past
+                    # the input, and torch divides it by the elements actually inside.
+                    ((1, 3, 7), 2, 3, 0, True, True),
                 ],
             )
         ],
@@ -3450,6 +3453,9 @@ class TestAvgPool(TorchBaseTest):
                     ((1, 3, 10, 10), 1, 2, 1, True, True),
                     ((1, 3, 10, 10), 3, 2, 0, True, False),
                     ((1, 3, 10, 10), 1, 1, 1, True, True),
+                    # ceil_mode with no explicit padding: the trailing window hangs past
+                    # the input, and torch divides it by the elements actually inside.
+                    ((1, 3, 7, 7), 2, 3, 0, True, True),
                 ],
             )
         ],
