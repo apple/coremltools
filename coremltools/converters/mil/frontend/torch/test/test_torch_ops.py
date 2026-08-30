@@ -6156,7 +6156,7 @@ class TestEinsum(TorchBaseTest):
             compute_units,
             backends,
             frontends,
-            ["ab->ba", "aa->a", "ab->b", "iijk->ji"],
+            ["ab->ba", "aa->a", "ab->b", "iijk->ji", "ab->", "aa->"],
             [False, True],
         ),
     )
@@ -6181,9 +6181,9 @@ class TestEinsum(TorchBaseTest):
             k = torch.export.Dim(name="k")
             if equation == "ab->ba":
                 torch_export_dynamic_shapes = {"x": {0: a, 1: b}}
-            elif equation == "aa->a":
+            elif equation in ("aa->a", "aa->"):
                 torch_export_dynamic_shapes = {"x": {0: a, 1: a}}
-            elif equation == "ab->b":
+            elif equation in ("ab->b", "ab->"):
                 torch_export_dynamic_shapes = {"x": {0: a, 1: b}}
             else:
                 assert equation == "iijk->ji"
