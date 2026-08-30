@@ -5739,16 +5739,17 @@ def index(context, node):
             The true value indicates whether the element should be selected among the masked axes
             The output c is a tensor with shape (2, N), where N is the number of elements of b satisfying condition > 0.1
         """
-        boolean_indices_axis = []
-        for i, index in enumerate(indices):
-            if index is not None and types.is_bool(index.dtype):
-                boolean_indices_axis.append(i)
+        non_none_indices_axis = [i for i, index in enumerate(indices) if index is not None]
+        boolean_indices_axis = [i for i in non_none_indices_axis if types.is_bool(indices[i].dtype)]
 
-        if len(boolean_indices_axis) == 1:
+        # This shortcut only holds when the mask is the sole index. With another index present,
+        # e.g. x[mask, j], torch pairs the mask's True positions up with j elementwise instead of
+        # selecting whole slices, which is what the general path below does.
+        if len(boolean_indices_axis) == 1 and len(non_none_indices_axis) == 1:
             # get the True element indices
             axis = boolean_indices_axis[0]
-            axes = list(range(axis, axis + index.rank))
             index = indices[axis]
+            axes = list(range(axis, axis + index.rank))
             index = mb.non_zero(x=index)
 
             # transpose the masked axes to the beginning

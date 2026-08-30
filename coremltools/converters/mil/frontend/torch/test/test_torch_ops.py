@@ -11373,6 +11373,33 @@ class TestIndex(TorchBaseTest):
                 )
 
     @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_index_bool_mask_with_another_index(self, compute_unit, backend, frontend):
+        """A bool mask paired with a second index selects elements, not whole slices."""
+        if frontend in TORCH_EXPORT_BASED_FRONTENDS:
+            pytest.xfail(
+                "torch.export cannot trace this model: the bool mask makes the intermediate "
+                "size data dependent, so export raises PendingUnbackedSymbolNotFound before "
+                "the converter is reached."
+            )
+
+        class IndexModel(torch.nn.Module):
+            def forward(self, x):
+                mask = torch.tensor([True, True])
+                j = torch.tensor([0, 2])
+                return x[mask, j]
+
+        self.run_compare_torch(
+            [(2, 3)],
+            IndexModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend, input_dtype, shape, minimum_deployment_target",
         itertools.product(
             compute_units,
