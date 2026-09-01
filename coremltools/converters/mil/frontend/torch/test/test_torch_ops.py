@@ -697,6 +697,12 @@ class TestTensordot(TorchBaseTest):
         ),
     )
     def test_tensordot(self, compute_unit, backend, frontend, shapes_and_dims):
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip(
+                "torch._ops.aten.tensordot.default is not in Core ATen opset, so to_edge "
+                "decomposes it and this converter is never reached"
+            )
+
         x_shape, y_shape, dims = shapes_and_dims
         model = ModuleWrapper(function=torch.tensordot, kwargs={"dims": dims})
 
@@ -722,6 +728,12 @@ class TestTensordot(TorchBaseTest):
         ),
     )
     def test_tensordot_negative_dims(self, compute_unit, backend, frontend, dims):
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip(
+                "torch._ops.aten.tensordot.default is not in Core ATen opset, so to_edge "
+                "decomposes it and this converter is never reached"
+            )
+
         model = ModuleWrapper(function=torch.tensordot, kwargs={"dims": dims})
 
         x = generate_input_data((2, 3, 4))
@@ -746,6 +758,12 @@ class TestTensordot(TorchBaseTest):
         ),
     )
     def test_tensordot_no_contraction(self, compute_unit, backend, frontend, shapes):
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip(
+                "torch._ops.aten.tensordot.default is not in Core ATen opset, so to_edge "
+                "decomposes it and this converter is never reached"
+            )
+
         # contracting nothing leaves the outer product
         model = ModuleWrapper(function=torch.tensordot, kwargs={"dims": ([], [])})
 
@@ -766,6 +784,12 @@ class TestTensordot(TorchBaseTest):
         itertools.product(compute_units, backends, frontends, [(4,), (2, 3), (2, 3, 4)]),
     )
     def test_tensordot_full_contraction(self, compute_unit, backend, frontend, shape):
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip(
+                "torch._ops.aten.tensordot.default is not in Core ATen opset, so to_edge "
+                "decomposes it and this converter is never reached"
+            )
+
         # contracting every dimension of both inputs leaves a scalar
         dims = (list(range(len(shape))), list(range(len(shape))))
         model = ModuleWrapper(function=torch.tensordot, kwargs={"dims": dims})
@@ -784,6 +808,12 @@ class TestTensordot(TorchBaseTest):
 
     @pytest.mark.parametrize("frontend", frontends)
     def test_tensordot_symbolic_free_dim(self, frontend):
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip(
+                "torch._ops.aten.tensordot.default is not in Core ATen opset, so to_edge "
+                "decomposes it and this converter is never reached"
+            )
+
         class Model(nn.Module):
             def forward(self, x, y):
                 return torch.tensordot(x, y, dims=([1], [0]))
