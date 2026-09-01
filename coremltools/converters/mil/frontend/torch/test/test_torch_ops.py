@@ -675,6 +675,142 @@ class TestOuter(TorchBaseTest):
         )
 
 
+class TestTensordot(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, shapes_and_dims",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [
+                # the shapes reported in https://github.com/apple/coremltools/issues/2137
+                ((3, 4, 5), (4, 3, 2), ([1, 0], [0, 1])),
+                # a single contracted dimension, i.e. a plain matrix multiplication
+                ((2, 3), (3, 4), ([1], [0])),
+                # contracting every dimension of the smaller input
+                ((2, 3, 4), (3, 4), ([1, 2], [0, 1])),
+                # the contracted dimensions are not the trailing ones
+                ((2, 3, 4), (2, 5), ([0], [0])),
+                # inputs of different rank
+                ((4,), (4, 5), ([0], [0])),
+                ((2, 3, 4), (4,), ([2], [0])),
+            ],
+        ),
+    )
+    def test_tensordot(self, compute_unit, backend, frontend, shapes_and_dims):
+        x_shape, y_shape, dims = shapes_and_dims
+        model = ModuleWrapper(function=torch.tensordot, kwargs={"dims": dims})
+
+        x = generate_input_data(x_shape)
+        y = generate_input_data(y_shape)
+
+        TorchBaseTest.run_compare_torch(
+            (x, y),
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, dims",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [([-1], [-1]), ([-2], [1]), ([0, -1], [-3, 2]), ([-3, -2], [0, 1])],
+        ),
+    )
+    def test_tensordot_negative_dims(self, compute_unit, backend, frontend, dims):
+        model = ModuleWrapper(function=torch.tensordot, kwargs={"dims": dims})
+
+        x = generate_input_data((2, 3, 4))
+        y = generate_input_data((2, 3, 4))
+
+        TorchBaseTest.run_compare_torch(
+            (x, y),
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, shapes",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [((3,), (4,)), ((2, 3), (4,)), ((2, 3), (4, 5))],
+        ),
+    )
+    def test_tensordot_no_contraction(self, compute_unit, backend, frontend, shapes):
+        # contracting nothing leaves the outer product
+        model = ModuleWrapper(function=torch.tensordot, kwargs={"dims": ([], [])})
+
+        x = generate_input_data(shapes[0])
+        y = generate_input_data(shapes[1])
+
+        TorchBaseTest.run_compare_torch(
+            (x, y),
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, shape",
+        itertools.product(compute_units, backends, frontends, [(4,), (2, 3), (2, 3, 4)]),
+    )
+    def test_tensordot_full_contraction(self, compute_unit, backend, frontend, shape):
+        # contracting every dimension of both inputs leaves a scalar
+        dims = (list(range(len(shape))), list(range(len(shape))))
+        model = ModuleWrapper(function=torch.tensordot, kwargs={"dims": dims})
+
+        x = generate_input_data(shape)
+        y = generate_input_data(shape)
+
+        TorchBaseTest.run_compare_torch(
+            (x, y),
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+    @pytest.mark.parametrize("frontend", frontends)
+    def test_tensordot_symbolic_free_dim(self, frontend):
+        class Model(nn.Module):
+            def forward(self, x, y):
+                return torch.tensordot(x, y, dims=([1], [0]))
+
+        x = generate_input_data((3, 4))
+        y = generate_input_data((4, 5))
+        converter_input_type = [
+            TensorType(shape=(RangeDim(default=3, upper_bound=50), 4)),
+            TensorType(shape=(4, 5)),
+        ]
+        torch_export_dynamic_shapes = {
+            "x": {0: torch.export.Dim("x_rows", min=2, max=50)},
+            "y": None,
+        }
+
+        self.run_compare_torch(
+            (x, y),
+            Model(),
+            input_as_shape=False,
+            frontend=frontend,
+            backend=("neuralnetwork", "fp32"),
+            converter_input_type=converter_input_type,
+            torch_export_dynamic_shapes=torch_export_dynamic_shapes,
+        )
+
+
 class TestCdist(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, shapes, p",
