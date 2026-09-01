@@ -625,6 +625,113 @@ def outer(context, node):
     context.add(res)
 
 
+@register_torch_op
+def tensordot(context, node):
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, expected=4)
+        return inputs[0], inputs[1], inputs[2], inputs[3]
+
+    def _translate_torch_args(x, y, dims_x, dims_y) -> Tuple[List[int], List[int]]:
+        def _to_axes(dims, rank: int, name: str) -> List[int]:
+            if isinstance(dims, (list, tuple)):
+                # A dims list built at run time, e.g. from a prim::ListConstruct whose
+                # elements are not all const, binds to a python list of scalar Vars
+                # instead of to a single const Var.
+                values = []
+                for dim in dims:
+                    if isinstance(dim, Var):
+                        if dim.val is None:
+                            raise ValueError(f"tensordot only supports a const {name}")
+                        values.append(dim.val)
+                    else:
+                        values.append(dim)
+            elif isinstance(dims, Var):
+                if dims.val is None:
+                    raise ValueError(f"tensordot only supports a const {name}")
+                values = np.atleast_1d(dims.val)
+            else:
+                values = np.atleast_1d(dims)
+
+            axes = []
+            for value in values:
+                axis = int(value)
+                if not -rank <= axis < rank:
+                    raise ValueError(
+                        f"tensordot {name} {axis} is out of range for a rank {rank} input"
+                    )
+                axes.append(axis % rank)
+            if len(set(axes)) != len(axes):
+                raise ValueError(f"tensordot got a repeated dimension in {name}: {axes}")
+            return axes
+
+        axes_x = _to_axes(dims_x, x.rank, "dims_self")
+        axes_y = _to_axes(dims_y, y.rank, "dims_other")
+        if len(axes_x) != len(axes_y):
+            raise ValueError(
+                "tensordot must contract as many dimensions in dims_self as in dims_other, "
+                f"got {len(axes_x)} and {len(axes_y)}"
+            )
+        return axes_x, axes_y
+
+    def _contracted_volume(x, y, axes_x, axes_y) -> int:
+        volume = 1
+        for axis_x, axis_y in zip(axes_x, axes_y):
+            size_x = x.shape[axis_x]
+            size_y = y.shape[axis_y]
+            if is_symbolic(size_x) or is_symbolic(size_y):
+                raise ValueError(
+                    "tensordot does not support contracting a symbolic dimension, got "
+                    f"dimensions {axis_x} and {axis_y}."
+                )
+            if size_x != size_y:
+                raise ValueError(
+                    f"tensordot contracts dimensions {axis_x} and {axis_y}, so they "
+                    f"must match, but got {size_x} and {size_y}."
+                )
+            volume *= size_x
+        return volume
+
+    def _as_matrix(var, leading_axes: List[int], trailing_axes: List[int], shape) -> Var:
+        perm = leading_axes + trailing_axes
+        if perm != list(range(var.rank)):
+            var = mb.transpose(x=var, perm=perm)
+        return mb.reshape(x=var, shape=shape)
+
+    def _output_shape(x, y, free_x: List[int], free_y: List[int]):
+        static_shape = [x.shape[axis] for axis in free_x] + [y.shape[axis] for axis in free_y]
+        if not any_symbolic(static_shape):
+            return static_shape
+        # A free dimension is only known at run time, so read the sizes back off the
+        # inputs and assemble the target shape as a tensor.
+        sizes = []
+        for var, free_axes in ((x, free_x), (y, free_y)):
+            if free_axes:
+                sizes.append(mb.gather(x=mb.shape(x=var), indices=free_axes, axis=0))
+        return mb.cast(x=mb.concat(values=sizes, axis=0), dtype="int32")
+
+    x, y, dims_x, dims_y = _parse_positional_args(context, node)
+    x, y = promote_input_dtypes([x, y])
+    axes_x, axes_y = _translate_torch_args(x, y, dims_x, dims_y)
+
+    free_x = [axis for axis in range(x.rank) if axis not in axes_x]
+    free_y = [axis for axis in range(y.rank) if axis not in axes_y]
+    volume = _contracted_volume(x, y, axes_x, axes_y)
+
+    # Gather the contracted dimensions together so the contraction becomes a single
+    # matmul: self -> (free volume, contracted volume), other -> (contracted volume,
+    # free volume). Reshaping the free dimensions to -1 keeps symbolic sizes intact.
+    x_matrix = _as_matrix(x, free_x, axes_x, [-1, volume])
+    y_matrix = _as_matrix(y, axes_y, free_y, [volume, -1])
+    product = mb.matmul(x=x_matrix, y=y_matrix)
+
+    if free_x or free_y:
+        result = mb.reshape(x=product, shape=_output_shape(x, y, free_x, free_y), name=node.name)
+    else:
+        # Everything was contracted, so the matmul left a 1x1 matrix holding a scalar.
+        result = mb.squeeze(x=product, axes=[0, 1], name=node.name)
+    context.add(result)
+
+
 @register_torch_op(torch_alias=["_cdist_forward"])
 def cdist(context, node):
     def _parse_positional_args(context, node) -> Tuple[Var]:
