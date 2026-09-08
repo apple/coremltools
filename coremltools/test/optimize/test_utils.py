@@ -4,6 +4,7 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
+import warnings
 
 import numpy as np
 import pytest
@@ -62,6 +63,56 @@ class TestComputeQuantizationParams:
             assert ret[-1] is not None
 
         assert ret[0].shape == weight.shape
+
+    @pytest.mark.parametrize(
+        "quant_mode, block_sizes",
+        itertools.product(
+            ["LINEAR", "LINEAR_SYMMETRIC"],
+            [[1, 0], [0, 0], [0, 4]],  # per-channel, per-tensor, blockwise
+        ),
+    )
+    def test_compute_qparams_all_zero_block(self, quant_mode, block_sizes):
+        """An all-zero channel/block (e.g. a pruned channel) makes
+        ``val_max == val_min``, so the quantization range is 0. The scale must
+        not come out as 0: previously ``weight / scale`` and the zero_point
+        computation divided by zero and silently produced NaNs. The block must
+        instead get a valid nonzero scale and dequantize back to 0. The
+        palettization path guards this the same way (see
+        ``coreml/_quantization_passes.py``).
+        """
+        weight = np.random.randn(4, 8).astype(np.float32)
+        # Zero out exactly one full quantization block for each granularity so
+        # that block's val_max == val_min (the case that used to give scale 0).
+        if block_sizes == [1, 0]:
+            weight[0, :] = 0.0  # one pruned output channel (per-channel)
+        elif block_sizes == [0, 0]:
+            weight[:] = 0.0  # whole tensor zero (per-tensor)
+        else:  # [0, 4]
+            weight[:, 0:4] = 0.0  # one zero column block (blockwise)
+
+        with warnings.catch_warnings():
+            # any divide-by-zero RuntimeWarning becomes a test failure
+            warnings.simplefilter("error", RuntimeWarning)
+            quantized_data, scale, zero_point = optimize_utils.compute_qparams(
+                weight,
+                nbits=8,
+                signed=True,
+                quantization_mode=quant_mode,
+                dtype=np.int8,
+                block_sizes=block_sizes,
+            )
+
+        scale = np.asarray(scale)
+        quantized_data = np.asarray(quantized_data)
+        # a zero scale is not a valid quantization scale
+        assert np.all(scale != 0)
+        assert np.isfinite(quantized_data.astype(np.float64)).all()
+
+        # the all-zero block must round-trip back to zero
+        dequantized = optimize_utils.dequantize_by_scale_and_zp(
+            quantized_data, scale, zero_point
+        )
+        np.testing.assert_allclose(dequantized[weight == 0], 0.0, atol=1e-6)
 
     @pytest.mark.parametrize(
         "quant_mode, block_sizes",

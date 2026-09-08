@@ -109,7 +109,16 @@ def quantize_weight_by_dtype(
         val_min = np.minimum(0.0, val_min)
         val_max = np.maximum(0.0, val_max)
 
-    scale = (val_max - val_min) / (q_val_max - q_val_min)
+    val_range = val_max - val_min
+    # An all-zero (constant) block has val_max == val_min, so its range is 0 and
+    # the scale below would be 0 -- not a valid quantization scale. Dividing by
+    # it (here and in the zero_point computation) would silently produce NaNs.
+    # Replace a zero range with 1 so the block quantizes to 0 and dequantizes
+    # back to 0, mirroring the palettization path which guards this the same way
+    # (`per_channel_scale[per_channel_scale == 0] = 1` in
+    # coreml/_quantization_passes.py).
+    val_range[val_range == 0] = 1.0
+    scale = val_range / (q_val_max - q_val_min)
     quantized_data = np.round(weight / scale)
 
     if types.is_int(dtype):
@@ -117,7 +126,7 @@ def quantize_weight_by_dtype(
             zero_point_shift = q_val_max // 2
             zero_point = zero_point_shift * np.ones(val_min.shape)
         elif quantization_mode == "LINEAR":
-            zero_point = (q_val_min * val_max - q_val_max * val_min) / (val_max - val_min)
+            zero_point = (q_val_min * val_max - q_val_max * val_min) / val_range
             zero_point = np.round(zero_point)
             zero_point = np.clip(zero_point, q_val_min, q_val_max)
 
