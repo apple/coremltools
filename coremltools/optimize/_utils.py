@@ -110,15 +110,18 @@ def quantize_weight_by_dtype(
         val_max = np.maximum(0.0, val_max)
 
     val_range = val_max - val_min
-    # An all-zero (constant) block has val_max == val_min, so its range is 0 and
-    # the scale below would be 0 -- not a valid quantization scale. Dividing by
-    # it (here and in the zero_point computation) would silently produce NaNs.
-    # Replace a zero range with 1 so the block quantizes to 0 and dequantizes
-    # back to 0, mirroring the palettization path which guards this the same way
-    # (`per_channel_scale[per_channel_scale == 0] = 1` in
-    # coreml/_quantization_passes.py).
+    # An all-zero block (e.g. a pruned channel) has val_max == val_min, so its
+    # range is 0 and every division below would be 0/0.
     val_range[val_range == 0] = 1.0
     scale = val_range / (q_val_max - q_val_min)
+    # The scale can still be 0 by underflow in low-precision weight dtypes
+    # (Core ML weights are fp16 by default), which makes `weight / scale` below
+    # divide by zero. A 0 scale is not a valid quantization parameter, and the
+    # resulting NaN/inf would be cast to the integer weight dtype. Replace it
+    # with 1, mirroring the palettization path which guards the same condition
+    # the same way (`per_channel_scale[per_channel_scale == 0] = 1` in
+    # coreml/_quantization_passes.py). The affected block then quantizes to 0.
+    scale[scale == 0] = 1.0
     quantized_data = np.round(weight / scale)
 
     if types.is_int(dtype):

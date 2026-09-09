@@ -114,6 +114,35 @@ class TestComputeQuantizationParams:
         )
         np.testing.assert_allclose(dequantized[weight == 0], 0.0, atol=1e-6)
 
+
+    @pytest.mark.parametrize("quant_mode", ["LINEAR", "LINEAR_SYMMETRIC"])
+    def test_compute_qparams_scale_underflow(self, quant_mode):
+        """The scale is computed in the weight dtype, and Core ML weights are
+        fp16 by default, so a channel whose range is very small underflows to a
+        scale of 0 even though the channel is not all zeros. ``weight / scale``
+        then divided by zero and the resulting inf/NaN was cast to the integer
+        weight dtype.
+        """
+        weight = np.random.randn(4, 8).astype(np.float16)
+        # a channel small enough that range / (q_max - q_min) underflows in fp16
+        weight[0, :] = (np.random.randn(8) * 1e-6).astype(np.float16)
+
+        with warnings.catch_warnings():
+            # any divide-by-zero RuntimeWarning becomes a test failure
+            warnings.simplefilter("error", RuntimeWarning)
+            quantized_data, scale, _ = optimize_utils.compute_qparams(
+                weight,
+                nbits=8,
+                signed=True,
+                quantization_mode=quant_mode,
+                dtype=np.int8,
+                block_sizes=[1, 0],
+            )
+
+        # a zero scale is not a valid quantization scale
+        assert np.all(np.asarray(scale) != 0)
+        assert np.isfinite(np.asarray(quantized_data).astype(np.float64)).all()
+
     @pytest.mark.parametrize(
         "quant_mode, block_sizes",
         itertools.product(
