@@ -606,7 +606,8 @@ class fuse_onehot_matmul_to_gather(AbstractGraphPass):
             return False
         if onehot_op.indices.shape is None:
             return False
-        rank = len(onehot_op.indices.shape)
+        # one_hot's axis refers to the *output* rank, which is rank(indices) + 1.
+        rank = len(onehot_op.indices.shape) + 1
         if axis >= 0:
             axis -= rank
         if axis != -1:

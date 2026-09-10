@@ -4677,6 +4677,55 @@ class TestFuseOnehotMatmulToGather:
             minimum_deployment_target=opset_version,
         )
 
+    @pytest.mark.parametrize("rank", [1, 2, 3])
+    def test_no_fusion_when_onehot_axis_is_not_last(self, rank):
+        """
+        one_hot's axis refers to its output rank, which is rank(indices) + 1. When the
+        one-hot dimension is not the last one, matmul does not reduce over it and the
+        rewrite to gather is not valid.
+        """
+        input_shape = (10, 3, 6)[-rank:]
+        vocab_size = 15
+        embedding_size = 12
+        # Put the one-hot dimension second to last, so matmul contracts over the last
+        # dimension of the indices instead.
+        axis = rank - 1
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=input_shape, dtype=types.int32)])
+        def prog(x):
+            x = mb.one_hot(
+                indices=x, on_value=1.0, off_value=0.0, axis=axis, one_hot_vector_size=vocab_size
+            )
+            x = mb.matmul(x=x, y=np.random.rand(input_shape[-1], embedding_size))
+            return x
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::fuse_onehot_matmul_to_gather"
+        )
+        assert get_op_types_in_program(prev_prog) == ["one_hot", "matmul"]
+        assert get_op_types_in_program(prog) == ["one_hot", "matmul"]
+
+    @pytest.mark.parametrize("rank", [1, 2, 3])
+    def test_fuse_onehot_matmul_to_gather_non_negative_axis(self, rank):
+        """A last axis spelled as a non-negative index must fuse, same as axis=-1."""
+        input_shape = (10, 3, 6)[-rank:]
+        vocab_size = 15
+        embedding_size = 12
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=input_shape, dtype=types.int32)])
+        def prog(x):
+            x = mb.one_hot(
+                indices=x, on_value=1.0, off_value=0.0, axis=rank, one_hot_vector_size=vocab_size
+            )
+            x = mb.matmul(x=x, y=np.random.rand(vocab_size, embedding_size))
+            return x
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::fuse_onehot_matmul_to_gather"
+        )
+        assert get_op_types_in_program(prev_prog) == ["one_hot", "matmul"]
+        assert get_op_types_in_program(prog) == ["gather"]
+
 
 class TestGuardNegativeGatherIndices:
     @pytest.mark.parametrize("backend", backends)
