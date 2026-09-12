@@ -893,6 +893,40 @@ class TestSoftmax:
             backend=backend,
         )
 
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
+    def test_builder_to_backend_rank3_axis_minus_3(self, compute_unit, backend):
+        # Rank-3 softmax(axis=-3) must not use NeuralNetwork SoftmaxLayer
+        # (https://github.com/apple/coremltools/issues/1714): that layer
+        # applies axis=-1 when rank==3, which yields all-ones here.
+        t = np.array([[[0.5]], [[1.5]]], dtype=np.float32)
+        input_placeholders = {"x": mb.placeholder(shape=t.shape)}
+        input_values = {"x": t}
+
+        def build(x):
+            return mb.softmax(x=x, axis=-3)
+
+        expected_output_types = (2, 1, 1, types.fp32)
+        expected_outputs = scipy.special.softmax(t, axis=-3).astype(np.float32)
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            compute_unit=compute_unit,
+            backend=backend,
+        )
+
+    def test_neuralnetwork_rank3_axis_minus_3_uses_softmax_nd(self):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 1, 1))])
+        def prog(x):
+            return mb.softmax(x=x, axis=-3, name="y")
+
+        mlmodel = ct.convert(prog, source="milinternal", convert_to="neuralnetwork")
+        layer = mlmodel.get_spec().neuralNetwork.layers[0]
+        assert layer.WhichOneof("layer") == "softmaxND"
+        assert layer.softmaxND.axis == -3
+
     @ssa_fn
     def test_builder_eval(self):
         x_val = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
