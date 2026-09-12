@@ -1065,9 +1065,11 @@ class palettize_weights(AbstractCompressionPass):
                 return
 
         if op_config.enable_per_channel_scale:
-            # Normalize by per channel scales before doing palettization.
+            # Normalize by per channel scales before doing palettization. Copy first, because
+            # op.outputs[0].val is the const's own buffer and compression may still be skipped.
             per_channel_scale = np.max(np.abs(weight_to_compress), axis=channel_axis, keepdims=True)
             per_channel_scale[per_channel_scale == 0] = 1
+            weight_to_compress = weight_to_compress.copy()
             weight_to_compress /= per_channel_scale
 
         lut_params = self.blockwise_compress(
