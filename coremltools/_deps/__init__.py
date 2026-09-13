@@ -94,7 +94,7 @@ MSG_LIBSVM_NOT_FOUND = "Libsvm not found."
 
 # ---------------------------------------------------------------------------------------
 _HAS_XGBOOST = True
-_XGBOOST_MAX_VERSION = "1.4.2"
+_XGBOOST_MAX_VERSION = "3.0.2"
 try:
     import xgboost
     _warn_if_above_max_supported_version("XGBoost", xgboost.__version__, _XGBOOST_MAX_VERSION)
