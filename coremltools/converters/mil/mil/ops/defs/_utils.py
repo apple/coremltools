@@ -522,11 +522,17 @@ def solve_slice_by_index_shape(x_shape, begin, end, stride, begin_mask, end_mask
     Helper function to solve the shape of tensor slicing.
     """
     # set default values
+    # begin and end are copied because the negative index normalization below
+    # writes into them, and callers pass the values of their begin/end consts
     rank = len(x_shape)
     if begin is None or len(begin) == 0:
         begin = [None] * rank
+    else:
+        begin = list(begin)
     if end is None or len(end) == 0:
         end = [None] * rank
+    else:
+        end = list(end)
     if stride is None:
         stride = [1] * rank
     if begin_mask is None:

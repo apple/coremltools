@@ -745,6 +745,44 @@ class TestSliceByIndex:
             backend=backend,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(compute_units, backends),
+    )
+    def test_shared_negative_begin_const(self, compute_unit, backend):
+        """Type inference must not rewrite the begin const it is handed. A
+        const shared by two slices over differently sized inputs would
+        otherwise get normalized against the first input's shape only."""
+        x_val = np.arange(10).reshape((1, 10)).astype(np.float32)
+        y_val = np.arange(100, 120).reshape((1, 20)).astype(np.float32)
+        input_placeholders = {
+            "x": mb.placeholder(shape=x_val.shape),
+            "y": mb.placeholder(shape=y_val.shape),
+        }
+        input_values = {"x": x_val, "y": y_val}
+
+        def build(x, y):
+            begin = mb.const(val=np.array([0, -1], dtype=np.int32))
+            return [
+                mb.slice_by_index(x=x, begin=begin, end=[1, 10]),
+                mb.slice_by_index(x=y, begin=begin, end=[1, 20]),
+            ]
+
+        expected_output_types = [(1, 1, types.fp32)] * 2
+        expected_outputs = [
+            np.array([[9]], dtype=np.float32),
+            np.array([[119]], dtype=np.float32),
+        ]
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            compute_unit=compute_unit,
+            backend=backend,
+        )
+
     def test_type_inference(self):
         s0 = get_new_symbol()
         s1 = get_new_symbol()
