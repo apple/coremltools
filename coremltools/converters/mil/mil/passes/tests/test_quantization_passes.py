@@ -3104,3 +3104,106 @@ class TestInt32CastToInt16:
                 assert cast_op.dtype.val == "int16"
                 assert cast_op.outputs[0] == prog["main"].find_ops(op_type="gather")[0].indices
         assert get_op_types_in_program(prog) == expected_ops
+
+
+class TestNormalizeAffineDequantizeInt8:
+    """Tests for common::normalize_affine_dequantize_int8 pass."""
+
+    def _make_prog_int8_zp0(self, quantized_data, scale, zero_point, axis=0):
+        @mb.program(input_specs=[], opset_version=ct.target.iOS16)
+        def prog():
+            return mb.constexpr_affine_dequantize(
+                quantized_data=quantized_data,
+                zero_point=zero_point,
+                scale=scale,
+                axis=np.int32(axis),
+            )
+
+        return prog
+
+    def test_int8_zp0_transforms_to_uint8_zp127(self):
+        """int8 quantized_data with zero_point=0 is re-encoded as uint8+127."""
+        quantized_data = np.array([-127, -64, 0, 64, 127], dtype=np.int8)
+        scale = np.float16(0.5)
+        zero_point = np.int8(0)
+
+        prog = self._make_prog_int8_zp0(quantized_data, scale, zero_point)
+        apply_pass_and_basic_check(prog, "common::normalize_affine_dequantize_int8")
+
+        assert get_op_types_in_program(prog) == ["constexpr_affine_dequantize"]
+        op = prog.find_ops(op_type="constexpr_affine_dequantize", exactly_one=True)[0]
+
+        assert op.quantized_data.dtype == types.uint8
+        expected_uint8 = (quantized_data.astype(np.int32) + 127).astype(np.uint8)
+        np.testing.assert_array_equal(op.quantized_data.val, expected_uint8)
+
+        assert op.zero_point.dtype == types.uint8
+        np.testing.assert_array_equal(op.zero_point.val, np.full(zero_point.shape, 127, dtype=np.uint8))
+
+        # Output values must be numerically identical before and after
+        original_output = quantized_data.astype(np.float32) * float(scale)
+        new_output = (op.quantized_data.val.astype(np.int32) - int(op.zero_point.val)) * float(scale)
+        np.testing.assert_allclose(original_output, new_output, rtol=1e-5)
+
+    def test_channel_wise_int8_zp0_transforms(self):
+        """Channel-wise int8+zp=0 is also re-encoded."""
+        SHAPE = (4, 8)
+        quantized_data = np.random.randint(-127, 128, SHAPE, dtype=np.int8)
+        scale = np.random.rand(SHAPE[0]).astype(np.float16)
+        zero_point = np.zeros(SHAPE[0], dtype=np.int8)
+
+        prog = self._make_prog_int8_zp0(quantized_data, scale, zero_point, axis=0)
+        apply_pass_and_basic_check(prog, "common::normalize_affine_dequantize_int8")
+
+        op = prog.find_ops(op_type="constexpr_affine_dequantize", exactly_one=True)[0]
+        assert op.quantized_data.dtype == types.uint8
+        assert op.zero_point.dtype == types.uint8
+        np.testing.assert_array_equal(op.zero_point.val, np.full(zero_point.shape, 127, dtype=np.uint8))
+
+    def test_nonzero_zp_not_transformed(self):
+        """int8 with non-zero zero_point is left unchanged."""
+        quantized_data = np.array([-64, 0, 64], dtype=np.int8)
+        scale = np.float16(1.0)
+        zero_point = np.int8(5)  # non-zero
+
+        prog = self._make_prog_int8_zp0(quantized_data, scale, zero_point)
+        apply_pass_and_basic_check(prog, "common::normalize_affine_dequantize_int8")
+
+        op = prog.find_ops(op_type="constexpr_affine_dequantize", exactly_one=True)[0]
+        assert op.quantized_data.dtype == types.int8
+        assert op.zero_point.dtype == types.int8
+        assert int(op.zero_point.val) == 5
+
+    def test_uint8_not_transformed(self):
+        """uint8 quantized_data is left unchanged (already correct encoding)."""
+        quantized_data = np.array([0, 64, 127, 200, 254], dtype=np.uint8)
+        scale = np.float16(0.5)
+        zero_point = np.uint8(127)
+
+        @mb.program(input_specs=[], opset_version=ct.target.iOS16)
+        def prog():
+            return mb.constexpr_affine_dequantize(
+                quantized_data=quantized_data,
+                zero_point=zero_point,
+                scale=scale,
+                axis=np.int32(0),
+            )
+
+        apply_pass_and_basic_check(prog, "common::normalize_affine_dequantize_int8")
+        op = prog.find_ops(op_type="constexpr_affine_dequantize", exactly_one=True)[0]
+        assert op.quantized_data.dtype == types.uint8
+        np.testing.assert_array_equal(op.quantized_data.val, quantized_data)
+
+    def test_int8_with_minus128_not_transformed(self):
+        """int8 data containing -128 is skipped (cannot re-encode losslessly)."""
+        quantized_data = np.array([-128, -64, 0, 64, 127], dtype=np.int8)
+        scale = np.float16(0.5)
+        zero_point = np.int8(0)
+
+        prog = self._make_prog_int8_zp0(quantized_data, scale, zero_point)
+        apply_pass_and_basic_check(prog, "common::normalize_affine_dequantize_int8")
+
+        op = prog.find_ops(op_type="constexpr_affine_dequantize", exactly_one=True)[0]
+        # Transformation skipped: dtype and zero_point must remain unchanged
+        assert op.quantized_data.dtype == types.int8
+        assert int(op.zero_point.val) == 0
