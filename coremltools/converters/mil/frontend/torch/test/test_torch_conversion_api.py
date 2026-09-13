@@ -438,6 +438,34 @@ class TestPyTorchConverterExamples:
         assert isinstance(model, ct.converters.mil.Program)
 
     @staticmethod
+    def test_convert_does_not_modify_torchscript_model(tmpdir):
+        """
+        ct.convert must leave the user's TorchScript graph untouched, so the
+        traced model can still be saved and loaded afterwards (issue #2215).
+        """
+
+        class Network(torch.nn.Module):
+            def forward(self, x):
+                a, b, c = x.chunk(3)
+                return (a * b) + c
+
+        example_input = torch.rand(6, 4)
+        traced_model = torch.jit.trace(Network().eval(), example_input)
+        graph_before = str(traced_model.forward.graph)
+
+        ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(name="input", shape=example_input.shape)],
+            convert_to="milinternal",
+        )
+
+        assert str(traced_model.forward.graph) == graph_before
+        path = os.path.join(tmpdir, "traced_model.pt")
+        torch.jit.save(traced_model, path)
+        loaded_model = torch.jit.load(path)
+        torch.testing.assert_close(loaded_model(example_input), traced_model(example_input))
+
+    @staticmethod
     def _get_classifier_model():
         class Net(torch.nn.Module):
             def __init__(self):
