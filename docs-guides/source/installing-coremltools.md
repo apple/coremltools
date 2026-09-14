@@ -96,6 +96,8 @@ pip install -U coremltools
 
 Install the third-party source packages for your conversions (such as [TensorFlow](https://www.tensorflow.org "TensorFlow") and [PyTorch](https://pytorch.org "PyTorch")) using the package guides provided for them. The `coremltools` package does _not_ include the third-party source packages.
 
+`coremltools` is tested with PyTorch versions up to 2.8. Importing `coremltools` alongside a newer PyTorch emits a warning, and conversion may run into unexpected errors. The `coremltools.optimize.torch` module additionally requires PyTorch 2.1 or newer; with an older version it is disabled and a warning is emitted at import time.
+
 ## Install From Source
 
 The continuous integration (CI) system linked to the `coremltools` repo builds a [Python wheel](https://pypi.org/project/wheel/) from the master branch whenever a commit is merged. To get the latest updates to the code base, you can get this wheel from the CI job and install it.
