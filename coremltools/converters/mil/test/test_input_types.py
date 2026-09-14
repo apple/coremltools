@@ -20,6 +20,26 @@ def test_rangedim_raises_if_default_above_upper():
     with pytest.raises(ValueError, match=r"greater than maximum value"):
         RangeDim(lower_bound=0, upper_bound=5, default=6)
 
+@pytest.mark.parametrize("default", [None, 4, 5])
+def test_rangedim_raises_if_lower_above_positive_finite_upper(default):
+    with pytest.raises(ValueError, match=r"Lower bound.*greater than upper bound"):
+        RangeDim(lower_bound=5, upper_bound=3, default=default)
+
+@pytest.mark.parametrize(
+    "lower_bound, upper_bound, default, expected_default",
+    [
+        (5, 5, None, 5),
+        (0, 5, None, 0),
+        (1, 5, 3, 3),
+        (5, -1, None, 5),
+    ],
+)
+def test_rangedim_accepts_valid_bounds(lower_bound, upper_bound, default, expected_default):
+    dim = RangeDim(lower_bound=lower_bound, upper_bound=upper_bound, default=default)
+    assert dim.lower_bound == lower_bound
+    assert dim.upper_bound == upper_bound
+    assert dim.default == expected_default
+
 def test_rangedim_ior_merges_bounds_and_adjusts_default():
     dim1 = RangeDim(lower_bound=0, upper_bound=10, default=5)
     dim2 = RangeDim(lower_bound=2, upper_bound=8, default=3)

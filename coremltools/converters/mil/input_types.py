@@ -398,6 +398,11 @@ class RangeDim:
         symbol:
             Optional symbol name for the dim. Autogenerate a symbol name if not specified.
         """
+        if upper_bound > 0 and lower_bound > upper_bound:
+            raise ValueError(
+                f"Lower bound {lower_bound} is greater than upper bound ({upper_bound}) for range"
+            )
+
         if symbol is None:
             from coremltools.converters.mil.mil import get_new_symbol
             self.symbol = get_new_symbol()
