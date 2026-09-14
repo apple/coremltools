@@ -140,7 +140,9 @@ def _expand_and_optimize_ir(torchscript):
     Given a torch.jit.ScriptModule, convert it to a optimized
     torch._C.Graph and dict of model parameter's names to tensors.
     """
-    graph = torchscript.forward.graph
+    # Work on a copy: the passes below rewrite the graph in place, which would
+    # otherwise leave the user's module unable to be saved and loaded again.
+    graph = torchscript.forward.graph.copy()
 
     # From PyTorch code: Inline function and method calls.
     torch._C._jit_pass_inline(graph)
