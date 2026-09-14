@@ -652,7 +652,7 @@ class MLModelUpdatableTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             q_nn_builder.make_updatable(["ip2"])
 
-    def test_nn_partial_fp16_make_updatable_fail(self):
+    def test_nn_updatable_fp16_quantize_fail(self):
         nn_builder = self.create_base_builder()
         model_path = os.path.join(self.model_dir, "updatable_creation.mlmodel")
         print(model_path)
