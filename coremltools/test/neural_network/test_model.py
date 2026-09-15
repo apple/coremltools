@@ -563,6 +563,48 @@ class MLModelTest(unittest.TestCase):
         self.assertEqual(out[1], 6.0)
 
     @unittest.skipUnless(
+        _is_macos() and _macos_version() >= (12, 0), "Only supported on macOS 12+"
+    )
+    def test_rename_feature_mlprogram_nested_block(self):
+        # A cond op's nested blocks reference the outer input by name, so renaming has to
+        # reach into them. Otherwise the renamed model no longer parses.
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(1,), dtype=coremltools.converters.mil.mil.types.bool),
+                mb.TensorSpec(shape=(1,)),
+            ]
+        )
+        def cond_prog(a, b):
+            def true_fn():
+                return mb.add(x=b, y=1.0)
+
+            def false_fn():
+                return mb.mul(x=b, y=2.0)
+
+            return mb.cond(pred=mb.squeeze(x=a), _true_fn=true_fn, _false_fn=false_fn)
+
+        model = coremltools.convert(
+            cond_prog,
+            convert_to="mlprogram",
+            minimum_deployment_target=coremltools.target.iOS16,
+        )
+        output_name = model.get_spec().description.output[0].name
+
+        spec = model.get_spec()
+        rename_feature(spec, "b", "renamed_b")
+        self.assertEqual([i.name for i in spec.description.input], ["a", "renamed_b"])
+
+        renamed_model = coremltools.models.MLModel(spec, weights_dir=model.weights_dir)
+        for pred, expected in ((1.0, 3.0), (0.0, 4.0)):
+            out = renamed_model.predict(
+                {
+                    "a": np.array([pred], dtype=np.float32),
+                    "renamed_b": np.array([2.0], dtype=np.float32),
+                }
+            )[output_name]
+            np.testing.assert_allclose(out, np.array([expected], dtype=np.float32))
+
+    @unittest.skipUnless(
         _is_macos() and _macos_version() >= (12, 0) and _HAS_TORCH, "Only supported on macOS 12+"
     )
     def test_rename_feature_classifier_mlprogram(self):
