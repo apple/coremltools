@@ -25,3 +25,19 @@ class TestNameSanitizer:
         for i, in_and_out_str in enumerate(input_and_expected_strings):
             out = _NameSanitizer().sanitize_name(in_and_out_str[0])
             assert out == in_and_out_str[1]
+
+    def test_name_sanitizer_collides_with_already_valid_name(self):
+        # "a/b" gets sanitized into "a_b", so a subsequent (already valid) "a_b"
+        # must not be handed back unchanged, otherwise two different vars end up
+        # sharing a name.
+        sanitizer = _NameSanitizer()
+        assert sanitizer.sanitize_name("a/b") == "a_b"
+        assert sanitizer.sanitize_name("a_b") == "a_b_0"
+
+    def test_name_sanitizer_unique_suffix(self):
+        # Names that all sanitize into the same string get "_0", "_1", ... appended,
+        # as documented, instead of an ever growing suffix chain.
+        sanitizer = _NameSanitizer()
+        sanitized = [sanitizer.sanitize_name(name) for name in ("x/0", "x-0", "x.0", "x:0")]
+        assert sanitized == ["x_0", "x_0_0", "x_0_1", "x_0_2"]
+        assert len(set(sanitized)) == len(sanitized)
