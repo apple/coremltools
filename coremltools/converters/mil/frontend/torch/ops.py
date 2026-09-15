@@ -9992,8 +9992,12 @@ def scaled_dot_product_attention(context, node):
                   (B, ..., target_seq, source_seq)
     - is_causal : bool
     - scale : optional float
+    - enable_gqa : bool
 
     Output shape: (target_seq, d_v) or (B,...,target_seq, d_v)
+
+    With grouped-query attention, i.e. enable_gqa = True, key and value have fewer heads than
+    query, so their heads get repeated to match the number of query heads
 
     output = softmax(scale*Q*K^transpose + mask) * V
 
@@ -10046,24 +10050,31 @@ def scaled_dot_product_attention(context, node):
             dropout = inputs[4] if nargs > 4 else 0.0
             is_causal = inputs[5].val if nargs > 5 else False
             scale = inputs[6] if nargs > 6 else None
+            # Although enable_gqa is keyword-only in torch, torch script serializes it
+            # positionally. It was introduced in torch 2.5, so older torch has no such input
+            enable_gqa = inputs[7] if nargs > 7 else False
         elif node.kind == "_scaled_dot_product_flash_attention_for_cpu":
             dropout = inputs[3] if nargs > 3 else 0.0
             is_causal = inputs[4].val if nargs > 4 else False
             attn_mask = inputs[5] if nargs > 5 else None
             scale = inputs[6] if nargs > 6 else None
+            # This aten op has no grouped-query attention argument
+            enable_gqa = False
         else:
             assert node.kind in ("coreml.sdpa", "coreml::sdpa")
             attn_mask = inputs[3] if nargs > 3 else None
             dropout = 0.0
             is_causal = False
             scale = None
+            enable_gqa = False
 
-        return q, k, v, attn_mask, dropout, is_causal, scale
+        return q, k, v, attn_mask, dropout, is_causal, scale, enable_gqa
 
-    def _parse_keyword_args(context, node, attn_mask, scale) -> Tuple[Var]:
+    def _parse_keyword_args(context, node, attn_mask, scale, enable_gqa) -> Tuple[Var]:
         attn_mask = _get_kwinputs(context, node, "attn_mask", default=[attn_mask])[0]
         scale = _get_kwinputs(context, node, "scale", default=[scale])[0]
-        return attn_mask, scale
+        enable_gqa = _get_kwinputs(context, node, "enable_gqa", default=[enable_gqa])[0]
+        return attn_mask, scale, enable_gqa
 
     def _check_args(q, k, v, attn_mask, dropout, is_causal) -> None:
         if attn_mask is not None and is_causal:
@@ -10123,6 +10134,77 @@ def scaled_dot_product_attention(context, node):
         float_mask = mb.mul(x=-3e4, y=compliment_of_mask)
         return float_mask
 
+    def _repeat_kv_heads(x: Var, repeats: int) -> Var:
+        """
+        Equivalent to torch.repeat_interleave(x, repeats, dim=-3), which is how PyTorch
+        expands key and value heads for grouped-query attention
+
+        It has to be repeat interleave rather than tile, e.g. for repeats = 2
+        * repeat interleave gives head0, head0, head1, head1
+        * tile gives head0, head1, head0, head1
+        """
+        if repeats == 1:
+            return x
+
+        # (..., H, S, E) -> (..., H, 1, S, E)
+        result = mb.expand_dims(x=x, axes=[-3])
+        # (..., H, 1, S, E) -> (..., H, repeats, S, E)
+        reps = [1] * (x.rank + 1)
+        reps[-3] = repeats
+        result = mb.tile(x=result, reps=reps)
+        # (..., H, repeats, S, E) -> (..., H * repeats, S, E)
+        if any_symbolic(x.shape):
+            x_shape = mb.shape(x=x)
+            sizes = [_utils.pymil_value_at(x_shape, i) for i in range(x.rank)]
+            sizes[-3] = mb.mul(x=sizes[-3], y=repeats)
+            target_shape = mb.concat(values=sizes, axis=0)
+        else:
+            target_shape = list(x.shape)
+            target_shape[-3] *= repeats
+        return mb.reshape(x=result, shape=target_shape)
+
+    def _maybe_repeat_kv_heads_for_gqa(q: Var, k: Var, v: Var, enable_gqa) -> Tuple[Var]:
+        """
+        With grouped-query attention, key and value have fewer heads than query,
+        so their heads get repeated to match the number of query heads
+        """
+        if isinstance(enable_gqa, Var):
+            if enable_gqa.val is None:
+                raise NotImplementedError(
+                    "A variable enable_gqa is specified. Since Core ML has to determine how "
+                    "many times to repeat key and value heads at conversion time, "
+                    "we cowardly refuse to convert it"
+                )
+            enable_gqa = bool(enable_gqa.val)
+        if not enable_gqa:
+            return k, v
+
+        if q.rank < 3:
+            raise ValueError(
+                "scaled_dot_product_attention op: enable_gqa requires query, key, value to "
+                f"have a head dimension, i.e. rank >= 3, but got rank {q.rank}"
+            )
+
+        q_heads, k_heads, v_heads = q.shape[-3], k.shape[-3], v.shape[-3]
+        if is_symbolic(q_heads) or is_symbolic(k_heads) or is_symbolic(v_heads):
+            raise ValueError(
+                "scaled_dot_product_attention op: enable_gqa requires the number of heads, "
+                "i.e. the -3 dimension of query, key, value, to be known at conversion time"
+            )
+        if k_heads != v_heads:
+            raise ValueError(
+                "scaled_dot_product_attention op: key and value must have a same number of "
+                f"heads, got key heads = {k_heads}, value heads = {v_heads}"
+            )
+        if q_heads % k_heads != 0:
+            raise ValueError(
+                "scaled_dot_product_attention op: with enable_gqa, the number of query heads "
+                f"({q_heads}) must be divisible by the number of key and value heads ({k_heads})"
+            )
+
+        repeats = q_heads // k_heads
+        return _repeat_kv_heads(k, repeats), _repeat_kv_heads(v, repeats)
+
     def _translate_torch_args(q, k, attn_mask, is_causal, can_use_fused_sdpa) -> Var:
         mask = attn_mask
         if is_causal:
@@ -10133,9 +10215,15 @@ def scaled_dot_product_attention(context, node):
             mask = _cast_bool_attn_mask(mask, q)
         return mask
 
-    q, k, v, attn_mask, dropout, is_causal, scale = _parse_positional_args(context, node)
-    attn_mask, scale = _parse_keyword_args(context, node, attn_mask, scale)
+    q, k, v, attn_mask, dropout, is_causal, scale, enable_gqa = _parse_positional_args(
+        context, node
+    )
+    attn_mask, scale, enable_gqa = _parse_keyword_args(context, node, attn_mask, scale, enable_gqa)
     _check_args(q, k, v, attn_mask, dropout, is_causal)
+
+    # Grouped-query attention is lowered by repeating key and value heads,
+    # which benefits both the fused and the decomposed lowerings below
+    k, v = _maybe_repeat_kv_heads_for_gqa(q, k, v, enable_gqa)
 
     # Since ios18, Core ML supports scaled_dot_product_attention op
     # It does not have scale, though
