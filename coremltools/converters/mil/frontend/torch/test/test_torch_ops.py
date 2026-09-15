@@ -3354,6 +3354,100 @@ class TestUpsample(TorchBaseTest):
                 if layer.WhichOneof("layer") == "upsample":
                     assert len(layer.upsample.fractionalScalingFactor) == 0
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, [TorchFrontend.TORCHEXPORT]),
+    )
+    def test_interpolate_nearest2d_with_float_scale_dynamic(
+        self, compute_unit, backend, frontend
+    ):
+        input_shape = (1, 3, 10, 10)
+
+        class Model(nn.Module):
+            def __init__(self, scale_factor):
+                super().__init__()
+                self.scale_factor = scale_factor
+
+            def forward(self, args):
+                return nn.functional.interpolate(
+                    args,
+                    scale_factor=self.scale_factor,
+                    mode="nearest",
+                    recompute_scale_factor=True,
+                )
+
+        model = Model((2.5, 1.5))
+
+        upper_bound_coreml = 20 if backend[0] == "mlprogram" else -1
+        upper_bound_torch = None if upper_bound_coreml == -1 else upper_bound_coreml
+        height = RangeDim(upper_bound=upper_bound_coreml)
+        width = RangeDim(upper_bound=upper_bound_coreml)
+        converter_input_type = [TensorType(shape=(1, 3, height, width), dtype=np.float32)]
+        torch_export_dynamic_shapes = {
+            "args": {
+                2: torch.export.Dim(name="height", max=upper_bound_torch),
+                3: torch.export.Dim(name="width", max=upper_bound_torch),
+            }
+        }
+
+        self.run_compare_torch(
+            input_shape,
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            converter_input_type=converter_input_type,
+            torch_export_dynamic_shapes=torch_export_dynamic_shapes,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, [TorchFrontend.TORCHEXPORT]),
+    )
+    def test_interpolate_bilinear2d_with_float_scale_dynamic(
+        self, compute_unit, backend, frontend
+    ):
+        input_shape = (1, 3, 9, 22)
+
+        class Model(nn.Module):
+            def __init__(self, scale_factor, align_corners):
+                super().__init__()
+                self.scale_factor = scale_factor
+                self.align_corners = align_corners
+
+            def forward(self, args):
+                return nn.functional.interpolate(
+                    args,
+                    scale_factor=self.scale_factor,
+                    mode="bilinear",
+                    align_corners=self.align_corners,
+                    recompute_scale_factor=True,
+                )
+
+        model = Model((2.5, 3.5), False)
+
+        upper_bound_coreml = 30 if backend[0] == "mlprogram" else -1
+        upper_bound_torch = None if upper_bound_coreml == -1 else upper_bound_coreml
+        height = RangeDim(upper_bound=upper_bound_coreml)
+        width = RangeDim(upper_bound=upper_bound_coreml)
+        converter_input_type = [TensorType(shape=(1, 3, height, width), dtype=np.float32)]
+        torch_export_dynamic_shapes = {
+            "args": {
+                2: torch.export.Dim(name="height", max=upper_bound_torch),
+                3: torch.export.Dim(name="width", max=upper_bound_torch),
+            }
+        }
+
+        self.run_compare_torch(
+            input_shape,
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            converter_input_type=converter_input_type,
+            torch_export_dynamic_shapes=torch_export_dynamic_shapes,
+        )
+
 
 class TestEmpty(TorchBaseTest):
     @pytest.mark.parametrize(

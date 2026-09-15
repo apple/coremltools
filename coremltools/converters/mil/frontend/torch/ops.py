@@ -2464,6 +2464,28 @@ def size(context, node):
 
 
 @register_torch_op
+def sym_float(context, node):
+    """
+    torch.export emits ``sym_float`` nodes when a symbolic integer dimension
+    (from ``aten.sym_size``) is converted to float, e.g. in the output-size
+    computation of ``F.interpolate(..., scale_factor=..., recompute_scale_factor=True)``
+    over a dynamic input shape:
+
+        %h  = aten.sym_size.int(x, 2)   -> int32
+        %hf = sym_float(%h)             -> fp32
+
+    The conversion is an int32 -> fp32 cast; the value is a runtime dimension,
+    so it must remain dynamic.
+    """
+    inputs = _get_inputs(context, node, expected=1)
+    x = inputs[0]
+    if types.is_float(x.dtype):
+        context.add(x, node.name)
+    else:
+        context.add(mb.cast(x=x, dtype="fp32", name=node.name))
+
+
+@register_torch_op
 def _shape_as_tensor(context, node):
     inputs = _get_inputs(context, node, expected=1)
 
@@ -4697,9 +4719,12 @@ def upsample_nearest1d(context, node):
         assert (
             isinstance(output_size, list) and len(output_size) == 1
         ), "for dynamic shape torch should give [output_size]"
+        output_height = output_size[0]
+        if output_height.dtype != types.int32:
+            output_height = mb.cast(x=output_height, dtype="int32")
         x = mb.torch_upsample_nearest_neighbor(
             x=x,
-            output_height=output_size[0],
+            output_height=output_height,
             output_width=1,
         )
     x = mb.squeeze(x=x, axes=[3], name=node.name)
@@ -4787,10 +4812,16 @@ def upsample_nearest2d(context, node):
         # the input shape is dynamic and recompute_scale_factor = True
         # need to trace the graph to find the scale factor
         # we define a torch front end op mb.torch_upsample_nearest_neighbor to resolve the const scaling factor
+        output_height = output_size[0]
+        output_width = output_size[1]
+        if output_height.dtype != types.int32:
+            output_height = mb.cast(x=output_height, dtype="int32")
+        if output_width.dtype != types.int32:
+            output_width = mb.cast(x=output_width, dtype="int32")
         upsample_nearest2d = mb.torch_upsample_nearest_neighbor(
             x=x,
-            output_height=output_size[0],
-            output_width=output_size[1],
+            output_height=output_height,
+            output_width=output_width,
             name=node.name,
         )
     context.add(upsample_nearest2d)
@@ -7864,6 +7895,33 @@ def expm1(context, node):
 def floor(context, node):
     inputs = _get_inputs(context, node, expected=1)
     context.add(mb.floor(x=inputs[0], name=node.name))
+
+
+@register_torch_op
+def trunc(context, node):
+    """
+    torch.trunc rounds toward zero: trunc(x) = sign(x) * floor(|x|).
+    MIL has no native trunc op, so it is decomposed into sign/mul/abs/floor
+    (the same building blocks used by the ``frac`` lowering). On integer
+    tensors trunc is the identity.
+
+    torch.export also emits a ``trunc`` node when computing the output size of
+    ``F.interpolate(..., scale_factor=..., recompute_scale_factor=True)`` with
+    a float scale factor and a dynamic input shape; the SSA pass
+    ``torch_upsample_to_core_upsample`` traces this decomposition back to the
+    constant scale factor.
+    """
+    inputs = _get_inputs(context, node, expected=1)
+    x = inputs[0]
+    if types.is_int(x.dtype):
+        context.add(x, node.name)
+        return
+    floor_abs = mb.floor(
+        x=mb.abs(x=x, name=node.name + "_abs"), name=node.name + "_floor"
+    )
+    context.add(
+        mb.mul(x=floor_abs, y=mb.sign(x=x, name=node.name + "_sign"), name=node.name)
+    )
 
 
 @register_torch_op
