@@ -15867,6 +15867,111 @@ class TestScaledDotProductAttention(TorchBaseTest):
             compute_unit=compute_unit,
         )
 
+    @pytest.mark.skipif(
+        condition=version_lt(torch, "2.5.0"),
+        reason="enable_gqa is introduced in PyTorch 2.5.0",
+    )
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, minimum_deployment_target, head_numbers",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [None, ct.target.iOS18],
+            [(8, 2), (6, 3), (4, 1), (4, 4)],
+        ),
+    )
+    def test_enable_gqa(
+        self, compute_unit, backend, frontend, minimum_deployment_target, head_numbers
+    ):
+        """
+        With grouped-query attention, key and value have fewer heads than query,
+        so their heads get repeated to match the number of query heads
+        """
+        query_heads, kv_heads = head_numbers
+        batch_size, target_seq_len, source_seq_len, embedding_dim = 2, 5, 7, 8
+        query_shape = (batch_size, query_heads, target_seq_len, embedding_dim)
+        key_shape = (batch_size, kv_heads, source_seq_len, embedding_dim)
+        value_shape = key_shape
+
+        model = ModuleWrapper(
+            function=nn.functional.scaled_dot_product_attention,
+            kwargs={"enable_gqa": True},
+        )
+
+        res = self.run_compare_torch(
+            [query_shape, key_shape, value_shape],
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            minimum_deployment_target=minimum_deployment_target,
+        )
+
+        # torch script keeps sdpa as a single op, so the repeated key and value heads
+        # show up as exactly 1 tile each, or as no tile at all when there is nothing to repeat
+        if frontend == TorchFrontend.TORCHSCRIPT and backend[0] == "mlprogram":
+            op_types = get_op_types_in_program(res[1]._mil_program)
+            assert op_types.count("tile") == (0 if query_heads == kv_heads else 2)
+
+    @pytest.mark.skipif(
+        condition=version_lt(torch, "2.5.0"),
+        reason="enable_gqa is introduced in PyTorch 2.5.0",
+    )
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, minimum_deployment_target",
+        itertools.product(compute_units, backends, frontends, [None, ct.target.iOS18]),
+    )
+    def test_enable_gqa_dynamic_shapes(
+        self, compute_unit, backend, frontend, minimum_deployment_target
+    ):
+        """
+        Grouped-query attention needs a known number of heads, but batch size
+        and sequence lengths may still be dynamic
+        """
+        batch_size, query_heads, kv_heads, embedding_dim = 2, 8, 2, 8
+        target_seq_len, source_seq_len = 5, 7
+
+        class Model(nn.Module):
+            def forward(self, query, key, value):
+                return nn.functional.scaled_dot_product_attention(
+                    query, key, value, enable_gqa=True
+                )
+
+        query = generate_input_data((batch_size, query_heads, target_seq_len, embedding_dim))
+        key = generate_input_data((batch_size, kv_heads, source_seq_len, embedding_dim))
+        value = generate_input_data((batch_size, kv_heads, source_seq_len, embedding_dim))
+
+        upper_bound = 10
+        batch_coreml = ct.RangeDim(default=batch_size, upper_bound=upper_bound)
+        batch_torch = torch.export.Dim(name="batch", max=upper_bound)
+        source_seq_coreml = ct.RangeDim(default=source_seq_len, upper_bound=upper_bound)
+        source_seq_torch = torch.export.Dim(name="source_seq", max=upper_bound)
+        target_seq_coreml = ct.RangeDim(default=target_seq_len, upper_bound=upper_bound)
+        target_seq_torch = torch.export.Dim(name="target_seq", max=upper_bound)
+        converter_input_type = [
+            ct.TensorType(shape=(batch_coreml, query_heads, target_seq_coreml, embedding_dim)),
+            ct.TensorType(shape=(batch_coreml, kv_heads, source_seq_coreml, embedding_dim)),
+            ct.TensorType(shape=(batch_coreml, kv_heads, source_seq_coreml, embedding_dim)),
+        ]
+        torch_export_dynamic_shapes = {
+            "query": {0: batch_torch, 2: target_seq_torch},
+            "key": {0: batch_torch, 2: source_seq_torch},
+            "value": {0: batch_torch, 2: source_seq_torch},
+        }
+
+        self.run_compare_torch(
+            (query, key, value),
+            Model(),
+            frontend=frontend,
+            backend=backend,
+            converter_input_type=converter_input_type,
+            torch_export_dynamic_shapes=torch_export_dynamic_shapes,
+            compute_unit=compute_unit,
+            minimum_deployment_target=minimum_deployment_target,
+            input_as_shape=False,
+        )
+
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, minimum_deployment_target, mask_as_input, dynamic",
         itertools.product(
