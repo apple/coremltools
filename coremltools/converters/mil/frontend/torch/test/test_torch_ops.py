@@ -15844,10 +15844,16 @@ class TestScaledDotProductAttention(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, frontend",
-        itertools.product(compute_units, backends, frontends),
+        "compute_unit, backend, frontend, minimum_deployment_target, scale",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [None, ct.target.iOS18],
+            [1.5, 7**-0.5],
+        ),
     )
-    def test_scale(self, compute_unit, backend, frontend):
+    def test_scale(self, compute_unit, backend, frontend, minimum_deployment_target, scale):
         batch_size, seq_len, n_heads, embedding_dim = 2, 10, 3, 7
         input_shape = (batch_size, n_heads, seq_len, embedding_dim)
         model = ModuleWrapper(
@@ -15856,16 +15862,24 @@ class TestScaledDotProductAttention(TorchBaseTest):
                 "attn_mask": None,
                 "dropout_p": 0.0,
                 "is_causal": False,
-                "scale": 1.5,
+                "scale": scale,
             },
         )
-        self.run_compare_torch(
+        res = self.run_compare_torch(
             [input_shape] * 3,
             model,
             frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
+            minimum_deployment_target=minimum_deployment_target,
         )
+        if minimum_deployment_target == ct.target.iOS18 and frontend != TorchFrontend.EXECUTORCH:
+            # An explicit scale is folded into query, so the fused op is still used;
+            # a scale equal to the default 1 / sqrt(embedding_dim) needs no extra op at all
+            prog = res[1]._mil_program
+            assert len(prog.find_ops(op_type="scaled_dot_product_attention")) == 1
+            expected_num_mul = 0 if scale == embedding_dim**-0.5 else 1
+            assert len(prog.find_ops(op_type="mul")) == expected_num_mul
 
     @pytest.mark.skipif(
         condition=version_lt(torch, "2.5.0"),
