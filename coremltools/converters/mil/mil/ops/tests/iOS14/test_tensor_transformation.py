@@ -1303,6 +1303,19 @@ class TestSqueeze:
         assert np.isclose(np.squeeze(x), v.val)
 
     @staticmethod
+    def test_builder_eval_rank_0_from_split():
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1,))])
+        def prog(x):
+            x = mb.concat(values=[np.array([1.0], dtype=np.float32), x], axis=0)
+            x, _ = mb.split(x=x, num_splits=2, axis=0)
+            return mb.squeeze(x=x)
+
+        output = prog.functions["main"].outputs[0]
+        assert output.shape == ()
+        assert type(output.val) == np.float32
+        assert np.isclose(output.val, 1.0)
+
+    @staticmethod
     def test_squeeze_value_inference_is_inplace():
         @mb.program()
         def prog():
