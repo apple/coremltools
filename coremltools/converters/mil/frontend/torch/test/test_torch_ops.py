@@ -7076,7 +7076,7 @@ class TestActivation(TorchBaseTest):
     def test_gelu(self, compute_unit, backend, frontend, shape, approximate):
         model = nn.GELU() if approximate is None else nn.GELU(approximate=approximate)
         model = model.eval()
-        self.run_compare_torch(
+        res = self.run_compare_torch(
             shape,
             model,
             atol=1e-3,
@@ -7085,6 +7085,12 @@ class TestActivation(TorchBaseTest):
             backend=backend,
             compute_unit=compute_unit,
         )
+        # The tolerance above is loose enough to hide the difference between the exact
+        # and the tanh-approximated gelu, so check the mode of the emitted op explicitly
+        gelu_ops = res[1]._mil_program.find_ops(op_type="gelu")
+        assert len(gelu_ops) == 1
+        expected_mode = "TANH_APPROXIMATION" if approximate == "tanh" else "EXACT"
+        assert gelu_ops[0].mode.val == expected_mode
 
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, inplace",
