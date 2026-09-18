@@ -1233,7 +1233,12 @@ class split(Operation):
             return self.x.sym_val
 
         split_indices = np.cumsum(sizes).astype(np.int32)
-        return tuple(np.split(self.x.sym_val, split_indices[:-1], axis=self.axis.val))
+        outputs = np.split(self.x.sym_val, split_indices[:-1], axis=self.axis.val)
+        dtype = types.nptype_from_builtin(self.x.dtype)
+        return tuple(
+            output if any_symbolic(output) else output.astype(dtype, copy=False)
+            for output in outputs
+        )
 
 
 @register_op

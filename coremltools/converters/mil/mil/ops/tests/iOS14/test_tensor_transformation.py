@@ -1314,6 +1314,7 @@ class TestSqueeze:
         assert output.shape == ()
         assert type(output.val) == np.float32
         assert np.isclose(output.val, 1.0)
+        ct.convert(prog, source="milinternal", convert_to="mlprogram")
 
     @staticmethod
     def test_squeeze_value_inference_is_inplace():
