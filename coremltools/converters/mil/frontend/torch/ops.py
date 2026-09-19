@@ -10215,6 +10215,24 @@ def scaled_dot_product_attention(context, node):
             mask = _cast_bool_attn_mask(mask, q)
         return mask
 
+    def _fold_scale_into_query(q: Var, scale) -> Optional[Var]:
+        """
+        Core ML fused scaled_dot_product_attention always scales by 1 / sqrt(embed_size),
+        so a custom scale is folded into query as q * (scale * sqrt(embed_size)).
+        Returns None when that is impossible, i.e. the decomposition has to be used.
+        """
+        if scale is None:
+            return q
+        scale_val = scale.val if isinstance(scale, Var) else scale
+        embed_size = q.shape[-1]
+        if scale_val is None or is_symbolic(embed_size):
+            return None
+        factor = float(scale_val) * _math.sqrt(embed_size)
+        if np.isclose(factor, 1.0):
+            return q
+        factor = np.array(factor, dtype=types.nptype_from_builtin(q.dtype))
+        return mb.mul(x=q, y=factor)
+
     q, k, v, attn_mask, dropout, is_causal, scale, enable_gqa = _parse_positional_args(
         context, node
     )
@@ -10226,11 +10244,16 @@ def scaled_dot_product_attention(context, node):
     k, v = _maybe_repeat_kv_heads_for_gqa(q, k, v, enable_gqa)
 
     # Since ios18, Core ML supports scaled_dot_product_attention op
-    # It does not have scale, though
-    can_use_fused_sdpa = is_current_opset_version_compatible_with(target.iOS18) and scale is None
+    # It does not have scale, though, so a custom scale gets folded into query
+    fused_q = None
+    if is_current_opset_version_compatible_with(target.iOS18):
+        fused_q = _fold_scale_into_query(q, scale)
+    can_use_fused_sdpa = fused_q is not None
     mask = _translate_torch_args(q, k, attn_mask, is_causal, can_use_fused_sdpa)
 
     if can_use_fused_sdpa:
+        q = fused_q
+
         # ios18 scaled_dot_product_attention only supports rank >= 3
         is_rank_2 = q.rank == 2
 
