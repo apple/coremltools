@@ -1314,7 +1314,10 @@ class TestSqueeze:
         assert output.shape == ()
         assert type(output.val) == np.float32
         assert np.isclose(output.val, 1.0)
-        ct.convert(prog, source="milinternal", convert_to="mlprogram")
+        model = ct.convert(prog, source="milinternal", convert_to="mlprogram")
+        if ct.utils._macos_version() >= (12, 0):
+            prediction = model.predict({"x": np.array([2.0], dtype=np.float32)})
+            np.testing.assert_allclose(list(prediction.values())[0], 1.0)
 
     @staticmethod
     def test_squeeze_value_inference_is_inplace():
