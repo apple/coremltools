@@ -3,7 +3,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from typing import List, Set, Tuple
+from typing import List, Optional, Set, Tuple
 
 import numpy as np
 
@@ -27,8 +27,10 @@ from coremltools.optimize import _utils as optimize_utils
 class merge_affine_dequantize_with_consecutive_ops(AbstractGraphPass):
     """
     This graph pass does const folding to a chain of supported ops starts with a
-    ``constexpr_affine_dequantize`` op. More types of op are supported when quantization
-    is tensor-wise, and only a subset is supported for channel-wise. For example
+    quantization ``constexpr`` op (``constexpr_affine_dequantize`` for pre-iOS18, or
+    ``constexpr_blockwise_shift_scale`` for iOS18+). More types of op are supported when
+    quantization is tensor-wise, and only a subset is supported for channel-wise /
+    block-wise. For example
 
     .. code-block::
 
@@ -39,6 +41,18 @@ class merge_affine_dequantize_with_consecutive_ops(AbstractGraphPass):
             new_data -> constexpr_affine_dequantize -> out
 
     where ``new_data`` is computed by ``data -> transpose -> expand_dims``.
+
+    For ``constexpr_blockwise_shift_scale``, ``scale`` (and ``offset``, if present) have the
+    same rank as ``data``, so they get the very same shape op applied to them, which keeps
+    every block lined up with the elements it quantizes:
+
+    .. code-block::
+
+        Input graph:
+            data, scale -> constexpr_blockwise_shift_scale -> transpose -> out
+
+        Output graph:
+            new_data, new_scale -> constexpr_blockwise_shift_scale -> out
 
     Note that, the graph pass only supports const folding of a single linked list pattern.
     For example, the following pattern will not be changed
@@ -59,9 +73,31 @@ class merge_affine_dequantize_with_consecutive_ops(AbstractGraphPass):
         "squeeze",
     }
     SUPPORTED_OP_TYPES_PER_CHANNEL = {"transpose"}
+    # For ``constexpr_blockwise_shift_scale``, ``scale`` / ``offset`` always have the same
+    # rank as ``data``, so a shape op can be folded whenever applying the *same* shape op to
+    # the parameters keeps the block structure intact:
+    #   * ``transpose`` permutes the block grid exactly like it permutes the data.
+    #   * ``expand_dims`` inserts size-1 axes into both, i.e. axes with block size 1.
+    #   * ``squeeze`` can only remove size-1 data axes, and a size-1 data axis forces a
+    #     size-1 parameter axis, since every parameter dim must divide its data dim.
+    # ``reshape`` is excluded because in general it does not preserve the block structure.
+    # It stays available for single-element (per-tensor) parameters, which are handled by
+    # SUPPORTED_OP_TYPES_PER_TENSOR.
+    SUPPORTED_OP_TYPES_BLOCKWISE = {"transpose", "expand_dims", "squeeze"}
     assert SUPPORTED_OP_TYPES_PER_CHANNEL.issubset(
         SUPPORTED_OP_TYPES_PER_TENSOR
     ), "If an op can merge with channel-wise quantization, then it must also be able to merge with tensor-wise quantization"
+    assert SUPPORTED_OP_TYPES_BLOCKWISE.issubset(
+        SUPPORTED_OP_TYPES_PER_TENSOR
+    ), "If an op can merge with block-wise quantization, then it must also be able to merge with tensor-wise quantization"
+
+    # The quantization constexpr ops this pass knows how to fold shape ops into.
+    # ``fuse_transpose_matmul`` consults this set so it does not consume a transpose that
+    # would be better folded into the compressed weight itself.
+    SUPPORTED_CONSTEXPR_OP_TYPES = {
+        "constexpr_affine_dequantize",  # iOS16
+        "constexpr_blockwise_shift_scale",  # iOS18
+    }
 
     def apply(self, prog):
         for f in prog.functions.values():
@@ -81,7 +117,7 @@ class merge_affine_dequantize_with_consecutive_ops(AbstractGraphPass):
                 while block_changed:
                     block_changed = self.merge_affine_dequantize_with_consecutive_ops_block(b)
 
-            if op.op_type != "constexpr_affine_dequantize":
+            if op.op_type not in self.SUPPORTED_CONSTEXPR_OP_TYPES:
                 continue
 
             if self._try_to_transform(op, block):
@@ -107,6 +143,47 @@ class merge_affine_dequantize_with_consecutive_ops(AbstractGraphPass):
             if axes is None or axes.val is None:
                 return np.squeeze(val)
             return np.squeeze(val, axis=tuple(op.axes.val.tolist()))
+
+    @staticmethod
+    def _resolve_squeeze_axes(op: Operation) -> Tuple[int, ...]:
+        """
+        The axes a ``squeeze`` op removes from its input. Without explicit ``axes``, ``squeeze``
+        removes every size-1 axis.
+        """
+        assert op.op_type == "squeeze"
+        if op.axes is None or op.axes.val is None:
+            return tuple(axis for axis, dim in enumerate(op.x.shape) if dim == 1)
+        return tuple(int(axis) for axis in op.axes.val.tolist())
+
+    @staticmethod
+    def _apply_equivalent_transform_to_block_param(val: np.ndarray, op: Operation) -> np.ndarray:
+        """
+        Apply the shape op ``op`` to a ``constexpr_blockwise_shift_scale`` parameter
+        (``scale`` or ``offset``), which carries the same rank as ``data``.
+        """
+        if (
+            op.op_type
+            not in merge_affine_dequantize_with_consecutive_ops.SUPPORTED_OP_TYPES_PER_TENSOR
+        ):
+            raise ValueError(f"unsupported op_type {op.op_type}")
+
+        if op.op_type == "transpose":
+            return np.transpose(val, axes=op.perm.val)
+        if op.op_type == "expand_dims":
+            # ``axes`` is resolved against the output rank, which is the same for ``data`` and
+            # for a parameter of equal rank, so the new size-1 axes land in the same places.
+            return np.expand_dims(val, axis=op.axes.val.tolist())
+        if op.op_type == "squeeze":
+            # Only size-1 ``data`` axes can be squeezed, and those force size-1 parameter axes,
+            # so squeezing the very same axes out of the parameter is always valid.
+            return np.squeeze(
+                val, axis=merge_affine_dequantize_with_consecutive_ops._resolve_squeeze_axes(op)
+            )
+        if op.op_type == "reshape":
+            # Only reachable for a single-element (per-tensor) parameter: an all-ones shape of
+            # the new rank keeps quantization tensor-wise whatever the new data shape is.
+            assert val.size == 1, "reshape can only be folded into a per-tensor parameter"
+            return np.reshape(val, (1,) * len(op.outputs[0].shape))
 
     @staticmethod
     def search_for_ops_to_fold(
@@ -207,7 +284,79 @@ class merge_affine_dequantize_with_consecutive_ops(AbstractGraphPass):
         block.remove_ops([op] + ops_to_fold)
         return True
 
+    @staticmethod
+    def _try_to_transform_blockwise(op: Operation, block: Block) -> bool:
+        """
+        Fold shape ops into an iOS18 ``constexpr_blockwise_shift_scale``.
+
+        ``data``, ``scale`` and ``offset`` all share the same rank, and the block size along
+        each axis is ``data.shape[i] // scale.shape[i]``. So a shape op can be folded by
+        applying it to ``data`` and to the parameters alike, as long as that leaves each block
+        covering the same elements. See ``SUPPORTED_OP_TYPES_BLOCKWISE`` for which ops qualify.
+        """
+        data = op.data.val
+        scale = op.scale.val
+        offset: Optional[np.ndarray] = None if op.offset is None else op.offset.val
+        # `data` / `scale` / `offset` may in turn be produced by another `constexpr` op (e.g. a
+        # palettized scale). Materializing those here would defeat the compression, so skip.
+        if data is None or scale is None or (op.offset is not None and offset is None):
+            return False
+
+        supported_op_types = (
+            merge_affine_dequantize_with_consecutive_ops.SUPPORTED_OP_TYPES_PER_TENSOR
+            if scale.size == 1
+            else merge_affine_dequantize_with_consecutive_ops.SUPPORTED_OP_TYPES_BLOCKWISE
+        )
+        ops_to_fold = merge_affine_dequantize_with_consecutive_ops.search_for_ops_to_fold(
+            op, block, supported_op_types
+        )
+        if len(ops_to_fold) == 0:
+            return False
+
+        # do the same transformation on the source quantized data and on its parameters
+        transform_data = merge_affine_dequantize_with_consecutive_ops._apply_equivalent_transform
+        transform_param = (
+            merge_affine_dequantize_with_consecutive_ops._apply_equivalent_transform_to_block_param
+        )
+        for op_to_fold in ops_to_fold:
+            data = transform_data(data, op_to_fold)
+            scale = transform_param(scale, op_to_fold)
+            if offset is not None:
+                offset = transform_param(offset, op_to_fold)
+
+        # `constexpr_blockwise_shift_scale` requires rank >= 1 and equal ranks. Both hold by
+        # construction for every supported op, but a `squeeze` can drop the rank to 0, in which
+        # case there is no valid op to build, so leave the graph alone.
+        if data.ndim < 1 or data.ndim != scale.ndim:
+            return False
+
+        kwargs = {
+            "data": data,
+            "scale": scale,
+            "name": ops_to_fold[-1].outputs[0].name,
+            "before_op": ops_to_fold[-1],
+        }
+        if offset is not None:
+            kwargs["offset"] = offset
+        new_var = mb.constexpr_blockwise_shift_scale(**kwargs)
+
+        block.replace_uses_of_var_after_op(
+            anchor_op=ops_to_fold[-1],
+            old_var=ops_to_fold[-1].outputs[0],
+            new_var=new_var,
+            force_replace=True,
+        )
+        block.remove_ops([op] + ops_to_fold)
+        return True
+
     def _try_to_transform(self, op: Operation, block: Block) -> bool:
+        if op.op_type == "constexpr_blockwise_shift_scale":
+            # make sure data only feeds into a single op, otherwise folding would duplicate the
+            # compressed weight instead of just reshaping it
+            if len(op.data.child_ops) != 1:
+                return False
+            return self._try_to_transform_blockwise(op, block)
+
         # make sure quantized_data only feeds into a single op
         if len(op.quantized_data.child_ops) != 1:
             return False

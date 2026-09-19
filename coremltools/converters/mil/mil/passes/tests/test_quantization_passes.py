@@ -15,8 +15,12 @@ import coremltools as ct
 import coremltools.converters.mil.mil.types as types
 from coremltools._deps import _HAS_TORCH, _IS_MACOS, MSG_TORCH_NOT_FOUND
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil.ops.defs.iOS18.compression import (
+    constexpr_blockwise_shift_scale,
+)
 from coremltools.converters.mil.mil.passes.defs import quantization
 from coremltools.converters.mil.mil.passes.defs.quantization import add_fp16_cast
+from coremltools.converters.mil.mil.passes.pass_pipeline import PassPipelineManager
 from coremltools.converters.mil.mil.types import numpy_type_to_builtin_type
 from coremltools.converters.mil.testing_utils import (
     apply_pass_and_basic_check,
@@ -261,6 +265,365 @@ class TestTensorwiseAffineDequantizeConstElimination:
 
         transpose_op = prog.find_ops(op_type="transpose", exactly_one=True)[0]
         assert transpose_op.perm.val.tolist() == [0, 3, 2, 1]
+
+
+
+class TestBlockwiseShiftScaleConstElimination:
+    """
+    ``merge_affine_dequantize_with_consecutive_ops`` folding shape ops into the iOS18
+    ``constexpr_blockwise_shift_scale`` op.
+    """
+
+    @staticmethod
+    def _decompressed(op) -> np.ndarray:
+        """The dense value a ``constexpr_blockwise_shift_scale`` op stands for."""
+        return constexpr_blockwise_shift_scale.decompress(
+            op.data.val,
+            op.scale.val,
+            None if op.offset is None else op.offset.val,
+        )
+
+    @pytest.mark.parametrize(
+        "scale_shape, has_offset",
+        itertools.product(
+            [(1, 1), (1, 4), (6, 1), (3, 2)],  # per-tensor, per-channel (both axes), blockwise
+            [True, False],
+        ),
+    )
+    def test_eliminate_transpose(self, scale_shape, has_offset):
+        """
+        Input graph:
+            data, scale -> constexpr_blockwise_shift_scale -> transpose
+
+        Output graph:
+            new_data, new_scale -> constexpr_blockwise_shift_scale
+
+        ``scale`` (and ``offset``) get the very same permutation as ``data``, which keeps every
+        block covering the same elements.
+        """
+        SHAPE = (6, 4)
+        PERM = (1, 0)
+        data = np.random.randint(-8, 8, SHAPE).astype(np.int8)
+        scale = (np.random.rand(*scale_shape) + 0.1).astype(np.float16)
+        offset = np.random.randint(-8, 8, scale_shape).astype(np.int8) if has_offset else None
+
+        @mb.program(input_specs=[], opset_version=ct.target.iOS18)
+        def prog():
+            kwargs = {"data": data, "scale": scale}
+            if has_offset:
+                kwargs["offset"] = offset
+            return mb.transpose(x=mb.constexpr_blockwise_shift_scale(**kwargs), perm=PERM)
+
+        old_op = prog.find_ops(op_type="constexpr_blockwise_shift_scale", exactly_one=True)[0]
+        expected = np.transpose(self._decompressed(old_op), PERM)
+
+        apply_pass_and_basic_check(prog, "common::merge_affine_dequantize_with_consecutive_ops")
+        assert get_op_types_in_program(prog) == ["constexpr_blockwise_shift_scale"]
+
+        new_op = prog.find_ops(op_type="constexpr_blockwise_shift_scale", exactly_one=True)[0]
+        np.testing.assert_array_equal(new_op.data.val, np.transpose(data, PERM))
+        np.testing.assert_array_equal(new_op.scale.val, np.transpose(scale, PERM))
+        if has_offset:
+            np.testing.assert_array_equal(new_op.offset.val, np.transpose(offset, PERM))
+        else:
+            assert new_op.offset is None
+        # the folded op must decompress to exactly what the original chain produced
+        np.testing.assert_array_equal(self._decompressed(new_op), expected)
+
+    def test_eliminate_transpose_keeps_sub_byte_dtype(self):
+        """Folding must not silently widen an int4 weight to int8."""
+        data = np.random.randint(-8, 8, (6, 4)).astype(types.np_int4_dtype)
+        scale = (np.random.rand(1, 4) + 0.1).astype(np.float16)
+        offset = np.random.randint(-8, 8, (1, 4)).astype(types.np_int4_dtype)
+
+        @mb.program(input_specs=[], opset_version=ct.target.iOS18)
+        def prog():
+            return mb.transpose(
+                x=mb.constexpr_blockwise_shift_scale(data=data, scale=scale, offset=offset),
+                perm=(1, 0),
+            )
+
+        apply_pass_and_basic_check(prog, "common::merge_affine_dequantize_with_consecutive_ops")
+        assert get_op_types_in_program(prog) == ["constexpr_blockwise_shift_scale"]
+
+        new_op = prog.find_ops(op_type="constexpr_blockwise_shift_scale", exactly_one=True)[0]
+        assert types.builtin_to_string(new_op.data.dtype) == "int4"
+        assert types.builtin_to_string(new_op.offset.dtype) == "int4"
+
+    def test_eliminate_expand_dims(self):
+        data = np.random.randint(-8, 8, (4, 6)).astype(np.int8)
+        scale = (np.random.rand(4, 3) + 0.1).astype(np.float16)
+        AXES = (0, 3)
+
+        @mb.program(input_specs=[], opset_version=ct.target.iOS18)
+        def prog():
+            return mb.expand_dims(
+                x=mb.constexpr_blockwise_shift_scale(data=data, scale=scale), axes=AXES
+            )
+
+        old_op = prog.find_ops(op_type="constexpr_blockwise_shift_scale", exactly_one=True)[0]
+        expected = np.expand_dims(self._decompressed(old_op), AXES)
+
+        apply_pass_and_basic_check(prog, "common::merge_affine_dequantize_with_consecutive_ops")
+        assert get_op_types_in_program(prog) == ["constexpr_blockwise_shift_scale"]
+
+        new_op = prog.find_ops(op_type="constexpr_blockwise_shift_scale", exactly_one=True)[0]
+        np.testing.assert_array_equal(new_op.data.val, np.expand_dims(data, AXES))
+        np.testing.assert_array_equal(new_op.scale.val, np.expand_dims(scale, AXES))
+        np.testing.assert_array_equal(self._decompressed(new_op), expected)
+
+    @pytest.mark.parametrize("axes", [(0, 2), None])
+    def test_eliminate_squeeze(self, axes):
+        data = np.random.randint(-8, 8, (1, 4, 1, 6)).astype(np.int8)
+        scale = (np.random.rand(1, 4, 1, 3) + 0.1).astype(np.float16)
+
+        @mb.program(input_specs=[], opset_version=ct.target.iOS18)
+        def prog():
+            return mb.squeeze(
+                x=mb.constexpr_blockwise_shift_scale(data=data, scale=scale), axes=axes
+            )
+
+        old_op = prog.find_ops(op_type="constexpr_blockwise_shift_scale", exactly_one=True)[0]
+        expected = np.squeeze(self._decompressed(old_op), axis=axes)
+
+        apply_pass_and_basic_check(prog, "common::merge_affine_dequantize_with_consecutive_ops")
+        assert get_op_types_in_program(prog) == ["constexpr_blockwise_shift_scale"]
+
+        new_op = prog.find_ops(op_type="constexpr_blockwise_shift_scale", exactly_one=True)[0]
+        np.testing.assert_array_equal(new_op.data.val, np.squeeze(data, axis=axes))
+        np.testing.assert_array_equal(new_op.scale.val, np.squeeze(scale, axis=axes))
+        np.testing.assert_array_equal(self._decompressed(new_op), expected)
+
+    def test_eliminate_multiple_ops(self):
+        data = np.random.randint(-8, 8, (1, 4, 6)).astype(np.int8)
+        scale = (np.random.rand(1, 4, 3) + 0.1).astype(np.float16)
+
+        @mb.program(input_specs=[], opset_version=ct.target.iOS18)
+        def prog():
+            res = mb.constexpr_blockwise_shift_scale(data=data, scale=scale)
+            res = mb.transpose(x=res, perm=(0, 2, 1))
+            res = mb.squeeze(x=res, axes=(0,))
+            return mb.expand_dims(x=res, axes=(1,))
+
+        old_op = prog.find_ops(op_type="constexpr_blockwise_shift_scale", exactly_one=True)[0]
+        expected = self._decompressed(old_op)
+        expected = np.expand_dims(np.squeeze(np.transpose(expected, (0, 2, 1)), 0), 1)
+
+        apply_pass_and_basic_check(prog, "common::merge_affine_dequantize_with_consecutive_ops")
+        assert get_op_types_in_program(prog) == ["constexpr_blockwise_shift_scale"]
+
+        new_op = prog.find_ops(op_type="constexpr_blockwise_shift_scale", exactly_one=True)[0]
+        np.testing.assert_array_equal(self._decompressed(new_op), expected)
+
+    def test_reshape_only_folded_when_per_tensor(self):
+        """
+        ``reshape`` does not preserve the block structure in general, so it may only be folded
+        when the parameters are a single element, i.e. quantization is tensor-wise.
+        """
+        data = np.random.randint(-8, 8, (4, 6)).astype(np.int8)
+
+        def build(scale):
+            @mb.program(input_specs=[], opset_version=ct.target.iOS18)
+            def prog():
+                return mb.reshape(
+                    x=mb.constexpr_blockwise_shift_scale(data=data, scale=scale), shape=(3, 8)
+                )
+
+            return prog
+
+        # block-wise: must be left alone
+        blockwise = build((np.random.rand(4, 3) + 0.1).astype(np.float16))
+        apply_pass_and_basic_check(
+            blockwise, "common::merge_affine_dequantize_with_consecutive_ops"
+        )
+        assert get_op_types_in_program(blockwise) == [
+            "constexpr_blockwise_shift_scale",
+            "reshape",
+        ]
+
+        # per-tensor: safe to fold, the new parameters are all-ones of the new rank
+        per_tensor = build(np.float16(0.7).reshape(1, 1))
+        old_op = per_tensor.find_ops(
+            op_type="constexpr_blockwise_shift_scale", exactly_one=True
+        )[0]
+        expected = np.reshape(self._decompressed(old_op), (3, 8))
+        apply_pass_and_basic_check(
+            per_tensor, "common::merge_affine_dequantize_with_consecutive_ops"
+        )
+        assert get_op_types_in_program(per_tensor) == ["constexpr_blockwise_shift_scale"]
+        new_op = per_tensor.find_ops(
+            op_type="constexpr_blockwise_shift_scale", exactly_one=True
+        )[0]
+        np.testing.assert_array_equal(new_op.data.val, np.reshape(data, (3, 8)))
+        assert new_op.scale.shape == (1, 1)
+        np.testing.assert_array_equal(self._decompressed(new_op), expected)
+
+    def test_negative_non_linked_list_pattern(self):
+        """
+        If ``data`` feeds into multiple ``constexpr_blockwise_shift_scale`` ops, folding would
+        duplicate the compressed weight, so the graph is left unchanged.
+        """
+        data = np.random.randint(-8, 8, (4, 6)).astype(np.int8)
+
+        @mb.program(input_specs=[], opset_version=ct.target.iOS18)
+        def prog():
+            shared = mb.const(val=data)
+            x = mb.constexpr_blockwise_shift_scale(
+                data=shared, scale=np.float16(0.7).reshape(1, 1)
+            )
+            y = mb.constexpr_blockwise_shift_scale(
+                data=shared, scale=np.float16(0.3).reshape(1, 1)
+            )
+            return mb.transpose(x=x, perm=(1, 0)), mb.transpose(x=y, perm=(1, 0))
+
+        apply_pass_and_basic_check(prog, "common::merge_affine_dequantize_with_consecutive_ops")
+        assert get_op_types_in_program(prog) == [
+            "constexpr_blockwise_shift_scale",
+            "constexpr_blockwise_shift_scale",
+            "transpose",
+            "transpose",
+        ]
+
+    def test_negative_nested_constexpr(self):
+        """
+        When ``data`` is itself produced by another ``constexpr`` op (a palettized weight with a
+        per-channel scale), materializing it would undo the compression, so skip it.
+        """
+
+        @mb.program(input_specs=[], opset_version=ct.target.iOS18)
+        def prog():
+            lut = mb.constexpr_lut_to_dense(
+                indices=np.arange(24).reshape(4, 6).astype(types.np_uint4_dtype),
+                lut=np.arange(16).reshape(1, 1, 16, 1).astype(np.float16),
+            )
+            scaled = mb.constexpr_blockwise_shift_scale(
+                data=lut, scale=(np.random.rand(4, 1) + 0.1).astype(np.float16)
+            )
+            return mb.transpose(x=scaled, perm=(1, 0))
+
+        apply_pass_and_basic_check(prog, "common::merge_affine_dequantize_with_consecutive_ops")
+        assert get_op_types_in_program(prog) == [
+            "constexpr_lut_to_dense",
+            "constexpr_blockwise_shift_scale",
+            "transpose",
+        ]
+
+    def test_eliminate_connected_outputs(self):
+        """The optimization stops when the node is a block output."""
+        data = np.random.randint(-8, 8, (4, 6)).astype(np.int8)
+        scale = (np.random.rand(4, 1) + 0.1).astype(np.float16)
+
+        @mb.program(input_specs=[], opset_version=ct.target.iOS18)
+        def prog():
+            x = mb.constexpr_blockwise_shift_scale(data=data, scale=scale)
+            x = mb.transpose(x=x, perm=(1, 0))
+            y = mb.transpose(x=x, perm=(1, 0))
+            return x, y
+
+        apply_pass_and_basic_check(prog, "common::merge_affine_dequantize_with_consecutive_ops")
+        assert get_op_types_in_program(prog) == ["constexpr_blockwise_shift_scale", "transpose"]
+
+        new_op = prog.find_ops(op_type="constexpr_blockwise_shift_scale", exactly_one=True)[0]
+        np.testing.assert_array_equal(new_op.data.val, np.transpose(data, (1, 0)))
+        np.testing.assert_array_equal(new_op.scale.val, np.transpose(scale, (1, 0)))
+
+    @pytest.mark.parametrize("opset_version", [ct.target.iOS16, ct.target.iOS18])
+    def test_transpose_before_matmul_folds_into_weight(self, opset_version):
+        """
+        `constexpr -> transpose -> matmul` must end up as `constexpr -> matmul`, with the
+        transpose folded into the compressed weight rather than into the matmul's
+        ``transpose_y`` flag.
+
+        This is the whole pipeline, not a single pass: ``fuse_transpose_matmul`` runs long
+        before ``merge_affine_dequantize_with_consecutive_ops``, and used to consume the
+        transpose first, mirroring the weight relative to what a dense const weight would give
+        (``const_elimination`` folds ``transpose(const)`` at the very start of the pipeline).
+        """
+        K, N = 4, 3
+        is_ios18 = opset_version == ct.target.iOS18
+        input_dtype = types.fp16 if is_ios18 else types.fp32
+
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=(1, K), dtype=input_dtype)],
+            opset_version=opset_version,
+        )
+        def prog(x):
+            if is_ios18:
+                weight = mb.constexpr_blockwise_shift_scale(
+                    data=np.random.randint(-8, 8, (K, N)).astype(np.int8),
+                    scale=(np.random.rand(1, N) + 0.1).astype(np.float16),
+                )
+            else:
+                weight = mb.constexpr_affine_dequantize(
+                    quantized_data=np.random.randint(-8, 8, (K, N)).astype(np.int8),
+                    axis=1,
+                    scale=(np.random.rand(N) + 0.1).astype(np.float32),
+                    zero_point=np.zeros(N, dtype=np.int8),
+                )
+            return mb.matmul(x=x, y=mb.transpose(x=weight, perm=(1, 0)), transpose_y=True)
+
+        constexpr_op_type = get_op_types_in_program(prog)[0]
+        PassPipelineManager.apply_pipeline(prog, ct.PassPipeline.DEFAULT)
+
+        # `add_fp16_cast` may wrap an fp32 program in casts, which are irrelevant here
+        op_types = [op for op in get_op_types_in_program(prog) if op != "cast"]
+        assert op_types == [constexpr_op_type, "matmul"]
+        matmul = prog.find_ops(op_type="matmul", exactly_one=True)[0]
+        assert matmul.transpose_y.val, "the transpose should have been folded into the weight"
+        assert matmul.y.shape == (N, K)
+
+    @pytest.mark.skipif(
+        not _IS_MACOS or ct.utils._macos_version() < (15, 0),
+        reason="prediction requires macOS 15+",
+    )
+    def test_numerical_output_preserved(self):
+        """Convert the same program with and without the optimization, and compare outputs."""
+        K, N = 8, 4
+        data = np.random.randint(-8, 8, (K, N)).astype(types.np_int4_dtype)
+        scale = (np.random.rand(1, N) * 0.1 + 0.05).astype(np.float16)
+        offset = np.random.randint(-8, 8, (1, N)).astype(types.np_int4_dtype)
+
+        def build():
+            @mb.program(
+                input_specs=[mb.TensorSpec(shape=(1, K), dtype=types.fp16)],
+                opset_version=ct.target.iOS18,
+            )
+            def prog(x):
+                weight = mb.constexpr_blockwise_shift_scale(
+                    data=data, scale=scale, offset=offset
+                )
+                return mb.matmul(
+                    x=x, y=mb.transpose(x=weight, perm=(1, 0)), transpose_y=True
+                )
+
+            return prog
+
+        def convert(pipeline):
+            return ct.convert(
+                build(),
+                convert_to="mlprogram",
+                minimum_deployment_target=ct.target.iOS18,
+                pass_pipeline=pipeline,
+                compute_units=ct.ComputeUnit.CPU_ONLY,
+            )
+
+        unoptimized = convert(ct.PassPipeline.EMPTY)
+        optimized = convert(ct.PassPipeline.DEFAULT)
+        assert "transpose" not in get_op_types_in_program(optimized._mil_program)
+
+        input_name = list(unoptimized.input_description)[0]
+        unoptimized_output = list(unoptimized.output_description)[0]
+        optimized_output = list(optimized.output_description)[0]
+
+        for _ in range(5):
+            x = (np.random.rand(1, K) * 4 - 2).astype(np.float16)
+            expected = unoptimized.predict({input_name: x})[unoptimized_output]
+            actual = optimized.predict({input_name: x})[optimized_output]
+            # the two matmul orientations accumulate in a different order, so allow fp16 noise
+            np.testing.assert_allclose(
+                actual, expected, rtol=0.0, atol=1e-2 * np.max(np.abs(expected))
+            )
+
 
 
 class QuantizationBaseTest:

@@ -8,6 +8,9 @@ import numpy as np
 from coremltools.converters.mil.mil import Block
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Operation, Program, Var
+from coremltools.converters.mil.mil.passes.defs.optimize_quantization import (
+    merge_affine_dequantize_with_consecutive_ops,
+)
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
@@ -352,10 +355,32 @@ class fuse_transpose_matmul(AbstractGraphPass):
         1. check if x is transposed
         2. check if x is transposed in the last 2 dimensions,
            since the transpose arg in matmul only transposes the last 2 dimensions
+        3. check that we are not transposing a compressed weight, which is better folded
+           into the weight itself by ``merge_affine_dequantize_with_consecutive_ops``
         """
 
         # x is not transposed, False
         if x.op is None or x.op.op_type != "transpose":
+            return False
+
+        # ``transpose(const)`` never reaches this pass: ``const_elimination`` folds it into a
+        # new const far earlier in the pipeline. ``transpose(constexpr_*(...))``, i.e. a
+        # transposed quantized weight, is the same situation, except ``const_elimination``
+        # cannot fold it, since ``constexpr`` ops are deliberately left unmaterialized.
+        # Decline it here so ``merge_affine_dequantize_with_consecutive_ops`` can fold the
+        # transpose into the compressed weight instead. That removes the same op *and* leaves
+        # quantized weights in the same matmul orientation as their non-quantized equivalents,
+        # rather than in the mirrored one.
+        # This is not a lost fusion: ``_CLEANUP_PASSES`` runs
+        # ``merge_affine_dequantize_with_consecutive_ops`` and then ``fuse_transpose_matmul``
+        # again, so a transpose the merge pass declines (e.g. a weight shared by several
+        # ``constexpr`` ops) still gets fused there.
+        transposed_var = x.op.x
+        if (
+            transposed_var.op is not None
+            and transposed_var.op.op_type
+            in merge_affine_dequantize_with_consecutive_ops.SUPPORTED_CONSTEXPR_OP_TYPES
+        ):
             return False
 
         rank = x.rank
