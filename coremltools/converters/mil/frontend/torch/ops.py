@@ -80,6 +80,10 @@ TORCH_STRING_ARGS = {
     # searchsorted side
     "left",
     "right",
+
+    # gelu approximate
+    "none",
+    "tanh",
 }
 
 
@@ -6429,16 +6433,20 @@ def hardsigmoid(context, node):
 
 @register_torch_op
 def gelu(context, node):
-    inputs = _get_inputs(context, node)
-    assert len(inputs) in (1, 2)
+    inputs = _get_inputs(context, node, expected=(1, 2))
+    x = inputs[0]
+    # torch script serializes approximate positionally, torch.export keeps it as a keyword
+    approximate = inputs[1] if len(inputs) == 2 else None
+    approximate = _get_kwinputs(context, node, "approximate", default=[approximate])[0]
+    if isinstance(approximate, Var):
+        approximate = approximate.val
+
     mode = None
-    if len(inputs) == 2:
-        approximate = inputs[1].val
-        if approximate == "tanh":
-            mode = "TANH_APPROXIMATION"
-        else:
-            assert approximate == "none"
-    res = mb.gelu(x=inputs[0], mode=mode, name=node.name)
+    if approximate == "tanh":
+        mode = "TANH_APPROXIMATION"
+    elif approximate not in (None, "none"):
+        raise ValueError(f"gelu: unsupported approximate mode {approximate}")
+    res = mb.gelu(x=x, mode=mode, name=node.name)
     context.add(res)
 
 
