@@ -1139,12 +1139,28 @@ class palettize_weights(AbstractCompressionPass):
                         "Palettization with per-channel-scale is only supported since "
                         "iOS18. Please set minimum_deployment_target accordingly."
                     )
-                new_var = mb.constexpr_blockwise_shift_scale(
-                    data=new_var,
-                    scale=per_channel_scale,
-                    offset=None,
-                    before_op=op,
+                # Bake per_channel_scale into the LUT entries instead of
+                # wrapping the dense weight in a runtime
+                # constexpr_blockwise_shift_scale: that wrapper fails MPSGraph
+                # verification on Apple Neural Engine (macOS 26+) because the
+                # mps.dequantize lowering expects an integer data operand.
+                # Folding is mathematically identical (output = data * scale).
+                lut = lut_params.lut.copy()
+                # LUT has trailing dims [group, num_palette, vector_size] that
+                # are not present in per_channel_scale; broadcast across those.
+                pcs_bcast = per_channel_scale.reshape(
+                    per_channel_scale.shape
+                    + (1,) * (lut.ndim - per_channel_scale.ndim)
+                )
+                lut = (
+                    lut.astype(np.float32) * pcs_bcast.astype(np.float32)
+                ).astype(lut.dtype)
+                new_var = frontend_utils._construct_constexpr_lut_op(
+                    lut_params.indices,
+                    lut,
+                    lut_params.vector_axis,
                     name=op.name + "_palettized_pcs",
+                    before_op=op,
                 )
         else:
             decompressed_val = self.decompress(lut_params)
