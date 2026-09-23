@@ -9463,6 +9463,27 @@ class TestZeros(TorchBaseTest):
         )
 
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_zeros_like_dtype_from_bool(self, compute_unit, backend, frontend):
+        # nn.MultiheadAttention builds its float attention mask from a bool mask this way
+        # (F._canonical_mask). With bool zeros, masked_fill would keep a bool result.
+        class Model(nn.Module):
+            def __init__(self):
+                super().__init__()
+                mask = torch.tensor([[False, True, False], [True, False, False]])
+                self.register_buffer("mask", mask)
+
+            def forward(self, x):
+                return x + torch.zeros_like(self.mask, dtype=x.dtype).masked_fill(self.mask, -5.0)
+
+        self.run_compare_torch(
+            (2, 3), Model().eval(), frontend=frontend, backend=backend, compute_unit=compute_unit
+        )
+
+
 class TestTopk(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, largest, sort, dynamic, shape_dim_k",
@@ -16387,6 +16408,42 @@ class TestTransformer(TorchBaseTest):
                 batch_first=True,
             ),
             converter_input_type=inputs,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, mask",
+        itertools.product(
+            compute_units,
+            backends,
+            [f for f in frontends if f != TorchFrontend.TORCHSCRIPT],
+            ["causal", "none_blocked"],
+        ),
+    )
+    def test_multihead_attention_bool_attn_mask(self, compute_unit, backend, frontend, mask):
+        # torch.export keeps F._canonical_mask's zeros_like(mask, dtype=...) + masked_fill, see
+        # TestZeros::test_zeros_like_dtype_from_bool. (torch.jit.trace fails its own sanity
+        # check on nn.MultiheadAttention, so TorchScript is not covered here.)
+        class Model(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.attn = nn.MultiheadAttention(16, 2, batch_first=True)
+                blocked = torch.ones(6, 6, dtype=torch.bool)
+                if mask == "causal":
+                    blocked = torch.triu(blocked, diagonal=1)
+                else:
+                    blocked = torch.zeros_like(blocked)
+                self.register_buffer("mask", blocked)
+
+            def forward(self, x):
+                return self.attn(x, x, x, attn_mask=self.mask, need_weights=False)[0]
+
+        self.run_compare_torch(
+            (1, 6, 16),
+            Model().eval(),
+            frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
         )
