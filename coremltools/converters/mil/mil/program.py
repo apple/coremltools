@@ -286,7 +286,8 @@ class Program:
                 if len(operation.blocks) > 0:
                     raise NotImplementedError("Multi-block case has not been supported yet")
                 debug_handle = operation.scopes[ScopeSource.EXIR_DEBUG_HANDLE]
-                if debug_handle is None:
+                # A plain torch.export program records the scope as [None]: it has no handle.
+                if debug_handle is None or debug_handle[0] is None:
                     continue
                 debug_handle = debug_handle[0]
                 if debug_handle not in debug_handle_to_ops_mapping:
