@@ -144,8 +144,12 @@ class scaled_dot_product_attention(Operation):
             return None
 
         float_mask = None
-        if self.attn_mask is not None and self.attn_mask.val is not None:
+        if self.attn_mask is not None:
             mask = self.attn_mask.val
+            if mask is None:
+                # The mask changes the result, so without its value there is nothing
+                # to const fold to.
+                return None
             if mask.dtype == bool:
                 float_mask = np.zeros(mask.shape)
                 float_mask[np.where(np.logical_not(mask))] = -np.inf
