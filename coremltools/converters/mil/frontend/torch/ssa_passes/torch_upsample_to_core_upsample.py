@@ -142,6 +142,42 @@ def _try_get_upsample_factor_pattern_1(output_size):
         return np.float32(op.y.val)
 
 
+def _try_get_upsample_factor_pattern_3(output_size):
+    """
+    Handles the torch.export decomposition for a FLOAT scale factor with a
+    dynamic input shape and ``recompute_scale_factor=True``:
+
+        %h    = aten.sym_size.int(x, 2)     -> gather(shape(x), 2)        (int32)
+        %hf   = sym_float(%h)               -> cast(fp32)
+        %hm   = mul(%hf, scale_factor)      -> mul  (y is const scale)
+        %ht   = trunc(%hm)                  -> mul(sign, floor(abs))      (fp32)
+        %out  = cast(%ht, int32)            -> cast(int32)   (output_size)
+
+    ``trunc`` is lowered as ``sign(x) * floor(abs(x))`` (see the torch
+    frontend ``trunc`` op), so we trace: cast(int32) -> mul -> floor -> abs
+    -> mul, and return the constant scale factor.
+    """
+    op = output_size
+    if op.op_type != "cast" or op.dtype.val != "int32":
+        return None
+
+    # trunc(x) = sign(x) * floor(abs(x)); locate the floor(abs(x)) input.
+    op = op.x.op
+    if op.op_type != "mul":
+        return None
+    floor_op = op.x.op if op.x.op.op_type == "floor" else op.y.op
+    if floor_op.op_type != "floor":
+        return None
+    abs_op = floor_op.x.op
+    if abs_op.op_type != "abs":
+        return None
+    mul_op = abs_op.x.op
+    if mul_op.op_type != "mul":
+        return None
+    assert mul_op.y.val is not None, "scale factor should be const"
+    return np.float32(mul_op.y.val)
+
+
 def _try_replace_with_core_upsample(op):
     """
     Inputs:
@@ -164,9 +200,18 @@ def _try_replace_with_core_upsample(op):
         scales_h = _try_get_upsample_factor_pattern_1(op.output_height.op)
         scales_w = _try_get_upsample_factor_pattern_1(op.output_width.op)
 
-        if scales_h is None or scales_w is None:
+        # Only fill in the scale factors that pattern 1 could not resolve, so a
+        # previously resolved value (e.g. the constant dummy width of a 1d
+        # upsample) is not overwritten.
+        if scales_h is None:
             scales_h = _try_get_upsample_factor_pattern_2(op.output_height.op, 2, op.x)
+        if scales_w is None:
             scales_w = _try_get_upsample_factor_pattern_2(op.output_width.op, 3, op.x)
+
+        if scales_h is None:
+            scales_h = _try_get_upsample_factor_pattern_3(op.output_height.op)
+        if scales_w is None:
+            scales_w = _try_get_upsample_factor_pattern_3(op.output_width.op)
 
         if scales_h is None or scales_w is None:
             return False
