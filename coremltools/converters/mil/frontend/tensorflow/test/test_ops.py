@@ -3982,7 +3982,7 @@ class TestGather(TensorFlowBaseTest):
 
         model, inputs, outputs = build_model
 
-        with pytest.raises(tf.errors.InvalidArgumentError, match="-1 is not in \[0, 6\)"):
+        with pytest.raises(tf.errors.InvalidArgumentError, match=r"-1 is not in \[0, 6\)"):
             # Negative indices will error out.
             input_dict = dict(zip(inputs, [np.array([2, 0, -1, 5], dtype=np.int32)]))
             TensorFlowBaseTest.run_compare_tf(
@@ -3992,7 +3992,7 @@ class TestGather(TensorFlowBaseTest):
                 compute_unit=compute_unit,
                 backend=backend,
             )
-        with pytest.raises(tf.errors.InvalidArgumentError, match="6 is not in \[0, 6\)"):
+        with pytest.raises(tf.errors.InvalidArgumentError, match=r"6 is not in \[0, 6\)"):
             # Out-of-range indices will error out.
             input_dict = dict(zip(inputs, [np.array([2, 0, 1, 6], dtype=np.int32)]))
             TensorFlowBaseTest.run_compare_tf(
@@ -4178,7 +4178,7 @@ class TestGather(TensorFlowBaseTest):
 
         with pytest.raises(
             tf.errors.InvalidArgumentError,
-            match="\[1, -1\] does not index into param shape \[2,2\]",
+            match=r"\[1, -1\] does not index into param shape \[2,2\]",
         ):
             # Negative indices will error out.
             input_dict = dict(zip(inputs, [np.array([[0, 0], [1, -1]], dtype=np.int32)]))
@@ -4190,7 +4190,7 @@ class TestGather(TensorFlowBaseTest):
                 backend=backend,
             )
         with pytest.raises(
-            tf.errors.InvalidArgumentError, match="\[2, 0\] does not index into param shape \[2,2\]"
+            tf.errors.InvalidArgumentError, match=r"\[2, 0\] does not index into param shape \[2,2\]"
         ):
             # Out-of-range indices will error out.
             input_dict = dict(zip(inputs, [np.array([[2, 0], [1, 1]], dtype=np.int32)]))

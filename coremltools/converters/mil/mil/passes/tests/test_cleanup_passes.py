@@ -2710,7 +2710,7 @@ class TestTopologicalReorder:
         )
 
     def test_move_transpose_before_subblock(self):
-        """
+        r"""
         Input graph:
             x (input) ---> cast ---> transpose ---> cast (output)
             |

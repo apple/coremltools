@@ -30,7 +30,7 @@ class TestCoreMLUpdateState:
         # Update state with value of different shape
         with pytest.raises(
             ValueError,
-            match="State wrapped type tensor\[2,3,fp32\] not matched with the value's sym_type tensor\[3,2,fp32\]",
+            match=r"State wrapped type tensor\[2,3,fp32\] not matched with the value's sym_type tensor\[3,2,fp32\]",
         ):
 
             @mb.program(
@@ -43,7 +43,7 @@ class TestCoreMLUpdateState:
         # Update state with value of different dtype
         with pytest.raises(
             ValueError,
-            match="State wrapped type tensor\[2,3,fp32\] not matched with the value's sym_type tensor\[2,3,fp16\]",
+            match=r"State wrapped type tensor\[2,3,fp32\] not matched with the value's sym_type tensor\[2,3,fp16\]",
         ):
 
             @mb.program(

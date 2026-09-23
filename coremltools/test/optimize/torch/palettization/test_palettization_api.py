@@ -24,7 +24,7 @@ from coremltools.test.optimize.torch.palettization.palettization_utils import (
 )
 from coremltools.test.optimize.torch.utils import get_logging_capture_context_manager
 
-REGEX_YAML = """
+REGEX_YAML = r"""
 module_name_configs:
   conv\d+:
     - n_bits: 4
