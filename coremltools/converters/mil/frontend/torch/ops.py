@@ -7258,9 +7258,14 @@ def zeros_like(context, node):
     )
     x = inputs[0]
     src_np_type = nptype_from_builtin(x.dtype)
-    if len(inputs) > 1 and inputs[1] and inputs[1].val:
-        dtype = inputs[1].val
-        dst_np_type = NUM_TO_NUMPY_DTYPE[dtype]
+    # TorchScript passes dtype positionally; torch.export and ExecuTorch pass it as a keyword.
+    dtype = inputs[1] if len(inputs) > 1 else None
+    if dtype is None:
+        dtype = _get_kwinputs(context, node, "dtype", default=[None])[0]
+    if isinstance(dtype, Var):
+        dtype = dtype.val
+    if dtype is not None:
+        dst_np_type = NUM_TO_NUMPY_DTYPE[int(dtype)]
     else:
         dst_np_type = src_np_type
 
