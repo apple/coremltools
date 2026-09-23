@@ -49,7 +49,7 @@ class TestWeightBlob:
         writer = BlobWriter(self.working_dir + "/net.wt")
         input_arr = np.array([-80, -2, 0, 2, 7], dtype=np.float32)
         with pytest.raises(
-            ValueError, match="Value -80 is outside allowed subbyte datatype range \[-8, 7\]."
+            ValueError, match=r"Value -80 is outside allowed subbyte datatype range \[-8, 7\]."
         ):
             writer.write_int4_data(input_arr)
 
@@ -81,7 +81,7 @@ class TestWeightBlob:
         input_arr = np.array([1, 80, 2, 0, 2])
         with pytest.raises(
             ValueError,
-            match=f"Value 80 is outside allowed subbyte datatype range \[0, {2 ** nbits - 1}\].",
+            match=rf"Value 80 is outside allowed subbyte datatype range \[0, {2 ** nbits - 1}\].",
         ):
             getattr(writer, f"write_uint{nbits}_data")(input_arr)
 

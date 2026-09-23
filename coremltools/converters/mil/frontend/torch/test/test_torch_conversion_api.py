@@ -2079,7 +2079,7 @@ class TestInputOutputConversionAPI:
         # test that error is raised if only 1 input is provided
         with pytest.raises(
             ValueError,
-            match="Number of TorchScript inputs \(2\) must match the user provided inputs \(1\).",
+            match=r"Number of TorchScript inputs \(2\) must match the user provided inputs \(1\).",
         ):
             ct.convert(
                 float32_two_input_model,

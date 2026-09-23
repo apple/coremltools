@@ -199,8 +199,8 @@ class TestFlexibleInputShapesTorch:
             with pytest.raises(
                 ValueError,
                 match="For mlprogram, inputs with infinite upper_bound is not allowed. Please set "
-                'upper_bound to a positive value in "RangeDim\(\)" for the "inputs" param in '
-                "ct.convert\(\).",
+                r'upper_bound to a positive value in "RangeDim\(\)" for the "inputs" param in '
+                r"ct.convert\(\).",
             ):
                 ct.convert(
                     traced_model,
@@ -319,8 +319,8 @@ class TestFlexibleInputShapesTorch:
             with pytest.raises(
                 ValueError,
                 match="For mlprogram, inputs with infinite upper_bound is not allowed. Please set "
-                'upper_bound to a positive value in "RangeDim\(\)" for the "inputs" param in '
-                "ct.convert\(\).",
+                r'upper_bound to a positive value in "RangeDim\(\)" for the "inputs" param in '
+                r"ct.convert\(\).",
             ):
                 ct.convert(
                     traced_model,
@@ -625,8 +625,8 @@ class TestFlexibleInputShapesTF:
             with pytest.raises(
                 ValueError,
                 match="For mlprogram, inputs with infinite upper_bound is not allowed. Please set "
-                'upper_bound to a positive value in "RangeDim\(\)" for the "inputs" param in '
-                "ct.convert\(\).",
+                r'upper_bound to a positive value in "RangeDim\(\)" for the "inputs" param in '
+                r"ct.convert\(\).",
             ):
                 ct.convert(
                     self.model,
@@ -709,8 +709,8 @@ class TestFlexibleInputShapesTF:
             with pytest.raises(
                 ValueError,
                 match="For mlprogram, inputs with infinite upper_bound is not allowed. Please set "
-                'upper_bound to a positive value in "RangeDim\(\)" for the "inputs" param in '
-                "ct.convert\(\).",
+                r'upper_bound to a positive value in "RangeDim\(\)" for the "inputs" param in '
+                r"ct.convert\(\).",
             ):
                 ct.convert(
                     self.model,

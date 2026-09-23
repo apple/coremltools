@@ -221,7 +221,7 @@ class TestMLProgramConverterExamples:
 
         # check error if mlprogram is saved with mlmodel extension
         mlmodel_path = os.path.join(save_path_dir, "model_mlprogram.mlmodel")
-        expected_pattern = "For an ML Program\, extension must be \.mlpackage \(not \.mlmodel\)\. Please see .* to see the difference between neuralnetwork and mlprogram model types\."
+        expected_pattern = r"For an ML Program\, extension must be \.mlpackage \(not \.mlmodel\)\. Please see .* to see the difference between neuralnetwork and mlprogram model types\."
         with pytest.raises(Exception, match=expected_pattern):
             mlmodel.save(mlmodel_path)
 
