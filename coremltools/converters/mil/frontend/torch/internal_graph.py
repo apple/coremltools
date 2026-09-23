@@ -288,7 +288,7 @@ class InternalTorchIRNode:
             else:
                 kind = str(node.target)
         kind = sanitize_op_kind(kind)
-        if kind not in _TORCH_OPS_REGISTRY:
+        if kind not in _TORCH_OPS_REGISTRY.name_to_func_mapping:
             raise NotImplementedError(f"Unsupported fx node {str(node)}, kind {kind}")
 
         inputs = get_arguments(node.args)
