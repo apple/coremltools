@@ -594,7 +594,7 @@ class EnumeratedShapes:
             else:
                 self.shapes.append(Shape(s))
 
-        self.symbolic_shape = self.shapes[0].symbolic_shape
+        self.symbolic_shape = self.shapes[0].symbolic_shape.copy()
         for shape in self.shapes:
             for idx, s in enumerate(shape.symbolic_shape):
                 if is_symbolic(self.symbolic_shape[idx]):
