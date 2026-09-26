@@ -1694,6 +1694,45 @@ class TestPalettizeWeights:
         if _macos_version() >= (15, 0):
             verify_model_outputs(mlmodel, mlmodel_palettized, coreml_input_values)
 
+    def test_palettization_pcs_skipped_keeps_weight(self):
+        """A skipped op must keep its original weight, not the per-channel-scaled one."""
+        inputs = [ct.TensorType(name="data", shape=(1, 128))]
+        model = torch.nn.Linear(128, 120, bias=False).eval()
+        weight = model.weight.detach().numpy().copy()
+
+        torchmodel = torch.jit.trace(model, [torch.rand(1, 128)])
+        mlmodel = ct.convert(
+            torchmodel,
+            inputs=inputs,
+            convert_to="mlprogram",
+            minimum_deployment_target=ct.target.iOS18,
+            compute_precision=ct.precision.FLOAT32,
+        )
+
+        # 120 output channels is not divisible by group_size 16, so palettization is skipped.
+        config = cto.coreml.OptimizationConfig(
+            global_config=cto.coreml.OpPalettizerConfig(
+                mode="uniform",
+                nbits=4,
+                granularity="per_grouped_channel",
+                group_size=16,
+                enable_per_channel_scale=True,
+                weight_threshold=500,
+            )
+        )
+        mlmodel_palettized = cto.coreml.palettize_weights(mlmodel, config)
+
+        assert get_op_types_in_program(mlmodel_palettized._mil_program) == get_op_types_in_program(
+            mlmodel._mil_program
+        )
+        consts = [
+            op.outputs[0].val
+            for op in mlmodel_palettized._mil_program.functions["main"].find_ops(op_type="const")
+            if op.outputs[0].val is not None and op.outputs[0].val.size == weight.size
+        ]
+        assert len(consts) == 1
+        np.testing.assert_allclose(consts[0].reshape(weight.shape), weight, rtol=1e-6)
+
 
 class TestPruneWeights:
     @staticmethod
