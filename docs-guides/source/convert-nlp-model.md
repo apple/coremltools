@@ -83,7 +83,7 @@ Initialize the `token_predictor` from `GPT2LMHeadModel`, a GPT2 model transforme
 token_predictor = GPT2LMHeadModel.from_pretrained("gpt2", torchscript=True).eval()
 ```
 
-You can now use PyTorch's JIT tracer ([`torch.jit.trace`](https://pytorch.org/docs/stable/generated/torch.jit.trace.html)) to trace the loop body as it predicts the next token from a list of random tokens:
+You can now use PyTorch's JIT tracer ([`torch.jit.trace`](https://docs.pytorch.org/docs/stable/jit.html)) to trace the loop body as it predicts the next token from a list of random tokens:
 
 ```python
 random_tokens = torch.randint(10000, (5,))
@@ -92,7 +92,7 @@ traced_token_predictor = torch.jit.trace(token_predictor, random_tokens)
 
 Tracing the loop body in this manner elicits a warning from JIT tracer that the trace might not generalize to other inputs, but you can ignore this warning.
 
-With the bulk of the loop body traced, you can instantiate the model and apply PyTorch's [JIT script](https://pytorch.org/docs/stable/generated/torch.jit.script.html) to script the outer control loop:
+With the bulk of the loop body traced, you can instantiate the model and apply PyTorch's [JIT script](https://docs.pytorch.org/docs/stable/jit.html) to script the outer control loop:
 
 ```python
 model = FinishMySentence(model=traced_token_predictor)

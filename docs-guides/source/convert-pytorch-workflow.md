@@ -13,7 +13,7 @@ The Core ML Tools [Unified Conversion API](unified-conversion-api) produces Core
 ```
 
 To export a model from PyTorch to Core ML, there are 2 steps:
-1. Capture the PyTorch model graph from the original torch.nn.Module, via [`torch.jit.trace`](https://pytorch.org/docs/stable/generated/torch.jit.trace.html) or [`torch.export.export`](https://pytorch.org/docs/stable/export.html#torch.export.export).
+1. Capture the PyTorch model graph from the original torch.nn.Module, via [`torch.jit.trace`](https://docs.pytorch.org/docs/stable/jit.html) or [`torch.export.export`](https://pytorch.org/docs/stable/export.html#torch.export.export).
 2. Convert the PyTorch model graph to Core ML, via the Core ML Tools [Unified Conversion API](unified-conversion-api).
 
 The conversion from a graph captured via `torch.jit.trace` has been supported for many versions of Core ML Tools, hence it is the stable and the more performant path. For now, this is the recommended way for converting PyTorch models to Core ML.
@@ -47,7 +47,7 @@ To ensure that training time operations such as dropout, batch norm with moving 
 
 ### TorchScript
 
-[TorchScript](https://pytorch.org/docs/stable/jit.html) is an intermediate representation of a PyTorch model. To generate a TorchScript representation from PyTorch code, use PyTorch's JIT tracer ([`torch.jit.trace`](https://pytorch.org/docs/stable/generated/torch.jit.trace.html)) to _trace_ the model, as shown in the following example:
+[TorchScript](https://pytorch.org/docs/stable/jit.html) is an intermediate representation of a PyTorch model. To generate a TorchScript representation from PyTorch code, use PyTorch's JIT tracer ([`torch.jit.trace`](https://docs.pytorch.org/docs/stable/jit.html)) to _trace_ the model, as shown in the following example:
 
 ```python
 # Trace the model with random data.
@@ -57,7 +57,7 @@ traced_model = torch.jit.trace(torch_model, example_input)
 
 The process of tracing takes an example input and traces its flow through the model. You can trace the model by creating an example image input, as shown in the above code using random data. To understand the reasons for tracing and how to trace a PyTorch model, see [Model Tracing](model-tracing).
 
-If your model uses a data-dependent control flow, such as a loop or conditional, the traced model won't generalize to other inputs. In such cases you can use JIT script ([`torch.jit.script`](https://pytorch.org/docs/stable/generated/torch.jit.script.html)) to capture the graph accurately. Core ML Tools offers limited support for models that are obtained from `torch.jit.script` API, so it may or may not work for your model. See [Model Scripting](model-scripting) to learn more.
+If your model uses a data-dependent control flow, such as a loop or conditional, the traced model won't generalize to other inputs. In such cases you can use JIT script ([`torch.jit.script`](https://docs.pytorch.org/docs/stable/jit.html)) to capture the graph accurately. Core ML Tools offers limited support for models that are obtained from `torch.jit.script` API, so it may or may not work for your model. See [Model Scripting](model-scripting) to learn more.
 
 ### ExportedProgram
 

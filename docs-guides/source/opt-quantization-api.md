@@ -25,8 +25,8 @@ slightly better accuracy.
 
 For more details on the parameters available in the config, see the following in the API Reference:
 
-- [`OpLinearQuantizerConfig`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OpLinearQuantizerConfig)
-- [`OptimizationConfig`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig)
+- [`OpLinearQuantizerConfig`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.quantization.html#coremltools.optimize.coreml.OpLinearQuantizerConfig)
+- [`OptimizationConfig`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.OptimizationConfig)
 - [`linear_quantize_weights`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.linear_quantize_weights)
 
 ### Quantizing weights and activations
