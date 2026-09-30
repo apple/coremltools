@@ -2472,7 +2472,10 @@ def softplus(const_context, builder, op):
 @register_mil_to_nn_mapping
 def softmax(const_context, builder, op):
     rank = op.x.rank
-    if op.axis.val == -3 or op.axis.val > 0 and op.axis.val == rank - 3:
+    # SoftmaxLayer is specified as axis=-3, but for rank-3 inputs the
+    # NeuralNetwork runtime applies softmax along axis=-1 instead (see issue
+    # 1714). Only emit it when rank >= 4, matching the concat mapping.
+    if rank >= 4 and (op.axis.val == -3 or op.axis.val > 0 and op.axis.val == rank - 3):
         builder.add_softmax(
             name=op.name, input_name=op.x.name, output_name=op.outputs[0].name,
         )

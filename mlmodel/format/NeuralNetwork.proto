@@ -2306,8 +2306,9 @@ message LRNLayerParams {
  * Softmax Normalization Layer
  *
  * A layer that performs softmax normalization.
- * Normalization is applied along axis = -3 or N-3 (where N is the rank of the input)
- * For softmax layer that can operate on any axis, see SoftmaxNDLayer.
+ * For rank >= 4, normalization is applied along axis = -3 or N-3 (where N is the rank of the input).
+ * For rank == 3, the NeuralNetwork runtime applies softmax along axis = -1, not -3.
+ * For a softmax layer that can operate on any axis, see SoftmaxNDLayer.
  *
  *
  * .. code::
