@@ -675,10 +675,6 @@ class KMeans:
             max_iter=300,
         ).fit(weight_2d, sample_weight=importance_2d)
 
-        weight_2d.cpu()
-        if importance_2d is not None:
-            importance_2d.cpu()
-
         return kmeans_results.cluster_centers_.cpu(), kmeans_results.labels_.cpu()
 
     @classmethod
