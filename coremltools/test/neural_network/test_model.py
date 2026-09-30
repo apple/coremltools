@@ -6,6 +6,7 @@
 import os
 import tempfile
 import unittest
+from unittest import mock
 
 import numpy as np
 import PIL.Image
@@ -22,6 +23,7 @@ from coremltools.models.utils import (
     _is_macos,
     _macos_version,
     convert_double_to_float_multiarray_type,
+    evaluate_transformer,
     rename_feature,
     save_spec,
 )
@@ -128,6 +130,12 @@ class MLModelTest(unittest.TestCase):
         preds = model.predict({"feature_1": 1.0, "feature_2": 1.0})
         self.assertIsNotNone(preds)
         self.assertEqual(preds["output"], 3.1)
+
+    def test_evaluate_transformer_with_zero_output(self):
+        model = mock.MagicMock(spec=MLModel)
+        model.predict.return_value = {"output": 0.0}
+        result = evaluate_transformer(model, [{"feature_1": 0.0}], [{"output": 0.0}])
+        self.assertEqual(result["num_errors"], 0)
 
     @unittest.skipUnless(
         _is_macos() and _macos_version() >= (10, 13), "Only supported on macOS 10.13+"

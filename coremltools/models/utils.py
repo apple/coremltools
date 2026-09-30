@@ -782,7 +782,7 @@ def _element_equal(x, y):
             and all(_element_equal(x[k], y[k]) for k in x.keys())
         )
     elif isinstance(x, float):
-        return abs(x - y) < 1e-5 * (abs(x) + abs(y))
+        return abs(x - y) <= 1e-5 * (abs(x) + abs(y))
     elif isinstance(x, (list, tuple)):
         return x == y
     else:
