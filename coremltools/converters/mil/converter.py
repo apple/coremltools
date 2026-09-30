@@ -71,6 +71,31 @@ class MILFrontend:
                 if isinstance(inp, input_types.ImageType) and inputs[idx].channel_first is None:
                     inputs[idx].channel_first = True
             model.functions["main"].set_input_types(tuple(inputs))
+
+        outputs = kwargs.get("outputs", None)
+        if outputs is not None:
+            main_func = model.functions["main"]
+            if len(outputs) != len(main_func.outputs):
+                raise ValueError(
+                    f"Number of outputs provided, {len(outputs)}, does not match the number "
+                    f"of outputs of the MIL program, {len(main_func.outputs)}."
+                )
+            input_vars = list(main_func.inputs.values())
+            new_outputs = []
+            with main_func:
+                for output_type, output_var in zip(outputs, main_func.outputs):
+                    name = output_type.name
+                    if name is not None and name != output_var.name:
+                        if output_var in input_vars or output_var in new_outputs:
+                            # Renaming a function input would rename the model input as well,
+                            # and renaming a var that is already an output would rename that
+                            # output, so return a copy of it under the requested name instead.
+                            output_var = mb.identity(x=output_var, name=name)
+                        else:
+                            output_var.name = name
+                    new_outputs.append(output_var)
+                main_func.set_outputs(new_outputs)
+            main_func.set_output_types(list(outputs))
         return model
 
 
