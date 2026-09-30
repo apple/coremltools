@@ -5531,7 +5531,7 @@ class TestLayerNorm(TorchBaseTest):
 
 
 @pytest.mark.skipif(
-    condition=version_lt(torch, "2.5.0"),
+    condition=version_lt(torch, "2.4.0"),
     reason="torch.rms_norm is introduced in PyTorch 2.4.0",
 )
 class TestRMSNorm(TorchBaseTest):
@@ -15960,7 +15960,7 @@ class TestScaledDotProductAttention(TorchBaseTest):
         )
 
     @pytest.mark.skipif(
-        condition=version_lt(torch, "2.5.0"),
+        condition=version_lt(torch, "2.4.0"),
         reason="enable_gqa is introduced in PyTorch 2.5.0",
     )
     @pytest.mark.parametrize(
@@ -16007,7 +16007,7 @@ class TestScaledDotProductAttention(TorchBaseTest):
             assert op_types.count("tile") == (0 if query_heads == kv_heads else 2)
 
     @pytest.mark.skipif(
-        condition=version_lt(torch, "2.5.0"),
+        condition=version_lt(torch, "2.4.0"),
         reason="enable_gqa is introduced in PyTorch 2.5.0",
     )
     @pytest.mark.parametrize(
