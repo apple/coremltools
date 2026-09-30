@@ -5556,6 +5556,146 @@ class TestRandnLike(TorchBaseTest):
             self.run_compare_torch((5, 4), TestModel())
 
 
+class TestNormal(TorchBaseTest):
+    # The samples are random, so the models cannot return them for comparison. Instead,
+    # each model returns 1.0 for every statistic of a large sample (64 * 256 values) that
+    # lands within 10% of a standard deviation of its expected value, and 0.0 otherwise.
+    # At this sample size that margin is over 12 standard errors wide, so the checks do
+    # not flake.
+    SHAPE = (64, 256)
+
+    @staticmethod
+    def _xfail_executorch(frontend):
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.xfail("torch.normal and Tensor.normal_ are not in the Core ATen opset")
+
+    @staticmethod
+    def _check_stats(y, mean, std):
+        stats = torch.cat([y.mean().reshape(1), y.std().reshape(1)])
+        expected = torch.tensor([mean, std])
+        return ((stats - expected).abs() < 0.1 * std).to(torch.float32)
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, args",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [(), (2.0, 0.5), (-3.0, 2.0)],
+        ),
+    )
+    def test_normal_inplace(self, compute_unit, backend, frontend, args):
+        self._xfail_executorch(frontend)
+        mean, std = args if args else (0.0, 1.0)
+
+        class TestModel(nn.Module):
+            def forward(self, x):
+                y = torch.zeros_like(x).normal_(*args)
+                return TestNormal._check_stats(y, mean, std)
+
+        self.run_compare_torch(
+            self.SHAPE, TestModel(), compute_unit=compute_unit, backend=backend, frontend=frontend
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, overload",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            ["Tensor_float", "float_Tensor", "Tensor_Tensor", "float_float"],
+        ),
+    )
+    def test_normal_overloads(self, compute_unit, backend, frontend, overload):
+        self._xfail_executorch(frontend)
+
+        class TestModel(nn.Module):
+            def forward(self, x):
+                # Samples drawn with per-element tensor parameters are standardized back
+                # to N(0, 1) before their statistics are checked.
+                std = x.abs() + 0.5
+                if overload == "Tensor_float":
+                    return TestNormal._check_stats((torch.normal(x, 2.0) - x) / 2.0, 0.0, 1.0)
+                if overload == "float_Tensor":
+                    return TestNormal._check_stats((torch.normal(-1.0, std) + 1.0) / std, 0.0, 1.0)
+                if overload == "Tensor_Tensor":
+                    return TestNormal._check_stats((torch.normal(x, std) - x) / std, 0.0, 1.0)
+                return TestNormal._check_stats(torch.normal(1.5, 3.0, size=x.shape), 1.5, 3.0)
+
+        self.run_compare_torch(
+            self.SHAPE, TestModel(), compute_unit=compute_unit, backend=backend, frontend=frontend
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, variant",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            ["inplace", "float_float", "Tensor_Tensor"],
+        ),
+    )
+    def test_normal_dynamic_shape(self, compute_unit, backend, frontend, variant):
+        self._xfail_executorch(frontend)
+
+        class TestModel(nn.Module):
+            def forward(self, x):
+                if variant == "inplace":
+                    return TestNormal._check_stats(torch.zeros_like(x).normal_(2.0, 0.5), 2.0, 0.5)
+                if variant == "float_float":
+                    # With a dynamic input, TorchScript passes this size as a list of scalars.
+                    y = torch.normal(1.5, 3.0, size=x.shape)
+                    return TestNormal._check_stats(y, 1.5, 3.0)
+                std = x.abs() + 0.5
+                return TestNormal._check_stats((torch.normal(x, std) - x) / std, 0.0, 1.0)
+
+        self.run_compare_torch(
+            self.SHAPE,
+            TestModel(),
+            compute_unit=compute_unit,
+            backend=backend,
+            frontend=frontend,
+            converter_input_type=[
+                TensorType(shape=(RangeDim(default=self.SHAPE[0], upper_bound=1024), self.SHAPE[1]))
+            ],
+            torch_export_dynamic_shapes={"x": {0: torch.export.Dim("rows", min=2, max=1024)}},
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_normal_broadcast_shape(self, compute_unit, backend, frontend):
+        self._xfail_executorch(frontend)
+
+        class TestModel(nn.Module):
+            def forward(self, x):
+                # mean is (3, 1) and std is (1, 4), so the sample is (3, 4).
+                std = torch.arange(1, 5, dtype=torch.float32).reshape(1, 4)
+                return torch.normal(x, std) * 0.0
+
+        self.run_compare_torch(
+            (3, 1), TestModel(), compute_unit=compute_unit, backend=backend, frontend=frontend
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_normal_constant_tensor_parameters(self, compute_unit, backend, frontend):
+        # The reproduction from https://github.com/apple/coremltools/issues/1528
+        self._xfail_executorch(frontend)
+
+        class TestModel(nn.Module):
+            def forward(self, x):
+                y = torch.normal(mean=torch.arange(1.0, 11.0), std=torch.arange(1, 0, -0.1))
+                return y * 0.0 + x
+
+        self.run_compare_torch(
+            (10,), TestModel(), compute_unit=compute_unit, backend=backend, frontend=frontend
+        )
+
+
 class TestTypeAs(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, type",

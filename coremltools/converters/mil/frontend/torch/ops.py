@@ -6296,6 +6296,96 @@ def randn_like(context, node):
     rand_fp32 = mb.cast(x=rand_normal, dtype="fp32", name=node.name)
     context.add(rand_fp32)
 
+
+@register_torch_op(
+    torch_alias=[
+        "normal_functional",
+        "normal.tensor_float",
+        "normal.float_tensor",
+        "normal.tensor_tensor",
+        "normal.float_float",
+    ]
+)
+def normal(context, node):
+    """
+    Converts every overload of ``torch.normal``, plus the in-place ``Tensor.normal_``
+    (which torch.export lowers to ``normal_functional``):
+
+    - ``normal_(self, mean=0., std=1.)``: samples a tensor shaped like ``self``.
+    - ``normal.Tensor_float(mean, std=1.)``, ``normal.float_Tensor(mean, std)`` and
+      ``normal.Tensor_Tensor(mean, std)``: sample one value per element of the broadcast
+      shape of ``mean`` and ``std``.
+    - ``normal.float_float(mean, std, size)``: samples a tensor of shape ``size``.
+
+    TorchScript reports all the out-of-place overloads as ``normal``, so they are told apart
+    by their number of inputs. As with the other random ops, the ``generator`` argument is
+    ignored, so Core ML does not reproduce PyTorch's random stream.
+    """
+
+    def _to_float(x: Var) -> Var:
+        return x if types.is_float(x.dtype) else mb.cast(x=x, dtype="fp32")
+
+    def _get_param(index: int, keyword: str, default: float) -> Var:
+        if index < len(inputs):
+            return inputs[index]
+        return _get_kwinputs(context, node, keyword, default=[mb.const(val=default)])[0]
+
+    def _sample(shape: Var, mean: Var, std: Var, out_dtype: str) -> Var:
+        if mean.rank == 0 and std.rank == 0 and mean.val is not None and std.val is not None:
+            # Scalar parameters known at conversion time map directly onto random_normal.
+            sample = mb.random_normal(
+                shape=shape, mean=np.float32(mean.val), stddev=np.float32(std.val)
+            )
+        else:
+            # Otherwise, shift and scale a standard normal sample.
+            mean, std = promote_input_dtypes([_to_float(mean), _to_float(std)])
+            sample = mb.random_normal(shape=shape)
+            if mean.dtype != sample.dtype:
+                sample = mb.cast(x=sample, dtype=builtin_to_string(mean.dtype))
+            sample = mb.add(x=mb.mul(x=sample, y=std), y=mean)
+        if builtin_to_string(sample.dtype) != out_dtype:
+            sample = mb.cast(x=sample, dtype=out_dtype)
+        return sample
+
+    inputs = _get_inputs(context, node, min_expected=1)
+
+    if node.kind in ("normal_", "normal_functional"):
+        x = inputs[0]
+        if not types.is_float(x.dtype):
+            raise ValueError(f"normal_ expects a floating point tensor, but got {x.dtype}.")
+        mean, std = _get_param(1, "mean", 0.0), _get_param(2, "std", 1.0)
+        out_dtype = builtin_to_string(x.dtype)
+        shape = mb.shape(x=x)
+    elif node.kind == "normal.float_float" or (node.kind == "normal" and len(inputs) > 3):
+        mean, std, shape = inputs[0], inputs[1], inputs[2]
+        if context.frontend == TorchFrontend.TORCHSCRIPT:
+            dtype = inputs[4]
+        else:
+            dtype = _get_kwinputs(context, node, "dtype", default=[None])[0]
+        _assert_torch_dtype_num_is_not_complex_number(dtype)
+        out_dtype = "fp32"
+        if dtype is not None and dtype.val is not None:
+            out_dtype = NUM_TO_DTYPE_STRING[dtype.val]
+        if isinstance(shape, list):
+            # A size with dynamic dimensions arrives as a list of scalars.
+            shape = mb.concat(values=shape, axis=0)
+        if shape.dtype != types.int32:
+            shape = mb.cast(x=shape, dtype="int32")
+    else:
+        mean, std = _get_param(0, "mean", 0.0), _get_param(1, "std", 1.0)
+        mean, std = promote_input_dtypes([_to_float(mean), _to_float(std)])
+        out_dtype = builtin_to_string(mean.dtype)
+        # The sample takes the broadcast shape of mean and std.
+        shape = mb.shape(x=mb.add(x=mean, y=std))
+
+    if shape.shape == (0,):
+        # random_normal cannot produce a 0-d tensor, so sample one value and squeeze it.
+        sample = _sample(np.array([1], dtype=np.int32), mean, std, out_dtype)
+        context.add(mb.squeeze(x=sample, name=node.name))
+    else:
+        context.add(_sample(shape, mean, std, out_dtype), node.name)
+
+
 @register_torch_op
 def bitwise_not(context, node):
     inputs = _get_inputs(context, node)
