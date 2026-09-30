@@ -6217,6 +6217,56 @@ def randint(context, node):
     rand_int = mb.minimum(x=rand_int_unclipped, y=high_minus_one, name=node.name)
     context.add(rand_int)
 
+
+@register_torch_op(torch_alias=["bernoulli.p"])
+def bernoulli(context, node):
+    """
+    Converts ``torch.bernoulli`` and the in-place ``Tensor.bernoulli_``. Each output element
+    is 1 with probability ``p`` and 0 otherwise, and the output takes the shape and dtype of
+    ``input``:
+
+    - ``bernoulli(input)``: ``input`` holds the per-element probabilities.
+    - ``bernoulli.p(input, p)`` and ``bernoulli_(input, p=0.5)`` with a float ``p``: one
+      probability for every element.
+    - ``bernoulli.Tensor(input, p)`` and ``bernoulli_(input, p)`` with a tensor ``p``:
+      per-element probabilities that broadcast to the shape of ``input``.
+
+    A single probability known at conversion time maps onto ``random_bernoulli``. That op only
+    accepts one constant probability, so otherwise each element draws a uniform sample from
+    [0, 1) and becomes 1 when the sample is below its probability, which happens with exactly
+    that probability. As with the other random ops, the ``generator`` argument is ignored.
+    """
+    inputs = _get_inputs(context, node, min_expected=1)
+    x = inputs[0]
+    if context.frontend == TorchFrontend.TORCHSCRIPT:
+        # TorchScript always passes the generator as the last input.
+        p = inputs[1] if len(inputs) > 2 else None
+    else:
+        p = inputs[1] if len(inputs) > 1 else _get_kwinputs(context, node, "p", default=[None])[0]
+    if p is None:
+        # bernoulli(input): the input holds the probabilities.
+        p = x
+
+    # random_bernoulli and random_uniform cannot produce a 0-d tensor, so a 0-d input is
+    # sampled as a single value and squeezed afterwards.
+    shape = mb.shape(x=x) if x.rank > 0 else np.array([1], dtype=np.int32)
+    if p.rank == 0 and p.val is not None:
+        sample = mb.random_bernoulli(shape=shape, prob=np.float32(p.val))
+    else:
+        if not types.is_float(p.dtype):
+            p = mb.cast(x=p, dtype="fp32")
+        uniform = mb.random_uniform(shape=shape, low=0.0, high=1.0)
+        uniform, p = promote_input_dtypes([uniform, p])
+        sample = mb.less(x=uniform, y=p)
+
+    out_dtype = builtin_to_string(x.dtype)
+    if x.rank == 0:
+        sample = mb.squeeze(x=sample)
+    if builtin_to_string(sample.dtype) != out_dtype:
+        sample = mb.cast(x=sample, dtype=out_dtype)
+    context.add(sample, node.name)
+
+
 @register_torch_op
 def rand(context, node):
     shape, _, dtype, _, _ = _get_inputs(context, node)
