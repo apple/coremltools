@@ -10,6 +10,7 @@ import platform
 import re
 import shutil
 import tempfile
+import warnings
 from unittest.mock import patch
 
 import numpy as np
@@ -29,7 +30,6 @@ from coremltools._deps import (
 from coremltools.converters.mil.frontend.torch.test.testing_utils import _copy_input_data
 from coremltools.converters.mil.frontend.torch.torch_op_registry import (
     _TORCH_OPS_REGISTRY,
-    TorchOpsRegistry,
     register_torch_op,
 )
 from coremltools.converters.mil.mil.scope import ScopeSource
@@ -310,10 +310,10 @@ class TestFxNodeSupport:
         symbolic_traced = torch.fx.symbolic_trace(model)
 
         # Mock our torch ops registry, pretending that only "add" is supported
-        with patch.object(
-            TorchOpsRegistry,
-            "__contains__",
-            side_effect=(lambda op_name: op_name == "add"),
+        with patch.dict(
+            _TORCH_OPS_REGISTRY.name_to_func_mapping,
+            {"add": _TORCH_OPS_REGISTRY.get_func("add")},
+            clear=True,
         ):
             for node in symbolic_traced.graph.nodes:
                 # There are many types of torch fx node,
@@ -327,6 +327,29 @@ class TestFxNodeSupport:
                 # Other types of torch fx node are not supported
                 else:
                     assert not ct.converters.mil.frontend.torch.is_torch_fx_node_supported(node)
+
+
+    @staticmethod
+    def test_does_not_use_deprecated_registry_api():
+        """
+        ``_TORCH_OPS_REGISTRY.__contains__`` is deprecated for users, so coremltools itself must
+        not call it: supported-op checks and torch.export conversions used to emit one
+        DeprecationWarning per node
+        """
+
+        class Model(torch.nn.Module):
+            def forward(self, x, y):
+                return torch.nn.functional.softmax(x + y, dim=-1)
+
+        model = Model().eval()
+        example_inputs = (torch.rand(2, 3), torch.rand(2, 3))
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            for node in torch.fx.symbolic_trace(model).graph.nodes:
+                ct.converters.mil.frontend.torch.is_torch_fx_node_supported(node)
+            ct.convert(torch.export.export(model, example_inputs).run_decompositions({}))
+        registry_warnings = [w for w in caught if "_TORCH_OPS_REGISTRY" in str(w.message)]
+        assert not registry_warnings, [str(w.message) for w in registry_warnings]
 
 
 #################################################################################

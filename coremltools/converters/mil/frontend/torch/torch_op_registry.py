@@ -163,4 +163,4 @@ def is_torch_fx_node_supported(torch_fx_node: "torch.fx.Node") -> bool:
         "all ops should be functional, i.e. there should not be any in-place op"
     )
 
-    return torch_fx_node_target_name in _TORCH_OPS_REGISTRY
+    return torch_fx_node_target_name in _TORCH_OPS_REGISTRY.name_to_func_mapping
