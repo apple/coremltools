@@ -1,11 +1,11 @@
 # API Overview
 
 ## Pruning APIs for Core ML model
-- [`OpMagnitudePrunerConfig`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OpMagnitudePrunerConfig): Prune the weights with a constant sparsity percentile.
-- [`OpThresholdPrunerConfig`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OpThresholdPrunerConfig): Set all weight values below a certain value.
+- [`OpMagnitudePrunerConfig`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.pruning.html#coremltools.optimize.coreml.OpMagnitudePrunerConfig): Prune the weights with a constant sparsity percentile.
+- [`OpThresholdPrunerConfig`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.pruning.html#coremltools.optimize.coreml.OpThresholdPrunerConfig): Set all weight values below a certain value.
 
 ### Data free Pruning
-Here is a simple example showing the usage of [`OpThresholdPrunerConfig`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OpThresholdPrunerConfig):
+Here is a simple example showing the usage of [`OpThresholdPrunerConfig`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.pruning.html#coremltools.optimize.coreml.OpThresholdPrunerConfig):
 ```python
 from coremltools.optimize.coreml import (
     OpThresholdPrunerConfig,
@@ -20,7 +20,7 @@ model_compressed = prune_weights(model, config=config)
 ```
 - All weight values below a certain value, as specified by `threshold`, are set to zero.
 
-Another way to perform data-free pruning would be using the [`OpMagnitudePrunerConfig`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OpMagnitudePrunerConfig). Below, we see how to configure it with different config parameters based on the op type and op name:
+Another way to perform data-free pruning would be using the [`OpMagnitudePrunerConfig`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.pruning.html#coremltools.optimize.coreml.OpMagnitudePrunerConfig). Below, we see how to configure it with different config parameters based on the op type and op name:
 
 ```python
 from coremltools.optimize.coreml import (

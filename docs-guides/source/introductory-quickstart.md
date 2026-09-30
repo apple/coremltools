@@ -150,7 +150,7 @@ To verify the conversion programmatically, Core ML Tools provides the `predict()
 
 ```{note}
 
-Core ML models can be [imported and executed with TVM](https://tvm.apache.org/docs/tutorials/frontend/from_coreml.html), which may provide a way to test Core ML models on non-macOS systems.
+Core ML models can be [imported and executed with TVM](https://tvm.apache.org/docs/), which may provide a way to test Core ML models on non-macOS systems.
 ```
 
 Compare predictions made by the converted model with predictions made by the source model:

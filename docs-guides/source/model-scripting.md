@@ -8,7 +8,7 @@
     single: TorchScript
 ```
 
-Model tracing is not appropriate in all cases. If your model includes a data-dependent control flow, such as a loop or conditional, you can experiment with PyTorch's [JIT script](https://pytorch.org/docs/stable/generated/torch.jit.script.html) to _script_ the model by analyzing the code to generate TorchScript.
+Model tracing is not appropriate in all cases. If your model includes a data-dependent control flow, such as a loop or conditional, you can experiment with PyTorch's [JIT script](https://docs.pytorch.org/docs/stable/jit.html) to _script_ the model by analyzing the code to generate TorchScript.
 
 ```{warning}
 If you convert a scripted model, a warning appears explaining that support for scripted models is experimental.
@@ -26,7 +26,7 @@ Thus, the same model can produce two different traces. This is probably not the 
 
 ## Use JIT Script
 
-Use PyTorch's [JIT script](https://pytorch.org/docs/stable/generated/torch.jit.script.html) to script the model and convert it to TorchScript. To demonstrate, follow this code fragment:
+Use PyTorch's [JIT script](https://docs.pytorch.org/docs/stable/jit.html) to script the model and convert it to TorchScript. To demonstrate, follow this code fragment:
 
 - Define a single convolution plus activation block.
 - If the input tensor to the network has mean value less than zero, run the block twice.

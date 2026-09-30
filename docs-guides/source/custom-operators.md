@@ -13,7 +13,7 @@ In such cases you can create a _custom layer_ in your model for the custom opera
 
 A custom operator is not easy to implement. Use a custom operator only if you can't get the performance you want, and only as a last resort if:
 
-- The functionality you need is not supported in the [Core ML API](https://developer.apple.com/documentation/coreml/core_ml_api).
+- The functionality you need is not supported in the [Core ML API](https://developer.apple.com/documentation/coreml).
 - You can't represent the functionality with a [composite operator](composite-operators). Whenever possible, use a composite operator, which is more efficient than a custom operation, and compiles down to various hardware backends available on your device.
 ```
 

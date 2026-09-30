@@ -166,7 +166,7 @@ class ImageFilteringModel(torch.nn.Module):
 
 #### Trace the PyTorch Model
 
-The following code snippet traces the model instantiated from `ImageFilteringModel`, using  a 256 x 256 pixel image as its shape. The code uses `jit` ([JIT tracer](https://pytorch.org/docs/stable/generated/torch.jit.trace.html)) to generate TorchScript. For details about tracing PyTorch models before converting them, see [Model Tracing](model-tracing).
+The following code snippet traces the model instantiated from `ImageFilteringModel`, using  a 256 x 256 pixel image as its shape. The code uses `jit` ([JIT tracer](https://docs.pytorch.org/docs/stable/jit.html)) to generate TorchScript. For details about tracing PyTorch models before converting them, see [Model Tracing](model-tracing).
 
 ```python
 torch_model = ImageFilteringModel()

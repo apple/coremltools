@@ -26,7 +26,7 @@ predictions = model.predict({'bedroom': 1.0, 'bath': 1.0, 'size': 1240})
 
 For the prediction API, coremltools interacts with the Core ML framework which is available on macOS only. The prediction API is not available on Linux. 
 
-However, Core ML models can be [imported and executed with TVM](https://tvm.apache.org/docs/tutorials/frontend/from_coreml.html), which may provide a way to test Core ML models on non-macOS systems.
+However, Core ML models can be [imported and executed with TVM](https://tvm.apache.org/docs/), which may provide a way to test Core ML models on non-macOS systems.
 ```
 
 ## Types of Inputs and Outputs

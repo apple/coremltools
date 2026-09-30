@@ -26,7 +26,7 @@ To run this example on your system, follow these steps:
     - Processing and inspection utilities ([demo_utils.py](https://docs-assets.developer.apple.com/coremltools/deepspeech/demo_utils.py)) 
     - Sample audio file ([audio_sample_16bit_mono_16khz.wav](https://docs-assets.developer.apple.com/coremltools/deepspeech/audio_sample_16bit_mono_16khz.wav))
     - Alphabet configuration file ([alphabet.txt](https://github.com/mozilla/DeepSpeech/blob/master/data/alphabet.txt))
-    - Language model scorer ([kenlm.scorer](https://github.com/mozilla/DeepSpeech/blob/master/data/lm/kenlm.scorer))
+    - Language model scorer ([kenlm.scorer](https://github.com/mozilla/DeepSpeech/releases/download/v0.9.3/deepspeech-0.9.3-models.scorer))
     - Pre-trained weights ([deepspeech-0.7.1-checkpoint](https://github.com/mozilla/DeepSpeech/releases/download/v0.7.1/deepspeech-0.7.1-checkpoint.tar.gz))
     - Script to export TensorFlow 1 model ([DeepSpeech.py](https://github.com/mozilla/DeepSpeech/blob/master/DeepSpeech.py))
 

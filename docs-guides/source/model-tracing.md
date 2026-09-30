@@ -7,7 +7,7 @@
 
 # Model Tracing
 
-The easiest way to generate TorchScript for your model is to use PyTorch's [JIT tracer](https://pytorch.org/docs/stable/generated/torch.jit.trace.html). Tracing runs an example input tensor through your model, and captures the operations that are invoked as that input makes its way through the model's layers.
+The easiest way to generate TorchScript for your model is to use PyTorch's [JIT tracer](https://docs.pytorch.org/docs/stable/jit.html). Tracing runs an example input tensor through your model, and captures the operations that are invoked as that input makes its way through the model's layers.
 
 ```{admonition} Tracing Limitations
 
