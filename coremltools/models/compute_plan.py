@@ -302,7 +302,7 @@ class MLComputePlanDeviceUsage:
         The compute device that the framework prefers to execute the layer/operation.
 
     supported_compute_devices : List[MLComputeDevice]
-        The compute device that the framework prefers to execute the layer/operation.
+        The compute devices that can execute the layer/operation.
     """
 
     preferred_compute_device: _MLComputeDevice

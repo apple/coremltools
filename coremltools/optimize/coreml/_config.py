@@ -160,6 +160,20 @@ class OpLinearQuantizerConfig(OpCompressorConfig):
         * ``"per_channel"`` (default)
         * ``"per_block"``
 
+        .. note::
+            ``granularity`` and ``block_size`` configure weight compression;
+            successful compression does not guarantee Neural Engine execution.
+            See the `hardware-specific compression guidance
+            <https://apple.github.io/coremltools/docs-guides/source/opt-overview.html#effect-on-runtime-performance-on-apple-silicon>`_
+            when choosing these settings.
+
+            :py:class:`~coremltools.models.compute_plan.MLComputePlan` reports
+            supported and preferred compute devices for model operations.
+            Supported devices are eligible to execute an operation; the preferred
+            device is the framework's choice in the plan. The plan describes
+            anticipated placement, not a recorded inference run. Confirm execution
+            by profiling on the target device.
+
     block_size: int or List/Tuple of int
 
         * Only effective when granularity is set to "per_block".
