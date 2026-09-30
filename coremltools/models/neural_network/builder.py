@@ -866,8 +866,9 @@ class NeuralNetworkBuilder:
 
             # uniDirectionalLSTM Layers
             elif layer_type == "uniDirectionalLSTM":
-                return self._check_fp16_weight_params_lstms(lstm_wp=layer.uniDirectionalLSTM.weightParams,
-                                                            has_peephole=layer.uniDirectionalLSTM.params.hasPeepholeVectors)
+                if self._check_fp16_weight_params_lstms(lstm_wp=layer.uniDirectionalLSTM.weightParams,
+                                                        has_peephole=layer.uniDirectionalLSTM.params.hasPeepholeVectors):
+                    return True
 
             # biDirectionalLSTM Layers
             elif layer_type == "biDirectionalLSTM":
@@ -878,19 +879,19 @@ class NeuralNetworkBuilder:
 
             # branch Layers
             elif layer_type == "branch":
-                if len(layer.branch.ifBranch.float16Value) > 0:
+                if self._check_fp16_weight_param_exists(layer.branch.ifBranch.layers):
                     return True
-                if len(layer.branch.elseBranch.float16Value) > 0:
+                if self._check_fp16_weight_param_exists(layer.branch.elseBranch.layers):
                     return True
 
             # loop Layers
             elif layer_type == "loop":
-                if len(layer.loop.conditionNetwork.float16Value) > 0:
+                if self._check_fp16_weight_param_exists(layer.loop.conditionNetwork.layers):
                     return True
-                if len(layer.loop.bodyNetwork.float16Value) > 0:
+                if self._check_fp16_weight_param_exists(layer.loop.bodyNetwork.layers):
                     return True
 
-            return False
+        return False
 
     def make_updatable(self, trainables):
         """
