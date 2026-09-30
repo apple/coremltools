@@ -1009,7 +1009,7 @@ class TestPad:
     @staticmethod
     def test_error_out_with_dynamic_paddings_with_invaid_shape():
         with pytest.raises(
-            ValueError, match="Non-constant 'pad' must have shape \(8,\). Got \(4,\)"
+            ValueError, match=r"Non-constant 'pad' must have shape \(8,\). Got \(4,\)"
         ):
 
             @mb.program(
@@ -1731,7 +1731,7 @@ class TestConcat:
         """If the input to the concat op has different dtypes, it will error out."""
         with pytest.raises(
             ValueError,
-            match="Tensors in 'values' of the concat op \(concat_0\) should share the same data type",
+            match=r"Tensors in 'values' of the concat op \(concat_0\) should share the same data type",
         ):
 
             @mb.program(

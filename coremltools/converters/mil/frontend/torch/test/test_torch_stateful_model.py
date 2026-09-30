@@ -754,7 +754,7 @@ class TestStateConversionAPI:
         """
         with pytest.raises(
             ValueError,
-            match="StateType named None not provided or not found in the source torch model. Please make sure the name in 'ct.StateType\(name=..., wrapped_type=ct.TensorType\(...\)\)' match the 'named_buffers\(\)' in the source torch model.",
+            match=r"StateType named None not provided or not found in the source torch model. Please make sure the name in 'ct.StateType\(name=..., wrapped_type=ct.TensorType\(...\)\)' match the 'named_buffers\(\)' in the source torch model.",
         ):
             prog = ct.convert(
                 float32_buffer_model,
@@ -775,7 +775,7 @@ class TestStateConversionAPI:
 
         with pytest.raises(
             ValueError,
-            match="StateType named invalid not provided or not found in the source torch model. Please make sure the name in 'ct.StateType\(name=..., wrapped_type=ct.TensorType\(...\)\)' match the 'named_buffers\(\)' in the source torch model: \['state'\]",
+            match=r"StateType named invalid not provided or not found in the source torch model. Please make sure the name in 'ct.StateType\(name=..., wrapped_type=ct.TensorType\(...\)\)' match the 'named_buffers\(\)' in the source torch model: \['state'\]",
         ):
             prog = ct.convert(
                 float32_buffer_model,
@@ -797,7 +797,7 @@ class TestStateConversionAPI:
         """
         with pytest.raises(
             ValueError,
-            match="StateType shape \(2,\) must match the torch buffer shape \(3,\)",
+            match=r"StateType shape \(2,\) must match the torch buffer shape \(3,\)",
         ):
             prog = ct.convert(
                 float32_buffer_model,
@@ -824,7 +824,7 @@ class TestStateConversionAPI:
         """
         with pytest.raises(
             ValueError,
-            match="Number of TorchScript inputs \(2\) must match the user provided inputs \(1\).",
+            match=r"Number of TorchScript inputs \(2\) must match the user provided inputs \(1\).",
         ):
             prog = ct.convert(
                 float32_buffer_model_with_two_inputs,

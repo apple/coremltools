@@ -307,7 +307,7 @@ class TestMILProgramVersionHandling:
         In this case, `mb.program` should error out, and tell the user to set `opset_version=target.iOS16`
         '''
         expected_err_str = (
-            "Op topk with an out of date version coremltools.target.iOS13 is detected. Please use @mb.program\(input_specs=..., opset_version=coremltools.target.iOS16\)"
+            r"Op topk with an out of date version coremltools.target.iOS13 is detected. Please use @mb.program\(input_specs=..., opset_version=coremltools.target.iOS16\)"
         )
         with pytest.raises(ValueError, match=expected_err_str):
             get_simple_topk_pixel_unshuffle_program()
@@ -1085,7 +1085,7 @@ class TestScope:
         def prog(x):
             with pytest.raises(
                 ValueError,
-                match="Scope must be type of List\[str\]. Got element 9 with type \<class 'int'\>.",
+                match=r"Scope must be type of List\[str\]. Got element 9 with type \<class 'int'\>.",
             ):
                 with mb.scope(
                     ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=["m1", 9]),
@@ -1097,7 +1097,7 @@ class TestScope:
 
             with pytest.raises(
                 ValueError,
-                match="Scope must be type of List\[str\]. Got element 0 with type \<class 'int'\>.",
+                match=r"Scope must be type of List\[str\]. Got element 0 with type \<class 'int'\>.",
             ):
                 with mb.scope(
                     ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=["m1", "m2"]),
@@ -1283,7 +1283,7 @@ class TestScope:
     def test_invalid_scope_source_type():
         @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
         def prog(x):
-            with pytest.raises(TypeError, match="'source' must be \<enum 'ScopeSource'\>"):
+            with pytest.raises(TypeError, match=r"'source' must be \<enum 'ScopeSource'\>"):
                 with mb.scope(
                     ScopeInfo(source="invalid_source", data="a1"),
                 ):
@@ -1296,7 +1296,7 @@ class TestScope:
         def prog(x):
             with pytest.raises(
                 ValueError,
-                match="mb.scope only accepts inputs of type ScopeInfo. Got \<class 'str'\>.",
+                match=r"mb.scope only accepts inputs of type ScopeInfo. Got \<class 'str'\>.",
             ):
                 with mb.scope(
                     ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=["module_1"]),

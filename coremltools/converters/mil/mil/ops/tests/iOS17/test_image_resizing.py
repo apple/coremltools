@@ -101,8 +101,8 @@ class TestCropResize:
         )
         with pytest.raises(
             ValueError,
-            match='N dimension of "boxes" \(3\) should not be greater '
-            'than the B dimension of "x" \(1\)',
+            match=r'N dimension of "boxes" \(3\) should not be greater '
+            r'than the B dimension of "x" \(1\)',
         ):
 
             @mb.program(input_specs=[], opset_version=backend.opset_version)
@@ -114,7 +114,7 @@ class TestCropResize:
         with pytest.raises(
             ValueError,
             match='input "box_indices" should not have values >= B '
-            "dimension of x \(1\), but got \[10\]",
+            r"dimension of x \(1\), but got \[10\]",
         ):
 
             @mb.program(input_specs=[], opset_version=backend.opset_version)
@@ -123,7 +123,7 @@ class TestCropResize:
 
         indices_two_dim = np.array([[0]], dtype=np.int32)
         with pytest.raises(
-            ValueError, match='input "box_indices" must has shape \[1\], but got \(1, 1\)'
+            ValueError, match=r'input "box_indices" must has shape \[1\], but got \(1, 1\)'
         ):
 
             @mb.program(input_specs=[], opset_version=backend.opset_version)
@@ -341,7 +341,7 @@ class TestResize:
                 backend=backend,
             )
 
-        with pytest.raises(ValueError, match="The shape's size \(4\) must <= x's rank \(3\)"):
+        with pytest.raises(ValueError, match=r"The shape's size \(4\) must <= x's rank \(3\)"):
             run_compare_builder(
                 build_invalid_target_shape,
                 input_placeholder_dict,

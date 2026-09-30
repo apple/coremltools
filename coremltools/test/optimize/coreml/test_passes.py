@@ -1806,7 +1806,7 @@ class TestLinearQuantizer(TestCompressionPasses):
 
         with pytest.raises(
             ValueError,
-            match="Only mode \('LINEAR_SYMMETRIC', 'LINEAR'\) supported for weight affine quantization. Got mode: \"DUMMY\".",
+            match="Only mode \\('LINEAR_SYMMETRIC', 'LINEAR'\\) supported for weight affine quantization. Got mode: \"DUMMY\".",
         ):
             cto.coreml.OpLinearQuantizerConfig(
                 mode="DUMMY",
@@ -2956,7 +2956,7 @@ class TestInvalidConfig:
                 block_size=9,
             )
 
-        msg = '"block_size" must be an integer \> 1'
+        msg = r'"block_size" must be an integer \> 1'
         with pytest.raises(ValueError, match=msg):
             config = cto.coreml.OpMagnitudePrunerConfig(
                 target_sparsity=0.9,
@@ -2969,7 +2969,7 @@ class TestInvalidConfig:
                 block_size=-9,
             )
 
-        msg = '"n_m_ratio" must be a tuple of two integers \(n, m\). n \<\= m. Got'
+        msg = r'"n_m_ratio" must be a tuple of two integers \(n, m\). n \<\= m. Got'
         with pytest.raises(ValueError, match=msg):
             config = cto.coreml.OpMagnitudePrunerConfig(
                 n_m_ratio=(2, 2, 2),

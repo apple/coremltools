@@ -56,7 +56,7 @@ class TestExtractSubModel:
             extract_submodel(mlmodel, outputs=invalid_outputs)
 
         invalid_outputs = ["error"]
-        with pytest.raises(ValueError, match="outputs \['error'\] not found in the function."):
+        with pytest.raises(ValueError, match=r"outputs \['error'\] not found in the function."):
             extract_submodel(mlmodel, outputs=invalid_outputs)
 
         model_dir = tempfile.TemporaryDirectory()

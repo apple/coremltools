@@ -1441,7 +1441,7 @@ class TestPalettizeWeights:
             assert snr_grouped_channelwise > snr_per_tensor
 
     def test_channelwise_palettization_invalid_config(self):
-        with pytest.raises(ValueError, match='Invalid value of "nbits" \(7\) for palettization'):
+        with pytest.raises(ValueError, match=r'Invalid value of "nbits" \(7\) for palettization'):
             cto.coreml.OpPalettizerConfig(
                 mode="kmeans",
                 nbits=7,
@@ -2765,12 +2765,12 @@ class TestErrorHandling:
             linear_quantize_weights(mlmodel, dtype="int32")
 
         # Test invalid threshold for weight sparsification
-        expected_err_str = 'Invalid value of "threshold": \-1.0. Needs to be in \[0, inf\)'
+        expected_err_str = r'Invalid value of "threshold": \-1.0. Needs to be in \[0, inf\)'
         with pytest.raises(ValueError, match=expected_err_str):
             prune_weights(mlmodel, mode="threshold_based", threshold=-1.0)
 
         # Test invalid percentile for weight sparsification
-        expected_err_str = "Invalid value of \"target_sparsity\": 1.2. Needs to be in \[0, 1\]"
+        expected_err_str = "Invalid value of \"target_sparsity\": 1.2. Needs to be in \\[0, 1\\]"
         with pytest.raises(ValueError, match=expected_err_str):
            prune_weights(mlmodel, mode="percentile_based", target_sparsity=1.2)
 

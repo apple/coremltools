@@ -27,7 +27,7 @@ from .palettization_config import DEFAULT_PALETTIZATION_ADVANCED_OPTIONS
 _logger = _logging.getLogger(__name__)
 
 class FakePalettize(_FakeQuantize, _Partitioner):
-    """
+    r"""
     A class that implements palettization algorithm described in
     `DKM: Differentiable K-Means Clustering Layer for Neural Network Compression
     <https://arxiv.org/abs/2108.12659>`_. It clusters the weights
