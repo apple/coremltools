@@ -53,10 +53,7 @@ function(coreml_add_build_proto proto_fn target_suffix)
             -I${CMAKE_CURRENT_SOURCE_DIR}/format/
             ${CMAKE_CURRENT_SOURCE_DIR}/format/${proto_fn}.proto
         COMMAND python
-            -m lib2to3
-            -wn
-            --no-diff
-            -f import
+            ${CMAKE_SOURCE_DIR}/scripts/fix_proto_imports.py
             ${CMAKE_BINARY_DIR}/coremltools${target_suffix}/${proto_fn}_pb2.py
         DEPENDS protoc
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
@@ -91,10 +88,7 @@ function(coreml_add_build_proto proto_fn target_suffix)
                 -I${CMAKE_CURRENT_SOURCE_DIR}/format/
                 ${CMAKE_CURRENT_SOURCE_DIR}/format/${proto_fn}.proto
             COMMAND python
-                -m lib2to3
-                -wn
-                --no-diff
-                -f import
+                ${CMAKE_SOURCE_DIR}/scripts/fix_proto_imports.py
                 ${CMAKE_SOURCE_DIR}/coremltools${target_suffix}/proto/${proto_fn}_pb2.py
             DEPENDS protoc
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
