@@ -342,6 +342,32 @@ class TestMLModel:
                 _compare_loaded_debug_handle_mapping_with_original(package1)
 
     @pytest.mark.skipif(not _HAS_TORCH, reason="requires torch")
+    def test_save_torch_export_writes_no_EXIR_debug_handle_mapping(self):
+        """
+        A plain torch.export program carries no EXIR debug handles, so saving it
+        must not write an ExecuTorch debug handle mapping (it used to map every op to a
+        `null` handle)
+        """
+
+        class TestModule(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.linear = torch.nn.Linear(10, 20)
+
+            def forward(self, x):
+                return torch.relu(self.linear(x))
+
+        exported_program = torch.export.export(TestModule().eval(), (torch.rand(2, 10),)).run_decompositions({})
+        coreml_model = coremltools.convert(exported_program)
+        assert coreml_model._mil_program.construct_debug_handle_to_ops_mapping() == {}
+
+        with tempfile.TemporaryDirectory(suffix=".mlpackage") as package:
+            coreml_model.save(package)
+            assert not os.path.exists(
+                os.path.join(package, "executorch_debug_handle_mapping.json")
+            )
+
+    @pytest.mark.skipif(not _HAS_TORCH, reason="requires torch")
     def test_mil_as_package(self):
         num_tokens = 3
         embedding_size = 5
