@@ -1432,10 +1432,17 @@ class TorchConverter:
                         f"Number of outputs provided, {len(self.outputs)}, do not match the number of outputs detected in the model, {len(graph_outputs)}."
                     )
             if self.output_names:
+                input_vars = list(ssa_func.inputs.values())
                 for index, var in enumerate(graph_outputs):
                     if self.output_names[index] is not None:
                         output_rename = self.output_names[index]
-                        var.name = output_rename
+                        if var in input_vars and var.name != output_rename:
+                            # The model returns this input unchanged. Renaming the var would
+                            # rename the model input as well, so output a copy of it instead.
+                            with mb.scope(*self._output_copy_scopes(output_rename)):
+                                graph_outputs[index] = mb.identity(x=var, name=output_rename)
+                        else:
+                            var.name = output_rename
 
             ssa_func.set_outputs(graph_outputs)
             prog.add_function("main", ssa_func)
@@ -1463,6 +1470,17 @@ class TorchConverter:
             prog._add_essential_scope_source(essential_scope_sources)
             prog.validate(check_essential_scope=True)
         return prog
+
+    def _output_copy_scopes(self, output_name: str) -> List[ScopeInfo]:
+        if self.context.frontend == TorchFrontend.TORCHSCRIPT:
+            return [
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data="placeholder"),
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=output_name),
+            ]
+        return [
+            ScopeInfo(source=ScopeSource.EXIR_STACK_TRACE, data=output_name),
+            ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None]),
+        ]
 
     def convert_output_to_memory_layout(self):
         """
