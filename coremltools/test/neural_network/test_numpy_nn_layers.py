@@ -782,6 +782,17 @@ class SimpleTest(CorrectnessTest):
         self._test_model(builder.spec, input, expected, useCPUOnly=True)
 
 
+def test_image_size_range_add_shape_range():
+    size_range = flexible_shape_utils.NeuralNetworkImageSizeRange()
+    size_range.add_height_range(flexible_shape_utils.ShapeRange(64, 128))
+    size_range.add_width_range(flexible_shape_utils.ShapeRange(32, -1))
+
+    assert size_range.get_height_range().lowerBound == 64
+    assert size_range.get_height_range().upperBound == 128
+    assert size_range.get_width_range().lowerBound == 32
+    assert size_range.get_width_range().isUnbounded
+
+
 @unittest.skipIf(
     not _is_macos() or _macos_version() < LAYERS_10_15_MACOS_VERSION,
     "macOS 10.15+ required. Skipping tests.",

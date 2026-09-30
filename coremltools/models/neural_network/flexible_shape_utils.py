@@ -281,8 +281,9 @@ class NeuralNetworkImageSizeRange:
                 raise Exception("Width range should be a ShapeRange or a tuple object")
             elif len(width_range) != 2:
                 raise Exception("Width range tuple should be at least length 2")
+            width_range = ShapeRange(width_range[0], width_range[1])
 
-        self._width_range = ShapeRange(width_range[0], width_range[1])
+        self._width_range = width_range
 
     def add_height_range(self, height_range):
         if not isinstance(height_range, ShapeRange):
@@ -290,8 +291,9 @@ class NeuralNetworkImageSizeRange:
                 raise Exception("Height range should be a ShapeRange or a tuple object")
             elif len(height_range) != 2:
                 raise Exception("Height range tuple should be at least length 2")
+            height_range = ShapeRange(height_range[0], height_range[1])
 
-        self._height_range = ShapeRange(height_range[0], height_range[1])
+        self._height_range = height_range
 
     def get_width_range(self):
         return self._width_range
@@ -636,8 +638,8 @@ def update_image_size_range(spec, feature_name, size_range):
 
         spec = coremltools.utils.load_spec("mymodel.mlmodel")
         img_size_ranges = flexible_shape_utils.NeuralNetworkImageSizeRange()
-        img_size_ranges.add_height_range(64, 128)
-        img_size_ranges.add_width_range(128, -1)
+        img_size_ranges.add_height_range((64, 128))
+        img_size_ranges.add_width_range((128, -1))
         flexible_shape_utils.update_image_size_range(
             spec, feature_name="my_multiarray_featurename", size_range=img_size_ranges
         )
