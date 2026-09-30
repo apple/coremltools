@@ -5530,6 +5530,98 @@ class TestLayerNorm(TorchBaseTest):
         )
 
 
+@pytest.mark.skipif(
+    condition=version_lt(torch, "2.5.0"),
+    reason="torch.rms_norm is introduced in PyTorch 2.4.0",
+)
+class TestRMSNorm(TorchBaseTest):
+    def test_rms_norm_scales_epsilon_with_input(self):
+        input_shape = (1, 8)
+        eps = 1e-5
+
+        class RMSNormModel(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.weight = nn.Parameter(torch.ones(8))
+
+            def forward(self, x):
+                return nn.functional.rms_norm(
+                    x,
+                    normalized_shape=(8,),
+                    weight=self.weight,
+                    eps=eps,
+                )
+
+        model = RMSNormModel().eval()
+        input_data = torch.tensor(
+            [[25.0, 1.0, 0.5, -0.25, 0.1, -0.05, 0.02, -0.01]],
+            dtype=torch.float32,
+        )
+
+        model_spec = export_torch_model_to_frontend(
+            model,
+            input_data,
+            TorchFrontend.TORCHSCRIPT,
+        )
+
+        program = ct.convert(
+            model_spec,
+            source="pytorch",
+            convert_to="milinternal",
+            inputs=[ct.TensorType(shape=input_shape)],
+            compute_precision=ct.precision.FLOAT32,
+        )
+
+        operations = program["main"].operations
+
+        scale_op = next(
+            op
+            for op in operations
+            if op.op_type == "maximum"
+            and np.isclose(op.inputs["y"].val, 1.0)
+        )
+        inv_scale_op = next(
+            op
+            for op in operations
+            if op.op_type == "real_div"
+            and op.inputs["y"].name == scale_op.name
+            and np.isclose(op.inputs["x"].val, 1.0)
+        )
+
+        eps_scale_op = next(
+            op
+            for op in operations
+            if op.op_type == "mul"
+            and (
+                op.inputs["x"].name == inv_scale_op.name
+                or op.inputs["y"].name == inv_scale_op.name
+            )
+            and any(
+                getattr(inp, "val", None) is not None
+                and np.isclose(inp.val, eps)
+                for inp in op.inputs.values()
+            )
+        )
+
+        eps_scaled_op = next(
+            op
+            for op in operations
+            if op.op_type == "mul"
+            and (
+                op.inputs["x"].name == eps_scale_op.name
+                or op.inputs["y"].name == eps_scale_op.name
+            )
+        )
+
+        assert eps_scaled_op.name.endswith("_eps_scaled")
+
+        assert not any(
+            op.op_type == "mul"
+            and op.name.endswith("_rms_scaled")
+            for op in operations
+        )
+
+
 class TestPixelShuffle(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, batch_size, CHW, r",
