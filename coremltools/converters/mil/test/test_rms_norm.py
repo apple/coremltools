@@ -117,6 +117,94 @@ class TestRMSNorm:
             f"Test '{test_name}' produced Inf values"
 
     @staticmethod
+    def test_spiky_input_eps_not_inflated():
+        """
+        Regression test for Issue #2821: the max-|x| overflow-protection
+        rescale must rescale eps along with the input. Otherwise the
+        effective epsilon becomes eps * max(|x|)^2, which produces large
+        errors for spiky inputs (max|x| >> rms(x)) even at FLOAT32.
+        """
+        class TestModel(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.norm = torch.nn.RMSNorm(64, eps=1e-5)
+
+            def forward(self, x):
+                return self.norm(x)
+
+        model = TestModel()
+        model.eval()
+
+        torch.manual_seed(0)
+        # Mostly small values with one large component per row:
+        # max(|x|)^2 / mean(x^2) ~ 6e4, so an inflated epsilon dominates.
+        example = 0.01 * torch.randn(1, 8, 64)
+        example[..., 0] = 25.0
+
+        torch_out = model(example).detach().numpy()
+        traced = torch.jit.trace(model, example)
+        mlmodel = ct.convert(
+            traced,
+            inputs=[ct.TensorType(
+                shape=example.shape,
+                dtype=np.float32,
+                name="input"
+            )],
+            outputs=[ct.TensorType(name="output", dtype=np.float32)],
+            convert_to="mlprogram",
+            compute_precision=ct.precision.FLOAT32,
+            compute_units=ct.ComputeUnit.CPU_ONLY,
+        )
+        coreml_out = mlmodel.predict({"input": example.numpy()})["output"]
+
+        rel_l2 = (
+            np.linalg.norm(torch_out - coreml_out) / np.linalg.norm(torch_out)
+        )
+        # fp32 rounding is ~1e-7; the eps-inflation bug produced 3.2e-4 here.
+        assert rel_l2 < 1e-5, (
+            f"rms_norm eps inflation regression: rel_l2={rel_l2:.2e}"
+        )
+
+    @staticmethod
+    def test_zero_input_converted_model():
+        """
+        The converted model (not just the PyTorch reference) must handle an
+        all-zero input: the max-|x| rescale divides by reduce_max(|x|),
+        which is 0 for a zero row unless clamped.
+        """
+        class TestModel(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.norm = torch.nn.RMSNorm(64)
+
+            def forward(self, x):
+                return self.norm(x)
+
+        model = TestModel()
+        model.eval()
+
+        example = torch.zeros(2, 8, 64)
+        torch_out = model(example).detach().numpy()
+        traced = torch.jit.trace(model, torch.randn(2, 8, 64))
+        mlmodel = ct.convert(
+            traced,
+            inputs=[ct.TensorType(
+                shape=example.shape,
+                dtype=np.float32,
+                name="input"
+            )],
+            outputs=[ct.TensorType(name="output", dtype=np.float32)],
+            convert_to="mlprogram",
+            compute_precision=ct.precision.FLOAT32,
+            compute_units=ct.ComputeUnit.CPU_ONLY,
+        )
+        coreml_out = mlmodel.predict({"input": example.numpy()})["output"]
+
+        assert not np.isnan(coreml_out).any(), \
+            "Converted RMSNorm produced NaN on all-zero input"
+        np.testing.assert_allclose(torch_out, coreml_out, atol=1e-6)
+
+    @staticmethod
     def test_edge_cases():
         """
         Test edge cases like zero inputs, very small values
