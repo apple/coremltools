@@ -412,6 +412,87 @@ class TestMILBuilderAPI:
             prog.add_function("func_1", func_1)
 
 
+class TestMILFrontendOutputs:
+    """
+    The ``outputs`` argument of ``ct.convert`` applies to a pymil program.
+    """
+
+    @staticmethod
+    def _get_prog():
+        @mb.program(input_specs=[mb.TensorSpec(shape=(4,))], opset_version=ct.target.iOS16)
+        def prog(x):
+            return mb.relu(x=x), mb.square(x=x)
+
+        return prog
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "convert_to, names_as_str",
+        [("mlprogram", False), ("mlprogram", True), ("neuralnetwork", False)],
+    )
+    def test_output_names(convert_to, names_as_str):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(4,))])
+        def prog(x):
+            return mb.relu(x=x), mb.square(x=x)
+
+        outputs = ["y", "z"] if names_as_str else [ct.TensorType(name="y"), ct.TensorType(name="z")]
+        mlmodel = ct.convert(prog, convert_to=convert_to, outputs=outputs, skip_model_load=True)
+        assert [o.name for o in mlmodel.get_spec().description.output] == ["y", "z"]
+
+    @staticmethod
+    def test_output_dtype():
+        mlmodel = ct.convert(
+            TestMILFrontendOutputs._get_prog(),
+            outputs=[ct.TensorType(dtype=np.float16), ct.TensorType(dtype=np.float16)],
+            minimum_deployment_target=ct.target.iOS16,
+            skip_model_load=True,
+        )
+        fp16 = ct.proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT16
+        for output in mlmodel.get_spec().description.output:
+            assert output.type.multiArrayType.dataType == fp16
+
+    @staticmethod
+    def test_output_count_mismatch():
+        with pytest.raises(ValueError, match="Number of outputs provided, 1"):
+            ct.convert(
+                TestMILFrontendOutputs._get_prog(),
+                outputs=[ct.TensorType(name="y")],
+                minimum_deployment_target=ct.target.iOS16,
+                skip_model_load=True,
+            )
+
+    @staticmethod
+    def test_rename_input_returned_as_output():
+        @mb.program(input_specs=[mb.TensorSpec(shape=(4,))], opset_version=ct.target.iOS16)
+        def prog(x):
+            return x, mb.relu(x=x)
+
+        mlmodel = ct.convert(
+            prog,
+            outputs=["y", "z"],
+            minimum_deployment_target=ct.target.iOS16,
+            skip_model_load=True,
+        )
+        spec = mlmodel.get_spec()
+        assert [i.name for i in spec.description.input] == ["x"]
+        assert [o.name for o in spec.description.output] == ["y", "z"]
+
+    @staticmethod
+    def test_rename_var_returned_twice():
+        @mb.program(input_specs=[mb.TensorSpec(shape=(4,))], opset_version=ct.target.iOS16)
+        def prog(x):
+            y = mb.relu(x=x)
+            return y, y
+
+        mlmodel = ct.convert(
+            prog,
+            outputs=["y", "z"],
+            minimum_deployment_target=ct.target.iOS16,
+            skip_model_load=True,
+        )
+        assert [o.name for o in mlmodel.get_spec().description.output] == ["y", "z"]
+
+
 class TestMILBasic:
     """
     Test the basic error handling / validation in pymil.
