@@ -979,9 +979,7 @@ def _python_version():
     """
     Return python version as a tuple of integers
     """
-    version = _sys.version.split(" ")[0]
-    version = list(map(int, list(version.split("."))))
-    return tuple(version)
+    return tuple(_sys.version_info[:3])
 
 
 def _get_feature(spec, feature_name):

@@ -8,6 +8,7 @@ import itertools
 import os
 import platform
 import shutil
+import sys
 import tempfile
 from sys import version_info
 from typing import Dict, Tuple
@@ -1901,3 +1902,18 @@ class TestChangeInputOutputTensorType:
         )
         for updated_output in updated_model.get_spec().description.output:
             assert updated_output.type.multiArrayType.dataType == to_feature_type
+
+
+class TestPythonVersion:
+    @pytest.mark.parametrize(
+        "sys_version, sys_version_info",
+        (
+            ("3.13.1 (main, Dec  3 2024, 17:59:52) [Clang 16.0.0]", (3, 13, 1, "final", 0)),
+            ("3.15.0rc2 (main, Sep  2 2026, 00:00:00) [GCC 15.2.1]", (3, 15, 0, "candidate", 2)),
+            ("3.15.0a1+ (heads/main:1a2b3c4, Oct 15 2025) [Clang 17.0.0]", (3, 15, 0, "alpha", 1)),
+        ),
+    )
+    def test_release_levels(self, monkeypatch, sys_version, sys_version_info):
+        monkeypatch.setattr(sys, "version", sys_version)
+        monkeypatch.setattr(sys, "version_info", sys_version_info)
+        assert ct.utils._python_version() == sys_version_info[:3]
