@@ -22,6 +22,7 @@ from coremltools import proto
 from coremltools._deps import (
     _HAS_HF,
     _HAS_TORCH,
+    _HAS_TORCH_EXPORT_API,
     _HAS_TORCHAO,
     MSG_TORCH_NOT_FOUND,
     MSG_TORCHAO_NOT_FOUND,
@@ -2140,6 +2141,44 @@ class TestInputOutputConversionAPI:
         assert_input_dtype(mlmodel, expected_type_str="fp32", expected_name="custom_input_name")
         assert_output_dtype(mlmodel, expected_type_str="fp32", expected_name="custom_output1_name", index=0)
         assert_output_dtype(mlmodel, expected_type_str="fp32", expected_name="custom_output2_name", index=1)
+
+    @pytest.mark.parametrize(
+        "use_torch_export, compute_precision, use_image",
+        itertools.product(
+            [False, True],
+            [ct.precision.FLOAT32, ct.precision.FLOAT16],
+            [False, True],
+        ),
+    )
+    def test_output_name_specified_for_returned_input(
+        self, use_torch_export, compute_precision, use_image
+    ):
+        # The model returns its input, so naming the output must not rename the input
+        class Model(torch.nn.Module):
+            def forward(self, x):
+                return x
+
+        example_input = torch.rand(1, 3, 8, 8)
+        if use_torch_export:
+            if not _HAS_TORCH_EXPORT_API:
+                pytest.skip("torch.export is not available")
+            model = torch.export.export(Model().eval(), (example_input,))
+            model = model.run_decompositions({})
+        else:
+            model = torch.jit.trace(Model().eval(), example_input)
+
+        io_type = ct.ImageType if use_image else ct.TensorType
+        mlmodel = ct.convert(
+            model,
+            inputs=[io_type(name="input", shape=example_input.shape)],
+            outputs=[io_type(name="output")],
+            compute_precision=compute_precision,
+            minimum_deployment_target=ct.target.macOS13,
+        )
+        spec = mlmodel.get_spec()
+        assert [x.name for x in spec.description.input] == ["input"]
+        assert [x.name for x in spec.description.output] == ["output"]
+        verify_prediction(mlmodel)
 
     def test_single_output_model(self, int32_input_model, float32_input_model_relu_ops):
         # test output type: if not provided, it should be the default which is float32
