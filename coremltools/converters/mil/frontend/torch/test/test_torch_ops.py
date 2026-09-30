@@ -5395,6 +5395,174 @@ class TestRandint(TorchBaseTest):
         assert prediction.min() >= 0
 
 
+class TestBernoulli(TorchBaseTest):
+    # The samples are random, so most models return 1.0 for every property of a large sample
+    # (64 * 256 draws) that holds, and 0.0 otherwise:
+    # - every value is 0 or 1;
+    # - the fraction of ones is within 0.03 of the expected probability;
+    # - with per-element probabilities p, mean(y * p) is within 0.03 of mean(p * p), which
+    #   only holds when each element is 1 with its own probability.
+    # The 0.03 margin is more than 7 standard errors wide at this sample size.
+    SHAPE = (64, 256)
+
+    @staticmethod
+    def _xfail_executorch(frontend):
+        if frontend == TorchFrontend.EXECUTORCH:
+            # PyTorch's edge verifier rejects bernoulli, which is not in the Core ATen opset,
+            # and lowers bernoulli(input) to rand, which does not convert from torch.export yet.
+            pytest.xfail("ExecuTorch does not keep torch.bernoulli or Tensor.bernoulli_")
+
+    @staticmethod
+    def _check_sample(y, p):
+        is_binary = (y * (1.0 - y)).abs().max() < 1e-3
+        if isinstance(p, float):
+            checks = [is_binary, (y.mean() - p).abs() < 0.03]
+        else:
+            p = p.expand_as(y)
+            checks = [
+                is_binary,
+                (y.mean() - p.mean()).abs() < 0.03,
+                ((y * p).mean() - (p * p).mean()).abs() < 0.03,
+            ]
+        return torch.cat([c.reshape(1) for c in checks]).to(torch.float32)
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, variant, p",
+        [
+            (compute_unit, backend, frontend, variant, p)
+            for compute_unit, backend, frontend in itertools.product(
+                compute_units, backends, frontends
+            )
+            # bernoulli_ defaults to p=0.5. torch.bernoulli(input, p) always takes a p.
+            for variant, p in [
+                ("inplace", None),
+                ("inplace", 0.3),
+                ("inplace", 0.8),
+                ("functional", 0.3),
+                ("functional", 0.8),
+            ]
+        ],
+    )
+    def test_bernoulli_scalar_probability(self, compute_unit, backend, frontend, variant, p):
+        self._xfail_executorch(frontend)
+
+        class TestModel(nn.Module):
+            def forward(self, x):
+                if variant == "inplace" and p is None:
+                    return TestBernoulli._check_sample(torch.zeros_like(x).bernoulli_(), 0.5)
+                if variant == "inplace":
+                    return TestBernoulli._check_sample(torch.zeros_like(x).bernoulli_(p), p)
+                return TestBernoulli._check_sample(torch.bernoulli(x, p), p)
+
+        self.run_compare_torch(
+            self.SHAPE, TestModel(), compute_unit=compute_unit, backend=backend, frontend=frontend
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, variant",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            ["functional", "inplace", "broadcast"],
+        ),
+    )
+    def test_bernoulli_tensor_probabilities(self, compute_unit, backend, frontend, variant):
+        self._xfail_executorch(frontend)
+
+        class TestModel(nn.Module):
+            def forward(self, x):
+                if variant == "functional":
+                    # torch.bernoulli(input) takes a probability from each input element.
+                    p = x.abs()
+                    return TestBernoulli._check_sample(torch.bernoulli(p), p)
+                if variant == "inplace":
+                    p = x.abs()
+                    return TestBernoulli._check_sample(torch.zeros_like(x).bernoulli_(p), p)
+                # A (1, 256) probability row broadcasts over the (64, 256) input.
+                p = torch.linspace(0.0, 1.0, TestBernoulli.SHAPE[1]).reshape(1, -1)
+                return TestBernoulli._check_sample(torch.zeros_like(x).bernoulli_(p), p)
+
+        self.run_compare_torch(
+            self.SHAPE, TestModel(), compute_unit=compute_unit, backend=backend, frontend=frontend
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, variant",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            ["scalar_zero", "scalar_one", "tensor"],
+        ),
+    )
+    def test_bernoulli_certain_outcomes(self, compute_unit, backend, frontend, variant):
+        # Probabilities of exactly 0 and 1 make the output deterministic, so it is compared
+        # value by value.
+        self._xfail_executorch(frontend)
+
+        class TestModel(nn.Module):
+            def forward(self, x):
+                if variant == "scalar_zero":
+                    return torch.ones_like(x).bernoulli_(0.0)
+                if variant == "scalar_one":
+                    return torch.zeros_like(x).bernoulli_(1.0)
+                return torch.bernoulli((x > 0).to(torch.float32))
+
+        self.run_compare_torch(
+            self.SHAPE, TestModel(), compute_unit=compute_unit, backend=backend, frontend=frontend
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, variant",
+        itertools.product(compute_units, backends, frontends, ["scalar", "tensor"]),
+    )
+    def test_bernoulli_dynamic_shape(self, compute_unit, backend, frontend, variant):
+        self._xfail_executorch(frontend)
+
+        class TestModel(nn.Module):
+            def forward(self, x):
+                if variant == "scalar":
+                    return TestBernoulli._check_sample(torch.zeros_like(x).bernoulli_(0.3), 0.3)
+                p = x.abs()
+                return TestBernoulli._check_sample(torch.bernoulli(p), p)
+
+        self.run_compare_torch(
+            self.SHAPE,
+            TestModel(),
+            compute_unit=compute_unit,
+            backend=backend,
+            frontend=frontend,
+            converter_input_type=[
+                TensorType(shape=(RangeDim(default=self.SHAPE[0], upper_bound=1024), self.SHAPE[1]))
+            ],
+            torch_export_dynamic_shapes={"x": {0: torch.export.Dim("rows", min=2, max=1024)}},
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_bernoulli_drop_path(self, compute_unit, backend, frontend):
+        # The per-sample mask from timm's drop_path (stochastic depth), which issue #1550 hit
+        # while converting EfficientNet-B0. Each row of the output must be either all zeros
+        # or the input row scaled by 1 / keep_prob.
+        self._xfail_executorch(frontend)
+        keep_prob = 0.8
+
+        class TestModel(nn.Module):
+            def forward(self, x):
+                mask = x.new_empty((x.shape[0], 1)).bernoulli_(keep_prob)
+                y = x * mask.div(keep_prob)
+                kept = (y.abs().sum(dim=1, keepdim=True) > 0).to(torch.float32)
+                error = (y - x * kept / keep_prob).abs().max()
+                return (error < 1e-2).to(torch.float32).reshape(1)
+
+        self.run_compare_torch(
+            self.SHAPE, TestModel(), compute_unit=compute_unit, backend=backend, frontend=frontend
+        )
+
+
 class TestRand(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, shape, dtype",
