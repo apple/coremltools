@@ -1894,7 +1894,15 @@ def MirrorPad(context, node):
 
     mode = node.attr.get("mode", "reflect").lower()
     if mode == "symmetric":
-        mode = "reflect"
+        # MIL pad supports only `constant`, `reflect`, and `replicate`. TF's
+        # `symmetric` mode reflects including the edge values, which differs
+        # from `reflect` (excludes the edge). Mapping it to `reflect` would
+        # silently produce wrong outputs, so error out instead.
+        raise NotImplementedError(
+            "Padding mode 'symmetric' (SYMMETRIC) in the MirrorPad op is not "
+            "supported by Core ML. Only 'reflect' (REFLECT) is supported for "
+            "mirror padding."
+        )
     in_rank = len(x.sym_type.get_shape())
 
     if in_rank > 5 or in_rank < 2:
@@ -1950,7 +1958,15 @@ def Pad(context, node):
 
     mode = node.attr.get("mode", "constant").lower()
     if mode == "symmetric":
-        mode = "reflect"
+        # MIL pad supports only `constant`, `reflect`, and `replicate`. TF's
+        # `symmetric` mode reflects including the edge values, which differs
+        # from `reflect` (excludes the edge). Mapping it to `reflect` would
+        # silently produce wrong outputs, so error out instead.
+        raise NotImplementedError(
+            "Padding mode 'symmetric' (SYMMETRIC) in the Pad op is not "
+            "supported by Core ML. Only 'constant' (CONSTANT) and 'reflect' "
+            "(REFLECT) are supported."
+        )
     constant_val = node.attr.get("constant_val", 0.0)
     constant_val = mb.const(val=constant_val)
     in_rank = len(x.sym_type.get_shape())
