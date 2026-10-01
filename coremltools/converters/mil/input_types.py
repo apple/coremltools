@@ -444,9 +444,7 @@ class RangeDim:
         else:
             self.upper_bound = max(self.upper_bound, other.upper_bound)
 
-        # Adjust default to fit in new bounds if needed
-        self.default = max(self.lower_bound, min(self.default, self.upper_bound))
-
+        # Widening the range preserves the validity of the existing default.
         return self
 
 
