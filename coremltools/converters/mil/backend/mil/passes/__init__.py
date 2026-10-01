@@ -4,4 +4,5 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from . import (adjust_io_to_supported_types, fuse_activation_silu,
-               insert_image_preprocessing_op, sanitize_name_strings)
+               insert_image_preprocessing_op, sanitize_name_strings,
+               split_non_constant_pads)
