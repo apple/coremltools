@@ -293,7 +293,9 @@ class TestLinearQuantizeWeights:
         assert get_op_types_in_program(prog) == expected_ops
         assert prog.find_ops(op_type="conv")[1].weight.op.op_type == "const"
 
-        expected_dtype = [np.int8, np.uint8, np.uint8, np.uint8, np.uint8]
+        # linear_symmetric int8 is re-encoded as uint8 (zero_point=127) for GPU/ANE compatibility
+        # (rdar://121298675); all remaining ops use uint8 natively.
+        expected_dtype = [np.uint8, np.uint8, np.uint8, np.uint8, np.uint8]
         affine_ops = prog.find_ops(op_type="constexpr_affine_dequantize")
         for dtype, op in zip(expected_dtype, affine_ops):
             assert op.quantized_data.val.dtype == dtype
@@ -318,6 +320,36 @@ class TestLinearQuantizeWeights:
 
         quanitze_op = mlmodel_quantized._mil_program.functions["main"].find_ops(op_type="constexpr_affine_dequantize")[0]
         assert model.weight.detach().numpy().shape == quanitze_op.quantized_data.shape
+
+        verify_model_outputs(mlmodel, mlmodel_quantized, coreml_input_values)
+
+    def test_linear_symmetric_int8_uses_uint8_encoding(self):
+        """
+        Verify that linear_symmetric with int8 dtype re-encodes to uint8 with zero_point=127
+        (rdar://121298675). The CoreML GPU/ANE backend may mishandle signed int8 in
+        constexpr_affine_dequantize. uint8[0,254]+zp=127 is mathematically identical to int8[-127,127]+zp=0.
+        """
+        model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data()
+        torchmodel = torch.jit.trace(model, torch_input_values)
+        mlmodel = ct.convert(torchmodel, inputs=inputs, convert_to="mlprogram")
+
+        mlmodel_quantized = linear_quantize_weights(mlmodel, mode="linear_symmetric", dtype=np.int8)
+
+        quant_op = mlmodel_quantized._mil_program.functions["main"].find_ops(
+            op_type="constexpr_affine_dequantize"
+        )[0]
+
+        # Quantized data must be uint8 (not int8) after the re-encoding
+        assert quant_op.quantized_data.val.dtype == np.uint8, (
+            "linear_symmetric int8 must be re-encoded as uint8 for GPU/ANE compatibility"
+        )
+        # zero_point must be 127 (the uint8 symmetric midpoint)
+        assert np.all(quant_op.zero_point.val == 127), (
+            "zero_point must be 127 for the re-encoded uint8 symmetric quantization"
+        )
+        # All quantized values must be in the valid uint8 symmetric range [0, 254]
+        assert np.all(quant_op.quantized_data.val >= 0)
+        assert np.all(quant_op.quantized_data.val <= 254)
 
         verify_model_outputs(mlmodel, mlmodel_quantized, coreml_input_values)
 

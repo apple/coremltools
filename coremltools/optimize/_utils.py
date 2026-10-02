@@ -738,9 +738,20 @@ def ios18_quant_params_to_ios16(quant_params: QuantParams) -> QuantParamsIos16:
 
     scale = quant_params.scale
     zero_point = quant_params.offset
-    if zero_point is None:
+    quantized_data = quant_params.data
+
+    if zero_point is None and quantized_data.dtype == np.int8:
+        # Symmetric signed-int quantization (offset=None) stores weights in [-127, 127] with
+        # zero_point=0.  The CoreML GPU/ANE runtime on some OS versions mishandles signed int8
+        # in constexpr_affine_dequantize.  Re-encode as unsigned uint8 [0, 254] with
+        # zero_point=127, which is mathematically identical:
+        #   (uint8 - 127) * scale  ==  int8 * scale
+        # This is safe because symmetric quantization clips to [-127, 127], never -128.
+        quantized_data = (quantized_data.astype(np.int32) + 127).astype(np.uint8)
+        zero_point = np.full(scale.shape, 127, dtype=np.uint8)
+    elif zero_point is None:
         # The constexpr_affine_dequantize op requires zero_point.
-        zero_point = np.zeros_like(scale).astype(quant_params.data.dtype)
+        zero_point = np.zeros_like(scale).astype(quantized_data.dtype)
 
     # The constexpr_affine_dequantize op requires scale and zero_point to have rank 0 or 1.
     if isinstance(scale, (np.ndarray, np.generic)):
@@ -749,7 +760,7 @@ def ios18_quant_params_to_ios16(quant_params: QuantParams) -> QuantParamsIos16:
         zero_point = np.squeeze(zero_point)
 
     return QuantParamsIos16(
-        quantized_data=quant_params.data, zero_point=zero_point, scale=scale, axis=np.int32(axis)
+        quantized_data=quantized_data, zero_point=zero_point, scale=scale, axis=np.int32(axis)
     )
 
 
