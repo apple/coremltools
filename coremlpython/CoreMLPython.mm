@@ -539,24 +539,33 @@ py::dict Model::predict(const py::dict& input, State* state) {
         MLDictionaryFeatureProvider *inFeatures = Utils::dictToFeatures(input, &error);
         Utils::handleError(error);
 
+        // Core ML does not call back into Python while predicting, so release the
+        // GIL around the prediction to let other Python threads run meanwhile.
         id<MLFeatureProvider> outFeatures;
-        uint64_t predictStartTime = mach_absolute_time();
+        uint64_t predictStartTime = 0;
+        uint64_t predictEndTime = 0;
         if (state == NULL) {
+          py::gil_scoped_release release;
+          predictStartTime = mach_absolute_time();
           outFeatures = [m_model predictionFromFeatures:static_cast<MLDictionaryFeatureProvider * _Nonnull>(inFeatures)
                                                             error:&error];
+          predictEndTime = mach_absolute_time();
         }
         #if BUILT_WITH_MACOS15_SDK
         else if (@available(macOS 15.0, *)) {
+           MLState *mlState = state->getImpl();
+           py::gil_scoped_release release;
+           predictStartTime = mach_absolute_time();
            outFeatures = [m_model predictionFromFeatures:static_cast<MLDictionaryFeatureProvider * _Nonnull>(inFeatures)
-                                              usingState:state->getImpl()
+                                              usingState:mlState
                                                    error:&error];
+           predictEndTime = mach_absolute_time();
         }
         #endif
         else {
             throw std::runtime_error("Stateful predictions using MLState are only supported on macOS >= 15.0");
         }
 
-        uint64_t predictEndTime = mach_absolute_time();
         Utils::handleError(error);
 
         m_lastPredictDurationInNanoSeconds = convertMachTimeToNanoSeconds(predictEndTime - predictStartTime);
