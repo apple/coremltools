@@ -8,14 +8,54 @@ import itertools
 import numpy as np
 import pytest
 
+import coremltools as ct
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.ops.tests.iOS17 import backends
 from coremltools.converters.mil.mil.ops.tests.testing_utils import run_compare_builder
 from coremltools.converters.mil.testing_reqs import compute_units
+from coremltools.converters.mil.testing_utils import get_op_types_in_program
 
 
 class TestTopK:
+    @pytest.mark.parametrize("x_dtype", [np.int8, np.int16, np.uint8, np.uint16])
+    @pytest.mark.parametrize("axis", [0, -1])
+    @pytest.mark.parametrize("ascending", [False, True])
+    @pytest.mark.parametrize("return_indices", [False, True])
+    def test_builder_eval_integer_limits(self, x_dtype, axis, ascending, return_indices):
+        limits = np.iinfo(x_dtype)
+        x_val = np.array(
+            [[limits.min, 1, limits.max - 1, limits.max]], dtype=x_dtype
+        )
+        expected_indices = np.array([[3, 2, 1, 0]], dtype=np.int32)
+        if ascending:
+            expected_indices = expected_indices[:, ::-1]
+        expected_indices = expected_indices[:, :2]
+        expected_values = x_val[:, expected_indices[0]]
+        if axis == 0:
+            x_val = x_val.T
+            expected_values, expected_indices = expected_values.T, expected_indices.T
+        original = x_val.copy()
+
+        @mb.program(input_specs=[], opset_version=ct.target.iOS17)
+        def prog():
+            return mb.topk(
+                x=x_val, k=2, axis=axis, ascending=ascending, return_indices=return_indices
+            )
+
+        converted = ct.convert(
+            prog, convert_to="milinternal", minimum_deployment_target=ct.target.iOS17
+        )
+        assert get_op_types_in_program(converted) == []
+        values = converted.functions["main"].outputs[0]
+        np.testing.assert_array_equal(values.val, expected_values)
+        assert values.dtype == types.numpy_type_to_builtin_type(x_dtype)
+        if return_indices:
+            indices = converted.functions["main"].outputs[1]
+            np.testing.assert_array_equal(indices.val, expected_indices)
+            assert indices.dtype == types.int32
+        np.testing.assert_array_equal(x_val, original)
+
     @pytest.mark.parametrize(
         "compute_unit, backend, x_dtype, k_dtype",
         itertools.product(
