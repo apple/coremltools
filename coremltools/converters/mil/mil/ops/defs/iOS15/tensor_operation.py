@@ -710,6 +710,14 @@ class tile(Operation):
         return np.tile(self.x.val, reps=self.reps.val)
 
 
+def _argsort(x, axis, ascending):
+    if not ascending:
+        # Complement reverses integer order without overflowing at the signed
+        # minimum or wrapping unsigned zero, unlike negation.
+        x = np.bitwise_not(x) if np.issubdtype(x.dtype, np.integer) else -x
+    return np.argsort(x, axis=axis)
+
+
 @register_op
 class argsort(Operation):
     """
@@ -758,10 +766,7 @@ class argsort(Operation):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        # The default np argsort mode is ascending, which is opposite to MIL's argsort op.
-        if self.ascending.val:
-            return np.argsort(self.x.val, axis=self.axis.val)
-        return np.argsort(-self.x.val, axis=self.axis.val)
+        return _argsort(self.x.val, self.axis.val, self.ascending.val)
 
 
 @register_op
@@ -830,9 +835,7 @@ class topk(Operation):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        indices = np.argsort(self.x.val, axis=self.axis.val)
-        if not self.ascending.val:
-            indices = np.argsort(-self.x.val, axis=self.axis.val)
+        indices = _argsort(self.x.val, self.axis.val, self.ascending.val)
         slc = [slice(None)] * self.x.rank
         slc[self.axis.val] = slice(0, self.k.val)
         indices = indices[tuple(slc)]

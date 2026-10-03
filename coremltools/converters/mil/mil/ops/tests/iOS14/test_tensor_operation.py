@@ -1278,6 +1278,40 @@ class TestDynamicTile:
 
 
 class TestTopK:
+    @pytest.mark.parametrize("opset_version", [ct.target.iOS15, ct.target.iOS16, ct.target.iOS17])
+    @pytest.mark.parametrize("axis", [0, -1])
+    @pytest.mark.parametrize("ascending", [False, True])
+    @pytest.mark.parametrize("k", [1, 3, 5])
+    def test_builder_eval_integer_limits(self, opset_version, axis, ascending, k):
+        limits = np.iinfo(np.int32)
+        x_val = np.array(
+            [[limits.min, -1, 0, limits.max - 1, limits.max]], dtype=np.int32
+        )
+        expected_indices = np.array([[4, 3, 2, 1, 0]], dtype=np.int32)
+        if ascending:
+            expected_indices = expected_indices[:, ::-1]
+        expected_indices = expected_indices[:, :k]
+        expected_values = x_val[:, expected_indices[0]]
+        if axis == 0:
+            x_val = x_val.T
+            expected_values, expected_indices = expected_values.T, expected_indices.T
+        original = x_val.copy()
+
+        @mb.program(input_specs=[], opset_version=opset_version)
+        def prog():
+            return mb.topk(x=x_val, k=k, axis=axis, ascending=ascending)
+
+        converted = ct.convert(
+            prog, convert_to="milinternal", minimum_deployment_target=opset_version
+        )
+        assert get_op_types_in_program(converted) == []
+        values, indices = converted.functions["main"].outputs
+        np.testing.assert_array_equal(values.val, expected_values)
+        np.testing.assert_array_equal(indices.val, expected_indices)
+        assert values.dtype == types.int32
+        assert indices.dtype == types.int32
+        np.testing.assert_array_equal(x_val, original)
+
     @pytest.mark.parametrize(
         "compute_unit, backend",
         itertools.product(
@@ -1653,6 +1687,31 @@ class TestIdentity:
 
 
 class TestArgSort:
+    @pytest.mark.parametrize("axis", [0, -1])
+    @pytest.mark.parametrize("ascending", [False, True])
+    def test_builder_eval_integer_limits(self, axis, ascending):
+        limits = np.iinfo(np.int32)
+        x_val = np.array(
+            [[limits.min, -1, 0, limits.max - 1, limits.max]], dtype=np.int32
+        )
+        expected = np.array([[4, 3, 2, 1, 0]], dtype=np.int32)
+        if ascending:
+            expected = expected[:, ::-1]
+        if axis == 0:
+            x_val, expected = x_val.T, expected.T
+        original = x_val.copy()
+
+        @mb.program(input_specs=[])
+        def prog():
+            return mb.argsort(x=x_val, axis=axis, ascending=ascending)
+
+        converted = ct.convert(prog, convert_to="milinternal")
+        assert get_op_types_in_program(converted) == []
+        result = converted.functions["main"].outputs[0]
+        np.testing.assert_array_equal(result.val, expected)
+        assert result.dtype == types.int32
+        np.testing.assert_array_equal(x_val, original)
+
     @pytest.mark.parametrize(
         "compute_unit, backend",
         itertools.product(
