@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 
+import os as _os
 from dataclasses import dataclass as _dataclass
 from typing import Any as _Any
 from typing import Dict as _Dict
@@ -27,6 +28,40 @@ try:
 except Exception as e:
     _logger.warning(f"Failed to load _MLComputePlanProxy: {e}")
     _MLComputePlanProxy = None
+
+
+def _validate_compiled_model_path(path: _Any) -> None:
+    """
+    Validates that ``path`` refers to a compiled model directory (``.mlmodelc``).
+
+    The underlying framework API terminates the process with SIGABRT, rather than
+    reporting an error, when given a path that exists but is not a compiled model -
+    for instance an uncompiled ``.mlpackage``. The C++ exception is raised on an
+    internal dispatch queue, so it cannot be caught from Python and the caller loses
+    the whole process. Validating up front keeps that mistake recoverable.
+
+    ``coremldata.bin`` is used as the marker because it is the file the framework
+    itself fails to open, and it is present in compiled ``mlprogram`` and
+    ``neuralnetwork`` models alike.
+    """
+    if not isinstance(path, str):
+        raise TypeError('The "path" parameter must be of type "str".')
+
+    if not _os.path.isdir(path):
+        raise ValueError(
+            f'The compiled model path does not exist or is not a directory: "{path}".'
+        )
+
+    if not _os.path.isfile(_os.path.join(path, "coremldata.bin")):
+        message = f'The path is not a compiled model directory: "{path}".'
+        if path.rstrip("/").endswith(".mlpackage"):
+            message += (
+                " It looks like an uncompiled model package. Compile it first with"
+                ' "coremltools.models.utils.compile_model", or use'
+                ' "MLModel.get_compiled_model_path()".'
+            )
+        raise ValueError(message)
+
 
 @_dataclass(frozen=True)
 class MLModelStructureNeuralNetworkLayer:
@@ -288,6 +323,8 @@ class MLModelStructure:
         if _MLModelProxy is None:
             raise ValueError("MLModelStructure is not supported.")
 
+        _validate_compiled_model_path(compiled_model_path)
+
         return _MLModelProxy.get_model_structure(compiled_model_path)
 
 
@@ -444,5 +481,7 @@ class MLComputePlan:
 
         if _MLModelProxy is None:
             raise ValueError("MLComputePlan is not supported.")
+
+        _validate_compiled_model_path(path)
 
         return _MLModelProxy.get_compute_plan(path, compute_units.name)
