@@ -174,7 +174,7 @@ class const_deduplication(AbstractGraphPass):
                     if v.val is None or const_deduplication.should_be_deduplicated(v.val):
                         hash_key.append(v)
                     else:
-                        hash_key.append(str(v.val))
+                        hash_key.append(const_deduplication.value_key(v.val))
                 hash_key = tuple(hash_key)
                 if hash_key not in hashkey_2_duplicates:
                     hashkey_2_duplicates[hash_key] = [op.outputs[0]]
@@ -182,6 +182,21 @@ class const_deduplication(AbstractGraphPass):
                     hashkey_2_duplicates[hash_key].append(op.outputs[0])
 
         return {v[0]: v[1:] for v in hashkey_2_duplicates.values()}
+
+    @staticmethod
+    def value_key(val: Union[str, bool, np.ndarray]) -> Tuple:
+        """
+        An exact, hashable stand-in for a small value.
+
+        ``str(np.ndarray)`` cannot be used for this. It rounds to ``precision``
+        fractional digits and summarizes arrays longer than ``threshold``, and both of
+        those are read from the process wide ``np.printoptions``, so two arrays that
+        differ can share a rendering.
+        """
+        if isinstance(val, (str, bool)):
+            return (type(val).__name__, val)
+        val = np.asarray(val)
+        return (val.dtype.str, val.shape, val.tobytes())
 
     @staticmethod
     def should_be_deduplicated(val: Union[str, bool, np.ndarray]) -> bool:
