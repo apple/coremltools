@@ -569,6 +569,53 @@ class BasicNumericCorrectnessTest(unittest.TestCase):
             )
 
 
+class SliceMasksNumpyBoolTest(unittest.TestCase):
+    """The slice layers must accept numpy bool masks, which protobuf rejects unless cast."""
+
+    @staticmethod
+    def _builder():
+        return NeuralNetworkBuilder(
+            [("data", datatypes.Array(3, 4, 5)), ("begin", datatypes.Array(3))],
+            [("out", None)],
+            disable_rank5_shape_mapping=True,
+        )
+
+    def test_add_slice_static_numpy_bool_masks(self):
+        builder = self._builder()
+        builder.add_slice_static(
+            "slice",
+            "data",
+            "out",
+            begin_ids=[0, 0, 0],
+            end_ids=[1, 2, 3],
+            strides=[1, 1, 1],
+            begin_masks=np.array([True, False, True]),
+            end_masks=np.array([False, True, False]),
+            squeeze_masks=np.array([False, False, True]),
+        )
+        params = builder.spec.neuralNetwork.layers[-1].sliceStatic
+        assert list(params.beginMasks) == [True, False, True]
+        assert list(params.endMasks) == [False, True, False]
+        assert list(params.squeezeMasks) == [False, False, True]
+
+    def test_add_slice_dynamic_numpy_bool_masks(self):
+        builder = self._builder()
+        builder.add_slice_dynamic(
+            "slice",
+            ["data", "begin"],
+            "out",
+            end_ids=[1, 2, 3, 1, 1],
+            strides=[1, 1, 1, 1, 1],
+            begin_masks=np.array([True, False, True, False, False]),
+            end_masks=np.array([False, True, False, False, False]),
+            squeeze_masks=np.array([False, False, True, False, False]),
+        )
+        params = builder.spec.neuralNetwork.layers[-1].sliceDynamic
+        assert list(params.beginMasks) == [True, False, True, False, False]
+        assert list(params.endMasks) == [False, True, False, False, False]
+        assert list(params.squeezeMasks) == [False, False, True, False, False]
+
+
 @unittest.skipUnless(
     _is_macos() and _macos_version() >= (10, 13), "Only supported on macOS 10.13+"
 )

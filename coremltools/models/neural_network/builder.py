@@ -5838,10 +5838,10 @@ class NeuralNetworkBuilder:
         spec_layer_params.beginIds.extend(begin_ids)
         spec_layer_params.endIds.extend(end_ids)
         spec_layer_params.strides.extend(strides)
-        spec_layer_params.beginMasks.extend(begin_masks)
-        spec_layer_params.endMasks.extend(end_masks)
+        spec_layer_params.beginMasks.extend([bool(x) for x in begin_masks])
+        spec_layer_params.endMasks.extend([bool(x) for x in end_masks])
 
-        if not (squeeze_masks and any(squeeze_masks)):
+        if squeeze_masks is None or not any(squeeze_masks):
             return spec_layer
 
         if self.spec and (
@@ -5849,7 +5849,7 @@ class NeuralNetworkBuilder:
             or self.spec.specificationVersion < _SPECIFICATION_VERSION_IOS_14
         ):
             self.spec.specificationVersion = _SPECIFICATION_VERSION_IOS_14
-        spec_layer_params.squeezeMasks.extend(squeeze_masks)
+        spec_layer_params.squeezeMasks.extend([bool(x) for x in squeeze_masks])
 
         return spec_layer
 
@@ -5893,15 +5893,15 @@ class NeuralNetworkBuilder:
         add_slice_static
         """
 
-        if not end_ids:
+        if end_ids is None or len(end_ids) == 0:
             end_ids = [1 for _ in range(5)]
-        if not strides:
+        if strides is None or len(strides) == 0:
             strides = [1 for _ in range(5)]
-        if not begin_masks:
+        if begin_masks is None or len(begin_masks) == 0:
             begin_masks = [False for _ in range(5)]
-        if not end_masks:
+        if end_masks is None or len(end_masks) == 0:
             end_masks = [False for _ in range(5)]
-        if not squeeze_masks:
+        if squeeze_masks is None or len(squeeze_masks) == 0:
             squeeze_masks = [False for _ in range(5)]
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
@@ -5909,8 +5909,8 @@ class NeuralNetworkBuilder:
 
         spec_layer_params.endIds.extend(end_ids)
         spec_layer_params.strides.extend(strides)
-        spec_layer_params.beginMasks.extend(begin_masks)
-        spec_layer_params.endMasks.extend(end_masks)
+        spec_layer_params.beginMasks.extend([bool(x) for x in begin_masks])
+        spec_layer_params.endMasks.extend([bool(x) for x in end_masks])
         if not any(squeeze_masks):
             return spec_layer
 
@@ -5919,7 +5919,7 @@ class NeuralNetworkBuilder:
             or self.spec.specificationVersion < _SPECIFICATION_VERSION_IOS_14
         ):
             self.spec.specificationVersion = _SPECIFICATION_VERSION_IOS_14
-        spec_layer_params.squeezeMasks.extend(squeeze_masks)
+        spec_layer_params.squeezeMasks.extend([bool(x) for x in squeeze_masks])
 
         return spec_layer
 
