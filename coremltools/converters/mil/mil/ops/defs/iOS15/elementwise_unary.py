@@ -61,6 +61,24 @@ class elementwise_unary_with_int(Operation):
 Elementwise unary op implementation(s)
 """
 
+def _epsilon_for_dtype(builtin_dtype, value):
+    """Cast a default epsilon to ``builtin_dtype`` without letting it reach zero.
+
+    ``log`` and ``rsqrt`` default to epsilons (1e-45 and 1e-12) that are
+    representable in fp32 but underflow to exactly 0 in fp16. Casting blindly
+    therefore removes the stabilizer for the dtype that needs it most, and
+    ``log(0)`` / ``rsqrt(0)`` return -inf / inf instead of a finite value. Floor
+    the result at the smallest positive subnormal so the documented behaviour
+    holds for every dtype in the op's type domain. fp32 is unaffected: both
+    defaults are representable there and come back unchanged.
+    """
+    np_dtype = nptype_from_builtin(builtin_dtype)
+    epsilon = np_dtype(value)
+    if epsilon == 0:
+        epsilon = np.nextafter(np_dtype(0), np_dtype(1))
+    return epsilon
+
+
 @register_op
 class abs(elementwise_unary_with_int):
     """
@@ -482,7 +500,7 @@ class log(Operation):
 
     def default_inputs(self):
         return DefaultInputs(
-            epsilon=nptype_from_builtin(self.x.dtype)(1e-45)
+            epsilon=_epsilon_for_dtype(self.x.dtype, 1e-45)
         )
 
     def type_inference(self):
@@ -587,7 +605,7 @@ class rsqrt(Operation):
 
     def default_inputs(self):
         return DefaultInputs(
-            epsilon=nptype_from_builtin(self.x.dtype)(1e-12),
+            epsilon=_epsilon_for_dtype(self.x.dtype, 1e-12),
         )
 
     def type_inference(self):
