@@ -344,6 +344,31 @@ class TestMILFlexibleShapes:
         assert spec_H_range == [10, 10], "Ranged height mismatch"
         assert spec_W_range == [10, 30], "Ranged width mismatch"
 
+    @pytest.mark.parametrize("flexibility", ["enumerated", "range"])
+    def test_mil_classifier_rejects_flexible_probabilities(self, flexibility):
+        """A classifier needs a fully known probabilities shape, so conversion must not
+        return a model the Core ML runtime cannot compile for any input shape."""
+        class_labels = ["a", "b", "c", "d"]
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(get_new_symbol(), len(class_labels)))])
+        def classifier_network(x):
+            return mb.softmax(x=x, axis=1)
+
+        if flexibility == "enumerated":
+            shape = ct.EnumeratedShapes(shapes=[(1, 4), (4, 4)], default=(1, 4))
+        else:
+            shape = (ct.RangeDim(lower_bound=1, upper_bound=8), 4)
+
+        with pytest.raises(ValueError, match="fully known shape"):
+            ct.convert(
+                classifier_network,
+                source="milinternal",
+                convert_to="mlprogram",
+                inputs=[ct.TensorType(name="x", shape=shape)],
+                classifier_config=ct.ClassifierConfig(class_labels),
+                minimum_deployment_target=ct.target.iOS16,
+            )
+
 
 class TestMILDefaultValues:
     @mb.program(input_specs=[mb.TensorSpec(shape=[1]), mb.TensorSpec(shape=[1])])

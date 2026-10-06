@@ -552,6 +552,19 @@ def _add_classify_op(prog, classifier_config):
     probability_var = _get_probability_var_for_classifier(prog, classifier_config)
     original_probability_var = probability_var
 
+    # The Core ML runtime requires a classifier's probabilities to have a fully known shape, so a
+    # symbolic one produces a model that cannot be compiled for any input shape, not even the ones
+    # where the symbol resolves to a size matching the class labels. Reject it here instead of
+    # returning that model: without this the flexible-shape case skips the size check below, which
+    # only runs for a fully known shape.
+    if any_symbolic(probability_var.shape):
+        raise ValueError(
+            "Classifier probabilities must have a fully known shape, but the tensor "
+            f"'{probability_var.name}' selected for the 'ClassifierConfig' has shape "
+            f"{probability_var.shape}. Flexible shapes (for instance an enumerated or "
+            "range-dimension batch) are not supported for classifier outputs."
+        )
+
     # add the classify op now
     # we consider this step as a scope of coremltools graph pass
     with mb.scope(ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["add_classify_op"])):
