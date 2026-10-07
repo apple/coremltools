@@ -53,7 +53,12 @@ class remove_redundant_ops(AbstractGraphPass):
     For more examples, see "TestRemoveRedundantOpsPass".
     """
 
-    _NON_REDUNDANT_OPS = tuple()
+    # Ops that are not a pure function of their inputs, so two of them with identical
+    # inputs are not interchangeable. The state ops read from / write to mutable state
+    # that is not threaded through their inputs, hence two ``read_state`` ops on the same
+    # state can observe different values, and two identical ``coreml_update_state`` ops
+    # are not redundant if another write to the same state sits between them.
+    _NON_REDUNDANT_OPS = ("read_state", "coreml_update_state")
 
     def __init__(self):
         self._num_of_visited_ops: int = (
