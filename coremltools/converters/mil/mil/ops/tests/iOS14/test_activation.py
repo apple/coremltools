@@ -987,6 +987,39 @@ class TestThresholdedReLU:
         y[y < 2.0] = 0
         np.testing.assert_allclose(y, v.val, atol=1e-04, rtol=1e-05)
 
+    @ssa_fn
+    def test_builder_eval_does_not_mutate_input(self):
+        """value_inference must not write through to the input's own array."""
+        x_val = np.array([[-1.0, 0.5], [2.0, -3.0]], dtype=np.float32)
+        original = np.copy(x_val)
+        v = mb.thresholded_relu(x=x_val, alpha=1.0)
+        np.testing.assert_allclose(
+            v.val, np.array([[0.0, 0.0], [2.0, 0.0]], dtype=np.float32), atol=1e-04, rtol=1e-05
+        )
+        np.testing.assert_allclose(x_val, original, atol=1e-04, rtol=1e-05)
+
+    def test_builder_eval_does_not_corrupt_shared_const(self):
+        """
+        A const consumed both by thresholded_relu and by another op must keep its
+        value for that other op.
+        """
+        w_val = np.array([[-1.0, 0.5], [2.0, -3.0]], dtype=np.float32)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 2))])
+        def prog(x):
+            w = mb.const(val=w_val, name="weight")
+            y = mb.matmul(x=x, y=w)
+            z = mb.thresholded_relu(x=w, alpha=1.0)
+            return mb.add(x=y, y=z)
+
+        matmul_op = prog.functions["main"].find_ops(op_type="matmul")[0]
+        np.testing.assert_allclose(
+            matmul_op.y.val,
+            np.array([[-1.0, 0.5], [2.0, -3.0]], dtype=np.float32),
+            atol=1e-04,
+            rtol=1e-05,
+        )
+
     @pytest.mark.parametrize(
         "compute_unit, backend, dim, alpha",
         itertools.product(compute_units, backends, [2, 4, 8], [2.0, 3.0]),
