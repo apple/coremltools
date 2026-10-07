@@ -23,6 +23,7 @@ from coremltools.converters.mil.mil.ops.defs.iOS16.scatter_gather import (
     gather_nd as _gather_nd_iOS16,
 )
 from coremltools.converters.mil.mil.ops.defs.iOS17 import _IOS17_TARGET
+from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 
 
 @register_op(opset_version=_IOS17_TARGET)
@@ -231,8 +232,10 @@ class scatter_nd(_scatter_nd_iOS15):
         result = super().type_inference()
         if self.validate_indices.val:
             indices = self.indices.val
-            upper_bound = self.data.shape
-            if indices is not None:
+            # The last axis of indices addresses the leading indices.shape[-1] dims of
+            # data, which may be fewer than data's rank.
+            upper_bound = self.data.shape[: self.indices.shape[-1]]
+            if indices is not None and not any_symbolic(upper_bound):
                 if np.count_nonzero(np.logical_or(indices < 0, indices >= upper_bound)):
                     raise IndexError(
                         f"Indices is out of bounds for `{self.op_type}` node {self.name}. "
@@ -466,8 +469,11 @@ class gather_nd(_gather_nd_iOS16):
         result = super().type_inference()
         if self.validate_indices.val:
             indices = self.indices.val
-            upper_bound = self.x.shape
-            if indices is not None:
+            # The last axis of indices addresses indices.shape[-1] dims of x, starting
+            # after the batch dims. That is fewer than x's rank in general.
+            batch_dims = self.batch_dims.val
+            upper_bound = self.x.shape[batch_dims : batch_dims + self.indices.shape[-1]]
+            if indices is not None and not any_symbolic(upper_bound):
                 if np.count_nonzero(np.logical_or(indices < 0, indices >= upper_bound)):
                     raise IndexError(
                         f"Indices is out of bounds for `{self.op_type}` node {self.name}. "
