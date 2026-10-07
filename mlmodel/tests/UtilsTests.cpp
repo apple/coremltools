@@ -6,6 +6,35 @@
 
 using namespace CoreML;
 
+int testSpecDowngradeIOS26() {
+    Specification::Model spec;
+    spec.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_NEWEST);
+    spec.mutable_identity();
+
+    auto *input = spec.mutable_description()->add_input();
+    input->set_name("input");
+    auto *inputType = input->mutable_type()->mutable_multiarraytype();
+    inputType->set_datatype(Specification::ArrayFeatureType_ArrayDataType_INT8);
+    inputType->add_shape(1);
+
+    auto *output = spec.mutable_description()->add_output();
+    output->set_name("output");
+    auto *outputType = output->mutable_type()->mutable_multiarraytype();
+    outputType->set_datatype(Specification::ArrayFeatureType_ArrayDataType_INT8);
+    outputType->add_shape(1);
+
+    Model ios26Model(spec);
+    ML_ASSERT_EQ(ios26Model.getProto().specificationversion(), MLMODEL_SPECIFICATION_VERSION_IOS26);
+
+    inputType->set_datatype(Specification::ArrayFeatureType_ArrayDataType_FLOAT32);
+    outputType->set_datatype(Specification::ArrayFeatureType_ArrayDataType_FLOAT32);
+
+    Model legacyModel(spec);
+    ML_ASSERT_EQ(legacyModel.getProto().specificationversion(), MLMODEL_SPECIFICATION_VERSION_IOS11);
+
+    return 0;
+}
+
 int testSpecDowngradePipeline() {
 
     int32_t latestVersion = MLMODEL_SPECIFICATION_VERSION;

@@ -207,6 +207,10 @@ void CoreML::downgradeSpecificationVersion(Specification::Model *pModel) {
         pModel->set_specificationversion(MLMODEL_SPECIFICATION_VERSION_NEWEST);
     }
 
+    if (pModel->specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS26 && !hasIOS26Features(*pModel)) {
+        pModel->set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS18);
+    }
+
     if (pModel->specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS18 && !hasIOS18Features(*pModel)) {
         pModel->set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS17);
     }
