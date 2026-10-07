@@ -6098,6 +6098,53 @@ class TestFuseLayerNormOrInstanceNorm:
             prog, {"x": shape}, expected_output_shapes={block.outputs[0].name: shape}
         )
 
+    @staticmethod
+    def _build_norm_pattern(shape, axes, gamma, beta):
+        """y = x * [gamma * rsqrt(var + eps)] + (beta - mean * [gamma * rsqrt(var + eps)])"""
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=shape)])
+        def prog(x):
+            mean = mb.reduce_mean(x=x, axes=axes, keep_dims=True)
+            var = mb.reduce_mean(x=mb.square(x=mb.sub(x=x, y=mean)), axes=axes, keep_dims=True)
+            scale = mb.mul(x=mb.rsqrt(x=mb.add(x=var, y=1e-5)), y=gamma)
+            return mb.add(x=mb.mul(x=x, y=scale), y=mb.sub(x=beta, y=mb.mul(x=mean, y=scale)))
+
+        return prog
+
+    def test_layer_norm_gamma_only_broadcasts(self):
+        """
+        gamma has the rank layer_norm wants but not its shape: it only broadcasts over the
+        normalized axis. layer_norm requires gamma.shape == x.shape[axes], so this pattern
+        must be left alone rather than fused into an op that rejects it.
+        """
+        shape = (1, 2, 5)
+        prog = self._build_norm_pattern(
+            shape, [-1], np.float32([2.0]), np.float32([0.5])
+        )
+        apply_pass_and_basic_check(prog, "common::fuse_layernorm_or_instancenorm")
+        assert "layer_norm" not in get_op_types_in_program(prog)
+        assert_model_is_valid(prog, {"x": shape})
+
+    def test_instance_norm_gamma_on_a_spatial_axis(self):
+        """
+        gamma squeezes to rank 1 but broadcasts over H, not over the channel axis.
+        instance_norm's gamma is per channel, so fusing would move gamma onto a different
+        axis and give it the wrong length.
+        """
+        shape = (1, 3, 4, 5)
+        gamma = np.arange(1, 5, dtype=np.float32).reshape(1, 1, 4, 1)
+        prog = self._build_norm_pattern(shape, [-2, -1], gamma, np.zeros_like(gamma))
+        apply_pass_and_basic_check(prog, "common::fuse_layernorm_or_instancenorm")
+        assert "instance_norm" not in get_op_types_in_program(prog)
+        assert_model_is_valid(prog, {"x": shape})
+
+    def test_instance_norm_gamma_on_the_channel_axis_is_still_fused(self):
+        shape = (1, 3, 4, 5)
+        gamma = np.arange(1, 4, dtype=np.float32).reshape(1, 3, 1, 1)
+        prog = self._build_norm_pattern(shape, [-2, -1], gamma, np.zeros_like(gamma))
+        apply_pass_and_basic_check(prog, "common::fuse_layernorm_or_instancenorm")
+        assert get_op_types_in_program(prog) == ["instance_norm"]
+
     @pytest.mark.parametrize(
         "with_affine, constexpr_beta", itertools.product([True, False], [True, False])
     )
