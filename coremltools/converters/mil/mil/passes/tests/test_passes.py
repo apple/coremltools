@@ -1722,6 +1722,63 @@ class TestMergeConsecutiveReshapes:
         )
         """
 
+    def test_keep_trailing_reshape_inheriting_input_dims(self):
+        """
+        A ``0`` in the last reshape's shape inherits the corresponding dimension from
+        that reshape's own input. Merging would re-bind it to the head of the
+        sequence's input, changing the output shape, so the merge must not happen.
+        """
+        INPUT_SHAPE = (2, 3, 4)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=INPUT_SHAPE)])
+        def prog(x):
+            y1 = mb.reshape(x=x, shape=(4, 3, 2))
+            y2 = mb.reshape(x=y1, shape=(0, 6, -1))
+            return y2
+
+        prev_prog, _, block = apply_pass_and_basic_check(prog, "common::merge_consecutive_reshapes")
+        assert get_op_types_in_program(prev_prog) == ["reshape"] * 2
+        assert get_op_types_in_program(prog) == ["reshape"] * 2
+        assert block.outputs[0].shape == (4, 6, 1)
+
+    def test_merge_up_to_reshape_inheriting_input_dims(self):
+        """
+        Only the trailing reshape's ``0`` is a problem: the preceding ones can still
+        be merged together.
+        """
+        INPUT_SHAPE = (2, 3, 4)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=INPUT_SHAPE)])
+        def prog(x):
+            y1 = mb.reshape(x=x, shape=(4, 3, 2))
+            y2 = mb.reshape(x=y1, shape=(6, 2, 2))
+            y3 = mb.reshape(x=y2, shape=(0, 4, -1))
+            return y3
+
+        prev_prog, _, block = apply_pass_and_basic_check(prog, "common::merge_consecutive_reshapes")
+        assert get_op_types_in_program(prev_prog) == ["reshape"] * 3
+        assert get_op_types_in_program(prog) == ["reshape"] * 2
+        assert block.outputs[0].shape == (6, 4, 1)
+
+    def test_merge_reshape_with_leading_zero_shape(self):
+        """
+        A ``0`` that is not in the last reshape's shape is discarded by the merge, so
+        it does not block it.
+        """
+        INPUT_SHAPE = (2, 3, 4)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=INPUT_SHAPE)])
+        def prog(x):
+            y1 = mb.reshape(x=x, shape=(0, 4, 3))
+            y2 = mb.reshape(x=y1, shape=(6, 4))
+            return y2
+
+        prev_prog, _, block = apply_pass_and_basic_check(prog, "common::merge_consecutive_reshapes")
+        assert get_op_types_in_program(prev_prog) == ["reshape"] * 2
+        assert get_op_types_in_program(prog) == ["reshape"]
+        assert block.outputs[0].shape == (6, 4)
+
+
 class TestCastOptimizationReduendantCastRemoval:
     """
     Test single cast op removal.
