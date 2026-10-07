@@ -218,6 +218,85 @@ class TestFuseMatmulWeightBias:
         if _VALIDATE_MODEL:
             assert_model_is_valid(prog, {"x": (2, 4)})
 
+    @staticmethod
+    def _evaluate(prog, x_val):
+        """Interpret the handful of op types these programs are made of."""
+        env = {}
+        func = prog.functions["main"]
+        for var in func.inputs.values():
+            env[var] = x_val
+
+        def value_of(var):
+            return env[var] if var in env else np.asarray(var.val)
+
+        for op in func.operations:
+            if op.op_type == "const":
+                continue
+            elif op.op_type == "matmul":
+                a, b = value_of(op.x), value_of(op.y)
+                if op.transpose_x.val:
+                    a = np.swapaxes(a, -1, -2)
+                if op.transpose_y.val:
+                    b = np.swapaxes(b, -1, -2)
+                env[op.outputs[0]] = a @ b
+            elif op.op_type == "linear":
+                env[op.outputs[0]] = value_of(op.x) @ value_of(op.weight).T + value_of(op.bias)
+            elif op.op_type == "transpose":
+                env[op.outputs[0]] = np.transpose(value_of(op.x), list(op.perm.val))
+            elif op.op_type == "add":
+                env[op.outputs[0]] = value_of(op.x) + value_of(op.y)
+            elif op.op_type == "sub":
+                env[op.outputs[0]] = value_of(op.x) - value_of(op.y)
+            else:
+                raise AssertionError(f"unhandled op type {op.op_type}")
+        return env[func.outputs[0]]
+
+    @pytest.mark.parametrize(
+        "transpose_x, transpose_y", itertools.product([False, True], [False, True])
+    )
+    def test_fuse_matmul_weight_bias_sub_with_matmul_second(self, transpose_x, transpose_y):
+        """
+        sub is not commutative: ``bias - x @ w`` is ``linear(x, -w, bias)``, not
+        ``linear(x, w, -bias)``.
+        """
+        weights_val = ((np.arange(9, dtype=np.float32).reshape(3, 3) + 1.0) / 7.0)
+        bias_val = np.array([100.0, 200.0, 300.0], dtype=np.float32)
+        x_val = np.arange(9, dtype=np.float32).reshape(3, 3)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3, 3))])
+        def prog(x):
+            matmul = mb.matmul(
+                x=x, y=weights_val, transpose_x=transpose_x, transpose_y=transpose_y
+            )
+            return mb.sub(x=bias_val, y=matmul)
+
+        expected = self._evaluate(prog, x_val)
+        PASS_REGISTRY["common::fuse_matmul_weight_bias"](prog)
+        assert get_op_types_in_program(prog).count("linear") == 1
+        np.testing.assert_allclose(self._evaluate(prog, x_val), expected, atol=1e-04, rtol=1e-05)
+
+    @pytest.mark.parametrize(
+        "op_type, bias_first", itertools.product(["add", "sub"], [True, False])
+    )
+    def test_no_fuse_matmul_weight_bias_const_on_the_left(self, op_type, bias_first):
+        """
+        ``w @ x`` becomes ``transpose(linear(transpose(x), w))``, and linear's bias would
+        land on the wrong axis of the result, so this pattern must be left alone.
+        """
+        weights_val = ((np.arange(9, dtype=np.float32).reshape(3, 3) + 1.0) / 7.0)
+        bias_val = np.array([100.0, 200.0, 300.0], dtype=np.float32)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3, 3))])
+        def prog(x):
+            matmul = mb.matmul(x=weights_val, y=x)
+            builder_op = getattr(mb, op_type)
+            if bias_first:
+                return builder_op(x=bias_val, y=matmul)
+            return builder_op(x=matmul, y=bias_val)
+
+        PASS_REGISTRY["common::fuse_matmul_weight_bias"](prog)
+        assert get_op_types_in_program(prog) == ["matmul", op_type]
+
 
 class TestFuseTransposeMatmul:
     def test_fuse_transposes(self):

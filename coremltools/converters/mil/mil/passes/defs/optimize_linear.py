@@ -212,13 +212,16 @@ class fuse_matmul_weight_bias(AbstractGraphPass):
 
         x_is_weight = matmul_op.x.val is not None
         if x_is_weight:
-            weight, linear_x = matmul_op.x, matmul_op.y
-            transpose_weight = matmul_op.transpose_x.val
-            transpose_x = matmul_op.transpose_y.val
-        else:
-            weight, linear_x = matmul_op.y, matmul_op.x
-            transpose_weight = matmul_op.transpose_y.val
-            transpose_x = matmul_op.transpose_x.val
+            # w @ x is rewritten as transpose(linear(transpose(x), w)). linear adds its
+            # bias along its own last axis, which the outer transpose then moves to
+            # axis -2 of the result, so the bias would end up on the wrong axis. There
+            # is no way to express the bias inside the linear op here, and adding it
+            # after the transpose would not fuse anything, so leave this pattern alone.
+            return False
+
+        weight, linear_x = matmul_op.y, matmul_op.x
+        transpose_weight = matmul_op.transpose_y.val
+        transpose_x = matmul_op.transpose_x.val
 
         # We potentially are going to transpose the weight, so if the weight itself is not removable, we skip this path
         if len(weight.nonreplaceable_vars_upstream) > 0:
@@ -249,28 +252,26 @@ class fuse_matmul_weight_bias(AbstractGraphPass):
             return  # cannot transform
 
         if add_op.op_type == "sub":
-            bias = -bias
+            # sub is not commutative, so which operand the matmul output is matters.
+            if add_op.x == matmul_op.outputs[0]:
+                # x @ w - bias == linear(x, w, -bias)
+                bias = -bias
+            else:
+                # bias - x @ w == linear(x, -w, bias)
+                weight = mb.const(val=-weight.val, before_op=matmul_op)
         out_name = add_op.outputs[0].name
 
         with mb.set_before_op(matmul_op):
-            if x_is_weight:
-                # If transpose_x == transpose_weight == False:
-                # w*x = (x^T w^T)^T = linear(x^T, w)^T
-                x_transposed = self._transpose(linear_x) if not transpose_x else linear_x
-                w_no_transpose = weight if not transpose_weight else self._transpose(weight)
-                x = mb.linear(x=x_transposed, weight=w_no_transpose, bias=bias)
-                x = self._transpose(x, name=out_name)
-            else:
-                # If transpose_x == transpose_weight == False
-                # x*w = x*(w^T)^T = linear(x, w^T)
-                x_no_transpose = self._transpose(linear_x) if transpose_x else linear_x
-                w_transposed = weight if transpose_weight else self._transpose(weight)
-                x = mb.linear(
-                    x=x_no_transpose,
-                    weight=w_transposed,
-                    bias=bias,
-                    name=out_name,
-                )
+            # If transpose_x == transpose_weight == False
+            # x*w = x*(w^T)^T = linear(x, w^T)
+            x_no_transpose = self._transpose(linear_x) if transpose_x else linear_x
+            w_transposed = weight if transpose_weight else self._transpose(weight)
+            x = mb.linear(
+                x=x_no_transpose,
+                weight=w_transposed,
+                bias=bias,
+                name=out_name,
+            )
 
         if add_op.enclosing_block.try_replace_uses_of_var_after_op(
             anchor_op=add_op,
