@@ -1101,7 +1101,19 @@ class concat(Operation):
             return None
 
         if not isinstance(values[0], np.ndarray) or values[0].shape == ():
+            # Every value is a scalar, so interleaving and concatenating are the same.
             return np.stack(values, axis=self.axis.val)
+
+        if self.interleave.val:
+            # All the inputs share the same shape (enforced by type_inference), so
+            # interleaving along `axis` is a stack right after `axis` followed by
+            # folding the new dimension back into `axis`.
+            axis = self.axis.val
+            if axis < 0:
+                axis += values[0].ndim
+            interleaved_shape = list(values[0].shape)
+            interleaved_shape[axis] *= len(values)
+            return np.reshape(np.stack(values, axis=axis + 1), interleaved_shape)
 
         return np.concatenate(values, axis=self.axis.val)
 
