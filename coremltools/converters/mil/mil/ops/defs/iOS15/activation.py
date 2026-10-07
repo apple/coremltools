@@ -77,9 +77,14 @@ class clamped_relu(activation_with_alpha_and_beta):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        x = np.minimum(np.maximum(self.x.val, 0), self.beta.val)
-        y = np.minimum(np.minimum(self.x.val, 0) * self.alpha.val, self.beta.val)
-        return x + y
+        # Splitting into a positive and a negative half and adding them back together
+        # only works when at most one half is non-zero, which stops being true once
+        # beta is negative and clamps both of them. Apply the documented formula
+        # directly instead.
+        return np.minimum(
+            np.where(self.x.val >= 0, self.x.val, self.x.val * self.alpha.val),
+            self.beta.val,
+        )
 
 
 @register_op
