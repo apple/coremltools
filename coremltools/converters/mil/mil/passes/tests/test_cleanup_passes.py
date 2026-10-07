@@ -1282,6 +1282,78 @@ class TestLoopInvariantElimination:
         if _VALIDATE_MODEL:
             assert_model_is_valid(prog, {"a": (1, 2), "b": (1, 2)})
 
+    @staticmethod
+    def _while_loop_body_returns_other_outer_var(a, b, c):
+        """
+        Body output 1 is ``c``, a var from the enclosing scope that is not ``loop_vars[1]``
+        (which is ``b``). The loop var is therefore ``b`` on the first iteration and ``c``
+        from the second on, so it is not invariant.
+        """
+
+        def body(ax, bx):
+            return mb.add(x=ax, y=np.float32([[1.0, 1.0]])), c
+
+        def cond(ax, bx):
+            return mb.less(x=mb.reduce_mean(x=ax, axes=[0, 1]), y=np.float32(3.0))
+
+        return mb.while_loop(_cond=cond, _body=body, loop_vars=(a, b))
+
+    def test_loop_invariant_elimination_other_outer_var(self):
+        """
+        Not an invariant pattern: the block outputs a var from outside of the block, but
+        not the one the loop var was seeded with.
+        """
+
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(1, 2)),
+                mb.TensorSpec(shape=(1, 2)),
+                mb.TensorSpec(shape=(1, 2)),
+            ]
+        )
+        def prog(a, b, c):
+            return self._while_loop_body_returns_other_outer_var(a, b, c)
+
+        PASS_REGISTRY["common::loop_invariant_elimination"](prog)
+
+        while_op = prog.find_ops(op_type="while_loop", exactly_one=True)[0]
+        assert len(while_op.loop_vars) == 2
+        assert len(while_op.outputs) == 2
+        # The outer var now has a definition inside the body block.
+        body_output = while_op.blocks[1].outputs[1]
+        assert body_output.op.op_type == "identity"
+        assert body_output.op.x is prog.functions["main"].inputs["c"]
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(compute_units, backends),
+    )
+    def test_loop_invariant_elimination_other_outer_var_prediction(self, compute_unit, backend):
+        """End to end counterpart: the second output is ``c``, not ``b``."""
+        if backend.backend == "neuralnetwork":
+            pytest.skip("neuralnetwork backend does not support while_loop")
+
+        def build(a, b, c):
+            return self._while_loop_body_returns_other_outer_var(a, b, c)
+
+        a = np.zeros((1, 2), dtype=np.float32)
+        b = np.full((1, 2), 10.0, dtype=np.float32)
+        c = np.full((1, 2), 20.0, dtype=np.float32)
+
+        run_compare_builder(
+            build,
+            {
+                "a": mb.placeholder(shape=(1, 2)),
+                "b": mb.placeholder(shape=(1, 2)),
+                "c": mb.placeholder(shape=(1, 2)),
+            },
+            {"a": a, "b": b, "c": c},
+            expected_output_types=[(1, 2, types.fp32), (1, 2, types.fp32)],
+            expected_outputs=[np.full((1, 2), 3.0, dtype=np.float32), c],
+            compute_unit=compute_unit,
+            backend=backend,
+        )
+
 
 class TestNoopElimination:
     @pytest.mark.parametrize("is_block_output", ((True, False)))

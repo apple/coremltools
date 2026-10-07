@@ -63,20 +63,43 @@ class loop_invariant_elimination(AbstractGraphPass):
         block = while_op.blocks[1]  # body block
         loop_invariant_ids = []  # list of index in op.loop_vars, block.inputs
         for i, vx_in in enumerate(block.inputs):
-            vx_out = block.outputs[i]  # first output is cond var.
+            vx_out = block.outputs[i]  # body outputs are the next iteration's loop vars
             return_input_as_output = vx_in == vx_out
-            # this block output is a var from outside of the block
-
-            enclosing_block = while_op.enclosing_block
-            output_from_outside_of_block = enclosing_block.is_var_visible_in_block(
-                vx_out, upto_op=while_op
-            )
-            if return_input_as_output or output_from_outside_of_block:
+            # This block output is the very var the loop var was seeded with, so feeding
+            # it back leaves the loop var unchanged. Any *other* var from the enclosing
+            # scope is a value the loop var changes to from the second iteration on, and
+            # is therefore not invariant.
+            return_loop_var_as_output = vx_out == while_op.loop_vars[i]
+            if return_input_as_output or return_loop_var_as_output:
                 loop_invariant_ids.append(i)
 
         # TODO: All outputs that depend on only invariants are invariant. We
         # need to move computation out of while loop.
         return loop_invariant_ids
+
+    @staticmethod
+    def _materialize_body_outputs_from_outer_scope(while_op):
+        """
+        Re-emit inside the body block any body output that is a var from the enclosing
+        scope and is not the loop var it feeds back into.
+
+        Such an output is not loop invariant, so it has to stay a loop var, but it also
+        cannot stay as it is: a block output has to be produced inside its own block.
+        An ``identity`` gives the same value a definition inside the body.
+        """
+        body_block = while_op.blocks[1]
+        outputs = list(body_block.outputs)
+        materialized = False
+        for i, vx_out in enumerate(outputs):
+            if vx_out == body_block.inputs[i] or vx_out == while_op.loop_vars[i]:
+                continue
+            if not while_op.enclosing_block.is_var_visible_in_block(vx_out, upto_op=while_op):
+                continue
+            with body_block:
+                outputs[i] = mb.identity(x=vx_out, name=vx_out.name + "_loop_var")
+            materialized = True
+        if materialized:
+            body_block.set_outputs(outputs)
 
     @block_context_manager
     def _loop_invariant_elimination_block(self, block):
@@ -96,6 +119,7 @@ class loop_invariant_elimination(AbstractGraphPass):
             if op.op_type != "while_loop":
                 continue
 
+            self._materialize_body_outputs_from_outer_scope(op)
             loop_invariant_ids = self._detect_loop_invariants(op)
             for i in loop_invariant_ids:
                 output_rename.append((op.loop_vars[i], op.outputs[i], op))
