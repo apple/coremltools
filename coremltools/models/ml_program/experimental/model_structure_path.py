@@ -301,7 +301,6 @@ def map_model_structure_to_path(
             components=components,
         )
     elif model_structure.pipeline:
-        components.append(ModelStructurePath.Pipeline())
         result = []
         for submodel_name, submodel in model_structure.pipeline.sub_models:
             result.extend(
@@ -315,7 +314,7 @@ def map_model_structure_to_path(
                 )
             )
 
-            return result
+        return result
     else:
         raise ValueError("Invalid model structure: no recognized components found")
 
@@ -379,12 +378,16 @@ def map_model_spec_to_path(
             components=components,
         )
     elif spec_type == "pipeline":
-        components.append(ModelStructurePath.Pipeline())
+        # The spec may leave the sub-model names unset, in which case the framework names them
+        # by position. Match that here so these paths line up with the ones built from the
+        # loaded model structure.
+        names = list(model_spec.pipeline.names)
         result = []
-        for submodel_name, submodel in zip(model_spec.names.model_spec.models):
+        for index, submodel in enumerate(model_spec.pipeline.models):
+            submodel_name = names[index] if index < len(names) else f"model{index}"
             result.extend(
                 map_model_spec_to_path(
-                    model_structure=submodel,
+                    model_spec=submodel,
                     components=components
                     + [
                         ModelStructurePath.Pipeline(),
@@ -393,6 +396,6 @@ def map_model_spec_to_path(
                 )
             )
 
-            return result
+        return result
     else:
         raise ValueError("Invalid model structure: no recognized components found")
