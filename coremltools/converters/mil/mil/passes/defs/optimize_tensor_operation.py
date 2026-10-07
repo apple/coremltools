@@ -764,8 +764,14 @@ class guard_negative_gather_indices(AbstractGraphPass):
             indices_shape = mb.shape(x=indices_int32, before_op=op)
             indices_last_dim = _utils.pymil_value_at(indices_shape, indices.rank - 1, before_op=op)
             indices_last_dim_expand = mb.expand_dims(x=indices_last_dim, axes=[0], before_op=op)
+            # gather_nd's indices address x starting at dimension batch_dims: the output
+            # is K[:-1] + D[batch_dims + K[-1]:]. So a negative index at position j must
+            # be offset by D[batch_dims + j], not D[j].
             slice_shape = mb.slice_by_size(
-                x=x_shape, begin=[0], size=indices_last_dim_expand, before_op=op
+                x=x_shape,
+                begin=[op.batch_dims.val],
+                size=indices_last_dim_expand,
+                before_op=op,
             )
             indices_plus = mb.add(x=indices_int32, y=slice_shape, before_op=op)
         nonnegative_indices = mb.select(cond=cond, a=indices_int32, b=indices_plus, before_op=op)
