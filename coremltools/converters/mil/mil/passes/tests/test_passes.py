@@ -3986,6 +3986,35 @@ class TestConvScaleFusion:
             backend=backend,
         )
 
+    @pytest.mark.parametrize("backend", backends)
+    def test_conv_const_numerator_not_fused(self, backend):
+        """
+        Input graph:
+        input -----> conv -----> real_div(x=const, y=conv) ---> out
+
+        real_div is not commutative, so this must be left alone.
+        """
+        Cin, Cout = 3, 4
+        input_shape = (1, Cin, 2, 2)
+        scale = np.arange(1, Cout + 1).astype(np.float32).reshape(1, Cout, 1, 1)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=input_shape)])
+        def prog(x):
+            conv = mb.conv(x=x, weight=np.ones((Cout, Cin, 1, 1), np.float32))
+            return mb.real_div(x=scale, y=conv)
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, "common::fuse_conv_scale")
+
+        assert get_op_types_in_program(prev_prog) == ["conv", "real_div"]
+        assert get_op_types_in_program(prog) == ["conv", "real_div"]
+
+        assert_model_is_valid(
+            prog,
+            {"x": input_shape},
+            expected_output_shapes={block.outputs[0].name: (1, Cout, 2, 2)},
+            backend=backend,
+        )
+
     @pytest.mark.parametrize(
         "rank, groups, has_bias, scale_op, scale_type, backend",
         itertools.product(
