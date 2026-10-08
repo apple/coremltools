@@ -584,7 +584,7 @@ def _lower_complex_stft(op: Operation):
 
 @LowerComplex.register_lower_func(op_type="complex_shape")
 def _lower_complex_shape(op: Operation):
-    return mb.shape(x=op.data.real)
+    return mb.shape(x=op.x.real)
 
 @LowerComplex.register_lower_func(op_type="complex_abs")
 def _lower_complex_abs(op: Operation):

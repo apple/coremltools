@@ -10,6 +10,7 @@ import pytest
 
 from coremltools import ComputeUnit
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import get_new_symbol
 from coremltools.converters.mil.mil.passes.defs.lower_complex_dialect_ops import (
     _calculate_dft_matrix,
 )
@@ -25,6 +26,23 @@ np.random.seed(9)
 
 
 class TestLowerComplexDialectOps:
+    @pytest.mark.parametrize("dynamic", [False, True])
+    def test_lower_complex_shape(self, dynamic):
+        shape = (get_new_symbol() if dynamic else 1, 2, 3)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=shape)])
+        def prog(x):
+            z = mb.complex(real_data=x, imag_data=x)
+            return mb.complex_shape(x=z)
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            prog, "common::lower_complex_dialect_ops"
+        )
+        assert get_op_types_in_program(prev_prog) == ["complex", "complex_shape"]
+        assert get_op_types_in_program(prog) == ["shape"]
+        assert block.outputs[0].op.x is block.inputs["x"]
+        np.testing.assert_array_equal(block.outputs[0].sym_val, shape)
+
     def test_lower_complex_real(self):
         @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 3))])
         def prog(x):
