@@ -6954,12 +6954,25 @@ def _arange(
     start: Var,
     end: Var,
     step: Var,
+    dtype: Optional[Var] = None,
 ):
     # torch may have mixed precision, including mixing float and int,
     # but Core ML needs these inputs to have uniform dtype
     start, end, step = promote_input_dtypes([start, end, step])
 
-    res = mb.range_1d(start=start, end=end, step=step, name=node_name)
+    dtype_str = None
+    if dtype is not None and dtype.val is not None:
+        torch_dtype = dtype_to_32bit(NUM_TO_TORCH_DTYPE[dtype.val])
+        dtype_str = NUM_TO_DTYPE_STRING[TORCH_DTYPE_TO_NUM[torch_dtype]]
+
+    # Without an explicit dtype, torch infers it from start/end/step, which the
+    # promotion above already matches. With one, the result must honor it
+    # (e.g. torch.arange(8, dtype=torch.float32) is float, not int).
+    if dtype_str is None or dtype_str == builtin_to_string(start.dtype):
+        res = mb.range_1d(start=start, end=end, step=step, name=node_name)
+    else:
+        res = mb.range_1d(start=start, end=end, step=step)
+        res = mb.cast(x=res, dtype=dtype_str, name=node_name)
     context.add(res)
 
 
@@ -6968,12 +6981,15 @@ def arange(context, node):
     def _parse_positional_args(context, node) -> Tuple[Var]:
         inputs = _get_inputs(context, node, min_expected=1)
         nargs = len(inputs)
+        dtype = None
 
         if context.frontend == TorchFrontend.TORCHSCRIPT:
             # dtype = inputs[-4]
             # layout = inputs[-3]
             # device = inputs[-2]
             # pin_memory = inputs[-1]
+            if nargs >= 5:
+                dtype = inputs[-4]
             if nargs == 1 or nargs == 5:
                 # inputs are [end] or [end, dtype, layout, device, pin_memory]
                 start = 0
@@ -7005,16 +7021,17 @@ def arange(context, node):
                 end = inputs[0]
                 step = 1
 
-        return start, end, step
+        return start, end, step, dtype
 
-    def _parse_keyword_args(context, node, step) -> Var:
+    def _parse_keyword_args(context, node, step, dtype) -> Tuple[Var]:
         step = _get_kwinputs(context, node, "step", default=[step])[0]
-        return step
+        dtype = _get_kwinputs(context, node, "dtype", default=[dtype])[0]
+        return step, dtype
 
-    start, end, step = _parse_positional_args(context, node)
-    step = _parse_keyword_args(context, node, step)
+    start, end, step, dtype = _parse_positional_args(context, node)
+    step, dtype = _parse_keyword_args(context, node, step, dtype)
 
-    _arange(context, node.name, start, end, step)
+    _arange(context, node.name, start, end, step, dtype)
 
 
 @register_torch_op(torch_alias=["arange.start_step"])
@@ -7023,8 +7040,9 @@ def arange_start_step(context, node):
     start = inputs[0]
     end = inputs[1]
     step = 1 if len(inputs) < 3 else inputs[2]
+    dtype = _get_kwinputs(context, node, "dtype", default=[None])[0]
 
-    _arange(context, node.name, start, end, step)
+    _arange(context, node.name, start, end, step, dtype)
 
 
 @register_torch_op

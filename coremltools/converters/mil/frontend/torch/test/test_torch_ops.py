@@ -6294,6 +6294,36 @@ class TestArange(TorchBaseTest):
             (1,), model, compute_unit=compute_unit, backend=backend, frontend=frontend
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, args, dtype",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [(8,), (0, 8), (0, 16, 2), (0.0, 8.0), (0.0, 16.0, 2.0)],
+            [torch.float32, torch.int64],
+        ),
+    )
+    def test_arange_dtype(self, compute_unit, backend, frontend, args, dtype):
+        # The explicit dtype must win over the dtype inferred from start/end/step,
+        # e.g. torch.arange(8, dtype=torch.float32) is float (issue #1852)
+        class Model(nn.Module):
+            def forward(self, x):
+                return torch.arange(*args, dtype=dtype)
+
+        model = Model()
+        res = self.run_compare_torch(
+            (1,), model, compute_unit=compute_unit, backend=backend, frontend=frontend
+        )
+        # mlprogram preserves output dtype; neuralnetwork always returns float
+        if backend[0] == "mlprogram":
+            prediction = list(res[3].values())[0]
+            expected = np.floating if dtype.is_floating_point else np.integer
+            assert np.issubdtype(prediction.dtype, expected), (
+                f"torch.arange{args} with dtype={dtype} should predict {expected.__name__} "
+                f"on mlprogram, got {prediction.dtype}"
+            )
+
 
 class TestEinsum(TorchBaseTest):
     @pytest.mark.parametrize(
