@@ -577,9 +577,11 @@ class TorchConverter:
                 self.inputs[idx].channel_first = True
 
         # process states
+        infer_states_from_buffers = states is None
         if states is None:
             states = []
         self.states = states
+        self._mutable_buffers_as_inputs = False
 
         if self.use_default_fp16_io:
             # If the input type is not specified by the user and use_default_fp16_io
@@ -637,7 +639,7 @@ class TorchConverter:
             # finalize inputs after internal graph gets settled
             self.inputs = self._match_user_exir_inputs(inputs)
 
-            if states is None or len(states) == 0:
+            if infer_states_from_buffers:
                 # For torch.export, we default to create states from torch mutable buffers
                 self.states = []
                 for name, tensor in self.graph.buffers.items():
@@ -652,6 +654,15 @@ class TorchConverter:
                         wrapped_type=TensorType(shape=tensor.shape, dtype=dtype), name=name
                     )
                     self.states.append(state)
+            elif len(states) == 0 and self.graph.buffers:
+                # Without Core ML state, the caller supplies mutable buffers and receives
+                # their updated values as ordinary model outputs.
+                self._mutable_buffers_as_inputs = True
+                for name, tensor in self.graph.buffers.items():
+                    dtype = NUM_TO_NUMPY_DTYPE[TORCH_DTYPE_TO_NUM[tensor.dtype]]
+                    buffer_input = TensorType(shape=tensor.shape, dtype=dtype, name=name)
+                    self.graph.inputs[name] = buffer_input
+                    self.inputs.append(buffer_input)
 
         else:
             raise ValueError(
@@ -1371,6 +1382,9 @@ class TorchConverter:
                     buffer_name,
                 ) in self.context.torch_graph.input_name_to_source_buffer_name.items():
                     buffer_var = self.context[buffer_name]
+                    if self._mutable_buffers_as_inputs:
+                        self.context.add(buffer_var, torch_name=input_name)
+                        continue
                     scopes = [
                         ScopeInfo(source=ScopeSource.EXIR_STACK_TRACE, data=f"read_{buffer_name}")
                     ]
@@ -1390,7 +1404,11 @@ class TorchConverter:
 
             # Add the rest of the operations
             has_states = len(getattr(self, "states", [])) > 0
-            convert_nodes(self.context, self.graph, early_exit=not has_states)
+            convert_nodes(
+                self.context,
+                self.graph,
+                early_exit=not has_states and not self._mutable_buffers_as_inputs,
+            )
 
             # Only torch script needs to convert memory layout
             if self.context.frontend == TorchFrontend.TORCHSCRIPT:
@@ -1404,6 +1422,8 @@ class TorchConverter:
                     output_name,
                     buffer_name,
                 ) in self.context.torch_graph.output_name_to_target_buffer_name.items():
+                    if self._mutable_buffers_as_inputs:
+                        continue
                     output_var = self.context[output_name]
                     buffer_var = self.context[buffer_name]
                     scopes = [
@@ -1417,6 +1437,24 @@ class TorchConverter:
                         mb.coreml_update_state(state=buffer_var, value=cast_value)
 
             graph_outputs = [self.context[name] for name in self.graph.outputs]
+
+            buffer_outputs = []
+            if self._mutable_buffers_as_inputs:
+                for output_name, buffer_name in (
+                    self.context.torch_graph.output_name_to_target_buffer_name.items()
+                ):
+                    scopes = [
+                        ScopeInfo(source=ScopeSource.EXIR_STACK_TRACE, data=f"output_{buffer_name}"),
+                        ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None]),
+                    ]
+                    with mb.scope(*scopes):
+                        # A user output may alias this value, so give the mutation
+                        # its own output variable and name.
+                        buffer_outputs.append(
+                            mb.identity(
+                                x=self.context[output_name], name=f"{buffer_name}_updated"
+                            )
+                        )
 
             # An output can be None when it's a None constant, which happens
             # in Fairseq MT.
@@ -1436,6 +1474,18 @@ class TorchConverter:
                     if self.output_names[index] is not None:
                         output_rename = self.output_names[index]
                         var.name = output_rename
+
+            if buffer_outputs:
+                if self.outputs is None:
+                    self.outputs = [TensorType() for _ in graph_outputs]
+                self.outputs = self.outputs + [
+                    TensorType(name=output.name, dtype=self.graph.inputs[buffer_name].dtype)
+                    for output, buffer_name in zip(
+                        buffer_outputs,
+                        self.context.torch_graph.output_name_to_target_buffer_name.values(),
+                    )
+                ]
+            graph_outputs.extend(buffer_outputs)
 
             ssa_func.set_outputs(graph_outputs)
             prog.add_function("main", ssa_func)

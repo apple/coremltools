@@ -495,6 +495,9 @@ def convert(
         by providing the ``StateType`` in the ``states`` argument (for details see `MIL Input Types <https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html>`_).
         The stateful model is useful when converting a large language model with KV-Cache.
         The name of ``StateType`` must match the key of the PyTorch ``named_buffers()`` method in the source traced model.
+        For a PyTorch ``ExportedProgram``, omitting ``states`` infers states from mutable
+        buffers. Passing ``states=[]`` instead exposes each mutable buffer as a regular
+        input and its updated value as an output, so the caller manages it between calls.
 
         The following example converts a torch model with a buffer called ``state_1``.
 
@@ -643,13 +646,14 @@ def convert(
     )
 
     # Verify the inputs cannot contains state
-    if states is None:
-        states = []
     _verify_inputs_doesnot_contains_states(inputs)
 
     # states can only passed if the source is pytorch
-    if len(states) > 0 and exact_source != "pytorch":
+    if states is not None and len(states) > 0 and exact_source != "pytorch":
         raise ValueError("'states' can only be passed with pytorch source model.")
+
+    if states is None and exact_source != "pytorch":
+        states = []
 
     mlmodel = mil_convert(
         model,
