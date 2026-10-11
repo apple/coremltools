@@ -27,6 +27,7 @@ from coremltools.converters.mil.frontend.torch.exir_utils import WRAPPED_SCALAR_
 import coremltools as ct
 from coremltools import proto
 from coremltools.converters.mil import testing_reqs
+from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.scope import ScopeSource
 from coremltools.converters.mil.testing_utils import assert_spec_input_image_type, verify_prediction
 from coremltools.models import _METADATA_SOURCE_DIALECT
@@ -38,6 +39,53 @@ compute_units = testing_reqs.compute_units
 
 
 class TestTorchExportConversionAPI(TorchBaseTest):
+    @pytest.mark.parametrize("frontend", frontends)
+    def test_explicit_empty_states_exposes_mutable_buffer_as_io(self, frontend):
+        class Model(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.register_buffer("cache", torch.zeros(2))
+
+            def forward(self, x):
+                self.cache.add_(x)
+                return self.cache * 2
+
+        exported_model = export_torch_model_to_frontend(Model(), (torch.ones(2),), frontend)
+
+        inferred = ct.convert(
+            exported_model,
+            convert_to="milinternal",
+            minimum_deployment_target=ct.target.iOS18,
+        )
+        inferred_main = inferred.functions["main"]
+        assert types.is_state(inferred_main.inputs["cache"].sym_type)
+        assert len(inferred_main.outputs) == 1
+
+        explicit_empty = ct.convert(
+            exported_model,
+            states=[],
+            outputs=[ct.TensorType(name="result")],
+            convert_to="milinternal",
+            minimum_deployment_target=ct.target.iOS17,
+        )
+        main = explicit_empty.functions["main"]
+        assert list(main.inputs) == ["x", "cache"]
+        assert not types.is_state(main.inputs["cache"].sym_type)
+        assert main.inputs["cache"].dtype == types.fp32
+        assert [output.name for output in main.outputs] == ["result", "cache_updated"]
+        assert main.outputs[-1].dtype == types.fp32
+        assert not main.find_ops(op_type="read_state")
+        assert not main.find_ops(op_type="coreml_update_state")
+
+        default_outputs = ct.convert(
+            exported_model,
+            states=[],
+            convert_to="milinternal",
+            minimum_deployment_target=ct.target.iOS17,
+        ).functions["main"].outputs
+        assert [output.name for output in default_outputs] == ["mul", "cache_updated"]
+        assert default_outputs[-1].dtype == types.fp32
+
     @pytest.mark.parametrize("frontend", frontends)
     def test_image_input(self, frontend):
         class Model(torch.nn.Module):
