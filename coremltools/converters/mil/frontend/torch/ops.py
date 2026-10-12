@@ -8070,6 +8070,26 @@ def tanh(context, node):
 
 
 @register_torch_op
+def deg2rad(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    x = inputs[0]
+    if types.is_int(x.dtype):
+        x = mb.cast(x=x, dtype="fp32")
+    res = mb.mul(x=x, y=_math.pi / 180.0, name=node.name)
+    context.add(res)
+
+
+@register_torch_op
+def rad2deg(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    x = inputs[0]
+    if types.is_int(x.dtype):
+        x = mb.cast(x=x, dtype="fp32")
+    res = mb.mul(x=x, y=180.0 / _math.pi, name=node.name)
+    context.add(res)
+
+
+@register_torch_op
 def threshold(context, node):
     inputs = _get_inputs(context, node, expected=3)
     x = inputs[0]

@@ -420,6 +420,92 @@ class TestFrac(TorchBaseTest):
         )
 
 
+class TestDeg2Rad(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, shape",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            COMMON_SHAPES,
+        ),
+    )
+    def test_deg2rad(self, compute_unit, backend, frontend, shape):
+        model = ModuleWrapper(function=torch.deg2rad)
+        input_data = 360.0 * torch.rand(shape) - 180.0
+        TorchBaseTest.run_compare_torch(
+            input_data,
+            model,
+            input_as_shape=False,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+        ),
+    )
+    def test_deg2rad_int(self, compute_unit, backend, frontend):
+        model = ModuleWrapper(function=torch.deg2rad)
+        input_data = torch.randint(-180, 180, (2, 3), dtype=torch.int32)
+        TorchBaseTest.run_compare_torch(
+            input_data,
+            model,
+            input_as_shape=False,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+
+class TestRad2Deg(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, shape",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            COMMON_SHAPES,
+        ),
+    )
+    def test_rad2deg(self, compute_unit, backend, frontend, shape):
+        model = ModuleWrapper(function=torch.rad2deg)
+        input_data = 2.0 * np.pi * torch.rand(shape) - np.pi
+        TorchBaseTest.run_compare_torch(
+            input_data,
+            model,
+            input_as_shape=False,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+        ),
+    )
+    def test_rad2deg_int(self, compute_unit, backend, frontend):
+        model = ModuleWrapper(function=torch.rad2deg)
+        input_data = torch.randint(-4, 4, (2, 3), dtype=torch.int32)
+        TorchBaseTest.run_compare_torch(
+            input_data,
+            model,
+            input_as_shape=False,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+
 class TestNLLLoss(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, reduction",
