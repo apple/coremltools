@@ -3212,8 +3212,9 @@ def embedding(context, node):
 def hardtanh(context, node):
     inputs = _get_inputs(context, node, expected=3)
     _input = inputs[0]
-    min_val = inputs[1].val
-    max_val = inputs[2].val
+    dtype = nptype_from_builtin(_input.dtype)
+    min_val = dtype(inputs[1].val)
+    max_val = dtype(inputs[2].val)
 
     res = mb.clip(x=_input, alpha=min_val, beta=max_val, name=node.name)
     context.add(res)
@@ -7734,7 +7735,7 @@ def acosh(context, node):
     inputs = _get_inputs(context, node, expected=1)
     x = inputs[0]
     x_squared = mb.mul(x=x, y=x)
-    inner = mb.sub(x=x_squared, y=1.0)
+    inner = mb.sub(x=x_squared, y=nptype_from_builtin(x.dtype)(1.0))
     sqrt_val = mb.sqrt(x=inner)
     sum_val = mb.add(x=x, y=sqrt_val)
     context.add(mb.log(x=sum_val, name=node.name))
@@ -7778,9 +7779,11 @@ def atan2(context, node):
     inputs = _get_inputs(context, node, expected=2)
     y = inputs[0]
     x = inputs[1]
-    if not types.is_float(y.dtype):
+    # The constants below are fp32, so compute fp16 inputs in fp32 and cast the result back.
+    is_fp16 = y.dtype == types.fp16 and x.dtype == types.fp16
+    if y.dtype != types.fp32:
         y = mb.cast(x=y, dtype="fp32")
-    if not types.is_float(x.dtype):
+    if x.dtype != types.fp32:
         x = mb.cast(x=x, dtype="fp32")
 
     # basic logical expressions
@@ -7836,7 +7839,11 @@ def atan2(context, node):
     atan2_4 = mb.mul(x=atan2_3, y=coeff3)
     atan2_5 = mb.add(x=atan2_4, y=coeff4)
     atan2_6 = mb.mul(x=atan2_5, y=coeff5)
-    context.add(mb.add(x=atan2_6, y=coeff6, name=node.name))
+    if is_fp16:
+        atan2_7 = mb.add(x=atan2_6, y=coeff6)
+        context.add(mb.cast(x=atan2_7, dtype="fp16", name=node.name))
+    else:
+        context.add(mb.add(x=atan2_6, y=coeff6, name=node.name))
 
 
 @register_torch_op
@@ -7962,8 +7969,9 @@ def exp2(context, node):
 @register_torch_op
 def expm1(context, node):
     inputs = _get_inputs(context, node, expected=1)
-    exp = mb.exp(x=inputs[0])
-    expm1 = mb.sub(x=exp, y=1.0, name=node.name)
+    x = inputs[0]
+    exp = mb.exp(x=x)
+    expm1 = mb.sub(x=exp, y=nptype_from_builtin(x.dtype)(1.0), name=node.name)
     context.add(expm1)
 
 
@@ -8038,7 +8046,7 @@ def asinh(context, node):
     inputs = _get_inputs(context, node, expected=1)
     x = inputs[0]
     x_squared = mb.mul(x=x, y=x)
-    inner = mb.add(x=x_squared, y=1.0)
+    inner = mb.add(x=x_squared, y=nptype_from_builtin(x.dtype)(1.0))
     sqrt_val = mb.sqrt(x=inner)
     sum_val = mb.add(x=x, y=sqrt_val)
     context.add(mb.log(x=sum_val, name=node.name))
@@ -8783,7 +8791,7 @@ def log10(context, node):
     if types.is_int(x.dtype):
         x = mb.cast(x=x, dtype="fp32")
     log_x = mb.log(x=x)
-    context.add(mb.mul(x=log_x, y=1 / np.log(10.0)), node.name)
+    context.add(mb.mul(x=log_x, y=nptype_from_builtin(x.dtype)(1 / np.log(10.0))), node.name)
 
 
 @register_torch_op
@@ -8793,7 +8801,7 @@ def log2(context, node):
     if types.is_int(x.dtype):
         x = mb.cast(x=x, dtype="fp32")
     log_x = mb.log(x=x)
-    context.add(mb.mul(x=log_x, y=1 / np.log(2.0)), node.name)
+    context.add(mb.mul(x=log_x, y=nptype_from_builtin(x.dtype)(1 / np.log(2.0))), node.name)
 
 
 @register_torch_op
