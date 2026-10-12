@@ -4209,8 +4209,14 @@ def _get_scales_from_output_size(output_size, input_shape):
             scales_h = Hout / Hin if Hout % Hin == 0 else (Hout + 1e-4) / Hin
             scales_w = Wout / Win if Wout % Win == 0 else (Wout + 1e-4) / Win
             scales = [scales_h, scales_w]
+        elif len(output_size) == 3:
+            # 3d upsampling
+            scales = [
+                out / inp if out % inp == 0 else (out + 1e-4) / inp
+                for out, inp in zip(output_size, input_shape[-3:])
+            ]
         else:
-            msg = "Only 1d and 2d unsampling are supported."
+            msg = "Only 1d, 2d and 3d upsampling are supported."
             raise NotImplementedError(msg)
 
     return scales
@@ -4901,6 +4907,147 @@ def upsample_nearest2d(context, node):
             name=node.name,
         )
     context.add(upsample_nearest2d)
+
+
+def _upsample_3d(context, node, x, output_size, scales, align_corners):
+    """
+    MIL only has upsample 2d ops, which work on the last two dims, so we upsample
+    (N, C, D, H * W) over D with a width scale of 1 first, then (N, C * D_out, H, W)
+    over H and W. align_corners is None for nearest neighbor.
+    """
+
+    def _upsample_2d(x, scale_factor_height, scale_factor_width):
+        if align_corners is None:
+            return mb.upsample_nearest_neighbor(
+                x=x,
+                scale_factor_height=scale_factor_height,
+                scale_factor_width=scale_factor_width,
+            )
+        return mb.upsample_bilinear(
+            x=x,
+            scale_factor_height=scale_factor_height,
+            scale_factor_width=scale_factor_width,
+            align_corners=align_corners,
+        )
+
+    if any_symbolic(x.shape[1:]):
+        raise NotImplementedError(
+            f"Dynamic input channel and spatial shapes are not supported for {node.kind} "
+            f"for the op {node.name}"
+        )
+
+    scales = [
+        _get_kwinputs(context, node, keyword, default=[scale])[0]
+        for keyword, scale in zip(("scales_d", "scales_h", "scales_w"), scales)
+    ]
+    if all(scale is not None for scale in scales):
+        # get scale factors from provided inputs
+        # this happens when recompute_scale_factor = False
+        scales = [scale.val if isinstance(scale, Var) else scale for scale in scales]
+    elif isinstance(output_size, Var) and output_size.val is not None:
+        # infer scale factors from output sizes
+        # This happens when recompute_scale_factor = True or the output_size is specified
+        scales = _get_scales_from_output_size(output_size, x.shape)
+    else:
+        raise NotImplementedError(
+            f"Dynamic output size is not supported for the upsample op {node.name}"
+        )
+
+    scales_d, scales_h, scales_w = [float(scale) for scale in scales]
+
+    # with explicit scales, torch maps output to input with 1 / scale and Core ML with in / out,
+    # which only agree on a whole output size. Like upsample_bilinear2d, we are not supporting
+    # recompute_scale_factor = False, align_corners = False (or nearest) with float output size
+    if not align_corners and any(
+        _is_float_value(size * scale)
+        for size, scale in zip(x.shape[2:], (scales_d, scales_h, scales_w))
+    ):
+        raise NotImplementedError(
+            "recompute_scale_factor = False, align_corners = False with float output size "
+            f"is not supported for the upsample op {node.name}"
+        )
+
+    # D goes first: upsampling H and W first and then folding H_out * W_out for the D pass
+    # crashes Core ML predict for some sizes when the batch is flexible
+    _, c, d, h, w = x.shape
+    x = mb.reshape(x=x, shape=[-1, c, d, h * w])
+    x = _upsample_2d(x, scales_d, 1.0)
+    d_out = x.shape[-2]
+    x = mb.reshape(x=x, shape=[-1, c * d_out, h, w])
+    x = _upsample_2d(x, scales_h, scales_w)
+    x = mb.reshape(x=x, shape=[-1, c, d_out, x.shape[-2], x.shape[-1]], name=node.name)
+    context.add(x)
+
+
+@register_torch_op(torch_alias=["upsample_trilinear3d.vec"])
+def upsample_trilinear3d(context, node):
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected={TorchFrontend.TORCHSCRIPT: (4, 6)},
+            min_expected={TorchFrontend.TORCHEXPORT: 3, TorchFrontend.EXECUTORCH: 3},
+        )
+        nargs = len(inputs)
+
+        x = inputs[0]
+        output_size = inputs[1]
+        align_corners = bool(inputs[2].val)
+
+        if context.frontend == TorchFrontend.TORCHSCRIPT:
+            if nargs == 4:
+                scale_factors = inputs[3]
+                scales = [None] * 3 if scale_factors is None else list(scale_factors.val)
+            else:
+                scales = inputs[3:6]
+        else:
+            suffix = node.kind.split(".")[-1]
+            if suffix == "vec":
+                scale_factors = None if nargs < 4 else inputs[3]
+                scales = [None] * 3 if scale_factors is None else scale_factors
+            else:
+                scales = [None if nargs <= i else inputs[i] for i in range(3, 6)]
+
+        return x, output_size, align_corners, scales
+
+    x, output_size, align_corners, scales = _parse_positional_args(context, node)
+    if x.dtype not in (types.fp16, types.fp32):
+        x = mb.cast(x=x, dtype="fp32")
+    _upsample_3d(context, node, x, output_size, scales, align_corners)
+
+
+@register_torch_op(torch_alias=["upsample_nearest3d.vec"])
+def upsample_nearest3d(context, node):
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected={TorchFrontend.TORCHSCRIPT: (3, 5)},
+            min_expected={TorchFrontend.TORCHEXPORT: 2, TorchFrontend.EXECUTORCH: 2},
+        )
+        nargs = len(inputs)
+
+        x = inputs[0]
+        output_size = inputs[1]
+
+        if context.frontend == TorchFrontend.TORCHSCRIPT:
+            if nargs == 3:
+                scale_factors = inputs[2]
+                scales = [None] * 3 if scale_factors is None else list(scale_factors.val)
+            else:
+                scales = inputs[2:5]
+        else:
+            suffix = node.kind.split(".")[-1]
+            if suffix == "vec":
+                scale_factors = None if nargs < 3 else inputs[2]
+                scales = [None] * 3 if scale_factors is None else scale_factors
+            else:
+                scales = [None if nargs <= i else inputs[i] for i in range(2, 5)]
+
+        return x, output_size, scales
+
+    x, output_size, scales = _parse_positional_args(context, node)
+    _upsample_3d(context, node, x, output_size, scales, align_corners=None)
 
 
 @register_torch_op(torch_alias=["listunpack"])

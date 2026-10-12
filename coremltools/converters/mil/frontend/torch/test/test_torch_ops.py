@@ -3520,6 +3520,182 @@ class TestUpsample(TorchBaseTest):
                 if layer.WhichOneof("layer") == "upsample":
                     assert len(layer.upsample.fractionalScalingFactor) == 0
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, output_size, align_corners",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [(8, 10, 12), (7, 9, 13), (2, 3, 3)],
+            [True, False],
+        ),
+    )
+    def test_upsample_trilinear3d_with_output_size(
+        self, compute_unit, backend, frontend, output_size, align_corners
+    ):
+        input_shape = (2, 3, 4, 5, 6)
+        model = ModuleWrapper(
+            nn.functional.interpolate,
+            {
+                "size": output_size,
+                "mode": "trilinear",
+                "align_corners": align_corners,
+            },
+        )
+        self.run_compare_torch(
+            input_shape, model, frontend=frontend, backend=backend, compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, scales, align_corners, recompute_scale_factor",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [(2, 3, 1), (0.5, 0.5, 0.5), (1.5, 2.5, 1.2)],
+            [True, False],
+            [True, False],
+        ),
+    )
+    def test_upsample_trilinear3d_with_scales(
+        self, compute_unit, backend, frontend, scales, align_corners, recompute_scale_factor
+    ):
+        input_shape = (1, 3, 4, 6, 8)
+        is_float = any(
+            self._is_float_value(size * scale) for size, scale in zip(input_shape[2:], scales)
+        )
+        if is_float and not align_corners and not recompute_scale_factor:
+            pytest.xfail("rdar://81124053 (Support recompute_scale_factor)")
+
+        model = ModuleWrapper(
+            nn.functional.interpolate,
+            {
+                "scale_factor": scales,
+                "mode": "trilinear",
+                "align_corners": align_corners,
+                "recompute_scale_factor": recompute_scale_factor,
+            },
+        )
+        self.run_compare_torch(
+            input_shape, model, frontend=frontend, backend=backend, compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, output_size",
+        itertools.product(compute_units, backends, frontends, [(8, 10, 12), (8, 15, 6), (5, 7, 9)]),
+    )
+    def test_upsample_nearest3d_with_output_size(
+        self, compute_unit, backend, frontend, output_size
+    ):
+        input_shape = (1, 3, 4, 5, 6)
+        if backend[0] == "neuralnetwork":
+            if any(out % size != 0 for out, size in zip(output_size, input_shape[2:])):
+                return  # Skip fractional scale factors tests for neuralnetwork
+
+        model = ModuleWrapper(
+            nn.functional.interpolate,
+            {"size": output_size, "mode": "nearest"},
+        )
+        self.run_compare_torch(
+            input_shape, model, frontend=frontend, backend=backend, compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, scales",
+        itertools.product(
+            compute_units, backends, frontends, [(2, 2, 2), (2, 3, 1), (1.5, 2.5, 0.5)]
+        ),
+    )
+    def test_upsample_nearest3d_with_scales(self, compute_unit, backend, frontend, scales):
+        if backend[0] == "neuralnetwork":
+            if any(isinstance(scale, float) for scale in scales):
+                return  # Skip fractional scale factors tests for neuralnetwork
+
+        input_shape = (2, 3, 4, 6, 8)
+        model = ModuleWrapper(
+            nn.functional.interpolate,
+            {"scale_factor": scales, "mode": "nearest"},
+        )
+        self.run_compare_torch(
+            input_shape, model, frontend=frontend, backend=backend, compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_upsample_nearest3d_with_float_output_size(self, compute_unit, backend, frontend):
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.skip("to_edge decomposes upsample_nearest3d before conversion")
+
+        # With explicit scales torch maps the output with 1 / scale, Core ML with in / out
+        model = ModuleWrapper(
+            nn.functional.interpolate,
+            {"scale_factor": (1.15, 1.3, 2.3), "mode": "nearest"},
+        )
+        with pytest.raises(NotImplementedError, match="with float output size is not supported"):
+            self.run_compare_torch(
+                (2, 3, 10, 7, 5),
+                model,
+                frontend=frontend,
+                backend=backend,
+                compute_unit=compute_unit,
+            )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, mode, input_shape_and_size",
+        itertools.product(
+            compute_units,
+            backends,
+            ["trilinear", "nearest"],
+            # trilinear crashed predict at these sizes when H/W went before D
+            [((3, 4, 5, 6), (7, 9, 13)), ((4, 5, 9, 5), (10, 22, 12))],
+        ),
+    )
+    def test_upsample_3d_with_flexible_batch(
+        self, compute_unit, backend, mode, input_shape_and_size
+    ):
+        if mode == "nearest" and backend[0] == "neuralnetwork":
+            return  # Skip fractional scale factors tests for neuralnetwork
+
+        input_shape, output_size = input_shape_and_size
+
+        # Predict batch 1 on a model whose default batch is 2. TorchScript only, since
+        # torch.export specializes a batch of 1.
+        kwargs = {"size": output_size, "mode": mode}
+        if mode == "trilinear":
+            kwargs["align_corners"] = False
+        model = ModuleWrapper(nn.functional.interpolate, kwargs)
+        upper_bound = 4 if backend[0] == "mlprogram" else -1
+        self.run_compare_torch(
+            (1, *input_shape),
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            converter_input_type=[
+                TensorType(shape=(RangeDim(1, upper_bound, default=2), *input_shape))
+            ],
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, mode",
+        itertools.product(compute_units, backends, frontends, ["trilinear", "nearest"]),
+    )
+    def test_upsample_3d_default_overload(self, compute_unit, backend, frontend, mode):
+        if frontend == TorchFrontend.EXECUTORCH and mode == "trilinear":
+            pytest.skip("torch._ops.aten.upsample_trilinear3d.default is not Aten Canonical")
+
+        # nn.functional.interpolate only emits the .vec overloads
+        class Model(nn.Module):
+            def forward(self, x):
+                if mode == "trilinear":
+                    return torch.ops.aten.upsample_trilinear3d(x, [8, 10, 12], False, 2.0, 2.0, 2.0)
+                return torch.ops.aten.upsample_nearest3d(x, [8, 15, 6])
+
+        self.run_compare_torch(
+            (1, 3, 4, 5, 6), Model(), frontend=frontend, backend=backend, compute_unit=compute_unit
+        )
+
 
 class TestEmpty(TorchBaseTest):
     @pytest.mark.parametrize(
