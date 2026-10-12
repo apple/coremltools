@@ -7191,6 +7191,23 @@ class TestActivation(TorchBaseTest):
             )
 
     @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_hardtanh_fp16(self, compute_unit, backend, frontend):
+        model = nn.Hardtanh(-1.0, 2.0).eval()
+        input_data = torch.tensor([[-3.0, -0.5, 0.0, 1.5, 4.0]], dtype=torch.float16)
+        self.run_compare_torch(
+            input_data,
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+            minimum_deployment_target=ct.target.iOS16,
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend, shape, alpha, minimum_deployment_target",
         itertools.product(
             compute_units,
@@ -7851,8 +7868,49 @@ class TestElementWiseUnary(TorchBaseTest):
             converter_input_type=converter_input_type,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, op_string",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            ["log2", "log10", "expm1", "asinh", "acosh"],
+        ),
+    )
+    def test_elementwise_fp16(self, compute_unit, backend, frontend, op_string):
+        # These converters add a scalar constant, which has to match the fp16 input.
+        input_data = torch.tensor([[1.5, 2.0, 3.0, 4.5]], dtype=torch.float16)
+        model = ModuleWrapper(function=getattr(torch, op_string))
+        self.run_compare_torch(
+            input_data,
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+            minimum_deployment_target=ct.target.iOS16,
+        )
+
 
 class TestAtan2(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_atan2_fp16(self, compute_unit, backend, frontend):
+        model = ModuleWrapper(function=torch.atan2)
+        y = torch.tensor([[1.0, -1.0, 0.5, -2.0, 0.0]], dtype=torch.float16)
+        x = torch.tensor([[2.0, 3.0, -1.5, -0.5, 1.0]], dtype=torch.float16)
+        self.run_compare_torch(
+            (y, x),
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+            minimum_deployment_target=ct.target.iOS16,
+        )
+
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, rank",
         itertools.product(compute_units, backends, frontends, range(1, 6)),
