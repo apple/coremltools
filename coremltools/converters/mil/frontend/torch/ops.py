@@ -7840,6 +7840,20 @@ def atan2(context, node):
 
 
 @register_torch_op
+def hypot(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    x, y = promote_input_dtypes([inputs[0], inputs[1]])
+    if types.is_int(x.dtype):
+        x = mb.cast(x=x, dtype="fp32")
+        y = mb.cast(y=y, dtype="fp32")
+    x2 = mb.mul(x=x, y=x)
+    y2 = mb.mul(x=y, y=y)
+    sum_sq = mb.add(x=x2, y=y2)
+    res = mb.sqrt(x=sum_sq, name=node.name)
+    context.add(res)
+
+
+@register_torch_op
 def atanh(context, node):
     inputs = _get_inputs(context, node, expected=1)
     context.add(mb.atanh(x=inputs[0], name=node.name))

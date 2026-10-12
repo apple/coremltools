@@ -7970,6 +7970,46 @@ class TestAtan2(TorchBaseTest):
             )
 
 
+class TestHypot(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, rank",
+        itertools.product(compute_units, backends, frontends, range(1, 5)),
+    )
+    def test_hypot(self, compute_unit, backend, frontend, rank):
+        model = ModuleWrapper(function=torch.hypot)
+        input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
+        self.run_compare_torch(
+            [input_shape, input_shape],
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, shapes",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [
+                [(2, 1), (1, 3)],
+                [(1, 4), (3, 1)],
+                [(2, 3, 1), (1, 4)],
+            ],
+        ),
+    )
+    def test_hypot_broadcast(self, compute_unit, backend, frontend, shapes):
+        model = ModuleWrapper(function=torch.hypot)
+        self.run_compare_torch(
+            shapes,
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+
 class TestTriu(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, shape, diagonal, dtype",
