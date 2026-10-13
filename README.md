@@ -5,6 +5,10 @@
 [Core ML Tools](https://apple.github.io/coremltools/docs-guides/source/overview-coremltools.html)
 =======================
 
+<p>
+  <b>English</b> · <a href="README.zh.md">简体中文</a>
+</p>
+
 ![Core ML Tools logo](docs/logo.png)
 
 Use [Core ML Tools](https://apple.github.io/coremltools/docs-guides/source/overview-coremltools.html) (*coremltools*) to convert machine learning models from third-party libraries to the Core ML format. This Python package contains the supporting tools for converting models from training libraries such as the following:
