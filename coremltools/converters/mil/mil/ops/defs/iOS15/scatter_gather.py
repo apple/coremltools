@@ -399,15 +399,45 @@ class scatter_along_axis(Operation):
             mode="add",
             )
 
+    # Reduction used by each ``mode`` other than ``update``. They are applied with
+    # ``ufunc.at``, so repeated indices accumulate, which matches the runtime.
+    _MODE_TO_NP_UFUNC = {
+        "add": np.add,
+        "sub": np.subtract,
+        "mul": np.multiply,
+        "div": np.divide,
+        "max": np.maximum,
+        "min": np.minimum,
+    }
+
     @precondition(allow=VALUE)
     def value_inference(self):
         data = np.copy(self.data.val)
         indices = self.indices.val
         updates = self.updates.val
         axis = self.axis.val
-        np_output = data
-        np.put_along_axis(np_output, indices, updates, axis=axis)
-        return np_output
+        if axis < 0:
+            axis += self.data.rank
+        mode = self.mode.val
+
+        if mode == "update":
+            np.put_along_axis(data, indices, updates, axis=axis)
+            return data
+
+        ufunc = self._MODE_TO_NP_UFUNC.get(mode)
+        if ufunc is None:
+            # Unknown mode: do not const fold rather than fold to a wrong value.
+            return None
+        if ufunc is np.divide and not np.issubdtype(data.dtype, np.floating):
+            # np.divide cannot write its result back into an integer array.
+            return None
+
+        # Index ``data`` along ``axis`` with ``indices``, and along every other axis with
+        # that axis' own coordinates, i.e. the indexing np.put_along_axis performs.
+        index = list(np.indices(indices.shape, sparse=True))
+        index[axis] = indices
+        ufunc.at(data, tuple(index), updates)
+        return data
 
     def type_inference(self):
         if self.axis.val < -self.data.rank or self.axis.val >= self.data.rank:
