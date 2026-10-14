@@ -863,6 +863,90 @@ class TestImagePreprocessingPass:
         add_op = prog.find_ops(op_type="add", exactly_one=False)[0]
         assert add_op.y.dtype() == prog.functions["main"].inputs["x"].dtype()
 
+    def test_program_rgb_per_channel_scale(self):
+        """
+        Regression test for https://github.com/apple/coremltools/issues/2461:
+        when `ImageType.scale` is a per-channel list (matching the documented
+        ``scale: float or list of floats`` API), the preprocessing pass used
+        to fail with::
+
+            ValueError: Incompatible dim 3 in shapes (1, 3, 224, 224) vs. (1, 1, 1, 3)
+
+        because the scale constant kept its `(3,)` shape and broadcast against
+        the last axis of the channel-first input. The fix reshapes the scale
+        to the same `(1, 3, 1, 1)` layout already used by per-channel `bias`.
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 3, 20, 20))])
+        def prog(x):
+            y1 = mb.relu(x=x)
+            y2 = mb.relu(x=x)
+            z = mb.add(x=y1, y=y2)
+            return z
+
+        prog.functions["main"].input_types = (
+            ct.ImageType(
+                name="x",
+                shape=[1, 3, 20, 20],
+                scale=[1 / 127.5, 1 / 127.5, 1 / 127.5],
+                bias=[-1.0, -1.0, -1.0],
+                color_layout="RGB",
+                channel_first=True,
+            ),
+        )
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "mil_backend::insert_image_preprocessing_ops"
+        )
+        assert get_op_types_in_program(prev_prog) == ["relu", "relu", "add"]
+        assert get_op_types_in_program(prog) == ["mul", "add", "relu", "relu", "add"]
+
+        scale_op = prog.find_ops(op_type="mul", exactly_one=True)[0]
+        np.testing.assert_allclose(
+            scale_op.y.val,
+            np.array([1 / 127.5, 1 / 127.5, 1 / 127.5]).reshape([1, 3, 1, 1]),
+        )
+
+        add_op = prog.find_ops(op_type="add", exactly_one=False)[0]
+        np.testing.assert_allclose(
+            add_op.y.val, np.array([-1.0, -1.0, -1.0]).reshape([1, 3, 1, 1])
+        )
+
+    def test_program_rgb_per_channel_scale_rank3(self):
+        """Rank-3 sibling of `test_program_rgb_per_channel_scale`: per-channel
+        scale must reshape to `(3, 1, 1)` for a `(3, H, W)` channel-first
+        input, mirroring the existing rank-3 bias path."""
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3, 20, 20))])
+        def prog(x):
+            y = mb.relu(x=x)
+            return y
+
+        prog.functions["main"].input_types = (
+            ct.ImageType(
+                name="x",
+                shape=[3, 20, 20],
+                scale=[0.5, 0.25, 0.125],
+                bias=[1.0, 2.0, 3.0],
+                color_layout="RGB",
+                channel_first=True,
+            ),
+        )
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "mil_backend::insert_image_preprocessing_ops"
+        )
+        assert get_op_types_in_program(prog) == ["mul", "add", "relu"]
+        scale_op = prog.find_ops(op_type="mul", exactly_one=True)[0]
+        np.testing.assert_allclose(
+            scale_op.y.val, np.array([0.5, 0.25, 0.125]).reshape([3, 1, 1])
+        )
+        add_op = prog.find_ops(op_type="add", exactly_one=True)[0]
+        np.testing.assert_allclose(
+            add_op.y.val, np.array([1.0, 2.0, 3.0]).reshape([3, 1, 1])
+        )
+
+
 class TestSanitizerPass:
 
     def test_sanitize_numeric_var_names(self):
