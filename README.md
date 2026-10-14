@@ -35,6 +35,8 @@ To install it use `pip` or the Python package manager of your choice.
 pip install coremltools
 ```
 
+Third-party frameworks such as PyTorch and TensorFlow are installed separately. `coremltools` is tested with PyTorch versions up to 2.8; see [Install Third-party Packages](https://apple.github.io/coremltools/docs-guides/source/installing-coremltools.html#install-third-party-packages) for details.
+
 To install the latest dev release:
 ```shell
 pip install coremltools==9.1.dev1
