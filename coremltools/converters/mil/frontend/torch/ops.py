@@ -10361,6 +10361,109 @@ def scaled_dot_product_attention(context, node):
 
 
 @register_torch_op
+def _native_multi_head_attention(context, node):
+    """
+    The fast path of torch.nn.MultiheadAttention. PyTorch takes it for batched self attention
+    when nothing requires grad, e.g. a model traced in eval mode under torch.no_grad()
+
+    Input shapes/types:
+    - query, key, value : (B, seq, embed_dim)
+    - qkv_weight : (3 * embed_dim, embed_dim), the q, k and v projections stacked
+    - qkv_bias : (3 * embed_dim,)
+    - proj_weight : (embed_dim, embed_dim)
+    - proj_bias : (embed_dim,)
+    - mask : optional, (target_seq, source_seq) for mask_type 0,
+             (B, source_seq) for mask_type 1 and (B, num_heads, target_seq, source_seq) for mask_type 2
+    - need_weights, average_attn_weights : bool
+    - mask_type : optional int
+
+    Outputs: the attention output (B, target_seq, embed_dim), then, if need_weights,
+    the attention weights (B, target_seq, source_seq), or (B, num_heads, target_seq, source_seq)
+    when they are not averaged over the heads
+
+    The kernel reads the mask as boolean, so any non-zero entry masks that position out, even
+    though nn.MultiheadAttention hands it a float mask with -inf in it
+    """
+    inputs = _get_inputs(context, node, expected=13)
+    query, key, value = inputs[:3]
+    embed_dim = inputs[3].val
+    num_heads = inputs[4].val
+    qkv_weight, qkv_bias, proj_weight, proj_bias = inputs[5:9]
+    mask = inputs[9]
+    need_weights = inputs[10].val
+    average_attn_weights = inputs[11].val
+    mask_type = inputs[12].val if inputs[12] is not None else None
+    head_dim = embed_dim // num_heads
+
+    def _project(x: Var, index: int) -> Var:
+        begin, end = index * embed_dim, (index + 1) * embed_dim
+        if qkv_weight.val is not None:
+            weight = qkv_weight.val[begin:end]
+        else:
+            weight = mb.slice_by_index(x=qkv_weight, begin=[begin, 0], end=[end, embed_dim])
+        if qkv_bias.val is not None:
+            bias = qkv_bias.val[begin:end]
+        else:
+            bias = mb.slice_by_index(x=qkv_bias, begin=[begin], end=[end])
+        return _create_linear_layer(x, weight, bias)
+
+    def _batch_and_seq_shape(x: Var) -> Var:
+        if any_symbolic(x.shape[:2]):
+            return mb.slice_by_size(x=mb.shape(x=x), begin=[0], size=[2])
+        return np.array(x.shape[:2], dtype=np.int32)
+
+    def _split_heads(x: Var) -> Var:
+        # (B, seq, embed_dim) -> (B, num_heads, seq, head_dim)
+        shape = mb.concat(
+            values=[_batch_and_seq_shape(x), np.array([num_heads, head_dim], dtype=np.int32)],
+            axis=0,
+        )
+        x = mb.reshape(x=x, shape=shape)
+        return mb.transpose(x=x, perm=[0, 2, 1, 3])
+
+    q = _split_heads(_project(query, 0))
+    k = _split_heads(_project(key, 1))
+    v = _split_heads(_project(value, 2))
+
+    if mask is not None:
+        if not is_bool(mask.dtype):
+            mask = mb.not_equal(x=mask, y=0.0)
+        if mask_type == 1:
+            # key padding mask, (B, source_seq) -> (B, 1, 1, source_seq)
+            mask = mb.expand_dims(x=mask, axes=[1, 2])
+        # Use a big enough but not easily fp16-overflow number (e.g. -3e4) as -inf
+        mask = mb.mul(x=mb.cast(x=mask, dtype=types.builtin_to_string(q.dtype)), y=-3e4)
+
+    if need_weights:
+        q = mb.mul(x=q, y=1.0 / _math.sqrt(head_dim))
+        weights = mb.matmul(x=q, y=k, transpose_y=True)
+        if mask is not None:
+            weights = mb.add(x=weights, y=mask)
+        weights = mb.softmax(x=weights, axis=-1)
+        attn = mb.matmul(x=weights, y=v)
+    elif is_current_opset_version_compatible_with(target.iOS18):
+        attn = mb.scaled_dot_product_attention(query=q, key=k, value=v, attn_mask=mask)
+    else:
+        attn = _utils._decompose_scaled_dot_product_attention(q, k, v, mask, node.name + "_attn")
+
+    # (B, num_heads, target_seq, head_dim) -> (B, target_seq, embed_dim)
+    attn = mb.transpose(x=attn, perm=[0, 2, 1, 3])
+    shape = mb.concat(
+        values=[_batch_and_seq_shape(attn), np.array([embed_dim], dtype=np.int32)], axis=0
+    )
+    attn = mb.reshape(x=attn, shape=shape)
+    res = _create_linear_layer(attn, proj_weight, proj_bias)
+    res = mb.identity(x=res, name=node.outputs[0])
+    context.add(res, torch_name=node.outputs[0])
+
+    if need_weights:
+        if average_attn_weights:
+            weights = mb.reduce_mean(x=weights, axes=[1], keep_dims=False)
+        weights = mb.identity(x=weights, name=node.outputs[1])
+        context.add(weights, torch_name=node.outputs[1])
+
+
+@register_torch_op
 def fliplr(context, node):
     """
     Flip tensor in the left/right direction.
