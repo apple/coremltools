@@ -10381,8 +10381,9 @@ def _native_multi_head_attention(context, node):
     the attention weights (B, target_seq, source_seq), or (B, num_heads, target_seq, source_seq)
     when they are not averaged over the heads
 
-    The kernel reads the mask as boolean, so any non-zero entry masks that position out, even
-    though nn.MultiheadAttention hands it a float mask with -inf in it
+    nn.MultiheadAttention only takes this path with bool masks, and hands them over as float
+    masks with -inf in them. The kernel reads the mask back as boolean, so any non-zero entry
+    masks that position out
     """
     inputs = _get_inputs(context, node, expected=13)
     query, key, value = inputs[:3]
