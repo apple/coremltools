@@ -448,6 +448,8 @@ def find_indices_for_lut(
         )
     else:
         # For vector palettization, find the closest vector by Euclidean distance.
+        # Use at least fp32 to avoid underflow when squaring fp16 differences.
+        data = data.astype(np.result_type(data.dtype, np.float32), copy=False)
         dist = np.linalg.norm(np.expand_dims(data, axis=-2) - repeated_lut, axis=-1)
         indices = np.argmin(dist, axis=-1)
 
