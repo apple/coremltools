@@ -16392,6 +16392,114 @@ class TestTransformer(TorchBaseTest):
         )
 
 
+class TestMultiheadAttention(TorchBaseTest):
+    """
+    nn.MultiheadAttention takes its fast path, aten::_native_multi_head_attention, for batched
+    self attention in eval mode when nothing requires grad
+    """
+
+    EMBED_DIM, NUM_HEADS, BATCH, SEQ = 16, 4, 2, 5
+
+    class Model(nn.Module):
+        def __init__(self, need_weights, average_attn_weights, attn_mask, key_padding_mask):
+            super().__init__()
+            self.attn = nn.MultiheadAttention(
+                TestMultiheadAttention.EMBED_DIM, TestMultiheadAttention.NUM_HEADS, batch_first=True
+            )
+            self.need_weights = need_weights
+            self.average_attn_weights = average_attn_weights
+            self.attn_mask = attn_mask
+            self.key_padding_mask = key_padding_mask
+
+        def forward(self, x):
+            out, weights = self.attn(
+                x,
+                x,
+                x,
+                need_weights=self.need_weights,
+                attn_mask=self.attn_mask,
+                key_padding_mask=self.key_padding_mask,
+                average_attn_weights=self.average_attn_weights,
+            )
+            return (out, weights) if self.need_weights else out
+
+    @staticmethod
+    def _make_model(need_weights=False, average_attn_weights=True, mask=None):
+        attn_mask, key_padding_mask = None, None
+        seq = TestMultiheadAttention.SEQ
+        if mask in ("attn", "both"):
+            # causal, so every query keeps at least one key
+            attn_mask = torch.triu(torch.ones(seq, seq, dtype=torch.bool), diagonal=1)
+        if mask in ("key_padding", "both"):
+            key_padding_mask = torch.zeros(TestMultiheadAttention.BATCH, seq, dtype=torch.bool)
+            key_padding_mask[0, -2:] = True
+        model = TestMultiheadAttention.Model(
+            need_weights, average_attn_weights, attn_mask, key_padding_mask
+        )
+        # with a parameter that requires grad, PyTorch skips the fast path
+        return model.eval().requires_grad_(False)
+
+    @staticmethod
+    def _assert_fast_path(model_spec):
+        assert "aten::_native_multi_head_attention" in str(model_spec.inlined_graph)
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, minimum_deployment_target, weights, mask",
+        itertools.product(
+            compute_units,
+            backends,
+            [None, ct.target.iOS18],
+            ["none", "averaged", "per_head"],
+            [None, "key_padding", "attn", "both"],
+        ),
+    )
+    def test_self_attention(self, compute_unit, backend, minimum_deployment_target, weights, mask):
+        if backend[0] == "neuralnetwork" and minimum_deployment_target == ct.target.iOS18:
+            pytest.skip("iOS18 target needs mlprogram")
+
+        model = self._make_model(
+            need_weights=weights != "none",
+            average_attn_weights=weights == "averaged",
+            mask=mask,
+        )
+        res = self.run_compare_torch(
+            (self.BATCH, self.SEQ, self.EMBED_DIM),
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            minimum_deployment_target=minimum_deployment_target,
+        )
+        self._assert_fast_path(res[0])
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, minimum_deployment_target",
+        itertools.product(compute_units, backends, [None, ct.target.iOS18]),
+    )
+    def test_dynamic_batch_and_seq(self, compute_unit, backend, minimum_deployment_target):
+        if backend[0] == "neuralnetwork" and minimum_deployment_target == ct.target.iOS18:
+            pytest.skip("iOS18 target needs mlprogram")
+
+        model = self._make_model()
+        converter_input_type = [
+            ct.TensorType(
+                shape=(
+                    ct.RangeDim(lower_bound=1, upper_bound=4, default=self.BATCH),
+                    ct.RangeDim(lower_bound=1, upper_bound=8, default=self.SEQ),
+                    self.EMBED_DIM,
+                )
+            )
+        ]
+        res = self.run_compare_torch(
+            (self.BATCH, self.SEQ, self.EMBED_DIM),
+            model,
+            converter_input_type=converter_input_type,
+            backend=backend,
+            compute_unit=compute_unit,
+            minimum_deployment_target=minimum_deployment_target,
+        )
+        self._assert_fast_path(res[0])
+
+
 class TestFliplr(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, input_shape",
