@@ -164,6 +164,18 @@ class TestFindIndicesForLut:
         np.testing.assert_array_equal(indices, expected_indices)
         assert types.builtin_to_string(types.numpy_type_to_builtin_type(indices.dtype)) == "uint1"
 
+    def test_vector_fp16_small_values(self):
+        data = np.array([[0, 1 / 8192], [0, 1 / 8192]], dtype=np.float16)
+        lut = np.array([[1 / 8192, 1 / 8192], [0, 0]], dtype=np.float16).reshape((1, 1, 2, 2))
+
+        indices = optimize_utils.find_indices_for_lut(data, lut, vector_axis=0)
+
+        np.testing.assert_array_equal(indices, np.array([[1, 0]], dtype=np.uint8))
+        assert types.builtin_to_string(types.numpy_type_to_builtin_type(indices.dtype)) == "uint1"
+        np.testing.assert_array_equal(
+            constexpr_lut_to_dense.decompress(indices, lut, vector_axis=0), data
+        )
+
     @pytest.mark.parametrize(
         "nbits, vector_size, vector_axis, group_size",
         itertools.product(
