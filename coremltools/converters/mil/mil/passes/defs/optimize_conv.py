@@ -748,7 +748,8 @@ class fuse_conv_bias(AbstractGraphPass):
             bias_value = np.squeeze(bias_value)
 
         if add_op.op_type == "sub":
-            bias_value *= -1
+            # The constant may be shared with other consumers in the graph.
+            bias_value = -bias_value
 
         # everything looks good, now find the new updated bias
         old_bias = conv_op.inputs.get("bias", None)
