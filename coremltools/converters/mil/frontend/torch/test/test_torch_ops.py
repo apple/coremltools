@@ -12606,6 +12606,12 @@ class TestWindowFunctions(TorchBaseTest):
         ),
     )
     def test_window(self, compute_unit, backend, frontend, window_op, window_length, periodic):
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.xfail(
+                f"torch._ops.aten.{window_op.__name__}.periodic is not in Core ATen opset, "
+                "so ExecuTorch to_edge rejects it"
+            )
+
         class WindowModel(nn.Module):
             def forward(self, x):
                 return x + window_op(window_length, periodic=periodic)
@@ -12625,6 +12631,12 @@ class TestWindowFunctions(TorchBaseTest):
         itertools.product(compute_units, backends, frontends),
     )
     def test_hamming_window_alpha_beta(self, compute_unit, backend, frontend):
+        if frontend == TorchFrontend.EXECUTORCH:
+            pytest.xfail(
+                "torch._ops.aten.hamming_window.periodic_alpha_beta is not in Core ATen opset, "
+                "so ExecuTorch to_edge rejects it"
+            )
+
         class HammingModel(nn.Module):
             def forward(self, x):
                 return x + torch.hamming_window(16, periodic=True, alpha=0.5, beta=0.4)
