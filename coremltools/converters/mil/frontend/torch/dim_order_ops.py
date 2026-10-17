@@ -135,3 +135,22 @@ def _empty_dim_order(context, node):
         zeros = mb.const(val=zeros_array, name=node.name)
 
     context.add(zeros)
+
+
+@register_torch_op(torch_alias=["dim_order_ops::_clone_dim_order"])
+def _clone_dim_order(context, node):
+    "_clone_dim_order(Tensor self, *, bool non_blocking=False, int[]? dim_order=None) -> Tensor"
+    # ExecuTorch >= 1.0 rewrites aten.clone into this op in to_edge
+    inputs = _get_inputs(context, node, min_expected=1)
+    x = inputs[0]
+    dim_order = inputs[2] if len(inputs) > 2 else None
+    dim_order = _get_kwinputs(context, node, "dim_order", default=[dim_order])[0]
+
+    if dim_order is not None:
+        contiguous_dim_order = np.arange(x.rank)
+        # For now, we simply error out non-contiguous dim order
+        # TODO (rdar://150313325): Support general dim order
+        if any(dim_order.val != contiguous_dim_order):
+            raise NotImplementedError("Core ML does not support non-contiguous dim order")
+
+    context.add(mb.identity(x=x, name=node.name))

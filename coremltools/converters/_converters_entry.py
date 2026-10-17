@@ -591,6 +591,18 @@ def convert(
                                      outputs_as_strings,
                                      outputs_as_tensor_or_image_types,
                                      outputs)
+    # Starting with torch 2.9, torch.export.export() returns an ExportedProgram
+    # in the new "TRAINING" IR dialect by default, whereas conversion expects
+    # the "ATEN" dialect (the prior default). Lower it to ATEN via
+    # run_decompositions -- the migration torch recommends -- so existing
+    # convert() calls keep working without a manual run_decompositions() step.
+    if (
+        exact_source == "pytorch"
+        and _HAS_TORCH_EXPORT_API
+        and isinstance(model, ExportedProgram)
+        and model.dialect not in ("ATEN", "EDGE")
+    ):
+        model = model.run_decompositions({})
     source_dialect = _determine_source_dialect(model, exact_source)
     exact_target = _determine_target(convert_to, minimum_deployment_target)
     _validate_conversion_arguments(

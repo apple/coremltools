@@ -22,6 +22,7 @@ from coremltools import proto
 from coremltools._deps import (
     _HAS_HF,
     _HAS_TORCH,
+    _HAS_TORCH_EXPORT_API,
     _HAS_TORCHAO,
     MSG_TORCH_NOT_FOUND,
     MSG_TORCHAO_NOT_FOUND,
@@ -641,6 +642,41 @@ class TestPyTorchConverterExamples:
             convert_to='mlprogram'
         )
         assert isinstance(model._get_mil_internal(), ct.converters.mil.Program)
+
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TORCH_EXPORT_API, reason="torch.export API not available.")
+    def test_convert_exported_program_training_dialect():
+        # Starting with torch 2.9, torch.export.export() returns an
+        # ExportedProgram in the new "TRAINING" IR dialect by default. convert()
+        # should lower it automatically via run_decompositions instead of
+        # requiring the user to call run_decompositions() themselves.
+        class Network(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.hidden = torch.nn.Linear(8, 4)
+                self.relu = torch.nn.ReLU()
+
+            def forward(self, x):
+                return self.relu(self.hidden(x))
+
+        torch_model = Network().eval()
+        example_input = torch.rand(2, 8)
+        exported_program = torch.export.export(torch_model, (example_input,))
+
+        # With torch >= 2.9 the default export dialect is no longer ATEN, so the
+        # installed torch here actually drives convert()'s auto-lowering path.
+        # Assert it to guarantee this test exercises that path instead of
+        # silently passing as a no-op on a torch whose default is still ATEN.
+        if Version(torch.__version__) >= Version("2.9.0"):
+            assert exported_program.dialect not in ("ATEN", "EDGE")
+
+        # Convert directly, without a manual run_decompositions() step.
+        mlmodel = ct.convert(
+            exported_program,
+            inputs=[ct.TensorType(name="x", shape=example_input.shape)],
+            convert_to="mlprogram",
+        )
+        assert isinstance(mlmodel._get_mil_internal(), ct.converters.mil.Program)
 
     @staticmethod
     @pytest.mark.skipif(ct.utils._macos_version() < (12, 0), reason='Model produces specification 6.')
@@ -3270,6 +3306,13 @@ class TestTorchao:
                     "torchao.quantization.quant_api.int4_weight_only "
                     "no longer supports CPU"
                 )
+        except ImportError as e:
+            if "fbgemm-gpu-genai" in str(e) and Version(torchao.__version__) >= Version("0.14.0"):
+                pytest.xfail(
+                    "Starting from torchao 0.14.0 int4_weight_only defaults to Int4Tensor, "
+                    "which requires fbgemm-gpu-genai (not available on macOS)"
+                )
+            raise
         model = unwrap_tensor_subclass(model)
         input_data = torch.randn((2, 32), dtype=torch.float16)
         exported_model = torch.export.export(model, (input_data,))
@@ -3301,7 +3344,17 @@ class TestTorchao:
             )
             err_type = NotImplementedError
         else:
-            exported_model = torch.jit.trace(model, example_inputs=(input_data,))
+            try:
+                exported_model = torch.jit.trace(model, example_inputs=(input_data,))
+            except RuntimeError as e:
+                if "isIntList() INTERNAL ASSERT FAILED" in str(e) and Version(
+                    torchao.__version__
+                ) >= Version("0.14.0"):
+                    pytest.xfail(
+                        "Starting from torchao 0.14.0 choose_qparams_affine receives a traced "
+                        "tensor in block_size, which torch.jit.trace cannot record"
+                    )
+                raise
             inputs = [ct.TensorType(shape=input_data.shape)]
             err_msg = (
                 r"PyTorch convert function for op 'torchao::choose_qparams_affine' not implemented."
