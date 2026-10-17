@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from ..utils import load_boston
+from ..utils import load_test_data
 from coremltools._deps import (_HAS_LIBSVM, _HAS_SKLEARN, MSG_LIBSVM_NOT_FOUND,
                                MSG_SKLEARN_NOT_FOUND)
 from coremltools.models.utils import (_is_macos, _macos_version,
@@ -43,7 +43,7 @@ class SvrScikitTest(unittest.TestCase):
         if not _HAS_SKLEARN:
             return
 
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         scikit_model = SVR(kernel="linear")
         scikit_model.fit(scikit_data["data"], scikit_data["target"])
 
@@ -146,7 +146,7 @@ class EpsilonSVRLibSVMTest(unittest.TestCase):
         if not _HAS_LIBSVM:
             return
 
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         prob = svmutil.svm_problem(scikit_data["target"], scikit_data["data"].tolist())
         param = svmutil.svm_parameter()
         param.svm_type = svmutil.EPSILON_SVR
@@ -156,7 +156,7 @@ class EpsilonSVRLibSVMTest(unittest.TestCase):
         self.libsvm_model = svmutil.svm_train(prob, param)
 
     def test_input_names(self):
-        data = load_boston()
+        data = load_test_data()
         df = pd.DataFrame({"input": data["data"].tolist()})
         df["input"] = df["input"].apply(np.array)
 

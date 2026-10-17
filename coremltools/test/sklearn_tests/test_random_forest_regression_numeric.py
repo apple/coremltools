@@ -9,7 +9,7 @@ import unittest
 import pandas as pd
 import pytest
 
-from ..utils import load_boston
+from ..utils import load_test_data
 from coremltools._deps import _HAS_SKLEARN
 from coremltools.models.utils import (_is_macos, _macos_version,
                                       evaluate_regressor)
@@ -21,7 +21,7 @@ if _HAS_SKLEARN:
 
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
-class RandomForestRegressorBostonHousingScikitNumericTest(unittest.TestCase):
+class RandomForestRegressorScikitNumericTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter and running both models
     """
@@ -32,7 +32,7 @@ class RandomForestRegressorBostonHousingScikitNumericTest(unittest.TestCase):
         Set up the unit test by loading the dataset and training a model.
         """
         # Load data and train model
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         self.scikit_data = scikit_data
         self.X = scikit_data["data"].astype("f").astype(
             "d"
@@ -77,14 +77,14 @@ class RandomForestRegressorBostonHousingScikitNumericTest(unittest.TestCase):
             metrics = evaluate_regressor(spec, df, verbose=False)
             self._check_metrics(metrics, scikit_params)
 
-    def test_boston_housing_simple_regression(self):
+    def test_simple_regression(self):
         self._train_convert_evaluate_assert()
 
-    def test_boston_housing_float_double_corner_case(self):
+    def test_float_double_corner_case(self):
         self._train_convert_evaluate_assert(max_depth=13)
 
     @pytest.mark.slow
-    def test_boston_housing_parameter_stress_test(self):
+    def test_parameter_stress_test(self):
 
         ## These are all the options in decision tree regression of scikit-learn
         options = dict(

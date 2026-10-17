@@ -10,7 +10,7 @@ import unittest
 import pandas as pd
 import pytest
 
-from ..utils import load_boston
+from ..utils import load_test_data
 from coremltools._deps import (_HAS_LIBSVM, _HAS_SKLEARN, MSG_LIBSVM_NOT_FOUND,
                                MSG_SKLEARN_NOT_FOUND)
 from coremltools.models.utils import (_is_macos, _macos_version,
@@ -41,7 +41,7 @@ class NuSVRScikitTest(unittest.TestCase):
         Set up the unit test by loading the dataset and training a model.
         """
         self.scikit_model = NuSVR(kernel="linear")
-        self.data = load_boston()
+        self.data = load_test_data()
         self.scikit_model.fit(self.data["data"], self.data["target"])
 
     def test_conversion_bad_inputs(self):
@@ -138,7 +138,7 @@ class NuSVRLibSVMTest(unittest.TestCase):
         if not _HAS_LIBSVM:
             return
 
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         prob = svmutil.svm_problem(scikit_data["target"], scikit_data["data"].tolist())
         param = svmutil.svm_parameter()
         param.svm_type = svmutil.NU_SVR

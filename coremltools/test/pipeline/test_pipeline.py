@@ -10,7 +10,7 @@ import unittest
 import numpy as np
 import pytest
 
-from ..utils import load_boston
+from ..utils import load_test_data
 import coremltools as ct
 from coremltools._deps import _HAS_LIBSVM, _HAS_SKLEARN
 from coremltools.converters.mil import mil
@@ -44,7 +44,7 @@ class LinearRegressionPipelineCreationTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         feature_names = scikit_data["feature_names"]
 
         scikit_model = LinearRegression()
@@ -105,7 +105,7 @@ class LibSVMPipelineCreationTest(unittest.TestCase):
         if not _HAS_LIBSVM:
             return
 
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         prob = svmutil.svm_problem(
             scikit_data["target"] > scikit_data["target"].mean(),
             scikit_data["data"].tolist(),
@@ -165,7 +165,7 @@ class LinearRegressionPipeline(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
 
         scikit_model = Pipeline(steps=[("linear", LinearRegression())])
         scikit_model.fit(scikit_data["data"], scikit_data["target"])

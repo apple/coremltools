@@ -8,7 +8,7 @@ import unittest
 import numpy as np
 from packaging.version import Version
 
-from ..utils import load_boston
+from ..utils import load_test_data
 from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
 
 if _HAS_SKLEARN:
@@ -37,7 +37,7 @@ class ImputerTestCase(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         # axis parameter deprecated in SimpleImputer >= 0.22. which now imputes
         # only along columns as desired here.
         if _SKLEARN_VERSION >= Version("0.22"):

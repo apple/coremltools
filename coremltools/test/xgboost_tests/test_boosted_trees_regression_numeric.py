@@ -9,7 +9,7 @@ import unittest
 import pandas as pd
 import pytest
 
-from ..utils import load_boston
+from ..utils import load_test_data
 from coremltools._deps import _HAS_SKLEARN, _HAS_XGBOOST
 from coremltools.models.utils import (_is_macos, _macos_version,
                                       evaluate_regressor)
@@ -26,11 +26,11 @@ if _HAS_SKLEARN:
 
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
-class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase):
+class GradientBoostingRegressorScikitNumericTest(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         # Load data and train model
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         self.scikit_data = scikit_data
         self.X = scikit_data["data"]
         self.target = scikit_data["target"]
@@ -67,11 +67,11 @@ class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase)
             metrics = evaluate_regressor(spec, df, "target", verbose=False)
             self._check_metrics(metrics, scikit_params)
 
-    def test_boston_housing_simple_regression(self):
+    def test_simple_regression(self):
         self._train_convert_evaluate_assert()
 
     @pytest.mark.slow
-    def test_boston_housing_parameter_stress_test(self):
+    def test_parameter_stress_test(self):
 
         options = dict(
             max_depth=[1, 10, None],
@@ -94,7 +94,7 @@ class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase)
 @unittest.skipIf(_macos_version() >= (12, 0), "rdar://problem/84898245")
 @unittest.skipIf(not _HAS_XGBOOST, "Missing xgboost. Skipping")
 @unittest.skipIf(not _HAS_SKLEARN, "Missing scikit-learn. Skipping tests.")
-class XgboostBoosterBostonHousingNumericTest(unittest.TestCase):
+class XgboostBoosterNumericTest(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         if not _HAS_XGBOOST:
@@ -103,7 +103,7 @@ class XgboostBoosterBostonHousingNumericTest(unittest.TestCase):
             return
 
         # Load data and train model
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         self.X = scikit_data["data"].astype("f").astype("d")
         self.dtrain = xgboost.DMatrix(
             scikit_data["data"],
@@ -151,17 +151,17 @@ class XgboostBoosterBostonHousingNumericTest(unittest.TestCase):
             metrics = evaluate_regressor(spec, df, target="target", verbose=False)
             self._check_metrics(metrics, allowed_error, bt_params)
 
-    def test_boston_housing_simple_decision_tree_regression(self):
+    def test_simple_decision_tree_regression(self):
         self._train_convert_evaluate_assert(num_boost_round=1)
 
-    def test_boston_housing_simple_boosted_tree_regression(self):
+    def test_simple_boosted_tree_regression(self):
         self._train_convert_evaluate_assert(num_boost_round=10)
 
-    def test_boston_housing_simple_random_forest_regression(self):
+    def test_simple_random_forest_regression(self):
         self._train_convert_evaluate_assert(bt_params={"subsample": 0.5},
                                             allowed_error={"rmse": 0.004, "max_error": 0.09})
 
-    def test_boston_housing_float_double_corner_case(self):
+    def test_float_double_corner_case(self):
         self._train_convert_evaluate_assert(
             {
                 "colsample_bytree": 1,
@@ -179,7 +179,7 @@ class XgboostBoosterBostonHousingNumericTest(unittest.TestCase):
         )
 
     @pytest.mark.slow
-    def test_boston_housing_parameter_stress_test(self):
+    def test_parameter_stress_test(self):
 
         options = dict(
             max_depth=[1, 5],
@@ -205,7 +205,7 @@ class XgboostBoosterBostonHousingNumericTest(unittest.TestCase):
 @unittest.skipIf(_macos_version() >= (12, 0), "rdar://problem/84898245")
 @unittest.skipIf(not _HAS_XGBOOST, "Missing xgboost. Skipping")
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
-class XGboostRegressorBostonHousingNumericTest(unittest.TestCase):
+class XGboostRegressorNumericTest(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         """
@@ -213,7 +213,7 @@ class XGboostRegressorBostonHousingNumericTest(unittest.TestCase):
         """
 
         # Load data and train model
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
 
         self.X = scikit_data["data"]
         self.scikit_data = self.X
@@ -257,18 +257,18 @@ class XGboostRegressorBostonHousingNumericTest(unittest.TestCase):
             metrics = evaluate_regressor(spec, df, target="target", verbose=False)
             self._check_metrics(metrics, bt_params, allowed_error)
 
-    def test_boston_housing_simple_boosted_tree_regression(self):
+    def test_simple_boosted_tree_regression(self):
         self._train_convert_evaluate_assert()
 
-    def test_boston_housing_simple_random_forest_regression(self):
+    def test_simple_random_forest_regression(self):
         self._train_convert_evaluate_assert(
             allowed_error={"rmse": 0.05, "max_error": 0.81}, subsample=0.5
         )
 
-    def test_boston_housing_simple_decision_tree_regression(self):
+    def test_simple_decision_tree_regression(self):
         self._train_convert_evaluate_assert(n_estimators=1)
 
-    def test_boston_housing_float_double_corner_case(self):
+    def test_float_double_corner_case(self):
         self._train_convert_evaluate_assert(
             {
                 "colsample_bytree": 1,
@@ -285,7 +285,7 @@ class XGboostRegressorBostonHousingNumericTest(unittest.TestCase):
         )
 
     @pytest.mark.slow
-    def test_boston_housing_parameter_stress_test(self):
+    def test_parameter_stress_test(self):
 
         options = dict(
             max_depth=[1, 5],

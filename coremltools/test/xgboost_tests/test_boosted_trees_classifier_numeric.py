@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from ..utils import load_boston
+from ..utils import load_test_data
 from coremltools._deps import _HAS_SKLEARN, _HAS_XGBOOST
 from coremltools.models.utils import (_is_macos, _macos_version,
                                       evaluate_classifier,
@@ -28,7 +28,7 @@ if _HAS_XGBOOST:
 
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
-class BoostedTreeClassificationBostonHousingScikitNumericTest(unittest.TestCase):
+class BoostedTreeClassificationScikitNumericTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter and running both models
     """
@@ -39,7 +39,7 @@ class BoostedTreeClassificationBostonHousingScikitNumericTest(unittest.TestCase)
         Set up the unit test by loading the dataset and training a model.
         """
         # Load data and train model
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         self.scikit_data = scikit_data
         self.X = scikit_data["data"].astype("f").astype(
             "d"
@@ -83,8 +83,8 @@ class BoostedTreeClassificationBostonHousingScikitNumericTest(unittest.TestCase)
 
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
-class BoostedTreeBinaryClassificationBostonHousingScikitNumericTest(
-    BoostedTreeClassificationBostonHousingScikitNumericTest
+class BoostedTreeBinaryClassificationScikitNumericTest(
+    BoostedTreeClassificationScikitNumericTest
 ):
     def test_simple_binary_classifier(self):
         self._train_convert_evaluate_assert()
@@ -110,13 +110,13 @@ class BoostedTreeBinaryClassificationBostonHousingScikitNumericTest(
 
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
-class BoostedTreeMultiClassClassificationBostonHousingScikitNumericTest(
-    BoostedTreeClassificationBostonHousingScikitNumericTest
+class BoostedTreeMultiClassClassificationScikitNumericTest(
+    BoostedTreeClassificationScikitNumericTest
 ):
     @classmethod
     def setUpClass(self):
         # Load data and train model
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         num_classes = 3
         self.X = scikit_data["data"].astype("f").astype(
             "d"
@@ -155,7 +155,7 @@ class BoostedTreeMultiClassClassificationBostonHousingScikitNumericTest(
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
 @unittest.skipIf(not _HAS_XGBOOST, "Skipping, no xgboost")
-class BoostedTreeClassificationBostonHousingXGboostNumericTest(unittest.TestCase):
+class BoostedTreeClassificationXGboostNumericTest(unittest.TestCase):
     """
     Unit test class for testing xgboost converter and running both models
     """
@@ -208,8 +208,8 @@ class BoostedTreeClassificationBostonHousingXGboostNumericTest(unittest.TestCase
 @unittest.skipIf(_macos_version() >= (10, 16), "rdar://problem/84898245")
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
 @unittest.skipIf(not _HAS_XGBOOST, "Skipping, no xgboost")
-class BoostedTreeBinaryClassificationBostonHousingXGboostNumericTest(
-    BoostedTreeClassificationBostonHousingXGboostNumericTest
+class BoostedTreeBinaryClassificationXGboostNumericTest(
+    BoostedTreeClassificationXGboostNumericTest
 ):
     @classmethod
     def setUpClass(self):
@@ -217,7 +217,7 @@ class BoostedTreeBinaryClassificationBostonHousingXGboostNumericTest(
         Set up the unit test by loading the dataset and training a model.
         """
         # Load data and train model
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         self.scikit_data = scikit_data
         self.X = scikit_data["data"].astype("f").astype(
             "d"
@@ -237,12 +237,12 @@ class BoostedTreeBinaryClassificationBostonHousingXGboostNumericTest(
 @unittest.skipIf(_macos_version() >= (12, 0), "rdar://problem/84898245")
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
 @unittest.skipIf(not _HAS_XGBOOST, "Skipping, no xgboost")
-class BoostedTreeMultiClassClassificationBostonHousingXGboostNumericTest(
-    BoostedTreeClassificationBostonHousingXGboostNumericTest
+class BoostedTreeMultiClassClassificationXGboostNumericTest(
+    BoostedTreeClassificationXGboostNumericTest
 ):
     @classmethod
     def setUpClass(self):
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         num_classes = 3
         self.X = scikit_data["data"].astype("f").astype(
             "d"

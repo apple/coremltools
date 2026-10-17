@@ -1,7 +1,8 @@
 numpy==1.21.0; platform_machine == "arm64" and python_version < "3.9"
 numpy<1.20; platform_machine != "arm64" and python_version < "3.9"
 numpy==2.0.0; python_version >= "3.9" and python_version < "3.13"
-numpy==2.1.0; python_version >= "3.13"
+numpy==2.1.0; python_version >= "3.13" and python_version < "3.14"
+numpy==2.3.0; python_version >= "3.14"
 
 protobuf
 pytest

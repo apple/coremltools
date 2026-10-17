@@ -8,7 +8,7 @@ import unittest
 import numpy as np
 import PIL.Image
 
-from ..utils import load_boston
+from ..utils import load_test_data
 import coremltools
 from coremltools._deps import _HAS_SKLEARN, MSG_SKLEARN_NOT_FOUND
 from coremltools.models.utils import _is_macos, _macos_version
@@ -50,7 +50,7 @@ class TestIODataTypes(unittest.TestCase):
 
     @property
     def scikit_data(self):
-        return load_boston()
+        return load_test_data()
 
     def _feature_data_type(self, dtype):
         feature_dict = {np.int32: "INT32", np.float32: "FLOAT32", np.float64: "DOUBLE"}

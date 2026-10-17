@@ -33,6 +33,7 @@ from coremltools.converters.mil.frontend.torch.torch_op_registry import (
     TorchOpsRegistry,
     register_torch_op,
 )
+from coremltools.converters.mil.mil.scope import ScopeSource
 from coremltools.converters.mil.mil.types import builtin_to_string
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 from coremltools.converters.mil.testing_reqs import backends
@@ -162,6 +163,48 @@ class TestTorchScriptValidation:
 
         current_date = str(date.today())
         assert mlmodel.user_defined_metadata[_METADATA_CONVERSION_DATE] == current_date
+
+
+@pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
+class TestTorchScriptScopes:
+    @staticmethod
+    @pytest.mark.parametrize("backend", backends)
+    def test_module_path_preserves_modulelist_names(backend):
+        class TwoLists(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.layers_a = nn.ModuleList([nn.Linear(3, 3)])
+                self.layers_b = nn.ModuleList([nn.Linear(3, 3)])
+
+            def forward(self, x):
+                return self.layers_a[0](x) + self.layers_b[0](x)
+
+        model = TwoLists().eval()
+        traced = torch.jit.trace(model, torch.rand(1, 3))
+        mlmodel = ct.convert(
+            traced,
+            source="pytorch",
+            inputs=[ct.TensorType(shape=(1, 3))],
+            convert_to=backend[0],
+        )
+
+        ops = mlmodel._mil_program.functions["main"].operations
+        linear_ops = [op for op in ops if op.op_type == "linear"]
+        assert len(linear_ops) == 2
+
+        # MODULE_PATH keeps each ModuleList container's attribute name + index.
+        assert sorted(
+            op.scopes[ScopeSource.TORCHSCRIPT_MODULE_PATH] for op in linear_ops
+        ) == [["layers_a", "0"], ["layers_b", "0"]]
+
+        # MODULE_NAME drops the container name.
+        assert sorted(
+            op.scopes[ScopeSource.TORCHSCRIPT_MODULE_NAME][:-1] for op in linear_ops
+        ) == [["0"], ["0"]]
+
+        assert {
+            tuple(op.scopes.get(ScopeSource.TORCHSCRIPT_MODULE_PATH, [])) for op in ops
+        } == {("layers_a", "0"), ("layers_b", "0"), ()}
 
 
 @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
@@ -394,6 +437,34 @@ class TestPyTorchConverterExamples:
             convert_to='milinternal'
         )
         assert isinstance(model, ct.converters.mil.Program)
+
+    @staticmethod
+    def test_convert_does_not_modify_torchscript_model(tmpdir):
+        """
+        ct.convert must leave the user's TorchScript graph untouched, so the
+        traced model can still be saved and loaded afterwards (issue #2215).
+        """
+
+        class Network(torch.nn.Module):
+            def forward(self, x):
+                a, b, c = x.chunk(3)
+                return (a * b) + c
+
+        example_input = torch.rand(6, 4)
+        traced_model = torch.jit.trace(Network().eval(), example_input)
+        graph_before = str(traced_model.forward.graph)
+
+        ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(name="input", shape=example_input.shape)],
+            convert_to="milinternal",
+        )
+
+        assert str(traced_model.forward.graph) == graph_before
+        path = os.path.join(tmpdir, "traced_model.pt")
+        torch.jit.save(traced_model, path)
+        loaded_model = torch.jit.load(path)
+        torch.testing.assert_close(loaded_model(example_input), traced_model(example_input))
 
     @staticmethod
     def _get_classifier_model():

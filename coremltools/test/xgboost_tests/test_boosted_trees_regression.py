@@ -7,7 +7,7 @@ import json
 import tempfile
 import unittest
 
-from ..utils import load_boston
+from ..utils import load_test_data
 from coremltools._deps import _HAS_SKLEARN, _HAS_XGBOOST
 from coremltools.models.utils import _macos_version
 
@@ -34,7 +34,7 @@ class GradientBoostingRegressorScikitTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         scikit_model = GradientBoostingRegressor(random_state=1)
         scikit_model.fit(scikit_data["data"], scikit_data["target"])
 
@@ -107,7 +107,7 @@ class BoostedTreeRegressorXGboostTest(unittest.TestCase):
         if not _HAS_SKLEARN:
             return
 
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         dtrain = xgboost.DMatrix(
             scikit_data["data"],
             label=scikit_data["target"],

@@ -12,6 +12,11 @@ from coremltools.converters.mil.mil.types.symbolic import is_compatible_symbolic
 register_op = SSAOpRegistry.register_op
 
 
+def _get_upsample_output_dimension(output_size):
+    output_size_value = get_param_val(output_size)
+    return get_new_symbol() if output_size_value is None else int(output_size_value)
+
+
 # This file contains the Torch dialect of SSA. Briefly, these ops are only
 # understandable in the Torch frontend and not acceptable in the standard op set.
 # No backend would support any of the op here. These ops exist to facilitate
@@ -67,8 +72,8 @@ class torch_upsample_nearest_neighbor(Operation):
                 'input to the "torch_upsample_nearest_neighbor" op must have rank 4'
             )
         ret_shape = list(self.x.shape)
-        ret_shape[2] = get_new_symbol()
-        ret_shape[3] = get_new_symbol()
+        ret_shape[2] = _get_upsample_output_dimension(self.output_height)
+        ret_shape[3] = _get_upsample_output_dimension(self.output_width)
         return types.tensor(self.x.dtype, ret_shape)
 
 # torch_upsample_bilinear is dealing with upsample layer which has flexible input shape,
@@ -126,8 +131,8 @@ class torch_upsample_bilinear(Operation):
                 'input to the "torch_upsample_bilinear" op must have rank 4'
             )
         ret_shape = list(self.x.shape)
-        ret_shape[2] = get_new_symbol()
-        ret_shape[3] = get_new_symbol()
+        ret_shape[2] = _get_upsample_output_dimension(self.output_height)
+        ret_shape[3] = _get_upsample_output_dimension(self.output_width)
         return types.tensor(self.x.dtype, ret_shape)
 
 # torch_tensor_assign is dealing with the tensor assignment operation

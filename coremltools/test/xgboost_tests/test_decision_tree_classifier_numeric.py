@@ -11,7 +11,7 @@ import pandas as pd
 import pytest
 from packaging.version import Version
 
-from ..utils import load_boston
+from ..utils import load_test_data
 from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
 from coremltools.models.utils import (_is_macos, _macos_version,
                                       evaluate_classifier)
@@ -23,7 +23,7 @@ if _HAS_SKLEARN:
 
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
-class DecisionTreeClassificationBostonHousingScikitNumericTest(unittest.TestCase):
+class DecisionTreeClassificationScikitNumericTest(unittest.TestCase):
     def _check_metrics(self, metrics, params={}):
         self.assertEqual(
             metrics["num_errors"],
@@ -49,13 +49,13 @@ class DecisionTreeClassificationBostonHousingScikitNumericTest(unittest.TestCase
 
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
-class DecisionTreeBinaryClassificationBostonHousingScikitNumericTest(
-    DecisionTreeClassificationBostonHousingScikitNumericTest
+class DecisionTreeBinaryClassificationScikitNumericTest(
+    DecisionTreeClassificationScikitNumericTest
 ):
     @classmethod
     def setUpClass(self):
         # Load data and train model
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         self.scikit_data = scikit_data
         self.X = scikit_data["data"].astype("f").astype(
             "d"
@@ -91,13 +91,13 @@ class DecisionTreeBinaryClassificationBostonHousingScikitNumericTest(
 
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
-class DecisionTreeMultiClassClassificationBostonHousingScikitNumericTest(
-    DecisionTreeClassificationBostonHousingScikitNumericTest
+class DecisionTreeMultiClassClassificationScikitNumericTest(
+    DecisionTreeClassificationScikitNumericTest
 ):
     @classmethod
     def setUpClass(self):
         # Load data and train model
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         num_classes = 3
         self.X = scikit_data["data"].astype("f").astype(
             "d"

@@ -8,7 +8,7 @@ import unittest
 import pandas as pd
 from packaging.version import Version
 
-from ..utils import load_boston
+from ..utils import load_test_data
 from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
 from coremltools.converters.sklearn import convert
 from coremltools.models.utils import (_is_macos, _macos_version,
@@ -21,14 +21,14 @@ if _HAS_SKLEARN:
 
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
-class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase):
+class GradientBoostingRegressorScikitNumericTest(unittest.TestCase):
 
     @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
     @unittest.skipIf(_SKLEARN_VERSION >= Version("0.22"),
         "categorical_features parameter to OneHotEncoder() deprecated after SciKit Learn 0.22."
     )
-    def test_boston_OHE_plus_normalizer(self):
-        data = load_boston()
+    def test_OHE_plus_normalizer(self):
+        data = load_test_data()
 
         pl = Pipeline(
             [
@@ -52,9 +52,9 @@ class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase)
     @unittest.skipIf(_SKLEARN_VERSION >= Version("0.22"),
         "categorical_features parameter to OneHotEncoder() deprecated after SciKit Learn 0.22."
     )
-    def _test_boston_OHE_plus_trees(self, loss='ls'):
+    def _test_OHE_plus_trees(self, loss='ls'):
 
-        data = load_boston()
+        data = load_test_data()
 
         pl = Pipeline(
             [
@@ -78,8 +78,8 @@ class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase)
 
             assert result["max_error"] < 0.0001
 
-    def test_boston_OHE_plus_trees(self):
-        self._test_boston_OHE_plus_trees()
+    def test_OHE_plus_trees(self):
+        self._test_OHE_plus_trees()
 
-    def test_boston_OHE_plus_trees_with_huber_loss(self):
-        self._test_boston_OHE_plus_trees(loss='huber')
+    def test_OHE_plus_trees_with_huber_loss(self):
+        self._test_OHE_plus_trees(loss='huber')

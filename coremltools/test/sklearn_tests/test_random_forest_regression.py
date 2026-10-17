@@ -6,7 +6,7 @@
 
 import unittest
 
-from ..utils import load_boston
+from ..utils import load_test_data
 from coremltools._deps import _HAS_SKLEARN
 
 if _HAS_SKLEARN:
@@ -26,7 +26,7 @@ class RandomForestRegressorScikitTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         # n_estimators default changed >= 0.22. Specify explicitly to match <0.22 behavior.
         scikit_model = RandomForestRegressor(random_state=1, n_estimators=10)
         scikit_model.fit(scikit_data["data"], scikit_data["target"])

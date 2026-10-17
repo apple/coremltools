@@ -11,7 +11,7 @@ import pandas as pd
 import pytest
 from packaging.version import Version
 
-from ..utils import load_boston
+from ..utils import load_test_data
 from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
 from coremltools.models.utils import (_is_macos, _macos_version,
                                       evaluate_classifier)
@@ -23,7 +23,7 @@ if _HAS_SKLEARN:
 
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
-class RandomForestClassificationBostonHousingScikitNumericTest(unittest.TestCase):
+class RandomForestClassificationScikitNumericTest(unittest.TestCase):
     def _check_metrics(self, metrics, params={}):
         self.assertEqual(
             metrics["num_errors"],
@@ -49,8 +49,8 @@ class RandomForestClassificationBostonHousingScikitNumericTest(unittest.TestCase
 
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
-class RandomForestBinaryClassifierBostonHousingScikitNumericTest(
-    RandomForestClassificationBostonHousingScikitNumericTest
+class RandomForestBinaryClassifierScikitNumericTest(
+    RandomForestClassificationScikitNumericTest
 ):
     @classmethod
     def setUpClass(self):
@@ -58,7 +58,7 @@ class RandomForestBinaryClassifierBostonHousingScikitNumericTest(
         Set up the unit test by loading the dataset and training a model.
         """
         # Load data and train model
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         self.X = scikit_data["data"].astype("f").astype(
             "d"
         )  ## scikit-learn downcasts data
@@ -95,13 +95,13 @@ class RandomForestBinaryClassifierBostonHousingScikitNumericTest(
 
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
-class RandomForestMultiClassClassificationBostonHousingScikitNumericTest(
-    RandomForestClassificationBostonHousingScikitNumericTest
+class RandomForestMultiClassClassificationScikitNumericTest(
+    RandomForestClassificationScikitNumericTest
 ):
     @classmethod
     def setUpClass(self):
         # Load data and train model
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         self.X = scikit_data["data"].astype("f").astype(
             "d"
         )  ## scikit-learn downcasts data

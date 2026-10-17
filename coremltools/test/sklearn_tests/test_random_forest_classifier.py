@@ -7,7 +7,7 @@ import unittest
 
 import numpy as np
 
-from ..utils import load_boston
+from ..utils import load_test_data
 from coremltools._deps import _HAS_SKLEARN
 
 if _HAS_SKLEARN:
@@ -27,7 +27,7 @@ class RandomForestBinaryClassifierScikitTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         # n_estimators default changed >= 0.22. Specify explicitly to match <0.22 behavior.
         scikit_model = RandomForestClassifier(random_state=1, n_estimators=10)
         target = 1 * (scikit_data["target"] > scikit_data["target"].mean())
@@ -101,7 +101,7 @@ class RandomForestMultiClassClassifierScikitTest(unittest.TestCase):
         """
         # n_estimators default changed >= 0.22. Specify explicitly to match <0.22 behavior.
         scikit_model = RandomForestClassifier(random_state=1, n_estimators=10)
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         t = scikit_data["target"]
         target = np.digitize(t, np.histogram(t)[1]) - 1
         scikit_model.fit(scikit_data["data"], target)

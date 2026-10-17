@@ -153,9 +153,14 @@ class cumsum(Operation):
             data = np.flip(data, axis=axis)
         data = np.cumsum(data, axis=axis)
         if exclusive:
-            zero_shape = np.copy(data.shape)
+            # Exclusive prefix sum: shift the inclusive cumsum one step along ``axis``
+            # and fill the first position with zero (out[0] = 0, out[i] = sum(x[:i])).
+            zero_shape = list(data.shape)
             zero_shape[axis] = 1
-            data = np.concatenate((np.zeros(zero_shape, data)), axis=axis)
+            zeros = np.zeros(zero_shape, dtype=data.dtype)
+            slc = [slice(None)] * data.ndim
+            slc[axis] = slice(0, -1)
+            data = np.concatenate((zeros, data[tuple(slc)]), axis=axis)
         if reverse:
             data = np.flip(data, axis=axis)
         return data
@@ -1228,7 +1233,12 @@ class split(Operation):
             return self.x.sym_val
 
         split_indices = np.cumsum(sizes).astype(np.int32)
-        return tuple(np.split(self.x.sym_val, split_indices[:-1], axis=self.axis.val))
+        outputs = np.split(self.x.sym_val, split_indices[:-1], axis=self.axis.val)
+        dtype = types.nptype_from_builtin(self.x.dtype)
+        return tuple(
+            output if any_symbolic(output) else output.astype(dtype, copy=False)
+            for output in outputs
+        )
 
 
 @register_op

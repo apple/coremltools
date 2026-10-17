@@ -65,4 +65,15 @@
     return self;
 }
 
+- (void)dealloc {
+    // Core ML may release the multi-array on one of its private queues. Clear
+    // the Python owner while holding the GIL so py::array does not decrement
+    // its reference count from a non-Python thread.
+    py::handle array = m_array.release();
+    if (array) {
+        py::gil_scoped_acquire gil;
+        array.dec_ref();
+    }
+}
+
 @end

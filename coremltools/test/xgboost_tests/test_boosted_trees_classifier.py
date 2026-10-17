@@ -9,7 +9,7 @@ import unittest
 
 import numpy as np
 
-from ..utils import load_boston
+from ..utils import load_test_data
 from coremltools._deps import _HAS_SKLEARN, _HAS_XGBOOST
 from coremltools.converters import sklearn as skl_converter
 from coremltools.models.utils import _macos_version
@@ -34,7 +34,7 @@ class GradientBoostingBinaryClassifierScikitTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         scikit_model = GradientBoostingClassifier(random_state=1)
         target = scikit_data["target"] > scikit_data["target"].mean()
         scikit_model.fit(scikit_data["data"], target)
@@ -106,7 +106,7 @@ class GradientBoostingMulticlassClassifierScikitTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         scikit_model = GradientBoostingClassifier(random_state=1)
         t = scikit_data["target"]
         target = np.digitize(t, np.histogram(t)[1]) - 1
@@ -181,7 +181,7 @@ class GradientBoostingBinaryClassifierXGboostTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         self.xgb_model = xgboost.XGBClassifier()
         target = scikit_data["target"] > scikit_data["target"].mean()
         self.xgb_model.fit(scikit_data["data"], target)
@@ -244,7 +244,7 @@ class GradientBoostingMulticlassClassifierXGboostTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         t = scikit_data["target"]
         target = np.digitize(t, np.histogram(t)[1]) - 1
         dtrain = xgboost.DMatrix(

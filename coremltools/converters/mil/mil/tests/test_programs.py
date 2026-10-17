@@ -13,6 +13,7 @@ from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, Program, types
 from coremltools.converters.mil.mil.passes.tests.test_passes import CONSTEXPR_FUNCS
 from coremltools.converters.mil.mil.scope import ScopeInfo, ScopeSource, add_graph_pass_scope
+from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.mil.var import ComplexVar
 
 np.random.seed(0)
@@ -485,6 +486,28 @@ class TestMILBasic:
             return mb.add(x=x, y=8.9)
 
         assert len(prog._get_dialect_namespaces()) == 0
+
+    @staticmethod
+    @pytest.mark.parametrize("mode", ["nearest", "bilinear"])
+    def test_torch_upsample_preserves_static_output_dimension(mode):
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(1, 2, 3, 1), dtype=types.fp32),
+                mb.placeholder(shape=(), dtype=types.int32, allow_rank0_input=True),
+            ]
+        )
+        def prog(x, output_height):
+            if mode == "nearest":
+                return mb.torch_upsample_nearest_neighbor(
+                    x=x, output_height=output_height, output_width=1
+                )
+            return mb.torch_upsample_bilinear(
+                x=x, output_height=output_height, output_width=1
+            )
+
+        output_shape = prog.functions["main"].outputs[0].shape
+        assert is_symbolic(output_shape[2])
+        assert output_shape[3] == 1
 
     @staticmethod
     def test_invalid_dialect_namespaces_error_out():

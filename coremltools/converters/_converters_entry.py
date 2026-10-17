@@ -620,6 +620,14 @@ def convert(
 
     if pass_pipeline is None:
         pass_pipeline = PassPipeline()
+    elif not isinstance(pass_pipeline, PassPipeline):
+        # Otherwise the wrong type is only noticed much later, as an AttributeError
+        # from inside the pass machinery, which does not name the argument.
+        raise TypeError(
+            "Unrecognized value of argument 'pass_pipeline': {}. "
+            "It needs to be an instance of 'coremltools.PassPipeline'. "
+            "For example, coremltools.PassPipeline.EMPTY".format(pass_pipeline)
+        )
     if not need_fp16_cast_pass:
         pass_pipeline.remove_passes({"common::add_fp16_cast", "common::add_int16_cast"})
     if isinstance(compute_precision, FP16ComputePrecision):

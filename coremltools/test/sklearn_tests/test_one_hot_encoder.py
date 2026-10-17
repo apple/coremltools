@@ -9,7 +9,7 @@ from copy import copy
 import numpy as np
 from packaging.version import Version
 
-from ..utils import load_boston
+from ..utils import load_test_data
 from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
 from coremltools.models.utils import (_is_macos, _macos_version,
                                       evaluate_transformer)
@@ -122,8 +122,8 @@ class OneHotEncoderScikitTest(unittest.TestCase):
     @unittest.skipIf(_SKLEARN_VERSION >= Version("0.22"),
         "categorical_features parameter to OneHotEncoder() deprecated after SciKit Learn 0.22."
     )
-    def test_boston_OHE(self):
-        data = load_boston()
+    def test_OHE(self):
+        data = load_test_data()
 
         for categorical_features in [[3], [8], [3, 8], [8, 3]]:
             model = OneHotEncoder(
@@ -147,8 +147,8 @@ class OneHotEncoderScikitTest(unittest.TestCase):
     @unittest.skipIf(_SKLEARN_VERSION >= Version("0.22"),
         "categorical_features parameter to OneHotEncoder() deprecated after SciKit Learn 0.22."
     )
-    def test_boston_OHE_pipeline(self):
-        data = load_boston()
+    def test_OHE_pipeline(self):
+        data = load_test_data()
 
         for categorical_features in [[3], [8], [3, 8], [8, 3]]:
             # Put it in a pipeline so that we can test whether the output dimension

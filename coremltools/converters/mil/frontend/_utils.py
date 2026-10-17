@@ -622,6 +622,11 @@ def get_perm_transpose_einsum(src_axes: List[int], dst_axes: List[int]) -> List[
 
 
 def solve_transpose_einsum(src_parsed_vector: List[int], dst_parsed_vector: List[int], var: Var, name: str) -> Var:
+    if len(dst_parsed_vector) == 0:
+        # The output is a scalar, e.g. "ii->", so solve_sum_einsum has already reduced
+        # every axis away and there is nothing left to permute. mb.transpose cannot take
+        # an empty perm, so pass the value through instead.
+        return mb.identity(x=var, name=name)
     return mb.transpose(x=var, perm=get_perm_transpose_einsum(src_parsed_vector, dst_parsed_vector), name=name)
 
 

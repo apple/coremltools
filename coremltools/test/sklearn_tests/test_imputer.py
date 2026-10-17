@@ -9,7 +9,7 @@ import numpy as np
 import numpy.random as rn
 from packaging.version import Version
 
-from ..utils import load_boston
+from ..utils import load_test_data
 from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
 from coremltools.models.utils import (_is_macos, _macos_version,
                                       evaluate_transformer)
@@ -40,8 +40,8 @@ class NumericalImputerTestCase(unittest.TestCase):
     Unit test class for testing scikit-learn converter.
     """
 
-    def test_conversion_boston(self):
-        scikit_data = load_boston()
+    def test_conversion_generated_data(self):
+        scikit_data = load_test_data()
 
         sh = scikit_data["data"].shape
 

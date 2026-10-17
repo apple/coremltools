@@ -353,6 +353,20 @@ class TestGraphPassManagement:
 
         return TestModel().eval()
 
+    @pytest.mark.parametrize("bad_pipeline", ["default", 3, ["common::const_elimination"]])
+    def test_pass_pipeline_rejects_a_non_pipeline(self, bad_pipeline):
+        """A wrong type used to surface later as an AttributeError from the pass machinery."""
+        model = self._get_test_model()
+        example_input = torch.rand(1, 1, 28, 28)
+        traced_model = torch.jit.trace(model, example_input)
+        with pytest.raises(TypeError, match="Unrecognized value of argument 'pass_pipeline'"):
+            ct.convert(
+                traced_model,
+                inputs=[ct.TensorType(shape=example_input.shape)],
+                convert_to="mlprogram",
+                pass_pipeline=bad_pipeline,
+            )
+
     def test_default_pipeline(self):
         model = self._get_test_model()
         example_input = torch.rand(1, 1, 28, 28)

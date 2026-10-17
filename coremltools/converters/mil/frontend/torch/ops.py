@@ -20,7 +20,7 @@ from coremltools.converters.mil.frontend import _utils
 from coremltools.converters.mil.frontend.milproto.load import TranscriptionContext
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Symbol, types
-from coremltools.converters.mil.mil.block import is_current_opset_version_compatible_with
+from coremltools.converters.mil.mil.block import Block, is_current_opset_version_compatible_with
 from coremltools.converters.mil.mil.ops.defs._utils import (
     MAX_SIZE_CONSTANT_FOLDING,
     promote_input_dtypes,
@@ -148,10 +148,11 @@ def convert_single_node(context: TranscriptionContext, node: InternalTorchIRNode
 
     scopes = []
     if context.frontend == TorchFrontend.TORCHSCRIPT:
-        scope_name, scope_type = node.get_scope_info()
+        scope_name, scope_type, module_path = node.get_scope_info()
         scopes = [
             ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=scope_type),
             ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=scope_name),
+            ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_PATH, data=module_path),
         ]
     elif context.frontend in TORCH_EXPORT_BASED_FRONTENDS:
         scopes = [
@@ -625,6 +626,209 @@ def outer(context, node):
 
 
 @register_torch_op
+def tensordot(context, node):
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, expected=4)
+        return inputs[0], inputs[1], inputs[2], inputs[3]
+
+    def _translate_torch_args(x, y, dims_x, dims_y) -> Tuple[List[int], List[int]]:
+        def _to_axes(dims, rank: int, name: str) -> List[int]:
+            if isinstance(dims, (list, tuple)):
+                # A dims list built at run time, e.g. from a prim::ListConstruct whose
+                # elements are not all const, binds to a python list of scalar Vars
+                # instead of to a single const Var.
+                values = []
+                for dim in dims:
+                    if isinstance(dim, Var):
+                        if dim.val is None:
+                            raise ValueError(f"tensordot only supports a const {name}")
+                        values.append(dim.val)
+                    else:
+                        values.append(dim)
+            elif isinstance(dims, Var):
+                if dims.val is None:
+                    raise ValueError(f"tensordot only supports a const {name}")
+                values = np.atleast_1d(dims.val)
+            else:
+                values = np.atleast_1d(dims)
+
+            axes = []
+            for value in values:
+                axis = int(value)
+                if not -rank <= axis < rank:
+                    raise ValueError(
+                        f"tensordot {name} {axis} is out of range for a rank {rank} input"
+                    )
+                axes.append(axis % rank)
+            if len(set(axes)) != len(axes):
+                raise ValueError(f"tensordot got a repeated dimension in {name}: {axes}")
+            return axes
+
+        axes_x = _to_axes(dims_x, x.rank, "dims_self")
+        axes_y = _to_axes(dims_y, y.rank, "dims_other")
+        if len(axes_x) != len(axes_y):
+            raise ValueError(
+                "tensordot must contract as many dimensions in dims_self as in dims_other, "
+                f"got {len(axes_x)} and {len(axes_y)}"
+            )
+        return axes_x, axes_y
+
+    def _contracted_volume(x, y, axes_x, axes_y) -> int:
+        volume = 1
+        for axis_x, axis_y in zip(axes_x, axes_y):
+            size_x = x.shape[axis_x]
+            size_y = y.shape[axis_y]
+            if is_symbolic(size_x) or is_symbolic(size_y):
+                raise ValueError(
+                    "tensordot does not support contracting a symbolic dimension, got "
+                    f"dimensions {axis_x} and {axis_y}."
+                )
+            if size_x != size_y:
+                raise ValueError(
+                    f"tensordot contracts dimensions {axis_x} and {axis_y}, so they "
+                    f"must match, but got {size_x} and {size_y}."
+                )
+            volume *= size_x
+        return volume
+
+    def _as_matrix(var, leading_axes: List[int], trailing_axes: List[int], shape) -> Var:
+        perm = leading_axes + trailing_axes
+        if perm != list(range(var.rank)):
+            var = mb.transpose(x=var, perm=perm)
+        return mb.reshape(x=var, shape=shape)
+
+    def _output_shape(x, y, free_x: List[int], free_y: List[int]):
+        static_shape = [x.shape[axis] for axis in free_x] + [y.shape[axis] for axis in free_y]
+        if not any_symbolic(static_shape):
+            return static_shape
+        # A free dimension is only known at run time, so read the sizes back off the
+        # inputs and assemble the target shape as a tensor.
+        sizes = []
+        for var, free_axes in ((x, free_x), (y, free_y)):
+            if free_axes:
+                sizes.append(mb.gather(x=mb.shape(x=var), indices=free_axes, axis=0))
+        return mb.cast(x=mb.concat(values=sizes, axis=0), dtype="int32")
+
+    x, y, dims_x, dims_y = _parse_positional_args(context, node)
+    x, y = promote_input_dtypes([x, y])
+    axes_x, axes_y = _translate_torch_args(x, y, dims_x, dims_y)
+
+    free_x = [axis for axis in range(x.rank) if axis not in axes_x]
+    free_y = [axis for axis in range(y.rank) if axis not in axes_y]
+    volume = _contracted_volume(x, y, axes_x, axes_y)
+
+    # Gather the contracted dimensions together so the contraction becomes a single
+    # matmul: self -> (free volume, contracted volume), other -> (contracted volume,
+    # free volume). Reshaping the free dimensions to -1 keeps symbolic sizes intact.
+    x_matrix = _as_matrix(x, free_x, axes_x, [-1, volume])
+    y_matrix = _as_matrix(y, axes_y, free_y, [volume, -1])
+    product = mb.matmul(x=x_matrix, y=y_matrix)
+
+    if free_x or free_y:
+        result = mb.reshape(x=product, shape=_output_shape(x, y, free_x, free_y), name=node.name)
+    else:
+        # Everything was contracted, so the matmul left a 1x1 matrix holding a scalar.
+        result = mb.squeeze(x=product, axes=[0, 1], name=node.name)
+    context.add(result)
+
+
+@register_torch_op(torch_alias=["_cdist_forward"])
+def cdist(context, node):
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected={TorchFrontend.TORCHSCRIPT: 4},
+            min_expected={TorchFrontend.TORCHEXPORT: 2, TorchFrontend.EXECUTORCH: 2},
+        )
+        nargs = len(inputs)
+
+        x1 = inputs[0]
+        x2 = inputs[1]
+        p = inputs[2] if nargs > 2 else 2.0
+        compute_mode = inputs[3] if nargs > 3 else None
+
+        return x1, x2, p, compute_mode
+
+    def _parse_keyword_args(context, node, p, compute_mode) -> Tuple[Var]:
+        p = _get_kwinputs(context, node, "p", default=[p])[0]
+        compute_mode = _get_kwinputs(context, node, "compute_mode", default=[compute_mode])[0]
+        return p, compute_mode
+
+    def _translate_torch_args(p, compute_mode) -> Tuple[float, Optional[int]]:
+        if isinstance(p, Var):
+            p = p.val
+        if isinstance(compute_mode, Var):
+            compute_mode = compute_mode.val
+
+        p = float(p)
+        if p < 0.0 or _math.isnan(p):
+            raise ValueError("cdist only supports non-negative p values")
+        if compute_mode not in (None, 0, 1, 2):
+            raise ValueError(f"Unsupported cdist compute_mode: {compute_mode}")
+        return p, compute_mode
+
+    def _use_matrix_multiplication(x1, x2, p, compute_mode) -> bool:
+        if p != 2.0 or compute_mode == 2:
+            return False
+        if compute_mode == 1:
+            return True
+
+        num_x1_points = x1.shape[-2]
+        num_x2_points = x2.shape[-2]
+        if is_symbolic(num_x1_points) or is_symbolic(num_x2_points):
+            return True
+        return num_x1_points > 25 or num_x2_points > 25
+
+    def _euclidean_distance_with_matmul(x1, x2):
+        x1_squared = mb.reduce_sum(x=mb.mul(x=x1, y=x1), axes=[-1], keep_dims=True)
+        x2_squared = mb.reduce_sum(x=mb.mul(x=x2, y=x2), axes=[-1], keep_dims=True)
+        cross_product = mb.matmul(x=x1, y=x2, transpose_y=True)
+        squared_distance = mb.add(
+            x=mb.sub(x=x1_squared, y=mb.mul(x=cross_product, y=2.0)),
+            y=mb.transpose(x=x2_squared, perm=[*range(x2.rank - 2), x2.rank - 1, x2.rank - 2]),
+        )
+        squared_distance = mb.maximum(x=squared_distance, y=0.0)
+        return mb.sqrt(x=squared_distance, name=node.name)
+
+    def _pairwise_distance(x1, x2, p):
+        x1 = mb.expand_dims(x=x1, axes=[-2])
+        x2 = mb.expand_dims(x=x2, axes=[-3])
+        difference = mb.abs(x=mb.sub(x=x1, y=x2))
+
+        if p == 0.0:
+            nonzero = mb.not_equal(x=difference, y=0.0)
+            nonzero = mb.cast(x=nonzero, dtype=builtin_to_string(x1.dtype))
+            return mb.reduce_sum(x=nonzero, axes=[-1], name=node.name)
+        # TorchScript's float constant conversion represents infinity as the
+        # largest finite fp32 value.
+        if p > VALUE_CLOSE_TO_INFINITY:
+            return mb.reduce_max(x=difference, axes=[-1], name=node.name)
+        if p == 1.0:
+            return mb.reduce_sum(x=difference, axes=[-1], name=node.name)
+        if p == 2.0:
+            return mb.reduce_l2_norm(x=difference, axes=[-1], name=node.name)
+
+        difference, exponent = promote_input_dtypes([difference, p])
+        powered_difference = mb.pow(x=difference, y=exponent)
+        summed_difference = mb.reduce_sum(x=powered_difference, axes=[-1])
+        return mb.pow(x=summed_difference, y=1.0 / p, name=node.name)
+
+    x1, x2, p, compute_mode = _parse_positional_args(context, node)
+    p, compute_mode = _parse_keyword_args(context, node, p, compute_mode)
+    p, compute_mode = _translate_torch_args(p, compute_mode)
+
+    if x1.rank < 2 or x2.rank < 2:
+        raise ValueError("cdist only supports input tensors with rank >= 2")
+
+    if _use_matrix_multiplication(x1, x2, p, compute_mode):
+        res = _euclidean_distance_with_matmul(x1, x2)
+    else:
+        res = _pairwise_distance(x1, x2, p)
+    context.add(res)
+
+
+@register_torch_op
 def cross(context, node):
     inputs = _get_inputs(context, node, expected=3)
     x = inputs[0]
@@ -780,8 +984,16 @@ def narrow(context, node):
     end = list(x.shape)
     end[dim.val] = start.val + length.val
 
+    # torch.narrow accepts a negative start, which counts from the end of the
+    # dim. Such a slice reaches the end of the dim exactly when start + length
+    # is 0, which slice_by_index would read as the absolute index 0 and turn
+    # into an empty slice, so mask that end off instead.
+    end_mask = [False] * len(x.shape)
+    if start.val < 0 and end[dim.val] == 0:
+        end_mask[dim.val] = True
+
     context.add(
-        mb.slice_by_index(x=x, begin=begin, end=end, name=node.name)
+        mb.slice_by_index(x=x, begin=begin, end=end, end_mask=end_mask, name=node.name)
     )
 
 
@@ -877,6 +1089,17 @@ def unflatten(context, node):
         raise ValueError("In 'unflatten' op, the 'dim' must be provided.")
     if dim < 0:
         dim += x.rank
+
+    if isinstance(unflattened_size_var, (list, tuple)):
+        # A size read off the input, e.g. x.unflatten(1, (2, x.shape[1] // 2)), comes
+        # from a prim::ListConstruct whose elements are only known at run time, so it
+        # binds to a python list of scalar Vars instead of to a single const Var.
+        # Stack them into the rank 1 shape tensor that concat needs.
+        unflattened_size_var = mb.concat(
+            values=[mb.expand_dims(x=mb.cast(x=size, dtype="int32"), axes=[0])
+                    for size in unflattened_size_var],
+            axis=0,
+        )
 
     x_shape = mb.shape(x=x)
     pre_shape = mb.slice_by_index(x=x_shape, begin=[0], end=[dim])
@@ -1117,14 +1340,17 @@ def addmm(context, node):
     if isinstance(alpha, Var):
         alpha = alpha.val
 
+    # beta and alpha are torch scalars, so they may be ints even for float tensors
     if beta != 1.0:
         # Apply beta scaling factor to the input.
+        x, beta = promote_input_dtypes([x, beta])
         x = mb.mul(x=x, y=beta)
 
     matmul = mb.matmul(x=mat1, y=mat2)
 
     if alpha != 1.0:
         # Apply alpha scaling factor to the matrix multiplicaiton
+        alpha, matmul = promote_input_dtypes([alpha, matmul])
         matmul = mb.mul(x=alpha, y=matmul)
 
     result = mb.add(x=x, y=matmul, name=node.name)
@@ -1169,6 +1395,8 @@ def baddbmm(context, node):
 
     if alpha != 1.0:
         # Apply scaling factor alpha to the input.
+        # alpha is a torch scalar, so it may be an int even for float tensors
+        alpha, batch1 = promote_input_dtypes([alpha, batch1])
         batch1 = mb.mul(x=alpha, y=batch1, name=batch1.name + "_scaled")
         context.add(batch1)
 
@@ -1589,13 +1817,25 @@ def prelu(context, node):
         alpha = alpha.val
         alpha = np.ones((x.shape[1],)) * alpha
 
-    if x.rank <= 2:
-        axes = [1, 2] if x.rank == 1 else [2]
+    # mb.prelu accepts a per-channel alpha only when x is rank 4. For rank 3 it
+    # additionally requires every alpha value to be identical, which
+    # torch.nn.PReLU(num_parameters=C) does not satisfy. prelu is elementwise, so
+    # expand rank 2 and rank 3 input out to rank 4 rather than to the rank 3
+    # minimum: same result, and inside what mb.prelu supports.
+    axes = None
+    if x.rank == 1:
+        axes = [1, 2]
+    elif x.rank == 2:
+        axes = [2, 3]
+    elif x.rank == 3:
+        axes = [3]
+
+    if axes is None:
+        res = mb.prelu(x=x, alpha=alpha, name=node.name)
+    else:
         x = mb.expand_dims(x=x, axes=axes)
         x = mb.prelu(x=x, alpha=alpha)
         res = mb.squeeze(x=x, axes=axes, name=node.name)
-    else:
-        res = mb.prelu(x=x, alpha=alpha, name=node.name)
 
     context.add(res)
 
@@ -2108,6 +2348,8 @@ def sub(context, node):
         "mean.dim",
         "sum",
         "sum.dim_intlist",
+        "prod",
+        "prod.dim_int",
         "logsumexp",
         "all",
         "all.dim",
@@ -2127,7 +2369,7 @@ def mean(context, node):
             dim = inputs[1] if nargs > 1 else None
             keepdim = inputs[2] if nargs > 2 else False
         else:
-            if node.kind in ("mean", "sum", "all", "any"):
+            if node.kind in ("mean", "sum", "prod", "all", "any"):
                 x = inputs[0]
                 dim = None
                 keepdim = None
@@ -2178,6 +2420,13 @@ def mean(context, node):
 
     node_kind = node.kind.split(".")[0]
     if node_kind in ("all", "any"):
+        # torch treats every non-zero element as true, so casting to int32 and reducing
+        # with min / max would be wrong for non-boolean input: it truncates values in
+        # (-1, 1) to 0 and makes reduce_min / reduce_max compare magnitudes instead of
+        # truthiness
+        if not types.is_bool(x.dtype):
+            x, zero = promote_input_dtypes([x, mb.const(val=0)])
+            x = mb.not_equal(x=x, y=zero)
         x = mb.cast(x=x, dtype="int32")
         kwargs["x"] = x
         if node_kind == "all":
@@ -2190,6 +2439,8 @@ def mean(context, node):
             reduction_op_type = "reduce_mean"
         elif node_kind == "sum":
             reduction_op_type = "reduce_sum"
+        elif node_kind == "prod":
+            reduction_op_type = "reduce_prod"
         else:
             assert node_kind == "logsumexp"
             reduction_op_type = "reduce_log_sum_exp"
@@ -3022,7 +3273,7 @@ def stack(context, node):
     if len(tensors) == 1:
         res = mb.expand_dims(x=tensors[0], axes=[dim], name=node.name)
     else:
-        res = mb.stack(values=tensors, axis=dim, name=node.name)
+        res = mb.stack(values=promote_input_dtypes(tensors), axis=dim, name=node.name)
     context.add(res)
 
 
@@ -4223,6 +4474,264 @@ def upsample_bilinear2d(context, node):
     context.add(upsample_bilinear)
 
 
+def _bicubic_compute_output_size(input_shape, scales_h, scales_w):
+    """Reproduce torch's compute_output_size from scale factors (recompute=False)."""
+    in_h, in_w = input_shape[-2], input_shape[-1]
+    out_h = int(np.floor(in_h * scales_h))
+    out_w = int(np.floor(in_w * scales_w))
+    return [out_h, out_w]
+
+
+def _cubic_convolution1(x, a):
+    """Keys cubic weight for |x| <= 1."""
+    return ((a + 2) * x - (a + 3)) * x * x + 1.0
+
+
+def _cubic_convolution2(x, a):
+    """Keys cubic weight for 1 < |x| < 2."""
+    return ((a * x - 5 * a) * x + 8 * a) * x - 4 * a
+
+
+def _cubic_keys_indices_weights(in_size, out_size, scale, align_corners):
+    """
+    Plain bicubic (antialias=False), Keys coefficient a=-0.75.
+    Matches ATen area_pixel_compute_source_index + cubic_interp1d.
+    """
+    a = -0.75
+    indices = np.zeros((out_size, 4), dtype=np.int32)
+    weights = np.zeros((out_size, 4), dtype=np.float64)
+    for i in range(out_size):
+        if align_corners:
+            src = scale * i
+        else:
+            src = scale * (i + 0.5) - 0.5
+        in_idx = int(np.floor(src))
+        t = src - in_idx
+        tap_idx = np.array([in_idx - 1, in_idx, in_idx + 1, in_idx + 2])
+        indices[i] = np.clip(tap_idx, 0, in_size - 1)
+        weights[i] = [
+            _cubic_convolution2(t + 1, a),
+            _cubic_convolution1(t, a),
+            _cubic_convolution1(1 - t, a),
+            _cubic_convolution2(2 - t, a),
+        ]
+    return indices, weights.astype(np.float32)
+
+
+def _cubic_aa_filter(x, a=-0.5):
+    """ATen HelperInterpCubic::aa_filter (PIL-compatible Keys, a=-0.5)."""
+    x = np.abs(x)
+    if x < 1.0:
+        return _cubic_convolution1(x, a)
+    if x < 2.0:
+        return _cubic_convolution2(x, a)
+    return 0.0
+
+
+def _cubic_aa_indices_weights(in_size, out_size, scale):
+    """
+    Antialiased bicubic (_aa), matching ATen _compute_indices_min_size_weights_aa:
+    variable tap count, per-position normalization, a=-0.5.
+    """
+    a = -0.5
+    interp_size = 4
+    support = (interp_size * 0.5) * scale if scale >= 1.0 else interp_size * 0.5
+    max_interp_size = int(np.ceil(support)) * 2 + 1
+    invscale = 1.0 / scale if scale >= 1.0 else 1.0
+
+    indices = np.zeros((out_size, max_interp_size), dtype=np.int32)
+    weights = np.zeros((out_size, max_interp_size), dtype=np.float64)
+
+    for i in range(out_size):
+        center = scale * (i + 0.5)
+        xmin = builtins.max(int(center - support + 0.5), 0)
+        xsize = builtins.min(int(center + support + 0.5), in_size) - xmin
+        xsize = builtins.min(xsize, max_interp_size)
+        total_w = 0.0
+        for j in range(xsize):
+            w = _cubic_aa_filter((j + xmin - center + 0.5) * invscale, a)
+            weights[i, j] = w
+            total_w += w
+        if total_w != 0.0:
+            weights[i, :xsize] /= total_w
+        indices[i, :xsize] = np.clip(xmin + np.arange(xsize), 0, in_size - 1)
+    return indices, weights.astype(np.float32)
+
+
+@register_torch_op(
+    torch_alias=[
+        "upsample_bicubic2d.vec",
+        "_upsample_bicubic2d_aa",
+        "_upsample_bicubic2d_aa.vec",
+    ],
+)
+def upsample_bicubic2d(context, node):
+    """
+    PyTorch bicubic 2d upsampling with optional antialiasing.
+
+    The ATen implementations use a separable cubic convolution kernel. We mirror
+    them exactly with a decomposition into existing MIL ops (gather + broadcast
+    mul + reduce_sum), one pass per spatial axis.
+
+    Two kernels are needed because ``_aa`` differs from plain bicubic even on
+    upsampling (Keys coefficient a=-0.5 vs -0.75, variable tap count, and
+    per-position weight normalization):
+    - plain:  ``upsample_bicubic2d`` / ``upsample_bicubic2d.vec`` (a=-0.75)
+    - ``_aa``: ``_upsample_bicubic2d_aa`` / ``_upsample_bicubic2d_aa.vec`` (a=-0.5)
+      emitted by torchvision ``Resize(..., BICUBIC)`` (default antialias=True)
+    """
+
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected={TorchFrontend.TORCHSCRIPT: (4, 5)},
+            min_expected={TorchFrontend.TORCHEXPORT: 3, TorchFrontend.EXECUTORCH: 3},
+        )
+        nargs = len(inputs)
+
+        x = inputs[0]
+        output_size = inputs[1]
+        align_corners = bool(inputs[2].val)
+
+        if context.frontend == TorchFrontend.TORCHSCRIPT:
+            if nargs == 4:
+                scale_factors = inputs[3]
+                if scale_factors is None:
+                    scales_h = None
+                    scales_w = None
+                else:
+                    scales_h = scale_factors.val[0]
+                    scales_w = scale_factors.val[1]
+            else:
+                assert nargs == 5, "upsample_bicubic2d expects 4 or 5 inputs"
+                scales_h = inputs[3]
+                scales_w = inputs[4]
+        else:
+            suffix = node.kind.split(".")[-1]
+            if suffix == "vec":
+                scale_factors = None if nargs < 4 else inputs[3]
+                if scale_factors is None:
+                    scales_h = None
+                    scales_w = None
+                else:
+                    scales_h = scale_factors[0]
+                    scales_w = scale_factors[1]
+            else:
+                scales_h = None if nargs < 4 else inputs[3]
+                scales_w = None if nargs < 5 else inputs[4]
+
+        return x, output_size, align_corners, scales_h, scales_w
+
+    def _parse_keyword_args(context, node, scales_h, scales_w) -> Tuple[Var]:
+        scales_h = _get_kwinputs(context, node, "scales_h", default=[scales_h])[0]
+        scales_w = _get_kwinputs(context, node, "scales_w", default=[scales_w])[0]
+        return scales_h, scales_w
+
+    def _translate_torch_args(x, output_size, align_corners, scales_h, scales_w) -> Tuple[Var]:
+        if isinstance(output_size, Var) and output_size.val is not None:
+            # output_size specified (recompute_scale_factor = True)
+            output_size = [int(v) for v in output_size.val]
+        else:
+            output_size = None
+
+        if scales_h is not None and scales_w is not None:
+            # recompute_scale_factor = False: scale factors provided directly
+            if isinstance(scales_h, Var):
+                scales_h = scales_h.val
+            if isinstance(scales_w, Var):
+                scales_w = scales_w.val
+            if scales_h is None or scales_w is None:
+                raise NotImplementedError(
+                    f"Dynamic scale factors are not supported for the upsample op {node.name}"
+                )
+            if output_size is None:
+                output_size = _bicubic_compute_output_size(x.shape, scales_h, scales_w)
+
+        if output_size is None:
+            raise NotImplementedError(
+                "Dynamic output size is not supported for upsample_bicubic2d "
+                f"for the op {node.name}"
+            )
+        return output_size, scales_h, scales_w
+
+    def _cubic_weights(
+        x: Var,
+        output_size,
+        scales_h,
+        scales_w,
+        align_corners: bool,
+        antialias: bool,
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """Compute per-axis gather indices + weights as fp32/int32 constant arrays."""
+        in_h, in_w = x.shape[-2], x.shape[-1]
+
+        def _area_pixel_scale(in_size, out_size, scale):
+            if align_corners:
+                return (in_size - 1) / (out_size - 1) if out_size > 1 else 0.0
+            if scale is not None:
+                # scale factor is a multiplier: scale = 1 / scale_factor
+                return 1.0 / scale
+            return in_size / out_size
+
+        scale_h = _area_pixel_scale(in_h, output_size[0], scales_h)
+        scale_w = _area_pixel_scale(in_w, output_size[1], scales_w)
+
+        if antialias:
+            idx_h, wts_h = _cubic_aa_indices_weights(in_h, output_size[0], scale_h)
+            idx_w, wts_w = _cubic_aa_indices_weights(in_w, output_size[1], scale_w)
+        else:
+            idx_h, wts_h = _cubic_keys_indices_weights(in_h, output_size[0], scale_h, align_corners)
+            idx_w, wts_w = _cubic_keys_indices_weights(in_w, output_size[1], scale_w, align_corners)
+        return idx_h, wts_h, idx_w, wts_w
+
+    def _apply_1d_pass(
+        x: Var, indices: np.ndarray, weights: np.ndarray, axis: int, name: Optional[str] = None
+    ) -> Var:
+        # gather per tap: output (..., out_size, taps)
+        gathered = [
+            mb.gather(x=x, indices=mb.const(val=indices[:, i]), axis=axis)
+            for i in range(indices.shape[1])
+        ]
+        stacked = mb.stack(values=gathered, axis=-1)
+        # broadcast weights to (..., out_size, taps)
+        weight_shape = [1] * stacked.rank
+        weight_shape[axis] = weights.shape[0]
+        weight_shape[-1] = weights.shape[1]
+        weight_const = mb.const(val=weights.reshape(weight_shape))
+        weighted = mb.mul(x=stacked, y=weight_const)
+        reduce_kwargs = {"x": weighted, "axes": [-1]}
+        if name is not None:
+            reduce_kwargs["name"] = name
+        return mb.reduce_sum(**reduce_kwargs)
+
+    x, output_size, align_corners, scales_h, scales_w = _parse_positional_args(context, node)
+
+    if is_symbolic(x.shape[-2]) or is_symbolic(x.shape[-1]):
+        raise NotImplementedError(
+            "Dynamic input spatial shapes are not supported for upsample_bicubic2d "
+            f"for the op {node.name}"
+        )
+
+    scales_h, scales_w = _parse_keyword_args(context, node, scales_h, scales_w)
+    output_size, scales_h, scales_w = _translate_torch_args(
+        x, output_size, align_corners, scales_h, scales_w
+    )
+
+    if x.dtype not in (types.fp16, types.fp32):
+        x = mb.cast(x=x, dtype="fp32")
+
+    antialias = "aa" in node.kind
+    idx_h, wts_h, idx_w, wts_w = _cubic_weights(
+        x, output_size, scales_h, scales_w, align_corners, antialias
+    )
+
+    # horizontal pass along width, then vertical pass along height
+    intermediate = _apply_1d_pass(x, idx_w, wts_w, axis=3)
+    result = _apply_1d_pass(intermediate, idx_h, wts_h, axis=2, name=node.name)
+    context.add(result)
+
+
 @register_torch_op(torch_alias=["upsample_nearest1d.vec"])
 def upsample_nearest1d(context, node):
     """
@@ -4658,20 +5167,55 @@ def _if(context, node):
     true_block = node.blocks[0]
     false_block = node.blocks[1]
 
-    def _true_path():
-        res = convert_block(context, true_block, [])
-        return tuple(res)
+    # Build both blocks ourselves (instead of letting mb.cond build them lazily
+    # through _true_fn/_false_fn) so we can reconcile dtype mismatches between
+    # the two branches before MIL's cond op checks type consistency. PyTorch's
+    # prim::If allows each branch to return a Tensor of a different dtype.
+    dummy_op = mb.const(val=0.0)._op
+    with Block(outer_op=dummy_op, name=Block._get_new_name()) as true_mil_block:
+        true_ret_vars = list(convert_block(context, true_block, []))
+    with Block(outer_op=dummy_op, name=Block._get_new_name()) as false_mil_block:
+        false_ret_vars = list(convert_block(context, false_block, []))
 
-    def _false_path():
-        res = convert_block(context, false_block, [])
-        return tuple(res)
+    for i, (vt, vf) in enumerate(zip(true_ret_vars, false_ret_vars)):
+        if types.is_compatible_type(vt.sym_type, vf.sym_type):
+            continue
+        if not (types.is_tensor(vt.sym_type) or types.is_scalar(vt.sym_type)):
+            continue
+        if not (types.is_tensor(vf.sym_type) or types.is_scalar(vf.sym_type)):
+            continue
+        if vt.shape != vf.shape:
+            continue
+        promoted_dtype = types.promote_types(vt.dtype, vf.dtype)
+        if vt.dtype != promoted_dtype:
+            with true_mil_block:
+                true_ret_vars[i] = mb.cast(x=vt, dtype=builtin_to_string(promoted_dtype))
+        if vf.dtype != promoted_dtype:
+            with false_mil_block:
+                false_ret_vars[i] = mb.cast(x=vf, dtype=builtin_to_string(promoted_dtype))
+
+    true_mil_block.set_outputs(true_ret_vars)
+    false_mil_block.set_outputs(false_ret_vars)
+
+    def _dummy_true_fn(*args):
+        return None
+
+    def _dummy_false_fn(*args):
+        return None
 
     cond = mb.cond(
-        pred=condition, _true_fn=_true_path, _false_fn=_false_path, name=name
+        pred=condition,
+        _true_fn=_dummy_true_fn,
+        _false_fn=_dummy_false_fn,
+        _existing_blocks=[true_mil_block, false_mil_block],
+        name=name,
     )
     # If the condition only returns one item, wrap it in a tuple.
     if not isinstance(cond, (tuple, list)):
         cond = (cond,)
+
+    for block in (true_mil_block, false_mil_block):
+        block.outer_op = cond[0].op
 
     # Make sure the condition returned the expected number of outputs.
     assert len(cond) == len(node.outputs)
@@ -5793,21 +6337,22 @@ def _bitwise_as_logical_if_boolean(context, node, op_name, logical_handler):
         )
 
 
-@register_torch_op(torch_alias=["and"])
+@register_torch_op(torch_alias=["and", "iand"])
 def bitwise_and(context, node):
     _bitwise_as_logical_if_boolean(context, node, "bitwise_and", logical_and)
 
 
-# "or" and "xor" cover the post-sanitize form of "aten::__or__" / "aten::__xor__"
-# which torch.export emits for `tensor | tensor` / `tensor ^ tensor`. These are
-# common when building boolean attention masks (e.g. Gemma combines a causal
-# mask with a padding mask via __or__).
-@register_torch_op(torch_alias=["or"])
+# "or", "ior" and "xor", "ixor" cover the post-sanitize form of
+# "aten::__or__" / "aten::__ior__" / "aten::__xor__" / "aten::__ixor__"
+# which torch.export/torchscript emits for `tensor | tensor`, `tensor |= tensor`,
+# `tensor ^ tensor`, `tensor ^= tensor`. These are common when building boolean
+# attention masks (e.g. Gemma combines a causal mask with a padding mask).
+@register_torch_op(torch_alias=["or", "ior"])
 def bitwise_or(context, node):
     _bitwise_as_logical_if_boolean(context, node, "bitwise_or", logical_or)
 
 
-@register_torch_op(torch_alias=["xor"])
+@register_torch_op(torch_alias=["xor", "ixor"])
 def bitwise_xor(context, node):
     _bitwise_as_logical_if_boolean(context, node, "bitwise_xor", logical_xor)
 
@@ -6138,6 +6683,64 @@ def split(context, node):
         else:
             partial_size = mb.mul(x=tmp, y=remainder)
             split_sizes = mb.concat(values=[whole_sizes, partial_size], axis=0)
+    res = mb.split(x=x, split_sizes=split_sizes, axis=dim, name=node.name)
+    context.add(res, torch_name=node.name)
+
+
+@register_torch_op
+def tensor_split(context, node):
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, min_expected=2)
+        nargs = len(inputs)
+
+        x = inputs[0]
+        indices_or_sections = inputs[1]
+        dim = inputs[2] if nargs > 2 else 0
+        return x, indices_or_sections, dim
+
+    def _parse_keyword_args(context, node, dim) -> Var:
+        dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
+        return dim
+
+    def _translate_torch_args(dim) -> Var:
+        if isinstance(dim, Var):
+            dim = dim.val
+        return dim
+
+    x, indices_or_sections, dim = _parse_positional_args(context, node)
+    dim = _parse_keyword_args(context, node, dim)
+    dim = _translate_torch_args(dim)
+
+    if indices_or_sections.val is None:
+        raise NotImplementedError(
+            "tensor_split is only supported for a constant indices_or_sections."
+        )
+
+    dim_size = x.shape[dim]
+    if is_symbolic(dim_size):
+        raise NotImplementedError(
+            "tensor_split is not supported when the split dimension has a symbolic size."
+        )
+
+    if isinstance(indices_or_sections.val, np.ndarray):
+        # boundaries: 0, each index (clamped into range), dim_size; sizes are the gaps between them
+        boundaries = [0]
+        for index in indices_or_sections.val:
+            index = int(index)
+            if index < 0:
+                index += dim_size
+            boundaries.append(builtins.min(builtins.max(index, 0), dim_size))
+        boundaries.append(dim_size)
+        split_sizes = [boundaries[i + 1] - boundaries[i] for i in range(len(boundaries) - 1)]
+        if builtins.min(split_sizes) < 0:
+            raise NotImplementedError(
+                "tensor_split with non-monotonic indices is not supported."
+            )
+    else:
+        sections = int(indices_or_sections.val)
+        chunk, remainder = divmod(dim_size, sections)
+        split_sizes = [chunk + 1] * remainder + [chunk] * (sections - remainder)
+
     res = mb.split(x=x, split_sizes=split_sizes, axis=dim, name=node.name)
     context.add(res, torch_name=node.name)
 
@@ -6857,20 +7460,29 @@ def amin(context, node):
     _add_amax_amin(context, node, mb.reduce_min)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["argsort.stable"])
 def argsort(context, node):
     def _parse_positional_args(context, node) -> Tuple[Var]:
         inputs = _get_inputs(
             context,
             node,
-            expected={TorchFrontend.TORCHSCRIPT: 3},
+            expected={TorchFrontend.TORCHSCRIPT: (3, 4)},
             min_expected={TorchFrontend.TORCHEXPORT: 1, TorchFrontend.EXECUTORCH: 1},
         )
         nargs = len(inputs)
 
         x = inputs[0]
-        dim = inputs[1] if nargs > 1 else -1
-        descending = inputs[2] if nargs > 2 else False
+        # torch has two schemas here, and the second one inserts an argument
+        # ahead of dim, e.g. for sort:
+        #     aten::sort(Tensor self, int dim=-1, bool descending=False)
+        #     aten::sort.stable(Tensor self, *, bool? stable, int dim=-1,
+        #                       bool descending=False)
+        # torch picks the .stable overload as soon as `stable` is passed at all,
+        # including the semantically default `stable=False`, so dim and
+        # descending have to be read at the matching offset.
+        dim_index = 2 if nargs == 4 else 1
+        dim = inputs[dim_index] if nargs > dim_index else -1
+        descending = inputs[dim_index + 1] if nargs > dim_index + 1 else False
 
         return x, dim, descending
 
@@ -6887,20 +7499,29 @@ def argsort(context, node):
     context.add(argsort)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["sort.stable"])
 def sort(context, node):
     def _parse_positional_args(context, node) -> Tuple[Var]:
         inputs = _get_inputs(
             context,
             node,
-            expected={TorchFrontend.TORCHSCRIPT: 3},
+            expected={TorchFrontend.TORCHSCRIPT: (3, 4)},
             min_expected={TorchFrontend.TORCHEXPORT: 1, TorchFrontend.EXECUTORCH: 1},
         )
         nargs = len(inputs)
 
         x = inputs[0]
-        dim = inputs[1] if nargs > 1 else -1
-        descending = inputs[2] if nargs > 2 else False
+        # torch has two schemas here, and the second one inserts an argument
+        # ahead of dim, e.g. for sort:
+        #     aten::sort(Tensor self, int dim=-1, bool descending=False)
+        #     aten::sort.stable(Tensor self, *, bool? stable, int dim=-1,
+        #                       bool descending=False)
+        # torch picks the .stable overload as soon as `stable` is passed at all,
+        # including the semantically default `stable=False`, so dim and
+        # descending have to be read at the matching offset.
+        dim_index = 2 if nargs == 4 else 1
+        dim = inputs[dim_index] if nargs > dim_index else -1
+        descending = inputs[dim_index + 1] if nargs > dim_index + 1 else False
 
         return x, dim, descending
 
@@ -7175,7 +7796,10 @@ def atan2(context, node):
     x_equal_0 = mb.equal(x=x, y=0.0)
 
     # combined logical expressions
-    ygreater0_and_xless0 = mb.logical_and(x=y_greater_0, y=x_less_0)
+    # y == 0 belongs to the upper half plane, i.e. torch.atan2(0, x) is pi for x < 0,
+    # so the rotation by pi has to cover y >= 0 rather than y > 0
+    y_greater_equal_0 = mb.greater_equal(x=y, y=0.0)
+    ygreater0_and_xless0 = mb.logical_and(x=y_greater_equal_0, y=x_less_0)
     yless0_and_xless0 = mb.logical_and(x=y_less_0, y=x_less_0)
     ygreater0_and_xequal0 = mb.logical_and(x=y_greater_0, y=x_equal_0)
     yless0_and_xequal0 = mb.logical_and(x=y_less_0, y=x_equal_0)
@@ -7196,11 +7820,16 @@ def atan2(context, node):
 
     # if -1e-8 < x < 1e-8, x += 2e-8 to avoid y / 0
     # this shift makes atan2(0, 0) = 0, which is consistent with PyTorch torch.atan2
+    # the shift follows the sign of x, since flipping a tiny negative x to positive would
+    # move atan(y / x_safe) into the other half plane while the quadrant coefficients
+    # above still correct for x < 0
     x0left = mb.greater(x=x, y=-1e-8)
     x0right = mb.less(x=x, y=1e-8)
     x0 = mb.logical_and(x=x0left, y=x0right)
     x0numeric = mb.cast(x=x0, dtype="fp32")
-    safe_shift = mb.mul(x=x0numeric, y=2e-8)
+    x_less_0_numeric = mb.cast(x=x_less_0, dtype="fp32")
+    shift_sign = mb.sub(x=1.0, y=mb.mul(x=x_less_0_numeric, y=2.0))
+    safe_shift = mb.mul(x=mb.mul(x=x0numeric, y=2e-8), y=shift_sign)
     x_safe = mb.add(x=x, y=safe_shift)
 
     # compute atan(y / x)
@@ -7252,6 +7881,20 @@ def clamp(context, node):
     context.add(res, node.name)
 
 
+def _zero_out_band(x: Var, lower: int, upper: int) -> Var:
+    """
+    Zero out the ``band_part(lower, upper)`` band of ``x``, keeping everything else.
+
+    The obvious ``x - band_part(x, lower, upper)`` evaluates to NaN wherever ``x`` holds
+    +/-inf, so select against a mask instead, which does not depend on the values of x.
+    """
+    in_band = mb.band_part(
+        x=mb.fill(shape=mb.shape(x=x), value=1.0), lower=lower, upper=upper
+    )
+    zero = mb.cast(x=mb.const(val=0), dtype=builtin_to_string(x.dtype))
+    return mb.select(cond=mb.cast(x=in_band, dtype="bool"), a=zero, b=x)
+
+
 @register_torch_op
 def triu(context, node):
     assert context.frontend != TorchFrontend.EXECUTORCH, "triu is not a core aten op"
@@ -7271,16 +7914,7 @@ def triu(context, node):
     if diagonal <= 0:
         res = mb.band_part(x=x, lower=-diagonal, upper=-1)
     else:
-        y = mb.band_part(x=x, lower=-1, upper=diagonal - 1)
-        use_bool = False
-        if types.is_bool(x.dtype):
-            # The `mb.sub` op doesn't support bool.
-            use_bool = True
-            x = mb.cast(x=x, dtype="int32")
-            y = mb.cast(x=y, dtype="int32")
-        res = mb.sub(x=x, y=y)
-        if use_bool:
-            res = mb.cast(x=res, dtype="bool")
+        res = _zero_out_band(x, lower=-1, upper=diagonal - 1)
     context.add(res, node.name)
 
 
@@ -7303,16 +7937,7 @@ def tril(context, node):
     if diagonal >= 0:
         res = mb.band_part(x=x, lower=-1, upper=diagonal)
     else:
-        y = mb.band_part(x=x, lower=-diagonal - 1, upper=-1)
-        use_bool = False
-        if types.is_bool(x.dtype):
-            # The `mb.sub` op doesn't support bool.
-            use_bool = True
-            x = mb.cast(x=x, dtype="int32")
-            y = mb.cast(x=y, dtype="int32")
-        res = mb.sub(x=x, y=y)
-        if use_bool:
-            res = mb.cast(x=res, dtype="bool")
+        res = _zero_out_band(x, lower=-diagonal - 1, upper=-1)
     context.add(res, node.name)
 
 
@@ -7357,7 +7982,16 @@ def floor(context, node):
 @register_torch_op
 def reciprocal(context, node):
     inputs = _get_inputs(context, node, expected=1)
-    context.add(mb.inverse(x=inputs[0], name=node.name))
+    x = inputs[0]
+    # PyTorch's reciprocal promotes int inputs to float; mb.inverse only
+    # accepts fp16/fp32. Without this cast, common patterns like
+    # `1 / x.shape[0]` (which TorchScript traces as
+    # reciprocal(prim::NumToTensor(int))) fail to convert.
+    if types.is_int(x.dtype):
+        x = mb.cast(x=x, dtype="fp32")
+    # torch.reciprocal is exactly 1 / x, so opt out of the stability epsilon
+    # (default 1e-4) that mb.inverse would otherwise add to the input.
+    context.add(mb.inverse(x=x, epsilon=0.0, name=node.name))
 
 
 @register_torch_op
@@ -7690,37 +8324,45 @@ def var(context, node):
         x = inputs[0]
 
         if context.frontend == TorchFrontend.TORCHSCRIPT:
-            # torch.jit.trace does not distinguish by name `std` and `std.dim`,
-            # instead by nargs 2 or 4
+            # torch.jit.trace does not distinguish by name `var` and `var.dim`,
+            # instead by nargs 2 or 4. It also collapses the `unbiased` and
+            # `correction` overloads onto the same signature, so the second
+            # (nargs == 2) or third (nargs == 4) positional argument may carry
+            # either a bool `unbiased` or a Scalar `correction`. We treat it as
+            # `correction` since that subsumes `unbiased` (unbiased=False is
+            # correction=0, unbiased=True is correction=1).
             keepdim = False
             dim = None
             if len(inputs) == 2:
-                unbiased = inputs[1]
+                correction = inputs[1]
             if len(inputs) == 4:
                 dim = inputs[1]
-                unbiased = inputs[2]
+                correction = inputs[2]
                 keepdim = inputs[3]
         else:
             if node.kind == "var":
-                unbiased = inputs[1] if nargs > 1 else True
+                correction = inputs[1] if nargs > 1 else True
                 dim = None
                 keepdim = False
             else:
                 assert node.kind == "var.dim"
                 assert nargs > 1
                 dim = inputs[1]
-                unbiased = inputs[2] if nargs > 2 else True
+                correction = inputs[2] if nargs > 2 else True
                 keepdim = inputs[3] if nargs > 3 else False
 
-        return x, dim, unbiased, keepdim
+        return x, dim, correction, keepdim
 
-    def _parse_keyword_args(context, node, dim, unbiased, keepdim) -> Tuple[Var]:
+    def _parse_keyword_args(context, node, dim, correction, keepdim) -> Tuple[Var]:
         dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
-        unbiased = _get_kwinputs(context, node, "unbiased", default=[unbiased])[0]
+        unbiased = _get_kwinputs(context, node, "unbiased", default=[None])[0]
+        if unbiased is not None:
+            correction = unbiased
+        correction = _get_kwinputs(context, node, "correction", default=[correction])[0]
         keepdim = _get_kwinputs(context, node, "keepdim", default=[keepdim])[0]
-        return dim, unbiased, keepdim
+        return dim, correction, keepdim
 
-    def _translate_torch_args(dim, unbiased, keepdim) -> Tuple[Var]:
+    def _translate_torch_args(dim, correction, keepdim) -> Tuple[Var]:
         if isinstance(dim, Var):
             dim = dim.val
         try:
@@ -7728,19 +8370,23 @@ def var(context, node):
         except:
             pass
 
-        if isinstance(unbiased, Var):
-            unbiased = unbiased.val
+        if isinstance(correction, Var):
+            correction = correction.val
+        # `unbiased` is the bool special case of `correction`: a true/false flag
+        # maps to a divisor of N-1 / N, i.e. correction 1 / 0. A missing value
+        # defaults to torch's unbiased estimator (correction 1).
+        correction = 1 if correction is None else int(correction)
 
         if isinstance(keepdim, Var):
             keepdim = keepdim.val
 
-        return dim, unbiased, keepdim
+        return dim, correction, keepdim
 
-    x, dim, unbiased, keepdim = _parse_positional_args(context, node)
-    dim, unbiased, keepdim = _parse_keyword_args(context, node, dim, unbiased, keepdim)
-    axes, unbiased, keep_dims = _translate_torch_args(dim, unbiased, keepdim)
+    x, dim, correction, keepdim = _parse_positional_args(context, node)
+    dim, correction, keepdim = _parse_keyword_args(context, node, dim, correction, keepdim)
+    axes, correction, keep_dims = _translate_torch_args(dim, correction, keepdim)
 
-    y = _var(x, axes=axes, keep_dims=keep_dims, unbiased=unbiased)
+    y = _var(x, axes=axes, keep_dims=keep_dims, correction=correction)
     context.add(y, node.name)
 
 
@@ -7805,36 +8451,44 @@ def std(context, node):
 
         if context.frontend == TorchFrontend.TORCHSCRIPT:
             # torch.jit.trace does not distinguish by name `std` and `std.dim`,
-            # instead by nargs 2 or 4
+            # instead by nargs 2 or 4. It also collapses the `unbiased` and
+            # `correction` overloads onto the same signature, so the second
+            # (nargs == 2) or third (nargs == 4) positional argument may carry
+            # either a bool `unbiased` or a Scalar `correction`. We treat it as
+            # `correction` since that subsumes `unbiased` (unbiased=False is
+            # correction=0, unbiased=True is correction=1).
             keepdim = False
             dim = None
             if len(inputs) == 2:
-                unbiased = inputs[1]
+                correction = inputs[1]
             if len(inputs) == 4:
                 dim = inputs[1]
-                unbiased = inputs[2]
+                correction = inputs[2]
                 keepdim = inputs[3]
         else:
             if node.kind == "std":
-                unbiased = inputs[1] if nargs > 1 else True
+                correction = inputs[1] if nargs > 1 else True
                 dim = None
                 keepdim = False
             else:
                 assert node.kind == "std.dim"
                 assert nargs > 1
                 dim = inputs[1]
-                unbiased = inputs[2] if nargs > 2 else True
+                correction = inputs[2] if nargs > 2 else True
                 keepdim = inputs[3] if nargs > 3 else False
 
-        return x, dim, unbiased, keepdim
+        return x, dim, correction, keepdim
 
-    def _parse_keyword_args(context, node, dim, unbiased, keepdim) -> Tuple[Var]:
+    def _parse_keyword_args(context, node, dim, correction, keepdim) -> Tuple[Var]:
         dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
-        unbiased = _get_kwinputs(context, node, "unbiased", default=[unbiased])[0]
+        unbiased = _get_kwinputs(context, node, "unbiased", default=[None])[0]
+        if unbiased is not None:
+            correction = unbiased
+        correction = _get_kwinputs(context, node, "correction", default=[correction])[0]
         keepdim = _get_kwinputs(context, node, "keepdim", default=[keepdim])[0]
-        return dim, unbiased, keepdim
+        return dim, correction, keepdim
 
-    def _translate_torch_args(dim, unbiased, keepdim) -> Tuple[Var]:
+    def _translate_torch_args(dim, correction, keepdim) -> Tuple[Var]:
         if isinstance(dim, Var):
             dim = dim.val
         try:
@@ -7842,19 +8496,23 @@ def std(context, node):
         except:
             pass
 
-        if isinstance(unbiased, Var):
-            unbiased = unbiased.val
+        if isinstance(correction, Var):
+            correction = correction.val
+        # `unbiased` is the bool special case of `correction`: a true/false flag
+        # maps to a divisor of N-1 / N, i.e. correction 1 / 0. A missing value
+        # defaults to torch's unbiased estimator (correction 1).
+        correction = 1 if correction is None else int(correction)
 
         if isinstance(keepdim, Var):
             keepdim = keepdim.val
 
-        return dim, unbiased, keepdim
+        return dim, correction, keepdim
 
-    x, dim, unbiased, keepdim = _parse_positional_args(context, node)
-    dim, unbiased, keepdim = _parse_keyword_args(context, node, dim, unbiased, keepdim)
-    axes, unbiased, keep_dims = _translate_torch_args(dim, unbiased, keepdim)
+    x, dim, correction, keepdim = _parse_positional_args(context, node)
+    dim, correction, keepdim = _parse_keyword_args(context, node, dim, correction, keepdim)
+    axes, correction, keep_dims = _translate_torch_args(dim, correction, keepdim)
 
-    variance = _var(x, axes=axes, keep_dims=keep_dims, unbiased=unbiased)
+    variance = _var(x, axes=axes, keep_dims=keep_dims, correction=correction)
     standard_deviation = mb.sqrt(x=variance)
     context.add(standard_deviation, node.name)
 
@@ -8410,11 +9068,53 @@ def diagonal(context, node):
 
     x, offset, dim1, dim2 = _parse_positional_args(context, node)
     offset, dim1, dim2 = _parse_keyword_args(context, node, offset, dim1, dim2)
+    if isinstance(offset, Var):
+        offset = offset.val
+    if isinstance(dim1, Var):
+        dim1 = dim1.val
+    if isinstance(dim2, Var):
+        dim2 = dim2.val
 
-    if offset == 0 and dim1 == 0 and dim2 == 1:
-        diagonal = mb.band_part(x=x, lower=0, upper=0, name=node.name)
+    # torch.diagonal(input, offset=0, dim1=0, dim2=1) returns the requested
+    # diagonal as a 1-D tensor (for 2-D input) by extracting elements at
+    # input[i + max(-offset, 0), i + max(offset, 0)]. The previous
+    # implementation used band_part, which only zeros out the off-diagonal
+    # entries and returns the same-shape matrix.
+    if x.rank != 2:
+        raise NotImplementedError(
+            f"diagonal currently supports 2-D input only, got rank {x.rank}"
+        )
+    if any_symbolic(x.shape):
+        raise NotImplementedError("diagonal requires a statically-shaped input")
+
+    if dim1 < 0:
+        dim1 += x.rank
+    if dim2 < 0:
+        dim2 += x.rank
+    if (dim1, dim2) == (1, 0):
+        # diagonal along (dim1=1, dim2=0) equals diagonal along (0, 1) with
+        # sign-flipped offset.
+        offset = -offset
+    elif (dim1, dim2) != (0, 1):
+        raise NotImplementedError(
+            f"diagonal supports dim1/dim2 in (0, 1) or (1, 0), got ({dim1}, {dim2})"
+        )
+
+    n, m = x.shape
+    if offset >= 0:
+        diag_len = builtins.min(n, m - offset)
+        start = offset
     else:
-        raise NotImplementedError("Only offset == 0 and dim1 == 0 and dim2 == 1 handled")
+        diag_len = builtins.min(n + offset, m)
+        start = -offset * m
+    if diag_len <= 0:
+        raise ValueError(
+            f"diagonal offset {offset} produces an empty diagonal for shape ({n}, {m})"
+        )
+
+    indices = [start + i * (m + 1) for i in range(diag_len)]
+    flat = mb.reshape(x=x, shape=[-1])
+    diagonal = mb.gather(x=flat, indices=indices, axis=0, name=node.name)
 
     context.add(diagonal)
 
@@ -8447,8 +9147,12 @@ def roll(context, node):
 
     for s, i in zip(shift, dims):
         dim = _utils.pymil_value_at(shape, i)
-        s = mb.mod(x=s, y=dim)
-        start_idx = mb.sub(x=dim, y=s)
+        # The sign of mod with a negative dividend is backend dependent, so keep both
+        # operands non-negative: rolling right by s is rolling left by -s.
+        if s < 0:
+            start_idx = mb.mod(x=int(-s), y=dim)
+        else:
+            start_idx = mb.sub(x=dim, y=mb.mod(x=int(s), y=dim))
         indices0 = mb.range_1d(end=dim, start=start_idx, step=1)
         indices1 = mb.range_1d(end=start_idx, start=0, step=1)
         indices = mb.concat(values=[indices0, indices1], axis=0)
@@ -8798,6 +9502,12 @@ def fft_ifftn(context, node):
 def fft_irfft(context, node):
     """Lowers torch.fft.irfft by the dialect op `complex_irfft` from complex_dialect_ops.py."""
     input_data, n, dim, norm = _get_inputs(context, node, expected=[4])
+    # torch.fft.irfft accepts a real input and treats it as a complex tensor with a zero
+    # imaginary part. The complex_irfft dialect op only takes complex64, so promote a real
+    # input to complex here before lowering.
+    if not types.is_complex(input_data.dtype):
+        imag_data = mb.fill(shape=mb.shape(x=input_data), value=0.0)
+        input_data = mb.complex(real_data=input_data, imag_data=imag_data)
     irfft_res = mb.complex_irfft(data=input_data, n=n, dim=dim, norm=norm)
     context.add(irfft_res, node.name)
 
@@ -8908,6 +9618,134 @@ def stft(context, node):
     )
     context.add(stft_res, node.name)
 
+
+def _torchvision_roi_align_const_int(x: Var, name: str) -> int:
+    if x.val is None:
+        raise ValueError(f"torchvision::roi_align requires constant {name}.")
+    return int(x.val)
+
+
+def _torchvision_roi_align_const_float(x: Var, name: str) -> float:
+    if x.val is None:
+        raise ValueError(f"torchvision::roi_align requires constant {name}.")
+    return float(x.val)
+
+
+def _torchvision_roi_align_const_bool(x: Var, name: str) -> bool:
+    if x.val is None:
+        raise ValueError(f"torchvision::roi_align requires constant {name}.")
+    return bool(x.val)
+
+
+@register_torch_op(torch_alias=["torchvision::roi_align"])
+def torchvision_roi_align(context, node):
+    inputs = _get_inputs(context, node, expected=7)
+    x, boxes = inputs[0], inputs[1]
+    spatial_scale = _torchvision_roi_align_const_float(inputs[2], "spatial_scale")
+    pooled_height = _torchvision_roi_align_const_int(inputs[3], "pooled_height")
+    pooled_width = _torchvision_roi_align_const_int(inputs[4], "pooled_width")
+    sampling_ratio = _torchvision_roi_align_const_int(inputs[5], "sampling_ratio")
+    aligned = _torchvision_roi_align_const_bool(inputs[6], "aligned")
+
+    if x.rank != 4:
+        raise ValueError("torchvision::roi_align expects a rank-4 input tensor.")
+    if boxes.rank != 2 or boxes.shape[1] != 5:
+        raise ValueError(
+            "torchvision::roi_align currently expects boxes with shape [num_rois, 5]."
+        )
+    if pooled_height <= 0 or pooled_width <= 0:
+        raise ValueError("torchvision::roi_align expects positive pooled output dimensions.")
+    if sampling_ratio <= 0:
+        raise ValueError(
+            "torchvision::roi_align currently supports only positive constant sampling_ratio."
+        )
+
+    boxes = mb.cast(x=boxes, dtype="fp32")
+    batch_indices, x1, y1, x2, y2 = mb.split(x=boxes, num_splits=5, axis=1)
+    batch_indices = mb.squeeze(x=mb.cast(x=batch_indices, dtype="int32"), axes=[1])
+    roi_input = mb.gather(x=x, indices=batch_indices, axis=0)
+    pad_zero = np.float16(0.0) if x.dtype._width == 16 else np.float32(0.0)
+    roi_input = mb.pad(
+        x=roi_input,
+        pad=[1, 1, 1, 1],
+        mode="constant",
+        constant_val=pad_zero,
+    )
+
+    offset = 0.5 if aligned else 0.0
+    roi_start_w = mb.sub(x=mb.mul(x=x1, y=spatial_scale), y=offset)
+    roi_start_h = mb.sub(x=mb.mul(x=y1, y=spatial_scale), y=offset)
+    roi_end_w = mb.sub(x=mb.mul(x=x2, y=spatial_scale), y=offset)
+    roi_end_h = mb.sub(x=mb.mul(x=y2, y=spatial_scale), y=offset)
+
+    roi_width = mb.sub(x=roi_end_w, y=roi_start_w)
+    roi_height = mb.sub(x=roi_end_h, y=roi_start_h)
+    if not aligned:
+        roi_width = mb.maximum(x=roi_width, y=1.0)
+        roi_height = mb.maximum(x=roi_height, y=1.0)
+
+    bin_width = mb.real_div(x=roi_width, y=float(pooled_width))
+    bin_height = mb.real_div(x=roi_height, y=float(pooled_height))
+    roi_start_w = mb.expand_dims(x=roi_start_w, axes=[-1])
+    roi_start_h = mb.expand_dims(x=roi_start_h, axes=[-1])
+    bin_width = mb.expand_dims(x=bin_width, axes=[-1])
+    bin_height = mb.expand_dims(x=bin_height, axes=[-1])
+
+    pooled_w_grid = np.arange(pooled_width, dtype=np.float32).reshape(1, 1, pooled_width)
+    pooled_h_grid = np.arange(pooled_height, dtype=np.float32).reshape(1, pooled_height, 1)
+    pooled_w_zeros = np.zeros((1, 1, pooled_width), dtype=np.float32)
+    pooled_h_zeros = np.zeros((1, pooled_height, 1), dtype=np.float32)
+    roi_input_shape = mb.shape(x=roi_input)
+    hpad = mb.cast(x=_utils.pymil_value_at(roi_input_shape, 2), dtype="fp32")
+    wpad = mb.cast(x=_utils.pymil_value_at(roi_input_shape, 3), dtype="fp32")
+
+    accumulated = None
+    for y_sample in range(sampling_ratio):
+        y_offset = (y_sample + 0.5) / sampling_ratio
+        sample_y = mb.add(
+            x=roi_start_h,
+            y=mb.mul(x=bin_height, y=pooled_h_grid + y_offset),
+        )
+        sample_y = mb.add(x=sample_y, y=pooled_w_zeros)
+        sample_y = mb.add(x=sample_y, y=1.0)
+
+        for x_sample in range(sampling_ratio):
+            x_offset = (x_sample + 0.5) / sampling_ratio
+            sample_x = mb.add(
+                x=roi_start_w,
+                y=mb.mul(x=bin_width, y=pooled_w_grid + x_offset),
+            )
+            sample_x = mb.add(x=sample_x, y=pooled_h_zeros)
+            sample_x = mb.add(x=sample_x, y=1.0)
+
+            sample_y = mb.real_div(x=sample_y, y=mb.sub(x=hpad, y=1.0))
+            sample_x = mb.real_div(x=sample_x, y=mb.sub(x=wpad, y=1.0))
+            sample_y = mb.sub(x=mb.mul(x=sample_y, y=2.0), y=1.0)
+            sample_x = mb.sub(x=mb.mul(x=sample_x, y=2.0), y=1.0)
+
+            coordinates = mb.concat(
+                values=[
+                    mb.expand_dims(x=sample_x, axes=[-1]),
+                    mb.expand_dims(x=sample_y, axes=[-1]),
+                ],
+                axis=-1,
+            )
+            sampled = mb.resample(
+                x=roi_input,
+                coordinates=coordinates,
+                sampling_mode="bilinear",
+                padding_mode="constant",
+                padding_value=0.0,
+                coordinates_mode="normalized_minus_one_to_one",
+                align_corners=True,
+            )
+            accumulated = sampled if accumulated is None else mb.add(x=accumulated, y=sampled)
+
+    context.add(
+        mb.real_div(x=accumulated, y=float(sampling_ratio * sampling_ratio), name=node.name)
+    )
+
+
 @register_torch_op(torch_alias=["torchvision::nms"])
 def torchvision_nms(context, node):
     inputs = _get_inputs(context, node, expected=3)
@@ -8982,6 +9820,282 @@ def torchvision_nms(context, node):
         context.add(valid_indices)
 
 
+def _torchvision_deform_conv2d_const_int(x: Var, name: str) -> int:
+    if x is None or x.val is None:
+        raise ValueError(f"torchvision::deform_conv2d requires constant {name}.")
+    return int(np.array(x.val).item())
+
+
+def _torchvision_deform_conv2d_const_bool(x: Var, name: str) -> bool:
+    if x is None or x.val is None:
+        raise ValueError(f"torchvision::deform_conv2d requires constant {name}.")
+    return bool(np.array(x.val).item())
+
+
+def _torchvision_deform_conv2d_require_static_dim(dim, name: str) -> int:
+    if is_symbolic(dim):
+        raise ValueError(f"torchvision::deform_conv2d requires static {name}.")
+    return int(dim)
+
+
+def _torchvision_deform_conv2d_slice_channel(x: Var, channel: int) -> Var:
+    return mb.slice_by_index(
+        x=x,
+        begin=[0, channel, 0, 0],
+        end=[0, channel + 1, 0, 0],
+        begin_mask=[True, False, True, True],
+        end_mask=[True, False, True, True],
+        squeeze_mask=[False, True, False, False],
+    )
+
+
+def _torchvision_deform_conv2d_slice_channel_range(x: Var, start: int, end: int) -> Var:
+    return mb.slice_by_index(
+        x=x,
+        begin=[0, start, 0, 0],
+        end=[0, end, 0, 0],
+        begin_mask=[True, False, True, True],
+        end_mask=[True, False, True, True],
+    )
+
+
+def _torchvision_deform_conv2d_concat(values: List[Var], axis: int) -> Var:
+    if len(values) == 1:
+        return values[0]
+    return mb.concat(values=values, axis=axis)
+
+
+def _torchvision_deform_conv2d_base_grids(
+    height: int,
+    width: int,
+    stride_h: int,
+    stride_w: int,
+    pad_h: int,
+    pad_w: int,
+    kh_index: int,
+    kw_index: int,
+    dilation_h: int,
+    dilation_w: int,
+) -> Tuple[np.ndarray, np.ndarray]:
+    base_y = np.arange(height, dtype=np.float32) * stride_h - pad_h + kh_index * dilation_h
+    base_x = np.arange(width, dtype=np.float32) * stride_w - pad_w + kw_index * dilation_w
+    base_y = np.broadcast_to(base_y.reshape(1, height, 1), (1, height, width)).astype(
+        np.float32
+    )
+    base_x = np.broadcast_to(base_x.reshape(1, 1, width), (1, height, width)).astype(
+        np.float32
+    )
+    return base_y, base_x
+
+
+@register_torch_op(torch_alias=["torchvision::deform_conv2d"])
+def torchvision_deform_conv2d(context, node):
+    inputs = _get_inputs(context, node, expected=14)
+    x, weight, offset, mask, bias = inputs[:5]
+    stride_h = _torchvision_deform_conv2d_const_int(inputs[5], "stride_h")
+    stride_w = _torchvision_deform_conv2d_const_int(inputs[6], "stride_w")
+    pad_h = _torchvision_deform_conv2d_const_int(inputs[7], "pad_h")
+    pad_w = _torchvision_deform_conv2d_const_int(inputs[8], "pad_w")
+    dilation_h = _torchvision_deform_conv2d_const_int(inputs[9], "dilation_h")
+    dilation_w = _torchvision_deform_conv2d_const_int(inputs[10], "dilation_w")
+    groups = _torchvision_deform_conv2d_const_int(inputs[11], "groups")
+    offset_groups = _torchvision_deform_conv2d_const_int(inputs[12], "offset_groups")
+    use_mask = _torchvision_deform_conv2d_const_bool(inputs[13], "use_mask")
+
+    if x.rank != 4 or weight.rank != 4 or offset.rank != 4:
+        raise ValueError(
+            "torchvision::deform_conv2d expects rank-4 input, weight, and offset tensors."
+        )
+    if use_mask and (mask is None or mask.rank != 4):
+        raise ValueError("torchvision::deform_conv2d expects a rank-4 mask when use_mask=True.")
+    if bias is not None and bias.rank != 1:
+        raise ValueError("torchvision::deform_conv2d expects rank-1 bias.")
+
+    cin = _torchvision_deform_conv2d_require_static_dim(x.shape[1], "input channels")
+    hin = x.shape[2]
+    win = x.shape[3]
+    cout = _torchvision_deform_conv2d_require_static_dim(weight.shape[0], "output channels")
+    cin_per_group = _torchvision_deform_conv2d_require_static_dim(
+        weight.shape[1], "weight input channels per group"
+    )
+    kh = _torchvision_deform_conv2d_require_static_dim(weight.shape[2], "kernel height")
+    kw = _torchvision_deform_conv2d_require_static_dim(weight.shape[3], "kernel width")
+    offset_channels = _torchvision_deform_conv2d_require_static_dim(
+        offset.shape[1], "offset channels"
+    )
+    hout = _torchvision_deform_conv2d_require_static_dim(offset.shape[2], "output height")
+    wout = _torchvision_deform_conv2d_require_static_dim(offset.shape[3], "output width")
+
+    if stride_h <= 0 or stride_w <= 0:
+        raise ValueError("torchvision::deform_conv2d expects positive stride.")
+    if dilation_h <= 0 or dilation_w <= 0:
+        raise ValueError("torchvision::deform_conv2d expects positive dilation.")
+    if pad_h < 0 or pad_w < 0:
+        raise ValueError("torchvision::deform_conv2d expects non-negative padding.")
+    if groups <= 0 or offset_groups <= 0:
+        raise ValueError("torchvision::deform_conv2d expects positive groups and offset_groups.")
+    if cin % groups != 0:
+        raise ValueError("torchvision::deform_conv2d input channels must be divisible by groups.")
+    if cout % groups != 0:
+        raise ValueError("torchvision::deform_conv2d output channels must be divisible by groups.")
+    if cin % offset_groups != 0:
+        raise ValueError(
+            "torchvision::deform_conv2d input channels must be divisible by offset_groups."
+        )
+    if cin_per_group != cin // groups:
+        raise ValueError(
+            "torchvision::deform_conv2d weight shape does not match input channels/groups."
+        )
+
+    kernel_size = kh * kw
+    expected_offset_channels = 2 * offset_groups * kernel_size
+    if offset_channels != expected_offset_channels:
+        raise ValueError(
+            "torchvision::deform_conv2d offset channels must equal "
+            f"2 * offset_groups * kernel_height * kernel_width ({expected_offset_channels})."
+        )
+    if use_mask:
+        mask_channels = _torchvision_deform_conv2d_require_static_dim(
+            mask.shape[1], "mask channels"
+        )
+        expected_mask_channels = offset_groups * kernel_size
+        if mask_channels != expected_mask_channels:
+            raise ValueError(
+                "torchvision::deform_conv2d mask channels must equal "
+                f"offset_groups * kernel_height * kernel_width ({expected_mask_channels})."
+            )
+
+    if not is_symbolic(hin) and not is_symbolic(win):
+        expected_hout = (hin + 2 * pad_h - dilation_h * (kh - 1) - 1) // stride_h + 1
+        expected_wout = (win + 2 * pad_w - dilation_w * (kw - 1) - 1) // stride_w + 1
+        if hout != expected_hout or wout != expected_wout:
+            raise ValueError(
+                "torchvision::deform_conv2d offset spatial dimensions do not match "
+                "the input/weight/stride/padding/dilation configuration."
+            )
+
+    channels_per_offset_group = cin // offset_groups
+    sampled_by_kernel = []
+
+    for kh_index in range(kh):
+        for kw_index in range(kw):
+            kernel_index = kh_index * kw + kw_index
+            base_y, base_x = _torchvision_deform_conv2d_base_grids(
+                hout,
+                wout,
+                stride_h,
+                stride_w,
+                pad_h,
+                pad_w,
+                kh_index,
+                kw_index,
+                dilation_h,
+                dilation_w,
+            )
+            base_y = mb.const(val=base_y)
+            base_x = mb.const(val=base_x)
+
+            sampled_offset_groups = []
+            for offset_group in range(offset_groups):
+                channel_start = offset_group * channels_per_offset_group
+                channel_end = channel_start + channels_per_offset_group
+                x_group = _torchvision_deform_conv2d_slice_channel_range(
+                    x, channel_start, channel_end
+                )
+                # Core ML resample's constant padding is applied to the whole sample when
+                # coordinates are out of range. Deformable convolution needs per-neighbor
+                # zero padding for bilinear interpolation, so make the one-pixel border
+                # explicit and shift the sample coordinates into the padded image.
+                pad_value = np.float16(0.0) if x_group.dtype == types.fp16 else 0.0
+                x_group = mb.pad(
+                    x=x_group,
+                    pad=[0, 0, 0, 0, 1, 1, 1, 1],
+                    mode="constant",
+                    constant_val=pad_value,
+                )
+
+                offset_base = offset_group * 2 * kernel_size
+                offset_y = _torchvision_deform_conv2d_slice_channel(
+                    offset, offset_base + 2 * kernel_index
+                )
+                offset_x = _torchvision_deform_conv2d_slice_channel(
+                    offset, offset_base + 2 * kernel_index + 1
+                )
+                if offset_y.dtype != types.fp32:
+                    offset_y = mb.cast(x=offset_y, dtype="fp32")
+                if offset_x.dtype != types.fp32:
+                    offset_x = mb.cast(x=offset_x, dtype="fp32")
+
+                coord_y = mb.add(x=base_y, y=offset_y)
+                coord_x = mb.add(x=base_x, y=offset_x)
+                coord_y = mb.add(x=coord_y, y=1.0)
+                coord_x = mb.add(x=coord_x, y=1.0)
+
+                x_group_shape = mb.shape(x=x_group)
+                hpad = mb.cast(x=_utils.pymil_value_at(x_group_shape, 2), dtype="fp32")
+                wpad = mb.cast(x=_utils.pymil_value_at(x_group_shape, 3), dtype="fp32")
+                coord_y = mb.real_div(x=coord_y, y=mb.sub(x=hpad, y=1.0))
+                coord_x = mb.real_div(x=coord_x, y=mb.sub(x=wpad, y=1.0))
+                coord_y = mb.sub(x=mb.mul(x=coord_y, y=2.0), y=1.0)
+                coord_x = mb.sub(x=mb.mul(x=coord_x, y=2.0), y=1.0)
+                coordinates = mb.stack(values=[coord_x, coord_y], axis=-1)
+                sampled = mb.resample(
+                    x=x_group,
+                    coordinates=coordinates,
+                    sampling_mode="bilinear",
+                    padding_mode="constant",
+                    padding_value=pad_value,
+                    coordinates_mode="normalized_minus_one_to_one",
+                    align_corners=True,
+                )
+
+                if use_mask:
+                    mask_channel = offset_group * kernel_size + kernel_index
+                    mask_slice = _torchvision_deform_conv2d_slice_channel_range(
+                        mask, mask_channel, mask_channel + 1
+                    )
+                    sampled = mb.mul(x=sampled, y=mask_slice)
+
+                sampled_offset_groups.append(sampled)
+
+            sampled_by_kernel.append(
+                _torchvision_deform_conv2d_concat(sampled_offset_groups, axis=1)
+            )
+
+    patch_groups = []
+    channels_per_weight_group = cin // groups
+    for weight_group in range(groups):
+        channel_start = weight_group * channels_per_weight_group
+        channel_end = channel_start + channels_per_weight_group
+        for sampled in sampled_by_kernel:
+            patch_groups.append(
+                _torchvision_deform_conv2d_slice_channel_range(
+                    sampled, channel_start, channel_end
+                )
+            )
+    patches = _torchvision_deform_conv2d_concat(patch_groups, axis=1)
+
+    weight_1x1 = mb.transpose(x=weight, perm=[0, 2, 3, 1])
+    weight_1x1 = mb.reshape(x=weight_1x1, shape=[cout, kernel_size * cin_per_group, 1, 1])
+    patches, weight_1x1 = promote_input_dtypes([patches, weight_1x1])
+
+    conv_name = node.name if bias is None else node.name + "_conv"
+    out = mb.conv(
+        x=patches,
+        weight=weight_1x1,
+        groups=groups,
+        pad_type="valid",
+        name=conv_name,
+    )
+
+    if bias is not None:
+        bias = mb.reshape(x=bias, shape=[1, cout, 1, 1])
+        out, bias = promote_input_dtypes([out, bias])
+        out = mb.add(x=out, y=bias, name=node.name)
+
+    context.add(out)
+
+
 @register_torch_op
 def tupleindex(context, node):
     tuple_input, index_input = _get_inputs(context, node, expected=2)
@@ -9005,8 +10119,12 @@ def scaled_dot_product_attention(context, node):
                   (B, ..., target_seq, source_seq)
     - is_causal : bool
     - scale : optional float
+    - enable_gqa : bool
 
     Output shape: (target_seq, d_v) or (B,...,target_seq, d_v)
+
+    With grouped-query attention, i.e. enable_gqa = True, key and value have fewer heads than
+    query, so their heads get repeated to match the number of query heads
 
     output = softmax(scale*Q*K^transpose + mask) * V
 
@@ -9059,24 +10177,31 @@ def scaled_dot_product_attention(context, node):
             dropout = inputs[4] if nargs > 4 else 0.0
             is_causal = inputs[5].val if nargs > 5 else False
             scale = inputs[6] if nargs > 6 else None
+            # Although enable_gqa is keyword-only in torch, torch script serializes it
+            # positionally. It was introduced in torch 2.5, so older torch has no such input
+            enable_gqa = inputs[7] if nargs > 7 else False
         elif node.kind == "_scaled_dot_product_flash_attention_for_cpu":
             dropout = inputs[3] if nargs > 3 else 0.0
             is_causal = inputs[4].val if nargs > 4 else False
             attn_mask = inputs[5] if nargs > 5 else None
             scale = inputs[6] if nargs > 6 else None
+            # This aten op has no grouped-query attention argument
+            enable_gqa = False
         else:
             assert node.kind in ("coreml.sdpa", "coreml::sdpa")
             attn_mask = inputs[3] if nargs > 3 else None
             dropout = 0.0
             is_causal = False
             scale = None
+            enable_gqa = False
 
-        return q, k, v, attn_mask, dropout, is_causal, scale
+        return q, k, v, attn_mask, dropout, is_causal, scale, enable_gqa
 
-    def _parse_keyword_args(context, node, attn_mask, scale) -> Tuple[Var]:
+    def _parse_keyword_args(context, node, attn_mask, scale, enable_gqa) -> Tuple[Var]:
         attn_mask = _get_kwinputs(context, node, "attn_mask", default=[attn_mask])[0]
         scale = _get_kwinputs(context, node, "scale", default=[scale])[0]
-        return attn_mask, scale
+        enable_gqa = _get_kwinputs(context, node, "enable_gqa", default=[enable_gqa])[0]
+        return attn_mask, scale, enable_gqa
 
     def _check_args(q, k, v, attn_mask, dropout, is_causal) -> None:
         if attn_mask is not None and is_causal:
@@ -9136,6 +10261,77 @@ def scaled_dot_product_attention(context, node):
         float_mask = mb.mul(x=-3e4, y=compliment_of_mask)
         return float_mask
 
+    def _repeat_kv_heads(x: Var, repeats: int) -> Var:
+        """
+        Equivalent to torch.repeat_interleave(x, repeats, dim=-3), which is how PyTorch
+        expands key and value heads for grouped-query attention
+
+        It has to be repeat interleave rather than tile, e.g. for repeats = 2
+        * repeat interleave gives head0, head0, head1, head1
+        * tile gives head0, head1, head0, head1
+        """
+        if repeats == 1:
+            return x
+
+        # (..., H, S, E) -> (..., H, 1, S, E)
+        result = mb.expand_dims(x=x, axes=[-3])
+        # (..., H, 1, S, E) -> (..., H, repeats, S, E)
+        reps = [1] * (x.rank + 1)
+        reps[-3] = repeats
+        result = mb.tile(x=result, reps=reps)
+        # (..., H, repeats, S, E) -> (..., H * repeats, S, E)
+        if any_symbolic(x.shape):
+            x_shape = mb.shape(x=x)
+            sizes = [_utils.pymil_value_at(x_shape, i) for i in range(x.rank)]
+            sizes[-3] = mb.mul(x=sizes[-3], y=repeats)
+            target_shape = mb.concat(values=sizes, axis=0)
+        else:
+            target_shape = list(x.shape)
+            target_shape[-3] *= repeats
+        return mb.reshape(x=result, shape=target_shape)
+
+    def _maybe_repeat_kv_heads_for_gqa(q: Var, k: Var, v: Var, enable_gqa) -> Tuple[Var]:
+        """
+        With grouped-query attention, key and value have fewer heads than query,
+        so their heads get repeated to match the number of query heads
+        """
+        if isinstance(enable_gqa, Var):
+            if enable_gqa.val is None:
+                raise NotImplementedError(
+                    "A variable enable_gqa is specified. Since Core ML has to determine how "
+                    "many times to repeat key and value heads at conversion time, "
+                    "we cowardly refuse to convert it"
+                )
+            enable_gqa = bool(enable_gqa.val)
+        if not enable_gqa:
+            return k, v
+
+        if q.rank < 3:
+            raise ValueError(
+                "scaled_dot_product_attention op: enable_gqa requires query, key, value to "
+                f"have a head dimension, i.e. rank >= 3, but got rank {q.rank}"
+            )
+
+        q_heads, k_heads, v_heads = q.shape[-3], k.shape[-3], v.shape[-3]
+        if is_symbolic(q_heads) or is_symbolic(k_heads) or is_symbolic(v_heads):
+            raise ValueError(
+                "scaled_dot_product_attention op: enable_gqa requires the number of heads, "
+                "i.e. the -3 dimension of query, key, value, to be known at conversion time"
+            )
+        if k_heads != v_heads:
+            raise ValueError(
+                "scaled_dot_product_attention op: key and value must have a same number of "
+                f"heads, got key heads = {k_heads}, value heads = {v_heads}"
+            )
+        if q_heads % k_heads != 0:
+            raise ValueError(
+                "scaled_dot_product_attention op: with enable_gqa, the number of query heads "
+                f"({q_heads}) must be divisible by the number of key and value heads ({k_heads})"
+            )
+
+        repeats = q_heads // k_heads
+        return _repeat_kv_heads(k, repeats), _repeat_kv_heads(v, repeats)
+
     def _translate_torch_args(q, k, attn_mask, is_causal, can_use_fused_sdpa) -> Var:
         mask = attn_mask
         if is_causal:
@@ -9146,9 +10342,15 @@ def scaled_dot_product_attention(context, node):
             mask = _cast_bool_attn_mask(mask, q)
         return mask
 
-    q, k, v, attn_mask, dropout, is_causal, scale = _parse_positional_args(context, node)
-    attn_mask, scale = _parse_keyword_args(context, node, attn_mask, scale)
+    q, k, v, attn_mask, dropout, is_causal, scale, enable_gqa = _parse_positional_args(
+        context, node
+    )
+    attn_mask, scale, enable_gqa = _parse_keyword_args(context, node, attn_mask, scale, enable_gqa)
     _check_args(q, k, v, attn_mask, dropout, is_causal)
+
+    # Grouped-query attention is lowered by repeating key and value heads,
+    # which benefits both the fused and the decomposed lowerings below
+    k, v = _maybe_repeat_kv_heads_for_gqa(q, k, v, enable_gqa)
 
     # Since ios18, Core ML supports scaled_dot_product_attention op
     # It does not have scale, though
@@ -9215,6 +10417,76 @@ def linalg_inv(context, node):
             "For non-const input, the lowering for Torch `linalg_inv` op is not supported"
         )
     context.add(mb.const(val=np.linalg.inv(x.val), name=node.name))
+
+
+def _construct_non_finite_predicate(x: Var, predicate: str, name: str) -> Var:
+    """Construct a MIL boolean mask for a PyTorch non-finite predicate."""
+    if types.is_complex(x.dtype):
+        if predicate not in {"isinf", "isfinite"}:
+            raise NotImplementedError(f"Torch `{predicate}` does not support complex inputs")
+        real_mask = _construct_non_finite_predicate(
+            mb.complex_real(data=x), predicate, name + "_real"
+        )
+        imag_mask = _construct_non_finite_predicate(
+            mb.complex_imag(data=x), predicate, name + "_imag"
+        )
+        combine = mb.logical_or if predicate == "isinf" else mb.logical_and
+        return combine(x=real_mask, y=imag_mask, name=name)
+
+    elif types.is_bool(x.dtype):
+        inverse = mb.logical_not(x=x)
+        combine = mb.logical_or if predicate == "isfinite" else mb.logical_and
+        return combine(x=x, y=inverse, name=name)
+
+    elif types.is_int(x.dtype):
+        # PyTorch defines integer tensors as entirely finite.
+        comparison = mb.equal if predicate == "isfinite" else mb.not_equal
+        return comparison(x=x, y=x, name=name)
+
+    infinity = nptype_from_builtin(x.dtype)(np.inf)
+    if predicate == "isposinf":
+        return mb.equal(x=x, y=infinity, name=name)
+    if predicate == "isneginf":
+        return mb.equal(x=x, y=-infinity, name=name)
+
+    pos_inf_mask = mb.equal(x=x, y=infinity)
+    neg_inf_mask = mb.equal(x=x, y=-infinity)
+    if predicate == "isinf":
+        return mb.logical_or(x=pos_inf_mask, y=neg_inf_mask, name=name)
+
+    # A finite value is neither NaN nor either signed infinity. Explicit
+    # comparisons preserve large finite fp32 inputs under fp16 compute precision.
+    inf_mask = mb.logical_or(x=pos_inf_mask, y=neg_inf_mask)
+    not_nan_mask = mb.equal(x=x, y=x)
+    return mb.logical_and(
+        x=not_nan_mask,
+        y=mb.logical_not(x=inf_mask),
+        name=name,
+    )
+
+
+@register_torch_op
+def isinf(context, node):
+    x = _get_inputs(context, node, expected=1)[0]
+    context.add(_construct_non_finite_predicate(x, "isinf", node.name))
+
+
+@register_torch_op
+def isfinite(context, node):
+    x = _get_inputs(context, node, expected=1)[0]
+    context.add(_construct_non_finite_predicate(x, "isfinite", node.name))
+
+
+@register_torch_op
+def isposinf(context, node):
+    x = _get_inputs(context, node, expected=1)[0]
+    context.add(_construct_non_finite_predicate(x, "isposinf", node.name))
+
+
+@register_torch_op
+def isneginf(context, node):
+    x = _get_inputs(context, node, expected=1)[0]
+    context.add(_construct_non_finite_predicate(x, "isneginf", node.name))
 
 
 @register_torch_op

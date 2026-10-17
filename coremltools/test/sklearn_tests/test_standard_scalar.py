@@ -7,7 +7,7 @@ import unittest
 
 import numpy as np
 
-from ..utils import load_boston
+from ..utils import load_test_data
 from coremltools._deps import _HAS_SKLEARN
 from coremltools.models.utils import (_is_macos, _macos_version,
                                       evaluate_transformer)
@@ -45,8 +45,8 @@ class StandardScalerTestCase(unittest.TestCase):
 
         assert metrics["num_errors"] == 0
 
-    def test_boston(self):
-        scikit_data = load_boston()
+    def test_generated_data(self):
+        scikit_data = load_test_data()
         scikit_model = StandardScaler().fit(scikit_data["data"])
 
         spec = converter.convert(

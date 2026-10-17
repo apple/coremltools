@@ -4,7 +4,7 @@
 
 import unittest
 
-from ..utils import load_boston
+from ..utils import load_test_data
 from coremltools._deps import _HAS_SKLEARN
 from coremltools.models import MLModel
 from coremltools.models.utils import _is_macos, _macos_version, rename_feature
@@ -19,7 +19,7 @@ if _HAS_SKLEARN:
 class PipeLineRenameTests(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         feature_names = scikit_data["feature_names"]
 
         scikit_model = LinearRegression()

@@ -171,6 +171,7 @@ class InternalTorchIRNode:
         attr: Optional[Dict[str, Any]] = None,
         blocks: Optional[List["InternalTorchIRBlock"]] = None,
         model_hierarchy: Optional[str] = None,
+        module_path: Optional[str] = None,
         meta: Optional[Dict] = None,
     ):
         """
@@ -199,6 +200,7 @@ class InternalTorchIRNode:
         self.attr = attr if attr is not None else {"value": None}
         self.blocks = blocks if blocks is not None else []
         self.model_hierarchy = model_hierarchy
+        self.module_path = module_path
         self.meta = meta
 
     @classmethod
@@ -231,6 +233,7 @@ class InternalTorchIRNode:
             attr=attr,
             blocks=None,
             model_hierarchy=node.getModuleHierarchy(),
+            module_path=node.scopeName(),
         )
         internal_node.blocks = [
             InternalTorchIRBlock.from_torchscript_block(block=b, parent=internal_node)
@@ -339,9 +342,9 @@ class InternalTorchIRNode:
         for block in self.blocks:
             block.replace_name(old_name, new_name)
 
-    def get_scope_info(self) -> Tuple[List[str], List[str]]:
+    def get_scope_info(self) -> Tuple[List[str], List[str], List[str]]:
         """
-        Get the scope information (``scope_name``, ``scope_type``) of a TorchScript node.
+        Get the scope information (``scope_name``, ``scope_type``, ``module_path``) of a TorchScript node.
         In a TorchScript node, a model hierarchy is represented in a string of format:
             ``scope_name_1(scope_type_1).scope_name_2(scope_type_1).<...>.scope_name_n(scope_type_n)``
         For instance, given a torch model:
@@ -386,6 +389,30 @@ class InternalTorchIRNode:
         ``["submodule_1", "linear_1", "submodule_1.linear_1.weight"]``.
         This function does a special handling to trim it to:
         ``["submodule_1", "linear_1", "weight"]``
+
+        ``module_path`` is parsed from ``torch._C.Node.scopeName()`` because ``getModuleHierarchy()``
+        drops ``nn.ModuleList`` / ``nn.ModuleDict`` container attribute names that are needed
+        to reconstruct the original ``named_modules()`` path.
+        For example, given a model with two sibling ``nn.ModuleList`` containers:
+
+            class Model(torch.nn.Module):
+                def __init__(self):
+                    super().__init__()
+                    self.layers_a = torch.nn.ModuleList([SubModule()])
+                    self.layers_b = torch.nn.ModuleList([SubModule()])
+
+                def forward(self, x):
+                    return self.layers_a[0](x) + self.layers_b[0](x)
+
+        an op ``x_1`` emitted inside ``layers_a[0].linear_1`` and one inside
+        ``layers_b[0].linear_1`` yield the same ``scope_name = ["0", "linear_1", "x_1"]``
+        (the container attribute name is dropped in both cases), so backtracing from
+        ``scope_name`` alone cannot distinguish them even given the full set of
+        ``named_modules()`` paths. ``module_path`` keeps the container name and
+        disambiguates::
+
+            layers_a[0].linear_1: module_path = ["layers_a", "0", "linear_1"]
+            layers_b[0].linear_1: module_path = ["layers_b", "0", "linear_1"]
         """
 
         def _trim_scopename_for_weight(scope_names: List[str]) -> List[str]:
@@ -414,7 +441,17 @@ class InternalTorchIRNode:
         scope_types.append(self.kind)
         if self.kind == "getattr":
             scope_names = _trim_scopename_for_weight(scope_names)
-        return scope_names, scope_types
+
+        if self.module_path == "" or self.module_path is None:
+            module_path = []
+        else:
+            last_frame = self.module_path.split("/")[-1]
+            if last_frame.startswith("__module."):
+                module_path = last_frame.split(".")[1:]
+            else:
+                module_path = []
+
+        return scope_names, scope_types, module_path
 
 
 class InternalTorchIRGraph:

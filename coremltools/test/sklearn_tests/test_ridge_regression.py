@@ -7,7 +7,7 @@ import unittest
 
 import pandas as pd
 
-from ..utils import load_boston
+from ..utils import load_test_data
 from coremltools._deps import _HAS_SKLEARN
 from coremltools.models.utils import (_is_macos, _macos_version,
                                       evaluate_regressor)
@@ -30,7 +30,7 @@ class RidgeRegressionScikitTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        scikit_data = load_boston()
+        scikit_data = load_test_data()
         scikit_model = Ridge()
         scikit_model.fit(scikit_data["data"], scikit_data["target"])
 

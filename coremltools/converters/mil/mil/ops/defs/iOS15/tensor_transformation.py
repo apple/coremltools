@@ -942,7 +942,9 @@ class squeeze(Operation):
             val = np.squeeze(self.x.val)
         else:
             val = np.squeeze(self.x.val, axis=tuple(self.axes.val))
-        return val if val.shape != () else self.x.val[0]
+        if val.shape == ():
+            return np.asarray(val, dtype=types.nptype_from_builtin(self.x.dtype))[()]
+        return val
 
 @register_op
 class transpose(Operation):
