@@ -523,7 +523,7 @@ class PostTrainingQuantizer(_BasePostTrainingModelOptimizer):
             self._model, layer_types=list(self._supported_modules)
         ).items():
             submod_config = self._config.get_module_config(submod_name, submodule)
-            if submod_config is None:
+            if submod_config is None or submod_config.weight_dtype == _torch.float32:
                 continue
 
             # TODO: Replace this with supported modules abstraction
