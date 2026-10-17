@@ -10368,8 +10368,9 @@ class TestIndexPut(TorchBaseTest):
             minimum_deployment_target=minimum_deployment_target,
         )
 
-        # check slice_update is used
-        if minimum_deployment_target == ct.target.iOS18:
+        # check slice_update is used (ExecuTorch >= 1.0 to_edge decomposes this
+        # index_put into select/where before it reaches the converter)
+        if minimum_deployment_target == ct.target.iOS18 and frontend != TorchFrontend.EXECUTORCH:
             prog = res[1]._mil_program
             assert "slice_update" in get_op_types_in_program(prog)
 
@@ -10395,8 +10396,9 @@ class TestIndexPut(TorchBaseTest):
             minimum_deployment_target=minimum_deployment_target,
         )
 
-        # check slice_update is used
-        if minimum_deployment_target == ct.target.iOS18:
+        # check slice_update is used (ExecuTorch >= 1.0 to_edge decomposes this
+        # index_put into select/where before it reaches the converter)
+        if minimum_deployment_target == ct.target.iOS18 and frontend != TorchFrontend.EXECUTORCH:
             prog = res[1]._mil_program
             assert "slice_update" in get_op_types_in_program(prog)
 
@@ -12576,6 +12578,12 @@ class TestHannWindow(TorchBaseTest):
         ),
     )
     def test_hann_window(self, compute_unit, backend, frontend, window_length, periodic):
+        if frontend == TorchFrontend.EXECUTORCH and Version(torch.__version__) >= Version("2.9.0"):
+            pytest.xfail(
+                "Starting from torch 2.9, torch.export keeps aten.hann_window.periodic, which "
+                "is not in Core ATen opset, so ExecuTorch to_edge rejects it"
+            )
+
         class HannWindowModel(nn.Module):
             def forward(self, x):
                 return torch.hann_window(window_length, periodic)
