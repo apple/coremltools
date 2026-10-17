@@ -1,5 +1,12 @@
 -r ./common_test_packages.pip
 -r ./pytorch.pip
 
+# Pinned here rather than in common_test_packages.pip because ExecuTorch 1.0.x
+# (test_executorch.pip) requires scikit-learn==1.7.1 and pytest>=7.4.
+pytest==7.1.2
+scikit-learn==0.19.2; python_version < '3.8'
+scikit-learn==1.1.2; python_version == '3.8'
+scikit-learn==1.5.1; python_version > '3.8'
+
 numpy<2.0.0,>1.18.4; platform_machine != "arm64"
 numpy>=2.0.0; python_version >= "3.9" and platform_machine == "arm64"

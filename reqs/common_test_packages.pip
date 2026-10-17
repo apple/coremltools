@@ -9,16 +9,12 @@ olefile==0.44
 pandas
 parameterized==0.8.1
 pillow
-pytest==7.1.2
+pytest
 pytest-cov
 pytest-sugar
 pytest-timeout
 pytest-asyncio
 pytest-xdist
-
-scikit-learn==0.19.2; python_version < '3.8'
-scikit-learn==1.1.2; python_version == '3.8'
-scikit-learn==1.5.1; python_version > '3.8'
 
 six
 sympy > 1.6
