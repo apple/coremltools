@@ -3235,6 +3235,13 @@ class TestTorchao:
                     "torchao.quantization.quant_api.int4_weight_only "
                     "no longer supports CPU"
                 )
+        except ImportError as e:
+            if "fbgemm-gpu-genai" in str(e) and Version(torchao.__version__) >= Version("0.14.0"):
+                pytest.xfail(
+                    "Starting from torchao 0.14.0 int4_weight_only defaults to Int4Tensor, "
+                    "which requires fbgemm-gpu-genai (not available on macOS)"
+                )
+            raise
         model = unwrap_tensor_subclass(model)
         input_data = torch.randn((2, 32), dtype=torch.float16)
         exported_model = torch.export.export(model, (input_data,))
@@ -3266,7 +3273,17 @@ class TestTorchao:
             )
             err_type = NotImplementedError
         else:
-            exported_model = torch.jit.trace(model, example_inputs=(input_data,))
+            try:
+                exported_model = torch.jit.trace(model, example_inputs=(input_data,))
+            except RuntimeError as e:
+                if "isIntList() INTERNAL ASSERT FAILED" in str(e) and Version(
+                    torchao.__version__
+                ) >= Version("0.14.0"):
+                    pytest.xfail(
+                        "Starting from torchao 0.14.0 choose_qparams_affine receives a traced "
+                        "tensor in block_size, which torch.jit.trace cannot record"
+                    )
+                raise
             inputs = [ct.TensorType(shape=input_data.shape)]
             err_msg = (
                 r"PyTorch convert function for op 'torchao::choose_qparams_affine' not implemented."
