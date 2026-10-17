@@ -8412,15 +8412,7 @@ def diagonal(context, node):
     offset, dim1, dim2 = _parse_keyword_args(context, node, offset, dim1, dim2)
 
     if offset == 0 and dim1 == 0 and dim2 == 1:
-        if x.rank == 2 and not any_symbolic(x.shape):
-            # Return the actual 1-D diagonal (length min(H, W)) by summing the
-            # band along the longer axis, so consumers see the correct rank.
-            # ExecuTorch >= 1.0 inserts a rank-checked _clone_dim_order here.
-            axis = 1 if x.shape[0] <= x.shape[1] else 0
-            band = mb.band_part(x=x, lower=0, upper=0)
-            diagonal = mb.reduce_sum(x=band, axes=[axis], keep_dims=False, name=node.name)
-        else:
-            diagonal = mb.band_part(x=x, lower=0, upper=0, name=node.name)
+        diagonal = mb.band_part(x=x, lower=0, upper=0, name=node.name)
     else:
         raise NotImplementedError("Only offset == 0 and dim1 == 0 and dim2 == 1 handled")
 
