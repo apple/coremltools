@@ -85,10 +85,19 @@ class ConfigValidator:
             bs_output = None
             bs_input = self.config.block_size[0]
 
-        should_block_output = (
-            bs_output > 0 and bs_output < self.param.shape[0] if bs_output else False
+        output_axis = (
+            1
+            if isinstance(
+                self.module, (_nn.ConvTranspose1d, _nn.ConvTranspose2d, _nn.ConvTranspose3d)
+            )
+            else 0
         )
-        should_block_input = bs_input > 0 and bs_input < self.param.shape[1]
+        input_axis = 1 - output_axis
+
+        should_block_output = (
+            bs_output > 0 and bs_output < self.param.shape[output_axis] if bs_output else False
+        )
+        should_block_input = bs_input > 0 and bs_input < self.param.shape[input_axis]
 
         if should_block_input and not should_block_output:
             # By default we will always have per-channel on output-channel axis
@@ -103,16 +112,16 @@ class ConfigValidator:
             return False
 
         # Check if the output-channel block size is divisible by the axis length
-        if should_block_output and self.param.shape[0] % bs_output != 0:
+        if should_block_output and self.param.shape[output_axis] % bs_output != 0:
             _logger.warning(
-                f"{self.param_name}: block_size={bs_output} is not divisible by axis length={self.param.shape[0]}"
+                f"{self.param_name}: block_size={bs_output} is not divisible by axis length={self.param.shape[output_axis]}"
             )
             return False
 
         # Check if the input-channel block size is divisible by the axis length
-        if should_block_input and self.param.shape[1] % bs_input != 0:
+        if should_block_input and self.param.shape[input_axis] % bs_input != 0:
             _logger.warning(
-                f"{self.param_name}: block_size={bs_input} is not divisible by axis length={self.param.shape[0]}"
+                f"{self.param_name}: block_size={bs_input} is not divisible by axis length={self.param.shape[input_axis]}"
             )
             return False
 

@@ -237,6 +237,28 @@ def test_ptq_post_compress_conv_linear(
     )
 
 
+@pytest.mark.parametrize(
+    "module_type", [torch.nn.ConvTranspose1d, torch.nn.ConvTranspose2d, torch.nn.ConvTranspose3d]
+)
+@pytest.mark.parametrize("block_size", [2, (2,), (1, 2)])
+def test_ptq_per_block_conv_transpose_input_channels(module_type, block_size):
+    module = module_type(4, 3, kernel_size=1, bias=False)
+    with torch.no_grad():
+        module.weight.copy_(torch.arange(1, 13, dtype=torch.float32).reshape(module.weight.shape))
+    config = PostTrainingQuantizerConfig.from_dict(
+        {"global_config": {"granularity": "per_block", "block_size": block_size}}
+    )
+
+    compressed_module = PostTrainingQuantizer(module, config).compress()
+
+    scale = getattr(compressed_module, "_COREML_/weight/quantization_scale")
+    expected_shape = (2, 3) + (1,) * (module.weight.ndim - 2)
+    assert scale.shape == expected_shape
+    expected_scale = torch.tensor([[4, 5, 6], [10, 11, 12]], dtype=torch.float32) / 127
+    torch.testing.assert_close(scale, expected_scale.reshape(expected_shape))
+    assert not torch.equal(module.weight, compressed_module.weight)
+
+
 @pytest.mark.parametrize("quantization_scheme", ["symmetric", "affine"])
 @pytest.mark.parametrize(
     "granularity_block_size",
