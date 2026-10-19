@@ -6633,7 +6633,7 @@ def slice(context, node):
     context.add(res)
 
 
-@register_torch_op(torch_alias=["split_with_sizes", "split_with_sizes_copy"])
+@register_torch_op(torch_alias=["split_with_sizes", "split_with_sizes_copy", "unsafe_split"])
 def split(context, node):
     def _parse_positional_args(context, node) -> Tuple[Var]:
         inputs = _get_inputs(context, node, min_expected=2)
@@ -6878,6 +6878,26 @@ def constantchunk(context, node):
     res = mb.split(x=x, split_sizes=split_sizes, axis=dim, name=node.name)
     for val, name in zip(res, node.outputs):
         context.add(val, name)
+
+
+@register_torch_op
+def unsafe_chunk(context, node):
+    # Emitted by LSTMCell and GRUCell. Same as constantchunk, but chunks and dim
+    # are inputs instead of node attributes.
+    inputs = _get_inputs(context, node, expected=3)
+    x = inputs[0]
+    chunks = inputs[1].val
+    dim = inputs[2].val
+
+    total = x.shape[dim]
+    size = int(_math.ceil(float(total) / float(chunks)))
+    split_sizes = [size] * int(_math.floor(total / size))
+    remainder = total - sum(split_sizes)
+    if remainder > 0:
+        split_sizes.append(remainder)
+
+    res = mb.split(x=x, split_sizes=split_sizes, axis=dim, name=node.name)
+    context.add(res, torch_name=node.name)
 
 
 @register_torch_op(torch_alias=["expand_copy"])
