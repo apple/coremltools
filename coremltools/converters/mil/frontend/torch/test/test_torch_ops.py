@@ -8266,6 +8266,37 @@ class TestSplit(TorchBaseTest):
                     )
 
 
+class TestUnsafeChunk(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, chunks, dim",
+        itertools.product(compute_units, backends, frontends, [1, 2, 3, 7], [0, -1]),
+    )
+    def test_unsafe_chunk(self, compute_unit, backend, frontend, chunks, dim):
+        if backend[0] == "neuralnetwork" and chunks == 1:
+            pytest.skip("nn backend split layer needs at least 2 outputs, same as torch.split")
+        input_shape = (5, 7)
+        model = ModuleWrapper(
+            function=torch.unsafe_chunk,
+            kwargs={"chunks": chunks, "dim": dim},
+        )
+        self.run_compare_torch(
+            input_shape, model, frontend=frontend, backend=backend, compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, cell, bias",
+        itertools.product(
+            compute_units, backends, [torch.nn.LSTMCell, torch.nn.GRUCell], [True, False]
+        ),
+    )
+    def test_rnn_cell(self, compute_unit, backend, cell, bias):
+        # Traced LSTMCell and GRUCell split their gates with unsafe_chunk.
+        model = cell(input_size=4, hidden_size=6, bias=bias)
+        self.run_compare_torch(
+            (3, 4), model, backend=backend, compute_unit=compute_unit
+        )
+
+
 class TestTensorSplit(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, sections, dim",
