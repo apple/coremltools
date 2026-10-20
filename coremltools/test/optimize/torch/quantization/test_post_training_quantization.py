@@ -77,6 +77,34 @@ def test_ptq_config_n_bits(dtype, n_bits):
     assert config.global_config.weight_n_bits == n_bits
 
 
+@pytest.mark.parametrize("weight_dtype", [torch.float32, "float32"])
+@pytest.mark.parametrize("quantization_scheme", ["symmetric", "affine"])
+def test_ptq_float32(weight_dtype, quantization_scheme):
+    module = torch.nn.Linear(3, 1, bias=False).eval()
+    with torch.no_grad():
+        module.weight.copy_(torch.tensor([[-1.0, 0.0, 1.0]]))
+    config = PostTrainingQuantizerConfig.from_dict(
+        {
+            "global_config": {
+                "weight_dtype": weight_dtype,
+                "quantization_scheme": quantization_scheme,
+            }
+        }
+    )
+    model = PostTrainingQuantizer(module, config).compress()
+
+    assert torch.equal(module.weight, model.weight)
+    assert not any(name.startswith("_COREML_") for name, _ in model.named_buffers())
+
+    traced = torch.jit.trace(model, torch.ones(1, 3))
+    ct.convert(
+        traced,
+        inputs=[ct.TensorType(shape=(1, 3))],
+        convert_to="milinternal",
+        minimum_deployment_target=ct.target.iOS18,
+    )
+
+
 @pytest.mark.parametrize(
     "module",
     [
