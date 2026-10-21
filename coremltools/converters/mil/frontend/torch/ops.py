@@ -7867,8 +7867,19 @@ def clamp(context, node):
     if min_val.val is None or max_val.val is None or not types.is_float(x.dtype):
         # The `mb.clip` only support const alpha and beta, and requires the input to be float tensor.
         # For other cases, need to use `mb.minimum` and `mb.maximum`.
-        res = mb.minimum(x=x, y=max_val)
-        res = mb.maximum(x=res, y=min_val)
+        # PyTorch applies the lower bound first, then the upper bound.
+        res = mb.maximum(x=x, y=min_val)
+        res = mb.minimum(x=res, y=max_val)
+        if types.is_float(x.dtype):
+            # Core ML minimum/maximum may discard an input NaN.
+            has_nan = mb.logical_or(
+                x=mb.not_equal(x=x, y=x),
+                y=mb.not_equal(x=min_val, y=min_val),
+            )
+            has_nan = mb.logical_or(
+                x=has_nan, y=mb.not_equal(x=max_val, y=max_val)
+            )
+            res = mb.select(cond=has_nan, a=float("nan"), b=res)
     else:
         res = mb.clip(x=x, alpha=min_val, beta=max_val)
 
