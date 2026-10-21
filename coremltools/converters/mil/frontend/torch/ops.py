@@ -4699,22 +4699,19 @@ def upsample_bicubic2d(context, node):
     def _apply_1d_pass(
         x: Var, indices: np.ndarray, weights: np.ndarray, axis: int, name: Optional[str] = None
     ) -> Var:
-        # gather per tap: output (..., out_size, taps)
-        gathered = [
-            mb.gather(x=x, indices=mb.const(val=indices[:, i]), axis=axis)
-            for i in range(indices.shape[1])
-        ]
-        stacked = mb.stack(values=gathered, axis=-1)
-        # broadcast weights to (..., out_size, taps)
-        weight_shape = [1] * stacked.rank
-        weight_shape[axis] = weights.shape[0]
-        weight_shape[-1] = weights.shape[1]
-        weight_const = mb.const(val=weights.reshape(weight_shape))
-        weighted = mb.mul(x=stacked, y=weight_const)
-        reduce_kwargs = {"x": weighted, "axes": [-1]}
+        # Scatter the taps into a dense (out_size, in_size) matrix and apply it with one
+        # matmul. A gather per tap followed by mul and reduce_sum over the taps comes out
+        # wrong on the Core ML runtime for image sized inputs.
+        out_size = indices.shape[0]
+        matrix = np.zeros((out_size, x.shape[axis]), dtype=nptype_from_builtin(x.dtype))
+        np.add.at(matrix, (np.arange(out_size)[:, None], indices), weights)
+        if axis == x.rank - 1:
+            matmul_kwargs = {"x": x, "y": matrix.T}
+        else:
+            matmul_kwargs = {"x": matrix, "y": x}
         if name is not None:
-            reduce_kwargs["name"] = name
-        return mb.reduce_sum(**reduce_kwargs)
+            matmul_kwargs["name"] = name
+        return mb.matmul(**matmul_kwargs)
 
     x, output_size, align_corners, scales_h, scales_w = _parse_positional_args(context, node)
     scales_h, scales_w = _parse_keyword_args(context, node, scales_h, scales_w)
