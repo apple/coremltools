@@ -3339,6 +3339,28 @@ class TestUpsample(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
+        "compute_unit, backend, mode, antialias",
+        itertools.product(compute_units, backends, ["bilinear", "bicubic"], [True, False]),
+    )
+    def test_upsample_separable_image_size(self, compute_unit, backend, mode, antialias):
+        # the 8x8 inputs above are too small to show it, but at an image size the
+        # interpolation has to stay right too, like torchvision's Resize to 224
+        if mode == "bilinear" and not antialias:
+            pytest.skip("plain bilinear is lowered with upsample_bilinear, not this path")
+
+        model = ModuleWrapper(
+            nn.functional.interpolate,
+            {"size": (112, 84), "mode": mode, "antialias": antialias},
+        )
+        self.run_compare_torch(
+            (1, 3, 256, 192),
+            model,
+            frontend=TorchFrontend.TORCHSCRIPT,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend",
         itertools.product(compute_units, backends),
     )
