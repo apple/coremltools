@@ -4327,13 +4327,7 @@ def upsample_linear1d(context, node):
     context.add(x)
 
 
-@register_torch_op(
-    torch_alias=[
-        "upsample_bilinear2d.vec",
-        "_upsample_bilinear2d_aa",
-        "_upsample_bilinear2d_aa.vec",
-    ],
-)
+@register_torch_op(torch_alias=["upsample_bilinear2d.vec"])
 def upsample_bilinear2d(context, node):
     def _parse_positional_args(context, node) -> Tuple[Var]:
         inputs = _get_inputs(
@@ -4522,13 +4516,20 @@ def _cubic_aa_filter(x, a=-0.5):
     return 0.0
 
 
-def _cubic_aa_indices_weights(in_size, out_size, scale):
+def _linear_aa_filter(x):
+    """ATen HelperInterpLinear::aa_filter (triangle)."""
+    x = np.abs(x)
+    if x < 1.0:
+        return 1.0 - x
+    return 0.0
+
+
+def _aa_indices_weights(in_size, out_size, scale, interp_size, aa_filter):
     """
-    Antialiased bicubic (_aa), matching ATen _compute_indices_min_size_weights_aa:
-    variable tap count, per-position normalization, a=-0.5.
+    Antialiased interpolation (_aa), matching ATen _compute_indices_min_size_weights_aa:
+    variable tap count, per-position normalization. ``interp_size`` is 4 for bicubic
+    and 2 for bilinear.
     """
-    a = -0.5
-    interp_size = 4
     support = (interp_size * 0.5) * scale if scale >= 1.0 else interp_size * 0.5
     max_interp_size = int(np.ceil(support)) * 2 + 1
     invscale = 1.0 / scale if scale >= 1.0 else 1.0
@@ -4543,7 +4544,7 @@ def _cubic_aa_indices_weights(in_size, out_size, scale):
         xsize = builtins.min(xsize, max_interp_size)
         total_w = 0.0
         for j in range(xsize):
-            w = _cubic_aa_filter((j + xmin - center + 0.5) * invscale, a)
+            w = aa_filter((j + xmin - center + 0.5) * invscale)
             weights[i, j] = w
             total_w += w
         if total_w != 0.0:
@@ -4557,11 +4558,14 @@ def _cubic_aa_indices_weights(in_size, out_size, scale):
         "upsample_bicubic2d.vec",
         "_upsample_bicubic2d_aa",
         "_upsample_bicubic2d_aa.vec",
+        "_upsample_bilinear2d_aa",
+        "_upsample_bilinear2d_aa.vec",
     ],
 )
 def upsample_bicubic2d(context, node):
     """
-    PyTorch bicubic 2d upsampling with optional antialiasing.
+    PyTorch bicubic 2d upsampling with optional antialiasing, and antialiased
+    bilinear.
 
     The ATen implementations use a separable cubic convolution kernel. We mirror
     them exactly with a decomposition into existing MIL ops (gather + broadcast
@@ -4573,6 +4577,11 @@ def upsample_bicubic2d(context, node):
     - plain:  ``upsample_bicubic2d`` / ``upsample_bicubic2d.vec`` (a=-0.75)
     - ``_aa``: ``_upsample_bicubic2d_aa`` / ``_upsample_bicubic2d_aa.vec`` (a=-0.5)
       emitted by torchvision ``Resize(..., BICUBIC)`` (default antialias=True)
+
+    ``_upsample_bilinear2d_aa`` / ``_upsample_bilinear2d_aa.vec`` (torchvision
+    ``Resize`` with the default bilinear mode) go through the same ``_aa`` path
+    with a triangle filter. They differ from plain bilinear whenever an axis is
+    downsampled, and always with ``align_corners=True``.
     """
 
     def _parse_positional_args(context, node) -> Tuple[Var]:
@@ -4672,8 +4681,16 @@ def upsample_bicubic2d(context, node):
         scale_w = _area_pixel_scale(in_w, output_size[1], scales_w)
 
         if antialias:
-            idx_h, wts_h = _cubic_aa_indices_weights(in_h, output_size[0], scale_h)
-            idx_w, wts_w = _cubic_aa_indices_weights(in_w, output_size[1], scale_w)
+            if "bilinear" in node.kind:
+                interp_size, aa_filter = 2, _linear_aa_filter
+            else:
+                interp_size, aa_filter = 4, _cubic_aa_filter
+            idx_h, wts_h = _aa_indices_weights(
+                in_h, output_size[0], scale_h, interp_size, aa_filter
+            )
+            idx_w, wts_w = _aa_indices_weights(
+                in_w, output_size[1], scale_w, interp_size, aa_filter
+            )
         else:
             idx_h, wts_h = _cubic_keys_indices_weights(in_h, output_size[0], scale_h, align_corners)
             idx_w, wts_w = _cubic_keys_indices_weights(in_w, output_size[1], scale_w, align_corners)
@@ -4700,14 +4717,21 @@ def upsample_bicubic2d(context, node):
         return mb.reduce_sum(**reduce_kwargs)
 
     x, output_size, align_corners, scales_h, scales_w = _parse_positional_args(context, node)
+    scales_h, scales_w = _parse_keyword_args(context, node, scales_h, scales_w)
 
     if is_symbolic(x.shape[-2]) or is_symbolic(x.shape[-1]):
+        if "bilinear" in node.kind and not align_corners:
+            scales = [s.val if isinstance(s, Var) else s for s in (scales_h, scales_w)]
+            if all(s is not None and s >= 1 for s in scales):
+                # antialiasing does not change a bilinear upsample without
+                # align_corners, so the plain lowering, which handles dynamic
+                # shapes, gives the same result
+                return upsample_bilinear2d(context, node)
         raise NotImplementedError(
             "Dynamic input spatial shapes are not supported for upsample_bicubic2d "
             f"for the op {node.name}"
         )
 
-    scales_h, scales_w = _parse_keyword_args(context, node, scales_h, scales_w)
     output_size, scales_h, scales_w = _translate_torch_args(
         x, output_size, align_corners, scales_h, scales_w
     )
