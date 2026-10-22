@@ -560,7 +560,8 @@ class add_int16_cast(CastTypeQuantization):
     - For each input of dtype int32 which supports int16/uint16, inject a "cast" op to change it
       to int16/uint16 dtype.
     - For each output of dtype int16/uint16, inject a "cast" op to change it back to int32.
-    Notice that the cast will not be inserted if the const value is out of int16/uint16 range.
+    Data inputs are narrowed only when a constant value or a widening cast proves
+    that they fit in int16/uint16.
     """
     # Ops that prefer int16 params.
     # If an op supports 16-bit only in later iOS (e.g. gather started to support 16-bit from iOS16)
@@ -629,8 +630,12 @@ class add_int16_cast(CastTypeQuantization):
                 # https://apple.github.io/coremltools/source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.cast_optimization
                 if input_op.x.dtype == types.uint16:
                     param_target_dtype = "uint16"
-                else:
+                elif input_op.x.dtype == types.int16 or param_name != "x":
                     param_target_dtype = "int16"
+
+        # Tensor shape bounds indices, but does not bound the data values.
+        if param_name == "x" and param_target_dtype is None:
+            return None
 
         # In `gather` and `gather_along_axis`, if the dim size of x is larger than int16
         # upperbound, the dynamic indices could overflow, so it shouldn't be cast.

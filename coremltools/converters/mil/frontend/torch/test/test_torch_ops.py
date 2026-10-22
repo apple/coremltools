@@ -16647,6 +16647,39 @@ class TestNonFinitePredicates(TorchBaseTest):
 
 class TestCumprod(TorchBaseTest):
     @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, values",
+        itertools.product(
+            compute_units,
+            [("mlprogram", "fp16"), ("mlprogram", "fp32")],
+            [TorchFrontend.TORCHSCRIPT, TorchFrontend.TORCHEXPORT],
+            [[200, 200, 2], [256, 256, 1]],
+        ),
+    )
+    def test_cumprod_int32_intermediate(self, compute_unit, backend, frontend, values):
+        class TestModel(nn.Module):
+            def forward(self, x):
+                return torch.cumprod(x.to(torch.int32), dim=0, dtype=torch.int32)
+
+        res = self.run_compare_torch(
+            torch.tensor(values, dtype=torch.float32),
+            TestModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            minimum_deployment_target=ct.target.iOS17,
+            input_as_shape=False,
+            atol=0,
+            rtol=0,
+        )
+        for gather in res[1]._mil_program.find_ops(op_type="gather"):
+            assert gather.x.dtype == types.int32
+        if res[3] is not None:
+            np.testing.assert_array_equal(
+                next(iter(res[3].values())),
+                torch.cumprod(torch.tensor(values, dtype=torch.int32), dim=0, dtype=torch.int32),
+            )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend, axis",
         itertools.product(compute_units, backends, frontends, [0, 1, 2, -1]),
     )

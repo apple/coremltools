@@ -2723,6 +2723,66 @@ class TestTransformFunctionSignatures:
 
 
 class TestInt32CastToInt16:
+    @pytest.mark.parametrize("op_type", ["gather", "gather_along_axis", "gather_nd", "squeeze", "topk"])
+    @pytest.mark.parametrize("source", ["input", "cast", "scatter"])
+    def test_unbounded_int32_data(self, op_type, source):
+        input_dtype = types.fp32 if source == "cast" else types.int32
+
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=(1, 3), dtype=input_dtype)],
+            opset_version=ct.target.iOS17,
+        )
+        def prog(x):
+            if source == "cast":
+                x = mb.cast(x=x, dtype="int32")
+            elif source == "scatter":
+                x = mb.scatter(data=x, indices=[1], updates=[[200]], axis=1, mode="mul")
+            if op_type == "gather":
+                return mb.gather(x=x, indices=[1], axis=1)
+            if op_type == "gather_along_axis":
+                return mb.gather_along_axis(x=x, indices=[[1]], axis=1)
+            if op_type == "gather_nd":
+                return mb.gather_nd(x=x, indices=[[0, 1]])
+            if op_type == "squeeze":
+                return mb.squeeze(x=x, axes=[0])
+            return mb.topk(x=x, k=1, axis=1)
+
+        _, _, block = apply_pass_and_basic_check(prog, "common::add_int16_cast")
+        assert block.find_ops(op_type=op_type)[0].x.dtype == types.int32
+
+    @pytest.mark.parametrize("dtype", [types.int16, types.uint16])
+    def test_gather_restores_known_narrow_data(self, dtype):
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=(3,), dtype=dtype)],
+            opset_version=ct.target.iOS17,
+        )
+        def prog(x):
+            x = mb.cast(x=x, dtype="int32")
+            return mb.gather(x=x, indices=[1], axis=0)
+
+        _, _, block = apply_pass_and_basic_check(prog, "common::add_int16_cast")
+        assert block.find_ops(op_type="gather")[0].x.dtype == dtype
+
+    @pytest.mark.parametrize(
+        "value, expected_dtype",
+        [
+            (-32769, types.int32),
+            (65536, types.int32),
+            (-32768, types.int16),
+            (32767, types.uint16),
+            (65535, types.uint16),
+        ],
+    )
+    def test_gather_constant_data_range(self, value, expected_dtype):
+        @mb.program(input_specs=[], opset_version=ct.target.iOS17)
+        def prog():
+            return mb.gather(x=np.array([value], dtype=np.int32), indices=[0])
+
+        _, _, block = apply_pass_and_basic_check(prog, "common::add_int16_cast")
+        gather = block.find_ops(op_type="gather")[0]
+        assert gather.x.dtype == expected_dtype
+        np.testing.assert_array_equal(block.outputs[0].val, [value])
+
     @pytest.mark.parametrize(
         "x_dtype, dynamic, has_neg, opset_version",
         itertools.product(
@@ -2759,16 +2819,15 @@ class TestInt32CastToInt16:
             # iOS16 cast op doesn't support int16, so this pass doesn't have effect.
             assert get_op_types_in_program(prog) == get_op_types_in_program(prev_prog)
         else:
-            # When input ``x`` is float32, the output is also float32, so no cast for output.
-            # When input ``x`` is int32 and cast to int16, the output will also be int16, so there
-            # is another cast op to cast it back to int32.
+            # Only constant integer data has a proven range and needs an output cast.
             expected_ops = ["cast", "gather"]
-            if x_dtype == np.int32:
+            cast_data = x_dtype == np.int32 and not dynamic
+            if cast_data:
                 expected_ops = ["cast", "cast", "gather", "cast"]
             assert get_op_types_in_program(prog) == expected_ops
-            indices_cast_op_idx = 1 if x_dtype == np.int32 else 0
+            indices_cast_op_idx = 1 if cast_data else 0
             cast_op = block.find_ops(op_type="cast")[indices_cast_op_idx]
-            assert cast_op.dtype.val == "int16" if has_neg else "uint16"
+            assert cast_op.dtype.val == ("int16" if dynamic or has_neg else "uint16")
             assert len(cast_op.outputs) == 1
             assert len(cast_op.outputs[0].child_ops) == 1
             assert cast_op.outputs[0].child_ops[0].op_type == "gather"
@@ -2799,7 +2858,9 @@ class TestInt32CastToInt16:
         for prog in (prog_static, prog_dynamic):
             assert get_op_types_in_program(prog) == ["gather"]
             prev_prog, _, block = apply_pass_and_basic_check(prog, "common::add_int16_cast")
-            expected_ops = ["cast", "cast", "gather", "cast"]
+            expected_ops = (
+                ["cast", "cast", "gather", "cast"] if prog is prog_static else ["cast", "gather"]
+            )
             assert get_op_types_in_program(prog) == expected_ops
 
     @pytest.mark.parametrize(
@@ -2840,16 +2901,15 @@ class TestInt32CastToInt16:
             # iOS16 cast op doesn't support int16, so this pass doesn't have effect.
             assert get_op_types_in_program(prog) == get_op_types_in_program(prev_prog)
         else:
-            # When input ``x`` is float32, the output is also float32, so no cast for output.
-            # When input ``x`` is int32 and cast to int16, the output will also be int16, so there
-            # is another cast op to cast it back to int32.
+            # Only constant integer data has a proven range and needs an output cast.
             expected_ops = ["cast", "gather_along_axis"]
-            if x_dtype == np.int32:
+            cast_data = x_dtype == np.int32 and not dynamic
+            if cast_data:
                 expected_ops = ["cast", "cast", "gather_along_axis", "cast"]
             assert get_op_types_in_program(prog) == expected_ops
-            indices_cast_op_idx = 1 if x_dtype == np.int32 else 0
+            indices_cast_op_idx = 1 if cast_data else 0
             cast_op = block.find_ops(op_type="cast")[indices_cast_op_idx]
-            assert cast_op.dtype.val == "int16" if has_neg else "uint16"
+            assert cast_op.dtype.val == ("int16" if dynamic or has_neg else "uint16")
             assert len(cast_op.outputs) == 1
             assert len(cast_op.outputs[0].child_ops) == 1
             assert cast_op.outputs[0].child_ops[0].op_type == "gather_along_axis"
@@ -2965,22 +3025,8 @@ class TestInt32CastToInt16:
             return mb.squeeze(x=x)
 
         prev_prog, _, block = apply_pass_and_basic_check(prog, "common::add_int16_cast")
-
-        if opset_version < ct.target.iOS17:
-            # Prior to iOS 17, `squeeze` does not support int16, so this pass has no effect
-            assert get_op_types_in_program(prog) == get_op_types_in_program(prev_prog)
-        else:
-            if dtype == types.int32:
-                # When `x` is int32, it will be cast to int16 then feed into `squeeze`,
-                # then `squeeze(x)` will be cast back to int32 for output
-                assert get_op_types_in_program(prog) == ["cast", "squeeze", "cast"]
-                cast_int16, cast_int32 = block.find_ops(op_type="cast")
-                assert cast_int16.dtype.val == "int16"
-                assert cast_int32.dtype.val == "int32"
-                assert cast_int16.outputs[0].child_ops[0].op_type == "squeeze"
-            else:
-                # When `x` is float, this int pass has no effect
-                assert get_op_types_in_program(prog) == ["squeeze"]
+        # Dynamic data has no proven 16-bit range.
+        assert get_op_types_in_program(prog) == get_op_types_in_program(prev_prog)
 
     @pytest.mark.parametrize(
         "opset_version", [ct.target.iOS15, ct.target.iOS16, ct.target.iOS17, ct.target.iOS18]
