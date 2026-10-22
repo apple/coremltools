@@ -16647,6 +16647,143 @@ class TestNonFinitePredicates(TorchBaseTest):
 
 class TestCumprod(TorchBaseTest):
     @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(
+            compute_units,
+            [("mlprogram", "fp16"), ("mlprogram", "fp32")],
+            [TorchFrontend.TORCHSCRIPT, TorchFrontend.TORCHEXPORT],
+        ),
+    )
+    @pytest.mark.parametrize(
+        "values, dtype, output_dtype",
+        [
+            ([1.9, -2.2, 3.2], torch.int32, types.int32),
+            ([1.9999, -1.9999, 0.9999], torch.int32, types.int32),
+            ([2047.9999, 1.0, 1.0], torch.int32, types.int32),
+            ([200, 200, 2], torch.int32, types.int32),
+            ([256, 256, 1], torch.int32, types.int32),
+            ([1.9], torch.int32, types.int32),
+            ([1.0001, 1.0001, 1.0001], torch.float16, types.fp16),
+            ([1.0001], torch.float16, types.fp16),
+            ([1.5, -2.0, 0.0], torch.float32, types.fp32),
+            ([1.9, -2.2, 3.2], torch.int64, types.int32),
+            ([1.5, -2.0, 0.0], torch.float64, types.fp32),
+            ([1.5, -2.0, 0.0], None, types.fp32),
+        ],
+    )
+    def test_cumprod_dtype(self, compute_unit, backend, frontend, values, dtype, output_dtype):
+        class TestModel(nn.Module):
+            def forward(self, x):
+                y = torch.cumprod(x, dim=-1, dtype=dtype)
+                return y, y + 1, y * 2
+
+        data = torch.tensor(values, dtype=torch.float32)
+        res = self.run_compare_torch(
+            data,
+            TestModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            minimum_deployment_target=ct.target.iOS17,
+            input_as_shape=False,
+        )
+        prog = res[1]._mil_program
+        if output_dtype == types.int32:
+            assert all(var.dtype == types.int32 for var in prog.functions["main"].outputs)
+        if backend[1] == "fp32":
+            assert all(op.data.dtype == output_dtype for op in prog.find_ops(op_type="scatter"))
+            if dtype in (None, torch.float32, torch.float64):
+                assert not prog.find_ops(op_type="cast")
+        if res[3] is not None:
+            for output, expected in zip(res[1].get_spec().description.output, TestModel()(data)):
+                np.testing.assert_array_equal(res[3][output.name], expected.numpy())
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(
+            compute_units,
+            [("mlprogram", "fp16"), ("mlprogram", "fp32")],
+            [TorchFrontend.TORCHSCRIPT, TorchFrontend.TORCHEXPORT],
+        ),
+    )
+    @pytest.mark.parametrize(
+        "input_dtype, dtype",
+        [
+            (torch.int32, torch.int32),
+            (torch.int32, torch.float32),
+            (torch.float16, torch.float32),
+        ],
+    )
+    def test_cumprod_dtype_input(self, compute_unit, backend, frontend, input_dtype, dtype):
+        class TestModel(nn.Module):
+            def forward(self, x):
+                return torch.cumprod(x, dim=0, dtype=dtype)
+
+        data = torch.tensor([2, -3, 4], dtype=input_dtype)
+        res = self.run_compare_torch(
+            data,
+            TestModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            minimum_deployment_target=ct.target.iOS17,
+            input_as_shape=False,
+        )
+        prog = res[1]._mil_program
+        if backend[1] == "fp32":
+            expected_dtype = types.int32 if dtype == torch.int32 else types.fp32
+            assert all(op.data.dtype == expected_dtype for op in prog.find_ops(op_type="scatter"))
+            if input_dtype == dtype:
+                assert not prog.find_ops(op_type="cast")
+        if res[3] is not None:
+            np.testing.assert_array_equal(next(iter(res[3].values())), TestModel()(data).numpy())
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, axis",
+        itertools.product(
+            compute_units,
+            [("mlprogram", "fp16"), ("mlprogram", "fp32")],
+            [TorchFrontend.TORCHSCRIPT, TorchFrontend.TORCHEXPORT],
+            [0, 1, 2, -1],
+        ),
+    )
+    def test_cumprod_dtype_axes(self, compute_unit, backend, frontend, axis):
+        class TestModel(nn.Module):
+            def forward(self, x):
+                return torch.cumprod(x, axis, dtype=torch.int32)
+
+        data = torch.tensor([1.9, -2.2, 0.9, 3.2] * 6).reshape(2, 3, 4)
+        res = self.run_compare_torch(
+            data,
+            TestModel(),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+            minimum_deployment_target=ct.target.iOS17,
+            input_as_shape=False,
+        )
+        assert res[1]._mil_program.functions["main"].outputs[0].dtype == types.int32
+        if res[3] is not None:
+            np.testing.assert_array_equal(next(iter(res[3].values())), TestModel()(data).numpy())
+
+    @pytest.mark.parametrize("frontend", [TorchFrontend.TORCHSCRIPT, TorchFrontend.TORCHEXPORT])
+    @pytest.mark.parametrize("dtype", [torch.int8, torch.uint8, torch.int16])
+    def test_cumprod_unsupported_dtype(self, frontend, dtype):
+        class TestModel(nn.Module):
+            def forward(self, x):
+                return torch.cumprod(x, dim=0, dtype=dtype)
+
+        with pytest.raises(NotImplementedError, match="cumprod dtype.*gather/scatter"):
+            self.run_compare_torch(
+                torch.tensor([1.9, 2.2, 3.2]),
+                TestModel(),
+                frontend=frontend,
+                backend=("mlprogram", "fp32"),
+                minimum_deployment_target=ct.target.iOS17,
+                input_as_shape=False,
+            )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend, axis",
         itertools.product(compute_units, backends, frontends, [0, 1, 2, -1]),
     )
