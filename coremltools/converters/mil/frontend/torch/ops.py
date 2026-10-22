@@ -10561,13 +10561,24 @@ def cumprod(context, node):
     inputs = _get_inputs(context, node, min_expected=2)
     x = inputs[0]
     dim = inputs[1].val
-    # dtype may be the 3rd input, but we will not use it
+    dtype = inputs[2] if len(inputs) > 2 else None
+    dtype = _get_kwinputs(context, node, "dtype", default=[dtype])[0]
 
     size = x.shape[dim]
     if is_symbolic(size):
         raise NotImplementedError(
             "For symbolic shape input, the lowering for Torch `cumprod` op is not supported"
         )
+    if dtype is not None:
+        dtype_str = NUM_TO_DTYPE_STRING.get(dtype.val)
+        if dtype_str not in ("fp16", "fp32", "int32"):
+            raise NotImplementedError(
+                f"Torch cumprod dtype {dtype.val} is not supported by the gather/scatter lowering"
+            )
+        if builtin_to_string(x.dtype) != dtype_str:
+            # PyTorch casts the input before computing the products.
+            x = mb.cast(x=x, dtype=dtype_str)
+
     for idx in range(1, size):
         # For each element, multiply it with the previous element.
         prev_element = mb.gather(x=x, indices=[idx - 1], axis=dim)
