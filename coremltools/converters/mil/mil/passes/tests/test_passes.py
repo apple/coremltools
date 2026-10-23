@@ -6823,6 +6823,34 @@ class TestFuseLinearBias:
         np.testing.assert_almost_equal(new_bias, expected_bias)
 
     @pytest.mark.parametrize(
+        "op_type, is_first_input, out_channels",
+        itertools.product(["add", "sub"], [True, False], [1, 2]),
+    )
+    def test_transform_linear_scalar_bias(self, op_type, is_first_input, out_channels):
+        """
+        A scalar added to (or subtracted from) a linear is folded into every output channel's bias
+        """
+        weight = np.reshape(np.arange(4 * out_channels), (out_channels, 4)).astype(np.float32)
+        linear_bias = np.arange(1, out_channels + 1).astype(np.float32)
+        inputs = {
+            "linear_weight": weight,
+            "linear_bias": linear_bias,
+            "bias": np.float32(3.0),
+        }
+        func = mb.add if op_type == "add" else mb.sub
+
+        new_weight, new_bias = self._apply_transform(inputs, func, is_first_input, True)
+
+        if op_type == "sub" and not is_first_input:
+            expected_weight, expected_bias = -weight, 3.0 - linear_bias
+        elif op_type == "sub":
+            expected_weight, expected_bias = weight, linear_bias - 3.0
+        else:
+            expected_weight, expected_bias = weight, linear_bias + 3.0
+        np.testing.assert_almost_equal(new_weight, expected_weight)
+        np.testing.assert_almost_equal(new_bias, expected_bias)
+
+    @pytest.mark.parametrize(
         "rank, op_type, is_first_input, broadcast, backend",
         itertools.product([1, 2, 3], ["add", "sub"], [True, False], [True, False], backends),
     )
