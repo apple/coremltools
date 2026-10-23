@@ -67,6 +67,10 @@ class fuse_linear_bias(AbstractGraphPass):
         linear_bias = linear_op.bias.val
         bias = add_or_sub_op.y.val if is_first_input else add_or_sub_op.x.val
 
+        # a scalar adds the same value to every output channel
+        if np.ndim(bias) == 0:
+            bias = np.full(linear_bias.shape, bias, dtype=linear_bias.dtype)
+
         # check if the shape is broadcasable
         if np.prod(linear_bias.shape) != np.prod(bias.shape):
             return False
