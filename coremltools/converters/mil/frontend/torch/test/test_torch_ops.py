@@ -1748,6 +1748,47 @@ class TestInstanceNorm(TorchBaseTest):
             compute_unit=compute_unit,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, num_features, affine",
+        itertools.product(compute_units, backends, frontends, [5, 1], [True, False]),
+    )
+    def test_instancenorm_3d(self, compute_unit, backend, frontend, num_features, affine):
+        model = nn.InstanceNorm3d(num_features, affine=affine)
+        if affine:
+            with torch.no_grad():
+                model.weight.uniform_(0.5, 1.5)
+                model.bias.uniform_(-1.0, 1.0)
+        self.run_compare_torch(
+            (2, num_features, 3, 4, 5),
+            model,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, dynamic_w, affine",
+        itertools.product(compute_units, backends, [False, True], [False, True]),
+    )
+    def test_instancenorm_3d_dynamic_shape(self, compute_unit, backend, dynamic_w, affine):
+        model = nn.InstanceNorm3d(3, affine=affine)
+        if affine:
+            with torch.no_grad():
+                model.weight.uniform_(0.5, 1.5)
+                model.bias.uniform_(-1.0, 1.0)
+        input_shape = (2, 3, 4, 5, 6)
+        w = ct.RangeDim(1, 10) if dynamic_w else 6
+        input_type = ct.TensorType(
+            shape=ct.Shape([2, 3, ct.RangeDim(1, 10), ct.RangeDim(1, 10), w])
+        )
+        self.run_compare_torch(
+            [input_shape],
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            converter_input_type=[input_type],
+        )
+
 
 class TestGroupNorm(TorchBaseTest):
     @pytest.mark.parametrize(

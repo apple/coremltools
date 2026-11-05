@@ -3075,13 +3075,41 @@ def instance_norm(context, node):
     weight = inputs[1]
     bias = inputs[2]
     eps = inputs[7]
-    x = mb.instance_norm(
-        x=x,
-        gamma=weight,
-        beta=bias,
-        epsilon=eps,
-        name=node.name,
-    )
+    if x.rank != 5:
+        x = mb.instance_norm(
+            x=x,
+            gamma=weight,
+            beta=bias,
+            epsilon=eps,
+            name=node.name,
+        )
+    elif not any_symbolic((x.shape[0], x.shape[1], x.shape[4])):
+        # The instance_norm MIL op supports rank 3 and 4 only. Instance norm
+        # normalizes over all spatial dims of each (N, C) slice, so folding
+        # (D, H, W) into (D * H, W) gives the same result. N, C and W stay
+        # static so the reshape keeps the channel count known.
+        n, c, d, h, w = x.shape
+        if not any_symbolic(x.shape):
+            input_shape = [*x.shape]
+            new_shape = [n, c, d * h, w]
+        else:
+            input_shape = mb.shape(x=x)
+            new_shape = [n, c, -1, w]
+        x = mb.reshape(x=x, shape=new_shape)
+        x = mb.instance_norm(x=x, gamma=weight, beta=bias, epsilon=eps)
+        x = mb.reshape(x=x, shape=input_shape, name=node.name)
+    else:
+        # Dynamic N, C or W: compute the normalization directly.
+        axes = [2, 3, 4]
+        mean = mb.reduce_mean(x=x, axes=axes, keep_dims=True)
+        var = _var(x, axes=axes, keep_dims=True, unbiased=False)
+        std = mb.sqrt(x=mb.add(x=var, y=eps))
+        x = mb.real_div(x=mb.sub(x=x, y=mean), y=std)
+        if weight is not None:
+            x = mb.mul(x=x, y=mb.reshape(x=weight, shape=[1, -1, 1, 1, 1]))
+        if bias is not None:
+            x = mb.add(x=x, y=mb.reshape(x=bias, shape=[1, -1, 1, 1, 1]))
+        x = mb.identity(x=x, name=node.name)
     context.add(x)
 
 
