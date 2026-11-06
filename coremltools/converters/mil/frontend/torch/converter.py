@@ -777,6 +777,24 @@ class TorchConverter:
         _adjust_default_input_to_fp16_helper(self.inputs)
         _adjust_default_input_to_fp16_helper(self.states)
 
+    def _duplicate_output_scopes(self, var: Var) -> List[ScopeInfo]:
+        """
+        Scopes for the identity op that gives a repeated graph output its own Var:
+        the scopes of the op that produced ``var``, or placeholder scopes if ``var``
+        is a graph input.
+        """
+        if var.op is not None:
+            return [ScopeInfo(source=source, data=data) for source, data in var.op.scopes.items()]
+        if self.context.frontend == TorchFrontend.TORCHSCRIPT:
+            return [
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data="placeholder"),
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=var.name),
+            ]
+        return [
+            ScopeInfo(source=ScopeSource.EXIR_STACK_TRACE, data=var.name),
+            ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None]),
+        ]
+
     def _adjust_default_output_to_fp16(self, graph_outputs):
         """
         An utility function that sets the default outputs with inferred type fp32 to fp16.
@@ -1424,6 +1442,20 @@ class TorchConverter:
                 if g is None:
                     logger.warning(f"Dropping output {g} which is None")
             graph_outputs = [g for g in graph_outputs if g is not None]
+
+            # Several outputs can be the same Var (e.g. `return x, x`). Each
+            # output needs its own Var, otherwise they end up with the same
+            # name (and renaming one renames the others), so route repeated
+            # outputs through an identity op, like the TensorFlow frontend does.
+            output_counts = {}
+            for index, var in enumerate(graph_outputs):
+                count = output_counts.get(id(var), 0) + 1
+                output_counts[id(var)] = count
+                if count > 1:
+                    with mb.scope(*self._duplicate_output_scopes(var)):
+                        graph_outputs[index] = mb.identity(
+                            x=var, name=f"{var.name}_duplicate_{count}"
+                        )
 
             # Output renaming occurs
             if self.outputs is not None:
