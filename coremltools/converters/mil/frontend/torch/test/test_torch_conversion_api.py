@@ -2141,6 +2141,41 @@ class TestInputOutputConversionAPI:
         assert_output_dtype(mlmodel, expected_type_str="fp32", expected_name="custom_output1_name", index=0)
         assert_output_dtype(mlmodel, expected_type_str="fp32", expected_name="custom_output2_name", index=1)
 
+    @pytest.mark.parametrize(
+        "backend, output_kind, use_custom_names",
+        itertools.product(backends, ["computed", "constant"], [False, True]),
+    )
+    def test_same_var_returned_as_multiple_outputs(self, backend, output_kind, use_custom_names):
+        # https://github.com/apple/coremltools/issues/1887
+        class Model(torch.nn.Module):
+            def forward(self, x):
+                y = torch.relu(x) if output_kind == "computed" else torch.tensor([1.0, 2.0])
+                return y, x + 1, y, y
+
+        x = torch.rand(1, 2)
+        expected = [t.numpy() for t in Model()(x)]
+        output_names = ["out_a", "out_b", "out_c", "out_d"]
+        mlmodel = ct.convert(
+            torch.jit.trace(Model().eval(), x),
+            inputs=[ct.TensorType(name="x", shape=x.shape)],
+            outputs=[ct.TensorType(name=name) for name in output_names]
+            if use_custom_names
+            else None,
+            convert_to=backend[0],
+            compute_precision=ct.precision.FLOAT32 if backend[0] == "mlprogram" else None,
+        )
+
+        names = [output.name for output in mlmodel.get_spec().description.output]
+        assert len(set(names)) == len(expected)
+        if use_custom_names:
+            assert names == output_names
+
+        if ct.utils._is_macos():
+            prediction = mlmodel.predict({"x": x.numpy()})
+            assert len(prediction) == len(expected)
+            for name, value in zip(names, expected):
+                np.testing.assert_allclose(prediction[name], value, rtol=1e-6)
+
     def test_single_output_model(self, int32_input_model, float32_input_model_relu_ops):
         # test output type: if not provided, it should be the default which is float32
         mlmodel = ct.convert(
