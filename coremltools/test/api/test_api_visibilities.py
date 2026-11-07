@@ -5,6 +5,7 @@
 
 
 import re
+import sys
 
 import coremltools as ct
 
@@ -353,5 +354,12 @@ class TestApiVisibilities:
         )
 
     def test_package_version_is_legal(self):
-        version_regex = re.compile("^\d+(\.\d+)*((a|b|rc)\d+)?(\.dev\d+)?$")
+        version_regex = re.compile(r"^\d+(\.\d+)*((a|b|rc)\d+)?(\.dev\d+)?$")
         assert version_regex.match(ct.__version__)
+
+    def test_python_version(self):
+        py_ver = ct.utils._python_version()
+        assert isinstance(py_ver, tuple)
+        assert len(py_ver) == 3
+        assert all(isinstance(v, int) for v in py_ver)
+        assert py_ver == tuple(sys.version_info[:3])

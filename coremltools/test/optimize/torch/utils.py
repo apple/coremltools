@@ -61,9 +61,7 @@ def _python_version():
     """
     Return python version as a tuple of integers
     """
-    version = sys.version.split(" ")[0]
-    version = list(map(int, list(version.split("."))))
-    return tuple(version)
+    return tuple(sys.version_info[:3])
 
 
 def _macos_version():
