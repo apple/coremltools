@@ -255,7 +255,8 @@ class MLModelStructure:
 
         Parameters
         ----------
-        compiled_model_path (str): The path to the compiled model.
+        compiled_model_path : str
+            The path to the compiled model.
 
         Returns
         -------
@@ -267,10 +268,10 @@ class MLModelStructure:
         .. sourcecode:: python
         
             model_structure = coremltools.models.compute_plan.MLModelStructure.load_from_path(
-                model.get_compiled_path()
+                model.get_compiled_model_path()
             )
 
-            if model_structure.neuralNetwork is not None:
+            if model_structure.neuralnetwork is not None:
                 # Examine Neural network model.
                 pass
             elif model_structure.program is not None:
@@ -412,26 +413,32 @@ class MLComputePlan:
 
         Parameters
         ----------
-        compiled_model_path : str
+        path : str
             The path to the compiled model.
+
+        compute_units : coremltools.ComputeUnit
+            The set of compute units the plan is computed for.
+            Defaults to ``coremltools.ComputeUnit.ALL``.
 
         Returns
         -------
-        The plan for executing the model.
+        MLComputePlan
+            The plan for executing the model.
 
         Examples
         --------
         .. sourcecode:: python
 
             compute_plan = coremltools.models.compute_plan.MLComputePlan.load_from_path(
-                model.get_compiled_path()
+                path=model.get_compiled_model_path(),
+                compute_units=coremltools.ComputeUnit.CPU_AND_NE,
             )
 
             if compute_plan.model_structure.program is None:
                 raise ValueError("Unexpected model type.")
 
             program = compute_plan.model_structure.program
-            mainFunction = program["main"]
+            mainFunction = program.functions["main"]
             for operation in mainFunction.block.operations:
                 # Get the compute device usage for the operation.
                 compute_device_usage = (

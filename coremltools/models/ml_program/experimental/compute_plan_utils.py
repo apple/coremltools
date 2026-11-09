@@ -241,9 +241,18 @@ async def load_compute_plan_from_path_on_device(
     path : str
         The path to the compiled model.
 
+    compute_units : coremltools.ComputeUnit
+        The set of compute units the plan is computed for.
+        Defaults to ``coremltools.ComputeUnit.ALL``.
+
+    device : Optional[Device]
+        The device to retrieve the compute plan on. If ``None`` (the
+        default), the compute plan is loaded locally.
+
     Returns
     -------
-    The plan for executing the model.
+    MLComputePlan
+        The plan for executing the model.
 
     Examples
     --------
@@ -255,7 +264,7 @@ async def load_compute_plan_from_path_on_device(
         # Prepare device for model debugging.
         device = await device.prepare_for_model_debugging()
         compute_plan = await coremltools.models.ml_program.experimental.compute_plan_utils.load_compute_plan_from_path_on_device(
-            path=model.get_compiled_path(),
+            path=model.get_compiled_model_path(),
             device=device,
         )
 
