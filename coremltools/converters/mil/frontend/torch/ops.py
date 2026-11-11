@@ -8936,6 +8936,21 @@ def remainder(context, node):
 
 
 @register_torch_op
+def lerp(context, node):
+    """
+    lerp(Tensor self, Tensor end, Scalar weight)
+    lerp(Tensor self, Tensor end, Tensor weight)
+    Linear interpolation between ``self`` and ``end``, with all three inputs broadcast together:
+    lerp(self, end, weight) == self + weight * (end - self)
+    """
+    inputs = _get_inputs(context, node, expected=3)
+    start, end, weight = promote_input_dtypes(inputs)
+    diff = mb.sub(x=end, y=start, name=node.name + "_diff")
+    scaled_diff = mb.mul(x=weight, y=diff, name=node.name + "_scaled_diff")
+    context.add(mb.add(x=start, y=scaled_diff, name=node.name))
+
+
+@register_torch_op
 def hann_window(context, node):
     inputs = _get_inputs(context, node, expected=[5, 6])
     if inputs[0].val is None:

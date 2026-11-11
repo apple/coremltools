@@ -13062,6 +13062,66 @@ class TestHstack(TorchBaseTest):
         )
 
 
+class TestLerp(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, shapes",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [
+                [(2, 3, 4), (2, 3, 4), (2, 3, 4)],
+                [(2, 3, 4), (3, 4), (1, 4)],  # broadcastable tensors
+                [(2, 1, 4), (2, 3, 1), (4,)],
+            ],
+        ),
+    )
+    def test_lerp_tensor_weight(self, compute_unit, backend, frontend, shapes):
+        class LerpModel(nn.Module):
+            def forward(self, start, end, weight):
+                return torch.lerp(start, end, weight)
+
+        self.run_compare_torch(
+            shapes, LerpModel(), compute_unit=compute_unit, backend=backend, frontend=frontend
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, weight",
+        itertools.product(compute_units, backends, frontends, [0.0, 0.3, 1.0, 1.5, -0.5]),
+    )
+    def test_lerp_scalar_weight(self, compute_unit, backend, frontend, weight):
+        class LerpModel(nn.Module):
+            def forward(self, start, end):
+                return torch.lerp(start, end, weight)
+
+        self.run_compare_torch(
+            [(2, 3, 4), (2, 3, 4)],
+            LerpModel(),
+            compute_unit=compute_unit,
+            backend=backend,
+            frontend=frontend,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_lerp_inplace(self, compute_unit, backend, frontend):
+        class LerpModel(nn.Module):
+            def forward(self, start, end):
+                start = start.clone()
+                start.lerp_(end, 0.25)
+                return start
+
+        self.run_compare_torch(
+            [(2, 3, 4), (2, 3, 4)],
+            LerpModel(),
+            compute_unit=compute_unit,
+            backend=backend,
+            frontend=frontend,
+        )
+
+
 class TestRemainder(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, shapes",
