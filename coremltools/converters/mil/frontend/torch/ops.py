@@ -5281,6 +5281,17 @@ def getitem(context, node):
         )
 
     if not isinstance(inputs[0], (list, tuple)):
+        # A python list of ints (e.g. ``x.shape`` from ``aten::size``, or a list of
+        # constants from ``prim::ListConstruct``) is lowered to a rank-1 tensor,
+        # so select the item from it
+        if (
+            isinstance(inputs[0], Var)
+            and inputs[0].rank == 1
+            and inputs[0].op is not None
+            and inputs[0].op.op_type in ("shape", "complex_shape", "const")
+        ):
+            context.add(_list_select(inputs[0], index), torch_name=node.name)
+            return
         # For single object with index 0, return this object
         if isinstance(inputs[0], Var) and index == 0:
             context.add(inputs[0], torch_name=node.name)
