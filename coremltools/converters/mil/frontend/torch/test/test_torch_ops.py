@@ -281,6 +281,38 @@ class TestScriptedModels(TorchBaseTest):
             use_scripting=True,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, index, dynamic",
+        itertools.product(compute_units, backends, [0, 1, -1], [False, True]),
+    )
+    def test_shape_getitem(self, compute_unit, backend, index, dynamic):
+        # In a scripted model, ``x.shape[i]`` is ``aten::__getitem__`` on the int list
+        # from ``aten::size``
+        class Model(nn.Module):
+            __constants__ = ["index"]
+
+            def __init__(self, index):
+                super().__init__()
+                self.index = index
+
+            def forward(self, x):
+                return x * x.shape[self.index]
+
+        input_shape = (4, 1)
+        converter_input_type = None
+        if dynamic:
+            converter_input_type = [
+                ct.TensorType(shape=ct.Shape([ct.RangeDim(1, 10, default=4), 1]))
+            ]
+        self.run_compare_torch(
+            input_shape,
+            Model(index).eval(),
+            backend=backend,
+            compute_unit=compute_unit,
+            converter_input_type=converter_input_type,
+            use_scripting=True,
+        )
+
 class TestAffineGrid(TorchBaseTest):
     @pytest.mark.parametrize(
         ",".join(
