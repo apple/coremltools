@@ -1918,15 +1918,15 @@ def eye(context, node):
         )
         nargs = len(inputs)
 
-        n = inputs[0].val
+        n = inputs[0]
         if context.frontend == TorchFrontend.TORCHSCRIPT:
             if nargs == 6:
-                m = inputs[1].val
+                m = inputs[1]
             else:
                 m = None
         else:
             if node.kind == "eye.m":
-                m = inputs[1].val
+                m = inputs[1]
             else:
                 m = None
 
@@ -1934,12 +1934,18 @@ def eye(context, node):
 
     n, m = _parse_positional_args(context, node)
 
-    # TODO: rdar://104400568 ([PyTorch] Use MIL ops to construct the eye matrix in order to avoid directly folding the input into a const)
-    if m is None:
-        eye = np.eye(n)
+    if all(v is None or (v.val is not None and not is_symbolic(v.val)) for v in (n, m)):
+        if m is None:
+            eye = np.eye(n.val)
+        else:
+            eye = np.eye(n.val, m.val)
+        eye = mb.const(val=eye, name=node.name)
     else:
-        eye = np.eye(n, m)
-    eye = mb.const(val=eye, name=node.name)
+        # The size is only known at runtime (e.g. it comes from the shape of a dynamic input),
+        # so keep the main diagonal of a runtime-sized matrix of ones.
+        shape = [mb.expand_dims(x=v, axes=[0]) for v in (n, n if m is None else m)]
+        ones = _make_fill_op(shape, 1.0, node.name + "_ones")
+        eye = mb.band_part(x=ones, lower=0, upper=0, name=node.name)
     context.add(eye)
 
 
