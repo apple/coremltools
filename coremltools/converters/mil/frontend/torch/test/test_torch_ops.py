@@ -5252,6 +5252,42 @@ class TestEye(TorchBaseTest):
             input_shape, model, frontend=frontend, backend=backend, compute_unit=compute_unit
         )
 
+    @pytest.mark.parametrize(
+        "frontend, eye_type",
+        itertools.product(frontends, ["single", "double", "static_m"]),
+    )
+    def test_eye_dynamic_size(self, frontend, eye_type):
+        class Model(nn.Module):
+            def forward(self, x):
+                if eye_type == "single":
+                    return torch.eye(x.shape[0]) @ x
+                if eye_type == "double":
+                    return x + torch.eye(x.shape[0], x.shape[1])
+                return torch.eye(x.shape[0], 5) * 2.0
+
+        converter_input_type = [TensorType(shape=(RangeDim(default=4, upper_bound=50), 3))]
+        torch_export_dynamic_shapes = {"x": {0: torch.export.Dim("rows", min=2, max=50)}}
+        model = Model().eval()
+
+        _, mlmodel, _, _, _, _ = self.run_compare_torch(
+            generate_input_data((4, 3)),
+            model,
+            input_as_shape=False,
+            frontend=frontend,
+            backend=("mlprogram", "fp32"),
+            compute_unit=ct.ComputeUnit.CPU_ONLY,
+            converter_input_type=converter_input_type,
+            torch_export_dynamic_shapes=torch_export_dynamic_shapes,
+        )
+
+        # The eye matrix must follow the runtime size, not the size at conversion time.
+        new_input = generate_input_data((6, 3))
+        input_name = mlmodel.get_spec().description.input[0].name
+        output = mlmodel.predict({input_name: new_input.numpy()})
+        np.testing.assert_allclose(
+            list(output.values())[0], model(new_input).numpy(), rtol=1e-5, atol=1e-5
+        )
+
 
 class TestOnes(TorchBaseTest):
     @pytest.mark.parametrize(
