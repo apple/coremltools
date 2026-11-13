@@ -13651,6 +13651,45 @@ class TestArgmax(TorchBaseTest):
             compute_unit=compute_unit,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, shape, keepdim, input_dtype",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [(5,), (3, 4), (2, 3, 4)],
+            [False, True],
+            [np.float32, np.int32],
+        ),
+    )
+    def test_argmax_without_dim(
+        self,
+        compute_unit,
+        backend: Tuple[str, str],
+        frontend: TorchFrontend,
+        shape: Tuple[int],
+        keepdim: bool,
+        input_dtype: np.dtype,
+    ):
+        # Without ``dim``, torch returns the index into the flattened input
+        # distinct values, so that the index of the extremum is unambiguous (also in fp16)
+        input_data = torch.randperm(int(np.prod(shape))).reshape(shape)
+        if input_dtype == np.float32:
+            input_data = input_data.float()
+        converter_input_type = [ct.TensorType(shape=input_data.shape, dtype=input_dtype)]
+        model = ModuleWrapper(function=torch.argmax, kwargs={"keepdim": keepdim})
+        expected_results = model(input_data)
+        TorchBaseTest.run_compare_torch(
+            input_data,
+            model,
+            expected_results=expected_results,
+            input_as_shape=False,
+            frontend=frontend,
+            backend=backend,
+            converter_input_type=converter_input_type,
+            compute_unit=compute_unit,
+        )
+
 class TestArgmin(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, frontend, shape, axis, input_dtype",
@@ -13675,6 +13714,45 @@ class TestArgmin(TorchBaseTest):
         input_data = torch.rand(*shape) if input_dtype == np.float32 else torch.randint(10, shape)
         converter_input_type = [ct.TensorType(shape=input_data.shape, dtype=input_dtype)]
         model = ModuleWrapper(function=torch.argmin, kwargs={"dim": axis})
+        expected_results = model(input_data)
+        TorchBaseTest.run_compare_torch(
+            input_data,
+            model,
+            expected_results=expected_results,
+            input_as_shape=False,
+            frontend=frontend,
+            backend=backend,
+            converter_input_type=converter_input_type,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, shape, keepdim, input_dtype",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [(5,), (3, 4), (2, 3, 4)],
+            [False, True],
+            [np.float32, np.int32],
+        ),
+    )
+    def test_argmin_without_dim(
+        self,
+        compute_unit,
+        backend: Tuple[str, str],
+        frontend: TorchFrontend,
+        shape: Tuple[int],
+        keepdim: bool,
+        input_dtype: np.dtype,
+    ):
+        # Without ``dim``, torch returns the index into the flattened input
+        # distinct values, so that the index of the extremum is unambiguous (also in fp16)
+        input_data = torch.randperm(int(np.prod(shape))).reshape(shape)
+        if input_dtype == np.float32:
+            input_data = input_data.float()
+        converter_input_type = [ct.TensorType(shape=input_data.shape, dtype=input_dtype)]
+        model = ModuleWrapper(function=torch.argmin, kwargs={"keepdim": keepdim})
         expected_results = model(input_data)
         TorchBaseTest.run_compare_torch(
             input_data,

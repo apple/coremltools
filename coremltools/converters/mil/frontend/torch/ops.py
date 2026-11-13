@@ -7240,11 +7240,20 @@ def argmax(context, node):
     if types.is_int(x.dtype) and x.dtype._width == 64:
         # MIL reduce_argmax and reduce_argmin doesn't support int64.
         x = mb.cast(x=x, dtype="int32")
-    if node.kind == "argmax":
-        res = mb.reduce_argmax(x=x, axis=dim, keep_dims=keepdim, name=node.name)
+
+    # Without ``dim``, torch returns the index into the flattened input.
+    flatten = dim is None
+    if flatten:
+        input_rank = x.rank
+        x = mb.reshape(x=x, shape=[-1])
+        dim = 0
+    reduce_op = mb.reduce_argmax if node.kind == "argmax" else mb.reduce_argmin
+    if flatten and keepdim:
+        res = reduce_op(x=x, axis=dim, keep_dims=False)
+        # torch keeps every dim as size 1 when ``keepdim`` is set without ``dim``.
+        res = mb.reshape(x=res, shape=np.ones(input_rank, dtype=np.int32), name=node.name)
     else:
-        assert node.kind == "argmin"
-        res = mb.reduce_argmin(x=x, axis=dim, keep_dims=keepdim, name=node.name)
+        res = reduce_op(x=x, axis=dim, keep_dims=keepdim, name=node.name)
     context.add(res)
 
 
