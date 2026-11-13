@@ -549,16 +549,17 @@ def cosine_similarity(context, node):
     xy = mb.mul(x=inputs[0], y=inputs[1])
     sum_xy = mb.reduce_sum(x=xy, axes=[dim])
 
+    # torch clamps each norm separately:
+    #     x . y / (max(||x||, eps) * max(||y||, eps))
+    # Taking the square root of each sum of squares before multiplying them also
+    # keeps the denominator from overflowing in fp16 (||x||^2 * ||y||^2 exceeds
+    # the fp16 range once ||x|| * ||y|| > 256).
     xx = mb.mul(x=inputs[0], y=inputs[0])
-    sum_xx = mb.reduce_sum(x=xx, axes=[dim])
+    norm_x = mb.maximum(x=mb.sqrt(x=mb.reduce_sum(x=xx, axes=[dim])), y=eps)
     yy = mb.mul(x=inputs[1], y=inputs[1])
-    sum_yy = mb.reduce_sum(x=yy, axes=[dim])
+    norm_y = mb.maximum(x=mb.sqrt(x=mb.reduce_sum(x=yy, axes=[dim])), y=eps)
 
-    mul_sum_xy = mb.mul(x=sum_xx, y=sum_yy)
-    div_12 = mb.maximum(x=mul_sum_xy, y=eps * eps)
-    div_sqrt = mb.sqrt(x=div_12)
-
-    cs = mb.real_div(x=sum_xy, y=div_sqrt, name=node.name)
+    cs = mb.real_div(x=sum_xy, y=mb.mul(x=norm_x, y=norm_y), name=node.name)
     context.add(cs)
 
 

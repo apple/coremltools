@@ -589,9 +589,6 @@ class TestMv(TorchBaseTest):
         )
 
 
-@pytest.mark.skip(
-    reason="rdar://100332029 ([PyTorch] cos_similarity unittest is failing stochastically)"
-)
 class TestCosineSimilarity(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, dim, eps, shape",
@@ -623,6 +620,32 @@ class TestCosineSimilarity(TorchBaseTest):
             input_as_shape=False,
             backend=backend,
             compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_cosine_similarity_norm_clamping(self, compute_unit, backend, frontend):
+        torch.manual_seed(0)
+        # Rows 1-3: ||x|| * ||y|| > 256, so ||x||^2 * ||y||^2 does not fit in fp16.
+        x = torch.randn(4, 128) * 3
+        y = x + torch.randn(4, 128) * 0.3
+        # Row 0: ||x|| = 0.01 < eps = 0.1 < ||x|| * ||y||. torch clamps each norm
+        # to eps on its own (expected 0.1), clamping the product of the norms gives 1.
+        x[0] = 0.0
+        y[0] = 0.0
+        x[0, :2] = torch.tensor([0.006, 0.008])
+        y[0, :2] = torch.tensor([60.0, 80.0])
+        model = nn.CosineSimilarity(dim=-1, eps=0.1)
+
+        TorchBaseTest.run_compare_torch(
+            [x, y],
+            model,
+            input_as_shape=False,
+            backend=backend,
+            compute_unit=compute_unit,
+            frontend=frontend,
         )
 
 
