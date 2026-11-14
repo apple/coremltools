@@ -13245,6 +13245,42 @@ class TestSum(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, op, input_dtype, dtype",
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            ["sum", "mean", "prod"],
+            [torch.int32, torch.float32],
+            [torch.int32, torch.float32],
+        ),
+    )
+    def test_reduction_dtype(self, compute_unit, backend, frontend, op, input_dtype, dtype):
+        # torch casts the input to ``dtype`` before reducing,
+        # so e.g. the mean of an int tensor is not truncated to an int
+        if op == "mean" and dtype == torch.int32:
+            pytest.skip("torch.mean only supports floating point dtype")
+
+        class Model(nn.Module):
+            def forward(self, x):
+                return getattr(torch, op)(x, dim=1, dtype=dtype)
+
+        model = Model()
+        input_data = torch.tensor([[0.75, 0.75, 0.75, 3.75], [-1.5, 2.5, 4.25, 0.5]])
+        input_data = input_data.to(input_dtype)
+        expected_results = model(input_data)
+
+        self.run_compare_torch(
+            input_data,
+            model,
+            expected_results=expected_results,
+            input_as_shape=False,
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend",
         itertools.product(compute_units, backends, frontends),
     )
