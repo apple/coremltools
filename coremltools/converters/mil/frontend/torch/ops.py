@@ -2368,22 +2368,24 @@ def mean(context, node):
             x = inputs[0]
             dim = inputs[1] if nargs > 1 else None
             keepdim = inputs[2] if nargs > 2 else False
+            dtype = inputs[3] if nargs > 3 else None
         else:
             if node.kind in ("mean", "sum", "prod", "all", "any"):
                 x = inputs[0]
                 dim = None
                 keepdim = None
-                # although we would not use dtype, still parse it
                 dtype = inputs[1] if nargs > 1 else None
             else:
                 x = inputs[0]
                 dim = inputs[1] if nargs > 1 else None
                 keepdim = inputs[2] if nargs > 2 else False
-        return x, dim, keepdim
+                dtype = inputs[3] if nargs > 3 else None
+        return x, dim, keepdim, dtype
 
-    def _parse_keyword_args(context, node, keepdim) -> Var:
+    def _parse_keyword_args(context, node, keepdim, dtype) -> Tuple[Var]:
         keepdim = _get_kwinputs(context, node, "keepdim", default=[keepdim])[0]
-        return keepdim
+        dtype = _get_kwinputs(context, node, "dtype", default=[dtype])[0]
+        return keepdim, dtype
 
     def _translate_torch_args(dim, keepdim) -> Tuple[Var]:
         # torch dim means Core ML axes
@@ -2408,8 +2410,8 @@ def mean(context, node):
 
         return axes, keep_dims
 
-    x, dim, keepdim = _parse_positional_args(context, node)
-    keepdim = _parse_keyword_args(context, node, keepdim)
+    x, dim, keepdim, dtype = _parse_positional_args(context, node)
+    keepdim, dtype = _parse_keyword_args(context, node, keepdim, dtype)
     axes, keep_dims = _translate_torch_args(dim, keepdim)
 
     kwargs = {}
@@ -2444,6 +2446,12 @@ def mean(context, node):
         else:
             assert node_kind == "logsumexp"
             reduction_op_type = "reduce_log_sum_exp"
+        # torch casts the input to ``dtype`` before reducing,
+        # e.g. torch.mean(int_x, dim, dtype=torch.float32) must not truncate to int
+        if dtype is not None and dtype.val is not None:
+            dtype = NUM_TO_DTYPE_STRING[dtype.val]
+            if builtin_to_string(x.dtype) != dtype:
+                x = mb.cast(x=x, dtype=dtype)
         if (
             builtin_to_string(x.dtype)
             not in SSAOpRegistry._get_core_op_cls(reduction_op_type).supported_dtypes()
