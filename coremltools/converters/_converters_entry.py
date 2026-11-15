@@ -591,9 +591,9 @@ def convert(
                                      outputs_as_strings,
                                      outputs_as_tensor_or_image_types,
                                      outputs)
-    # Starting with torch 2.9, torch.export.export() returns an ExportedProgram
-    # in the new "TRAINING" IR dialect by default, whereas conversion expects
-    # the "ATEN" dialect (the prior default). Lower it to ATEN via
+    # Since torch 2.6, torch.export.export() returns an ExportedProgram in the
+    # "TRAINING" IR dialect by default, whereas conversion expects the "ATEN"
+    # dialect (the default up to torch 2.5). Lower it to ATEN via
     # run_decompositions -- the migration torch recommends -- so existing
     # convert() calls keep working without a manual run_decompositions() step.
     if (

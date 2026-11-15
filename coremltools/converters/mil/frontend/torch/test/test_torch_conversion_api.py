@@ -646,8 +646,8 @@ class TestPyTorchConverterExamples:
     @staticmethod
     @pytest.mark.skipif(not _HAS_TORCH_EXPORT_API, reason="torch.export API not available.")
     def test_convert_exported_program_training_dialect():
-        # Starting with torch 2.9, torch.export.export() returns an
-        # ExportedProgram in the new "TRAINING" IR dialect by default. convert()
+        # Since torch 2.6, torch.export.export() returns an ExportedProgram
+        # in the "TRAINING" IR dialect by default. convert()
         # should lower it automatically via run_decompositions instead of
         # requiring the user to call run_decompositions() themselves.
         class Network(torch.nn.Module):
@@ -663,11 +663,11 @@ class TestPyTorchConverterExamples:
         example_input = torch.rand(2, 8)
         exported_program = torch.export.export(torch_model, (example_input,))
 
-        # With torch >= 2.9 the default export dialect is no longer ATEN, so the
+        # With torch >= 2.6 the default export dialect is no longer ATEN, so the
         # installed torch here actually drives convert()'s auto-lowering path.
         # Assert it to guarantee this test exercises that path instead of
         # silently passing as a no-op on a torch whose default is still ATEN.
-        if Version(torch.__version__) >= Version("2.9.0"):
+        if Version(torch.__version__) >= Version("2.6.0"):
             assert exported_program.dialect not in ("ATEN", "EDGE")
 
         # Convert directly, without a manual run_decompositions() step.
