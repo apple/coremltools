@@ -8020,6 +8020,15 @@ class TestTriu(TorchBaseTest):
             frontend=frontend,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, diagonal",
+        itertools.product(compute_units, backends, frontends, [-1, 0, 1]),
+    )
+    def test_triu_constant_infinite_input(self, compute_unit, backend, frontend, diagonal):
+        _test_band_constant_infinite_input(
+            self, torch.triu, diagonal, compute_unit, backend, frontend
+        )
+
 
 class TestTril(TorchBaseTest):
     @pytest.mark.parametrize(
@@ -8069,6 +8078,35 @@ class TestTril(TorchBaseTest):
             backend=backend,
             frontend=frontend,
         )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, diagonal",
+        itertools.product(compute_units, backends, frontends, [-1, 0, 1]),
+    )
+    def test_tril_constant_infinite_input(self, compute_unit, backend, frontend, diagonal):
+        _test_band_constant_infinite_input(
+            self, torch.tril, diagonal, compute_unit, backend, frontend
+        )
+
+
+def _test_band_constant_infinite_input(test, op, diagonal, compute_unit, backend, frontend):
+    # A constant input is folded at conversion time through band_part's value inference,
+    # which must not turn the dropped triangle into NaN either.
+    class Model(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.register_buffer("mask", torch.full((4, 4), float("-inf")))
+
+        def forward(self, x):
+            return x + op(self.mask, diagonal=diagonal)
+
+    mlmodel = test.run_compare_torch(
+        (4, 4), Model().eval(), frontend=frontend, backend=backend, compute_unit=compute_unit
+    )[1]
+    for const_op in mlmodel._mil_program.find_ops(op_type="const"):
+        val = np.asarray(const_op.outputs[0].val)
+        if np.issubdtype(val.dtype, np.floating):
+            assert not np.isnan(val).any()
 
 
 class TestMatMul(TorchBaseTest):
