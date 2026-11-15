@@ -83,7 +83,7 @@ class band_part(Operation):
     @precondition(allow=VALUE)
     def value_inference(self):
         M, N = self.x.val.shape[-2:]
-        band = np.zeros((M, N), dtype=types.nptype_from_builtin(self.x.dtype))
+        band = np.zeros((M, N), dtype=bool)
         num_lower = self.lower.val
         num_upper = self.upper.val
         for m in range(M):
@@ -91,7 +91,10 @@ class band_part(Operation):
                 band[m, n] = (num_lower < 0 or (m - n) <= num_lower) and (
                     num_upper < 0 or (n - m) <= num_upper
                 )
-        return np.multiply(band, self.x.val)
+        # Select instead of multiplying by the band: 0 * inf is NaN, while elements outside
+        # the band have to be 0 whatever x holds.
+        zero = np.zeros((), dtype=types.nptype_from_builtin(self.x.dtype))
+        return np.where(band, self.x.val, zero)
 
 
 @register_op

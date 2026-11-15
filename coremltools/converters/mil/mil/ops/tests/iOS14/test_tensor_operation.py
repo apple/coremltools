@@ -174,6 +174,32 @@ class TestBandPart:
             out_value_inference, out_from_model_prediction, atol=1e-3, rtol=1e-3
         )
 
+    @pytest.mark.parametrize(
+        "lower_upper, dtype, shape",
+        itertools.product(
+            [(0, -1), (-1, 0), (0, 0), (1, 1), (1, 2), (2, 1), (-1, -1)],
+            [np.float32, np.float16],
+            [(3, 4), (2, 3, 4)],
+        ),
+    )
+    def test_value_inference_non_finite_input(self, lower_upper, dtype, shape):
+        # Constant folding goes through value_inference, so the elements outside the band
+        # have to come out as 0 rather than 0 * x, which is NaN when x is +/-inf or NaN.
+        num_lower, num_upper = lower_upper
+        x_val = np.resize(np.array([-np.inf, np.inf, np.nan, 2.5], dtype=dtype), shape)
+
+        with Function({}):
+            out = mb.band_part(x=x_val, lower=num_lower, upper=num_upper).val
+
+        M, N = shape[-2:]
+        ones = np.ones((M, N), dtype=bool)
+        in_band = np.tril(ones, k=num_upper if num_upper >= 0 else N) & np.triu(
+            ones, k=-num_lower if num_lower >= 0 else -M
+        )
+        expected = np.where(in_band, x_val, dtype(0))
+        assert out.dtype == dtype
+        np.testing.assert_array_equal(out, expected)
+
 
 class TestCumSum:
     @pytest.mark.parametrize(
