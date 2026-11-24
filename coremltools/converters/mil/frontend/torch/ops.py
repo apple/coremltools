@@ -2479,6 +2479,9 @@ def cumsum(context, node):
 
     if is_bool(x.dtype):
         x = mb.cast(x=x, dtype="int32")
+    # mb.cumsum only accepts axis in [-1, rank - 1]
+    if dim.val is not None and dim.val < 0:
+        dim = mb.const(val=np.int32(dim.val + x.rank))
     if node.kind == "cumsum":
         if dtype is not None and builtin_to_string(x.dtype) != dtype:
             x = mb.cast(x=x, dtype=dtype)
