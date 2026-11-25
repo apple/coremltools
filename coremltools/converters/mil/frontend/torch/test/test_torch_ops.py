@@ -13421,7 +13421,7 @@ class TestCumSum(TorchBaseTest):
             compute_units,
             backends,
             frontends,
-            [-1, 0, 1, 2, 3],
+            [-4, -3, -2, -1, 0, 1, 2, 3],
         ),
     )
     def test_cumsum(self, compute_unit, backend, frontend, axis):
@@ -13489,7 +13489,7 @@ class TestCumSum(TorchBaseTest):
             compute_units,
             backends,
             frontends,
-            [-1, 0, 1, 2, 3],
+            [-4, -3, -2, -1, 0, 1, 2, 3],
         ),
     )
     def test_logcumsumexp(self, compute_unit, backend, frontend, axis):
